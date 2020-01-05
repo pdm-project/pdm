@@ -1,9 +1,11 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
+import pip_shims
 
 from pdm.types import Source
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import get_package_finder
 
 
 class BaseRepository:
@@ -13,6 +15,11 @@ class BaseRepository:
 
     def match_index(self, requirement: Requirement) -> bool:
         return requirement.index is None or requirement.index == self.source["name"]
+
+    def get_finder(
+        self, requires_python: Optional[PySpecSet]
+    ) -> pip_shims.PackageFinder:
+        return get_package_finder([self.source], requires_python.as_py_versions())
 
     def get_dependencies(
         self, candidate: Candidate
@@ -32,20 +39,14 @@ class BaseRepository:
     ) -> Tuple[List[Requirement], PySpecSet]:
         pass
 
-    def _get_dependencies_from_local(
-        self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet]:
-        if not candidate.is_local:
-            return [], PySpecSet()
-
-
-class PyPIRepository(BaseRepository):
-    def _get_dependencies_from_json(
+    def _get_dependencies_from_metadata(
         self, candidate: Candidate
     ) -> Tuple[List[Requirement], PySpecSet]:
         pass
 
-    def _get_dependencies_from_simple(
+
+class PyPIRepository(BaseRepository):
+    def _get_dependencies_from_json(
         self, candidate: Candidate
     ) -> Tuple[List[Requirement], PySpecSet]:
         pass

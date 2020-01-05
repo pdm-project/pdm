@@ -1,59 +1,65 @@
-from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
 from pip_shims import InstallRequirement
-from pkg_resources import safe_name
+from pip._internal.exceptions import InstallationError
 
-
-def get_egg_info(ireq: InstallRequirement) -> Optional[str]:
-    root = Path(ireq.setup_py_dir)
-    name = safe_name(ireq.name)
-    if (root / f"{name}.egg-info").is_dir():
-        return (root / f"{name}.egg-info").as_posix()
+if TYPE_CHECKING:
+    from pdm.models.requirements import Requirement
+    from pdm.models.repositories import BaseRepository
 
 
 def get_sdist(ireq: InstallRequirement) -> Optional[EggInfoDistribution]:
-    egg_info = get_egg_info(ireq)
+    try:
+        egg_info = ireq.egg_info_path
+    except InstallationError:
+        ireq.run_egg_info()
+        egg_info = ireq.egg_info_path
     return EggInfoDistribution(egg_info) if egg_info else None
 
 
 class Candidate:
     """A concrete candidate that can be downloaded and installed."""
 
-    @property
-    def is_local(self) -> bool:
-        return isinstance(self, LocalDirCandidate)
-
-
-class LocalDirCandidate(Candidate):
-    def __init__(self, location: str, req):
-        self.location = Path(location).absolute()
+    def __init__(self, req, repository=None):
+        # type: (Requirement, Optional[BaseRepository]) -> None
         self.req = req
-        self._source_ready = True
+        self.repository = repository
         self.wheel = None
+
+    def get_metadata(self) -> Optional[Metadata]:
+        ireq = self.req.as_ireq()
+        if ireq.editable:
+            sdist = get_sdist(ireq)
+            return sdist.metadata if sdist else None
+        else:
+            if not self.wheel:
+                self._build_wheel()
+            return self.wheel.meta
+
+    def _build_wheel(self) -> None:
+        pass
+
+
+class LocalCandidate(Candidate):
+    def __init__(self, req, repository=None):
+        # type: (Requirement, Optional[BaseRepository]) -> None
+        super().__init__(req, repository)
+        self.location = self.req.path.absolute()
+
+    def prepare_sources(self) -> None:
+        """A local candidate has already everything in local, no need to download."""
+        pass
 
     @property
     def source_dir(self) -> str:
-        return self.path.as_posix()
-
-    def prepare_source(self) -> None:
-        pass
-
-    def get_metadata(self) -> Optional[Metadata]:
-        if not self._source_ready:
-            self.prepare_source()
-        ireq = self.req.as_ireq()
-        if ireq.editable:
-            ireq.run_egg_info()
-            sdist = get_sdist(ireq)
-            return sdist.metadata if sdist else None
+        return self.location.as_posix()
 
 
-class FileCandidate(Candidate):
+class RemoteCandidate(LocalCandidate):
     pass
 
 
-class VcsCandidate(LocalDirCandidate):
+class VcsCandidate(LocalCandidate):
     pass

@@ -15,12 +15,13 @@ import pip_shims
 from pdm.models.markers import get_marker
 from pdm.models.candidates import (
     Candidate,
-    FileCandidate,
-    LocalDirCandidate,
+    RemoteCandidate,
+    LocalCandidate,
     VcsCandidate,
 )
 from pdm.models.project_files import SetupReader
 from pdm.types import RequirementDict
+from pdm.exceptions import RequirementError
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 
@@ -34,10 +35,6 @@ def _strip_extras(line):
     else:
         extras = None
     return name, extras
-
-
-class RequirementError(ValueError):
-    pass
 
 
 def get_specifier(version_str: str) -> SpecifierSet:
@@ -208,6 +205,8 @@ class FileRequirement(Requirement):
         if self.path and not self.path.is_absolute():
             self.str_path = "./" + self.str_path
         self._parse_url()
+        if self.path and not self.path.exists():
+            raise RequirementError(f"The local path {self.path} does not exist.")
         if self.is_local and not self.name:
             self._parse_name_from_project_files()
 
@@ -265,14 +264,10 @@ class FileRequirement(Requirement):
             return f"{editable}{project_name}{extras}{delimiter}{location}{marker}"
 
     def as_candidate(self) -> Candidate:
-        if self.is_local_dir:
-            return LocalDirCandidate(location=self.path, req=self)
-        elif self.path and self.path.exists() or self.url:
-            return FileCandidate(location=self.path or self.url, req=self)
+        if self.path:
+            return LocalCandidate(req=self)
         else:
-            raise RequirementError(
-                "Invalid requirement: the local path does not exist."
-            )
+            return RemoteCandidate(req=self)
 
     def _parse_name_from_project_files(self) -> None:
         result = SetupReader.read_from_directory(self.path.absolute().as_posix())
@@ -318,7 +313,7 @@ class VcsRequirement(FileRequirement):
         return f"{editable}{self.vcs}+{self.url}{self._format_marker()}"
 
     def as_candidate(self) -> Candidate:
-        return VcsCandidate(vcs=self.vcs, url=self.url, req=self)
+        return VcsCandidate(req=self)
 
     def _parse_url(self) -> None:
         if self.name and self.repo:
