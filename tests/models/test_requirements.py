@@ -1,6 +1,6 @@
 import pytest
 
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import Requirement, RequirementError
 from tests import FIXTURES
 
 REQUIREMENTS = [
@@ -34,6 +34,11 @@ REQUIREMENTS = [
         None,
     ),
     (
+        "git+http://git.example.com/MyProject#egg=MyProject",
+        ("MyProject", {"git": "http://git.example.com/MyProject"}),
+        None,
+    ),
+    (
         "https://github.com/pypa/pip/archive/1.3.1.zip",
         (None, {"url": "https://github.com/pypa/pip/archive/1.3.1.zip"}),
         None,
@@ -41,19 +46,18 @@ REQUIREMENTS = [
     (
         (FIXTURES / "projects/demo").as_posix(),
         ("demo", {"path": (FIXTURES / "projects/demo").as_posix()}),
-        "demo @ file:///" + (FIXTURES / "projects/demo").as_posix(),
+        "demo @ file://" + (FIXTURES / "projects/demo").as_posix(),
     ),
     (
         (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
         (
-            None,
+            "demo",
             {
-                "path": (
-                    FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
-                ).as_posix()
+                "url": "file://"
+                + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix()
             },
         ),
-        "file:///"
+        "demo @ file://"
         + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
     ),
 ]
@@ -67,3 +71,20 @@ def test_convert_req_dict_to_req_line(req, req_dict, result):
     r = Requirement.from_req_dict(*req_dict)
     result = result or req
     assert r.as_line() == result
+
+
+@pytest.mark.parametrize(
+    "line,expected",
+    [
+        (
+            "-e https://github.com/pypa/pip/archive/1.3.1.zip",
+            "Editable requirement is only supported",
+        ),
+        ("requests; os_name=>'nt'", "Invalid requirement"),
+        ("./nonexist", r"The local path (.+)? does not exist"),
+        ("./tests", r"The local path (.+)? is not installable"),
+    ],
+)
+def test_illegal_requirement_line(line, expected):
+    with pytest.raises(RequirementError, match=expected):
+        Requirement.from_line(line)

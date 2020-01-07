@@ -8,3 +8,11 @@ class RequirementError(PdmException, ValueError):
 
 class InvalidPyVersion(PdmException, ValueError):
     pass
+
+
+class WheelBuildError(PdmException):
+    pass
+
+
+class ProjectNotInitialized(PdmException):
+    pass

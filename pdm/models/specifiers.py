@@ -287,9 +287,9 @@ class PySpecSet(SpecifierSet):
                 for z in range(prev[2], current_max + 1):
                     yield (*prev[:2], z)
                 prev = (
-                    cur
-                    if cur[1] <= self.MAX_PY_VERSIONS[(cur[0],)]
-                    else _bump_version(prev, 0)
+                    _bump_version(prev, 0)
+                    if cur[0] < 3 and cur[1] > self.MAX_PY_VERSIONS[(cur[0],)]
+                    else cur
                 )
             else:  # X.Y.Z -> X.Y.W
                 while prev < upper:

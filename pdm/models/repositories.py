@@ -1,25 +1,25 @@
-from typing import List, Tuple, Optional
+from contextlib import contextmanager
+from typing import List, Tuple
+
 import pip_shims
 
-from pdm.types import Source
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import get_package_finder
+from pdm.types import Source
+from pdm.utils import get_finder
+from pdm.context import context
 
 
 class BaseRepository:
-    def __init__(self, source: Source, cache_dir: str) -> None:
-        self.source = source
-        self.cache_dir = cache_dir
+    def __init__(self, sources: List[Source]) -> None:
+        self.sources = sources
 
-    def match_index(self, requirement: Requirement) -> bool:
-        return requirement.index is None or requirement.index == self.source["name"]
-
-    def get_finder(
-        self, requires_python: Optional[PySpecSet]
-    ) -> pip_shims.PackageFinder:
-        return get_package_finder([self.source], requires_python.as_py_versions())
+    @contextmanager
+    def get_finder(self) -> pip_shims.PackageFinder:
+        finder = get_finder(self.sources, context.cache_dir.as_posix())
+        yield finder
+        finder.session.close()
 
     def get_dependencies(
         self, candidate: Candidate
@@ -32,6 +32,22 @@ class BaseRepository:
         requires_python: PySpecSet,
         allow_prereleases: bool = False,
     ) -> List[Candidate]:
+        if self.requirement.is_named:
+            return self._find_named_matches(
+                requirement, requires_python, allow_prereleases
+            )
+        else:
+            return [Candidate(requirement, self)]
+
+    def _find_named_matches(
+        self,
+        requirement: Requirement,
+        requires_python: PySpecSet,
+        allow_prereleases: bool = False,
+    ) -> List[Candidate]:
+        """Find candidates of the given NamedRequirement. Let it to be implemented in
+        subclasses.
+        """
         raise NotImplementedError
 
     def _get_dependencies_from_cache(

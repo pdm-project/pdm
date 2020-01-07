@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import os
 from typing import Any, Dict, Optional, Tuple
 import urllib.parse as urlparse
 
@@ -13,15 +14,10 @@ from packaging.specifiers import SpecifierSet
 import pip_shims
 
 from pdm.models.markers import get_marker
-from pdm.models.candidates import (
-    Candidate,
-    RemoteCandidate,
-    LocalCandidate,
-    VcsCandidate,
-)
-from pdm.models.project_files import SetupReader
+from pdm.models.readers import SetupReader
 from pdm.types import RequirementDict
 from pdm.exceptions import RequirementError
+from pdm.utils import parse_name_version_from_wheel, url_without_fragments
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 
@@ -50,7 +46,7 @@ class Requirement:
     """
 
     VCS_REQ = re.compile(
-        rf"(?P<editable>-e[\t ]+)(?P<vcs>{'|'.join(VCS_SCHEMA)})\+"
+        rf"(?P<editable>-e[\t ]+)?(?P<vcs>{'|'.join(VCS_SCHEMA)})\+"
         r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
     )
     _PATH_START = r"(?:\.|/|[a-zA-Z]:[/\\])"
@@ -140,16 +136,16 @@ class Requirement:
 
     def as_req_dict(self) -> Tuple[str, RequirementDict]:
         r = {}
-        if self.is_vcs:
-            r[self.vcs] = self.repo
-        elif self.url:
-            r["url"] = self.url
         if self.editable:
             r["editable"] = True
         if self.extras:
             r["extras"] = sorted(self.extras)
-        if self.path:
+        if self.is_vcs:
+            r[self.vcs] = self.repo
+        elif self.path and self.is_local_dir:
             r["path"] = self.str_path
+        elif self.url:
+            r["url"] = self.url
         if self.marker:
             r["marker"] = str(self.marker)
         if self.specs:
@@ -191,6 +187,17 @@ class Requirement:
         ireq.req = self
         return ireq
 
+    @classmethod
+    def from_pkg_requirement(cls, req: PackageRequirement) -> "Requirement":
+        klass = FileRequirement if req.url else NamedRequirement
+        return klass(
+            name=req.name,
+            extras=req.extras,
+            url=req.url,
+            specifier=req.specifier,
+            marker=req.marker,
+        )
+
     def _format_marker(self) -> str:
         if self.marker:
             return f"; {str(self.marker)}"
@@ -207,15 +214,8 @@ class FileRequirement(Requirement):
         self._parse_url()
         if self.path and not self.path.exists():
             raise RequirementError(f"The local path {self.path} does not exist.")
-        if self.is_local and not self.name:
-            self._parse_name_from_project_files()
-
-    @property
-    def normalized_url(self) -> Optional[str]:
-        if self.url:
-            return self.url
-        elif self.path:
-            return f"file:///{self.path.absolute().as_posix()}"
+        if not self.name and self.is_local_dir:
+            self._parse_name_from_local()
 
     @classmethod
     def from_line(cls, line: str, parsed: Dict[str, str]) -> "FileRequirement":
@@ -228,9 +228,14 @@ class FileRequirement(Requirement):
         return r
 
     def _parse_url(self) -> None:
-        parsed = urlparse.urlparse(self.url)
-        if parsed.scheme == "file" and not parsed.netloc:
-            self.path = Path(parsed.path)
+        if not self.url:
+            if self.path:
+                self.url = f"file://{self.path.absolute().as_posix()}"
+        else:
+            parsed = urlparse.urlparse(self.url)
+            if parsed.scheme == "file" and not parsed.netloc:
+                self.path = Path(parsed.path)
+        self._parse_name_from_url()
 
     @property
     def is_local(self) -> bool:
@@ -252,10 +257,10 @@ class FileRequirement(Requirement):
         editable = "-e " if self.editable else ""
         project_name = f"{self.project_name}" if self.project_name else ""
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
-        if self.path and not for_ireq and self.editable:
+        if self.path and not for_ireq and self.editable and not project_name:
             location = self.str_path
         else:
-            location = self.normalized_url
+            location = self.url
         marker = self._format_marker()
         if for_ireq and project_name:
             return f"{editable}{location}#egg={project_name}{extras}{marker}"
@@ -263,15 +268,24 @@ class FileRequirement(Requirement):
             delimiter = " @ " if project_name else ""
             return f"{editable}{project_name}{extras}{delimiter}{location}{marker}"
 
-    def as_candidate(self) -> Candidate:
-        if self.path:
-            return LocalCandidate(req=self)
-        else:
-            return RemoteCandidate(req=self)
+    def _parse_name_from_url(self) -> None:
+        parsed = urlparse.urlparse(self.url)
+        fragments = dict(urlparse.parse_qsl(parsed.fragment))
+        if "egg" in fragments:
+            egg_info = urlparse.unquote(fragments["egg"])
+            name, extras = _strip_extras(egg_info)
+            self.name = name
+            self.extras = extras
+        if not self.name:
+            filename = os.path.basename(url_without_fragments(self.url))
+            if filename.endswith(".whl"):
+                self.name, self.version = parse_name_version_from_wheel(filename)
 
-    def _parse_name_from_project_files(self) -> None:
+    def _parse_name_from_local(self) -> None:
         result = SetupReader.read_from_directory(self.path.absolute().as_posix())
         self.name = result["name"]
+        if not self.name:
+            raise RequirementError(f"The local path '{self.path}' is not installable.")
 
 
 class NamedRequirement(Requirement, PackageRequirement):
@@ -312,22 +326,14 @@ class VcsRequirement(FileRequirement):
         editable = "-e " if self.editable else ""
         return f"{editable}{self.vcs}+{self.url}{self._format_marker()}"
 
-    def as_candidate(self) -> Candidate:
-        return VcsCandidate(req=self)
-
     def _parse_url(self) -> None:
-        if self.name and self.repo:
-            return
         if self.url.startswith("git@"):
             self.url = "ssh://" + self.url[4:].replace(":", "/")
-        parsed = urlparse.urlparse(self.url)
-        fragments = dict(urlparse.parse_qsl(parsed.fragment))
-        if "egg" in fragments:
-            egg_info = urlparse.unquote(fragments["egg"])
-            name, extras = _strip_extras(egg_info)
-            self.name = name
-            self.extras = extras
-        self.repo = urlparse.urlunparse(parsed._replace(fragment=""))
+        if not self.name:
+            self._parse_name_from_url()
+        if not self.name:
+            raise RequirementError("VCS requirement must provide a 'egg=' fragment.")
+        self.repo = url_without_fragments(self.url)
 
     @staticmethod
     def _build_url_from_req_dict(name: str, url: str, req_dict: RequirementDict) -> str:
