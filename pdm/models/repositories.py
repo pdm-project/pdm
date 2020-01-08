@@ -3,12 +3,12 @@ from typing import List, Tuple
 
 import pip_shims
 
+from pdm.context import context
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.types import Source
 from pdm.utils import get_finder
-from pdm.context import context
 
 
 class BaseRepository:
@@ -52,19 +52,21 @@ class BaseRepository:
 
     def _get_dependencies_from_cache(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet]:
+    ) -> Tuple[List[str], str]:
         pass
 
     def _get_dependencies_from_metadata(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet]:
-        pass
+    ) -> Tuple[List[str], str]:
+        candidate.prepare_source()
+        deps = candidate.get_dependencies_from_metadata()
+        return deps
 
 
 class PyPIRepository(BaseRepository):
     def _get_dependencies_from_json(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet]:
+    ) -> Tuple[List[str], str]:
         pass
 
 

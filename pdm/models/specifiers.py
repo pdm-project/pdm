@@ -5,6 +5,12 @@ from packaging.specifiers import SpecifierSet
 from pdm.exceptions import InvalidPyVersion
 
 
+def get_specifier(version_str: str) -> SpecifierSet:
+    if not version_str or version_str == "*":
+        return SpecifierSet()
+    return SpecifierSet(version_str)
+
+
 def _parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
     try:
         return tuple(int(v) if v != "*" else v for v in version.split("."))

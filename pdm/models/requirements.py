@@ -1,22 +1,19 @@
-from pathlib import Path
-import re
 import os
-from typing import Any, Dict, Optional, Tuple
+import re
 import urllib.parse as urlparse
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
-from pkg_resources import (
-    Requirement as PackageRequirement,
-    RequirementParseError,
-    safe_name,
-)
-from packaging.markers import InvalidMarker
-from packaging.specifiers import SpecifierSet
 import pip_shims
+from packaging.markers import InvalidMarker
+from pkg_resources import Requirement as PackageRequirement
+from pkg_resources import RequirementParseError, safe_name
 
-from pdm.models.markers import get_marker
-from pdm.models.readers import SetupReader
-from pdm.types import RequirementDict
 from pdm.exceptions import RequirementError
+from pdm.models.markers import Marker, get_marker
+from pdm.models.readers import SetupReader
+from pdm.models.specifiers import PySpecSet, get_specifier
+from pdm.types import RequirementDict
 from pdm.utils import parse_name_version_from_wheel, url_without_fragments
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
@@ -31,12 +28,6 @@ def _strip_extras(line):
     else:
         extras = None
     return name, extras
-
-
-def get_specifier(version_str: str) -> SpecifierSet:
-    if not version_str or version_str == "*":
-        return SpecifierSet()
-    return SpecifierSet(version_str)
 
 
 class Requirement:
@@ -74,18 +65,26 @@ class Requirement:
     )
 
     def __init__(self, **kwargs):
+        self._marker = None
+        self.pyspecs = PySpecSet()
         for k, v in kwargs.items():
-            if k == "marker":
-                try:
-                    v = get_marker(v)
-                except InvalidMarker as e:
-                    raise RequirementError("Invalid marker: %s" % str(e)) from None
-            elif k == "specifier":
+            if k == "specifier":
                 v = get_specifier(v)
             setattr(self, k, v)
         if self.name and not self.project_name:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
+
+    @property
+    def marker(self) -> Optional[Marker]:
+        return self._marker
+
+    @marker.setter
+    def marker(self, value) -> None:
+        try:
+            self._marker = get_marker(value)
+        except InvalidMarker as e:
+            raise RequirementError("Invalid marker: %s" % str(e)) from None
 
     def __getattr__(self, attr: str) -> Any:
         if attr in self.attributes:
