@@ -3,15 +3,15 @@ Compatibility code
 """
 import os
 import atexit
+from contextlib import contextmanager
 import shutil
 import tempfile
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any
 import urllib.parse as parse
-from distlib.wheel import Wheel
-import pkg_resources
-from contextlib import contextmanager
 
+from distlib.wheel import Wheel
 from pip_shims.shims import InstallCommand, PackageFinder, get_package_finder
+from pip._internal.download import url_to_path
 
 from pdm.types import Source
 
@@ -89,17 +89,39 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
+def is_readonly_property(cls, name):
+    """Tell whether a attribute can't be setattr'ed."""
+    attr = getattr(cls, name, None)
+    return attr and isinstance(attr, property) and not attr.fset
+
+
+def join_list_with(items: List[Any], sep: Any) -> List[Any]:
+    new_items = []
+    for item in items:
+        new_items.extend([item, sep])
+    return new_items[:-1]
+
+
 @contextmanager
-def allow_all_markers():
-    """This is a monkey patch function that temporarily disables marker evaluation."""
-    from pip._vendor import pkg_resources as vendor_pkg
-
-    def evaluate_marker(text, extra=None):
-        return True
-
-    old_evaluate = pkg_resources.evaluate_marker
-    pkg_resources.evaluate_marker = evaluate_marker
-    vendor_pkg.evaluate_marker = evaluate_marker
-    yield
-    pkg_resources.evaluate_marker = old_evaluate
-    vendor_pkg = old_evaluate
+def unified_open_file(url, session):
+    try:
+        path = url_to_path(url)
+    except AssertionError:
+        # Remote URL
+        headers = {"Accept-Encoding": "identity"}
+        with session.get(url, headers=headers, stream=True) as resp:
+            try:
+                raw = getattr(resp, "raw", None)
+                result = raw if raw else resp
+                yield result
+            finally:
+                if raw:
+                    conn = getattr(raw, "_connection")
+                    if conn is not None:
+                        conn.close()
+                result.close()
+    else:
+        if os.path.isdir(path):
+            raise ValueError("Can't read content of a local directory.")
+        with open(path, 'rb') as fp:
+            yield fp

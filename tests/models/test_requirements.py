@@ -46,18 +46,18 @@ REQUIREMENTS = [
     (
         (FIXTURES / "projects/demo").as_posix(),
         ("demo", {"path": (FIXTURES / "projects/demo").as_posix()}),
-        "demo @ file://" + (FIXTURES / "projects/demo").as_posix(),
+        "demo @ file:///" + (FIXTURES / "projects/demo").as_posix(),
     ),
     (
         (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
         (
             "demo",
             {
-                "url": "file://"
+                "url": "file:///"
                 + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix()
             },
         ),
-        "demo @ file://"
+        "demo @ file:///"
         + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
     ),
 ]
@@ -80,7 +80,7 @@ def test_convert_req_dict_to_req_line(req, req_dict, result):
             "-e https://github.com/pypa/pip/archive/1.3.1.zip",
             "Editable requirement is only supported",
         ),
-        ("requests; os_name=>'nt'", "Invalid requirement"),
+        ("requests; os_name=>'nt'", "Parse error at \"'; os_nam"),
         ("./nonexist", r"The local path (.+)? does not exist"),
         ("./tests", r"The local path (.+)? is not installable"),
     ],

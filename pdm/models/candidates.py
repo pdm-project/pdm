@@ -1,5 +1,6 @@
 import os
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, Dict, List, TYPE_CHECKING
+import warnings
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
@@ -8,10 +9,13 @@ from pip_shims import shims
 from pkg_resources import safe_extra
 
 from pdm.context import context
-from pdm.exceptions import WheelBuildError, RequirementError
+from pdm.exceptions import WheelBuildError, RequirementError, ExtrasError
 from pdm.utils import cached_property, create_tracked_tempdir
-from pdm.models.markers import split_marker_element, Marker
-from pdm.models.requirements import Requirement
+from pdm.models.markers import Marker
+from pdm.models.requirements import Requirement, filter_requirements_with_extras
+
+if TYPE_CHECKING:
+    from pdm.models.repositories import BaseRepository
 
 vcs = shims.VcsSupport()
 
@@ -38,14 +42,23 @@ def get_source_dir() -> str:
 class Candidate:
     """A concrete candidate that can be downloaded and installed."""
 
-    def __init__(self, req, repository, name=None, version=None, link=None):
+    def __init__(
+        self,
+        req,  # type: Requirement
+        repository,  # type: BaseRepository
+        name=None,  # type: Optional[str]
+        version=None,  # type: Optional[str]
+        link=None  # type: shims.Link
+    ):
+        # type: (...) -> None
         self.req = req
         self.repository = repository
-        self.name = name
-        self.version = version
+        self.name = name or self.req.project_name
+        self.version = version or self.req.version
         if link is None:
             link = self.ireq.link
         self.link = link
+        self.hashes = None   # type: Optional[Dict[str, str]]
 
         self.wheel = None
         self.build_dir = None
@@ -90,7 +103,7 @@ class Candidate:
         return self.metadata
 
     def __repr__(self) -> str:
-        return f"<Candidate {self.name} {self.link.url}>"
+        return f"<Candidate {self.name} {self.version}>"
 
     def _make_pip_wheel_args(self) -> Dict[str, Any]:
         src_dir = self.ireq.source_dir or get_source_dir()
@@ -99,9 +112,7 @@ class Candidate:
         else:
             self.build_dir = create_tracked_tempdir(prefix="pdm-build")
         download_dir = context.cache("pkgs")
-        download_dir.mkdir(exist_ok=True)
         wheel_download_dir = context.cache("wheels")
-        wheel_download_dir.mkdir(exist_ok=True)
         return {
             "build_dir": self.build_dir,
             "src_dir": src_dir,
@@ -161,7 +172,13 @@ class Candidate:
                 self.wheel = Wheel(wheel_path)
 
     @classmethod
-    def from_installation_candidate(cls, candidate, req, repo):
+    def from_installation_candidate(
+        cls,
+        candidate,  # type: shims.InstallationCandidate
+        req,  # type: Requirement
+        repo,  # type: BaseRepository
+    ):
+        # type: (...) -> Candidate
         inst = cls(
             req,
             repo,
@@ -178,6 +195,7 @@ class Candidate:
         if self.req.editable:
             if not metadata:
                 return result
+            extras_in_metadata = []
             dep_map = self.ireq.get_dist()._build_dep_map()
             for extra, reqs in dep_map.items():
                 reqs = [Requirement.from_pkg_requirement(r) for r in reqs]
@@ -185,21 +203,31 @@ class Candidate:
                     result.extend(r.as_line() for r in reqs)
                 else:
                     new_extra, _, marker = extra.partition(":")
+                    extras_in_metadata.append(new_extra.strip())
                     if not new_extra.strip() or safe_extra(new_extra.strip()) in extras:
                         marker = Marker(marker) if marker else None
                         for r in reqs:
                             r.marker = marker
                             result.append(r.as_line())
+            extras_not_found = [e for e in extras if e not in extras_in_metadata]
+            if extras_not_found:
+                warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
         else:
-            for req in metadata.run_requires:
-                _r = Requirement.from_line(req)
-                if not _r.marker:
-                    result.append(req)
-                else:
-                    elements, rest = split_marker_element(str(_r.marker), "extra")
-                    _r.marker = rest
-                    if not elements or any(
-                        extra == e[1] for extra in extras for e in elements
-                    ):
-                        result.append(_r.as_line())
+            result = filter_requirements_with_extras(metadata.run_requires, extras)
         return result
+
+    @property
+    def requires_python(self) -> str:
+        requires_python = self.link.requires_python or ''
+        if not requires_python and self.metadata:
+            # For candidates fetched from PyPI simple API, requires_python is not available yet.
+            # Just allow all candidates, and dismatching candidates will be filtered out during resolving process.
+            try:
+                requires_python = self.metadata.requires_python
+            except AttributeError:
+                requires_python = self.metadata._legacy.requires_python
+            if not requires_python or requires_python == 'UNKNOWN':
+                requires_python = ""
+        if requires_python.isdigit():
+            requires_python = f'>={requires_python},<{int(requires_python) + 1}'
+        return requires_python

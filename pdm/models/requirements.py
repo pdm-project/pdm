@@ -2,19 +2,21 @@ import os
 import re
 import urllib.parse as urlparse
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Sequence, List
+import warnings
 
 import pip_shims
-from packaging.markers import InvalidMarker
-from pkg_resources import Requirement as PackageRequirement
-from pkg_resources import RequirementParseError, safe_name
+from pip._vendor.packaging.markers import InvalidMarker
+from pip._vendor.pkg_resources import Requirement as PackageRequirement
+from pip._vendor.pkg_resources import RequirementParseError, safe_name
+from pip._internal.download import url_to_path, path_to_url
 
-from pdm.exceptions import RequirementError
-from pdm.models.markers import Marker, get_marker
+from pdm.exceptions import RequirementError, ExtrasError
+from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.types import RequirementDict
-from pdm.utils import parse_name_version_from_wheel, url_without_fragments
+from pdm.utils import parse_name_version_from_wheel, url_without_fragments, is_readonly_property
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 
@@ -61,6 +63,7 @@ class Requirement:
         "url",
         "path",
         "index",
+        "version",
         "allow_prereleases",
     )
 
@@ -81,6 +84,7 @@ class Requirement:
 
     @marker.setter
     def marker(self, value) -> None:
+        # TODO: strip python requires
         try:
             self._marker = get_marker(value)
         except InvalidMarker as e:
@@ -158,6 +162,10 @@ class Requirement:
                 r[attr] = getattr(self, attr)
         return self.project_name, r
 
+    def copy(self) -> "Requirement":
+        kwargs = {k: getattr(self, k, None) for k in self.attributes if not is_readonly_property(self.__class__, k)}
+        return self.__class__(**kwargs)
+
     @property
     def is_named(self) -> bool:
         return isinstance(self, NamedRequirement)
@@ -208,6 +216,7 @@ class FileRequirement(Requirement):
         super().__init__(**kwargs)
         self.path = Path(self.path) if self.path else None
         self.str_path = self.path.as_posix() if self.path else None
+        self.version = None
         if self.path and not self.path.is_absolute():
             self.str_path = "./" + self.str_path
         self._parse_url()
@@ -229,11 +238,12 @@ class FileRequirement(Requirement):
     def _parse_url(self) -> None:
         if not self.url:
             if self.path:
-                self.url = f"file://{self.path.absolute().as_posix()}"
+                self.url = path_to_url(self.path.as_posix())
         else:
-            parsed = urlparse.urlparse(self.url)
-            if parsed.scheme == "file" and not parsed.netloc:
-                self.path = Path(parsed.path)
+            try:
+                self.path = Path(url_to_path(self.url))
+            except AssertionError:
+                pass
         self._parse_name_from_url()
 
     @property
@@ -341,3 +351,26 @@ class VcsRequirement(FileRequirement):
         if "subdirectory" in req_dict:
             fragments += f"&subdirectory={urlparse.quote(req_dict['subdirectory'])}"
         return f"{url}{ref}{fragments}"
+
+
+def filter_requirements_with_extras(requirment_lines: List[str], extras: Sequence[str]) -> List[str]:
+    result = []
+    extras_in_meta = []
+    for req in requirment_lines:
+        _r = Requirement.from_line(req)
+        if not _r.marker:
+            result.append(req)
+        else:
+            elements, rest = split_marker_element(str(_r.marker), "extra")
+            extras_in_meta.extend(e[1] for e in elements)
+            _r.marker = rest
+            if not elements or any(
+                extra == e[1] for extra in extras for e in elements
+            ):
+                result.append(_r.as_line())
+
+    extras_not_found = [e for e in extras if e not in extras_in_meta]
+    if extras_not_found:
+        warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
+
+    return result

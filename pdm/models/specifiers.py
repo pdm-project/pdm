@@ -1,11 +1,15 @@
+from functools import lru_cache
 from typing import List, Tuple, Union, Set
 
-from packaging.specifiers import SpecifierSet
+from pip._vendor.packaging.specifiers import SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
 
 
-def get_specifier(version_str: str) -> SpecifierSet:
+@lru_cache()
+def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
+    if isinstance(version_str, SpecifierSet):
+        return version_str
     if not version_str or version_str == "*":
         return SpecifierSet()
     return SpecifierSet(version_str)
@@ -22,27 +26,41 @@ def _parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
 
 def _bump_version(
     version: Tuple[Union[int, str], ...], index: int = -1
-) -> Tuple[int, int, int]:
+) -> Tuple[int, ...]:
     head, value = version[:index], version[index]
     assert isinstance(value, int)
     new_version = _complete_version((*head, value + 1))
     return new_version  # type: ignore
 
 
-def _complete_version(version, complete_with=0):
+def _complete_version(version: Tuple[int, ...], complete_with: int = 0) -> Tuple[int, ...]:
     assert len(version) <= 3
     return version + (3 - len(version)) * (complete_with,)
 
 
-def _version_part_match(valid_version, target_version):
+def _version_part_match(valid_version: Tuple[int, ...], target_version: Tuple[int, ...]) -> bool:
     return target_version[: len(valid_version)] == valid_version
 
 
-def _convert_to_version(version_tuple):
+def _convert_to_version(version_tuple: Tuple[Union[int, str], ...]) -> str:
     return ".".join(str(i) for i in version_tuple)
 
 
+def _restrict_versions_to_range(versions, lower, upper):
+    for version in versions:
+        try:
+            if version < lower:
+                continue
+            elif version >= upper:
+                break
+            else:  # lower <= version < upper
+                yield version
+        except TypeError:  # a wildcard match, count the version in.
+            yield version
+
+
 class PySpecSet(SpecifierSet):
+    # TODO: fetch from python.org and cache
     MAX_PY_VERSIONS = {
         (2,): 7,
         (2, 0): 1,
@@ -175,7 +193,7 @@ class PySpecSet(SpecifierSet):
             super().__init__(str(self))
 
     @property
-    def is_impossible(self):
+    def is_impossible(self) -> bool:
         if (
             self._lower_bound is self.MIN_VERSION
             or self._upper_bound is self.MAX_VERSION
@@ -184,7 +202,7 @@ class PySpecSet(SpecifierSet):
         return self._lower_bound >= self._upper_bound
 
     @property
-    def is_allow_all(self):
+    def is_allow_all(self) -> bool:
         if self.is_impossible:
             return False
         return (
@@ -193,7 +211,7 @@ class PySpecSet(SpecifierSet):
             and not self._excludes
         )
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return not self.is_allow_all
 
     def __str__(self) -> str:
@@ -227,6 +245,7 @@ class PySpecSet(SpecifierSet):
         instance._excludes = self._excludes[:]
         return instance
 
+    @lru_cache()
     def __and__(self, other: "PySpecSet") -> "PySpecSet":
         if any(s.is_impossible for s in (self, other)):
             return ImpossiblePySpecSet()
@@ -241,6 +260,7 @@ class PySpecSet(SpecifierSet):
         rv._merge_bounds_and_excludes(lower, upper, excludes)
         return rv
 
+    @lru_cache()
     def __or__(self, other: "PySpecSet") -> "PySpecSet":
         if self.is_impossible:
             return other.copy()
@@ -303,10 +323,60 @@ class PySpecSet(SpecifierSet):
                     prev = _bump_version(prev)
                 break
 
+    @lru_cache()
+    def is_superset(self, other: Union[str, SpecifierSet]) -> bool:
+        if self.is_impossible:
+            return False
+        if self.is_allow_all:
+            return True
+        other = type(self)(str(other))
+        if self._lower_bound > other._lower_bound or self._upper_bound < other._upper_bound:
+            return False
+        valid_excludes = set(_restrict_versions_to_range(self._excludes, other._lower_bound, other._upper_bound))
+        return valid_excludes <= set(other._excludes)
+
+    @lru_cache()
+    def is_subset(self, other: Union[str, SpecifierSet]) -> bool:
+        if self.is_impossible:
+            return False
+        other = type(self)(str(other))
+        if other.is_allow_all:
+            return True
+        if self._lower_bound < other._lower_bound or self._upper_bound > other._upper_bound:
+            return False
+        valid_excludes = set(_restrict_versions_to_range(other._excludes, self._lower_bound, self._upper_bound))
+        return valid_excludes <= set(self._excludes)
+
+    def as_marker_string(self) -> str:
+        if self.is_allow_all:
+            return ''
+        result = []
+        excludes = []
+        full_excludes = []
+        for spec in self:
+            op, version = spec.operator, spec.version
+            if len(version.split('.')) < 3:
+                key = 'python_version'
+            else:
+                key = 'python_full_version'
+                if version[-2:] == '.*':
+                    version = version[:-2]
+                    key = 'python_version'
+            if op == '!=':
+                if key == 'python_version':
+                    excludes.append(version)
+                else:
+                    full_excludes.append(version)
+            else:
+                result.append(f"{key}{op}{version!r}")
+        if excludes:
+            result.append('python_version not in {!r}'.format(', '.join(sorted(excludes))))
+        if full_excludes:
+            result.append('python_full_version not in {!r}'.format(', '.join(sorted(full_excludes))))
+        return ' and '.join(result)
+
 
 class ImpossiblePySpecSet(PySpecSet):
-    def __init__(self, version_str: str = "", analyze: bool = True):
-        pass
 
     @property
     def is_impossible(self):

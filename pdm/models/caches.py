@@ -1,17 +1,102 @@
+import hashlib
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING, Optional
+
+import pip_shims
+from pip._vendor import requests
+
+from pdm.exceptions import CorruptedCacheError
+from pdm.types import CandidateInfo
+from pdm.utils import unified_open_file
+
+if TYPE_CHECKING:
+    from pdm.models.candidates import Candidate
 
 
-class _JSONCache:
+class CandidateInfoCache:
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
         self._cache = {}  # type: Dict[str, Any]
         self._read_cache()
 
     def _read_cache(self) -> None:
+        if not self.cache_file.exists():
+            self._cache = {}
+            return
         with self.cache_file.open() as fp:
-            self._cache = json.load(fp)
+            try:
+                self._cache = json.load(fp)
+            except json.JSONDecodeError:
+                raise CorruptedCacheError("The dependencies cache seems to be broken.")
 
-    def get(self, key: str) -> Any:
+    def _write_cache(self) -> None:
+        with self.cache_file.open("w") as fp:
+            json.dump(self._cache, fp)
+
+    @staticmethod
+    def _get_key(candidate):
+        # type: (Candidate) -> str
+        # Name and version are set when dependencies are resolved, so use them for cache key.
+        # Local directories won't be cached
+        if not candidate.name or not candidate.version:
+            raise KeyError
+        extras = "[{}]".format(','.join(sorted(candidate.req.extras))) if candidate.req.extras else ""
+        return f"{candidate.name}{extras}-{candidate.version}"
+
+    def get(self, candidate):
+        # type: (Candidate) -> CandidateInfo
+        key = self._get_key(candidate)
         return self._cache[key]
+
+    def set(self, candidate, value):
+        # type: (Candidate, CandidateInfo) -> None
+        key = self._get_key(candidate)
+        self._cache[key] = value
+        self._write_cache()
+
+    def delete(self, candidate):
+        # type: (Candidate) -> None
+        try:
+            del self._cache[self._get_key(candidate)]
+        except KeyError:
+            pass
+        self._write_cache()
+
+    def clear(self) -> None:
+        self._cache.clear()
+        self._write_cache()
+
+
+class HashCache(pip_shims.SafeFileCache):
+
+    """Caches hashes of PyPI artifacts so we do not need to re-download them.
+
+    Hashes are only cached when the URL appears to contain a hash in it and the
+    cache key includes the hash value returned from the server). This ought to
+    avoid ssues where the location on the server changes.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.session = None  # type: Optional[requests.Session]
+        super(HashCache, self).__init__(*args, **kwargs)
+
+    def get_hash(self, link: pip_shims.Link) -> str:
+        # If there is no link hash (i.e., md5, sha256, etc.), we don't want
+        # to store it.
+        hash_value = self.get(link.url)
+        if not hash_value:
+            if link.hash:
+                hash_value = f"{link.hash_name}:{link.hash}"
+            else:
+                hash_value = self._get_file_hash(link)
+            hash_value = hash_value.encode()
+            self.set(link.url, hash_value)
+        return hash_value.decode('utf8')
+
+    def _get_file_hash(self, link: pip_shims.Link) -> str:
+        h = hashlib.new(pip_shims.FAVORITE_HASH)
+        with unified_open_file(link.url, self.session) as fp:
+            for chunk in iter(lambda: fp.read(8096), b""):
+                h.update(chunk)
+        return ":".join([h.name, h.hexdigest()])
