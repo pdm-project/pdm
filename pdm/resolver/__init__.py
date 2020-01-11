@@ -99,10 +99,20 @@ def _calculate_markers_and_pyspecs(traces, dependencies, pythons):
     return all_metasets
 
 
+def format_lockfile(mapping, fetched_dependencies, summary_collection):
+    result = []
+    for k, v in mapping.items():
+        base = v.as_lockfile_entry()
+        deps = dict(r.as_req_dict() for r in fetched_dependencies[k].values())
+        new_data = {"summary": summary_collection[k], **base, "dependencies": deps}
+        result.append(new_data)
+    return result
+
+
 def lock(requirements, repository, requires_python, allow_prereleases):
     reqs = [Requirement.from_line(line) for line in requirements]
     provider = RepositoryProvider(repository, requires_python, allow_prereleases)
-    reporter = SimpleReporter()
+    reporter = SimpleReporter(reqs)
     resolver = Resolver(provider, reporter)
     state = resolver.resolve(reqs)
     provider.fetched_dependencies[None] = {provider.identify(r): r for r in reqs}
@@ -122,4 +132,6 @@ def lock(requirements, repository, requires_python, allow_prereleases):
             state.mapping[key].marker = join_metaset(metaset)
             repository.get_hashes(state.mapping[key])
 
-    return state
+    data = format_lockfile(state.mapping, provider.fetched_dependencies, provider.summary_collection)
+
+    return data

@@ -9,7 +9,7 @@ import pip_shims
 from pip._vendor.packaging.markers import InvalidMarker
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
-from pip._internal.download import url_to_path, path_to_url
+from pip_shims import url_to_path, path_to_url
 
 from pdm.exceptions import RequirementError, ExtrasError
 from pdm.models.markers import Marker, get_marker, split_marker_element
@@ -77,6 +77,7 @@ class Requirement:
         if self.name and not self.project_name:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
+        self.from_section = 'default'
 
     @property
     def marker(self) -> Optional[Marker]:

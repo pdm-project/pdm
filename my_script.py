@@ -5,6 +5,7 @@ from pdm.models.specifiers import PySpecSet
 from pdm.context import context
 from resolvelib import Resolver
 from pdm.resolver import lock
+import json
 
 
 class FakeProject:
@@ -18,7 +19,5 @@ context.init(FakeProject())
 source = {"url": "https://pypi.org/simple", "index": "pypi", "verify_ssl": True}
 repo = PyPIRepository([source])
 
-state = lock(['pytest'], repo, FakeProject.python_requires, False)
-for k, v in state.mapping.items():
-    print(v, v.marker)
-print(state.mapping['pytest'].hashes)
+data = lock(['tensorflow'], repo, FakeProject.python_requires, False)
+json.dumps(data, indent=2)

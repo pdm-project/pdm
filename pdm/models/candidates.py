@@ -59,6 +59,7 @@ class Candidate:
             link = self.ireq.link
         self.link = link
         self.hashes = None   # type: Optional[Dict[str, str]]
+        self.marker = None
 
         self.wheel = None
         self.build_dir = None
@@ -231,3 +232,22 @@ class Candidate:
         if requires_python.isdigit():
             requires_python = f'>={requires_python},<{int(requires_python) + 1}'
         return requires_python
+
+    def as_lockfile_entry(self) -> Dict[str, Any]:
+        result = {
+            "name": self.name,
+            "section": self.req.from_section,
+            "version": str(self.version),
+            "extras": self.req.extras,
+            "marker": str(self.marker) if self.marker else None,
+            "editable": self.req.editable
+        }
+        if self.req.is_vcs:
+            result.update({
+                self.req.vcs: self.req.url,
+                "revision": self.revision,
+            })
+        if not self.req.is_named:
+            result.update(url=self.req.url)
+        result.update(hashes=self.hashes)
+        return {k: v for k, v in result.items() if v}

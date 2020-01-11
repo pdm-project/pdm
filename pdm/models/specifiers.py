@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List, Tuple, Union, Set
+from typing import List, Tuple, Union, Set, Optional
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -374,6 +374,14 @@ class PySpecSet(SpecifierSet):
         if full_excludes:
             result.append('python_full_version not in {!r}'.format(', '.join(sorted(full_excludes))))
         return ' and '.join(result)
+
+    def max_major_minor_version(self) -> Optional[Tuple[int, int]]:
+        if self._upper_bound == self.MAX_VERSION:
+            return None
+        if self._upper_bound[-1] == 0:
+            return self._upper_bound[0], self._upper_bound[1] - 1
+        else:
+            return self._upper_bound[:2]
 
 
 class ImpossiblePySpecSet(PySpecSet):

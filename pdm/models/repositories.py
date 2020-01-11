@@ -11,7 +11,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.models.specifiers import PySpecSet, SpecifierSet
 from pdm.types import Source, CandidateInfo
-from pdm.utils import get_finder
+from pdm.utils import get_finder, _allow_all_wheels
 
 
 def cache_result(
@@ -32,9 +32,19 @@ class BaseRepository:
         self._hash_cache = context.make_hash_cache()
 
     @contextmanager
-    def get_finder(self, sources: Optional[List[Source]] = None) -> pip_shims.PackageFinder:
+    def get_finder(
+        self, sources: Optional[List[Source]] = None,
+        requires_python: Optional[PySpecSet] = None,
+        ignore_requires_python: bool = False
+    ) -> pip_shims.PackageFinder:
         sources = sources or self.sources
-        finder = get_finder(sources, context.cache_dir.as_posix())
+
+        finder = get_finder(
+            sources,
+            context.cache_dir.as_posix(),
+            requires_python.max_major_minor_version() if requires_python else None,
+            ignore_requires_python
+        )
         yield finder
         finder.session.close()
 
@@ -101,10 +111,11 @@ class BaseRepository:
             return
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
-        matching_candidates = self.find_matches(req, allow_all=True)
+        with _allow_all_wheels():
+            matching_candidates = self.find_matches(req, allow_all=True)
         with self.get_finder() as finder:
             self._hash_cache.session = finder.session
-            candidate.hashes = {c.link.url: self._hash_cache.get_hash(c.link) for c in matching_candidates}
+            candidate.hashes = {c.link.filename: self._hash_cache.get_hash(c.link) for c in matching_candidates}
 
 
 class PyPIRepository(BaseRepository):
