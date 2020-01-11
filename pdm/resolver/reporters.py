@@ -32,5 +32,5 @@ class SimpleReporter(BaseReporter):
         """Called before the resolution ends successfully.
         """
         print("End resolving...")
-        elapsed = time.time() - self.start_at
-        print("Cost time:", elapsed)
+        # elapsed = time.time() - self.start_at
+        # print("Cost time:", elapsed)

@@ -1,11 +1,8 @@
 import os
 
 import pytest
-
-from pdm.models.requirements import Requirement
-from pdm.models.requirements import RequirementError
+from pdm.models.requirements import Requirement, RequirementError
 from tests import FIXTURES
-
 
 FILE_PREFIX = "{FILE_PREFIX}" if os.name == "nt" else "file://"
 

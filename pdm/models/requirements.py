@@ -2,37 +2,25 @@ import os
 import re
 import urllib.parse as urlparse
 import warnings
-
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Tuple
-
-from pip._vendor.packaging.markers import InvalidMarker
-from pip._vendor.pkg_resources import Requirement as PackageRequirement
-from pip._vendor.pkg_resources import RequirementParseError
-from pip._vendor.pkg_resources import safe_name
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import pip_shims
+from pip._vendor.packaging.markers import InvalidMarker
+from pip._vendor.pkg_resources import Requirement as PackageRequirement
+from pip._vendor.pkg_resources import RequirementParseError, safe_name
+from pip_shims import path_to_url, url_to_path
 
-from pdm.exceptions import ExtrasError
-from pdm.exceptions import RequirementError
-from pdm.models.markers import Marker
-from pdm.models.markers import get_marker
-from pdm.models.markers import split_marker_element
+from pdm.exceptions import ExtrasError, RequirementError
+from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
-from pdm.models.specifiers import PySpecSet
-from pdm.models.specifiers import get_specifier
+from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.types import RequirementDict
-from pdm.utils import is_readonly_property
-from pdm.utils import parse_name_version_from_wheel
-from pdm.utils import url_without_fragments
-from pip_shims import path_to_url
-from pip_shims import url_to_path
-
+from pdm.utils import (
+    is_readonly_property,
+    parse_name_version_from_wheel,
+    url_without_fragments,
+)
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 
@@ -94,6 +82,8 @@ class Requirement:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
         self.from_section = "default"
+        self.marker_no_python = None  # type: Optional[Marker]
+        self.requires_python = PySpecSet()  # type: PySpecSet
 
     @property
     def marker(self) -> Optional[Marker]:
@@ -101,9 +91,12 @@ class Requirement:
 
     @marker.setter
     def marker(self, value) -> None:
-        # TODO: strip python requires
         try:
-            self._marker = get_marker(value)
+            m = self._marker = get_marker(value)
+            if not m:
+                self.marker_no_python, self.requires_python = None, PySpecSet()
+            else:
+                self.marker_no_python, self.requires_python = m.split_pyspec()
         except InvalidMarker as e:
             raise RequirementError("Invalid marker: %s" % str(e)) from None
 
@@ -375,20 +368,30 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirment_lines: List[str], extras: Sequence[str]
+    requirment_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
+    extras: Sequence[str],
 ) -> List[str]:
     result = []
     extras_in_meta = []
     for req in requirment_lines:
-        _r = Requirement.from_line(req)
-        if not _r.marker:
-            result.append(req)
+        if isinstance(req, dict):
+            if req.get("extra"):
+                extras_in_meta.append(req["extra"])
+            if not req.get("extra") or req.get("extra") in extras:
+                marker = f"; {req['environment']}" if req.get("environment") else ""
+                result.extend(f"{line}{marker}" for line in req.get("requires", []))
         else:
-            elements, rest = split_marker_element(str(_r.marker), "extra")
-            extras_in_meta.extend(e[1] for e in elements)
-            _r.marker = rest
-            if not elements or any(extra == e[1] for extra in extras for e in elements):
-                result.append(_r.as_line())
+            _r = Requirement.from_line(req)
+            if not _r.marker:
+                result.append(req)
+            else:
+                elements, rest = split_marker_element(str(_r.marker), "extra")
+                extras_in_meta.extend(e[1] for e in elements)
+                _r.marker = rest
+                if not elements or any(
+                    extra == e[1] for extra in extras for e in elements
+                ):
+                    result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
     if extras_not_found:

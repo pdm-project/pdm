@@ -1,20 +1,14 @@
 import hashlib
 import json
-
 from pathlib import Path
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import Dict
-from typing import Optional
-
-from pip._vendor import requests
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import pip_shims
+from pip._vendor import requests
 
 from pdm.exceptions import CorruptedCacheError
 from pdm.types import CandidateInfo
 from pdm.utils import unified_open_file
-
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate

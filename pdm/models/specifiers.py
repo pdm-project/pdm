@@ -1,9 +1,6 @@
+import re
 from functools import lru_cache
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Union
+from typing import List, Optional, Set, Tuple, Union
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -20,11 +17,13 @@ def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
 
 
 def _parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
+    version = re.sub(r"(?<!\.)\*", ".*", version)
     try:
         return tuple(int(v) if v != "*" else v for v in version.split("."))
     except ValueError:
         raise InvalidPyVersion(
-            "Prereleases or postreleases are not supported for python version"
+            f"{version}: Prereleases or postreleases are not supported "
+            "for python version specifers."
         )
 
 

@@ -1,11 +1,7 @@
 import copy
 import operator
-
 from functools import reduce
-from typing import Iterable
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Any, Iterable, Optional, Tuple, Union
 
 from pip._vendor.packaging.markers import Marker as PackageMarker
 
@@ -20,7 +16,7 @@ class Marker(PackageMarker):
         return inst
 
     def __and__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None:
+        if other is None or self == other:
             return self
         lhs = f"({self})" if "or" in self._markers else str(self)
         rhs = f"({other})" if "or" in other._markers else str(other)
@@ -28,7 +24,7 @@ class Marker(PackageMarker):
         return type(self)(marker_str)
 
     def __rand__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None:
+        if other is None or self == other:
             return self
         rhs = f"({self})" if "or" in self._markers else str(self)
         lhs = f"({other})" if "or" in other._markers else str(other)
@@ -36,16 +32,21 @@ class Marker(PackageMarker):
         return type(self)(marker_str)
 
     def __or__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None:
+        if other is None or self == other:
             return self
         marker_str = f"{self} or {other}"
         return type(self)(marker_str)
 
     def __ror__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None:
+        if other is None or self == other:
             return self
         marker_str = f"{other} or {self}"
         return type(self)(marker_str)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, PackageMarker):
+            return False
+        return str(self) == str(other)
 
     def split_pyspec(self) -> Tuple[Optional["Marker"], PySpecSet]:
         """Split `python_version` and `python_full_version` from marker string"""
@@ -134,7 +135,18 @@ def _build_pyspec_from_marker(markers):
                     op = ">="
                 elif op == "==":
                     version += ".*"
-            pyspec = PySpecSet(f"{op}{version}")
+                elif op in ("in", "not in"):
+                    version = " ".join(v + ".*" for v in version.split())
+            if op == "in":
+                pyspec = reduce(
+                    operator.or_, (PySpecSet(f"=={v}") for v in version.split())
+                )
+            elif op == "not in":
+                pyspec = reduce(
+                    operator.and_, (PySpecSet(f"!={v}") for v in version.split())
+                )
+            else:
+                pyspec = PySpecSet(f"{op}{version}")
             groups[-1] = groups[-1] & pyspec
         else:
             assert marker in ("and", "or")

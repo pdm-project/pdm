@@ -1,28 +1,18 @@
 import os
 import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-
-from pkg_resources import safe_extra
+from pip._vendor.pkg_resources import safe_extra
+from pip_shims import shims
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
 from distlib.wheel import Wheel
 from pdm.context import context
-from pdm.exceptions import ExtrasError
-from pdm.exceptions import RequirementError
-from pdm.exceptions import WheelBuildError
+from pdm.exceptions import ExtrasError, RequirementError, WheelBuildError
 from pdm.models.markers import Marker
-from pdm.models.requirements import Requirement
-from pdm.models.requirements import filter_requirements_with_extras
-from pdm.utils import cached_property
-from pdm.utils import create_tracked_tempdir
-from pip_shims import shims
-
+from pdm.models.requirements import Requirement, filter_requirements_with_extras
+from pdm.utils import _allow_all_wheels, cached_property, create_tracked_tempdir
 
 if TYPE_CHECKING:
     from pdm.models.repositories import BaseRepository
@@ -31,7 +21,7 @@ vcs = shims.VcsSupport()
 
 
 def get_sdist(ireq: shims.InstallRequirement) -> Optional[EggInfoDistribution]:
-    egg_info = ireq.egg_info_path
+    egg_info = ireq.metadata_directory
     return EggInfoDistribution(egg_info) if egg_info else None
 
 
@@ -99,7 +89,7 @@ class Candidate:
                     "Editable installation is only supported for "
                     "local directory and VCS location."
                 )
-            ireq.run_egg_info()
+            ireq.prepare_metadata()
             sdist = get_sdist(ireq)
             self.metadata = sdist.metadata if sdist else None
         else:
@@ -135,7 +125,9 @@ class Candidate:
         """A local candidate has already everything in local, no need to download."""
         kwargs = self._make_pip_wheel_args()
         with self.repository.get_finder() as finder:
-            self.ireq.populate_link(finder, False, False)
+            with _allow_all_wheels():
+                # temporarily allow all wheels to get a link.
+                self.ireq.populate_link(finder, False, False)
             if not self.req.editable and not self.req.name:
                 self.ireq.source_dir = kwargs["build_dir"]
             else:
@@ -161,9 +153,9 @@ class Candidate:
         if not self.req.name:
             # Name is not available for a tarball distribution. Get the package name
             # from package's egg info.
-            # `run_egg_info()` won't work if there is a `req` attribute available.
+            # `prepare_metadata()` won't work if there is a `req` attribute available.
             self.ireq.req = None
-            self.ireq.run_egg_info()
+            self.ireq.prepare_metadata()
             self.req.name = self.ireq.metadata["Name"]
             self.ireq.req = self.req
 
@@ -173,9 +165,7 @@ class Candidate:
                 finder=finder, session=finder.session, **kwargs
             ) as preparer:
                 wheel_cache = context.make_wheel_cache()
-                builder = shims.WheelBuilder(
-                    finder=finder, preparer=preparer, wheel_cache=wheel_cache
-                )
+                builder = shims.WheelBuilder(preparer=preparer, wheel_cache=wheel_cache)
                 output_dir = create_tracked_tempdir(prefix="pdm-ephem")
                 wheel_path = builder._build_one(self.ireq, output_dir)
                 if not wheel_path or not os.path.exists(wheel_path):
@@ -237,7 +227,9 @@ class Candidate:
             try:
                 requires_python = self.metadata.requires_python
             except AttributeError:
-                requires_python = self.metadata._legacy.requires_python
+                requires_python = getattr(
+                    self.metadata._legacy, "requires_python", "UNKNOWN"
+                )
             if not requires_python or requires_python == "UNKNOWN":
                 requires_python = ""
         if requires_python.isdigit():
@@ -249,7 +241,7 @@ class Candidate:
             "name": self.name,
             "section": self.req.from_section,
             "version": str(self.version),
-            "extras": self.req.extras,
+            "extras": sorted(self.req.extras or ()),
             "marker": str(self.marker) if self.marker else None,
             "editable": self.req.editable,
         }
@@ -257,5 +249,4 @@ class Candidate:
             result.update({self.req.vcs: self.req.url, "revision": self.revision})
         if not self.req.is_named:
             result.update(url=self.req.url)
-        result.update(hashes=self.hashes)
         return {k: v for k, v in result.items() if v}

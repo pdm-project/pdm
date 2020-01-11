@@ -1,26 +1,17 @@
 import sys
-
 from contextlib import contextmanager
 from functools import wraps
-from typing import Callable
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Callable, List, Optional, Tuple
 
 import pip_shims
 
 from pdm.context import context
-from pdm.exceptions import CandidateInfoNotFound
-from pdm.exceptions import CorruptedCacheError
+from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement
-from pdm.models.requirements import filter_requirements_with_extras
-from pdm.models.specifiers import PySpecSet
-from pdm.models.specifiers import SpecifierSet
-from pdm.types import CandidateInfo
-from pdm.types import Source
-from pdm.utils import _allow_all_wheels
-from pdm.utils import get_finder
+from pdm.models.requirements import Requirement, filter_requirements_with_extras
+from pdm.models.specifiers import PySpecSet, SpecifierSet
+from pdm.types import CandidateInfo, Source
+from pdm.utils import _allow_all_wheels, get_finder
 
 
 def cache_result(
@@ -208,7 +199,7 @@ class PyPIRepository(BaseRepository):
         if allow_prereleases is None:
             allow_prereleases = requirement.allow_prereleases
 
-        with self.get_finder(sources) as finder:
+        with self.get_finder(sources) as finder, _allow_all_wheels():
             cans = [
                 Candidate.from_installation_candidate(c, requirement, self)
                 for c in finder.find_all_candidates(requirement.project_name)
@@ -219,7 +210,7 @@ class PyPIRepository(BaseRepository):
                 for c in cans
                 if requirement.specifier.contains(c.version, allow_prereleases)
             ),
-            key=lambda c: c.version,
+            key=lambda c: (c.version, c.is_wheel),
         )
         if not allow_all:
             sorted_cans = [

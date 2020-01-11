@@ -1,11 +1,13 @@
 import copy
+import time
 
-from pdm.models.markers import PySpecSet
-from pdm.models.markers import join_metaset
+import tomlkit
+from pdm.models.markers import PySpecSet, join_metaset
 from pdm.models.requirements import Requirement
 from pdm.resolver.providers import RepositoryProvider
 from pdm.resolver.reporters import SimpleReporter
 from resolvelib import Resolver
+from vistir.contextmanagers import atomic_open_for_write
 
 
 def _trace_visit_vertex(graph, current, target, visited, path, paths):
@@ -62,7 +64,7 @@ def _build_marker_and_pyspec(dependencies, pythons, key, trace, all_metasets):
     for parent, parent_metaset in all_parent_metasets.items():
         r = dependencies[parent][key]
         python = pythons[key]
-        marker, pyspec = r.marker.split_pyspec() if r.marker else (None, PySpecSet())
+        marker, pyspec = r.marker_no_python, r.requires_python
         pyspec = python & pyspec
         # Use 'and' to connect markers inherited from parent.
         child_marker = (
@@ -102,19 +104,46 @@ def _calculate_markers_and_pyspecs(traces, dependencies, pythons):
 
 
 def format_lockfile(mapping, fetched_dependencies, summary_collection):
-    result = []
+    packages = tomlkit.aot()
+    metadata = tomlkit.table()
     for k, v in mapping.items():
-        base = v.as_lockfile_entry()
-        deps = dict(r.as_req_dict() for r in fetched_dependencies[k].values())
-        new_data = {"summary": summary_collection[k], **base, "dependencies": deps}
-        result.append(new_data)
-    return result
+        base = tomlkit.table()
+        base.update(v.as_lockfile_entry())
+        base.add("summary", summary_collection[k])
+        deps = tomlkit.table()
+        for r in fetched_dependencies[k].values():
+            name, req = r.as_req_dict()
+            if getattr(req, "items", None) is not None:
+                inline = tomlkit.inline_table()
+                inline.update(req)
+                deps.add(name, inline)
+            else:
+                deps.add(name, req)
+        base.add("dependencies", deps)
+        packages.append(base)
+        if v.hashes:
+            key = f"{k} {v.version}"
+            metadata.add(key, tomlkit.array())
+            for filename, hash_value in v.hashes.items():
+                inline = tomlkit.inline_table()
+                inline.update({"file": filename, "hash": hash_value})
+                metadata[key].append(inline)
+    doc = tomlkit.document()
+    doc.update({"package": packages, "metadata": metadata})
+    return doc
+
+
+def write_lockfile(toml_data):
+
+    with atomic_open_for_write("pdm.lock") as fp:
+        fp.write(tomlkit.dumps(toml_data))
 
 
 def lock(requirements, repository, requires_python, allow_prereleases):
     reqs = [Requirement.from_line(line) for line in requirements]
     provider = RepositoryProvider(repository, requires_python, allow_prereleases)
     reporter = SimpleReporter(reqs)
+    start = time.time()
     resolver = Resolver(provider, reporter)
     state = resolver.resolve(reqs)
     provider.fetched_dependencies[None] = {provider.identify(r): r for r in reqs}
@@ -138,5 +167,7 @@ def lock(requirements, repository, requires_python, allow_prereleases):
     data = format_lockfile(
         state.mapping, provider.fetched_dependencies, provider.summary_collection
     )
+    write_lockfile(data)
+    print("total time cost: {} s".format(time.time() - start))
 
     return data

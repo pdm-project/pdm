@@ -8,24 +8,15 @@ import os
 import shutil
 import tempfile
 import urllib.parse as parse
-
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+
+from pip_shims import Wheel as PipWheel
+from pip_shims.backports import get_session, resolve_possible_shim
+from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
 
 from distlib.wheel import Wheel
 from pdm.types import Source
-from pip_shims import Wheel as PipWheel
-from pip_shims.backports import get_session
-from pip_shims.backports import resolve_possible_shim
-from pip_shims.shims import InstallCommand
-from pip_shims.shims import PackageFinder
-from pip_shims.shims import TargetPython
-from pip_shims.shims import url_to_path
-
 
 if TYPE_CHECKING:
     from pip_shims.backports import (

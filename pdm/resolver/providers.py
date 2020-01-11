@@ -1,7 +1,4 @@
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Dict, List, Optional, Union
 
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
@@ -49,7 +46,7 @@ class RepositoryProvider(AbstractProvider):
         )
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
-        if not candidate.version:
+        if not candidate.version or not requirement.is_named:
             return True
         return requirement.specifier.contains(
             candidate.version
@@ -57,8 +54,21 @@ class RepositoryProvider(AbstractProvider):
 
     def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
         deps, requires_python, summary = self.repository.get_dependencies(candidate)
+
+        # Filter out incompatible dependencies(e.g. functools32) early so that
+        # we don't get errors when building wheels.
+        valid_deps = [
+            dep
+            for dep in deps
+            if not (
+                dep.requires_python & requires_python & self.requires_python
+            ).is_impossible
+        ]
+
         candidate_key = self.identify(candidate.req)
-        self.fetched_dependencies[candidate_key] = {self.identify(r): r for r in deps}
+        self.fetched_dependencies[candidate_key] = {
+            self.identify(r): r for r in valid_deps
+        }
         self.summary_collection[candidate_key] = summary
         self.requires_python_collection[candidate_key] = requires_python
-        return deps
+        return valid_deps

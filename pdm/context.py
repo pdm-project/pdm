@@ -1,12 +1,11 @@
 import hashlib
-
 from functools import wraps
 from pathlib import Path
 
-from pdm.exceptions import ProjectNotInitialized
-from pdm.models.caches import CandidateInfoCache
-from pdm.models.caches import HashCache
 from pip_shims import shims
+
+from pdm.exceptions import ProjectNotInitialized
+from pdm.models.caches import CandidateInfoCache, HashCache
 
 
 def require_initialize(func):
