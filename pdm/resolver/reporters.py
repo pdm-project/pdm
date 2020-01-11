@@ -1,5 +1,6 @@
-from resolvelib.reporters import BaseReporter
 import time
+
+from resolvelib.reporters import BaseReporter
 
 
 class SimpleReporter(BaseReporter):
@@ -9,7 +10,7 @@ class SimpleReporter(BaseReporter):
 
     @staticmethod
     def _print_title(title):
-        print('=' * 20 + ' ' + title + ' ' + '=' * 20)
+        print("=" * 20 + " " + title + " " + "=" * 20)
 
     def starting(self):
         """Called before the resolution actually starts.

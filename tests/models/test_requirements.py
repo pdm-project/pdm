@@ -1,7 +1,13 @@
+import os
+
 import pytest
 
-from pdm.models.requirements import Requirement, RequirementError
+from pdm.models.requirements import Requirement
+from pdm.models.requirements import RequirementError
 from tests import FIXTURES
+
+
+FILE_PREFIX = "{FILE_PREFIX}" if os.name == "nt" else "file://"
 
 REQUIREMENTS = [
     ("requests", ("requests", "*"), None),
@@ -46,18 +52,18 @@ REQUIREMENTS = [
     (
         (FIXTURES / "projects/demo").as_posix(),
         ("demo", {"path": (FIXTURES / "projects/demo").as_posix()}),
-        "demo @ file:///" + (FIXTURES / "projects/demo").as_posix(),
+        f"demo @ {FILE_PREFIX}" + (FIXTURES / "projects/demo").as_posix(),
     ),
     (
         (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
         (
             "demo",
             {
-                "url": "file:///"
+                "url": FILE_PREFIX
                 + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix()
             },
         ),
-        "demo @ file:///"
+        f"demo @ {FILE_PREFIX}"
         + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
     ),
 ]

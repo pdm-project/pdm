@@ -1,14 +1,20 @@
 import hashlib
 import json
+
 from pathlib import Path
-from typing import Dict, Any, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Dict
+from typing import Optional
+
+from pip._vendor import requests
 
 import pip_shims
-from pip._vendor import requests
 
 from pdm.exceptions import CorruptedCacheError
 from pdm.types import CandidateInfo
 from pdm.utils import unified_open_file
+
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
@@ -37,11 +43,15 @@ class CandidateInfoCache:
     @staticmethod
     def _get_key(candidate):
         # type: (Candidate) -> str
-        # Name and version are set when dependencies are resolved, so use them for cache key.
-        # Local directories won't be cached
+        # Name and version are set when dependencies are resolved,
+        # so use them for cache key. Local directories won't be cached.
         if not candidate.name or not candidate.version:
             raise KeyError
-        extras = "[{}]".format(','.join(sorted(candidate.req.extras))) if candidate.req.extras else ""
+        extras = (
+            "[{}]".format(",".join(sorted(candidate.req.extras)))
+            if candidate.req.extras
+            else ""
+        )
         return f"{candidate.name}{extras}-{candidate.version}"
 
     def get(self, candidate):
@@ -92,7 +102,7 @@ class HashCache(pip_shims.SafeFileCache):
                 hash_value = self._get_file_hash(link)
             hash_value = hash_value.encode()
             self.set(link.url, hash_value)
-        return hash_value.decode('utf8')
+        return hash_value.decode("utf8")
 
     def _get_file_hash(self, link: pip_shims.Link) -> str:
         h = hashlib.new(pip_shims.FAVORITE_HASH)

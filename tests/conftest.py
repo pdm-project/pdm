@@ -1,13 +1,16 @@
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List
+from typing import Optional
+from typing import Tuple
 from urllib.parse import urlparse
+
+from pip._vendor.requests import adapters
+from pip._vendor.requests import models
 
 import pip_shims
 import pytest
-from pip._vendor.requests import adapters
-from pip._vendor.requests import models
 
 from pdm.context import context
 from pdm.models.candidates import Candidate
@@ -16,7 +19,6 @@ from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.types import Source
 from pdm.utils import get_finder
-
 from tests import FIXTURES
 
 
@@ -26,8 +28,12 @@ class ArtifactoryAdaptor(adapters.BaseAdapter):
         self.base_path = base_path
         self._opened_files = []
 
-    def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):
-        file_path = self.base_path / urlparse(request.url).path.lstrip('/')  # type: Path
+    def send(
+        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+    ):
+        file_path = self.base_path / urlparse(request.url).path.lstrip(
+            "/"
+        )  # type: Path
         response = models.Response()
         response.request = request
         if not file_path.exists():
@@ -48,15 +54,23 @@ class ArtifactoryAdaptor(adapters.BaseAdapter):
 
 
 class TestRepository(BaseRepository):
-    def get_dependencies(self, candidate: Candidate) -> Tuple[List[Requirement], PySpecSet, str]:
+    def get_dependencies(
+        self, candidate: Candidate
+    ) -> Tuple[List[Requirement], PySpecSet, str]:
         pass
 
-    def _find_named_matches(self, requirement: Requirement, requires_python: PySpecSet,
-                            allow_prereleases: bool = False) -> List[Candidate]:
+    def _find_named_matches(
+        self,
+        requirement: Requirement,
+        requires_python: PySpecSet,
+        allow_prereleases: bool = False,
+    ) -> List[Candidate]:
         pass
 
     @contextmanager
-    def get_finder(self, sources: Optional[List[Source]] = None) -> pip_shims.PackageFinder:
+    def get_finder(
+        self, sources: Optional[List[Source]] = None
+    ) -> pip_shims.PackageFinder:
         sources = sources or self.sources
         finder = get_finder(sources, context.cache_dir.as_posix())
         finder.session.mount("http://fixtures.test/", ArtifactoryAdaptor(FIXTURES))

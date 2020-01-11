@@ -1,17 +1,26 @@
-from contextlib import contextmanager
-from typing import List, Tuple, Callable, Optional
-from functools import wraps
 import sys
+
+from contextlib import contextmanager
+from functools import wraps
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import pip_shims
 
 from pdm.context import context
-from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
+from pdm.exceptions import CandidateInfoNotFound
+from pdm.exceptions import CorruptedCacheError
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.types import Source, CandidateInfo
-from pdm.utils import get_finder, _allow_all_wheels
+from pdm.models.requirements import Requirement
+from pdm.models.requirements import filter_requirements_with_extras
+from pdm.models.specifiers import PySpecSet
+from pdm.models.specifiers import SpecifierSet
+from pdm.types import CandidateInfo
+from pdm.types import Source
+from pdm.utils import _allow_all_wheels
+from pdm.utils import get_finder
 
 
 def cache_result(
@@ -22,6 +31,7 @@ def cache_result(
         result = func(self, candidate)
         self._candidate_info_cache.set(candidate, result)
         return result
+
     return wrapper
 
 
@@ -33,9 +43,10 @@ class BaseRepository:
 
     @contextmanager
     def get_finder(
-        self, sources: Optional[List[Source]] = None,
+        self,
+        sources: Optional[List[Source]] = None,
         requires_python: Optional[PySpecSet] = None,
-        ignore_requires_python: bool = False
+        ignore_requires_python: bool = False,
     ) -> pip_shims.PackageFinder:
         sources = sources or self.sources
 
@@ -43,7 +54,7 @@ class BaseRepository:
             sources,
             context.cache_dir.as_posix(),
             requires_python.max_major_minor_version() if requires_python else None,
-            ignore_requires_python
+            ignore_requires_python,
         )
         yield finder
         finder.session.close()
@@ -63,7 +74,7 @@ class BaseRepository:
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False
+        allow_all: bool = False,
     ) -> List[Candidate]:
         if requirement.is_named:
             return self._find_named_matches(
@@ -77,16 +88,14 @@ class BaseRepository:
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False
+        allow_all: bool = False,
     ) -> List[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
         """
         raise NotImplementedError
 
-    def _get_dependencies_from_cache(
-        self, candidate: Candidate
-    ) -> CandidateInfo:
+    def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
         try:
             result = self._candidate_info_cache.get(candidate)
         except CorruptedCacheError:
@@ -97,9 +106,7 @@ class BaseRepository:
         return result
 
     @cache_result
-    def _get_dependencies_from_metadata(
-        self, candidate: Candidate
-    ) -> CandidateInfo:
+    def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateInfo:
         candidate.prepare_source()
         deps = candidate.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
@@ -115,14 +122,15 @@ class BaseRepository:
             matching_candidates = self.find_matches(req, allow_all=True)
         with self.get_finder() as finder:
             self._hash_cache.session = finder.session
-            candidate.hashes = {c.link.filename: self._hash_cache.get_hash(c.link) for c in matching_candidates}
+            candidate.hashes = {
+                c.link.filename: self._hash_cache.get_hash(c.link)
+                for c in matching_candidates
+            }
 
 
 class PyPIRepository(BaseRepository):
     @cache_result
-    def _get_dependencies_from_json(
-        self, candidate: Candidate
-    ) -> CandidateInfo:
+    def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateInfo:
         if not candidate.name or not candidate.version:
             # Only look for json api for named requirements.
             raise CandidateInfoNotFound(candidate)
@@ -151,7 +159,9 @@ class PyPIRepository(BaseRepository):
                     requirement_lines = info["requires_dist"] or []
                 except KeyError:
                     requirement_lines = info["requires"] or []
-                requirements = filter_requirements_with_extras(requirement_lines, candidate.req.extras or ())
+                requirements = filter_requirements_with_extras(
+                    requirement_lines, candidate.req.extras or ()
+                )
                 return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
 
@@ -163,7 +173,7 @@ class PyPIRepository(BaseRepository):
         for getter in (
             self._get_dependencies_from_cache,
             self._get_dependencies_from_json,
-            self._get_dependencies_from_metadata
+            self._get_dependencies_from_metadata,
         ):
             try:
                 requirements, requires_python, summary = getter(candidate)
@@ -190,7 +200,7 @@ class PyPIRepository(BaseRepository):
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False
+        allow_all: bool = False,
     ) -> List[Candidate]:
         sources = self.get_filtered_sources(requirement)
         # `allow_prereleases` is None means leave it to specifier to decide whether to
@@ -204,16 +214,23 @@ class PyPIRepository(BaseRepository):
                 for c in finder.find_all_candidates(requirement.project_name)
             ]
         sorted_cans = sorted(
-            (c for c in cans if requirement.specifier.contains(c.version, allow_prereleases)),
-            key=lambda c: c.version
+            (
+                c
+                for c in cans
+                if requirement.specifier.contains(c.version, allow_prereleases)
+            ),
+            key=lambda c: c.version,
         )
         if not allow_all:
-            sorted_cans = [can for can in sorted_cans if requires_python.is_subset(can.requires_python)]
+            sorted_cans = [
+                can
+                for can in sorted_cans
+                if requires_python.is_subset(can.requires_python)
+            ]
         if not sorted_cans and not allow_prereleases:
             # No non-pre-releases is found, force pre-releases now
             sorted_cans = sorted(
                 (c for c in cans if requirement.specifier.contains(c.version, True)),
-                key=lambda c: c.version
+                key=lambda c: c.version,
             )
         return sorted_cans
-

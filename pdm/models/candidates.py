@@ -1,18 +1,28 @@
 import os
-from typing import Optional, Any, Dict, List, TYPE_CHECKING
 import warnings
+
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pkg_resources import safe_extra
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
 from distlib.wheel import Wheel
-from pip_shims import shims
-from pkg_resources import safe_extra
-
 from pdm.context import context
-from pdm.exceptions import WheelBuildError, RequirementError, ExtrasError
-from pdm.utils import cached_property, create_tracked_tempdir
+from pdm.exceptions import ExtrasError
+from pdm.exceptions import RequirementError
+from pdm.exceptions import WheelBuildError
 from pdm.models.markers import Marker
-from pdm.models.requirements import Requirement, filter_requirements_with_extras
+from pdm.models.requirements import Requirement
+from pdm.models.requirements import filter_requirements_with_extras
+from pdm.utils import cached_property
+from pdm.utils import create_tracked_tempdir
+from pip_shims import shims
+
 
 if TYPE_CHECKING:
     from pdm.models.repositories import BaseRepository
@@ -48,7 +58,7 @@ class Candidate:
         repository,  # type: BaseRepository
         name=None,  # type: Optional[str]
         version=None,  # type: Optional[str]
-        link=None  # type: shims.Link
+        link=None,  # type: shims.Link
     ):
         # type: (...) -> None
         self.req = req
@@ -58,7 +68,7 @@ class Candidate:
         if link is None:
             link = self.ireq.link
         self.link = link
-        self.hashes = None   # type: Optional[Dict[str, str]]
+        self.hashes = None  # type: Optional[Dict[str, str]]
         self.marker = None
 
         self.wheel = None
@@ -219,18 +229,19 @@ class Candidate:
 
     @property
     def requires_python(self) -> str:
-        requires_python = self.link.requires_python or ''
+        requires_python = self.link.requires_python or ""
         if not requires_python and self.metadata:
-            # For candidates fetched from PyPI simple API, requires_python is not available yet.
-            # Just allow all candidates, and dismatching candidates will be filtered out during resolving process.
+            # For candidates fetched from PyPI simple API, requires_python is not
+            # available yet. Just allow all candidates, and dismatching candidates
+            # will be filtered out during resolving process.
             try:
                 requires_python = self.metadata.requires_python
             except AttributeError:
                 requires_python = self.metadata._legacy.requires_python
-            if not requires_python or requires_python == 'UNKNOWN':
+            if not requires_python or requires_python == "UNKNOWN":
                 requires_python = ""
         if requires_python.isdigit():
-            requires_python = f'>={requires_python},<{int(requires_python) + 1}'
+            requires_python = f">={requires_python},<{int(requires_python) + 1}"
         return requires_python
 
     def as_lockfile_entry(self) -> Dict[str, Any]:
@@ -240,13 +251,10 @@ class Candidate:
             "version": str(self.version),
             "extras": self.req.extras,
             "marker": str(self.marker) if self.marker else None,
-            "editable": self.req.editable
+            "editable": self.req.editable,
         }
         if self.req.is_vcs:
-            result.update({
-                self.req.vcs: self.req.url,
-                "revision": self.revision,
-            })
+            result.update({self.req.vcs: self.req.url, "revision": self.revision})
         if not self.req.is_named:
             result.update(url=self.req.url)
         result.update(hashes=self.hashes)

@@ -1,25 +1,40 @@
 """
 Compatibility code
 """
-import os
 import atexit
-from contextlib import contextmanager
+import functools
+import inspect
+import os
 import shutil
 import tempfile
-import inspect
-import functools
-from typing import List, Optional, Tuple, Any, TYPE_CHECKING
 import urllib.parse as parse
 
-from distlib.wheel import Wheel
-from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
-from pip_shims import Wheel as PipWheel
-from pip_shims.backports import get_session, resolve_possible_shim
+from contextlib import contextmanager
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Tuple
 
+from distlib.wheel import Wheel
 from pdm.types import Source
+from pip_shims import Wheel as PipWheel
+from pip_shims.backports import get_session
+from pip_shims.backports import resolve_possible_shim
+from pip_shims.shims import InstallCommand
+from pip_shims.shims import PackageFinder
+from pip_shims.shims import TargetPython
+from pip_shims.shims import url_to_path
+
 
 if TYPE_CHECKING:
-    from pip_shims.backports import TargetPython, TCommand, TShimmedFunc, Values, TSession, TFinder
+    from pip_shims.backports import (
+        TCommand,
+        TShimmedFunc,
+        Values,
+        TSession,
+        TFinder,
+    )
 
 try:
     from functools import cached_property
@@ -95,7 +110,9 @@ def get_package_finder(
     )  # type: ignore
     build_kwargs = {"options": options, "session": session}
     expects_targetpython = "target_python" in builder_args.args
-    received_python = any(arg for arg in [platform, python_version, abi, implementation])
+    received_python = any(
+        arg for arg in [platform, python_version, abi, implementation]
+    )
     if expects_targetpython and received_python:
         if not target_python:
             if target_python_builder is None:
@@ -163,7 +180,7 @@ def get_finder(
     sources: List[Source],
     cache_dir: Optional[str] = None,
     python_version: Optional[Tuple[int, int]] = None,
-    ignore_requires_python: bool = False
+    ignore_requires_python: bool = False,
 ) -> PackageFinder:
     install_cmd = InstallCommand()
     pip_args = prepare_pip_source_args(sources)
@@ -174,9 +191,9 @@ def get_finder(
         install_cmd=install_cmd,
         options=options,
         python_version=python_version,
-        ignore_requires_python=ignore_requires_python
+        ignore_requires_python=ignore_requires_python,
     )
-    if not hasattr(finder, 'session'):
+    if not hasattr(finder, "session"):
         finder.session = finder._link_collector.session
     return finder
 
@@ -237,7 +254,7 @@ def unified_open_file(url, session):
     else:
         if os.path.isdir(path):
             raise ValueError("Can't read content of a local directory.")
-        with open(path, 'rb') as fp:
+        with open(path, "rb") as fp:
             yield fp
 
 

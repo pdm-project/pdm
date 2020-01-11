@@ -1,10 +1,12 @@
-from functools import wraps
-from pathlib import Path
-from pip_shims import shims
 import hashlib
 
+from functools import wraps
+from pathlib import Path
+
 from pdm.exceptions import ProjectNotInitialized
-from pdm.models.caches import CandidateInfoCache, HashCache
+from pdm.models.caches import CandidateInfoCache
+from pdm.models.caches import HashCache
+from pip_shims import shims
 
 
 def require_initialize(func):
@@ -54,7 +56,9 @@ class Context:
 
     @require_initialize
     def make_candidate_info_cache(self) -> CandidateInfoCache:
-        python_hash = hashlib.sha1(str(self.project.python_requires).encode()).hexdigest()
+        python_hash = hashlib.sha1(
+            str(self.project.python_requires).encode()
+        ).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
         return CandidateInfoCache(self.cache_dir / file_name)
 

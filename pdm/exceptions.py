@@ -28,7 +28,7 @@ class CandidateInfoNotFound(PdmException):
         self.candidate = candidate
 
     def __str__(self):
-        return f'No metadata information is available for {self.candidate}'
+        return f"No metadata information is available for {self.candidate}"
 
 
 class ExtrasError(UserWarning):

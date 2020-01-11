@@ -1,10 +1,14 @@
 import copy
-from functools import reduce
 import operator
-from typing import Union, Optional, Tuple, Iterable
+
+from functools import reduce
+from typing import Iterable
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from pip._vendor.packaging.markers import Marker as PackageMarker
-from pip._vendor.packaging.markers import InvalidMarker
+
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import join_list_with
 
@@ -47,17 +51,25 @@ class Marker(PackageMarker):
         """Split `python_version` and `python_full_version` from marker string"""
         if _only_contains_python_keys(self._markers):
             return None, _build_pyspec_from_marker(self._markers)
-        if 'or' in self._markers:
+        if "or" in self._markers:
             return self.copy(), PySpecSet()
-        py_markers = [marker for marker in self._markers if marker != 'and' and _only_contains_python_keys(marker)]
-        rest = [marker for marker in self._markers if marker != 'and' and marker not in py_markers]
-        new_markers = join_list_with(rest, 'and')
+        py_markers = [
+            marker
+            for marker in self._markers
+            if marker != "and" and _only_contains_python_keys(marker)
+        ]
+        rest = [
+            marker
+            for marker in self._markers
+            if marker != "and" and marker not in py_markers
+        ]
+        new_markers = join_list_with(rest, "and")
         if not new_markers:
             marker = None
         else:
             marker = self.copy()
             marker._markers = new_markers
-        return marker, _build_pyspec_from_marker(join_list_with(py_markers, 'and'))
+        return marker, _build_pyspec_from_marker(join_list_with(py_markers, "and"))
 
 
 def get_marker(marker: Union[PackageMarker, Marker, None]) -> Optional[Marker]:
@@ -97,10 +109,10 @@ def split_marker_element(
 
 def _only_contains_python_keys(markers):
     if isinstance(markers, tuple):
-        return markers[0].value in ('python_version', 'python_full_version')
+        return markers[0].value in ("python_version", "python_full_version")
 
     for marker in markers:
-        if marker in ('and', 'or'):
+        if marker in ("and", "or"):
             continue
         if not _only_contains_python_keys(marker):
             return False
@@ -114,19 +126,19 @@ def _build_pyspec_from_marker(markers):
             groups[-1] = groups[-1] & _build_pyspec_from_marker(marker)
         elif isinstance(marker, tuple):
             key, op, version = [i.value for i in marker]
-            if key == 'python_version':
-                if op == '>':
-                    int_versions = [int(ver) for ver in version.split('.')]
+            if key == "python_version":
+                if op == ">":
+                    int_versions = [int(ver) for ver in version.split(".")]
                     int_versions += 1
-                    version = '.'.join(str(v) for v in int_versions)
-                    op = '>='
-                elif op == '==':
-                    version += '.*'
-            pyspec = PySpecSet(f'{op}{version}')
+                    version = ".".join(str(v) for v in int_versions)
+                    op = ">="
+                elif op == "==":
+                    version += ".*"
+            pyspec = PySpecSet(f"{op}{version}")
             groups[-1] = groups[-1] & pyspec
         else:
-            assert marker in ('and', 'or')
-            if marker == 'or':
+            assert marker in ("and", "or")
+            if marker == "or":
                 groups.append(PySpecSet())
     return reduce(operator.or_, groups)
 

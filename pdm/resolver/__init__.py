@@ -1,11 +1,11 @@
 import copy
 
-from resolvelib import Resolver
-from pdm.resolver.reporters import SimpleReporter
-from pdm.resolver.providers import RepositoryProvider
-from pdm.models.requirements import Requirement
-from pdm.models.markers import join_metaset
 from pdm.models.markers import PySpecSet
+from pdm.models.markers import join_metaset
+from pdm.models.requirements import Requirement
+from pdm.resolver.providers import RepositoryProvider
+from pdm.resolver.reporters import SimpleReporter
+from resolvelib import Resolver
 
 
 def _trace_visit_vertex(graph, current, target, visited, path, paths):
@@ -65,7 +65,9 @@ def _build_marker_and_pyspec(dependencies, pythons, key, trace, all_metasets):
         marker, pyspec = r.marker.split_pyspec() if r.marker else (None, PySpecSet())
         pyspec = python & pyspec
         # Use 'and' to connect markers inherited from parent.
-        child_marker = parent_metaset[0] & marker if any((parent_metaset[0], marker)) else None
+        child_marker = (
+            parent_metaset[0] & marker if any((parent_metaset[0], marker)) else None
+        )
         child_pyspec = parent_metaset[1] & pyspec
         if not metasets:
             metasets = child_marker, child_pyspec
@@ -123,7 +125,8 @@ def lock(requirements, repository, requires_python, allow_prereleases):
     for key, metaset in all_metasets.items():
         if key is None:
             continue
-        # Root requires_python doesn't participate in the metaset resolving, now check it!
+        # Root requires_python doesn't participate in the metaset resolving,
+        # now check it!
         python = requires_python & metaset[1]
         if python.is_impossible:
             # Candidate doesn't match requires_python constraint
@@ -132,6 +135,8 @@ def lock(requirements, repository, requires_python, allow_prereleases):
             state.mapping[key].marker = join_metaset(metaset)
             repository.get_hashes(state.mapping[key])
 
-    data = format_lockfile(state.mapping, provider.fetched_dependencies, provider.summary_collection)
+    data = format_lockfile(
+        state.mapping, provider.fetched_dependencies, provider.summary_collection
+    )
 
     return data

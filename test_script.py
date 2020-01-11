@@ -1,11 +1,12 @@
+import json
+
+from pdm.context import context
+from pdm.models.candidates import Candidate
 from pdm.models.repositories import PyPIRepository
 from pdm.models.requirements import Requirement
-from pdm.models.candidates import Candidate
 from pdm.models.specifiers import PySpecSet
-from pdm.context import context
-from resolvelib import Resolver
 from pdm.resolver import lock
-import json
+from resolvelib import Resolver
 
 
 class FakeProject:
@@ -19,5 +20,5 @@ context.init(FakeProject())
 source = {"url": "https://pypi.org/simple", "index": "pypi", "verify_ssl": True}
 repo = PyPIRepository([source])
 
-data = lock(['tensorflow'], repo, FakeProject.python_requires, False)
+data = lock(["tensorflow"], repo, FakeProject.python_requires, False)
 json.dumps(data, indent=2)

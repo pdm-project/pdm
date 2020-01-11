@@ -1,22 +1,38 @@
 import os
 import re
 import urllib.parse as urlparse
-from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Sequence, List
 import warnings
 
-import pip_shims
+from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+
 from pip._vendor.packaging.markers import InvalidMarker
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
-from pip._vendor.pkg_resources import RequirementParseError, safe_name
-from pip_shims import url_to_path, path_to_url
+from pip._vendor.pkg_resources import RequirementParseError
+from pip._vendor.pkg_resources import safe_name
 
-from pdm.exceptions import RequirementError, ExtrasError
-from pdm.models.markers import Marker, get_marker, split_marker_element
+import pip_shims
+
+from pdm.exceptions import ExtrasError
+from pdm.exceptions import RequirementError
+from pdm.models.markers import Marker
+from pdm.models.markers import get_marker
+from pdm.models.markers import split_marker_element
 from pdm.models.readers import SetupReader
-from pdm.models.specifiers import PySpecSet, get_specifier
+from pdm.models.specifiers import PySpecSet
+from pdm.models.specifiers import get_specifier
 from pdm.types import RequirementDict
-from pdm.utils import parse_name_version_from_wheel, url_without_fragments, is_readonly_property
+from pdm.utils import is_readonly_property
+from pdm.utils import parse_name_version_from_wheel
+from pdm.utils import url_without_fragments
+from pip_shims import path_to_url
+from pip_shims import url_to_path
+
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 
@@ -77,7 +93,7 @@ class Requirement:
         if self.name and not self.project_name:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
-        self.from_section = 'default'
+        self.from_section = "default"
 
     @property
     def marker(self) -> Optional[Marker]:
@@ -164,7 +180,11 @@ class Requirement:
         return self.project_name, r
 
     def copy(self) -> "Requirement":
-        kwargs = {k: getattr(self, k, None) for k in self.attributes if not is_readonly_property(self.__class__, k)}
+        kwargs = {
+            k: getattr(self, k, None)
+            for k in self.attributes
+            if not is_readonly_property(self.__class__, k)
+        }
         return self.__class__(**kwargs)
 
     @property
@@ -354,7 +374,9 @@ class VcsRequirement(FileRequirement):
         return f"{url}{ref}{fragments}"
 
 
-def filter_requirements_with_extras(requirment_lines: List[str], extras: Sequence[str]) -> List[str]:
+def filter_requirements_with_extras(
+    requirment_lines: List[str], extras: Sequence[str]
+) -> List[str]:
     result = []
     extras_in_meta = []
     for req in requirment_lines:
@@ -365,9 +387,7 @@ def filter_requirements_with_extras(requirment_lines: List[str], extras: Sequenc
             elements, rest = split_marker_element(str(_r.marker), "extra")
             extras_in_meta.extend(e[1] for e in elements)
             _r.marker = rest
-            if not elements or any(
-                extra == e[1] for extra in extras for e in elements
-            ):
+            if not elements or any(extra == e[1] for extra in extras for e in elements):
                 result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
