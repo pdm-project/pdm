@@ -1,3 +1,13 @@
+[tool.pdm]
+python_requires = ">=3.6"
+
+[tool.pdm.dependencies]
+requests = "~=2.19.0"
+django = ">=2.0, <3.0"
+
+[tool.pdm.dev-dependencies]
+pytest = "*"
+
 [tool.isort]
 line_length = 88
 multi_line_output = 3

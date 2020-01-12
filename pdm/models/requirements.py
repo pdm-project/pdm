@@ -69,6 +69,7 @@ class Requirement:
         "index",
         "version",
         "allow_prereleases",
+        "from_section",
     )
 
     def __init__(self, **kwargs):
@@ -81,7 +82,7 @@ class Requirement:
         if self.name and not self.project_name:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
-        self.from_section = "default"
+        self.from_section = None
         self.marker_no_python = None  # type: Optional[Marker]
         self.requires_python = PySpecSet()  # type: PySpecSet
 

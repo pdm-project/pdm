@@ -38,3 +38,11 @@ class ExtrasError(UserWarning):
 
     def __str__(self):
         return f"Extras not found: {self.extras}"
+
+
+class NoProjectError(PdmException):
+    pass
+
+
+class NoConfigError(PdmException, KeyError):
+    pass

@@ -239,7 +239,7 @@ class Candidate:
     def as_lockfile_entry(self) -> Dict[str, Any]:
         result = {
             "name": self.name,
-            "section": self.req.from_section,
+            "section": self.req.from_section or "default",
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
             "marker": str(self.marker) if self.marker else None,

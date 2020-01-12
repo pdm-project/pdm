@@ -3,11 +3,9 @@ import time
 
 import tomlkit
 from pdm.models.markers import PySpecSet, join_metaset
-from pdm.models.requirements import Requirement
 from pdm.resolver.providers import RepositoryProvider
 from pdm.resolver.reporters import SimpleReporter
 from resolvelib import Resolver
-from vistir.contextmanagers import atomic_open_for_write
 
 
 def _trace_visit_vertex(graph, current, target, visited, path, paths):
@@ -119,7 +117,8 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
                 deps.add(name, inline)
             else:
                 deps.add(name, req)
-        base.add("dependencies", deps)
+        if len(deps) > 0:
+            base.add("dependencies", deps)
         packages.append(base)
         if v.hashes:
             key = f"{k} {v.version}"
@@ -133,20 +132,19 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
     return doc
 
 
-def write_lockfile(toml_data):
-
-    with atomic_open_for_write("pdm.lock") as fp:
-        fp.write(tomlkit.dumps(toml_data))
-
-
-def lock(requirements, repository, requires_python, allow_prereleases):
-    reqs = [Requirement.from_line(line) for line in requirements]
+def lock(project, updates=None):
+    repository = project.get_repository()
+    requirements = project.all_dependencies
+    allow_prereleases = project.allow_prereleases
+    requires_python = project.python_requires
     provider = RepositoryProvider(repository, requires_python, allow_prereleases)
-    reporter = SimpleReporter(reqs)
+    reporter = SimpleReporter(requirements)
     start = time.time()
     resolver = Resolver(provider, reporter)
-    state = resolver.resolve(reqs)
-    provider.fetched_dependencies[None] = {provider.identify(r): r for r in reqs}
+    state = resolver.resolve(requirements)
+    provider.fetched_dependencies[None] = {
+        provider.identify(r): r for r in requirements
+    }
     traces = trace_graph(state.graph)
     all_metasets = _calculate_markers_and_pyspecs(
         traces, provider.fetched_dependencies, provider.requires_python_collection
@@ -167,7 +165,7 @@ def lock(requirements, repository, requires_python, allow_prereleases):
     data = format_lockfile(
         state.mapping, provider.fetched_dependencies, provider.summary_collection
     )
-    write_lockfile(data)
+    project.write_lockfile(data)
     print("total time cost: {} s".format(time.time() - start))
 
     return data

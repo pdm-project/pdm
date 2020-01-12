@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple
 
 from pip_shims import Wheel as PipWheel
@@ -16,6 +17,7 @@ from pip_shims.backports import get_session, resolve_possible_shim
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
 
 from distlib.wheel import Wheel
+from pdm.exceptions import NoProjectError
 from pdm.types import Source
 
 if TYPE_CHECKING:
@@ -276,3 +278,23 @@ def _allow_all_wheels():
     yield
     PipWheel.supported = original_wheel_supported
     PipWheel.support_index_min = original_support_index_min
+
+
+def find_project_root(cwd: str = ".", max_depth: int = 5):
+    """Recursively find a `pyproject.toml` at given path or current working directory.
+    If none if found, go to the parent directory, at most `max_depth` levels will be
+    looked for.
+    """
+    original_path = Path(cwd).absolute()
+    path = original_path
+    for _ in range(max_depth):
+        if path.joinpath("pyproject.toml").exists():
+            return path.as_posix()
+        if path.parent == path:
+            # Root path is reached
+            break
+        path = path.parent
+
+    raise NoProjectError(
+        f"No pyproject.toml is found from directory '{original_path.as_posix}'"
+    )
