@@ -1,8 +1,7 @@
 import pytest
-
 from pdm.exceptions import ExtrasError
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import parse_requirement
 from tests import FIXTURES
 
 
@@ -10,11 +9,13 @@ from tests import FIXTURES
     "requirement_line",
     [
         f"{(FIXTURES / 'projects/demo').as_posix()}",
-        f"-e {(FIXTURES / 'projects/demo').as_posix()}",
+        "git+https://github.com/test-root/demo.git#egg=demo",
     ],
 )
-def test_parse_directory_metadata(requirement_line, project, repository):
-    req = Requirement.from_line(requirement_line)
+def test_parse_vcs_directory_metadata(
+    requirement_line, project, repository, vcs, is_editable
+):
+    req = parse_requirement(requirement_line, is_editable)
     candidate = Candidate(req, repository)
     candidate.prepare_source()
     assert candidate.get_dependencies_from_metadata() == [
@@ -33,7 +34,7 @@ def test_parse_directory_metadata(requirement_line, project, repository):
     ],
 )
 def test_parse_artifact_metadata(requirement_line, project, repository):
-    req = Requirement.from_line(requirement_line)
+    req = parse_requirement(requirement_line)
     candidate = Candidate(req, repository)
     candidate.prepare_source()
     assert candidate.get_dependencies_from_metadata() == [
@@ -45,7 +46,7 @@ def test_parse_artifact_metadata(requirement_line, project, repository):
 
 
 def test_parse_metadata_with_extras(project, repository):
-    req = Requirement.from_line(
+    req = parse_requirement(
         f"demo[tests,security] @ file://"
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
     )
@@ -61,7 +62,7 @@ def test_parse_metadata_with_extras(project, repository):
 
 
 def test_parse_remote_link_metadata(project, repository):
-    req = Requirement.from_line(
+    req = parse_requirement(
         f"http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, repository)
@@ -76,7 +77,7 @@ def test_parse_remote_link_metadata(project, repository):
 
 
 def test_extras_warning(project, repository, recwarn):
-    req = Requirement.from_line(
+    req = parse_requirement(
         f"demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, repository)

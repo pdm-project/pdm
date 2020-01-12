@@ -1,17 +1,16 @@
+import os
+import shutil
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from pip._vendor.requests import adapters
-from pip._vendor.requests import models
-
 import pip_shims
-import pytest
+from pip._internal.vcs import versioncontrol
+from pip._vendor import requests
 
+import pytest
 from pdm.context import context
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
@@ -22,7 +21,7 @@ from pdm.utils import get_finder
 from tests import FIXTURES
 
 
-class ArtifactoryAdaptor(adapters.BaseAdapter):
+class ArtifactoryAdaptor(requests.adapters.BaseAdapter):
     def __init__(self, base_path):
         super().__init__()
         self.base_path = base_path
@@ -34,7 +33,7 @@ class ArtifactoryAdaptor(adapters.BaseAdapter):
         file_path = self.base_path / urlparse(request.url).path.lstrip(
             "/"
         )  # type: Path
-        response = models.Response()
+        response = requests.models.Response()
         response.request = request
         if not file_path.exists():
             response.status_code = 404
@@ -51,6 +50,14 @@ class ArtifactoryAdaptor(adapters.BaseAdapter):
         for fp in self._opened_files:
             fp.close()
         self._opened_files.clear()
+
+
+class MockVersionControl(versioncontrol.VersionControl):
+    def obtain(self, dest, url):
+        url, _ = self.get_url_rev_options(url)
+        path = os.path.splitext(os.path.basename(urlparse(str(url)).path))[0]
+        mocked_path = FIXTURES / "projects" / path
+        shutil.copytree(mocked_path, dest)
 
 
 class TestRepository(BaseRepository):
@@ -95,3 +102,18 @@ def project(tmp_path):
     p.python_requires = PySpecSet(">=3.6")
     context.init(p)
     return p
+
+
+@pytest.fixture()
+def vcs(mocker):
+    ret = MockVersionControl()
+    mocker.patch(
+        "pip._internal.vcs.versioncontrol.VcsSupport.get_backend", return_value=ret
+    )
+    mocker.patch("pip._internal.download._get_used_vcs_backend", return_value=ret)
+    yield ret
+
+
+@pytest.fixture(params=[False, True])
+def is_editable(request):
+    return request.param

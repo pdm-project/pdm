@@ -23,6 +23,17 @@ from pdm.utils import (
 )
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
+VCS_REQ = re.compile(
+    rf"(?P<vcs>{'|'.join(VCS_SCHEMA)})\+" r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
+)
+_PATH_START = r"(?:\.|/|[a-zA-Z]:[/\\])"
+FILE_REQ = re.compile(
+    r"(?:(?P<url>\S+://[^\s;]+)|"
+    rf"(?P<path>{_PATH_START}(?:[^\s;]|\\ )*"
+    rf"|'{_PATH_START}(?:[^']|\\')*'"
+    rf"|\"{_PATH_START}(?:[^\"]|\\\")*\"))"
+    r"(?P<marker>[\t ]*;[^\n]+)?"
+)
 
 
 def _strip_extras(line):
@@ -42,18 +53,6 @@ class Requirement:
     some constraints of version, python version, or other marker.
     """
 
-    VCS_REQ = re.compile(
-        rf"(?P<editable>-e[\t ]+)?(?P<vcs>{'|'.join(VCS_SCHEMA)})\+"
-        r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
-    )
-    _PATH_START = r"(?:\.|/|[a-zA-Z]:[/\\])"
-    FILE_REQ = re.compile(
-        r"(?:(?P<url>\S+://[^\s;]+)|"
-        rf"(?P<editable>-e[\t ]+)?(?P<path>{_PATH_START}(?:[^\s;]|\\ )*"
-        rf"|'{_PATH_START}(?:[^']|\\')*'"
-        rf"|\"{_PATH_START}(?:[^\"]|\\\")*\"))"
-        r"(?P<marker>[\t ]*;[^\n]+)?"
-    )
     attributes = (
         "vcs",
         "editable",
@@ -108,30 +107,6 @@ class Requirement:
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
-
-    @classmethod
-    def from_line(cls, line: str) -> "Requirement":
-
-        m = cls.VCS_REQ.match(line)
-        if m is not None:
-            return VcsRequirement.from_line(line, m.groupdict())
-        m = cls.FILE_REQ.match(line)
-        if m is not None:
-            return FileRequirement.from_line(line, m.groupdict())
-        try:
-            r = NamedRequirement.from_line(line)  # type: Requirement
-        except RequirementParseError as e:
-            if line.strip().startswith("-e"):
-                raise RequirementError(
-                    "Editable requirement is only supported for "
-                    "VCS url or local directory."
-                ) from None
-            else:
-                raise RequirementError(str(e)) from None
-        else:
-            if r.url:
-                r = FileRequirement(name=r.name, url=r.url, extras=r.extras)
-            return r
 
     @classmethod
     def from_req_dict(cls, name: str, req_dict: RequirementDict) -> "Requirement":
@@ -241,12 +216,9 @@ class FileRequirement(Requirement):
             self._parse_name_from_local()
 
     @classmethod
-    def from_line(cls, line: str, parsed: Dict[str, str]) -> "FileRequirement":
+    def parse(cls, line: str, parsed: Dict[str, str]) -> "FileRequirement":
         r = cls(
-            url=parsed.get("url"),
-            path=parsed.get("path"),
-            editable=bool(parsed.get("editable")) or None,
-            marker=parsed.get("marker"),
+            url=parsed.get("url"), path=parsed.get("path"), marker=parsed.get("marker"),
         )
         return r
 
@@ -314,7 +286,7 @@ class FileRequirement(Requirement):
 
 class NamedRequirement(Requirement, PackageRequirement):
     @classmethod
-    def from_line(
+    def parse(
         cls, line: str, parsed: Optional[Dict[str, Optional[str]]] = None
     ) -> "NamedRequirement":
         r = cls()
@@ -337,12 +309,9 @@ class VcsRequirement(FileRequirement):
         self._parse_url()
 
     @classmethod
-    def from_line(cls, line: str, parsed: Dict[str, str]) -> "VcsRequirement":
+    def parse(cls, line: str, parsed: Dict[str, str]) -> "VcsRequirement":
         r = cls(
-            url=parsed.get("url"),
-            vcs=parsed.get("vcs"),
-            editable=bool(parsed.get("editable")) or None,
-            marker=parsed.get("marker"),
+            url=parsed.get("url"), vcs=parsed.get("vcs"), marker=parsed.get("marker"),
         )
         return r
 
@@ -382,7 +351,7 @@ def filter_requirements_with_extras(
                 marker = f"; {req['environment']}" if req.get("environment") else ""
                 result.extend(f"{line}{marker}" for line in req.get("requires", []))
         else:
-            _r = Requirement.from_line(req)
+            _r = parse_requirement(req)
             if not _r.marker:
                 result.append(req)
             else:
@@ -399,3 +368,33 @@ def filter_requirements_with_extras(
         warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
 
     return result
+
+
+def parse_requirement(line: str, editable: bool = False) -> Requirement:
+
+    r = None
+    m = VCS_REQ.match(line)
+    if m is not None:
+        r = VcsRequirement.parse(line, m.groupdict())
+    else:
+        m = FILE_REQ.match(line)
+        if m is not None:
+            r = FileRequirement.parse(line, m.groupdict())
+    if r is None:
+        try:
+            r = NamedRequirement.parse(line)  # type: Requirement
+        except RequirementParseError as e:
+            raise RequirementError(str(e)) from None
+        else:
+            if r.url:
+                r = FileRequirement(name=r.name, url=r.url, extras=r.extras)
+
+    if editable:
+        if r.is_vcs or r.is_file_or_url and r.is_local_dir:
+            r.editable = True
+        else:
+            raise RequirementError(
+                "Editable requirement is only supported for VCS link"
+                " or local directory."
+            )
+    return r

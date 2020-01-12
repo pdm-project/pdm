@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from pdm.models.requirements import Requirement, RequirementError
+from pdm.models.requirements import Requirement, RequirementError, parse_requirement
 from tests import FIXTURES
 
 FILE_PREFIX = "{FILE_PREFIX}" if os.name == "nt" else "file://"
@@ -32,8 +32,8 @@ REQUIREMENTS = [
         None,
     ),
     (
-        "-e git+http://git.example.com/MyProject#egg=MyProject",
-        ("MyProject", {"editable": True, "git": "http://git.example.com/MyProject"}),
+        "git+http://git.example.com/MyProject#egg=MyProject",
+        ("MyProject", {"git": "http://git.example.com/MyProject"}),
         None,
     ),
     (
@@ -68,7 +68,7 @@ REQUIREMENTS = [
 
 @pytest.mark.parametrize("req, req_dict, result", REQUIREMENTS)
 def test_convert_req_dict_to_req_line(req, req_dict, result):
-    r = Requirement.from_line(req)
+    r = parse_requirement(req)
     assert r.as_req_dict() == req_dict
     assert r.as_ireq()
     r = Requirement.from_req_dict(*req_dict)
@@ -79,10 +79,6 @@ def test_convert_req_dict_to_req_line(req, req_dict, result):
 @pytest.mark.parametrize(
     "line,expected",
     [
-        (
-            "-e https://github.com/pypa/pip/archive/1.3.1.zip",
-            "Editable requirement is only supported",
-        ),
         ("requests; os_name=>'nt'", "Parse error at \"'; os_nam"),
         ("./nonexist", r"The local path (.+)? does not exist"),
         ("./tests", r"The local path (.+)? is not installable"),
@@ -90,4 +86,14 @@ def test_convert_req_dict_to_req_line(req, req_dict, result):
 )
 def test_illegal_requirement_line(line, expected):
     with pytest.raises(RequirementError, match=expected):
-        Requirement.from_line(line)
+        parse_requirement(line)
+
+
+@pytest.mark.parametrize(
+    "line", ["requests >= 2.19.0", "https://github.com/pypa/pip/archive/1.3.1.zip"]
+)
+def test_not_supported_editable_requirement(line):
+    with pytest.raises(
+        RequirementError, match="Editable requirement is only supported"
+    ):
+        parse_requirement(line, True)

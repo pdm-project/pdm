@@ -8,7 +8,11 @@ import pip_shims
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement, filter_requirements_with_extras
+from pdm.models.requirements import (
+    Requirement,
+    filter_requirements_with_extras,
+    parse_requirement,
+)
 from pdm.models.specifiers import PySpecSet, SpecifierSet
 from pdm.types import CandidateInfo, Source
 from pdm.utils import _allow_all_wheels, get_finder
@@ -175,7 +179,7 @@ class PyPIRepository(BaseRepository):
         else:
             if last_ext_info is not None:
                 raise last_ext_info[0].with_traceback(last_ext_info[2])
-        requirements = [Requirement.from_line(line) for line in requirements]
+        requirements = [parse_requirement(line) for line in requirements]
         if candidate.req.extras:
             # HACK: If this candidate has extras, add the original candidate
             # (same pinned version, no extras) as its dependency. This ensures
