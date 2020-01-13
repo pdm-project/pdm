@@ -5,3 +5,4 @@ pytest
 pytest-cov
 pytest-mock
 pip_shims
+tomlkit
