@@ -1,27 +1,30 @@
+import json
 import os
 import shutil
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import pip_shims
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
+from pip._vendor.pkg_resources import safe_name
 
 import pytest
 from pdm.context import context
+from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.types import Source
+from pdm.types import CandidateInfo, Source
 from pdm.utils import get_finder
 from tests import FIXTURES
 
 
-class ArtifactoryAdaptor(requests.adapters.BaseAdapter):
+class LocalFileAdapter(requests.adapters.BaseAdapter):
     def __init__(self, base_path):
         super().__init__()
         self.base_path = base_path
@@ -61,28 +64,105 @@ class MockVersionControl(versioncontrol.VersionControl):
 
 
 class TestRepository(BaseRepository):
-    def get_dependencies(
+    def __init__(self, sources):
+        super().__init__(sources)
+        self._pypi_data = {}
+        self.load_fixtures()
+
+    def add_candidate(self, name, version, requires_python=""):
+        pypi_data = self._pypi_data.setdefault(safe_name(name), {}).setdefault(
+            version, {}
+        )
+        pypi_data["requires_python"] = requires_python
+
+    def add_dependencies(self, name, version, requirements):
+        pypi_data = self._pypi_data[safe_name(name)][version]
+        pypi_data.setdefault("dependencies", []).extend(requirements)
+
+    def _get_dependencies_from_fixture(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet, str]:
-        pass
+    ) -> Tuple[List[str], str, str]:
+        try:
+            pypi_data = self._pypi_data[candidate.req.key][candidate.version]
+        except KeyError:
+            raise CandidateInfoNotFound(candidate)
+        deps = pypi_data.get("dependencies", [])
+        for extra in candidate.req.extras or ():
+            deps.extend(pypi_data.get("extras_require", {}).get(extra, []))
+        return deps, pypi_data.get("requires_python", ""), ""
+
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+        return (
+            self._get_dependencies_from_cache,
+            self._get_dependencies_from_fixture,
+            self._get_dependencies_from_metadata,
+        )
+
+    def get_hashes(self, candidate: Candidate) -> None:
+        candidate.hashes = {}
 
     def _find_named_matches(
         self,
         requirement: Requirement,
-        requires_python: PySpecSet,
-        allow_prereleases: bool = False,
+        requires_python: PySpecSet = PySpecSet(),
+        allow_prereleases: Optional[bool] = None,
+        allow_all: bool = False,
     ) -> List[Candidate]:
-        pass
+        if allow_prereleases is None:
+            allow_prereleases = requirement.allow_prereleases
+
+        cans = []
+        for version, candidate in self._pypi_data.get(requirement.key, {}).items():
+            c = Candidate(
+                requirement, self, name=requirement.project_name, version=version
+            )
+            c._requires_python = PySpecSet(candidate.get("requires_python", ""))
+            cans.append(c)
+
+        sorted_cans = sorted(
+            (
+                c
+                for c in cans
+                if requirement.specifier.contains(c.version, allow_prereleases)
+            ),
+            key=lambda c: c.version,
+        )
+        if not allow_all:
+            sorted_cans = [
+                can
+                for can in sorted_cans
+                if requires_python.is_subset(can.requires_python)
+            ]
+        if not sorted_cans and allow_prereleases is None:
+            # No non-pre-releases is found, force pre-releases now
+            sorted_cans = sorted(
+                (c for c in cans if requirement.specifier.contains(c.version, True)),
+                key=lambda c: c.version,
+            )
+        return sorted_cans
 
     @contextmanager
     def get_finder(
-        self, sources: Optional[List[Source]] = None
+        self,
+        sources: Optional[List[Source]] = None,
+        requires_python: Optional[PySpecSet] = None,
+        ignore_requires_python: bool = False,
     ) -> pip_shims.PackageFinder:
         sources = sources or self.sources
-        finder = get_finder(sources, context.cache_dir.as_posix())
-        finder.session.mount("http://fixtures.test/", ArtifactoryAdaptor(FIXTURES))
+
+        finder = get_finder(
+            sources,
+            context.cache_dir.as_posix(),
+            requires_python.max_major_minor_version() if requires_python else None,
+            ignore_requires_python,
+        )
+        finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
         yield finder
         finder.session.close()
+
+    def load_fixtures(self):
+        json_file = FIXTURES / "pypi.json"
+        self._pypi_data = json.loads(json_file.read_text())
 
 
 class FakeProject:

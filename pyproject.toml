@@ -18,3 +18,6 @@ skip_glob = ["*/setup.py"]
 filter_files = true
 known_first_party = "pdm"
 known_third_party = "pip_shims"
+
+[tool.black]
+line-length = 88

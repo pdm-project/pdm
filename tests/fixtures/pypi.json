@@ -1,0 +1,27 @@
+{
+    "requests": {
+        "2.19.1": {
+            "dependencies": [
+                "certifi>=2017.4.17",
+                "chardet<3.1.0,>=3.0.2",
+                "idna<2.8,>=2.5",
+                "urllib3<1.24,>=1.21.1"
+            ],
+            "extras_require": {"security": ["PySocks>=1.5.6,!=1.5.7"]}
+        }
+    },
+    "urllib3": {"1.22": {}},
+    "chardet": {"3.0.4": {}},
+    "certifi": {"2018.11.17": {}},
+    "idna": {"2.7": {}},
+    "pysocks": {"1.5.6": {}},
+    "django": {
+        "2.2.9": {
+            "dependencies": ["pytz", "sqlparse"],
+            "requires_python": ">=3.5"
+        },
+        "1.11.8": {"dependencies": ["pytz"]}
+    },
+    "pytz": {"2019.3": {}},
+    "sqlparse": {"0.3.0": {"requires_python": ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"}}
+}

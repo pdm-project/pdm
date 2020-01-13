@@ -55,11 +55,12 @@ class Candidate:
         self.repository = repository
         self.name = name or self.req.project_name
         self.version = version or self.req.version
-        if link is None:
+        if link is None and self.req:
             link = self.ireq.link
         self.link = link
         self.hashes = None  # type: Optional[Dict[str, str]]
         self.marker = None
+        self._requires_python = None
 
         self.wheel = None
         self.build_dir = None
@@ -82,6 +83,7 @@ class Candidate:
     def get_metadata(self) -> Optional[Metadata]:
         if self.metadata is not None:
             return self.metadata
+        self.prepare_source()
         ireq = self.ireq
         if ireq.editable:
             if not self.req.is_local_dir and not self.req.is_vcs:
@@ -219,6 +221,8 @@ class Candidate:
 
     @property
     def requires_python(self) -> str:
+        if self._requires_python is not None:
+            return self._requires_python
         requires_python = self.link.requires_python or ""
         if not requires_python and self.metadata:
             # For candidates fetched from PyPI simple API, requires_python is not

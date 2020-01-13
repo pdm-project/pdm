@@ -4,7 +4,7 @@ import pytest
 from pdm.models.requirements import Requirement, RequirementError, parse_requirement
 from tests import FIXTURES
 
-FILE_PREFIX = "{FILE_PREFIX}" if os.name == "nt" else "file://"
+FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
 
 REQUIREMENTS = [
     ("requests", ("requests", "*"), None),

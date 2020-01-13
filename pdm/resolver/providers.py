@@ -26,9 +26,13 @@ class RepositoryProvider(AbstractProvider):
             {}
         )  # type: Dict[Optional[str], Dict[str, List[Requirement]]]
 
-    def identify(self, req: Union[Requirement, Candidate]) -> str:
+    def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
         if isinstance(req, Candidate):
             req = req.req
+        if req.key is None:
+            # Name attribute may be None for local tarballs.
+            # It will be picked up in the following get_dependencies calls.
+            return None
         extras = "[{}]".format(",".join(sorted(req.extras))) if req.extras else ""
         return req.key + extras
 

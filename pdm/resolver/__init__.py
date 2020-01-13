@@ -5,7 +5,7 @@ import tomlkit
 from pdm.models.markers import PySpecSet, join_metaset
 from pdm.resolver.providers import RepositoryProvider
 from pdm.resolver.reporters import SimpleReporter
-from resolvelib import Resolver
+from pdm.resolver.resolvers import Resolver
 
 
 def _trace_visit_vertex(graph, current, target, visited, path, paths):
@@ -132,14 +132,9 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
     return doc
 
 
-def lock(project, updates=None):
-    repository = project.get_repository()
-    requirements = project.all_dependencies
-    allow_prereleases = project.allow_prereleases
-    requires_python = project.python_requires
+def do_lock(requirements, repository, requires_python, allow_prereleases):
     provider = RepositoryProvider(repository, requires_python, allow_prereleases)
     reporter = SimpleReporter(requirements)
-    start = time.time()
     resolver = Resolver(provider, reporter)
     state = resolver.resolve(requirements)
     provider.fetched_dependencies[None] = {
@@ -161,10 +156,20 @@ def lock(project, updates=None):
         else:
             state.mapping[key].marker = join_metaset(metaset)
             repository.get_hashes(state.mapping[key])
+    return state.mapping, provider.fetched_dependencies, provider.summary_collection
 
-    data = format_lockfile(
-        state.mapping, provider.fetched_dependencies, provider.summary_collection
+
+def lock(project, updates=None):
+    repository = project.get_repository()
+    requirements = project.all_dependencies
+    allow_prereleases = project.allow_prereleases
+    requires_python = project.python_requires
+
+    start = time.time()
+    mapping, dependencies, summaries = do_lock(
+        requirements, repository, requires_python, allow_prereleases
     )
+    data = format_lockfile(mapping, dependencies, summaries)
     project.write_lockfile(data)
     print("total time cost: {} s".format(time.time() - start))
 

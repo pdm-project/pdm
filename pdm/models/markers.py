@@ -133,7 +133,7 @@ def _build_pyspec_from_marker(markers):
                     int_versions += 1
                     version = ".".join(str(v) for v in int_versions)
                     op = ">="
-                elif op == "==":
+                elif op in ("==", "!="):
                     version += ".*"
                 elif op in ("in", "not in"):
                     version = " ".join(v + ".*" for v in version.split())

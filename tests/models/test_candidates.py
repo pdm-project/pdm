@@ -36,7 +36,6 @@ def test_parse_vcs_directory_metadata(
 def test_parse_artifact_metadata(requirement_line, project, repository):
     req = parse_requirement(requirement_line)
     candidate = Candidate(req, repository)
-    candidate.prepare_source()
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
@@ -52,7 +51,6 @@ def test_parse_metadata_with_extras(project, repository):
     )
     candidate = Candidate(req, repository)
     assert candidate.is_wheel
-    candidate.prepare_source()
     assert sorted(candidate.get_dependencies_from_metadata()) == [
         'chardet; os_name == "nt"',
         "idna",
@@ -67,7 +65,6 @@ def test_parse_remote_link_metadata(project, repository):
     )
     candidate = Candidate(req, repository)
     assert candidate.is_wheel
-    candidate.prepare_source()
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
@@ -82,7 +79,6 @@ def test_extras_warning(project, repository, recwarn):
     )
     candidate = Candidate(req, repository)
     assert candidate.is_wheel
-    candidate.prepare_source()
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',

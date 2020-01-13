@@ -1,18 +1,14 @@
 import sys
 from contextlib import contextmanager
 from functools import wraps
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple
 
 import pip_shims
 
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import (
-    Requirement,
-    filter_requirements_with_extras,
-    parse_requirement,
-)
+from pdm.models.requirements import Requirement, filter_requirements_with_extras, parse_requirement
 from pdm.models.specifiers import PySpecSet, SpecifierSet
 from pdm.types import CandidateInfo, Source
 from pdm.utils import _allow_all_wheels, get_finder
@@ -62,7 +58,28 @@ class BaseRepository:
     def get_dependencies(
         self, candidate: Candidate
     ) -> Tuple[List[Requirement], PySpecSet, str]:
-        raise NotImplementedError
+        requirements, requires_python, summary = [], "", ""
+        last_ext_info = None
+        for getter in self.dependency_generators():
+            try:
+                requirements, requires_python, summary = getter(candidate)
+            except CandidateInfoNotFound:
+                last_ext_info = sys.exc_info()
+                continue
+            break
+        else:
+            if last_ext_info is not None:
+                raise last_ext_info[0].with_traceback(last_ext_info[2])
+        requirements = [parse_requirement(line) for line in requirements]
+        if candidate.req.extras:
+            # HACK: If this candidate has extras, add the original candidate
+            # (same pinned version, no extras) as its dependency. This ensures
+            # the same package with different extras (treated as distinct by
+            # the resolver) have the same version.
+            self_req = candidate.req.copy()
+            self_req.extras = None
+            requirements.append(self_req)
+        return requirements, PySpecSet(requires_python), summary
 
     def find_matches(
         self,
@@ -102,7 +119,6 @@ class BaseRepository:
 
     @cache_result
     def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateInfo:
-        candidate.prepare_source()
         deps = candidate.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
         summary = candidate.metadata.summary
@@ -121,6 +137,9 @@ class BaseRepository:
                 c.link.filename: self._hash_cache.get_hash(c.link)
                 for c in matching_candidates
             }
+
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+        raise NotImplementedError
 
 
 class PyPIRepository(BaseRepository):
@@ -160,35 +179,12 @@ class PyPIRepository(BaseRepository):
                 return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
 
-    def get_dependencies(
-        self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet, str]:
-        requirements, requires_python, summary = [], "", ""
-        last_ext_info = None
-        for getter in (
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+        return (
             self._get_dependencies_from_cache,
             self._get_dependencies_from_json,
             self._get_dependencies_from_metadata,
-        ):
-            try:
-                requirements, requires_python, summary = getter(candidate)
-            except CandidateInfoNotFound:
-                last_ext_info = sys.exc_info()
-                continue
-            break
-        else:
-            if last_ext_info is not None:
-                raise last_ext_info[0].with_traceback(last_ext_info[2])
-        requirements = [parse_requirement(line) for line in requirements]
-        if candidate.req.extras:
-            # HACK: If this candidate has extras, add the original candidate
-            # (same pinned version, no extras) as its dependency. This ensures
-            # the same package with different extras (treated as distinct by
-            # the resolver) have the same version.
-            self_req = candidate.req.copy()
-            self_req.extras = None
-            requirements.append(self_req)
-        return requirements, PySpecSet(requires_python), summary
+        )
 
     def _find_named_matches(
         self,
@@ -222,7 +218,7 @@ class PyPIRepository(BaseRepository):
                 for can in sorted_cans
                 if requires_python.is_subset(can.requires_python)
             ]
-        if not sorted_cans and not allow_prereleases:
+        if not sorted_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
             sorted_cans = sorted(
                 (c for c in cans if requirement.specifier.contains(c.version, True)),
