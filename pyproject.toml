@@ -4,6 +4,7 @@ python_requires = ">=3.6"
 [tool.pdm.dependencies]
 requests = "~=2.19.0"
 django = ">=2.0, <3.0"
+demo = {"path"="./tests/fixtures/projects/demo"}
 
 [tool.pdm.dev-dependencies]
 pytest = "*"

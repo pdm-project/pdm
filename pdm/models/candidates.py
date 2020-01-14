@@ -60,6 +60,7 @@ class Candidate:
         self.link = link
         self.hashes = None  # type: Optional[Dict[str, str]]
         self.marker = None
+        self.sections = []
         self._requires_python = None
 
         self.wheel = None
@@ -69,6 +70,11 @@ class Candidate:
     @cached_property
     def ireq(self) -> shims.InstallRequirement:
         return self.req.as_ireq()
+
+    def __eq__(self, other: "Candidate") -> bool:
+        if self.req.is_named:
+            return self.name == other.name and self.version == other.version
+        return self.name == other.name and self.link == other.link
 
     @property
     def is_wheel(self) -> bool:
@@ -243,7 +249,7 @@ class Candidate:
     def as_lockfile_entry(self) -> Dict[str, Any]:
         result = {
             "name": self.name,
-            "section": self.req.from_section or "default",
+            "sections": self.sections,
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
             "marker": str(self.marker) if self.marker else None,
@@ -252,5 +258,8 @@ class Candidate:
         if self.req.is_vcs:
             result.update({self.req.vcs: self.req.url, "revision": self.revision})
         if not self.req.is_named:
-            result.update(url=self.req.url)
+            if self.req.path:
+                result.update(path=self.req.str_path)
+            else:
+                result.update(url=self.req.url)
         return {k: v for k, v in result.items() if v}

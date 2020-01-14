@@ -4,11 +4,10 @@ from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
-from resolvelib.providers import AbstractProvider
-from resolvelib.resolvers import RequirementInformation
+from pdm.resolver.resolvers import RequirementInformation
 
 
-class RepositoryProvider(AbstractProvider):
+class RepositoryProvider:
     def __init__(
         self,
         repository: BaseRepository,

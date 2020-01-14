@@ -125,7 +125,11 @@ class BaseRepository:
         return deps, requires_python, summary
 
     def get_hashes(self, candidate: Candidate) -> None:
-        if candidate.hashes or candidate.req.is_vcs:
+        if (
+            candidate.hashes
+            or candidate.req.is_vcs
+            or candidate.req.is_file_or_url and candidate.req.is_local_dir
+        ):
             return
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")

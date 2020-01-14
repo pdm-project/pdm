@@ -1,4 +1,5 @@
 import pytest
+from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import do_lock
@@ -87,7 +88,7 @@ def test_resolve_vcs_and_local_requirements(
     assert result["idna"].version == "2.7"
 
 
-def test_resolving_conflicting_dependencies(project, repository):
+def test_resolving_auto_avoid_conflicts(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo", "0.2.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho<2.0"])
@@ -103,6 +104,23 @@ def test_resolving_conflicting_dependencies(project, repository):
     assert result["hoho"].version == "1.5"
 
 
+def test_resolve_conflicting_dependencies(project, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
+    repository.add_candidate("bar", "0.1.0")
+    repository.add_dependencies("bar", "0.1.0", ["hoho~=1.1"])
+    repository.add_candidate("hoho", "2.1")
+    repository.add_candidate("hoho", "1.5")
+    with pytest.raises(ResolutionImpossible):
+        resolve_requirements(repository, ["foo", "bar"])
+
+
+def test_resolve_no_available_versions(project, repository):
+    repository.add_candidate("foo", "0.1.0")
+    with pytest.raises(NoVersionsAvailable):
+        resolve_requirements(repository, ["foo>=0.2.0"])
+
+
 def test_resolving_marker_merging(project, repository):
     repository.add_candidate("foo", "0.1.0", ">=2.7, !=3.4.*")
     result = resolve_requirements(
@@ -110,7 +128,8 @@ def test_resolving_marker_merging(project, repository):
     )
     assert (
         str(result["foo"].marker)
-        == 'os_name == "nt" and python_version >= "2.7" and python_version not in "3.4, 3.5"'
+        == 'os_name == "nt" and python_version >= "2.7" '
+        'and python_version not in "3.4, 3.5"'
     )
 
 

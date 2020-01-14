@@ -19,6 +19,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.project import Project
 from pdm.types import CandidateInfo, Source
 from pdm.utils import get_finder
 from tests import FIXTURES
@@ -165,7 +166,7 @@ class TestRepository(BaseRepository):
         self._pypi_data = json.loads(json_file.read_text())
 
 
-class FakeProject:
+class TestProject(Project):
     pass
 
 
@@ -176,11 +177,8 @@ def repository():
 
 @pytest.fixture()
 def project(tmp_path):
-    p = FakeProject()
-    p.config = {"cache_dir": tmp_path.as_posix()}
-    p.packages_root = None
-    p.python_requires = PySpecSet(">=3.6")
-    context.init(p)
+    p = TestProject()
+    p.config["cache_dir"] = tmp_path.as_posix()
     return p
 
 

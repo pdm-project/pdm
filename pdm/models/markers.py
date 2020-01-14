@@ -88,11 +88,11 @@ def split_marker_element(
     :param element: the element to be stripped
     :returns: an iterable of (op, value) pairs together with the stripped part.
     """
-    if not text:
+    if text is None:
         return [], text
     marker = Marker(text)
     if "or" in marker._markers:
-        return [], text
+        return [], marker
     result = []
     bare_markers = [m for m in marker._markers if m != "and"]
     for m in bare_markers[:]:

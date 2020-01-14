@@ -1,6 +1,5 @@
 distlib
 pip>=19.3.1
-resolvelib
 pytest
 pytest-cov
 pytest-mock

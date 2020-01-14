@@ -132,6 +132,18 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
     return doc
 
 
+def _get_sections_from_top_requirements(traces, fetched_dependencies):
+    all_sections = {}
+    top_requirements = fetched_dependencies[None]
+    for key, trace in traces.items():
+        all_sections[key] = set([
+            top_requirements[route[1]].from_section
+            if len(route) > 1 else top_requirements[key].from_section
+            for route in trace
+        ])
+    return all_sections
+
+
 def do_lock(requirements, repository, requires_python, allow_prereleases):
     provider = RepositoryProvider(repository, requires_python, allow_prereleases)
     reporter = SimpleReporter(requirements)
@@ -144,6 +156,10 @@ def do_lock(requirements, repository, requires_python, allow_prereleases):
     all_metasets = _calculate_markers_and_pyspecs(
         traces, provider.fetched_dependencies, provider.requires_python_collection
     )
+    all_sections = _get_sections_from_top_requirements(
+        traces,
+        provider.fetched_dependencies
+    )
     for key, metaset in all_metasets.items():
         if key is None:
             continue
@@ -154,8 +170,10 @@ def do_lock(requirements, repository, requires_python, allow_prereleases):
             # Candidate doesn't match requires_python constraint
             del state.mapping[key]
         else:
-            state.mapping[key].marker = join_metaset(metaset)
-            repository.get_hashes(state.mapping[key])
+            candidate = state.mapping[key]
+            candidate.marker = join_metaset(metaset)
+            candidate.sections = list(all_sections[key])
+            repository.get_hashes(candidate)
     return state.mapping, provider.fetched_dependencies, provider.summary_collection
 
 

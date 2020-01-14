@@ -16,11 +16,7 @@ from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.types import RequirementDict
-from pdm.utils import (
-    is_readonly_property,
-    parse_name_version_from_wheel,
-    url_without_fragments,
-)
+from pdm.utils import is_readonly_property, parse_name_version_from_wheel, url_without_fragments
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 VCS_REQ = re.compile(
@@ -118,10 +114,10 @@ class Requirement:
                 repo = req_dict[vcs]  # type: str
                 url = VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
                 return VcsRequirement(name=name, vcs=vcs, url=url, **req_dict)
+        if "path" in req_dict or "url" in req_dict:
+            return FileRequirement(name=name, **req_dict)
         specifier = req_dict.pop("version", None)
-        if specifier is not None:
-            return NamedRequirement(name=name, specifier=specifier, **req_dict)
-        return FileRequirement(name=name, **req_dict)
+        return NamedRequirement(name=name, specifier=specifier, **req_dict)
 
     def as_req_dict(self) -> Tuple[str, RequirementDict]:
         r = {}
@@ -205,15 +201,21 @@ class FileRequirement(Requirement):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.path = Path(self.path) if self.path else None
-        self.str_path = self.path.as_posix() if self.path else None
         self.version = None
-        if self.path and not self.path.is_absolute():
-            self.str_path = "./" + self.str_path
         self._parse_url()
         if self.path and not self.path.exists():
             raise RequirementError(f"The local path {self.path} does not exist.")
         if not self.name and self.is_local_dir:
             self._parse_name_from_local()
+
+    @property
+    def str_path(self) -> Optional[str]:
+        if not self.path:
+            return None
+        result = self.path.as_posix()
+        if not self.path.is_absolute():
+            result = "./" + result
+        return result
 
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "FileRequirement":
