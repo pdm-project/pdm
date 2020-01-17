@@ -8,7 +8,7 @@ from pip._vendor import requests
 
 from pdm.exceptions import CorruptedCacheError
 from pdm.types import CandidateInfo
-from pdm.utils import unified_open_file
+from vistir.contextmanagers import open_file
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
@@ -100,7 +100,7 @@ class HashCache(pip_shims.SafeFileCache):
 
     def _get_file_hash(self, link: pip_shims.Link) -> str:
         h = hashlib.new(pip_shims.FAVORITE_HASH)
-        with unified_open_file(link.url, self.session) as fp:
+        with open_file(link.url, self.session) as fp:
             for chunk in iter(lambda: fp.read(8096), b""):
                 h.update(chunk)
         return ":".join([h.name, h.hexdigest()])

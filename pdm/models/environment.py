@@ -12,10 +12,13 @@ from distlib.wheel import Wheel
 from pdm.exceptions import NoPythonVersion, WheelBuildError
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.specifiers import PySpecSet
-from pdm.project import Config
+from pdm.project.config import Config
 from pdm.types import Source
-from pdm.utils import _allow_all_wheels, cached_property, create_tracked_tempdir, get_finder, get_python_version
+from pdm.utils import (
+    _allow_all_wheels, cached_property, convert_hashes, create_tracked_tempdir, get_finder, get_python_version,
+)
 from pythonfinder import Finder
+from vistir.contextmanagers import temp_environ
 
 
 class Environment:
@@ -71,11 +74,31 @@ class Environment:
 
     def get_paths(self) -> Dict[str, str]:
         paths = sysconfig.get_paths()
+        scripts = "Scripts" if os.name == "nt" else "bin"
         packages_path = self.packages_path
         paths["platlib"] = paths["purelib"] = (packages_path / "lib").as_posix()
-        paths["scripts"] = (packages_path / "bin").as_posix()
-        paths["data"] = packages_path.as_posix()
+        paths["scripts"] = (packages_path / scripts).as_posix()
+        paths["data"] = paths["prefix"] = packages_path.as_posix()
+        paths["include"] = paths["platinclude"] = paths["headers"] = (
+            packages_path / "include"
+        ).as_posix()
         return paths
+
+    @contextmanager
+    def activate(self):
+        paths = self.get_paths()
+        with temp_environ():
+            old_paths = os.getenv("PYTHONPATH")
+            if old_paths:
+                new_paths = os.pathsep.join([paths["platlib"], old_paths])
+            else:
+                new_paths = paths["platlib"]
+            os.environ["PYTHONPATH"] = new_paths
+            python_root = os.path.dirname(self.python_executable)
+            os.environ["PATH"] = os.pathsep.join(
+                [python_root, paths["scripts"], os.environ["PATH"]]
+            )
+            yield
 
     @cached_property
     def packages_path(self) -> Path:
@@ -86,8 +109,9 @@ class Environment:
             / "__pypackages__"
             / ".".join(map(str, get_python_version(self.python_executable)[:2]))
         )
-        if not pypackages.exists():
-            pypackages.mkdir(parents=True)
+        scripts = "Scripts" if os.name == "nt" else "bin"
+        for subdir in [scripts, "include", "lib"]:
+            pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
     def _make_pip_wheel_args(self, ireq: shims.InstallRequirement) -> Dict[str, Any]:
@@ -125,23 +149,27 @@ class Environment:
         ignore_requires_python: bool = False,
     ) -> shims.PackageFinder:
         sources = sources or []
-        requires_python = self.python_requires
+        python_version = get_python_version(self.python_executable)[:2]
         finder = get_finder(
             sources,
             self.cache_dir.as_posix(),
-            requires_python.max_major_minor_version() if requires_python else None,
+            python_version,
             ignore_requires_python,
         )
         yield finder
         finder.session.close()
 
-    def build_wheel(self, ireq: shims.InstallRequirement) -> Optional[Wheel]:
+    def build_wheel(
+        self,
+        ireq: shims.InstallRequirement,
+        hashes: Optional[Dict[str, str]] = None
+    ) -> Optional[Wheel]:
         """A local candidate has already everything in local, no need to download."""
         kwargs = self._make_pip_wheel_args(ireq)
         with self.get_finder() as finder:
             with _allow_all_wheels():
                 # temporarily allow all wheels to get a link.
-                ireq.populate_link(finder, False, False)
+                ireq.populate_link(finder, False, bool(hashes))
             if not ireq.editable and not ireq.req.name:
                 ireq.source_dir = kwargs["build_dir"]
             else:
@@ -152,10 +180,13 @@ class Environment:
             download_dir = kwargs["download_dir"]
             if ireq.link.is_wheel:
                 download_dir = kwargs["wheel_download_dir"]
+            if hashes:
+                ireq.options["hashes"] = convert_hashes(hashes)
             shims.shim_unpack(
                 link=ireq.link,
                 download_dir=download_dir,
                 location=ireq.source_dir,
+                hashes=ireq.hashes(False),
                 session=finder.session,
             )
 

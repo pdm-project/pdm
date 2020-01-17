@@ -36,7 +36,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install -r requirements.txt
+        python -m pdm install
     - name: Test
       run: |
-        pytest --cov pdm tests
+        python -m pdm run pytest --cov pdm tests
 

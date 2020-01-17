@@ -121,6 +121,12 @@ def _only_contains_python_keys(markers):
 
 
 def _build_pyspec_from_marker(markers):
+
+    def split_version(version):
+        if ',' in version:
+            return [v.strip() for v in version.split(',')]
+        return version.split()
+
     groups = [PySpecSet()]
     for marker in markers:
         if isinstance(marker, list):
@@ -136,14 +142,14 @@ def _build_pyspec_from_marker(markers):
                 elif op in ("==", "!="):
                     version += ".*"
                 elif op in ("in", "not in"):
-                    version = " ".join(v + ".*" for v in version.split())
+                    version = " ".join(v + ".*" for v in split_version(version))
             if op == "in":
                 pyspec = reduce(
-                    operator.or_, (PySpecSet(f"=={v}") for v in version.split())
+                    operator.or_, (PySpecSet(f"=={v}") for v in split_version(version))
                 )
             elif op == "not in":
                 pyspec = reduce(
-                    operator.and_, (PySpecSet(f"!={v}") for v in version.split())
+                    operator.and_, (PySpecSet(f"!={v}") for v in split_version(version))
                 )
             else:
                 pyspec = PySpecSet(f"{op}{version}")

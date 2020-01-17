@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import tomlkit
+from pdm.installers import Installer
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository, PyPIRepository
@@ -170,20 +171,21 @@ class Project:
     def get_locked_candidates(self, section: Optional[str] = None) -> List[Candidate]:
         section = section or "default"
         result = []
-        for package in self.lockfile["package"]:
+        for package in [dict(p) for p in self.lockfile["package"]]:
             if section not in package["sections"]:
                 continue
             version = package.get("version")
             if version:
                 package["version"] = f"=={version}"
-            req = Requirement.from_req_dict(package["name"], dict(package))
+            package_name = package.pop("name")
+            req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(
-                req, self.environment, name=package["name"], version=version
+                req, self.environment, name=package_name, version=version
             )
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(
-                    f"{package['name']} {version}", []
+                    f"{package_name} {version}", []
                 )
             }
             result.append(can)
@@ -198,3 +200,6 @@ class Project:
         pyproject_content = tomlkit.dumps(self.pyproject)
         content_hash = hasher(pyproject_content.encode("utf-8")).hexdigest()
         return content_hash == hash_value
+
+    def get_installer(self) -> Installer:
+        return Installer(self.environment)

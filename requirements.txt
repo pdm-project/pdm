@@ -1,8 +1,6 @@
 distlib
 pip>=19.3.1
-pytest
-pytest-cov
-pytest-mock
 pip_shims
 tomlkit
 appdirs
+pythonfinder

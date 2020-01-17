@@ -52,6 +52,9 @@ class Candidate:
         self.build_dir = None
         self.metadata = None
 
+    def __hash__(self):
+        return hash((self.name, self.version))
+
     @property
     def is_wheel(self) -> bool:
         return self.link.is_wheel
@@ -75,7 +78,7 @@ class Candidate:
         if self.metadata is not None:
             return self.metadata
         ireq = self.ireq
-        self.wheel = self.environment.build_wheel(ireq)
+        self.wheel = self.environment.build_wheel(ireq, self.hashes)
         if not self.wheel:
             if not self.req.is_local_dir and not self.req.is_vcs:
                 raise RequirementError(

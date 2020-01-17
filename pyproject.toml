@@ -11,6 +11,8 @@ pythonfinder = "*"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
 
 [tool.isort]
 line_length = 88

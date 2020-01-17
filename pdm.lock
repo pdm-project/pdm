@@ -49,6 +49,17 @@ packaging = "*"
 vistir = {extras = ["spinner"], version = ">=0.4"}
 
 [[package]]
+name = "pytest-cov"
+sections = ["dev"]
+version = "2.8.1"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "Pytest plugin for measuring coverage."
+
+[package.dependencies]
+pytest = ">=3.6"
+coverage = ">=4.4"
+
+[[package]]
 name = "click"
 sections = ["default"]
 version = "7.0"
@@ -56,9 +67,19 @@ marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3
 summary = "Composable command line interface toolkit"
 
 [[package]]
+name = "pytest-mock"
+sections = ["dev"]
+version = "2.0.0"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "Thin-wrapper around the mock package for easier use with py.test"
+
+[package.dependencies]
+pytest = ">=2.7"
+
+[[package]]
 name = "pytest"
 sections = ["dev"]
-version = "5.3.2"
+version = "5.3.3"
 marker = "python_version >= \"3.5\""
 summary = "pytest: simple powerful testing with Python"
 
@@ -109,7 +130,7 @@ vistir = ">=0.4"
 
 [[package]]
 name = "attrs"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "19.3.0"
 marker = "python_version >= \"2.7\""
 summary = "Classes Without Boilerplate"
@@ -153,7 +174,7 @@ summary = "More routines for operating on iterables, beyond itertools"
 name = "importlib-metadata"
 sections = ["dev"]
 version = "1.4.0"
-marker = "python_version < \"3.8\" and python_version >= \"3.5\""
+marker = "python_version >= \"3.5\" and python_version < \"3.8\""
 summary = "Read metadata from Python packages"
 
 [package.dependencies]
@@ -161,7 +182,7 @@ zipp = ">=0.5"
 
 [[package]]
 name = "six"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "1.14.0"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python 2 and 3 compatibility utilities"
@@ -179,7 +200,7 @@ six = "*"
 
 [[package]]
 name = "packaging"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "20.0"
 marker = "python_version >= \"2.7\""
 summary = "Core utilities for Python packages"
@@ -190,7 +211,7 @@ six = "*"
 
 [[package]]
 name = "colorama"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "0.4.3"
 marker = "sys_platform == \"win32\" and python_version >= \"2.7\""
 summary = "Cross-platform colored terminal text."
@@ -201,6 +222,13 @@ sections = ["default"]
 version = "0.33.6"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\" and python_full_version not in \"3.4.0\""
 summary = "A built-package format for Python."
+
+[[package]]
+name = "coverage"
+sections = ["dev"]
+version = "4.4.2"
+marker = "python_version < \"4.0\" and python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+summary = "Code coverage measurement for Python"
 
 [[package]]
 name = "pip"
@@ -220,7 +248,7 @@ summary = "Easily download, build, install, upgrade, and uninstall Python packag
 name = "zipp"
 sections = ["dev"]
 version = "1.0.0"
-marker = "python_version < \"3.8\" and python_version >= \"3.5\""
+marker = "python_version >= \"3.5\" and python_version < \"3.8\""
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [package.dependencies]
@@ -235,7 +263,7 @@ summary = "Yet Another Terminal Spinner"
 
 [[package]]
 name = "pyparsing"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "2.4.6"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python parsing module"
@@ -260,13 +288,21 @@ summary = "Python parsing module"
     {file = "pythonfinder-1.2.1-py2.py3-none-any.whl", hash = "sha256:cfbfe61b7bfc3b45b24f156e2bab76621ebc6ba92f69afbc16f76482d69d9802"},
     {file = "pythonfinder-1.2.1.tar.gz", hash = "sha256:0a4f585abb76aa2fc97479cd12d10f7644aa1ab42b919747e04d33d7f9379425"},
 ]
+"pytest-cov 2.8.1" = [
+    {file = "pytest-cov-2.8.1.tar.gz", hash = "sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b"},
+    {file = "pytest_cov-2.8.1-py2.py3-none-any.whl", hash = "sha256:cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626"},
+]
 "click 7.0" = [
     {file = "Click-7.0-py2.py3-none-any.whl", hash = "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13"},
     {file = "Click-7.0.tar.gz", hash = "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"},
 ]
-"pytest 5.3.2" = [
-    {file = "pytest-5.3.2-py3-none-any.whl", hash = "sha256:e41d489ff43948babd0fad7ad5e49b8735d5d55e26628a58673c39ff61d95de4"},
-    {file = "pytest-5.3.2.tar.gz", hash = "sha256:6b571215b5a790f9b41f19f3531c53a45cf6bb8ef2988bc1ff9afb38270b25fa"},
+"pytest-mock 2.0.0" = [
+    {file = "pytest-mock-2.0.0.tar.gz", hash = "sha256:b35eb281e93aafed138db25c8772b95d3756108b601947f89af503f8c629413f"},
+    {file = "pytest_mock-2.0.0-py2.py3-none-any.whl", hash = "sha256:cb67402d87d5f53c579263d37971a164743dc33c159dfb4fb4a86f37c5552307"},
+]
+"pytest 5.3.3" = [
+    {file = "pytest-5.3.3-py3-none-any.whl", hash = "sha256:9f8d44f4722b3d06b41afaeb8d177cfbe0700f8351b1fc755dd27eedaa3eb9e0"},
+    {file = "pytest-5.3.3.tar.gz", hash = "sha256:f5d3d0e07333119fe7d4af4ce122362dc4053cdd34a71d2766290cf5369c64ad"},
 ]
 "pluggy 0.13.1" = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
@@ -328,6 +364,40 @@ summary = "Python parsing module"
     {file = "wheel-0.33.6-py2.py3-none-any.whl", hash = "sha256:f4da1763d3becf2e2cd92a14a7c920f0f00eca30fdde9ea992c836685b9faf28"},
     {file = "wheel-0.33.6.tar.gz", hash = "sha256:10c9da68765315ed98850f8e048347c3eb06dd81822dc2ab1d4fde9dc9702646"},
 ]
+"coverage 4.4.2" = [
+    {file = "coverage-4.4.2.tar.gz", hash = "sha256:309d91bd7a35063ec7a0e4d75645488bfab3f0b66373e7722f23da7f5b0f34cc"},
+    {file = "coverage-4.4.2-cp26-cp26m-macosx_10_10_x86_64.whl", hash = "sha256:d1ee76f560c3c3e8faada866a07a32485445e16ed2206ac8378bd90dadffb9f0"},
+    {file = "coverage-4.4.2-cp26-cp26m-manylinux1_i686.whl", hash = "sha256:007eeef7e23f9473622f7d94a3e029a45d55a92a1f083f0f3512f5ab9a669b05"},
+    {file = "coverage-4.4.2-cp26-cp26m-manylinux1_x86_64.whl", hash = "sha256:17307429935f96c986a1b1674f78079528833410750321d22b5fb35d1883828e"},
+    {file = "coverage-4.4.2-cp26-cp26mu-manylinux1_i686.whl", hash = "sha256:845fddf89dca1e94abe168760a38271abfc2e31863fbb4ada7f9a99337d7c3dc"},
+    {file = "coverage-4.4.2-cp26-cp26mu-manylinux1_x86_64.whl", hash = "sha256:3f4d0b3403d3e110d2588c275540649b1841725f5a11a7162620224155d00ba2"},
+    {file = "coverage-4.4.2-cp27-cp27m-macosx_10_12_intel.whl", hash = "sha256:4c4f368ffe1c2e7602359c2c50233269f3abe1c48ca6b288dcd0fb1d1c679733"},
+    {file = "coverage-4.4.2-cp27-cp27m-macosx_10_12_x86_64.whl", hash = "sha256:f8c55dd0f56d3d618dfacf129e010cbe5d5f94b6951c1b2f13ab1a2f79c284da"},
+    {file = "coverage-4.4.2-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:cdd92dd9471e624cd1d8c1a2703d25f114b59b736b0f1f659a98414e535ffb3d"},
+    {file = "coverage-4.4.2-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:2ad357d12971e77360034c1596011a03f50c0f9e1ecd12e081342b8d1aee2236"},
+    {file = "coverage-4.4.2-cp27-cp27m-win32.whl", hash = "sha256:700d7579995044dc724847560b78ac786f0ca292867447afda7727a6fbaa082e"},
+    {file = "coverage-4.4.2-cp27-cp27m-win_amd64.whl", hash = "sha256:66f393e10dd866be267deb3feca39babba08ae13763e0fc7a1063cbe1f8e49f6"},
+    {file = "coverage-4.4.2-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:e9a0e1caed2a52f15c96507ab78a48f346c05681a49c5b003172f8073da6aa6b"},
+    {file = "coverage-4.4.2-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:eea9135432428d3ca7ee9be86af27cb8e56243f73764a9b6c3e0bda1394916be"},
+    {file = "coverage-4.4.2-cp33-cp33m-macosx_10_10_x86_64.whl", hash = "sha256:5ff16548492e8a12e65ff3d55857ccd818584ed587a6c2898a9ebbe09a880674"},
+    {file = "coverage-4.4.2-cp33-cp33m-manylinux1_i686.whl", hash = "sha256:d00e29b78ff610d300b2c37049a41234d48ea4f2d2581759ebcf67caaf731c31"},
+    {file = "coverage-4.4.2-cp33-cp33m-manylinux1_x86_64.whl", hash = "sha256:87d942863fe74b1c3be83a045996addf1639218c2cb89c5da18c06c0fe3917ea"},
+    {file = "coverage-4.4.2-cp34-cp34m-macosx_10_10_x86_64.whl", hash = "sha256:358d635b1fc22a425444d52f26287ae5aea9e96e254ff3c59c407426f44574f4"},
+    {file = "coverage-4.4.2-cp34-cp34m-manylinux1_i686.whl", hash = "sha256:81912cfe276e0069dca99e1e4e6be7b06b5fc8342641c6b472cb2fed7de7ae18"},
+    {file = "coverage-4.4.2-cp34-cp34m-manylinux1_x86_64.whl", hash = "sha256:079248312838c4c8f3494934ab7382a42d42d5f365f0cf7516f938dbb3f53f3f"},
+    {file = "coverage-4.4.2-cp34-cp34m-win32.whl", hash = "sha256:b0059630ca5c6b297690a6bf57bf2fdac1395c24b7935fd73ee64190276b743b"},
+    {file = "coverage-4.4.2-cp34-cp34m-win_amd64.whl", hash = "sha256:493082f104b5ca920e97a485913de254cbe351900deed72d4264571c73464cd0"},
+    {file = "coverage-4.4.2-cp35-cp35m-macosx_10_10_x86_64.whl", hash = "sha256:e3ba9b14607c23623cf38f90b23f5bed4a3be87cbfa96e2e9f4eabb975d1e98b"},
+    {file = "coverage-4.4.2-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:82cbd3317320aa63c65555aa4894bf33a13fb3a77f079059eb5935eea415938d"},
+    {file = "coverage-4.4.2-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:9721f1b7275d3112dc7ccf63f0553c769f09b5c25a26ee45872c7f5c09edf6c1"},
+    {file = "coverage-4.4.2-cp35-cp35m-win32.whl", hash = "sha256:bd4800e32b4c8d99c3a2c943f1ac430cbf80658d884123d19639bcde90dad44a"},
+    {file = "coverage-4.4.2-cp35-cp35m-win_amd64.whl", hash = "sha256:f29841e865590af72c4b90d7b5b8e93fd560f5dea436c1d5ee8053788f9285de"},
+    {file = "coverage-4.4.2-cp36-cp36m-macosx_10_12_x86_64.whl", hash = "sha256:f3a5c6d054c531536a83521c00e5d4004f1e126e2e2556ce399bef4180fbe540"},
+    {file = "coverage-4.4.2-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:dd707a21332615108b736ef0b8513d3edaf12d2a7d5fc26cd04a169a8ae9b526"},
+    {file = "coverage-4.4.2-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:2e1a5c6adebb93c3b175103c2f855eda957283c10cf937d791d81bef8872d6ca"},
+    {file = "coverage-4.4.2-cp36-cp36m-win32.whl", hash = "sha256:f87f522bde5540d8a4b11df80058281ac38c44b13ce29ced1e294963dd51a8f8"},
+    {file = "coverage-4.4.2-cp36-cp36m-win_amd64.whl", hash = "sha256:a7cfaebd8f24c2b537fa6a271229b051cdac9c1734bb6f939ccfc7c055689baa"},
+]
 "pip 19.3.1" = [
     {file = "pip-19.3.1-py2.py3-none-any.whl", hash = "sha256:6917c65fc3769ecdc61405d3dfd97afdedd75808d200b2838d7d961cebc0c2c7"},
     {file = "pip-19.3.1.tar.gz", hash = "sha256:21207d76c1031e517668898a6b46a9fb1501c7a4710ef5dfd6a40ad9e6757ea7"},
@@ -350,5 +420,5 @@ summary = "Python parsing module"
 ]
 
 [root]
-content_hash = "md5:71bc13c44ec7fe77dd23afbbf00b4239"
+content_hash = "md5:754342e61731af6b94d00dae129ea56c"
 meta_version = "0.0.1"
