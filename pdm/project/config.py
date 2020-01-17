@@ -8,7 +8,11 @@ from pdm.exceptions import NoConfigError
 
 
 class Config(MutableMapping):
-    DEFAULT_CONFIG = {"cache_dir": appdirs.user_cache_dir("pdm")}
+    DEFAULT_CONFIG = {
+        "cache_dir": appdirs.user_cache_dir("pdm"),
+        "python": None,
+        "packages_path": None
+    }
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
@@ -40,9 +44,9 @@ class Config(MutableMapping):
         return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
     def save_config(self, is_global: bool = False) -> None:
-        data = self.global_config if is_global else self.project_config
+        data = self._global_config if is_global else self._project_config
         data.update(self._dirty)
-        file_path = self.global_config_path if is_global else self.project_config_path
+        file_path = self._global_config_file if is_global else self._project_config_file
         file_path.parent.mkdir(exist_ok=True)
         toml_data = {}
         for key, value in data.items():
@@ -74,5 +78,5 @@ class Config(MutableMapping):
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
-    def __delitem__(self,) -> None:
+    def __delitem__(self, key) -> None:
         raise NotImplementedError

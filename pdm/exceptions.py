@@ -75,3 +75,7 @@ class RequirementsConflicted(ResolutionError):
     def __init__(self, requirements):
         super(RequirementsConflicted, self).__init__()
         self.requirements = requirements
+
+
+class NoPythonVersion(PdmException):
+    pass

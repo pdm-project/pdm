@@ -1,17 +1,18 @@
+from __future__ import annotations
+
 import sys
-from contextlib import contextmanager
 from functools import wraps
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple
 
-import pip_shims
-
-from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, filter_requirements_with_extras, parse_requirement
 from pdm.models.specifiers import PySpecSet, SpecifierSet
 from pdm.types import CandidateInfo, Source
-from pdm.utils import _allow_all_wheels, get_finder
+from pdm.utils import _allow_all_wheels
+
+if TYPE_CHECKING:
+    from pdm.models.environment import Environment
 
 
 def cache_result(
@@ -27,28 +28,11 @@ def cache_result(
 
 
 class BaseRepository:
-    def __init__(self, sources: List[Source]) -> None:
+    def __init__(self, sources: List[Source], environment: Environment) -> None:
         self.sources = sources
-        self._candidate_info_cache = context.make_candidate_info_cache()
-        self._hash_cache = context.make_hash_cache()
-
-    @contextmanager
-    def get_finder(
-        self,
-        sources: Optional[List[Source]] = None,
-        requires_python: Optional[PySpecSet] = None,
-        ignore_requires_python: bool = False,
-    ) -> pip_shims.PackageFinder:
-        sources = sources or self.sources
-
-        finder = get_finder(
-            sources,
-            context.cache_dir.as_posix(),
-            requires_python.max_major_minor_version() if requires_python else None,
-            ignore_requires_python,
-        )
-        yield finder
-        finder.session.close()
+        self.environment = environment
+        self._candidate_info_cache = self.environment.make_candidate_info_cache()
+        self._hash_cache = self.environment.make_hash_cache()
 
     def get_filtered_sources(self, req: Requirement) -> List[Source]:
         if not req.index:
@@ -93,7 +77,7 @@ class BaseRepository:
                 requirement, requires_python, allow_prereleases
             )
         else:
-            return [Candidate(requirement, self)]
+            return [Candidate(requirement, self.environment)]
 
     def _find_named_matches(
         self,
@@ -135,7 +119,7 @@ class BaseRepository:
         req.specifier = SpecifierSet(f"=={candidate.version}")
         with _allow_all_wheels():
             matching_candidates = self.find_matches(req, allow_all=True)
-        with self.get_finder() as finder:
+        with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
             candidate.hashes = {
                 c.link.filename: self._hash_cache.get_hash(c.link)
@@ -161,7 +145,7 @@ class PyPIRepository(BaseRepository):
             )
             if proc_url.endswith("/simple")
         ]
-        with self.get_finder(sources) as finder:
+        with self.environment.get_finder(sources) as finder:
             session = finder.session
             for prefix in url_prefixes:
                 json_url = f"{prefix}/pypi/{candidate.name}/{candidate.version}/json"
@@ -203,9 +187,9 @@ class PyPIRepository(BaseRepository):
         if allow_prereleases is None:
             allow_prereleases = requirement.allow_prereleases
 
-        with self.get_finder(sources) as finder, _allow_all_wheels():
+        with self.environment.get_finder(sources) as finder, _allow_all_wheels():
             cans = [
-                Candidate.from_installation_candidate(c, requirement, self)
+                Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)
             ]
         sorted_cans = sorted(

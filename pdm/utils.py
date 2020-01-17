@@ -4,13 +4,15 @@ Compatibility code
 import atexit
 import functools
 import inspect
+import json
 import os
 import shutil
+import subprocess
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 from pip_shims import Wheel as PipWheel
 from pip_shims.backports import get_session, resolve_possible_shim
@@ -298,3 +300,12 @@ def find_project_root(cwd: str = ".", max_depth: int = 5):
     raise NoProjectError(
         f"No pyproject.toml is found from directory '{original_path.as_posix}'"
     )
+
+
+def get_python_version(executable) -> Tuple[Union[str, int], ...]:
+    args = [
+        executable,
+        "-c",
+        "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))"
+    ]
+    return json.loads(subprocess.check_output(args))

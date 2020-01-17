@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import tomlkit
-from pdm.context import context
 from pdm.models.candidates import Candidate
+from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
@@ -58,12 +58,10 @@ class Project:
         self.root = Path(root_path)
         self.pyproject_file = self.root / self.PYPROJECT_FILENAME
         self.lockfile_file = self.root / "pdm.lock"
-        self.packages_root = None
 
         self._pyproject = None  # type: Optional[TOMLDocument]
         self._lockfile = None  # type: Optional[TOMLDocument]
         self._config = None  # type: Optional[Config]
-        context.init(self)
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"
@@ -91,6 +89,11 @@ class Project:
         if not self._config:
             self._config = Config(self.root)
         return self._config
+
+    @property
+    @pyproject_cache
+    def environment(self) -> Environment:
+        return Environment(self.python_requires, self.config)
 
     @property
     @pyproject_cache
@@ -145,7 +148,7 @@ class Project:
 
     def get_repository(self) -> BaseRepository:
         sources = self.sources or []
-        return self.repository_class(sources)
+        return self.repository_class(sources, self.environment)
 
     def get_project_metadata(self) -> Dict[str, Any]:
         pyproject_content = tomlkit.dumps(self.pyproject)
@@ -165,7 +168,6 @@ class Project:
         self._lockfile = None
 
     def get_locked_candidates(self, section: Optional[str] = None) -> List[Candidate]:
-        repository = self.get_repository()
         section = section or "default"
         result = []
         for package in self.lockfile["package"]:
@@ -175,7 +177,9 @@ class Project:
             if version:
                 package["version"] = f"=={version}"
             req = Requirement.from_req_dict(package["name"], dict(package))
-            can = Candidate(req, repository, name=package["name"], version=version)
+            can = Candidate(
+                req, self.environment, name=package["name"], version=version
+            )
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(

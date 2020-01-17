@@ -1,4 +1,5 @@
-import os
+from __future__ import annotations
+
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -7,15 +8,13 @@ from pip_shims import shims
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
-from distlib.wheel import Wheel
-from pdm.context import context
-from pdm.exceptions import ExtrasError, RequirementError, WheelBuildError
+from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.utils import _allow_all_wheels, cached_property, create_tracked_tempdir
+from pdm.utils import cached_property
 
 if TYPE_CHECKING:
-    from pdm.models.repositories import BaseRepository
+    from pdm.models.environment import Environment
 
 vcs = shims.VcsSupport()
 
@@ -25,34 +24,20 @@ def get_sdist(ireq: shims.InstallRequirement) -> Optional[EggInfoDistribution]:
     return EggInfoDistribution(egg_info) if egg_info else None
 
 
-def get_source_dir() -> str:
-    build_dir = context.project.packages_root
-    if build_dir:
-        src_dir = build_dir / "src"
-        src_dir.mkdir(exist_ok=True)
-        return src_dir.as_posix()
-    venv = os.environ.get("VIRTUAL_ENV", None)
-    if venv:
-        src_dir = os.path.join(venv, "src")
-        if os.path.exists(src_dir):
-            return src_dir
-    return create_tracked_tempdir("pdm-src")
-
-
 class Candidate:
     """A concrete candidate that can be downloaded and installed."""
 
     def __init__(
         self,
         req,  # type: Requirement
-        repository,  # type: BaseRepository
+        environment,  # type: Environment
         name=None,  # type: Optional[str]
         version=None,  # type: Optional[str]
         link=None,  # type: shims.Link
     ):
         # type: (...) -> None
         self.req = req
-        self.repository = repository
+        self.environment = environment
         self.name = name or self.req.project_name
         self.version = version or self.req.version
         if link is None and self.req:
@@ -67,6 +52,10 @@ class Candidate:
         self.build_dir = None
         self.metadata = None
 
+    @property
+    def is_wheel(self) -> bool:
+        return self.link.is_wheel
+
     @cached_property
     def ireq(self) -> shims.InstallRequirement:
         return self.req.as_ireq()
@@ -75,10 +64,6 @@ class Candidate:
         if self.req.is_named:
             return self.name == other.name and self.version == other.version
         return self.name == other.name and self.link == other.link
-
-    @property
-    def is_wheel(self) -> bool:
-        return self.link.is_wheel
 
     @cached_property
     def revision(self) -> str:
@@ -89,20 +74,17 @@ class Candidate:
     def get_metadata(self) -> Optional[Metadata]:
         if self.metadata is not None:
             return self.metadata
-        self.prepare_source()
         ireq = self.ireq
-        if ireq.editable:
+        self.wheel = self.environment.build_wheel(ireq)
+        if not self.wheel:
             if not self.req.is_local_dir and not self.req.is_vcs:
                 raise RequirementError(
                     "Editable installation is only supported for "
                     "local directory and VCS location."
                 )
-            ireq.prepare_metadata()
             sdist = get_sdist(ireq)
             self.metadata = sdist.metadata if sdist else None
         else:
-            if not self.wheel:
-                self._build_wheel()
             self.metadata = self.wheel.metadata
         if not self.name:
             self.name = self.metadata.name
@@ -114,83 +96,17 @@ class Candidate:
     def __repr__(self) -> str:
         return f"<Candidate {self.name} {self.version}>"
 
-    def _make_pip_wheel_args(self) -> Dict[str, Any]:
-        src_dir = self.ireq.source_dir or get_source_dir()
-        if self.req.editable:
-            self.build_dir = src_dir
-        else:
-            self.build_dir = create_tracked_tempdir(prefix="pdm-build")
-        download_dir = context.cache("pkgs")
-        wheel_download_dir = context.cache("wheels")
-        return {
-            "build_dir": self.build_dir,
-            "src_dir": src_dir,
-            "download_dir": download_dir.as_posix(),
-            "wheel_download_dir": wheel_download_dir.as_posix(),
-        }
-
-    def prepare_source(self) -> None:
-        """A local candidate has already everything in local, no need to download."""
-        kwargs = self._make_pip_wheel_args()
-        with self.repository.get_finder() as finder:
-            with _allow_all_wheels():
-                # temporarily allow all wheels to get a link.
-                self.ireq.populate_link(finder, False, False)
-            if not self.req.editable and not self.req.name:
-                self.ireq.source_dir = kwargs["build_dir"]
-            else:
-                self.ireq.ensure_has_source_dir(kwargs["build_dir"])
-            if self.req.editable and self.req.is_local_dir:
-                return
-            download_dir = kwargs["download_dir"]
-            if self.is_wheel:
-                download_dir = kwargs["wheel_download_dir"]
-            shims.shim_unpack(
-                link=self.link,
-                download_dir=download_dir,
-                location=self.ireq.source_dir,
-                session=finder.session,
-            )
-
-    def _build_wheel(self) -> None:
-        if self.is_wheel:
-            self.wheel = Wheel(
-                (context.cache("wheels") / self.link.filename).as_posix()
-            )
-            return
-        if not self.req.name:
-            # Name is not available for a tarball distribution. Get the package name
-            # from package's egg info.
-            # `prepare_metadata()` won't work if there is a `req` attribute available.
-            self.ireq.req = None
-            self.ireq.prepare_metadata()
-            self.req.name = self.ireq.metadata["Name"]
-            self.ireq.req = self.req
-
-        with self.repository.get_finder() as finder:
-            kwargs = self._make_pip_wheel_args()
-            with shims.make_preparer(
-                finder=finder, session=finder.session, **kwargs
-            ) as preparer:
-                wheel_cache = context.make_wheel_cache()
-                builder = shims.WheelBuilder(preparer=preparer, wheel_cache=wheel_cache)
-                output_dir = create_tracked_tempdir(prefix="pdm-ephem")
-                wheel_path = builder._build_one(self.ireq, output_dir)
-                if not wheel_path or not os.path.exists(wheel_path):
-                    raise WheelBuildError(str(self.ireq))
-                self.wheel = Wheel(wheel_path)
-
     @classmethod
     def from_installation_candidate(
         cls,
         candidate,  # type: shims.InstallationCandidate
         req,  # type: Requirement
-        repo,  # type: BaseRepository
+        environment,  # type: Environment
     ):
         # type: (...) -> Candidate
         inst = cls(
             req,
-            repo,
+            environment,
             name=candidate.project,
             version=candidate.version,
             link=candidate.link,

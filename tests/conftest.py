@@ -1,26 +1,23 @@
 import json
 import os
 import shutil
-from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
-import pip_shims
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
 
 import pytest
-from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
-from pdm.types import CandidateInfo, Source
+from pdm.types import CandidateInfo
 from pdm.utils import get_finder
 from tests import FIXTURES
 
@@ -65,8 +62,8 @@ class MockVersionControl(versioncontrol.VersionControl):
 
 
 class TestRepository(BaseRepository):
-    def __init__(self, sources):
-        super().__init__(sources)
+    def __init__(self, sources, environment):
+        super().__init__(sources, environment)
         self._pypi_data = {}
         self.load_fixtures()
 
@@ -115,7 +112,8 @@ class TestRepository(BaseRepository):
         cans = []
         for version, candidate in self._pypi_data.get(requirement.key, {}).items():
             c = Candidate(
-                requirement, self, name=requirement.project_name, version=version
+                requirement, self.environment,
+                name=requirement.project_name, version=version
             )
             c._requires_python = PySpecSet(candidate.get("requires_python", ""))
             cans.append(c)
@@ -142,25 +140,6 @@ class TestRepository(BaseRepository):
             )
         return sorted_cans
 
-    @contextmanager
-    def get_finder(
-        self,
-        sources: Optional[List[Source]] = None,
-        requires_python: Optional[PySpecSet] = None,
-        ignore_requires_python: bool = False,
-    ) -> pip_shims.PackageFinder:
-        sources = sources or self.sources
-
-        finder = get_finder(
-            sources,
-            context.cache_dir.as_posix(),
-            requires_python.max_major_minor_version() if requires_python else None,
-            ignore_requires_python,
-        )
-        finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
-        yield finder
-        finder.session.close()
-
     def load_fixtures(self):
         json_file = FIXTURES / "pypi.json"
         self._pypi_data = json.loads(json_file.read_text())
@@ -170,16 +149,24 @@ class TestProject(Project):
     pass
 
 
-@pytest.fixture()
-def repository():
-    return TestRepository([])
+def get_local_finder(*args, **kwargs):
+    finder = get_finder(*args, **kwargs)
+    finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
+    return finder
 
 
 @pytest.fixture()
-def project(tmp_path):
+def project(tmp_path, mocker):
     p = TestProject()
     p.config["cache_dir"] = tmp_path.as_posix()
+    mocker.patch("pdm.utils.get_finder", get_local_finder)
+    mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     return p
+
+
+@pytest.fixture()
+def repository(project):
+    return TestRepository([], project.environment)
 
 
 @pytest.fixture()

@@ -122,11 +122,14 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
         packages.append(base)
         if v.hashes:
             key = f"{k} {v.version}"
-            metadata.add(key, tomlkit.array())
+            array = tomlkit.array()
+            array.multiline(True)
             for filename, hash_value in v.hashes.items():
                 inline = tomlkit.inline_table()
                 inline.update({"file": filename, "hash": hash_value})
-                metadata[key].append(inline)
+                array.append(inline)
+            if array:
+                metadata.add(key, array)
     doc = tomlkit.document()
     doc.update({"package": packages, "metadata": metadata})
     return doc

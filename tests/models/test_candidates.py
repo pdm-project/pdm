@@ -13,11 +13,10 @@ from tests import FIXTURES
     ],
 )
 def test_parse_vcs_directory_metadata(
-    requirement_line, project, repository, vcs, is_editable
+    requirement_line, project, vcs, is_editable
 ):
     req = parse_requirement(requirement_line, is_editable)
-    candidate = Candidate(req, repository)
-    candidate.prepare_source()
+    candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
@@ -33,9 +32,9 @@ def test_parse_vcs_directory_metadata(
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}",
     ],
 )
-def test_parse_artifact_metadata(requirement_line, project, repository):
+def test_parse_artifact_metadata(requirement_line, project):
     req = parse_requirement(requirement_line)
-    candidate = Candidate(req, repository)
+    candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
@@ -44,12 +43,12 @@ def test_parse_artifact_metadata(requirement_line, project, repository):
     assert candidate.version == "0.0.1"
 
 
-def test_parse_metadata_with_extras(project, repository):
+def test_parse_metadata_with_extras(project):
     req = parse_requirement(
         f"demo[tests,security] @ file://"
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
     )
-    candidate = Candidate(req, repository)
+    candidate = Candidate(req, project.environment)
     assert candidate.is_wheel
     assert sorted(candidate.get_dependencies_from_metadata()) == [
         'chardet; os_name == "nt"',
@@ -59,11 +58,11 @@ def test_parse_metadata_with_extras(project, repository):
     ]
 
 
-def test_parse_remote_link_metadata(project, repository):
+def test_parse_remote_link_metadata(project):
     req = parse_requirement(
         f"http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
-    candidate = Candidate(req, repository)
+    candidate = Candidate(req, project.environment)
     assert candidate.is_wheel
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
@@ -73,11 +72,11 @@ def test_parse_remote_link_metadata(project, repository):
     assert candidate.version == "0.0.1"
 
 
-def test_extras_warning(project, repository, recwarn):
+def test_extras_warning(project, recwarn):
     req = parse_requirement(
         f"demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
-    candidate = Candidate(req, repository)
+    candidate = Candidate(req, project.environment)
     assert candidate.is_wheel
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
