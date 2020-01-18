@@ -153,12 +153,12 @@ class Synchronizer:
             self.install_candidates(
                 [can for k, can in self.candidates.items() if k in to_update]
             )
-        if to_remove and not dry_run:
+        if clean and to_remove and not dry_run:
             self.remove_distributions(to_remove)
         print()
         if to_add:
             _print_list_information("added", to_add)
         if to_update:
             _print_list_information("updated", to_update)
-        if to_remove:
+        if clean and to_remove:
             _print_list_information("removed", to_remove)

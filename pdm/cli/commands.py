@@ -4,9 +4,9 @@ import subprocess
 
 import click
 from pdm.cli import actions
+from pdm.cli.options import dry_run_option, save_strategy_option, sections_option, update_strategy_option
 from pdm.exceptions import CommandNotFound
 from pdm.project import Project
-from pdm.resolver import lock as _lock
 
 pass_project = click.make_pass_decorator(Project, ensure=True)
 context_settings = {
@@ -24,20 +24,11 @@ def cli():
 @cli.command(help="Lock dependencies.")
 @pass_project
 def lock(project):
-    _lock(project)
+    actions.do_lock(project)
 
 
 @cli.command(help="Install dependencies from lock file.")
-@click.option(
-    "-s", "--section", "sections", multiple=True, help="Specify section(s) to install."
-)
-@click.option(
-    "-d", "--dev", default=False, is_flag=True, help="Also install dev dependencies."
-)
-@click.option(
-    "--no-default", "default", flag_value=False, default=True,
-    help="Don't install dependencies from default seciton."
-)
+@sections_option
 @click.option(
     "--no-lock", "lock", flag_value=False, default=True,
     help="Don't do lock if lockfile is not found or outdated."
@@ -47,7 +38,7 @@ def install(project, sections, dev, default, lock):
     if lock and not (
         project.lockfile_file.is_file() and project.is_lockfile_hash_match()
     ):
-        _lock(project)
+        actions.do_lock(project)
     actions.do_sync(project, sections, dev, default, False, False)
 
 
@@ -67,20 +58,8 @@ def run(project, command, args):
 
 
 @cli.command(help="Synchronizes current working set with lock file.")
-@click.option(
-    "-s", "--section", "sections", multiple=True, help="Specify section(s) to install."
-)
-@click.option(
-    "-d", "--dev", default=False, is_flag=True, help="Also install dev dependencies."
-)
-@click.option(
-    "--no-default", "default", flag_value=False, default=True,
-    help="Don't install dependencies from default seciton."
-)
-@click.option(
-    "--dry-run", is_flag=True, default=False,
-    help="Only prints actions without actually running them."
-)
+@sections_option
+@dry_run_option
 @click.option(
     "--clean/--no-clean", "clean", default=None,
     help="Whether to remove unneeded packages from working set."
@@ -88,3 +67,48 @@ def run(project, command, args):
 @pass_project
 def sync(project, sections, dev, default, dry_run, clean):
     actions.do_sync(project, sections, dev, default, dry_run, clean)
+
+
+@cli.command(help="Add packages to pyproject.toml and install them.")
+@click.option(
+    "-d", "--dev", default=False, is_flag=True,
+    help="Add packages into dev dependencies."
+)
+@click.option("-s", "--section", help="Specify target section to add into.")
+@click.option(
+    "--no-install", "install", flag_value=False, default=True,
+    help="Only write pyproject.toml and do not install packages."
+)
+@save_strategy_option
+@update_strategy_option
+@click.option("-e", "editables", multiple=True, help="Specify editable packages.")
+@click.argument("packages", nargs=-1)
+@pass_project
+def add(project, dev, section, install, save, strategy, editables, packages):
+    actions.do_add(project, dev, section, install, save, strategy, editables, packages)
+
+
+@cli.command(help="Update packages in pyproject.toml")
+@sections_option
+@save_strategy_option
+@update_strategy_option
+@click.argument("packages", nargs=-1)
+@pass_project
+def update(project, dev, sections, default, save, strategy, packages):
+    pass
+
+
+@cli.command(help="Remove packages from pyproject.toml")
+@click.option(
+    "-d", "--dev", default=False, is_flag=True,
+    help="Remove packages from dev dependencies."
+)
+@click.option("-s", "--section", help="Specify target section the package belongs to")
+@click.option(
+    "--no-install", "install", flag_value=False, default=True,
+    help="Only write pyproject.toml and do not uninstall packages."
+)
+@click.argument("packages", nargs=-1)
+@pass_project
+def remove(project, dev, section, install, packages):
+    pass

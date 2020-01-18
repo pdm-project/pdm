@@ -20,7 +20,6 @@ from pip_shims.backports import get_session, resolve_possible_shim
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
 from distlib.wheel import Wheel
-from pdm.exceptions import ProjectError
 from pdm.types import Source
 
 if TYPE_CHECKING:
@@ -299,7 +298,7 @@ def _allow_all_wheels():
     PipWheel.support_index_min = original_support_index_min
 
 
-def find_project_root(cwd: str = ".", max_depth: int = 5):
+def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
     """Recursively find a `pyproject.toml` at given path or current working directory.
     If none if found, go to the parent directory, at most `max_depth` levels will be
     looked for.
@@ -313,10 +312,7 @@ def find_project_root(cwd: str = ".", max_depth: int = 5):
             # Root path is reached
             break
         path = path.parent
-
-    raise ProjectError(
-        f"No pyproject.toml is found from directory '{original_path.as_posix}'"
-    )
+    return None
 
 
 def get_python_version(executable) -> Tuple[Union[str, int], ...]:

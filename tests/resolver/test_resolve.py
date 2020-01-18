@@ -1,18 +1,36 @@
 import pytest
 from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
+from pdm.models.candidates import identify
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import do_lock
+from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, SimpleReporter, resolve
 from tests import FIXTURES
 
 
 def resolve_requirements(
-    repository, requirements, requires_python="", allow_prereleases=None
+    repository, lines, requires_python="", allow_prereleases=None,
+    strategy="reuse", preferred_pins=None, tracked_names=None
 ):
-    requirements = [parse_requirement(r) for r in requirements]
-    return do_lock(
-        requirements, repository, PySpecSet(requires_python), allow_prereleases
-    )[0]
+    requirements = {}
+    for line in lines:
+        req = parse_requirement(line)
+        requirements[identify(req)] = req
+    requires_python = PySpecSet(requires_python)
+    if not preferred_pins:
+        provider = BaseProvider(repository, requires_python, allow_prereleases)
+    else:
+        provider_class = (
+            ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
+        )
+        provider = provider_class(
+            preferred_pins, tracked_names or (), repository,
+            requires_python, allow_prereleases
+        )
+    reporter = SimpleReporter(requirements)
+    mapping, *_ = resolve(
+        provider, reporter, requirements, requires_python
+    )
+    return mapping
 
 
 def test_resolve_named_requirement(project, repository):

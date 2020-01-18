@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
@@ -109,7 +109,7 @@ class BaseRepository:
         summary = candidate.metadata.summary
         return deps, requires_python, summary
 
-    def get_hashes(self, candidate: Candidate) -> None:
+    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
         if (
             candidate.hashes
             or candidate.req.is_vcs
@@ -122,7 +122,7 @@ class BaseRepository:
             matching_candidates = self.find_matches(req, allow_all=True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
-            candidate.hashes = {
+            return {
                 c.link.filename: self._hash_cache.get_hash(c.link)
                 for c in matching_candidates
             }

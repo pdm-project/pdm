@@ -1,5 +1,9 @@
+import click
+
+
 class PdmException(Exception):
-    pass
+    def __init__(self, *args):
+        super().__init__(*args)
 
 
 class RequirementError(PdmException, ValueError):
@@ -19,6 +23,10 @@ class ProjectNotInitialized(PdmException):
 
 
 class CorruptedCacheError(PdmException):
+    pass
+
+
+class PdmUsageError(PdmException, click.UsageError):
     pass
 
 
@@ -81,7 +89,7 @@ class NoPythonVersion(PdmException):
     pass
 
 
-class CommandNotFound(PdmException):
+class CommandNotFound(PdmUsageError):
     def __init__(self, command):
         super.__init__(command)
         self.command = command

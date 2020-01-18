@@ -16,7 +16,7 @@ def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
     return SpecifierSet(version_str)
 
 
-def _parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
+def parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
     version = re.sub(r"(?<!\.)\*", ".*", version)
     try:
         return tuple(int(v) if v != "*" else v for v in version.split("."))
@@ -27,11 +27,10 @@ def _parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
         )
 
 
-def _bump_version(
+def bump_version(
     version: Tuple[Union[int, str], ...], index: int = -1
 ) -> Tuple[int, ...]:
-    head, value = version[:index], version[index]
-    assert isinstance(value, int)
+    head, value = version[:index], int(version[index])
     new_version = _complete_version((*head, value + 1))
     return new_version  # type: ignore
 
@@ -105,7 +104,7 @@ class PySpecSet(SpecifierSet):
         excludes = set()  # type: Set[Tuple[Union[int, str], ...]]
         for spec in self:
             op, version = spec.operator, spec.version
-            version = _parse_version_tuple(version)
+            version = parse_version_tuple(version)
             if version[-1] == "*":
                 if op == "==":
                     op = "~="
@@ -117,7 +116,7 @@ class PySpecSet(SpecifierSet):
                 version = _complete_version(version)
             if op in ("==", "==="):
                 lower_bound = version
-                upper_bound = _bump_version(version)
+                upper_bound = bump_version(version)
                 break
             if op == "!=":
                 excludes.add(version)
@@ -125,19 +124,19 @@ class PySpecSet(SpecifierSet):
                 if op == ">=":
                     new_lower = version
                 else:
-                    new_lower = _bump_version(version)
+                    new_lower = bump_version(version)
                 if new_lower > lower_bound:
                     lower_bound = new_lower
             elif op[0] == "<":
                 if op == "<=":
-                    new_upper = _bump_version(version)
+                    new_upper = bump_version(version)
                 else:
                     new_upper = version
                 if new_upper < upper_bound:
                     upper_bound = new_upper
             elif op == "~=":
                 new_lower = _complete_version(version)
-                new_upper = _bump_version(version, -2)
+                new_upper = bump_version(version, -2)
                 if new_upper < upper_bound:
                     upper_bound = new_upper
                 if new_lower > lower_bound:
@@ -181,7 +180,7 @@ class PySpecSet(SpecifierSet):
                     sorted_excludes.remove(version)
                 elif _version_part_match(valid_version, lower):
                     # The lower bound is excluded
-                    lower = _bump_version(version, -2)
+                    lower = bump_version(version, -2)
                     sorted_excludes.remove(version)
                 elif _version_part_match(valid_version, upper):
                     upper = _complete_version(valid_version)
@@ -190,7 +189,7 @@ class PySpecSet(SpecifierSet):
                 if version < lower or version >= upper:
                     sorted_excludes.remove(version)
                 elif version == lower:
-                    lower = _bump_version(version)
+                    lower = bump_version(version)
                     sorted_excludes.remove(version)
         self._lower_bound = lower
         self._upper_bound = upper
@@ -294,40 +293,40 @@ class PySpecSet(SpecifierSet):
         prev = lower
         while prev < upper:
             if prev[-2:] == (0, 0):
-                cur = _bump_version(prev, 0)
+                cur = bump_version(prev, 0)
                 if cur <= upper:  # X.0.0 -> X+1.0.0
                     yield (prev[0], "*")
                     prev = cur
                     continue
             if prev[-1] == 0:
-                cur = _bump_version(prev, 1)
+                cur = bump_version(prev, 1)
                 if cur <= upper:  # X.Y.0 -> X.Y+1.0
                     yield (*prev[:2], "*")
                     prev = (
-                        _bump_version(prev, 0)
+                        bump_version(prev, 0)
                         if cur[0] < 3 and cur[1] > self.MAX_PY_VERSIONS[(cur[0],)]
                         else cur
                     )
                     continue
                 while prev < upper:  # X.Y.0 -> X.Y.Z
                     yield prev
-                    prev = _bump_version(prev)
+                    prev = bump_version(prev)
                 break
             # no wildcard is available
-            cur = _bump_version(prev, 1)
+            cur = bump_version(prev, 1)
             if cur <= upper:  # X.Y.Z -> X.Y+1.0
                 current_max = self.MAX_PY_VERSIONS[(*prev[:2],)]
                 for z in range(prev[2], current_max + 1):
                     yield (*prev[:2], z)
                 prev = (
-                    _bump_version(prev, 0)
+                    bump_version(prev, 0)
                     if cur[0] < 3 and cur[1] > self.MAX_PY_VERSIONS[(cur[0],)]
                     else cur
                 )
             else:  # X.Y.Z -> X.Y.W
                 while prev < upper:
                     yield prev
-                    prev = _bump_version(prev)
+                    prev = bump_version(prev)
                 break
 
     @lru_cache()

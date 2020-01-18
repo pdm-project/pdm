@@ -9,7 +9,7 @@ from pdm.resolver.structs import DirectedGraph
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
-    from pdm.resolver.providers import RepositoryProvider
+    from pdm.resolver.providers import BaseProvider
     from pdm.resolver.reporters import SimpleReporter
 
 RequirementInformation = collections.namedtuple('RequirementInformation', [
@@ -40,7 +40,7 @@ class Criterion(object):
     @classmethod
     def from_requirement(
         cls,
-        provider: RepositoryProvider,
+        provider: BaseProvider,
         requirement: Requirement,
         parent: Candidate
     ) -> "Criterion":
@@ -62,7 +62,7 @@ class Criterion(object):
 
     def merged_with(
         self,
-        provider: RepositoryProvider,
+        provider: BaseProvider,
         requirement: Requirement,
         parent: Candidate
     ) -> "Criterion":
@@ -90,7 +90,7 @@ class Resolution(object):
     the resolution process, and holds the results afterwards.
     """
 
-    def __init__(self, provider: RepositoryProvider, reporter: SimpleReporter):
+    def __init__(self, provider: BaseProvider, reporter: SimpleReporter):
         self._p = provider
         self._r = reporter
         self._criteria = {}  # type: Dict[str, Criterion]
@@ -217,7 +217,7 @@ class Resolution(object):
             else:  # All candidates tried, nothing works. Give up. (?)
                 raise ResolutionImpossible(list(criterion.iter_requirement()))
 
-    def resolve(self, requirements: List[Requirement], max_rounds: int) -> None:
+    def resolve(self, requirements: Iterable[Requirement], max_rounds: int) -> None:
         if self._states:
             raise RuntimeError('already resolved')
 
@@ -255,11 +255,11 @@ class Resolver(object):
     """The thing that performs the actual resolution work.
     """
 
-    def __init__(self, provider: RepositoryProvider, reporter: SimpleReporter) -> None:
+    def __init__(self, provider: BaseProvider, reporter: SimpleReporter) -> None:
         self.provider = provider
         self.reporter = reporter
 
-    def resolve(self, requirements: List[Requirement], max_rounds: int = 20) -> State:
+    def resolve(self, requirements: Iterable[Requirement], max_rounds: int = 20) -> State:
         """Take a collection of constraints, spit out the resolution result.
 
         The return value is a representation to the final resolution result. It

@@ -1,10 +1,8 @@
 import copy
-import time
 
-import tomlkit
 from pdm.models.markers import PySpecSet, join_metaset
-from pdm.resolver.providers import RepositoryProvider
-from pdm.resolver.reporters import SimpleReporter
+from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider  # noqa
+from pdm.resolver.reporters import SimpleReporter  # noqa
 from pdm.resolver.resolvers import Resolver
 
 
@@ -101,40 +99,6 @@ def _calculate_markers_and_pyspecs(traces, dependencies, pythons):
     return all_metasets
 
 
-def format_lockfile(mapping, fetched_dependencies, summary_collection):
-    packages = tomlkit.aot()
-    metadata = tomlkit.table()
-    for k, v in mapping.items():
-        base = tomlkit.table()
-        base.update(v.as_lockfile_entry())
-        base.add("summary", summary_collection[k])
-        deps = tomlkit.table()
-        for r in fetched_dependencies[k].values():
-            name, req = r.as_req_dict()
-            if getattr(req, "items", None) is not None:
-                inline = tomlkit.inline_table()
-                inline.update(req)
-                deps.add(name, inline)
-            else:
-                deps.add(name, req)
-        if len(deps) > 0:
-            base.add("dependencies", deps)
-        packages.append(base)
-        if v.hashes:
-            key = f"{k} {v.version}"
-            array = tomlkit.array()
-            array.multiline(True)
-            for filename, hash_value in v.hashes.items():
-                inline = tomlkit.inline_table()
-                inline.update({"file": filename, "hash": hash_value})
-                array.append(inline)
-            if array:
-                metadata.add(key, array)
-    doc = tomlkit.document()
-    doc.update({"package": packages, "metadata": metadata})
-    return doc
-
-
 def _get_sections_from_top_requirements(traces, fetched_dependencies):
     all_sections = {}
     top_requirements = fetched_dependencies[None]
@@ -147,14 +111,10 @@ def _get_sections_from_top_requirements(traces, fetched_dependencies):
     return all_sections
 
 
-def do_lock(requirements, repository, requires_python, allow_prereleases):
-    provider = RepositoryProvider(repository, requires_python, allow_prereleases)
-    reporter = SimpleReporter(requirements)
+def resolve(provider, reporter, requirements, requires_python):
     resolver = Resolver(provider, reporter)
-    state = resolver.resolve(requirements)
-    provider.fetched_dependencies[None] = {
-        provider.identify(r): r for r in requirements
-    }
+    state = resolver.resolve(requirements.values())
+    provider.fetched_dependencies[None] = requirements
     traces = trace_graph(state.graph)
     all_metasets = _calculate_markers_and_pyspecs(
         traces, provider.fetched_dependencies, provider.requires_python_collection
@@ -176,22 +136,5 @@ def do_lock(requirements, repository, requires_python, allow_prereleases):
             candidate = state.mapping[key]
             candidate.marker = join_metaset(metaset)
             candidate.sections = list(all_sections[key])
-            repository.get_hashes(candidate)
+            candidate.hashes = provider.get_hashes(candidate)
     return state.mapping, provider.fetched_dependencies, provider.summary_collection
-
-
-def lock(project, updates=None):
-    repository = project.get_repository()
-    requirements = project.all_dependencies
-    allow_prereleases = project.allow_prereleases
-    requires_python = project.python_requires
-
-    start = time.time()
-    mapping, dependencies, summaries = do_lock(
-        requirements, repository, requires_python, allow_prereleases
-    )
-    data = format_lockfile(mapping, dependencies, summaries)
-    project.write_lockfile(data)
-    print("total time cost: {} s".format(time.time() - start))
-
-    return data

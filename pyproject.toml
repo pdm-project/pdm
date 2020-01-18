@@ -2,12 +2,13 @@
 python_requires = ">=3.7"
 
 [tool.pdm.dependencies]
-click = "*"
-pip_shims = "*"
 appdirs = "*"
+click = "*"
 distlib = "*"
-tomlkit = "*"
+parver = "<1.0.0,>=0.2.1"
+pip_shims = "*"
 pythonfinder = "*"
+tomlkit = "*"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"

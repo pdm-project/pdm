@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
@@ -22,6 +22,17 @@ vcs = shims.VcsSupport()
 def get_sdist(ireq: shims.InstallRequirement) -> Optional[EggInfoDistribution]:
     egg_info = ireq.metadata_directory
     return EggInfoDistribution(egg_info) if egg_info else None
+
+
+def identify(req: Union[Candidate, Requirement]) -> Optional[str]:
+    if isinstance(req, Candidate):
+        req = req.req
+    if req.key is None:
+        # Name attribute may be None for local tarballs.
+        # It will be picked up in the following get_dependencies calls.
+        return None
+    extras = "[{}]".format(",".join(sorted(req.extras))) if req.extras else ""
+    return req.key + extras
 
 
 class Candidate:

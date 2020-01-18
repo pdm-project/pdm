@@ -32,7 +32,7 @@ FILE_REQ = re.compile(
 )
 
 
-def _strip_extras(line):
+def strip_extras(line):
     match = re.match(r"^(.+?)(?:\[([^\]]+)\])?$", line)
     assert match is not None
     name, extras = match.groups()
@@ -133,7 +133,7 @@ class Requirement:
             r["url"] = self.url
         if self.marker:
             r["marker"] = str(self.marker)
-        if self.specs:
+        if self.specifier:
             r["version"] = str(self.specifier)
         elif self.is_named:
             r["version"] = "*"
@@ -271,7 +271,7 @@ class FileRequirement(Requirement):
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
         if "egg" in fragments:
             egg_info = urlparse.unquote(fragments["egg"])
-            name, extras = _strip_extras(egg_info)
+            name, extras = strip_extras(egg_info)
             self.name = name
             self.extras = extras
         if not self.name:

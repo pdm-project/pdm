@@ -1,15 +1,17 @@
 import hashlib
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
+
+from pip._vendor.pkg_resources import safe_name
 
 import tomlkit
 from pdm.context import context
 from pdm.exceptions import ProjectError
-from pdm.models.candidates import Candidate
+from pdm.models.candidates import Candidate, identify
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository, PyPIRepository
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import Requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.types import Source
@@ -56,8 +58,8 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         if root_path is None:
-            root_path = find_project_root()
-        self.root = Path(root_path)
+            root_path = find_project_root() or ''
+        self.root = Path(root_path).absolute()
         self.pyproject_file = self.root / self.PYPROJECT_FILENAME
         self.lockfile_file = self.root / "pdm.lock"
 
@@ -105,40 +107,52 @@ class Project:
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.pyproject.get("python_requires", ""))
 
-    def get_dependencies(self, section: Optional[str] = None) -> List[Requirement]:
+    def get_dependencies(self, section: Optional[str] = None) -> Dict[str, Requirement]:
         if section is None:
             deps = self.pyproject.get("dependencies", [])
         elif section == "dev":
             deps = self.pyproject.get("dev-dependencies", [])
         else:
             deps = self.pyproject[f"{section}-dependencies"]
-        result = []
+        result = {}
         for name, dep in deps.items():
             req = Requirement.from_req_dict(name, dep)
             req.from_section = section or "default"
-            result.append(req)
+            result[identify(req)] = req
         return result
 
     @property
     @pyproject_cache
-    def dependencies(self) -> List[Requirement]:
+    def dependencies(self) -> Dict[str, Requirement]:
         return self.get_dependencies()
 
     @property
     @pyproject_cache
-    def dev_dependencies(self) -> List[Requirement]:
+    def dev_dependencies(self) -> Dict[str, Requirement]:
         return self.get_dependencies("dev")
 
-    @property
-    @pyproject_cache
-    def all_dependencies(self) -> List[Requirement]:
-        result = []
+    def iter_sections(self) -> Iterable[str]:
         for key in self.pyproject:
             match = self.DEPENDENCIES_RE.match(key)
             if not match:
                 continue
             section = match.group(1) or None
-            result.extend(self.get_dependencies(section))
+            yield section
+
+    @property
+    @pyproject_cache
+    def all_dependencies(self) -> Dict[str, Requirement]:
+
+        def sort_key(name):
+            """dev dependencies always take precendence over other secitons,
+            then default dependencies"""
+            # based on character comprison, because section names are all alphabetic.
+            keys = {"dev": chr(123), None: chr(124)}
+            return keys.get(name, name)
+
+        result = {}
+        for section in sorted(self.iter_sections(), key=sort_key):
+            result.update(self.get_dependencies(section))
         return result
 
     @property
@@ -178,7 +192,7 @@ class Project:
         section = section or "default"
         result = {}
         for package in [dict(p) for p in self.lockfile["package"]]:
-            if section not in package["sections"]:
+            if section != "__all__" and section not in package["sections"]:
                 continue
             version = package.get("version")
             if version:
@@ -197,13 +211,68 @@ class Project:
             result[req.key] = can
         return result
 
+    def get_content_hash(self, algo: str = "md5") -> str:
+        pyproject_content = tomlkit.dumps(self.pyproject)
+        hasher = hashlib.new(algo)
+        hasher.update(pyproject_content.encode("utf-8"))
+        return hasher.hexdigest()
+
     def is_lockfile_hash_match(self) -> bool:
         if not self.lockfile_file.exists():
             return False
         hash_in_lockfile = self.lockfile["root"]["content_hash"]
         algo, hash_value = hash_in_lockfile.split(":")
-        hasher = hashlib.new(algo)
-        pyproject_content = tomlkit.dumps(self.pyproject)
-        hasher.update(pyproject_content.encode("utf-8"))
-        content_hash = hasher.hexdigest()
+        content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
+
+    def add_dependencies(self, requirements: Dict[str, Requirement]) -> None:
+        for name, dep in requirements.items():
+            if dep.from_section == "default":
+                deps = self.pyproject["dependencies"]
+            elif dep.from_section == "dev":
+                deps = self.pyproject["dev-dependencies"]
+            else:
+                section = f"{dep.from_section}-dependencies"
+                if section not in self.pyproject:
+                    self.pyproject[section] = tomlkit.table()
+                deps = self.pyproject[section]
+
+            matched_name = next(
+                filter(
+                    lambda k: strip_extras(name)[0] == safe_name(k).lower(),
+                    deps.keys()
+                ), None
+            )
+            name_to_save = dep.name if matched_name is None else matched_name
+            _, req_dict = dep.as_req_dict()
+            if isinstance(req_dict, dict):
+                req = tomlkit.inline_table()
+                req.update(req_dict)
+                req_dict = req
+            deps[name_to_save] = req_dict
+        self.write_pyproject()
+
+    def write_pyproject(self) -> None:
+        if self.pyproject_file.exists():
+            original = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
+        else:
+            original = tomlkit.document()
+        data = original
+        *parts, last = self.PDM_NAMESPACE.split(".")
+        for part in parts:
+            data = data.setdefault(part, tomlkit.table())
+        data[last] = tomlkit.table()
+        data[last].update(self._pyproject)
+
+        with atomic_open_for_write(
+            self.pyproject_file.as_posix(), encoding="utf-8"
+        ) as f:
+            f.write(tomlkit.dumps(original))
+        self._pyproject = None
+
+    def init_pyproject(self) -> None:
+        self._pyproject = {
+            "dependencies": tomlkit.table(),
+            "dev-dendencies": tomlkit.table()
+        }
+        self.write_pyproject()
