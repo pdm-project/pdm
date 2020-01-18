@@ -204,5 +204,6 @@ class Project:
         algo, hash_value = hash_in_lockfile.split(":")
         hasher = hashlib.new(algo)
         pyproject_content = tomlkit.dumps(self.pyproject)
-        content_hash = hasher(pyproject_content.encode("utf-8")).hexdigest()
+        hasher.update(pyproject_content.encode("utf-8"))
+        content_hash = hasher.hexdigest()
         return content_hash == hash_value
