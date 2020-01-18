@@ -12,6 +12,7 @@ from pip._internal.utils import misc
 from pip._vendor import pkg_resources
 from pip_shims import shims
 
+from distlib.wheel import Wheel
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion, WheelBuildError
 from pdm.utils import (
@@ -23,7 +24,6 @@ from vistir.path import normalize_path
 
 if TYPE_CHECKING:
     from pdm.models.specifiers import PySpecSet
-    from distlib.wheel import Wheel
     from pdm.project.config import Config
     from pdm.types import Source
 
