@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import tomlkit
-from pdm.installers import Installer
+from pdm.context import context
+from pdm.exceptions import ProjectError
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository, PyPIRepository
@@ -63,6 +64,7 @@ class Project:
         self._pyproject = None  # type: Optional[TOMLDocument]
         self._lockfile = None  # type: Optional[TOMLDocument]
         self._config = None  # type: Optional[Config]
+        context.init(self)
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"
@@ -80,7 +82,9 @@ class Project:
     @property
     def lockfile(self):
         # type: () -> TOMLDocument
-        if not self._lockfile and self.lockfile_file.exists():
+        if not self.lockfile_file.is_file():
+            raise ProjectError("Lock file does not exist.")
+        if not self._lockfile:
             data = tomlkit.parse(self.lockfile_file.read_text("utf-8"))
             self._lockfile = data
         return self._lockfile
@@ -168,9 +172,11 @@ class Project:
             fp.write(tomlkit.dumps(toml_data))
         self._lockfile = None
 
-    def get_locked_candidates(self, section: Optional[str] = None) -> List[Candidate]:
+    def get_locked_candidates(
+        self, section: Optional[str] = None
+    ) -> Dict[str, Candidate]:
         section = section or "default"
-        result = []
+        result = {}
         for package in [dict(p) for p in self.lockfile["package"]]:
             if section not in package["sections"]:
                 continue
@@ -188,7 +194,7 @@ class Project:
                     f"{package_name} {version}", []
                 )
             }
-            result.append(can)
+            result[req.key] = can
         return result
 
     def is_lockfile_hash_match(self) -> bool:
@@ -200,6 +206,3 @@ class Project:
         pyproject_content = tomlkit.dumps(self.pyproject)
         content_hash = hasher(pyproject_content.encode("utf-8")).hexdigest()
         return content_hash == hash_value
-
-    def get_installer(self) -> Installer:
-        return Installer(self.environment)

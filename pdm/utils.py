@@ -20,7 +20,7 @@ from pip_shims.backports import get_session, resolve_possible_shim
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
 from distlib.wheel import Wheel
-from pdm.exceptions import NoProjectError
+from pdm.exceptions import ProjectError
 from pdm.types import Source
 
 if TYPE_CHECKING:
@@ -314,7 +314,7 @@ def find_project_root(cwd: str = ".", max_depth: int = 5):
             break
         path = path.parent
 
-    raise NoProjectError(
+    raise ProjectError(
         f"No pyproject.toml is found from directory '{original_path.as_posix}'"
     )
 

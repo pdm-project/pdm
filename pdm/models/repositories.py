@@ -4,6 +4,7 @@ import sys
 from functools import wraps
 from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Tuple
 
+from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, filter_requirements_with_extras, parse_requirement
@@ -31,8 +32,8 @@ class BaseRepository:
     def __init__(self, sources: List[Source], environment: Environment) -> None:
         self.sources = sources
         self.environment = environment
-        self._candidate_info_cache = self.environment.make_candidate_info_cache()
-        self._hash_cache = self.environment.make_hash_cache()
+        self._candidate_info_cache = context.make_candidate_info_cache()
+        self._hash_cache = context.make_hash_cache()
 
     def get_filtered_sources(self, req: Requirement) -> List[Source]:
         if not req.index:

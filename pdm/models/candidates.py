@@ -49,7 +49,6 @@ class Candidate:
         self._requires_python = None
 
         self.wheel = None
-        self.build_dir = None
         self.metadata = None
 
     def __hash__(self):

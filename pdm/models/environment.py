@@ -1,54 +1,37 @@
-import hashlib
+from __future__ import annotations
+
 import os
 import sys
 import sysconfig
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from pip._internal.req import req_uninstall
+from pip._internal.utils import misc
+from pip._vendor import pkg_resources
 from pip_shims import shims
 
-from distlib.wheel import Wheel
+from pdm.context import context
 from pdm.exceptions import NoPythonVersion, WheelBuildError
-from pdm.models.caches import CandidateInfoCache, HashCache
-from pdm.models.specifiers import PySpecSet
-from pdm.project.config import Config
-from pdm.types import Source
 from pdm.utils import (
     _allow_all_wheels, cached_property, convert_hashes, create_tracked_tempdir, get_finder, get_python_version,
 )
 from pythonfinder import Finder
 from vistir.contextmanagers import temp_environ
+from vistir.path import normalize_path
+
+if TYPE_CHECKING:
+    from pdm.models.specifiers import PySpecSet
+    from distlib.wheel import Wheel
+    from pdm.project.config import Config
+    from pdm.types import Source
 
 
 class Environment:
     def __init__(self, python_requires: PySpecSet, config: Config) -> None:
         self.python_requires = python_requires
         self.config = config
-
-    @property
-    def cache_dir(self) -> Path:
-        return Path(self.config.get("cache_dir"))
-
-    def cache(self, name: str) -> Path:
-        path = self.cache_dir / name
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
-    def make_wheel_cache(self) -> shims.WheelCache:
-        return shims.WheelCache(
-            self.cache_dir.as_posix(), shims.FormatControl(set(), set()),
-        )
-
-    def make_candidate_info_cache(self) -> CandidateInfoCache:
-        python_hash = hashlib.sha1(
-            str(self.python_requires).encode()
-        ).hexdigest()
-        file_name = f"package_meta_{python_hash}.json"
-        return CandidateInfoCache(self.cache_dir / file_name)
-
-    def make_hash_cache(self) -> HashCache:
-        return HashCache(directory=self.cache("hashes").as_posix())
 
     @cached_property
     def python_executable(self) -> str:
@@ -98,7 +81,21 @@ class Environment:
             os.environ["PATH"] = os.pathsep.join(
                 [python_root, paths["scripts"], os.environ["PATH"]]
             )
+            working_set = self.get_working_set()
+            _old_ws = pkg_resources.working_set
+            pkg_resources.working_set = working_set
+            # HACK: Replace the is_local with environment version so that packages can
+            # be removed correctly.
+            _is_local = misc.is_local
+            misc.is_local = req_uninstall.is_local = self.is_local
             yield
+            misc.is_local = req_uninstall.is_local = _is_local
+            pkg_resources.working_set = _old_ws
+
+    def is_local(self, path) -> bool:
+        return normalize_path(path).startswith(
+            normalize_path(self.packages_path.as_posix())
+        )
 
     @cached_property
     def packages_path(self) -> Path:
@@ -120,8 +117,8 @@ class Environment:
             build_dir = src_dir
         else:
             build_dir = create_tracked_tempdir(prefix="pdm-build")
-        download_dir = self.cache("pkgs")
-        wheel_download_dir = self.cache("wheels")
+        download_dir = context.cache("pkgs")
+        wheel_download_dir = context.cache("wheels")
         return {
             "build_dir": build_dir,
             "src_dir": src_dir,
@@ -152,7 +149,7 @@ class Environment:
         python_version = get_python_version(self.python_executable)[:2]
         finder = get_finder(
             sources,
-            self.cache_dir.as_posix(),
+            context.cache_dir.as_posix(),
             python_version,
             ignore_requires_python,
         )
@@ -192,7 +189,7 @@ class Environment:
 
             if ireq.link.is_wheel:
                 return Wheel(
-                    (self.cache("wheels") / ireq.link.filename).as_posix()
+                    (context.cache("wheels") / ireq.link.filename).as_posix()
                 )
             # VCS url is unpacked, now build the egg-info
             if ireq.editable and ireq.req.is_vcs:
@@ -212,10 +209,14 @@ class Environment:
             with shims.make_preparer(
                 finder=finder, session=finder.session, **kwargs
             ) as preparer:
-                wheel_cache = self.make_wheel_cache()
+                wheel_cache = context.make_wheel_cache()
                 builder = shims.WheelBuilder(preparer=preparer, wheel_cache=wheel_cache)
                 output_dir = create_tracked_tempdir(prefix="pdm-ephem")
                 wheel_path = builder._build_one(ireq, output_dir)
                 if not wheel_path or not os.path.exists(wheel_path):
                     raise WheelBuildError(str(ireq))
                 return Wheel(wheel_path)
+
+    def get_working_set(self) -> pkg_resources.WorkingSet:
+        paths = self.get_paths()
+        return pkg_resources.WorkingSet([paths["platlib"]])
