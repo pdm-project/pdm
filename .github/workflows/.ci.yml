@@ -14,9 +14,8 @@ jobs:
           python-version: 3.7
       - name: Linting
         run: |
-          pip install pre-commit
-          pre-commit run
-
+          pip install flake8
+          flake8 pdm
   Testing:
     needs: Linting
     runs-on: ${{ matrix.os }}

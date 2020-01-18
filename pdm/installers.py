@@ -26,6 +26,14 @@ def _is_dist_editable(working_set: WorkingSet, dist: Distribution) -> bool:
     return False
 
 
+def _print_list_information(word, items):
+    template = "{count} package{suffix} {word}: {items}"
+    suffix = "s" if len(items) > 1 else ""
+    count = len(items)
+    items = ", ".join(items)
+    print(template.format(count=count, suffix=suffix, word=word, items=items))
+
+
 class Installer:
     # TODO: Support PEP 517 builds
 
@@ -44,6 +52,7 @@ class Installer:
     def install_wheel(self, wheel: Wheel) -> None:
         paths = self.environment.get_paths()
         scripts = distlib.scripts.ScriptMaker(None, None)
+        scripts.executable = self.environment.python_executable
         scripts.script_template = scripts.script_template.replace(
             "import sys",
             "import sys; sys.path.insert(0, {!r})".format(paths["platlib"])
@@ -136,19 +145,20 @@ class Synchronizer:
         if not any(lists_to_check):
             print("All packages are synced to date, nothing to do.")
             return
+        if to_add and not dry_run:
+            self.install_candidates(
+                [can for k, can in self.candidates.items() if k in to_add]
+            )
+        if to_update and not dry_run:
+            self.install_candidates(
+                [can for k, can in self.candidates.items() if k in to_update]
+            )
+        if to_remove and not dry_run:
+            self.remove_distributions(to_remove)
+        print()
         if to_add:
-            print("Packages to be added:", ", ".join(to_add))
-            if not dry_run:
-                self.install_candidates(
-                    [can for k, can in self.candidates.items() if k in to_add]
-                )
+            _print_list_information("added", to_add)
         if to_update:
-            print("Packages to be updated:", ", ".join(to_update))
-            if not dry_run:
-                self.install_candidates(
-                    [can for k, can in self.candidates.items() if k in to_update]
-                )
+            _print_list_information("updated", to_update)
         if to_remove:
-            print("Packages to be removed:", ", ".join(to_remove))
-            if not dry_run:
-                self.remove_distributions(to_remove)
+            _print_list_information("removed", to_remove)
