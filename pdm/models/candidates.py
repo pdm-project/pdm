@@ -195,4 +195,7 @@ class Candidate:
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
-        return f"{crayons.green(self.name, bold=True)} {crayons.yellow(self.version)}"
+        return (
+            f"{crayons.green(self.name, bold=True)} "
+            f"{crayons.yellow(str(self.version))}"
+        )
