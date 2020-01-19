@@ -50,7 +50,7 @@ class Context:
     @require_initialize
     def make_wheel_cache(self) -> shims.WheelCache:
         return shims.WheelCache(
-            self.cache_dir.as_posix(), shims.FormatControl(set(), set()),
+            self.cache_dir.as_posix(), shims.FormatControl(set(), set())
         )
 
     @require_initialize

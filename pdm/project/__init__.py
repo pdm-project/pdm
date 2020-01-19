@@ -58,7 +58,7 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         if root_path is None:
-            root_path = find_project_root() or ''
+            root_path = find_project_root() or ""
         self.root = Path(root_path).absolute()
         self.pyproject_file = self.root / self.PYPROJECT_FILENAME
         self.lockfile_file = self.root / "pdm.lock"
@@ -192,9 +192,7 @@ class Project:
                 package["version"] = f"=={version}"
             package_name = package.pop("name")
             req = Requirement.from_req_dict(package_name, dict(package))
-            can = Candidate(
-                req, self.environment, name=package_name, version=version
-            )
+            can = Candidate(req, self.environment, name=package_name, version=version)
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(
@@ -232,9 +230,9 @@ class Project:
 
             matched_name = next(
                 filter(
-                    lambda k: strip_extras(name)[0] == safe_name(k).lower(),
-                    deps.keys()
-                ), None
+                    lambda k: strip_extras(name)[0] == safe_name(k).lower(), deps.keys()
+                ),
+                None,
             )
             name_to_save = dep.name if matched_name is None else matched_name
             _, req_dict = dep.as_req_dict()
@@ -265,6 +263,6 @@ class Project:
     def init_pyproject(self) -> None:
         self._pyproject = {
             "dependencies": tomlkit.table(),
-            "dev-dependencies": tomlkit.table()
+            "dev-dependencies": tomlkit.table(),
         }
         self.write_pyproject()

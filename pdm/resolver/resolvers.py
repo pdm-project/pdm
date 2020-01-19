@@ -3,7 +3,12 @@ from __future__ import annotations
 import collections
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple, Union
 
-from pdm.exceptions import NoVersionsAvailable, RequirementsConflicted, ResolutionImpossible, ResolutionTooDeep
+from pdm.exceptions import (
+    NoVersionsAvailable,
+    RequirementsConflicted,
+    ResolutionImpossible,
+    ResolutionTooDeep,
+)
 from pdm.resolver.structs import DirectedGraph
 
 if TYPE_CHECKING:
@@ -12,9 +17,9 @@ if TYPE_CHECKING:
     from pdm.resolver.providers import BaseProvider
     from pdm.resolver.reporters import SimpleReporter
 
-RequirementInformation = collections.namedtuple('RequirementInformation', [
-    'requirement', 'parent',
-])
+RequirementInformation = collections.namedtuple(
+    "RequirementInformation", ["requirement", "parent"]
+)
 
 
 class Criterion(object):
@@ -30,19 +35,14 @@ class Criterion(object):
     """
 
     def __init__(
-        self,
-        candidates: List[Candidate],
-        information: List[RequirementInformation]
+        self, candidates: List[Candidate], information: List[RequirementInformation]
     ) -> None:
         self.candidates = candidates
         self.information = information
 
     @classmethod
     def from_requirement(
-        cls,
-        provider: BaseProvider,
-        requirement: Requirement,
-        parent: Candidate
+        cls, provider: BaseProvider, requirement: Requirement, parent: Candidate
     ) -> "Criterion":
         """Build an instance from a requirement.
         """
@@ -61,18 +61,14 @@ class Criterion(object):
         return (i.parent for i in self.information)
 
     def merged_with(
-        self,
-        provider: BaseProvider,
-        requirement: Requirement,
-        parent: Candidate
+        self, provider: BaseProvider, requirement: Requirement, parent: Candidate
     ) -> "Criterion":
         """Build a new instance from this and a new requirement.
         """
         infos = list(self.information)
         infos.append(RequirementInformation(requirement, parent))
         candidates = [
-            c for c in self.candidates
-            if provider.is_satisfied_by(requirement, c)
+            c for c in self.candidates if provider.is_satisfied_by(requirement, c)
         ]
         if not candidates:
             raise RequirementsConflicted([info.requirement for info in infos])
@@ -80,7 +76,7 @@ class Criterion(object):
 
 
 # Resolution state in a round.
-State = collections.namedtuple('State', 'mapping graph')
+State = collections.namedtuple("State", "mapping graph")
 
 
 class Resolution(object):
@@ -102,7 +98,7 @@ class Resolution(object):
         try:
             return self._states[-1]
         except IndexError:
-            raise AttributeError('state')
+            raise AttributeError("state")
 
     def _push_new_state(self) -> None:
         """Push a new state into history.
@@ -118,10 +114,7 @@ class Resolution(object):
                 graph.add(root)  # Sentinel as root dependencies' parent.
             state = State(mapping={}, graph=graph)
         else:
-            state = State(
-                mapping=base.mapping.copy(),
-                graph=base.graph.copy(),
-            )
+            state = State(mapping=base.mapping.copy(), graph=base.graph.copy())
         self._states.append(state)
 
     def _contribute_to_criteria(
@@ -141,7 +134,7 @@ class Resolution(object):
         except (IndexError, KeyError):
             pinned = None
         return self._p.get_preference(
-            pinned, criterion.candidates, criterion.information,
+            pinned, criterion.candidates, criterion.information
         )
 
     def _is_current_pin_satisfying(self, name: str, criterion: Criterion) -> bool:
@@ -169,8 +162,13 @@ class Resolution(object):
             return None
         return contributed
 
-    def _pin_candidate(self, name: str, criterion: Criterion, candidate: Candidate,
-                       child_names: Iterable[str]) -> None:
+    def _pin_candidate(
+        self,
+        name: str,
+        criterion: Criterion,
+        candidate: Candidate,
+        child_names: Iterable[str],
+    ) -> None:
         try:
             self.state.graph.remove(name)
         except KeyError:
@@ -196,10 +194,12 @@ class Resolution(object):
                 pass
 
     def _pin_criteria(self) -> None:
-        criterion_names = [name for name, _ in sorted(
-            self._criteria.items(),
-            key=self._get_criterion_item_preference,
-        )]
+        criterion_names = [
+            name
+            for name, _ in sorted(
+                self._criteria.items(), key=self._get_criterion_item_preference
+            )
+        ]
         for name in criterion_names:
             # Any pin may modify any criterion during the loop. Criteria are
             # replaced, not updated in-place, so we need to read this value
@@ -225,7 +225,7 @@ class Resolution(object):
         self, requirements: Dict[str, Iterable[Requirement]], max_rounds: int
     ) -> None:
         if self._states:
-            raise RuntimeError('already resolved')
+            raise RuntimeError("already resolved")
         self._roots = []
         for key, reqs in requirements.items():
             self._roots.append(f"__{key}__")

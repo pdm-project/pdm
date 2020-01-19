@@ -11,7 +11,7 @@ class Config(MutableMapping):
     DEFAULT_CONFIG = {
         "cache_dir": appdirs.user_cache_dir("pdm"),
         "python": None,
-        "packages_path": None
+        "packages_path": None,
     }
 
     def __init__(self, project_root: Path):

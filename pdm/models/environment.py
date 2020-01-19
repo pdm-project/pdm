@@ -16,7 +16,12 @@ from distlib.wheel import Wheel
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion, WheelBuildError
 from pdm.utils import (
-    _allow_all_wheels, cached_property, convert_hashes, create_tracked_tempdir, get_finder, get_python_version,
+    _allow_all_wheels,
+    cached_property,
+    convert_hashes,
+    create_tracked_tempdir,
+    get_finder,
+    get_python_version,
 )
 from pythonfinder import Finder
 from vistir.contextmanagers import temp_environ
@@ -157,9 +162,7 @@ class Environment:
         finder.session.close()
 
     def build_wheel(
-        self,
-        ireq: shims.InstallRequirement,
-        hashes: Optional[Dict[str, str]] = None
+        self, ireq: shims.InstallRequirement, hashes: Optional[Dict[str, str]] = None
     ) -> Optional[Wheel]:
         """A local candidate has already everything in local, no need to download."""
         kwargs = self._make_pip_wheel_args(ireq)
@@ -188,9 +191,7 @@ class Environment:
             )
 
             if ireq.link.is_wheel:
-                return Wheel(
-                    (context.cache("wheels") / ireq.link.filename).as_posix()
-                )
+                return Wheel((context.cache("wheels") / ireq.link.filename).as_posix())
             # VCS url is unpacked, now build the egg-info
             if ireq.editable and ireq.req.is_vcs:
                 ireq.prepare_metadata()

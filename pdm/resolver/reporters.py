@@ -45,7 +45,8 @@ class SimpleReporter:
         else:
             added = [can for k, can in state.mapping.items() if k not in self._previous]
             changed = [
-                (self._previous[k], can) for k, can in state.mapping.items()
+                (self._previous[k], can)
+                for k, can in state.mapping.items()
                 if k in self._previous and self._previous[k] != can
             ]
         if added:

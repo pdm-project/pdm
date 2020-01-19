@@ -23,13 +23,7 @@ from distlib.wheel import Wheel
 from pdm.types import Source
 
 if TYPE_CHECKING:
-    from pip_shims.backports import (
-        TCommand,
-        TShimmedFunc,
-        Values,
-        TSession,
-        TFinder,
-    )
+    from pip_shims.backports import TCommand, TShimmedFunc, Values, TSession, TFinder
 
 try:
     from functools import cached_property
@@ -57,33 +51,35 @@ def _get_abi_tag(python_version):
     """
     from pip._internal.pep425tags import get_config_var, get_abbr_impl, get_flag
 
-    soabi = get_config_var('SOABI')
+    soabi = get_config_var("SOABI")
     impl = get_abbr_impl()
     abi = None  # type: Optional[str]
 
-    if not soabi and impl in {'cp', 'pp'} and hasattr(sys, 'maxunicode'):
-        d = ''
-        m = ''
-        u = ''
-        is_cpython = (impl == 'cp')
+    if not soabi and impl in {"cp", "pp"} and hasattr(sys, "maxunicode"):
+        d = ""
+        m = ""
+        u = ""
+        is_cpython = impl == "cp"
         if get_flag(
-            'Py_DEBUG', lambda: hasattr(sys, 'gettotalrefcount'), warn=is_cpython
+            "Py_DEBUG", lambda: hasattr(sys, "gettotalrefcount"), warn=is_cpython
         ):
-            d = 'd'
+            d = "d"
         if python_version < (3, 8) and get_flag(
-            'WITH_PYMALLOC', lambda: is_cpython, warn=is_cpython
+            "WITH_PYMALLOC", lambda: is_cpython, warn=is_cpython
         ):
-            m = 'm'
+            m = "m"
         if python_version < (3, 3) and get_flag(
-            'Py_UNICODE_SIZE', lambda: sys.maxunicode == 0x10ffff,
-            expected=4, warn=is_cpython
+            "Py_UNICODE_SIZE",
+            lambda: sys.maxunicode == 0x10FFFF,
+            expected=4,
+            warn=is_cpython,
         ):
-            u = 'u'
-        abi = '%s%s%s%s%s' % (impl, "".join(map(str, python_version)), d, m, u)
-    elif soabi and soabi.startswith('cpython-'):
-        abi = 'cp' + soabi.split('-')[1]
+            u = "u"
+        abi = "%s%s%s%s%s" % (impl, "".join(map(str, python_version)), d, m, u)
+    elif soabi and soabi.startswith("cpython-"):
+        abi = "cp" + soabi.split("-")[1]
     elif soabi:
-        abi = soabi.replace('.', '_').replace('-', '_')
+        abi = soabi.replace(".", "_").replace("-", "_")
 
     return abi
 
@@ -319,7 +315,7 @@ def get_python_version(executable) -> Tuple[Union[str, int], ...]:
     args = [
         executable,
         "-c",
-        "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))"
+        "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))",
     ]
     return tuple(json.loads(subprocess.check_output(args)))
 

@@ -16,7 +16,11 @@ from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.types import RequirementDict
-from pdm.utils import is_readonly_property, parse_name_version_from_wheel, url_without_fragments
+from pdm.utils import (
+    is_readonly_property,
+    parse_name_version_from_wheel,
+    url_without_fragments,
+)
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 VCS_REQ = re.compile(
@@ -220,7 +224,7 @@ class FileRequirement(Requirement):
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "FileRequirement":
         r = cls(
-            url=parsed.get("url"), path=parsed.get("path"), marker=parsed.get("marker"),
+            url=parsed.get("url"), path=parsed.get("path"), marker=parsed.get("marker")
         )
         return r
 
@@ -313,7 +317,7 @@ class VcsRequirement(FileRequirement):
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "VcsRequirement":
         r = cls(
-            url=parsed.get("url"), vcs=parsed.get("vcs"), marker=parsed.get("marker"),
+            url=parsed.get("url"), vcs=parsed.get("vcs"), marker=parsed.get("marker")
         )
         return r
 

@@ -9,7 +9,13 @@ from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
-from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, SimpleReporter, resolve
+from pdm.resolver import (
+    BaseProvider,
+    EagerUpdateProvider,
+    ReusePinProvider,
+    SimpleReporter,
+    resolve,
+)
 
 
 def format_lockfile(mapping, fetched_dependencies, summary_collection):
@@ -47,9 +53,10 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
 
 
 def do_lock(
-    project: Project, strategy: str = "reuse",
+    project: Project,
+    strategy: str = "reuse",
     preferred_pins: Optional[Dict[str, Candidate]] = None,
-    tracked_names: Optional[Iterable[str]] = None
+    tracked_names: Optional[Iterable[str]] = None,
 ) -> Dict[str, Candidate]:
     """Performs the locking process and update lockfile.
 
@@ -70,8 +77,11 @@ def do_lock(
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
         provider = provider_class(
-            preferred_pins, tracked_names or (), repository,
-            requires_python, allow_prereleases
+            preferred_pins,
+            tracked_names or (),
+            repository,
+            requires_python,
+            allow_prereleases,
         )
     flat_reqs = list(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
@@ -89,8 +99,12 @@ def do_lock(
 
 
 def do_sync(
-    project: Project, sections: Tuple[str, ...] = (), dev: bool = False,
-    default: bool = True, dry_run: bool = False, clean: Optional[bool] = None
+    project: Project,
+    sections: Tuple[str, ...] = (),
+    dev: bool = False,
+    default: bool = True,
+    dry_run: bool = False,
+    clean: Optional[bool] = None,
 ) -> None:
     """Synchronize project
 
@@ -114,9 +128,14 @@ def do_sync(
 
 
 def do_add(
-    project: Project, dev: bool = False, section: Optional[str] = None,
-    install: bool = True, save: str = "compatible", strategy: str = "reuse",
-    editables: Iterable[str] = (), packages: Iterable[str] = ()
+    project: Project,
+    dev: bool = False,
+    section: Optional[str] = None,
+    install: bool = True,
+    save: str = "compatible",
+    strategy: str = "reuse",
+    editables: Iterable[str] = (),
+    packages: Iterable[str] = (),
 ) -> None:
     """Add packages and install
 
@@ -135,10 +154,9 @@ def do_add(
         section = "dev"
     tracked_names = set()
     requirements = {}
-    for r in (
-        [parse_requirement(line, True) for line in editables]
-        + [parse_requirement(line) for line in packages]
-    ):
+    for r in [parse_requirement(line, True) for line in editables] + [
+        parse_requirement(line) for line in packages
+    ]:
         key = identify(r)
         r.from_section = section or "default"
         tracked_names.add(key)
@@ -166,6 +184,10 @@ def do_add(
 
     if install:
         do_sync(
-            project, sections=(section,), dev=False, default=False,
-            dry_run=False, clean=False
+            project,
+            sections=(section,),
+            dev=False,
+            default=False,
+            dry_run=False,
+            clean=False,
         )

@@ -21,9 +21,7 @@ class BaseProvider:
             None: requires_python
         }  # type: Dict[Optional[str], PySpecSet]
         self.summary_collection = {}  # type: Dict[str, str]
-        self.fetched_dependencies = (
-            {}
-        )  # type: Dict[str, Dict[str, List[Requirement]]]
+        self.fetched_dependencies = {}  # type: Dict[str, Dict[str, List[Requirement]]]
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
         return identify(req)
@@ -79,6 +77,7 @@ class ReusePinProvider(BaseProvider):
     This is used to implement "add", "remove", and "reuse upgrade",
     where already-pinned candidates in lockfile should be preferred.
     """
+
     def __init__(
         self, preferred_pins: Dict[str, Candidate], tracked_names: Iterable[str], *args
     ):
@@ -91,9 +90,7 @@ class ReusePinProvider(BaseProvider):
         # preferred pin, and into a "normal" candidate selection process.
         if getattr(candidate, "_preferred", False):
             return True
-        return super().is_satisfied_by(
-            requirement, candidate,
-        )
+        return super().is_satisfied_by(requirement, candidate)
 
     def find_matches(self, requirement: Requirement) -> List[Candidate]:
         result = super().find_matches(requirement)
@@ -120,14 +117,11 @@ class EagerUpdateProvider(ReusePinProvider):
     def is_satisfied_by(self, requirement, candidate):
         # If this is a tracking package, tell the resolver out of using the
         # preferred pin, and into a "normal" candidate selection process.
-        if (
-            self.identify(requirement) in self.tracked_names
-            and getattr(candidate, "_preferred", False)
+        if self.identify(requirement) in self.tracked_names and getattr(
+            candidate, "_preferred", False
         ):
             return False
-        return super().is_satisfied_by(
-            requirement, candidate,
-        )
+        return super().is_satisfied_by(requirement, candidate)
 
     def get_dependencies(self, candidate):
         # If this package is being tracked for upgrade, remove pins of its

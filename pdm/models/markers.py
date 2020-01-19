@@ -121,10 +121,9 @@ def _only_contains_python_keys(markers):
 
 
 def _build_pyspec_from_marker(markers):
-
     def split_version(version):
-        if ',' in version:
-            return [v.strip() for v in version.split(',')]
+        if "," in version:
+            return [v.strip() for v in version.split(",")]
         return version.split()
 
     groups = [PySpecSet()]

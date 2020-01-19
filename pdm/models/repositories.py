@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tupl
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement, filter_requirements_with_extras, parse_requirement
+from pdm.models.requirements import (
+    Requirement,
+    filter_requirements_with_extras,
+    parse_requirement,
+)
 from pdm.models.specifiers import PySpecSet, SpecifierSet
 from pdm.types import CandidateInfo, Source
 from pdm.utils import _allow_all_wheels
@@ -113,7 +117,8 @@ class BaseRepository:
         if (
             candidate.hashes
             or candidate.req.is_vcs
-            or candidate.req.is_file_or_url and candidate.req.is_local_dir
+            or candidate.req.is_file_or_url
+            and candidate.req.is_local_dir
         ):
             return
         req = candidate.req.copy()

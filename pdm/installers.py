@@ -55,7 +55,7 @@ class Installer:
         scripts.executable = self.environment.python_executable
         scripts.script_template = scripts.script_template.replace(
             "import sys",
-            "import sys; sys.path.insert(0, {!r})".format(paths["platlib"])
+            "import sys; sys.path.insert(0, {!r})".format(paths["platlib"]),
         )
         wheel.install(paths, scripts)
 
@@ -64,12 +64,16 @@ class Installer:
         paths = self.environment.get_paths()
         old_pwd = os.getcwd()
         install_args = [
-            self.environment.python_executable, "-u", "-c",
+            self.environment.python_executable,
+            "-u",
+            "-c",
             SETUPTOOLS_SHIM % setup_path,
-            "develop", "--install-dir={}".format(paths["platlib"]), "--no-deps",
+            "develop",
+            "--install-dir={}".format(paths["platlib"]),
+            "--no-deps",
             "--prefix={}".format(paths["prefix"]),
             "--script-dir={}".format(paths["scripts"]),
-            "--site-dirs={}".format(paths["platlib"])
+            "--site-dirs={}".format(paths["platlib"]),
         ]
         os.chdir(ireq.source_dir)
         try:
@@ -93,9 +97,7 @@ class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
     def __init__(
-        self,
-        candidates: Dict[str, Candidate],
-        environment: Environment,
+        self, candidates: Dict[str, Candidate], environment: Environment
     ) -> None:
         self.candidates = candidates
         self.environment = environment

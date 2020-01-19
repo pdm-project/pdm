@@ -1,7 +1,11 @@
 import copy
 
 from pdm.models.markers import PySpecSet, join_metaset
-from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider  # noqa
+from pdm.resolver.providers import (  # noqa
+    BaseProvider,
+    EagerUpdateProvider,
+    ReusePinProvider,
+)
 from pdm.resolver.reporters import SimpleReporter  # noqa
 from pdm.resolver.resolvers import Resolver
 
@@ -88,7 +92,7 @@ def _calculate_markers_and_pyspecs(traces, dependencies, pythons):
         for key, trace in traces.items():
             assert key not in all_metasets, key  # Sanity check for debug.
             metasets = _build_marker_and_pyspec(
-                dependencies, pythons, key, trace, all_metasets,
+                dependencies, pythons, key, trace, all_metasets
             )
             if metasets is None:
                 continue
