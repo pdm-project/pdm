@@ -12,6 +12,7 @@ from pip._vendor.pkg_resources import safe_name
 
 import pytest
 from pdm.exceptions import CandidateInfoNotFound
+from pdm.installers import Synchronizer
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
@@ -59,6 +60,10 @@ class MockVersionControl(versioncontrol.VersionControl):
         path = os.path.splitext(os.path.basename(urlparse(str(url)).path))[0]
         mocked_path = FIXTURES / "projects" / path
         shutil.copytree(mocked_path, dest)
+
+    @classmethod
+    def get_revision(cls, location):
+        return "1234567890abcdef"
 
 
 class TestRepository(BaseRepository):
@@ -149,6 +154,38 @@ class TestProject(Project):
     pass
 
 
+class MockSynchronizer(Synchronizer):
+    def __init__(self):
+        super().__init__({}, None)
+        self.working_set = {}
+
+    def compare_with_working_set(self):
+        working_set = self.working_set
+        to_update, to_remove = [], []
+        candidates = self.candidates.copy()
+        for key, version in working_set.items():
+            if key not in candidates:
+                to_remove.append(key)
+            else:
+                can = candidates.pop(key)
+                if version != can.version:
+                    to_update.append(key)
+        to_add = list(candidates)
+        return to_add, to_update, to_remove
+
+    def install_candidates(self, candidates):
+        self.working_set.update({
+            can.req.key: can.version for can in candidates
+        })
+
+    def remove_distributions(self, distributions):
+        for dist in distributions:
+            try:
+                del self.working_set[dist]
+            except KeyError:
+                pass
+
+
 def get_local_finder(*args, **kwargs):
     finder = get_finder(*args, **kwargs)
     finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
@@ -157,16 +194,32 @@ def get_local_finder(*args, **kwargs):
 
 @pytest.fixture()
 def project(tmp_path, mocker):
-    p = TestProject()
-    p.config["cache_dir"] = tmp_path.as_posix()
+    p = TestProject(tmp_path.as_posix())
+    p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
+    p.init_pyproject()
     return p
 
 
 @pytest.fixture()
 def repository(project):
-    return TestRepository([], project.environment)
+    rv = TestRepository([], project.environment)
+    project.get_repository = lambda: rv
+    return rv
+
+
+@pytest.fixture()
+def synchronizer(mocker):
+    rv = MockSynchronizer()
+
+    def new_synchronizer(candidates, environment):
+        rv.candidates = candidates
+        rv.environment = environment
+        return rv
+
+    mocker.patch("pdm.cli.actions.Synchronizer", new_synchronizer)
+    yield rv
 
 
 @pytest.fixture()
@@ -181,4 +234,9 @@ def vcs(mocker):
 
 @pytest.fixture(params=[False, True])
 def is_editable(request):
+    return request.param
+
+
+@pytest.fixture(params=[False, True])
+def is_dev(request):
     return request.param

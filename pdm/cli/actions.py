@@ -1,3 +1,4 @@
+import itertools
 import time
 from typing import Dict, Iterable, Optional, Tuple
 
@@ -72,7 +73,10 @@ def do_lock(
             preferred_pins, tracked_names or (), repository,
             requires_python, allow_prereleases
         )
-    reporter = SimpleReporter(requirements)
+    flat_reqs = list(
+        itertools.chain(*[deps.values() for _, deps in requirements.items()])
+    )
+    reporter = SimpleReporter(flat_reqs)
     start = time.time()
     mapping, dependencies, summaries = resolve(
         provider, reporter, requirements, requires_python
@@ -85,8 +89,8 @@ def do_lock(
 
 
 def do_sync(
-    project: Project, sections: Tuple[str, ...], dev: bool,
-    default: bool, dry_run: bool, clean: Optional[bool]
+    project: Project, sections: Tuple[str, ...] = (), dev: bool = False,
+    default: bool = True, dry_run: bool = False, clean: Optional[bool] = None
 ) -> None:
     """Synchronize project
 
@@ -110,8 +114,9 @@ def do_sync(
 
 
 def do_add(
-    project: Project, dev: bool, section: Optional[str], install: bool,
-    save: str, strategy: str, editables: Iterable[str], packages: Iterable[str]
+    project: Project, dev: bool = False, section: Optional[str] = None,
+    install: bool = True, save: str = "compatible", strategy: str = "reuse",
+    editables: Iterable[str] = (), packages: Iterable[str] = ()
 ) -> None:
     """Add packages and install
 

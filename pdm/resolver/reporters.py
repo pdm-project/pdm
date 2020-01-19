@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
@@ -14,7 +14,7 @@ def print_title(title):
 
 
 class SimpleReporter:
-    def __init__(self, requirements: Dict[str, Requirement]) -> None:
+    def __init__(self, requirements: List[Requirement]) -> None:
         self.requirements = requirements
         self.start_at = None  # type: Optional[float]
         self._previous = None  # type: Optional[Dict[str, Candidate]]
@@ -28,7 +28,7 @@ class SimpleReporter:
         self._previous = None
         print_title("Start resolving requirements...")
         self.start_at = time.time()
-        for r in self.requirements.values():
+        for r in self.requirements:
             print(r.as_line())
 
     def ending_round(self, index: int, state: State) -> None:

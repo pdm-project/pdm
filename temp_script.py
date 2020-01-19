@@ -1,8 +1,8 @@
-import logging
-
-from pdm.cli.actions import do_add
-from pdm.installers import Installer
+import tomlkit
+from pdm.cli.actions import do_lock
+from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
+req = parse_requirement("git+https://github.com/test-root/demo.git#egg=demo", True)
 project = Project()
-do_add(project, False, None, True, "compatible", "reuse", (), ("parver",))
+project.add_dependencies({'demo': req})

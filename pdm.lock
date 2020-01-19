@@ -1,4 +1,11 @@
 [[package]]
+name = "pip"
+sections = ["default"]
+version = "19.3.1"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+summary = "The PyPA recommended tool for installing Python packages."
+
+[[package]]
 name = "parver"
 sections = ["default"]
 version = "0.2.1"
@@ -107,27 +114,6 @@ atomicwrites = {marker = "sys_platform == \"win32\"", version = ">=1.0"}
 colorama = {marker = "sys_platform == \"win32\"", version = "*"}
 
 [[package]]
-name = "arpeggio"
-sections = ["default"]
-version = "1.9.2"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "Packrat parser interpreter"
-
-[[package]]
-name = "attrs"
-sections = ["default", "dev"]
-version = "19.3.0"
-marker = "python_version >= \"2.7\""
-summary = "Classes Without Boilerplate"
-
-[[package]]
-name = "six"
-sections = ["default", "dev"]
-version = "1.14.0"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
-summary = "Python 2 and 3 compatibility utilities"
-
-[[package]]
 name = "pluggy"
 sections = ["dev"]
 version = "0.13.1"
@@ -160,6 +146,27 @@ summary = "TextUI colors for Python."
 
 [package.dependencies]
 colorama = "*"
+
+[[package]]
+name = "arpeggio"
+sections = ["default"]
+version = "1.9.2"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "Packrat parser interpreter"
+
+[[package]]
+name = "attrs"
+sections = ["default", "dev"]
+version = "19.3.0"
+marker = "python_version >= \"2.7\""
+summary = "Classes Without Boilerplate"
+
+[[package]]
+name = "six"
+sections = ["default", "dev"]
+version = "1.14.0"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
+summary = "Python 2 and 3 compatibility utilities"
 
 [[package]]
 name = "atomicwrites"
@@ -250,13 +257,6 @@ marker = "python_version < \"4.0\" and python_version >= \"2.7\" and python_vers
 summary = "Code coverage measurement for Python"
 
 [[package]]
-name = "pip"
-sections = ["default"]
-version = "19.3.1"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
-summary = "The PyPA recommended tool for installing Python packages."
-
-[[package]]
 name = "setuptools"
 sections = ["default"]
 version = "45.0.0"
@@ -288,21 +288,9 @@ marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python parsing module"
 
 [metadata]
-"parver 0.2.1" = [
-    {file = "parver-0.2.1-py3-none-any.whl", hash = "sha256:72d056b8f8883ac90eef5554a9c8a47fac39d3b66479f3d2c8d5bc21b849cdba"},
-    {file = "parver-0.2.1.tar.gz", hash = "sha256:1b37a691af145a3a193eff269d53ba5b2ab16dfbb65d47d85360755919f5fe4b"},
-]
-"arpeggio 1.9.2" = [
-    {file = "Arpeggio-1.9.2.tar.gz", hash = "sha256:948ce06163a48a72c97f4fe79ad3d1c1330b6fec4f22ece182fb60ef60bd022b"},
-    {file = "Arpeggio-1.9.2-py2.py3-none-any.whl", hash = "sha256:b9178917594bb9758002faed31e1e1c968b5ea7f2a8f78fd4a5b8fecaccfcfcd"},
-]
-"attrs 19.3.0" = [
-    {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
-    {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
-]
-"six 1.14.0" = [
-    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
-    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
+"pip 19.3.1" = [
+    {file = "pip-19.3.1-py2.py3-none-any.whl", hash = "sha256:6917c65fc3769ecdc61405d3dfd97afdedd75808d200b2838d7d961cebc0c2c7"},
+    {file = "pip-19.3.1.tar.gz", hash = "sha256:21207d76c1031e517668898a6b46a9fb1501c7a4710ef5dfd6a40ad9e6757ea7"},
 ]
 "vistir[spinner] 0.5.0" = [
     {file = "vistir-0.5.0-py2.py3-none-any.whl", hash = "sha256:e47afdec8baf35032a8d17116765f751ecd2f2146d47e5af457c5de1fe5a334e"},
@@ -310,6 +298,6 @@ summary = "Python parsing module"
 ]
 
 [root]
-content_hash = "md5:55fea6c876fefb373ad3d68e7e2fd3a3"
+content_hash = "md5:2cb630f9bbca74c542dd5f9af44d03eb"
 meta_version = "0.0.1"
 

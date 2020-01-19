@@ -108,7 +108,7 @@ class Project:
         return PySpecSet(self.pyproject.get("python_requires", ""))
 
     def get_dependencies(self, section: Optional[str] = None) -> Dict[str, Requirement]:
-        if section is None:
+        if section in (None, "default"):
             deps = self.pyproject.get("dependencies", [])
         elif section == "dev":
             deps = self.pyproject.get("dev-dependencies", [])
@@ -136,24 +136,15 @@ class Project:
             match = self.DEPENDENCIES_RE.match(key)
             if not match:
                 continue
-            section = match.group(1) or None
+            section = match.group(1) or "default"
             yield section
 
     @property
     @pyproject_cache
-    def all_dependencies(self) -> Dict[str, Requirement]:
-
-        def sort_key(name):
-            """dev dependencies always take precendence over other secitons,
-            then default dependencies"""
-            # based on character comprison, because section names are all alphabetic.
-            keys = {"dev": chr(123), None: chr(124)}
-            return keys.get(name, name)
-
-        result = {}
-        for section in sorted(self.iter_sections(), key=sort_key):
-            result.update(self.get_dependencies(section))
-        return result
+    def all_dependencies(self) -> Dict[str, Dict[str, Requirement]]:
+        return {
+            section: self.get_dependencies(section) for section in self.iter_sections()
+        }
 
     @property
     @pyproject_cache
@@ -189,6 +180,8 @@ class Project:
     def get_locked_candidates(
         self, section: Optional[str] = None
     ) -> Dict[str, Candidate]:
+        if not self.lockfile_file.is_file():
+            return {}
         section = section or "default"
         result = {}
         for package in [dict(p) for p in self.lockfile["package"]]:
@@ -261,8 +254,7 @@ class Project:
         *parts, last = self.PDM_NAMESPACE.split(".")
         for part in parts:
             data = data.setdefault(part, tomlkit.table())
-        data[last] = tomlkit.table()
-        data[last].update(self._pyproject)
+        data[last] = self.pyproject
 
         with atomic_open_for_write(
             self.pyproject_file.as_posix(), encoding="utf-8"
@@ -273,6 +265,6 @@ class Project:
     def init_pyproject(self) -> None:
         self._pyproject = {
             "dependencies": tomlkit.table(),
-            "dev-dendencies": tomlkit.table()
+            "dev-dependencies": tomlkit.table()
         }
         self.write_pyproject()

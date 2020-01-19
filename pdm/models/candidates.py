@@ -185,8 +185,8 @@ class Candidate:
             "editable": self.req.editable,
         }
         if self.req.is_vcs:
-            result.update({self.req.vcs: self.req.url, "revision": self.revision})
-        if not self.req.is_named:
+            result.update({self.req.vcs: self.req.repo, "revision": self.revision})
+        elif not self.req.is_named:
             if self.req.path:
                 result.update(path=self.req.str_path)
             else:

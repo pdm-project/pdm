@@ -18,7 +18,7 @@ def _trace_visit_vertex(graph, current, target, visited, path, paths):
         _trace_visit_vertex(graph, v, target, next_visited, next_path, paths)
 
 
-def trace_graph(graph):
+def trace_graph(graph, roots):
     """Build a collection of "traces" for each package.
 
     A trace is a list of names that eventually leads to the package. For
@@ -36,11 +36,12 @@ def trace_graph(graph):
     result = {}
     for vertex in graph:
         result[vertex] = []
-        for root in graph.iter_children(None):
+        for root in roots:
             paths = []
-            _trace_visit_vertex(graph, root, vertex, {None}, [None], paths)
+            _trace_visit_vertex(graph, root, vertex, set(), [], paths)
             result[vertex].extend(paths)
-    result.pop(None, None)
+    for root in roots:
+        result.pop(root, None)
     return result
 
 
@@ -53,7 +54,9 @@ def _build_marker_and_pyspec(dependencies, pythons, key, trace, all_metasets):
         try:
             parent_metaset = all_metasets[parent]
         except KeyError:  # Parent not calculated yet. Wait for it.
-            return
+            if not parent.startswith("__"):
+                return
+            parent_metaset = None, PySpecSet()
         all_parent_metasets[parent] = parent_metaset
 
     metasets = None
@@ -77,7 +80,7 @@ def _build_marker_and_pyspec(dependencies, pythons, key, trace, all_metasets):
 
 
 def _calculate_markers_and_pyspecs(traces, dependencies, pythons):
-    all_metasets = {None: (None, PySpecSet())}
+    all_metasets = {}
     traces = copy.deepcopy(traces)
 
     while traces:
@@ -99,30 +102,24 @@ def _calculate_markers_and_pyspecs(traces, dependencies, pythons):
     return all_metasets
 
 
-def _get_sections_from_top_requirements(traces, fetched_dependencies):
+def _get_sections_from_top_requirements(traces):
     all_sections = {}
-    top_requirements = fetched_dependencies[None]
     for key, trace in traces.items():
-        all_sections[key] = set([
-            top_requirements[route[1]].from_section
-            if len(route) > 1 else top_requirements[key].from_section
-            for route in trace
-        ])
+        all_sections[key] = set(item[0][2:-2] for item in trace)
     return all_sections
 
 
 def resolve(provider, reporter, requirements, requires_python):
     resolver = Resolver(provider, reporter)
-    state = resolver.resolve(requirements.values())
-    provider.fetched_dependencies[None] = requirements
-    traces = trace_graph(state.graph)
+    state = resolver.resolve({k: reqs.values() for k, reqs in requirements.items()})
+    for key, reqs in requirements.items():
+        provider.fetched_dependencies[f"__{key}__"] = reqs
+    traces = trace_graph(state.graph, [f"__{key}__" for key in requirements])
     all_metasets = _calculate_markers_and_pyspecs(
         traces, provider.fetched_dependencies, provider.requires_python_collection
     )
-    all_sections = _get_sections_from_top_requirements(
-        traces,
-        provider.fetched_dependencies
-    )
+    all_sections = _get_sections_from_top_requirements(traces)
+
     for key, metaset in all_metasets.items():
         if key is None:
             continue

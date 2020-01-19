@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import collections
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from pdm.exceptions import NoVersionsAvailable, RequirementsConflicted, ResolutionImpossible, ResolutionTooDeep
 from pdm.resolver.structs import DirectedGraph
@@ -93,6 +93,7 @@ class Resolution(object):
     def __init__(self, provider: BaseProvider, reporter: SimpleReporter):
         self._p = provider
         self._r = reporter
+        self._roots = []  # type: List[str]
         self._criteria = {}  # type: Dict[str, Criterion]
         self._states = []  # type: List[State]
 
@@ -113,7 +114,8 @@ class Resolution(object):
             base = self._states[-1]
         except IndexError:
             graph = DirectedGraph()
-            graph.add(None)  # Sentinel as root dependencies' parent.
+            for root in self._roots:
+                graph.add(root)  # Sentinel as root dependencies' parent.
             state = State(mapping={}, graph=graph)
         else:
             state = State(
@@ -123,7 +125,7 @@ class Resolution(object):
         self._states.append(state)
 
     def _contribute_to_criteria(
-        self, name: str, requirement: Requirement, parent: Optional[Candidate]
+        self, name: str, requirement: Requirement, parent: Union[str, Candidate]
     ) -> None:
         if name is None or name not in self._criteria:
             crit = Criterion.from_requirement(self._p, requirement, parent)
@@ -176,7 +178,9 @@ class Resolution(object):
         self.state.mapping[name] = candidate
         self.state.graph.add(name)
         for parent in criterion.iter_parent():
-            parent_name = None if parent is None else self._p.identify(parent)
+            parent_name = (
+                parent if isinstance(parent, str) else self._p.identify(parent)
+            )
             try:
                 self.state.graph.connect(parent_name, name)
             except KeyError:
@@ -217,17 +221,21 @@ class Resolution(object):
             else:  # All candidates tried, nothing works. Give up. (?)
                 raise ResolutionImpossible(list(criterion.iter_requirement()))
 
-    def resolve(self, requirements: Iterable[Requirement], max_rounds: int) -> None:
+    def resolve(
+        self, requirements: Dict[str, Iterable[Requirement]], max_rounds: int
+    ) -> None:
         if self._states:
             raise RuntimeError('already resolved')
-
-        for requirement in requirements:
-            try:
-                name = self._p.identify(requirement)
-                self._contribute_to_criteria(name, requirement, parent=None)
-            except RequirementsConflicted as e:
-                # If initial requirements conflict, nothing would ever work.
-                raise ResolutionImpossible(e.requirements + [requirement])
+        self._roots = []
+        for key, reqs in requirements.items():
+            self._roots.append(f"__{key}__")
+            for requirement in reqs:
+                try:
+                    name = self._p.identify(requirement)
+                    self._contribute_to_criteria(name, requirement, parent=f"__{key}__")
+                except RequirementsConflicted as e:
+                    # If initial requirements conflict, nothing would ever work.
+                    raise ResolutionImpossible(e.requirements + [requirement])
 
         last = None
         self._r.starting()
@@ -259,7 +267,9 @@ class Resolver(object):
         self.provider = provider
         self.reporter = reporter
 
-    def resolve(self, requirements: Iterable[Requirement], max_rounds: int = 20) -> State:
+    def resolve(
+        self, requirements: Dict[str, List[Requirement]], max_rounds: int = 20
+    ) -> State:
         """Take a collection of constraints, spit out the resolution result.
 
         The return value is a representation to the final resolution result. It
@@ -270,8 +280,7 @@ class Resolver(object):
             and the value is the resolved candidate.
         * `graph`: A `DirectedGraph` instance representing the dependency tree.
             The vertices are keys of `mapping`, and each edge represents *why*
-            a particular package is included. A special vertex `None` is
-            included to represent parents of user-supplied requirements.
+            a particular package is included.
 
         The following exceptions may be raised if a resolution cannot be found:
 

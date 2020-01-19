@@ -23,7 +23,7 @@ class BaseProvider:
         self.summary_collection = {}  # type: Dict[str, str]
         self.fetched_dependencies = (
             {}
-        )  # type: Dict[Optional[str], Dict[str, List[Requirement]]]
+        )  # type: Dict[str, Dict[str, List[Requirement]]]
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
         return identify(req)

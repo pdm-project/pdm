@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
 from pdm.models.candidates import identify
@@ -12,9 +14,12 @@ def resolve_requirements(
     strategy="reuse", preferred_pins=None, tracked_names=None
 ):
     requirements = {}
-    for line in lines:
-        req = parse_requirement(line)
-        requirements[identify(req)] = req
+    if isinstance(lines, list):
+        lines = {"default": lines}
+    for k, v in lines.items():
+        for line in v:
+            req = parse_requirement(line)
+            requirements.setdefault(k, {})[identify(req)] = req
     requires_python = PySpecSet(requires_python)
     if not preferred_pins:
         provider = BaseProvider(repository, requires_python, allow_prereleases)
@@ -26,7 +31,10 @@ def resolve_requirements(
             preferred_pins, tracked_names or (), repository,
             requires_python, allow_prereleases
         )
-    reporter = SimpleReporter(requirements)
+    flat_reqs = list(
+        itertools.chain(*[deps.values() for _, deps in requirements.items()])
+    )
+    reporter = SimpleReporter(flat_reqs)
     mapping, *_ = resolve(
         provider, reporter, requirements, requires_python
     )
@@ -156,3 +164,11 @@ def test_exclude_incompatible_requirements(project, repository):
     repository.add_dependencies("foo", "0.1.0", ["bar; python_version < '3'"])
     result = resolve_requirements(repository, ["foo"], ">=3.6")
     assert "bar" not in result
+
+
+def test_requirements_from_different_sections(project, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_candidate("foo", "0.2.0")
+    requirements = {"default": ["foo"], "dev": ["foo<0.2.0"]}
+    result = resolve_requirements(repository, requirements)
+    assert result["foo"].version == "0.1.0"
