@@ -276,3 +276,9 @@ def test_update_with_package_and_sections_argument(project, repository, synchron
 
     with pytest.raises(PdmUsageError):
         do_update(project, default=False, packages=("requests",))
+
+
+def test_add_package_with_mismatch_marker(project, repository, synchronizer, mocker):
+    mocker.patch("platform.system", return_value="Darwin")
+    do_add(project, packages=["requests", "pytz; platform_system!='Darwin'"])
+    assert "pytz" not in synchronizer.working_set

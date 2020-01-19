@@ -76,7 +76,7 @@ class SimpleReporter:
     def pin_candidate(self, name, criterion, candidate, child_names):
         pass
 
-    def resolve_metadata(self):
+    def extract_metadata(self):
         pass
 
 
@@ -111,5 +111,5 @@ class SpinnerReporter(SimpleReporter):
     def pin_candidate(self, name, criterion, candidate, child_names):
         self.spinner.text = f"Resolved: {candidate.format()}"
 
-    def resolve_metadata(self):
-        self.spinner.start("Resolving package metadata")
+    def extract_metadata(self):
+        self.spinner.start("Extracting package metadata")

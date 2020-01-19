@@ -73,7 +73,9 @@ class Requirement:
 
     def __init__(self, **kwargs):
         self._marker = None
-        self.pyspecs = PySpecSet()
+        self.from_section = "default"
+        self.marker_no_python = None  # type: Optional[Marker]
+        self.requires_python = PySpecSet()  # type: PySpecSet
         for k, v in kwargs.items():
             if k == "specifier":
                 v = get_specifier(v)
@@ -81,9 +83,6 @@ class Requirement:
         if self.name and not self.project_name:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
-        self.from_section = "default"
-        self.marker_no_python = None  # type: Optional[Marker]
-        self.requires_python = PySpecSet()  # type: PySpecSet
 
     @property
     def marker(self) -> Optional[Marker]:

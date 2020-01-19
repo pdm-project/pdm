@@ -181,10 +181,10 @@ def do_add(
                 )
                 r.specifier = get_specifier(f">={version},<{next_major_version}")
     # Update dependency specifiers and lockfile hash.
-    project.add_dependencies(requirements)
+    project.add_dependencies(requirements, False)
     lockfile = project.lockfile
     lockfile["root"]["content_hash"] = "md5:" + project.get_content_hash("md5")
-    project.write_lockfile(lockfile)
+    project.write_lockfile(lockfile, False)
 
     if sync:
         do_sync(

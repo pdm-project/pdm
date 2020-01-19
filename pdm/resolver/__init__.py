@@ -78,7 +78,7 @@ def _build_marker_and_pyspec(dependencies, pythons, key, trace, all_metasets):
             metasets = child_marker, child_pyspec
         else:
             # Use 'or' to connect metasets inherited from different parents.
-            marker = metasets[0] | child_marker if any((metasets[0], marker)) else None
+            marker = metasets[0] | child_marker if any((child_marker, marker)) else None
             metasets = marker, metasets[1] | child_pyspec
     return metasets or (None, PySpecSet())
 
@@ -119,7 +119,7 @@ def resolve(provider, reporter, requirements, requires_python):
     for key, reqs in requirements.items():
         provider.fetched_dependencies[f"__{key}__"] = reqs
     traces = trace_graph(state.graph, [f"__{key}__" for key in requirements])
-    reporter.resolve_metadata()
+    reporter.extract_metadata()
     all_metasets = _calculate_markers_and_pyspecs(
         traces, provider.fetched_dependencies, provider.requires_python_collection
     )

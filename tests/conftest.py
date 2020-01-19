@@ -167,15 +167,22 @@ class MockSynchronizer(Synchronizer):
     def compare_with_working_set(self):
         working_set = self.working_set
         to_update, to_remove = [], []
+        environment = self.environment.marker_environment()
         candidates = self.candidates.copy()
         for key, version in working_set.items():
             if key not in candidates:
                 to_remove.append(key)
             else:
                 can = candidates.pop(key)
-                if version != can.version:
+                if can.marker and not can.marker.evaluate(environment):
+                    to_remove.append(key)
+                elif version != can.version:
                     to_update.append(key)
-        to_add = list(candidates)
+        to_add = [
+            name
+            for name, can in candidates.items()
+            if not (can.marker and not can.marker.evaluate(environment))
+        ]
         return to_add, to_update, to_remove
 
     def install_candidates(self, candidates):

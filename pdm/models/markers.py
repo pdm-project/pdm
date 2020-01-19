@@ -32,13 +32,17 @@ class Marker(PackageMarker):
         return type(self)(marker_str)
 
     def __or__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None or self == other:
+        if None in (self, other):
+            return None
+        if self == other:
             return self
         marker_str = f"{self} or {other}"
         return type(self)(marker_str)
 
     def __ror__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None or self == other:
+        if None in (self, other):
+            return None
+        if self == other:
             return self
         marker_str = f"{other} or {self}"
         return type(self)(marker_str)

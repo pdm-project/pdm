@@ -105,6 +105,7 @@ class Candidate:
             self.req.name = self.name
         if not self.version:
             self.version = self.metadata.version
+        self.link = ireq.link
         return self.metadata
 
     def __repr__(self) -> str:

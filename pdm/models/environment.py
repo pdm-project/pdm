@@ -219,5 +219,15 @@ class Environment:
                 return Wheel(wheel_path)
 
     def get_working_set(self) -> pkg_resources.WorkingSet:
+        """Get the working set based on local packages directory."""
         paths = self.get_paths()
         return pkg_resources.WorkingSet([paths["platlib"]])
+
+    def marker_environment(self) -> Dict[str, Any]:
+        """Get environment for marker evaluation"""
+        # TODO: get python implementation
+        python_version = get_python_version(self.python_executable)
+        return {
+            "python_full_version": ".".join(map(str, python_version)),
+            "python_version": ".".join(map(str, python_version[:2])),
+        }

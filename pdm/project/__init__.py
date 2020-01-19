@@ -171,12 +171,15 @@ class Project:
             data.update({"source": self.sources})
         return data
 
-    def write_lockfile(self, toml_data: tomlkit.toml_document.TOMLDocument) -> None:
+    def write_lockfile(
+        self, toml_data: tomlkit.toml_document.TOMLDocument, show_message: bool = True
+    ) -> None:
         toml_data.update({"root": self.get_project_metadata()})
 
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
-        click.echo("Changes are written to pdm.lock.")
+        if show_message:
+            click.echo("Changes are written to pdm.lock.")
         self._lockfile = None
 
     def get_locked_candidates(
@@ -195,6 +198,7 @@ class Project:
             package_name = package.pop("name")
             req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(req, self.environment, name=package_name, version=version)
+            can.marker = req.marker
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(
@@ -218,7 +222,9 @@ class Project:
         content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
 
-    def add_dependencies(self, requirements: Dict[str, Requirement]) -> None:
+    def add_dependencies(
+        self, requirements: Dict[str, Requirement], show_message: bool = True
+    ) -> None:
         for name, dep in requirements.items():
             if dep.from_section == "default":
                 deps = self.pyproject["dependencies"]
@@ -243,9 +249,9 @@ class Project:
                 req.update(req_dict)
                 req_dict = req
             deps[name_to_save] = req_dict
-        self.write_pyproject()
+        self.write_pyproject(show_message)
 
-    def write_pyproject(self) -> None:
+    def write_pyproject(self, show_message: bool = True) -> None:
         if self.pyproject_file.exists():
             original = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
         else:
@@ -260,7 +266,8 @@ class Project:
             self.pyproject_file.as_posix(), encoding="utf-8"
         ) as f:
             f.write(tomlkit.dumps(original))
-        click.echo("Changes are written to pyproject.toml.")
+        if show_message:
+            click.echo("Changes are written to pyproject.toml.")
         self._pyproject = None
 
     def init_pyproject(self) -> None:

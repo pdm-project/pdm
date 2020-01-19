@@ -129,18 +129,25 @@ class Synchronizer:
         working_set = self.environment.get_working_set()
         to_update, to_remove = [], []
         candidates = self.candidates.copy()
+        environment = self.environment.marker_environment()
         for dist in working_set:
             if dist.key not in candidates:
                 to_remove.append(dist.key)
             else:
                 can = candidates.pop(dist.key)
-                if (
+                if can.marker and not can.marker.evaluate(environment):
+                    to_remove.append(dist.key)
+                elif (
                     not _is_dist_editable(working_set, dist)
                     and dist.version != can.version
                 ):
                     # XXX: An editable distribution is always considered as consistent.
                     to_update.append(dist.key)
-        to_add = list(candidates)
+        to_add = [
+            name
+            for name, can in candidates.items()
+            if not (can.marker and not can.marker.evaluate(environment))
+        ]
         return to_add, to_update, to_remove
 
     def install_candidates(self, candidates: List[Candidate]) -> None:
