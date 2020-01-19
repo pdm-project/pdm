@@ -86,29 +86,28 @@ def sync(project, sections, dev, default, dry_run, clean):
 )
 @click.option("-s", "--section", help="Specify target section to add into.")
 @click.option(
-    "--no-install",
-    "install",
+    "--no-sync",
+    "sync",
     flag_value=False,
     default=True,
-    help="Only write pyproject.toml and do not install packages.",
+    help="Only write pyproject.toml and do not sync the working set.",
 )
 @save_strategy_option
 @update_strategy_option
 @click.option("-e", "editables", multiple=True, help="Specify editable packages.")
 @click.argument("packages", nargs=-1)
 @pass_project
-def add(project, dev, section, install, save, strategy, editables, packages):
-    actions.do_add(project, dev, section, install, save, strategy, editables, packages)
+def add(project, dev, section, sync, save, strategy, editables, packages):
+    actions.do_add(project, dev, section, sync, save, strategy, editables, packages)
 
 
 @cli.command(help="Update packages in pyproject.toml")
 @sections_option
-@save_strategy_option
 @update_strategy_option
 @click.argument("packages", nargs=-1)
 @pass_project
-def update(project, dev, sections, default, save, strategy, packages):
-    pass
+def update(project, dev, sections, default, strategy, packages):
+    actions.do_update(project, dev, sections, default, strategy, packages)
 
 
 @cli.command(help="Remove packages from pyproject.toml")
@@ -121,13 +120,13 @@ def update(project, dev, sections, default, save, strategy, packages):
 )
 @click.option("-s", "--section", help="Specify target section the package belongs to")
 @click.option(
-    "--no-install",
-    "install",
+    "--no-sync",
+    "sync",
     flag_value=False,
     default=True,
     help="Only write pyproject.toml and do not uninstall packages.",
 )
 @click.argument("packages", nargs=-1)
 @pass_project
-def remove(project, dev, section, install, packages):
-    pass
+def remove(project, dev, section, sync, packages):
+    actions.do_remove(project, dev, section, sync, packages)

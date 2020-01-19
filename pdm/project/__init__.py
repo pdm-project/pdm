@@ -251,7 +251,7 @@ class Project:
         data = original
         *parts, last = self.PDM_NAMESPACE.split(".")
         for part in parts:
-            data = data.setdefault(part, tomlkit.table())
+            data = data.setdefault(part, {})
         data[last] = self.pyproject
 
         with atomic_open_for_write(

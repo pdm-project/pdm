@@ -26,7 +26,9 @@ def _is_dist_editable(working_set: WorkingSet, dist: Distribution) -> bool:
     return False
 
 
-def _print_list_information(word, items):
+def _print_list_information(word, items, dry=False):
+    if dry:
+        word = "to be " + word
     template = "{count} package{suffix} {word}: {items}"
     suffix = "s" if len(items) > 1 else ""
     count = len(items)
@@ -159,8 +161,8 @@ class Synchronizer:
             self.remove_distributions(to_remove)
         print()
         if to_add:
-            _print_list_information("added", to_add)
+            _print_list_information("added", to_add, dry_run)
         if to_update:
-            _print_list_information("updated", to_update)
+            _print_list_information("updated", to_update, dry_run)
         if clean and to_remove:
-            _print_list_information("removed", to_remove)
+            _print_list_information("removed", to_remove, dry_run)
