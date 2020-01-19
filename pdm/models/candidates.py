@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+import crayons
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
 
@@ -192,3 +193,6 @@ class Candidate:
             else:
                 result.update(url=self.req.url)
         return {k: v for k, v in result.items() if v}
+
+    def format(self) -> str:
+        return f"{crayons.green(self.name, bold=True)} {crayons.yellow(self.version)}"

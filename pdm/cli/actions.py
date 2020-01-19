@@ -1,12 +1,14 @@
 import itertools
-import time
 from typing import Dict, Iterable, Optional, Sequence
 
+import click
+import crayons
 import tomlkit
+import halo
 from pkg_resources import safe_name
 
 from pdm.exceptions import PdmUsageError
-from pdm.installers import Synchronizer
+from pdm.installers import Synchronizer, format_dist
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
@@ -15,9 +17,9 @@ from pdm.resolver import (
     BaseProvider,
     EagerUpdateProvider,
     ReusePinProvider,
-    SimpleReporter,
     resolve,
 )
+from pdm.resolver.reporters import SpinnerReporter
 
 
 def format_lockfile(mapping, fetched_dependencies, summary_collection):
@@ -87,14 +89,14 @@ def do_lock(
     flat_reqs = list(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
     )
-    reporter = SimpleReporter(flat_reqs)
-    start = time.time()
-    mapping, dependencies, summaries = resolve(
-        provider, reporter, requirements, requires_python
-    )
-    data = format_lockfile(mapping, dependencies, summaries)
+    with halo.Halo(text="Resolving dependencies", spinner="dots") as spin:
+        reporter = SpinnerReporter(flat_reqs, spin)
+        mapping, dependencies, summaries = resolve(
+            provider, reporter, requirements, requires_python
+        )
+        data = format_lockfile(mapping, dependencies, summaries)
+        spin.succeed("Resolution success")
     project.write_lockfile(data)
-    print("total time cost: {} s".format(time.time() - start))
 
     return mapping
 
@@ -161,6 +163,10 @@ def do_add(
         r.from_section = section
         tracked_names.add(key)
         requirements[key] = r
+    click.echo(
+        f"Adding packages to {section} dependencies: "
+        + ", ".join(str(crayons.green(key, bold=True)) for key in requirements)
+    )
     project.add_dependencies(requirements)
     resolved = do_lock(project, strategy, tracked_names)
     for name in tracked_names:
@@ -257,6 +263,10 @@ def do_remove(
     if toml_section not in project.pyproject:
         raise PdmUsageError(f"No such section {toml_section!r} in pyproject.toml.")
     deps = project.pyproject[toml_section]
+    click.echo(
+        f"Removing packages from {section} dependencies: "
+        + ", ".join(str(crayons.green(name, bold=True)) for name in packages)
+    )
     for name in packages:
         matched_name = next(
             filter(
@@ -272,3 +282,9 @@ def do_remove(
     do_lock(project, "reuse")
     if sync:
         do_sync(project, sections=(section,), default=False, clean=True)
+
+
+def do_list(project):
+    working_set = project.environment.get_working_set()
+    for dist in working_set:
+        click.echo(format_dist(working_set, dist))

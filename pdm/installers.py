@@ -2,6 +2,8 @@ import os
 import subprocess
 from typing import Dict, List, Tuple
 
+import click
+import crayons
 from pip._vendor.pkg_resources import Distribution, WorkingSet
 from pip_shims import shims
 
@@ -26,13 +28,25 @@ def _is_dist_editable(working_set: WorkingSet, dist: Distribution) -> bool:
     return False
 
 
+def format_dist(working_set: WorkingSet, dist: Distribution) -> str:
+    formatter = "{name} {version}{path}"
+    path = ""
+    if _is_dist_editable(working_set, dist):
+        path = f"(-e {dist.location})"
+    return formatter.format(
+        name=crayons.green(dist.project_name, bold=True),
+        version=crayons.yellow(dist.version),
+        path=path,
+    )
+
+
 def _print_list_information(word, items, dry=False):
     if dry:
         word = "to be " + word
     template = "{count} package{suffix} {word}: {items}"
     suffix = "s" if len(items) > 1 else ""
     count = len(items)
-    items = ", ".join(items)
+    items = ", ".join(str(crayons.green(item, bold=True)) for item in items)
     print(template.format(count=count, suffix=suffix, word=word, items=items))
 
 
@@ -44,7 +58,7 @@ class Installer:
         self.auto_confirm = auto_confirm
 
     def install(self, candidate: Candidate) -> None:
-        print(f"Installing {candidate.name} {candidate.version}...")
+        click.echo(f"Installing {candidate.format()}...")
         candidate.get_metadata()
         if candidate.wheel:
             self.install_wheel(candidate.wheel)
@@ -87,7 +101,10 @@ class Installer:
     def uninstall(self, name: str) -> None:
         working_set = self.environment.get_working_set()
         ireq = shims.install_req_from_line(name)
-        print(f"Uninstalling: {name} {working_set.by_key[name].version}")
+        click.echo(
+            f"Uninstalling: {crayons.green(name, bold=True)} "
+            f"{crayons.yellow(working_set.by_key[name].version)}"
+        )
 
         with self.environment.activate():
             pathset = ireq.uninstall(auto_confirm=self.auto_confirm)
@@ -147,7 +164,7 @@ class Synchronizer:
         if clean:
             lists_to_check.append(to_remove)
         if not any(lists_to_check):
-            print("All packages are synced to date, nothing to do.")
+            click.echo("All packages are synced to date, nothing to do.")
             return
         if to_add and not dry_run:
             self.install_candidates(
@@ -159,7 +176,7 @@ class Synchronizer:
             )
         if clean and to_remove and not dry_run:
             self.remove_distributions(to_remove)
-        print()
+        click.echo()
         if to_add:
             _print_list_information("added", to_add, dry_run)
         if to_update:

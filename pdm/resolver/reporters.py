@@ -3,6 +3,9 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional
 
+import crayons
+import halo
+
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
@@ -66,3 +69,47 @@ class SimpleReporter:
         print("Stable pins:")
         for k, can in state.mapping.items():
             print(f"\t{can.name}\t{can.version}")
+
+    def resolve_criteria(self, name):
+        pass
+
+    def pin_candidate(self, name, criterion, candidate, child_names):
+        pass
+
+    def resolve_metadata(self):
+        pass
+
+
+class SpinnerReporter(SimpleReporter):
+    def __init__(self, requirements: List[Requirement], spinner: halo.Halo) -> None:
+        super().__init__(requirements)
+        self.spinner = spinner
+
+    def starting_round(self, index: int) -> None:
+        # self.spinner.hide_and_write(f"Resolving ROUND {index}")
+        pass
+
+    def starting(self) -> None:
+        """Called before the resolution actually starts.
+        """
+
+    def ending_round(self, index: int, state: State) -> None:
+        """Called before each round of resolution ends.
+
+        This is NOT called if the resolution ends at this round. Use `ending`
+        if you want to report finalization. The index is zero-based.
+        """
+
+    def ending(self, state: State) -> None:
+        """Called before the resolution ends successfully.
+        """
+        self.spinner.stop_and_persist(text="Finish resolving")
+
+    def resolve_criteria(self, name):
+        self.spinner.text = f"Resolving {crayons.green(name, bold=True)}"
+
+    def pin_candidate(self, name, criterion, candidate, child_names):
+        self.spinner.text = f"Resolved: {candidate.format()}"
+
+    def resolve_metadata(self):
+        self.spinner.start("Resolving package metadata")

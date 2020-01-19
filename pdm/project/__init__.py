@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
+import click
 from pip._vendor.pkg_resources import safe_name
 
 import tomlkit
@@ -175,6 +176,7 @@ class Project:
 
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
+        click.echo("Changes are written to pdm.lock.")
         self._lockfile = None
 
     def get_locked_candidates(
@@ -258,6 +260,7 @@ class Project:
             self.pyproject_file.as_posix(), encoding="utf-8"
         ) as f:
             f.write(tomlkit.dumps(original))
+        click.echo("Changes are written to pyproject.toml.")
         self._pyproject = None
 
     def init_pyproject(self) -> None:

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
+import crayons
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
@@ -21,6 +22,8 @@ from pdm.project import Project
 from pdm.types import CandidateInfo
 from pdm.utils import get_finder
 from tests import FIXTURES
+
+crayons.disable()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -117,8 +120,10 @@ class TestRepository(BaseRepository):
         cans = []
         for version, candidate in self._pypi_data.get(requirement.key, {}).items():
             c = Candidate(
-                requirement, self.environment,
-                name=requirement.project_name, version=version
+                requirement,
+                self.environment,
+                name=requirement.project_name,
+                version=version,
             )
             c._requires_python = PySpecSet(candidate.get("requires_python", ""))
             cans.append(c)
@@ -174,9 +179,7 @@ class MockSynchronizer(Synchronizer):
         return to_add, to_update, to_remove
 
     def install_candidates(self, candidates):
-        self.working_set.update({
-            can.req.key: can.version for can in candidates
-        })
+        self.working_set.update({can.req.key: can.version for can in candidates})
 
     def remove_distributions(self, distributions):
         for dist in distributions:

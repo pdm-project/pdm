@@ -3,7 +3,9 @@ import shutil
 import subprocess
 
 import click
-from pdm.cli import actions
+import crayons
+
+from pdm.cli import actions, ui
 from pdm.cli.options import (
     dry_run_option,
     save_strategy_option,
@@ -15,10 +17,11 @@ from pdm.project import Project
 
 pass_project = click.make_pass_decorator(Project, ensure=True)
 context_settings = {"ignore_unknown_options": True, "allow_extra_args": True}
+click.core.HelpFormatter = ui.ColoredHelpFormatter
 
 
 @click.group(help="PDM - Python Development Master")
-@click.version_option(prog_name="pdm", version="0.0.1")
+@click.version_option(prog_name=crayons.normal("pdm", bold=True), version="0.0.1")
 def cli():
     pass
 
@@ -94,7 +97,13 @@ def sync(project, sections, dev, default, dry_run, clean):
 )
 @save_strategy_option
 @update_strategy_option
-@click.option("-e", "editables", multiple=True, help="Specify editable packages.")
+@click.option(
+    "-e",
+    "editables",
+    multiple=True,
+    help="Specify editable packages.",
+    metavar="EDITABLES",
+)
 @click.argument("packages", nargs=-1)
 @pass_project
 def add(project, dev, section, sync, save, strategy, editables, packages):
@@ -130,3 +139,9 @@ def update(project, dev, sections, default, strategy, packages):
 @pass_project
 def remove(project, dev, section, sync, packages):
     actions.do_remove(project, dev, section, sync, packages)
+
+
+@cli.command(name="list", help="List packages installed in current working set.")
+@pass_project
+def list_(project):
+    actions.do_list(project)

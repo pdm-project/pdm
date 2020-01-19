@@ -4,3 +4,5 @@ pip_shims
 tomlkit
 appdirs
 pythonfinder
+halo
+click

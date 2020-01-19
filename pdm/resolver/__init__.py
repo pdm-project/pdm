@@ -119,6 +119,7 @@ def resolve(provider, reporter, requirements, requires_python):
     for key, reqs in requirements.items():
         provider.fetched_dependencies[f"__{key}__"] = reqs
     traces = trace_graph(state.graph, [f"__{key}__" for key in requirements])
+    reporter.resolve_metadata()
     all_metasets = _calculate_markers_and_pyspecs(
         traces, provider.fetched_dependencies, provider.requires_python_collection
     )

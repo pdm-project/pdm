@@ -9,6 +9,7 @@ pip = "<20.0.0,>=19.3.1"
 pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
+halo = "<1.0.0,>=0.0.28"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"

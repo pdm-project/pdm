@@ -204,6 +204,7 @@ class Resolution(object):
             # Any pin may modify any criterion during the loop. Criteria are
             # replaced, not updated in-place, so we need to read this value
             # in the loop instead of outside. (sarugaku/resolvelib#5)
+            self._r.resolve_criteria(name)
             criterion = self._criteria[name]
 
             if self._is_current_pin_satisfying(name, criterion):
@@ -217,6 +218,7 @@ class Resolution(object):
                 if child_names is None:
                     continue
                 self._pin_candidate(name, criterion, candidate, child_names)
+                self._r.pin_candidate(name, criterion, candidate, child_names)
                 break
             else:  # All candidates tried, nothing works. Give up. (?)
                 raise ResolutionImpossible(list(criterion.iter_requirement()))

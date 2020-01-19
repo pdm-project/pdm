@@ -17,6 +17,7 @@ def sections_option(f):
         "-s",
         "--section",
         "sections",
+        metavar="SECTIONS",
         multiple=True,
         help=f"Specify section(s) to {name}.",
     )(f)
