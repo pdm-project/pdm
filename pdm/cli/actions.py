@@ -25,10 +25,10 @@ from pdm.resolver.reporters import SpinnerReporter
 def format_lockfile(mapping, fetched_dependencies, summary_collection):
     packages = tomlkit.aot()
     metadata = tomlkit.table()
-    for k, v in mapping.items():
+    for k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry())
-        base.add("summary", summary_collection[k])
+        base.add("summary", summary_collection[strip_extras(k)[0]])
         deps = tomlkit.table()
         for r in fetched_dependencies[k].values():
             name, req = r.as_req_dict()
@@ -260,9 +260,9 @@ def do_remove(
         raise PdmUsageError("Must specify at least one package to remove.")
     section = "dev" if dev else section or "default"
     toml_section = f"{section}-dependencies" if section != "default" else "dependencies"
-    if toml_section not in project.pyproject:
+    if toml_section not in project.tool_settings:
         raise PdmUsageError(f"No such section {toml_section!r} in pyproject.toml.")
-    deps = project.pyproject[toml_section]
+    deps = project.tool_settings[toml_section]
     click.echo(
         f"Removing packages from {section} dependencies: "
         + ", ".join(str(crayons.green(name, bold=True)) for name in packages)

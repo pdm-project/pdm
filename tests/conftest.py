@@ -19,7 +19,7 @@ from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
-from pdm.types import CandidateInfo
+from pdm._types import CandidateInfo
 from pdm.utils import get_finder
 from tests import FIXTURES
 
@@ -208,6 +208,7 @@ def project(tmp_path, mocker):
     p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
+    mocker.patch("pdm.cli.commands.Project", return_value=p)
     p.init_pyproject()
     return p
 

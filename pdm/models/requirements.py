@@ -15,7 +15,7 @@ from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm.types import RequirementDict
+from pdm._types import RequirementDict
 from pdm.utils import (
     is_readonly_property,
     parse_name_version_from_wheel,

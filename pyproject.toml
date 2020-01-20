@@ -1,5 +1,23 @@
 [tool.pdm]
+name = "pdm"
+version = "0.0.1"
+description = "Python Development Master"
+authors = [
+    "frostming <mianghong@gmail.com>"
+]
+license = "MIT"
 python_requires = ">=3.7"
+readme = "README.md"
+
+homepage = "https://github.com/pdm-project/pdm"
+repository = "https://github.com/pdm-project/pdm"
+
+keywords = ["packaging", "dependency", "workflow"]
+
+classifiers = [
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
 
 [tool.pdm.dependencies]
 appdirs = "*"
@@ -10,6 +28,7 @@ pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
 halo = "<1.0.0,>=0.0.28"
+crayons = "<1.0.0,>=0.3.0"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
@@ -18,6 +37,7 @@ pytest-mock = "*"
 
 [tool.coverage.run]
 branch = true
+omit = ["pdm/__main__.py"]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -32,7 +52,6 @@ exclude_lines = [
     # Don't complain if non-runnable code isn't run:
     "if __name__ == .__main__.:"
 ]
-omit = ["pdm/__main__.py"]
 ignore_errors = true
 
 [tool.isort]

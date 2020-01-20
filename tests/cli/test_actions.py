@@ -62,7 +62,7 @@ def test_add_package(project, repository, synchronizer, is_dev):
     do_add(project, is_dev, packages=["requests"])
     section = "dev-dependencies" if is_dev else "dependencies"
 
-    assert project.pyproject[section]["requests"] == "<3.0.0,>=2.19.1"
+    assert project.tool_settings[section]["requests"] == "<3.0.0,>=2.19.1"
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -72,7 +72,7 @@ def test_add_package(project, repository, synchronizer, is_dev):
 def test_add_package_to_custom_package(project, repository, synchronizer):
     do_add(project, section="test", packages=["requests"])
 
-    assert "requests" in project.pyproject["test-dependencies"]
+    assert "requests" in project.tool_settings["test-dependencies"]
     locked_candidates = project.get_locked_candidates("test")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -86,7 +86,7 @@ def test_add_editable_package(project, repository, synchronizer, is_dev, vcs):
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
     section = "dev-dependencies" if is_dev else "dependencies"
-    assert "demo" in project.pyproject[section]
+    assert "demo" in project.tool_settings[section]
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in synchronizer.working_set
@@ -100,12 +100,12 @@ def test_add_no_install(project, repository, synchronizer):
 
 def test_add_package_save_exact(project, repository):
     do_add(project, sync=False, save="exact", packages=["requests"])
-    assert project.pyproject["dependencies"]["requests"] == "==2.19.1"
+    assert project.tool_settings["dependencies"]["requests"] == "==2.19.1"
 
 
 def test_add_package_save_wildcard(project, repository):
     do_add(project, sync=False, save="wildcard", packages=["requests"])
-    assert project.pyproject["dependencies"]["requests"] == "*"
+    assert project.tool_settings["dependencies"]["requests"] == "*"
 
 
 def test_add_package_update_reuse(project, repository):
@@ -279,6 +279,20 @@ def test_update_with_package_and_sections_argument(project, repository, synchron
 
 
 def test_add_package_with_mismatch_marker(project, repository, synchronizer, mocker):
-    mocker.patch("platform.system", return_value="Darwin")
+    mocker.patch(
+        "pdm.models.environment.get_pep508_environment",
+        return_value={"platform_system": "Darwin"},
+    )
     do_add(project, packages=["requests", "pytz; platform_system!='Darwin'"])
     assert "pytz" not in synchronizer.working_set
+
+
+def test_add_dependency_from_multiple_parents(
+    project, repository, synchronizer, mocker
+):
+    mocker.patch(
+        "pdm.models.environment.get_pep508_environment",
+        return_value={"platform_system": "Darwin"},
+    )
+    do_add(project, packages=["requests", "chardet; platform_system!='Darwin'"])
+    assert "chardet" in synchronizer.working_set

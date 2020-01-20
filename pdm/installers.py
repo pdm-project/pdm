@@ -11,6 +11,7 @@ import distlib.scripts
 from distlib.wheel import Wheel
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
+from pdm.models.requirements import strip_extras
 
 SETUPTOOLS_SHIM = (
     "import setuptools, tokenize;__file__=%r;"
@@ -143,11 +144,14 @@ class Synchronizer:
                 ):
                     # XXX: An editable distribution is always considered as consistent.
                     to_update.append(dist.key)
-        to_add = [
-            name
-            for name, can in candidates.items()
-            if not (can.marker and not can.marker.evaluate(environment))
-        ]
+        to_add = list(
+            {
+                strip_extras(name)[0]
+                for name, can in candidates.items()
+                if not (can.marker and not can.marker.evaluate(environment))
+                and strip_extras(name)[0] not in working_set.by_key
+            }
+        )
         return to_add, to_update, to_remove
 
     def install_candidates(self, candidates: List[Candidate]) -> None:

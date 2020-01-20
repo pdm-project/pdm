@@ -6,3 +6,4 @@ appdirs
 pythonfinder
 halo
 click
+crayons

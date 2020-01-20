@@ -7,7 +7,7 @@ import pip_shims
 from pip._vendor import requests
 
 from pdm.exceptions import CorruptedCacheError
-from pdm.types import CandidateInfo
+from pdm._types import CandidateInfo
 from vistir.contextmanagers import open_file
 
 if TYPE_CHECKING:

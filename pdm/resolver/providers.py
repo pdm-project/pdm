@@ -17,9 +17,7 @@ class BaseProvider:
         self.repository = repository
         self.requires_python = requires_python  # Root python_requires value
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.requires_python_collection = {
-            None: requires_python
-        }  # type: Dict[Optional[str], PySpecSet]
+        self.requires_python_collection = {}  # type: Dict[Optional[str], PySpecSet]
         self.summary_collection = {}  # type: Dict[str, str]
         self.fetched_dependencies = {}  # type: Dict[str, Dict[str, List[Requirement]]]
 
@@ -59,12 +57,12 @@ class BaseProvider:
             ).is_impossible
         ]
 
-        candidate_key = self.identify(candidate.req)
+        candidate_key = self.identify(candidate)
         self.fetched_dependencies[candidate_key] = {
             self.identify(r): r for r in valid_deps
         }
-        self.summary_collection[candidate_key] = summary
-        self.requires_python_collection[candidate_key] = requires_python
+        self.summary_collection[candidate.req.key] = summary
+        self.requires_python_collection[candidate.req.key] = requires_python
         return valid_deps
 
     def get_hashes(self, candidate) -> Optional[Dict[str, str]]:

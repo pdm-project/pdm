@@ -22,6 +22,7 @@ from pdm.utils import (
     create_tracked_tempdir,
     get_finder,
     get_python_version,
+    get_pep508_environment,
 )
 from pythonfinder import Finder
 from vistir.contextmanagers import temp_environ
@@ -30,7 +31,7 @@ from vistir.path import normalize_path
 if TYPE_CHECKING:
     from pdm.models.specifiers import PySpecSet
     from pdm.project.config import Config
-    from pdm.types import Source
+    from pdm._types import Source
 
 
 class Environment:
@@ -225,9 +226,4 @@ class Environment:
 
     def marker_environment(self) -> Dict[str, Any]:
         """Get environment for marker evaluation"""
-        # TODO: get python implementation
-        python_version = get_python_version(self.python_executable)
-        return {
-            "python_full_version": ".".join(map(str, python_version)),
-            "python_version": ".".join(map(str, python_version[:2])),
-        }
+        return get_pep508_environment(self.python_executable)

@@ -3,6 +3,7 @@ Compatibility code
 """
 import atexit
 import functools
+import importlib
 import inspect
 import json
 import os
@@ -20,7 +21,7 @@ from pip_shims.backports import get_session, resolve_possible_shim
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
 from distlib.wheel import Wheel
-from pdm.types import Source
+from pdm._types import Source
 
 if TYPE_CHECKING:
     from pip_shims.backports import TCommand, TShimmedFunc, Values, TSession, TFinder
@@ -311,13 +312,21 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
     return None
 
 
-def get_python_version(executable) -> Tuple[Union[str, int], ...]:
+def get_python_version(executable: str) -> Tuple[Union[str, int], ...]:
     args = [
         executable,
         "-c",
         "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))",
     ]
     return tuple(json.loads(subprocess.check_output(args)))
+
+
+def get_pep508_environment(executable: str) -> Dict[str, Any]:
+    script = importlib.import_module("pdm.pep508").__file__
+    if script.endswith("pyc"):
+        script = script[:-1]
+    args = [executable, script]
+    return json.loads(subprocess.check_output(args))
 
 
 def convert_hashes(hases: Dict[str, str]) -> Dict[str, List[str]]:

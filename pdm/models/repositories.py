@@ -13,7 +13,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.types import CandidateInfo, Source
+from pdm._types import CandidateInfo, Source
 from pdm.utils import _allow_all_wheels
 
 if TYPE_CHECKING:
@@ -82,7 +82,10 @@ class BaseRepository:
                 requirement, requires_python, allow_prereleases
             )
         else:
-            return [Candidate(requirement, self.environment)]
+            # Fetch metadata so that resolver can know the candidate's name.
+            can = Candidate(requirement, self.environment)
+            can.get_metadata()
+            return [can]
 
     def _find_named_matches(
         self,

@@ -1,6 +1,7 @@
 import copy
 
 from pdm.models.markers import PySpecSet, join_metaset
+from pdm.models.requirements import strip_extras
 from pdm.resolver.providers import (  # noqa
     BaseProvider,
     EagerUpdateProvider,
@@ -66,7 +67,7 @@ def _build_marker_and_pyspec(dependencies, pythons, key, trace, all_metasets):
     metasets = None
     for parent, parent_metaset in all_parent_metasets.items():
         r = dependencies[parent][key]
-        python = pythons[key]
+        python = pythons[strip_extras(key)[0]]
         marker, pyspec = r.marker_no_python, r.requires_python
         pyspec = python & pyspec
         # Use 'and' to connect markers inherited from parent.
@@ -117,7 +118,11 @@ def resolve(provider, reporter, requirements, requires_python):
     resolver = Resolver(provider, reporter)
     state = resolver.resolve({k: reqs.values() for k, reqs in requirements.items()})
     for key, reqs in requirements.items():
-        provider.fetched_dependencies[f"__{key}__"] = reqs
+        # For tarball source distributions, the requirement will be updated after
+        # resolution, need to fetch again.
+        provider.fetched_dependencies[f"__{key}__"] = {
+            provider.identify(r): r for r in reqs.values()
+        }
     traces = trace_graph(state.graph, [f"__{key}__" for key in requirements])
     reporter.extract_metadata()
     all_metasets = _calculate_markers_and_pyspecs(

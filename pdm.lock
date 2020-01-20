@@ -1,9 +1,71 @@
 [[package]]
-name = "pip"
+name = "appdirs"
 sections = ["default"]
-version = "19.3.1"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
-summary = "The PyPA recommended tool for installing Python packages."
+version = "1.4.3"
+summary = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+
+[[package]]
+name = "atomicwrites"
+sections = ["dev"]
+version = "1.3.0"
+marker = "sys_platform == \"win32\" and python_version >= \"3.5\""
+summary = "Atomic file writes."
+
+[[package]]
+name = "attrs"
+sections = ["dev", "default"]
+version = "19.3.0"
+marker = "python_version >= \"2.7\""
+summary = "Classes Without Boilerplate"
+
+[[package]]
+name = "cached-property"
+sections = ["default"]
+version = "1.5.1"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "A decorator for caching properties in classes."
+
+[[package]]
+name = "click"
+sections = ["default"]
+version = "7.0"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "Composable command line interface toolkit"
+
+[[package]]
+name = "colorama"
+sections = ["dev", "default"]
+version = "0.4.3"
+marker = "python_version >= \"2.7\""
+summary = "Cross-platform colored terminal text."
+
+[[package]]
+name = "coverage"
+sections = ["dev"]
+version = "4.4.2"
+marker = "python_version >= \"2.7\" and python_version < \"4.0\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+summary = "Code coverage measurement for Python"
+
+[[package]]
+name = "crayons"
+sections = ["default"]
+version = "0.3.0"
+summary = "TextUI colors for Python."
+
+[package.dependencies]
+colorama = "*"
+
+[[package]]
+name = "cursor"
+sections = ["default"]
+version = "1.3.4"
+summary = "A small Python package to hide or show the terminal cursor"
+
+[[package]]
+name = "distlib"
+sections = ["default"]
+version = "0.3.0"
+summary = "Distribution utilities"
 
 [[package]]
 name = "halo"
@@ -20,10 +82,48 @@ colorama = ">=0.3.9"
 six = ">=1.12.0"
 
 [[package]]
-name = "appdirs"
+name = "importlib-metadata"
+sections = ["dev"]
+version = "1.4.0"
+marker = "python_version >= \"3.5\" and python_version < \"3.8\""
+summary = "Read metadata from Python packages"
+
+[package.dependencies]
+zipp = ">=0.5"
+
+[[package]]
+name = "log-symbols"
 sections = ["default"]
-version = "1.4.3"
-summary = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+version = "0.0.14"
+summary = "Colored symbols for various log levels for Python"
+
+[package.dependencies]
+colorama = ">=0.3.9"
+
+[[package]]
+name = "more-itertools"
+sections = ["dev"]
+version = "8.1.0"
+marker = "python_version >= \"3.5\""
+summary = "More routines for operating on iterables, beyond itertools"
+
+[[package]]
+name = "packaging"
+sections = ["dev", "default"]
+version = "20.0"
+marker = "python_version >= \"2.7\""
+summary = "Core utilities for Python packages"
+
+[package.dependencies]
+pyparsing = ">=2.0.2"
+six = "*"
+
+[[package]]
+name = "pip"
+sections = ["default"]
+version = "19.3.1"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
 name = "pip-shims"
@@ -41,61 +141,28 @@ vistir = "*"
 wheel = "*"
 
 [[package]]
-name = "distlib"
-sections = ["default"]
-version = "0.3.0"
-summary = "Distribution utilities"
-
-[[package]]
-name = "tomlkit"
-sections = ["default"]
-version = "0.5.8"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "Style preserving TOML library"
-
-[[package]]
-name = "pythonfinder"
-sections = ["default"]
-version = "1.2.1"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "A cross-platform python discovery tool to help locate python on any system."
-
-[package.dependencies]
-attrs = "*"
-cached-property = "*"
-click = "*"
-crayons = "*"
-six = "*"
-packaging = "*"
-vistir = {extras = ["spinner"], version = ">=0.4"}
-
-[[package]]
-name = "pytest-cov"
+name = "pluggy"
 sections = ["dev"]
-version = "2.8.1"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "Pytest plugin for measuring coverage."
+version = "0.13.1"
+marker = "python_version >= \"3.5\""
+summary = "plugin and hook calling mechanisms for python"
 
 [package.dependencies]
-pytest = ">=3.6"
-coverage = ">=4.4"
+importlib-metadata = {marker = "python_version < \"3.8\"", version = ">=0.12"}
 
 [[package]]
-name = "click"
-sections = ["default"]
-version = "7.0"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "Composable command line interface toolkit"
-
-[[package]]
-name = "pytest-mock"
+name = "py"
 sections = ["dev"]
-version = "2.0.0"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "Thin-wrapper around the mock package for easier use with py.test"
+version = "1.8.1"
+marker = "python_version >= \"3.5\""
+summary = "library with cross-python path, ini-parsing, io, code, log facilities"
 
-[package.dependencies]
-pytest = ">=2.7"
+[[package]]
+name = "pyparsing"
+sections = ["dev", "default"]
+version = "2.4.6"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
+summary = "Python parsing module"
 
 [[package]]
 name = "pytest"
@@ -116,6 +183,57 @@ atomicwrites = {marker = "sys_platform == \"win32\"", version = ">=1.0"}
 colorama = {marker = "sys_platform == \"win32\"", version = "*"}
 
 [[package]]
+name = "pytest-cov"
+sections = ["dev"]
+version = "2.8.1"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "Pytest plugin for measuring coverage."
+
+[package.dependencies]
+pytest = ">=3.6"
+coverage = ">=4.4"
+
+[[package]]
+name = "pytest-mock"
+sections = ["dev"]
+version = "2.0.0"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "Thin-wrapper around the mock package for easier use with py.test"
+
+[package.dependencies]
+pytest = ">=2.7"
+
+[[package]]
+name = "pythonfinder"
+sections = ["default"]
+version = "1.2.1"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
+summary = "A cross-platform python discovery tool to help locate python on any system."
+
+[package.dependencies]
+attrs = "*"
+cached-property = "*"
+click = "*"
+crayons = "*"
+six = "*"
+packaging = "*"
+vistir = {extras = ["spinner"], version = ">=0.4"}
+
+[[package]]
+name = "setuptools"
+sections = ["default"]
+version = "45.1.0"
+marker = "python_version >= \"3.5\""
+summary = "Easily download, build, install, upgrade, and uninstall Python packages"
+
+[[package]]
+name = "six"
+sections = ["dev", "default"]
+version = "1.14.0"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
+summary = "Python 2 and 3 compatibility utilities"
+
+[[package]]
 name = "spinners"
 sections = ["default"]
 version = "0.0.23"
@@ -128,53 +246,22 @@ version = "1.1.0"
 summary = "ANSII Color formatting for output in terminal."
 
 [[package]]
-name = "log-symbols"
+name = "tomlkit"
 sections = ["default"]
-version = "0.0.14"
-summary = "Colored symbols for various log levels for Python"
-
-[package.dependencies]
-colorama = ">=0.3.9"
-
-[[package]]
-name = "cursor"
-sections = ["default"]
-version = "1.3.4"
-summary = "A small Python package to hide or show the terminal cursor"
-
-[[package]]
-name = "six"
-sections = ["dev", "default"]
-version = "1.14.0"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
-summary = "Python 2 and 3 compatibility utilities"
-
-[[package]]
-name = "pluggy"
-sections = ["dev"]
-version = "0.13.1"
-marker = "python_version >= \"3.5\""
-summary = "plugin and hook calling mechanisms for python"
-
-[package.dependencies]
-importlib-metadata = {marker = "python_version < \"3.8\"", version = ">=0.12"}
-
-[[package]]
-name = "colorama"
-sections = ["dev", "default"]
-version = "0.4.3"
-marker = "python_version >= \"2.7\""
-summary = "Cross-platform colored terminal text."
-
-[[package]]
-name = "crayons"
-sections = ["default"]
-version = "0.3.0"
+version = "0.5.8"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "TextUI colors for Python."
+summary = "Style preserving TOML library"
+
+[[package]]
+name = "vistir"
+sections = ["default"]
+version = "0.5.0"
+marker = "python_version >= \"2.7\""
+summary = "Miscellaneous utilities for dealing with filesystems, paths, projects, subprocesses, and more."
 
 [package.dependencies]
-colorama = "*"
+colorama = "!=0.4.2,>=0.3.4"
+six = "*"
 
 [[package]]
 name = "vistir"
@@ -188,21 +275,7 @@ summary = "Miscellaneous utilities for dealing with filesystems, paths, projects
 colorama = "!=0.4.2,>=0.3.4"
 six = "*"
 yaspin = "*"
-vistir = ">=0.4"
-
-[[package]]
-name = "attrs"
-sections = ["dev", "default"]
-version = "19.3.0"
-marker = "python_version >= \"2.7\""
-summary = "Classes Without Boilerplate"
-
-[[package]]
-name = "atomicwrites"
-sections = ["dev"]
-version = "1.3.0"
-marker = "sys_platform == \"win32\" and python_version >= \"3.5\""
-summary = "Atomic file writes."
+vistir = {marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\"", version = "==0.5.0"}
 
 [[package]]
 name = "wcwidth"
@@ -212,88 +285,11 @@ marker = "python_version >= \"3.5\""
 summary = "Measures number of Terminal column cells of wide-character codes"
 
 [[package]]
-name = "py"
-sections = ["dev"]
-version = "1.8.1"
-marker = "python_version >= \"3.5\""
-summary = "library with cross-python path, ini-parsing, io, code, log facilities"
-
-[[package]]
-name = "cached-property"
-sections = ["default"]
-version = "1.5.1"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "A decorator for caching properties in classes."
-
-[[package]]
-name = "more-itertools"
-sections = ["dev"]
-version = "8.1.0"
-marker = "python_version >= \"3.5\""
-summary = "More routines for operating on iterables, beyond itertools"
-
-[[package]]
-name = "importlib-metadata"
-sections = ["dev"]
-version = "1.4.0"
-marker = "python_version >= \"3.5\" and python_version < \"3.8\""
-summary = "Read metadata from Python packages"
-
-[package.dependencies]
-zipp = ">=0.5"
-
-[[package]]
-name = "vistir"
-sections = ["default"]
-version = "0.5.0"
-marker = "python_version >= \"2.7\""
-summary = "Miscellaneous utilities for dealing with filesystems, paths, projects, subprocesses, and more."
-
-[package.dependencies]
-colorama = "!=0.4.2,>=0.3.4"
-six = "*"
-
-[[package]]
-name = "packaging"
-sections = ["dev", "default"]
-version = "20.0"
-marker = "python_version >= \"2.7\""
-summary = "Core utilities for Python packages"
-
-[package.dependencies]
-pyparsing = ">=2.0.2"
-six = "*"
-
-[[package]]
 name = "wheel"
 sections = ["default"]
 version = "0.33.6"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\" and python_full_version not in \"3.4.0\""
 summary = "A built-package format for Python."
-
-[[package]]
-name = "coverage"
-sections = ["dev"]
-version = "4.4.2"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
-summary = "Code coverage measurement for Python"
-
-[[package]]
-name = "setuptools"
-sections = ["default"]
-version = "45.0.0"
-marker = "python_version >= \"3.5\""
-summary = "Easily download, build, install, upgrade, and uninstall Python packages"
-
-[[package]]
-name = "zipp"
-sections = ["dev"]
-version = "1.0.0"
-marker = "python_version >= \"3.5\" and python_version < \"3.8\""
-summary = "Backport of pathlib-compatible object wrapper for zip files"
-
-[package.dependencies]
-more-itertools = "*"
 
 [[package]]
 name = "yaspin"
@@ -303,128 +299,39 @@ marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3
 summary = "Yet Another Terminal Spinner"
 
 [[package]]
-name = "pyparsing"
-sections = ["dev", "default"]
-version = "2.4.6"
-marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
-summary = "Python parsing module"
+name = "zipp"
+sections = ["dev"]
+version = "2.0.0"
+marker = "python_version >= \"3.6\" and python_version < \"3.8\""
+summary = "Backport of pathlib-compatible object wrapper for zip files"
+
+[package.dependencies]
+more-itertools = "*"
 
 [metadata]
-"pip 19.3.1" = [
-    {file = "pip-19.3.1-py2.py3-none-any.whl", hash = "sha256:6917c65fc3769ecdc61405d3dfd97afdedd75808d200b2838d7d961cebc0c2c7"},
-    {file = "pip-19.3.1.tar.gz", hash = "sha256:21207d76c1031e517668898a6b46a9fb1501c7a4710ef5dfd6a40ad9e6757ea7"},
-]
-"halo 0.0.28" = [
-    {file = "halo-0.0.28.tar.gz", hash = "sha256:9ebf98b94a43f3b68e18c6d74dcb1ea58446b8457ce6fb1b2b4cac8d83733f80"},
-    {file = "halo-0.0.28-py3-none-any.whl", hash = "sha256:9adbfe0a23ae7198a17895aac8845685eb0abeaa13c6a56b60410b347d0f503a"},
-]
 "appdirs 1.4.3" = [
     {file = "appdirs-1.4.3.tar.gz", hash = "sha256:9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"},
     {file = "appdirs-1.4.3-py2.py3-none-any.whl", hash = "sha256:d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"},
-]
-"pip-shims 0.4.0" = [
-    {file = "pip_shims-0.4.0-py2.py3-none-any.whl", hash = "sha256:d4b720d85a8cbd81f72ea22e273ac72415f1e0b49cade597b815c63b351d9637"},
-    {file = "pip_shims-0.4.0.tar.gz", hash = "sha256:383e054386d15f7a33d619a9fc19d670575cdf88e05a4dab93f0a254696ce836"},
-]
-"distlib 0.3.0" = [
-    {file = "distlib-0.3.0.zip", hash = "sha256:2e166e231a26b36d6dfe35a48c4464346620f8645ed0ace01ee31822b288de21"},
-]
-"tomlkit 0.5.8" = [
-    {file = "tomlkit-0.5.8-py2.py3-none-any.whl", hash = "sha256:96e6369288571799a3052c1ef93b9de440e1ab751aa045f435b55e9d3bcd0690"},
-    {file = "tomlkit-0.5.8.tar.gz", hash = "sha256:32c10cc16ded7e4101c79f269910658cc2a0be5913f1252121c3cd603051c269"},
-]
-"pythonfinder 1.2.1" = [
-    {file = "pythonfinder-1.2.1.tar.gz", hash = "sha256:0a4f585abb76aa2fc97479cd12d10f7644aa1ab42b919747e04d33d7f9379425"},
-    {file = "pythonfinder-1.2.1-py2.py3-none-any.whl", hash = "sha256:cfbfe61b7bfc3b45b24f156e2bab76621ebc6ba92f69afbc16f76482d69d9802"},
-]
-"pytest-cov 2.8.1" = [
-    {file = "pytest-cov-2.8.1.tar.gz", hash = "sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b"},
-    {file = "pytest_cov-2.8.1-py2.py3-none-any.whl", hash = "sha256:cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626"},
-]
-"click 7.0" = [
-    {file = "Click-7.0.tar.gz", hash = "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"},
-    {file = "Click-7.0-py2.py3-none-any.whl", hash = "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13"},
-]
-"pytest-mock 2.0.0" = [
-    {file = "pytest-mock-2.0.0.tar.gz", hash = "sha256:b35eb281e93aafed138db25c8772b95d3756108b601947f89af503f8c629413f"},
-    {file = "pytest_mock-2.0.0-py2.py3-none-any.whl", hash = "sha256:cb67402d87d5f53c579263d37971a164743dc33c159dfb4fb4a86f37c5552307"},
-]
-"pytest 5.3.3" = [
-    {file = "pytest-5.3.3-py3-none-any.whl", hash = "sha256:9f8d44f4722b3d06b41afaeb8d177cfbe0700f8351b1fc755dd27eedaa3eb9e0"},
-    {file = "pytest-5.3.3.tar.gz", hash = "sha256:f5d3d0e07333119fe7d4af4ce122362dc4053cdd34a71d2766290cf5369c64ad"},
-]
-"spinners 0.0.23" = [
-    {file = "spinners-0.0.23.tar.gz", hash = "sha256:f396fea1ee00c0622988d7d2bf2895d26dd6f70850ca2ce94eaca52ca4873560"},
-]
-"termcolor 1.1.0" = [
-    {file = "termcolor-1.1.0.tar.gz", hash = "md5:043e89644f8909d462fbbfa511c768df"},
-]
-"log-symbols 0.0.14" = [
-    {file = "log_symbols-0.0.14.tar.gz", hash = "sha256:cf0bbc6fe1a8e53f0d174a716bc625c4f87043cc21eb55dd8a740cfe22680556"},
-    {file = "log_symbols-0.0.14-py3-none-any.whl", hash = "sha256:4952106ff8b605ab7d5081dd2c7e6ca7374584eff7086f499c06edd1ce56dcca"},
-]
-"cursor 1.3.4" = [
-    {file = "cursor-1.3.4.tar.gz", hash = "sha256:33f279a17789c04efd27a92501a0dad62bb011f8a4cdff93867c798d26508940"},
-]
-"six 1.14.0" = [
-    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
-    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
-]
-"pluggy 0.13.1" = [
-    {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
-    {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
-]
-"colorama 0.4.3" = [
-    {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},
-    {file = "colorama-0.4.3.tar.gz", hash = "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"},
-]
-"crayons 0.3.0" = [
-    {file = "crayons-0.3.0.tar.gz", hash = "sha256:50e5fa729d313e2c607ae8bf7b53bb487652e10bd8e7a1e08c4bc8bf62755ffc"},
-    {file = "crayons-0.3.0-py2.py3-none-any.whl", hash = "sha256:8c9e4a3a607bc10e9a9140d496ecd16c6805088dd16c852c378f1f1d5db7aeb6"},
-]
-"vistir[spinner] 0.5.0" = [
-    {file = "vistir-0.5.0-py2.py3-none-any.whl", hash = "sha256:e47afdec8baf35032a8d17116765f751ecd2f2146d47e5af457c5de1fe5a334e"},
-    {file = "vistir-0.5.0.tar.gz", hash = "sha256:33f8e905d40a77276b3d5310c8b57c1479a4e46930042b4894fcf7ed60ad76c4"},
-]
-"attrs 19.3.0" = [
-    {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
-    {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
 ]
 "atomicwrites 1.3.0" = [
     {file = "atomicwrites-1.3.0.tar.gz", hash = "sha256:75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"},
     {file = "atomicwrites-1.3.0-py2.py3-none-any.whl", hash = "sha256:03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4"},
 ]
-"wcwidth 0.1.8" = [
-    {file = "wcwidth-0.1.8.tar.gz", hash = "sha256:f28b3e8a6483e5d49e7f8949ac1a78314e740333ae305b4ba5defd3e74fb37a8"},
-    {file = "wcwidth-0.1.8-py2.py3-none-any.whl", hash = "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603"},
-]
-"py 1.8.1" = [
-    {file = "py-1.8.1-py2.py3-none-any.whl", hash = "sha256:c20fdd83a5dbc0af9efd622bee9a5564e278f6380fffcacc43ba6f43db2813b0"},
-    {file = "py-1.8.1.tar.gz", hash = "sha256:5e27081401262157467ad6e7f851b7aa402c5852dbcb3dae06768434de5752aa"},
+"attrs 19.3.0" = [
+    {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
+    {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
 ]
 "cached-property 1.5.1" = [
     {file = "cached-property-1.5.1.tar.gz", hash = "sha256:9217a59f14a5682da7c4b8829deadbfc194ac22e9908ccf7c8820234e80a1504"},
     {file = "cached_property-1.5.1-py2.py3-none-any.whl", hash = "sha256:3a026f1a54135677e7da5ce819b0c690f156f37976f3e30c5430740725203d7f"},
 ]
-"more-itertools 8.1.0" = [
-    {file = "more-itertools-8.1.0.tar.gz", hash = "sha256:c468adec578380b6281a114cb8a5db34eb1116277da92d7c46f904f0b52d3288"},
-    {file = "more_itertools-8.1.0-py3-none-any.whl", hash = "sha256:1a2a32c72400d365000412fe08eb4a24ebee89997c18d3d147544f70f5403b39"},
+"click 7.0" = [
+    {file = "Click-7.0-py2.py3-none-any.whl", hash = "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13"},
+    {file = "Click-7.0.tar.gz", hash = "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"},
 ]
-"importlib-metadata 1.4.0" = [
-    {file = "importlib_metadata-1.4.0-py2.py3-none-any.whl", hash = "sha256:bdd9b7c397c273bcc9a11d6629a38487cd07154fa255a467bf704cd2c258e359"},
-    {file = "importlib_metadata-1.4.0.tar.gz", hash = "sha256:f17c015735e1a88296994c0697ecea7e11db24290941983b08c9feb30921e6d8"},
-]
-"vistir 0.5.0" = [
-    {file = "vistir-0.5.0-py2.py3-none-any.whl", hash = "sha256:e47afdec8baf35032a8d17116765f751ecd2f2146d47e5af457c5de1fe5a334e"},
-    {file = "vistir-0.5.0.tar.gz", hash = "sha256:33f8e905d40a77276b3d5310c8b57c1479a4e46930042b4894fcf7ed60ad76c4"},
-]
-"packaging 20.0" = [
-    {file = "packaging-20.0-py2.py3-none-any.whl", hash = "sha256:aec3fdbb8bc9e4bb65f0634b9f551ced63983a529d6a8931817d52fdd0816ddb"},
-    {file = "packaging-20.0.tar.gz", hash = "sha256:fe1d8331dfa7cc0a883b49d75fc76380b2ab2734b220fbb87d774e4fd4b851f8"},
-]
-"wheel 0.33.6" = [
-    {file = "wheel-0.33.6-py2.py3-none-any.whl", hash = "sha256:f4da1763d3becf2e2cd92a14a7c920f0f00eca30fdde9ea992c836685b9faf28"},
-    {file = "wheel-0.33.6.tar.gz", hash = "sha256:10c9da68765315ed98850f8e048347c3eb06dd81822dc2ab1d4fde9dc9702646"},
+"colorama 0.4.3" = [
+    {file = "colorama-0.4.3-py2.py3-none-any.whl", hash = "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff"},
+    {file = "colorama-0.4.3.tar.gz", hash = "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"},
 ]
 "coverage 4.4.2" = [
     {file = "coverage-4.4.2.tar.gz", hash = "sha256:309d91bd7a35063ec7a0e4d75645488bfab3f0b66373e7722f23da7f5b0f34cc"},
@@ -460,23 +367,115 @@ summary = "Python parsing module"
     {file = "coverage-4.4.2-cp36-cp36m-win32.whl", hash = "sha256:f87f522bde5540d8a4b11df80058281ac38c44b13ce29ced1e294963dd51a8f8"},
     {file = "coverage-4.4.2-cp36-cp36m-win_amd64.whl", hash = "sha256:a7cfaebd8f24c2b537fa6a271229b051cdac9c1734bb6f939ccfc7c055689baa"},
 ]
-"setuptools 45.0.0" = [
-    {file = "setuptools-45.0.0-py2.py3-none-any.whl", hash = "sha256:001c474c175697a03e2afffd87d92411c89215be5f2cd3e0ab80a67726c0f4c2"},
-    {file = "setuptools-45.0.0.zip", hash = "sha256:c46d9c8f2289535457d36c676b541ca78f7dcb736b97d02f50d17f7f15b583cc"},
+"crayons 0.3.0" = [
+    {file = "crayons-0.3.0.tar.gz", hash = "sha256:50e5fa729d313e2c607ae8bf7b53bb487652e10bd8e7a1e08c4bc8bf62755ffc"},
+    {file = "crayons-0.3.0-py2.py3-none-any.whl", hash = "sha256:8c9e4a3a607bc10e9a9140d496ecd16c6805088dd16c852c378f1f1d5db7aeb6"},
 ]
-"zipp 1.0.0" = [
-    {file = "zipp-1.0.0-py2.py3-none-any.whl", hash = "sha256:8dda78f06bd1674bd8720df8a50bb47b6e1233c503a4eed8e7810686bde37656"},
-    {file = "zipp-1.0.0.tar.gz", hash = "sha256:d38fbe01bbf7a3593a32bc35a9c4453c32bc42b98c377f9bff7e9f8da157786c"},
+"cursor 1.3.4" = [
+    {file = "cursor-1.3.4.tar.gz", hash = "sha256:33f279a17789c04efd27a92501a0dad62bb011f8a4cdff93867c798d26508940"},
 ]
-"yaspin 0.16.0" = [
-    {file = "yaspin-0.16.0.tar.gz", hash = "sha256:efca3eb7162e575d3ab2e49743cd9bd1f5ec2adc7d85b9489ab145a3f6460ed4"},
-    {file = "yaspin-0.16.0-py2.py3-none-any.whl", hash = "sha256:e88bf9c9fe4ac588e3620588aadae655dfc20f1f7460338394ef4693bdc2b800"},
+"distlib 0.3.0" = [
+    {file = "distlib-0.3.0.zip", hash = "sha256:2e166e231a26b36d6dfe35a48c4464346620f8645ed0ace01ee31822b288de21"},
+]
+"halo 0.0.28" = [
+    {file = "halo-0.0.28.tar.gz", hash = "sha256:9ebf98b94a43f3b68e18c6d74dcb1ea58446b8457ce6fb1b2b4cac8d83733f80"},
+    {file = "halo-0.0.28-py3-none-any.whl", hash = "sha256:9adbfe0a23ae7198a17895aac8845685eb0abeaa13c6a56b60410b347d0f503a"},
+]
+"importlib-metadata 1.4.0" = [
+    {file = "importlib_metadata-1.4.0-py2.py3-none-any.whl", hash = "sha256:bdd9b7c397c273bcc9a11d6629a38487cd07154fa255a467bf704cd2c258e359"},
+    {file = "importlib_metadata-1.4.0.tar.gz", hash = "sha256:f17c015735e1a88296994c0697ecea7e11db24290941983b08c9feb30921e6d8"},
+]
+"log-symbols 0.0.14" = [
+    {file = "log_symbols-0.0.14.tar.gz", hash = "sha256:cf0bbc6fe1a8e53f0d174a716bc625c4f87043cc21eb55dd8a740cfe22680556"},
+    {file = "log_symbols-0.0.14-py3-none-any.whl", hash = "sha256:4952106ff8b605ab7d5081dd2c7e6ca7374584eff7086f499c06edd1ce56dcca"},
+]
+"more-itertools 8.1.0" = [
+    {file = "more-itertools-8.1.0.tar.gz", hash = "sha256:c468adec578380b6281a114cb8a5db34eb1116277da92d7c46f904f0b52d3288"},
+    {file = "more_itertools-8.1.0-py3-none-any.whl", hash = "sha256:1a2a32c72400d365000412fe08eb4a24ebee89997c18d3d147544f70f5403b39"},
+]
+"packaging 20.0" = [
+    {file = "packaging-20.0-py2.py3-none-any.whl", hash = "sha256:aec3fdbb8bc9e4bb65f0634b9f551ced63983a529d6a8931817d52fdd0816ddb"},
+    {file = "packaging-20.0.tar.gz", hash = "sha256:fe1d8331dfa7cc0a883b49d75fc76380b2ab2734b220fbb87d774e4fd4b851f8"},
+]
+"pip 19.3.1" = [
+    {file = "pip-19.3.1-py2.py3-none-any.whl", hash = "sha256:6917c65fc3769ecdc61405d3dfd97afdedd75808d200b2838d7d961cebc0c2c7"},
+    {file = "pip-19.3.1.tar.gz", hash = "sha256:21207d76c1031e517668898a6b46a9fb1501c7a4710ef5dfd6a40ad9e6757ea7"},
+]
+"pip-shims 0.4.0" = [
+    {file = "pip_shims-0.4.0-py2.py3-none-any.whl", hash = "sha256:d4b720d85a8cbd81f72ea22e273ac72415f1e0b49cade597b815c63b351d9637"},
+    {file = "pip_shims-0.4.0.tar.gz", hash = "sha256:383e054386d15f7a33d619a9fc19d670575cdf88e05a4dab93f0a254696ce836"},
+]
+"pluggy 0.13.1" = [
+    {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
+    {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
+]
+"py 1.8.1" = [
+    {file = "py-1.8.1-py2.py3-none-any.whl", hash = "sha256:c20fdd83a5dbc0af9efd622bee9a5564e278f6380fffcacc43ba6f43db2813b0"},
+    {file = "py-1.8.1.tar.gz", hash = "sha256:5e27081401262157467ad6e7f851b7aa402c5852dbcb3dae06768434de5752aa"},
 ]
 "pyparsing 2.4.6" = [
     {file = "pyparsing-2.4.6-py2.py3-none-any.whl", hash = "sha256:c342dccb5250c08d45fd6f8b4a559613ca603b57498511740e65cd11a2e7dcec"},
     {file = "pyparsing-2.4.6.tar.gz", hash = "sha256:4c830582a84fb022400b85429791bc551f1f4871c33f23e44f353119e92f969f"},
 ]
+"pytest 5.3.3" = [
+    {file = "pytest-5.3.3-py3-none-any.whl", hash = "sha256:9f8d44f4722b3d06b41afaeb8d177cfbe0700f8351b1fc755dd27eedaa3eb9e0"},
+    {file = "pytest-5.3.3.tar.gz", hash = "sha256:f5d3d0e07333119fe7d4af4ce122362dc4053cdd34a71d2766290cf5369c64ad"},
+]
+"pytest-cov 2.8.1" = [
+    {file = "pytest-cov-2.8.1.tar.gz", hash = "sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b"},
+    {file = "pytest_cov-2.8.1-py2.py3-none-any.whl", hash = "sha256:cdbdef4f870408ebdbfeb44e63e07eb18bb4619fae852f6e760645fa36172626"},
+]
+"pytest-mock 2.0.0" = [
+    {file = "pytest-mock-2.0.0.tar.gz", hash = "sha256:b35eb281e93aafed138db25c8772b95d3756108b601947f89af503f8c629413f"},
+    {file = "pytest_mock-2.0.0-py2.py3-none-any.whl", hash = "sha256:cb67402d87d5f53c579263d37971a164743dc33c159dfb4fb4a86f37c5552307"},
+]
+"pythonfinder 1.2.1" = [
+    {file = "pythonfinder-1.2.1-py2.py3-none-any.whl", hash = "sha256:cfbfe61b7bfc3b45b24f156e2bab76621ebc6ba92f69afbc16f76482d69d9802"},
+    {file = "pythonfinder-1.2.1.tar.gz", hash = "sha256:0a4f585abb76aa2fc97479cd12d10f7644aa1ab42b919747e04d33d7f9379425"},
+]
+"setuptools 45.1.0" = [
+    {file = "setuptools-45.1.0-py3-none-any.whl", hash = "sha256:68e7fd3508687f94367f1aa090a3ed921cd045a60b73d8b0aa1f305199a0ca28"},
+    {file = "setuptools-45.1.0.zip", hash = "sha256:91f72d83602a6e5e4a9e4fe296e27185854038d7cbda49dcd7006c4d3b3b89d5"},
+]
+"six 1.14.0" = [
+    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
+    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
+]
+"spinners 0.0.23" = [
+    {file = "spinners-0.0.23.tar.gz", hash = "sha256:f396fea1ee00c0622988d7d2bf2895d26dd6f70850ca2ce94eaca52ca4873560"},
+]
+"termcolor 1.1.0" = [
+    {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
+]
+"tomlkit 0.5.8" = [
+    {file = "tomlkit-0.5.8-py2.py3-none-any.whl", hash = "sha256:96e6369288571799a3052c1ef93b9de440e1ab751aa045f435b55e9d3bcd0690"},
+    {file = "tomlkit-0.5.8.tar.gz", hash = "sha256:32c10cc16ded7e4101c79f269910658cc2a0be5913f1252121c3cd603051c269"},
+]
+"vistir 0.5.0" = [
+    {file = "vistir-0.5.0-py2.py3-none-any.whl", hash = "sha256:e47afdec8baf35032a8d17116765f751ecd2f2146d47e5af457c5de1fe5a334e"},
+    {file = "vistir-0.5.0.tar.gz", hash = "sha256:33f8e905d40a77276b3d5310c8b57c1479a4e46930042b4894fcf7ed60ad76c4"},
+]
+"vistir[spinner] 0.5.0" = [
+    {file = "vistir-0.5.0-py2.py3-none-any.whl", hash = "sha256:e47afdec8baf35032a8d17116765f751ecd2f2146d47e5af457c5de1fe5a334e"},
+    {file = "vistir-0.5.0.tar.gz", hash = "sha256:33f8e905d40a77276b3d5310c8b57c1479a4e46930042b4894fcf7ed60ad76c4"},
+]
+"wcwidth 0.1.8" = [
+    {file = "wcwidth-0.1.8.tar.gz", hash = "sha256:f28b3e8a6483e5d49e7f8949ac1a78314e740333ae305b4ba5defd3e74fb37a8"},
+    {file = "wcwidth-0.1.8-py2.py3-none-any.whl", hash = "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603"},
+]
+"wheel 0.33.6" = [
+    {file = "wheel-0.33.6-py2.py3-none-any.whl", hash = "sha256:f4da1763d3becf2e2cd92a14a7c920f0f00eca30fdde9ea992c836685b9faf28"},
+    {file = "wheel-0.33.6.tar.gz", hash = "sha256:10c9da68765315ed98850f8e048347c3eb06dd81822dc2ab1d4fde9dc9702646"},
+]
+"yaspin 0.16.0" = [
+    {file = "yaspin-0.16.0.tar.gz", hash = "sha256:efca3eb7162e575d3ab2e49743cd9bd1f5ec2adc7d85b9489ab145a3f6460ed4"},
+    {file = "yaspin-0.16.0-py2.py3-none-any.whl", hash = "sha256:e88bf9c9fe4ac588e3620588aadae655dfc20f1f7460338394ef4693bdc2b800"},
+]
+"zipp 2.0.0" = [
+    {file = "zipp-2.0.0-py3-none-any.whl", hash = "sha256:57147f6b0403b59f33fd357f169f860e031303415aeb7d04ede4839d23905ab8"},
+    {file = "zipp-2.0.0.tar.gz", hash = "sha256:7ae5ccaca427bafa9760ac3cd8f8c244bfc259794b5b6bb9db4dda2241575d09"},
+]
 
 [root]
-content_hash = "md5:2f879c200335263d0f1f0e9fb73dd96b"
+content_hash = "md5:337980a685000ebcd722536970ad47a3"
 meta_version = "0.0.1"
