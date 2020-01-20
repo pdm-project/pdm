@@ -2,6 +2,8 @@
 
 A modern Python package manager with PEP 582 support.
 
+![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
+
 ## What is PDM?
 
 PDM is meant to be a next generation Python package management tool.
@@ -32,3 +34,15 @@ you can probably find some goodness in `pdm`.
 - [x] `add`, `lock`, `list`, `update`, `remove` commands.
 - [ ] PEP 517 build backends.
 - [x] Continuous Integration.
+
+
+## Credits
+
+This project is strongly inspired by [pyflow] and [poetry].
+
+[pyflow]: https://github.com/David-OConnor/pyflow
+[poetry]: https://github.com/python-poetry/poetry
+
+
+## License
+This project is open sourced under MIT license, see the [LICENSE](LICENSE) file for more details.
