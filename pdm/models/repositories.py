@@ -207,7 +207,7 @@ class PyPIRepository(BaseRepository):
                 for c in cans
                 if requirement.specifier.contains(c.version, allow_prereleases)
             ),
-            key=lambda c: (c.version, c.is_wheel),
+            key=lambda c: (c.version, c.ireq.is_wheel),
         )
         if not allow_all:
             sorted_cans = [
