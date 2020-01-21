@@ -13,7 +13,7 @@ summary = "Atomic file writes."
 
 [[package]]
 name = "attrs"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "19.3.0"
 marker = "python_version >= \"2.7\""
 summary = "Classes Without Boilerplate"
@@ -34,7 +34,7 @@ summary = "Composable command line interface toolkit"
 
 [[package]]
 name = "colorama"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "0.4.3"
 marker = "python_version >= \"2.7\""
 summary = "Cross-platform colored terminal text."
@@ -43,7 +43,7 @@ summary = "Cross-platform colored terminal text."
 name = "coverage"
 sections = ["dev"]
 version = "4.4.2"
-marker = "python_version >= \"2.7\" and python_version < \"4.0\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+marker = "python_version < \"4.0\" and python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
 summary = "Code coverage measurement for Python"
 
 [[package]]
@@ -85,7 +85,7 @@ six = ">=1.12.0"
 name = "importlib-metadata"
 sections = ["dev"]
 version = "1.4.0"
-marker = "python_version >= \"3.5\" and python_version < \"3.8\""
+marker = "python_version < \"3.8\" and python_version >= \"3.5\""
 summary = "Read metadata from Python packages"
 
 [package.dependencies]
@@ -109,7 +109,7 @@ summary = "More routines for operating on iterables, beyond itertools"
 
 [[package]]
 name = "packaging"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "20.0"
 marker = "python_version >= \"2.7\""
 summary = "Core utilities for Python packages"
@@ -159,7 +159,7 @@ summary = "library with cross-python path, ini-parsing, io, code, log facilities
 
 [[package]]
 name = "pyparsing"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "2.4.6"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python parsing module"
@@ -167,7 +167,7 @@ summary = "Python parsing module"
 [[package]]
 name = "pytest"
 sections = ["dev"]
-version = "5.3.3"
+version = "5.3.4"
 marker = "python_version >= \"3.5\""
 summary = "pytest: simple powerful testing with Python"
 
@@ -228,7 +228,7 @@ summary = "Easily download, build, install, upgrade, and uninstall Python packag
 
 [[package]]
 name = "six"
-sections = ["dev", "default"]
+sections = ["default", "dev"]
 version = "1.14.0"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python 2 and 3 compatibility utilities"
@@ -275,7 +275,7 @@ summary = "Miscellaneous utilities for dealing with filesystems, paths, projects
 colorama = "!=0.4.2,>=0.3.4"
 six = "*"
 yaspin = "*"
-vistir = {marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\"", version = "==0.5.0"}
+vistir = ">=0.4"
 
 [[package]]
 name = "wcwidth"
@@ -302,7 +302,7 @@ summary = "Yet Another Terminal Spinner"
 name = "zipp"
 sections = ["dev"]
 version = "2.0.0"
-marker = "python_version >= \"3.6\" and python_version < \"3.8\""
+marker = "python_version < \"3.8\" and python_version >= \"3.6\""
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [package.dependencies]
@@ -310,12 +310,12 @@ more-itertools = "*"
 
 [metadata]
 "appdirs 1.4.3" = [
-    {file = "appdirs-1.4.3.tar.gz", hash = "sha256:9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"},
     {file = "appdirs-1.4.3-py2.py3-none-any.whl", hash = "sha256:d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"},
+    {file = "appdirs-1.4.3.tar.gz", hash = "sha256:9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"},
 ]
 "atomicwrites 1.3.0" = [
-    {file = "atomicwrites-1.3.0.tar.gz", hash = "sha256:75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"},
     {file = "atomicwrites-1.3.0-py2.py3-none-any.whl", hash = "sha256:03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4"},
+    {file = "atomicwrites-1.3.0.tar.gz", hash = "sha256:75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"},
 ]
 "attrs 19.3.0" = [
     {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
@@ -334,7 +334,6 @@ more-itertools = "*"
     {file = "colorama-0.4.3.tar.gz", hash = "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"},
 ]
 "coverage 4.4.2" = [
-    {file = "coverage-4.4.2.tar.gz", hash = "sha256:309d91bd7a35063ec7a0e4d75645488bfab3f0b66373e7722f23da7f5b0f34cc"},
     {file = "coverage-4.4.2-cp26-cp26m-macosx_10_10_x86_64.whl", hash = "sha256:d1ee76f560c3c3e8faada866a07a32485445e16ed2206ac8378bd90dadffb9f0"},
     {file = "coverage-4.4.2-cp26-cp26m-manylinux1_i686.whl", hash = "sha256:007eeef7e23f9473622f7d94a3e029a45d55a92a1f083f0f3512f5ab9a669b05"},
     {file = "coverage-4.4.2-cp26-cp26m-manylinux1_x86_64.whl", hash = "sha256:17307429935f96c986a1b1674f78079528833410750321d22b5fb35d1883828e"},
@@ -366,10 +365,11 @@ more-itertools = "*"
     {file = "coverage-4.4.2-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:2e1a5c6adebb93c3b175103c2f855eda957283c10cf937d791d81bef8872d6ca"},
     {file = "coverage-4.4.2-cp36-cp36m-win32.whl", hash = "sha256:f87f522bde5540d8a4b11df80058281ac38c44b13ce29ced1e294963dd51a8f8"},
     {file = "coverage-4.4.2-cp36-cp36m-win_amd64.whl", hash = "sha256:a7cfaebd8f24c2b537fa6a271229b051cdac9c1734bb6f939ccfc7c055689baa"},
+    {file = "coverage-4.4.2.tar.gz", hash = "sha256:309d91bd7a35063ec7a0e4d75645488bfab3f0b66373e7722f23da7f5b0f34cc"},
 ]
 "crayons 0.3.0" = [
-    {file = "crayons-0.3.0.tar.gz", hash = "sha256:50e5fa729d313e2c607ae8bf7b53bb487652e10bd8e7a1e08c4bc8bf62755ffc"},
     {file = "crayons-0.3.0-py2.py3-none-any.whl", hash = "sha256:8c9e4a3a607bc10e9a9140d496ecd16c6805088dd16c852c378f1f1d5db7aeb6"},
+    {file = "crayons-0.3.0.tar.gz", hash = "sha256:50e5fa729d313e2c607ae8bf7b53bb487652e10bd8e7a1e08c4bc8bf62755ffc"},
 ]
 "cursor 1.3.4" = [
     {file = "cursor-1.3.4.tar.gz", hash = "sha256:33f279a17789c04efd27a92501a0dad62bb011f8a4cdff93867c798d26508940"},
@@ -378,16 +378,16 @@ more-itertools = "*"
     {file = "distlib-0.3.0.zip", hash = "sha256:2e166e231a26b36d6dfe35a48c4464346620f8645ed0ace01ee31822b288de21"},
 ]
 "halo 0.0.28" = [
-    {file = "halo-0.0.28.tar.gz", hash = "sha256:9ebf98b94a43f3b68e18c6d74dcb1ea58446b8457ce6fb1b2b4cac8d83733f80"},
     {file = "halo-0.0.28-py3-none-any.whl", hash = "sha256:9adbfe0a23ae7198a17895aac8845685eb0abeaa13c6a56b60410b347d0f503a"},
+    {file = "halo-0.0.28.tar.gz", hash = "sha256:9ebf98b94a43f3b68e18c6d74dcb1ea58446b8457ce6fb1b2b4cac8d83733f80"},
 ]
 "importlib-metadata 1.4.0" = [
     {file = "importlib_metadata-1.4.0-py2.py3-none-any.whl", hash = "sha256:bdd9b7c397c273bcc9a11d6629a38487cd07154fa255a467bf704cd2c258e359"},
     {file = "importlib_metadata-1.4.0.tar.gz", hash = "sha256:f17c015735e1a88296994c0697ecea7e11db24290941983b08c9feb30921e6d8"},
 ]
 "log-symbols 0.0.14" = [
-    {file = "log_symbols-0.0.14.tar.gz", hash = "sha256:cf0bbc6fe1a8e53f0d174a716bc625c4f87043cc21eb55dd8a740cfe22680556"},
     {file = "log_symbols-0.0.14-py3-none-any.whl", hash = "sha256:4952106ff8b605ab7d5081dd2c7e6ca7374584eff7086f499c06edd1ce56dcca"},
+    {file = "log_symbols-0.0.14.tar.gz", hash = "sha256:cf0bbc6fe1a8e53f0d174a716bc625c4f87043cc21eb55dd8a740cfe22680556"},
 ]
 "more-itertools 8.1.0" = [
     {file = "more-itertools-8.1.0.tar.gz", hash = "sha256:c468adec578380b6281a114cb8a5db34eb1116277da92d7c46f904f0b52d3288"},
@@ -417,9 +417,9 @@ more-itertools = "*"
     {file = "pyparsing-2.4.6-py2.py3-none-any.whl", hash = "sha256:c342dccb5250c08d45fd6f8b4a559613ca603b57498511740e65cd11a2e7dcec"},
     {file = "pyparsing-2.4.6.tar.gz", hash = "sha256:4c830582a84fb022400b85429791bc551f1f4871c33f23e44f353119e92f969f"},
 ]
-"pytest 5.3.3" = [
-    {file = "pytest-5.3.3-py3-none-any.whl", hash = "sha256:9f8d44f4722b3d06b41afaeb8d177cfbe0700f8351b1fc755dd27eedaa3eb9e0"},
-    {file = "pytest-5.3.3.tar.gz", hash = "sha256:f5d3d0e07333119fe7d4af4ce122362dc4053cdd34a71d2766290cf5369c64ad"},
+"pytest 5.3.4" = [
+    {file = "pytest-5.3.4-py3-none-any.whl", hash = "sha256:c13d1943c63e599b98cf118fcb9703e4d7bde7caa9a432567bcdcae4bf512d20"},
+    {file = "pytest-5.3.4.tar.gz", hash = "sha256:1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600"},
 ]
 "pytest-cov 2.8.1" = [
     {file = "pytest-cov-2.8.1.tar.gz", hash = "sha256:cc6742d8bac45070217169f5f72ceee1e0e55b0221f54bcf24845972d3a47f2b"},
@@ -460,16 +460,16 @@ more-itertools = "*"
     {file = "vistir-0.5.0.tar.gz", hash = "sha256:33f8e905d40a77276b3d5310c8b57c1479a4e46930042b4894fcf7ed60ad76c4"},
 ]
 "wcwidth 0.1.8" = [
-    {file = "wcwidth-0.1.8.tar.gz", hash = "sha256:f28b3e8a6483e5d49e7f8949ac1a78314e740333ae305b4ba5defd3e74fb37a8"},
     {file = "wcwidth-0.1.8-py2.py3-none-any.whl", hash = "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603"},
+    {file = "wcwidth-0.1.8.tar.gz", hash = "sha256:f28b3e8a6483e5d49e7f8949ac1a78314e740333ae305b4ba5defd3e74fb37a8"},
 ]
 "wheel 0.33.6" = [
     {file = "wheel-0.33.6-py2.py3-none-any.whl", hash = "sha256:f4da1763d3becf2e2cd92a14a7c920f0f00eca30fdde9ea992c836685b9faf28"},
     {file = "wheel-0.33.6.tar.gz", hash = "sha256:10c9da68765315ed98850f8e048347c3eb06dd81822dc2ab1d4fde9dc9702646"},
 ]
 "yaspin 0.16.0" = [
-    {file = "yaspin-0.16.0.tar.gz", hash = "sha256:efca3eb7162e575d3ab2e49743cd9bd1f5ec2adc7d85b9489ab145a3f6460ed4"},
     {file = "yaspin-0.16.0-py2.py3-none-any.whl", hash = "sha256:e88bf9c9fe4ac588e3620588aadae655dfc20f1f7460338394ef4693bdc2b800"},
+    {file = "yaspin-0.16.0.tar.gz", hash = "sha256:efca3eb7162e575d3ab2e49743cd9bd1f5ec2adc7d85b9489ab145a3f6460ed4"},
 ]
 "zipp 2.0.0" = [
     {file = "zipp-2.0.0-py3-none-any.whl", hash = "sha256:57147f6b0403b59f33fd357f169f860e031303415aeb7d04ede4839d23905ab8"},
@@ -477,5 +477,5 @@ more-itertools = "*"
 ]
 
 [root]
-content_hash = "md5:337980a685000ebcd722536970ad47a3"
+content_hash = "md5:ea04411e95163c390f39e88f280663bb"
 meta_version = "0.0.1"
