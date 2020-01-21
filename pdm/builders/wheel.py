@@ -1,4 +1,5 @@
 import contextlib
+import glob
 import hashlib
 import os
 import stat
@@ -63,12 +64,13 @@ class WheelBuilder(Builder):
         if not os.path.exists(build_dir):
             os.makedirs(build_dir, exist_ok=True)
 
-        context.io.echo("- Building {}...".format(context.io.cyan("sdist")))
+        context.io.echo("- Building {}...".format(context.io.cyan("wheel")))
         self._records.clear()
-        (fd, temp_path) = tempfile.mkstemp(suffix=".whl")
+        fd, temp_path = tempfile.mkstemp(suffix=".whl")
+        os.close(fd)
 
         with zipfile.ZipFile(
-            os.fdopen(fd, "w+b"), mode="w", compression=zipfile.ZIP_DEFLATED
+            temp_path, mode="w", compression=zipfile.ZIP_DEFLATED
         ) as zip_file:
             self._copy_module(zip_file)
             self._build(zip_file)
@@ -150,6 +152,11 @@ class WheelBuilder(Builder):
         with self._write_to_zip(wheel, dist_info + "/METADATA") as f:
             self._write_metadata_file(f)
 
+        for pat in ("COPYING", "LICENSE"):
+            for path in glob.glob(pat + "*"):
+                if os.path.isfile(path):
+                    self._add_file(wheel, path, f"{dist_info}/{path}")
+
         with self._write_to_zip(wheel, dist_info + "/RECORD") as f:
             self._records.append((dist_info + "/RECORD", "", ""))
             self._write_record(f)
@@ -169,6 +176,7 @@ class WheelBuilder(Builder):
         hash_digest = urlsafe_b64encode(hashsum.digest()).decode("ascii").rstrip("=")
 
         wheel.writestr(zi, b, compress_type=zipfile.ZIP_DEFLATED)
+        context.io.echo(f" - Adding: {rel_path}", verbosity=context.io.DETAIL)
         self._records.append((rel_path, hash_digest, str(len(b))))
 
     def _build(self, wheel):
@@ -179,7 +187,6 @@ class WheelBuilder(Builder):
 
     def _copy_module(self, wheel):
         for path in self.find_files_to_add():
-            context.io.echo(f" - Adding: {path}", verbosity=context.io.DETAIL)
             self._add_file(wheel, str(path))
 
     def _add_file(self, wheel, full_path, rel_path=None):
@@ -188,7 +195,7 @@ class WheelBuilder(Builder):
         if os.sep != "/":
             # We always want to have /-separated paths in the zip file and in RECORD
             rel_path = rel_path.replace(os.sep, "/")
-
+        context.io.echo(f" - Adding: {rel_path}", verbosity=context.io.DETAIL)
         zinfo = zipfile.ZipInfo(rel_path)
 
         # Normalize permission bits to either 755 (executable) or 644

@@ -199,3 +199,21 @@ def remove(project, dev, section, sync, packages):
 @pass_project
 def list_(project):
     actions.do_list(project)
+
+
+@cli.command(help="Build artifacts for distribution.")
+@verbose_option
+@click.option(
+    "--no-sdist",
+    "sdist",
+    default=True,
+    flag_value=False,
+    help="Don't build source tarballs.",
+)
+@click.option(
+    "--no-wheel", "wheel", default=True, flag_value=False, help="Don't build wheels."
+)
+@click.option("-d", "--dest", default="dist", help="Target directory to put artifacts.")
+@pass_project
+def build(project, sdist, wheel, dest):
+    actions.do_build(project, sdist, wheel, dest)

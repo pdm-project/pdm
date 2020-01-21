@@ -5,6 +5,7 @@ import halo
 import tomlkit
 from pkg_resources import safe_name
 
+from pdm.builders import WheelBuilder, SdistBuilder
 from pdm.context import context
 from pdm.exceptions import PdmUsageError
 from pdm.installers import Synchronizer, format_dist
@@ -283,8 +284,24 @@ def do_remove(
         do_sync(project, sections=(section,), default=False, clean=True)
 
 
-def do_list(project):
+def do_list(project: Project) -> None:
     working_set = project.environment.get_working_set()
     for key in working_set:
         dist = working_set[key][0]
         context.io.echo(format_dist(dist))
+
+
+def do_build(
+    project: Project, sdist: bool = True, wheel: bool = True, dest: str = "dist"
+):
+    if not wheel and not sdist:
+        context.io.echo("All artifacts are disabled, nothing to do.")
+        return
+    ireq = project.make_self_candidate(False).ireq
+    ireq.source_dir = "."
+    if sdist:
+        with SdistBuilder(ireq) as builder:
+            builder.build(dest)
+    if wheel:
+        with WheelBuilder(ireq) as builder:
+            builder.build(dest)

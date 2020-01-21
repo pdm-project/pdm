@@ -121,15 +121,16 @@ class Builder:
     def build(self, build_dir: str, **kwargs) -> str:
         raise NotImplementedError
 
-    def _find_files_iter(self) -> Iterator[str]:
+    def _find_files_iter(self, include_build: bool = False) -> Iterator[str]:
         includes = []
         find_froms = []
         excludes = []
         dont_find_froms = []
 
         if not self.meta.includes:
-            includes = ["*.py"]
             find_froms = ["src"] if os.path.isdir("src") else _find_top_packages()
+            if not find_froms:
+                includes = ["*.py"]
         else:
             for pat in self.meta.includes:
                 if "*" in pat or os.path.isfile(pat):
@@ -168,6 +169,8 @@ class Builder:
         for path in includes:
             if os.path.isfile(path):
                 yield path
+        if not include_build:
+            return
 
         for pat in ("COPYING", "LICENSE", "README"):
             for path in glob.glob(pat + "*"):
@@ -177,12 +180,13 @@ class Builder:
         if self.project.pyproject_file.exists():
             yield "pyproject.toml"
 
-    def find_files_to_add(self) -> List[str]:
+    def find_files_to_add(self, include_build: bool = False) -> List[str]:
         """Traverse the project path and return a list of file names
         that should be included in a sdist distribution.
+        If include_build is True, will include files like LICENSE, README and pyproject
         Produce a paths list relative to the source dir.
         """
-        return sorted(Path(p) for p in set(self._find_files_iter()))
+        return sorted(Path(p) for p in set(self._find_files_iter(include_build)))
 
     def format_setup_py(self) -> str:
         before, extra, after = [], [], []

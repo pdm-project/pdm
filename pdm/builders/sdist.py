@@ -24,7 +24,7 @@ class SdistBuilder(Builder):
         try:
             tar_dir = "{}-{}".format(self.meta.project_name, self.meta.version)
 
-            files_to_add = self.find_files_to_add()
+            files_to_add = self.find_files_to_add(True)
 
             for relpath in files_to_add:
                 tar_info = tar.gettarinfo(
