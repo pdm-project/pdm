@@ -10,6 +10,7 @@ import vistir
 from pkg_resources import safe_name
 
 from pdm.exceptions import ProjectError
+from pdm.models.markers import Marker
 
 if TYPE_CHECKING:
     from pdm.project import Project
@@ -89,6 +90,18 @@ class PackageMeta:
             extra: [r.as_line() for r in self.project.get_dependencies(extra).values()]
             for extra in self._extras
         }
+
+    @property
+    def requires_extra(self) -> Dict[str, List[str]]:
+        if not self._extras:
+            return {}
+        result = {}
+        for extra in self._extras:
+            current = result[extra] = []
+            for r in self.project.get_dependencies(extra).values():
+                r.marker = Marker(f"extra == {extra!r}") & r.marker
+                current.append(r.as_line())
+        return result
 
     @property
     def python_requires(self) -> str:

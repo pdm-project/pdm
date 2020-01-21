@@ -1,9 +1,0 @@
-distlib
-pip>=19.3.1
-pip_shims
-tomlkit
-appdirs
-pythonfinder
-halo
-click
-crayons

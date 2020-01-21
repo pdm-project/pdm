@@ -34,9 +34,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install -r requirements.txt
-        python -m pdm install -d
+        python -m pip install pdm
+        pdm install -d
     - name: Test
       run: |
-        python -m pdm run pytest --cov pdm tests
+        pdm run pytest --cov pdm tests
 

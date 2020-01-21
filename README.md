@@ -16,7 +16,16 @@ you can probably find some goodness in `pdm`.
 
 ## Installation:
 
-> It is still a WIP project and not published to PyPI.
+```bash
+$ pipx install pdm
+```
+It is recommended to install `pdm` in an isolated enviroment, with `pipx`.
+
+Or you can install it under user site:
+
+```bash
+$ pip install --user pdm
+```
 
 ## Usage
 
@@ -32,7 +41,7 @@ you can probably find some goodness in `pdm`.
 - [x] Console scripts are injected with local paths.
 - [x] A neet CLI.
 - [x] `add`, `lock`, `list`, `update`, `remove` commands.
-- [ ] PEP 517 build backends.
+- [x] PEP 517 build backends.
 - [x] Continuous Integration.
 
 

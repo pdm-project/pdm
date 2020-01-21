@@ -46,7 +46,6 @@ Version: {version}
 Summary: {description}
 Home-page: {homepage}
 License: {license}
-Description: {readme}
 """
 
 
@@ -292,11 +291,13 @@ class Builder:
         for classifier in meta.classifiers or []:
             content += "Classifier: {}\n".format(classifier)
 
-        for extra in sorted(meta._extras or []):
-            content += "Provides-Extra: {}\n".format(extra)
-
         for dep in sorted(meta.install_requires):
             content += "Requires-Dist: {}\n".format(dep)
+
+        for extra, reqs in sorted(self.meta.requires_extra.items()):
+            content += "Provides-Extra: {}\n".format(extra)
+            for dep in reqs:
+                content += "Requires-Dist: {}\n".format(dep)
 
         for url in sorted(meta.project_urls or {}):
             content += "Project-URL: {}, {}\n".format(url, meta.project_urls[url])
@@ -305,6 +306,9 @@ class Builder:
             content += "Description-Content-Type: {}\n".format(
                 meta.long_description_content_type
             )
+
+        if meta.readme:
+            content += "\n" + Path(meta.readme).read_text("utf-8") + "\n"
 
         return content
 
