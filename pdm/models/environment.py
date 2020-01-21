@@ -12,9 +12,8 @@ from pip._internal.utils import misc
 from pip._vendor import pkg_resources
 from pip_shims import shims
 
-from distlib.wheel import Wheel
 from pdm.context import context
-from pdm.exceptions import NoPythonVersion, WheelBuildError
+from pdm.exceptions import NoPythonVersion
 from pdm.utils import (
     _allow_all_wheels,
     cached_property,
@@ -117,7 +116,7 @@ class Environment:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
-    def _make_pip_wheel_args(self, ireq: shims.InstallRequirement) -> Dict[str, Any]:
+    def _make_building_args(self, ireq: shims.InstallRequirement) -> Dict[str, Any]:
         src_dir = ireq.source_dir or self._get_source_dir()
         if ireq.editable:
             build_dir = src_dir
@@ -162,11 +161,14 @@ class Environment:
         yield finder
         finder.session.close()
 
-    def build_wheel(
+    def build(
         self, ireq: shims.InstallRequirement, hashes: Optional[Dict[str, str]] = None
-    ) -> Optional[Wheel]:
+    ) -> str:
         """A local candidate has already everything in local, no need to download."""
-        kwargs = self._make_pip_wheel_args(ireq)
+        from pdm.builders import EditableBuilder
+        from pdm.builders import WheelBuilder
+
+        kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
             with _allow_all_wheels():
                 # temporarily allow all wheels to get a link.
@@ -175,54 +177,34 @@ class Environment:
                 ireq.source_dir = kwargs["build_dir"]
             else:
                 ireq.ensure_has_source_dir(kwargs["build_dir"])
-            if ireq.editable and ireq.req.is_local_dir:
-                ireq.prepare_metadata()
-                return
+
             download_dir = kwargs["download_dir"]
             if ireq.link.is_wheel:
                 download_dir = kwargs["wheel_download_dir"]
             if hashes:
                 ireq.options["hashes"] = convert_hashes(hashes)
-            shims.shim_unpack(
-                link=ireq.link,
-                download_dir=download_dir,
-                location=ireq.source_dir,
-                hashes=ireq.hashes(False),
-                session=finder.session,
-            )
-
+            if not (ireq.editable and ireq.req.is_local_dir):
+                shims.shim_unpack(
+                    link=ireq.link,
+                    download_dir=download_dir,
+                    location=ireq.source_dir,
+                    hashes=ireq.hashes(False),
+                    session=finder.session,
+                )
+            # Now all source is prepared, build it.
             if ireq.link.is_wheel:
-                return Wheel((context.cache("wheels") / ireq.link.filename).as_posix())
-            # VCS url is unpacked, now build the egg-info
-            if ireq.editable and ireq.req.is_vcs:
-                ireq.prepare_metadata()
-                return
+                return (context.cache("wheels") / ireq.link.filename).as_posix()
+            builder_class = EditableBuilder if ireq.editable else WheelBuilder
+            kwargs["finder"] = finder
+            with builder_class(ireq) as builder:
+                return builder.build(**kwargs)
 
-            if not ireq.req.name:
-                # Name is not available for a tarball distribution. Get the package name
-                # from package's egg info.
-                # `prepare_metadata()` won't work if there is a `req` attribute.
-                req = ireq.req
-                ireq.req = None
-                ireq.prepare_metadata()
-                req.name = ireq.metadata["Name"]
-                ireq.req = req
-
-            with shims.make_preparer(
-                finder=finder, session=finder.session, **kwargs
-            ) as preparer:
-                wheel_cache = context.make_wheel_cache()
-                builder = shims.WheelBuilder(preparer=preparer, wheel_cache=wheel_cache)
-                output_dir = create_tracked_tempdir(prefix="pdm-ephem")
-                wheel_path = builder._build_one(ireq, output_dir)
-                if not wheel_path or not os.path.exists(wheel_path):
-                    raise WheelBuildError(str(ireq))
-                return Wheel(wheel_path)
-
-    def get_working_set(self) -> pkg_resources.WorkingSet:
+    def get_working_set(self) -> pkg_resources.Environment:
         """Get the working set based on local packages directory."""
         paths = self.get_paths()
-        return pkg_resources.WorkingSet([paths["platlib"]])
+        return pkg_resources.Environment(
+            [paths["platlib"]], python=get_python_version(self.python_executable)
+        )
 
     def marker_environment(self) -> Dict[str, Any]:
         """Get environment for marker evaluation"""

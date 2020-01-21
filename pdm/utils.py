@@ -44,7 +44,7 @@ except ImportError:
             return inst.__dict__[self.attr_name]
 
 
-def _get_abi_tag(python_version):
+def get_abi_tag(python_version):
     # type: (Tuple[int, int]) -> Optional[str]
     """Return the ABI tag based on SOABI (if available) or emulate SOABI
     (CPython 2, PyPy).
@@ -149,7 +149,7 @@ def get_package_finder(
             if target_python_builder is None:
                 target_python_builder = TargetPython
             if python_version and not abi:
-                abi = _get_abi_tag(python_version)
+                abi = get_abi_tag(python_version)
             target_python = target_python_builder(
                 platform=platform,
                 abi=abi,

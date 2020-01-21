@@ -3,8 +3,8 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-import crayons
 import halo
+from pdm.context import context
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
@@ -106,7 +106,7 @@ class SpinnerReporter(SimpleReporter):
         self.spinner.stop_and_persist(text="Finish resolving")
 
     def resolve_criteria(self, name):
-        self.spinner.text = f"Resolving {crayons.green(name, bold=True)}"
+        self.spinner.text = f"Resolving {context.io.green(name, bold=True)}"
 
     def pin_candidate(self, name, criterion, candidate, child_names):
         self.spinner.text = f"Resolved: {candidate.format()}"

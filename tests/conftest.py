@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
-import crayons
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
 
 import pytest
+
+from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers import Synchronizer
 from pdm.models.candidates import Candidate
@@ -23,7 +24,7 @@ from pdm._types import CandidateInfo
 from pdm.utils import get_finder
 from tests import FIXTURES
 
-crayons.disable()
+context.io.disable()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):

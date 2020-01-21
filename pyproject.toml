@@ -2,9 +2,7 @@
 name = "pdm"
 version = "0.0.1"
 description = "Python Development Master"
-authors = [
-    "frostming <mianghong@gmail.com>"
-]
+author = "frostming <mianghong@gmail.com>"
 license = "MIT"
 python_requires = ">=3.7"
 readme = "README.md"
@@ -34,6 +32,16 @@ crayons = "<1.0.0,>=0.3.0"
 pytest = "*"
 pytest-cov = "*"
 pytest-mock = "*"
+
+[tool.pdm.cli]
+pdm = "pdm.cli.commands:cli"
+
+[build-system]
+requires = ["intreehooks"]
+build-backend = "intreehooks:loader"
+
+[tool.intreehooks]
+build-backend = "pdm.builders.api"
 
 [tool.coverage.run]
 branch = true

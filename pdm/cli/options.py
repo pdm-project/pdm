@@ -1,4 +1,20 @@
 import click
+from pdm.context import context
+
+
+def verbose_option(f):
+    def callback(ctx, param, value):
+        context.io.set_verbosity(value)
+        return value
+
+    return click.option(
+        "-v",
+        "--verbose",
+        count=True,
+        callback=callback,
+        expose_value=False,
+        help="-v for detailed output and -vv for more detailed.",
+    )(f)
 
 
 def dry_run_option(f):

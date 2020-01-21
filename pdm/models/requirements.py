@@ -208,8 +208,8 @@ class FileRequirement(Requirement):
         self._parse_url()
         if self.path and not self.path.exists():
             raise RequirementError(f"The local path {self.path} does not exist.")
-        if not self.name and self.is_local_dir:
-            self._parse_name_from_local()
+        if self.is_local_dir:
+            self._check_installable()
 
     @property
     def str_path(self) -> Optional[str]:
@@ -282,11 +282,15 @@ class FileRequirement(Requirement):
             if filename.endswith(".whl"):
                 self.name, self.version = parse_name_version_from_wheel(filename)
 
-    def _parse_name_from_local(self) -> None:
-        result = SetupReader.read_from_directory(self.path.absolute().as_posix())
-        self.name = result["name"]
-        if not self.name:
+    def _check_installable(self) -> None:
+        if not (
+            self.path.joinpath("setup.py").exists()
+            or self.path.joinpath("pyproject.toml").exists()
+        ):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
+        result = SetupReader.read_from_directory(self.path.absolute().as_posix())
+        # TODO: Assign a temp name for PEP 517 local package.
+        self.name = result["name"]
 
 
 class NamedRequirement(Requirement, PackageRequirement):

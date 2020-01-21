@@ -3,30 +3,76 @@ import shutil
 import subprocess
 
 import click
-import crayons
+from click._compat import term_len
+from click.formatting import measure_table, iter_rows, wrap_text, HelpFormatter
 
-from pdm.cli import actions, ui
+from pdm.cli import actions
 from pdm.cli.options import (
     dry_run_option,
     save_strategy_option,
     sections_option,
+    verbose_option,
     update_strategy_option,
 )
+from pdm.context import context
 from pdm.exceptions import CommandNotFound
 from pdm.project import Project
 
 pass_project = click.make_pass_decorator(Project, ensure=True)
 context_settings = {"ignore_unknown_options": True, "allow_extra_args": True}
-click.core.HelpFormatter = ui.ColoredHelpFormatter
+
+
+class ColoredHelpFormatter(HelpFormatter):
+    """Click does not provide possibility to replace the inner formatter class
+    easily, we have to use monkey patch technique.
+    """
+
+    def write_heading(self, heading):
+        super().write_heading(context.io.yellow(heading, bold=True))
+
+    def write_dl(self, rows, col_max=30, col_spacing=2):
+        rows = list(rows)
+        widths = measure_table(rows)
+        if len(widths) != 2:
+            raise TypeError("Expected two columns for definition list")
+
+        first_col = min(widths[0], col_max) + col_spacing
+
+        for first, second in iter_rows(rows, len(widths)):
+            self.write("%*s%s" % (self.current_indent, "", context.io.cyan(first)))
+            if not second:
+                self.write("\n")
+                continue
+            if term_len(first) <= first_col - col_spacing:
+                self.write(" " * (first_col - term_len(first)))
+            else:
+                self.write("\n")
+                self.write(" " * (first_col + self.current_indent))
+
+            text_width = max(self.width - first_col - 2, 10)
+            lines = iter(wrap_text(second, text_width).splitlines())
+            if lines:
+                self.write(next(lines) + "\n")
+                for line in lines:
+                    self.write("%*s%s\n" % (first_col + self.current_indent, "", line))
+            else:
+                self.write("\n")
+
+
+click.core.HelpFormatter = ColoredHelpFormatter
 
 
 @click.group(help="PDM - Python Development Master")
-@click.version_option(prog_name=crayons.normal("pdm", bold=True), version="0.0.1")
+@verbose_option
+@click.version_option(
+    prog_name=context.io._style("pdm", bold=True), version=context.version
+)
 def cli():
     pass
 
 
 @cli.command(help="Lock dependencies.")
+@verbose_option
 @pass_project
 def lock(project):
     print(Project, project)
@@ -34,6 +80,7 @@ def lock(project):
 
 
 @cli.command(help="Install dependencies from lock file.")
+@verbose_option
 @sections_option
 @click.option(
     "--no-lock",
@@ -55,6 +102,7 @@ def install(project, sections, dev, default, lock):
     help="Run commands or scripts with local packages loaded.",
     context_settings=context_settings,
 )
+@verbose_option
 @click.argument("command")
 @click.argument("args", nargs=-1)
 @pass_project
@@ -67,6 +115,7 @@ def run(project, command, args):
 
 
 @cli.command(help="Synchronizes current working set with lock file.")
+@verbose_option
 @sections_option
 @dry_run_option
 @click.option(
@@ -81,6 +130,7 @@ def sync(project, sections, dev, default, dry_run, clean):
 
 
 @cli.command(help="Add packages to pyproject.toml and install them.")
+@verbose_option
 @click.option(
     "-d",
     "--dev",
@@ -112,6 +162,7 @@ def add(project, dev, section, sync, save, strategy, editables, packages):
 
 
 @cli.command(help="Update packages in pyproject.toml")
+@verbose_option
 @sections_option
 @update_strategy_option
 @click.argument("packages", nargs=-1)
@@ -121,6 +172,7 @@ def update(project, dev, sections, default, strategy, packages):
 
 
 @cli.command(help="Remove packages from pyproject.toml")
+@verbose_option
 @click.option(
     "-d",
     "--dev",
@@ -143,6 +195,7 @@ def remove(project, dev, section, sync, packages):
 
 
 @cli.command(name="list", help="List packages installed in current working set.")
+@verbose_option
 @pass_project
 def list_(project):
     actions.do_list(project)

@@ -12,9 +12,7 @@ from tests import FIXTURES
         "git+https://github.com/test-root/demo.git#egg=demo",
     ],
 )
-def test_parse_vcs_directory_metadata(
-    requirement_line, project, vcs, is_editable
-):
+def test_parse_vcs_directory_metadata(requirement_line, project, vcs, is_editable):
     req = parse_requirement(requirement_line, is_editable)
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == [
@@ -49,7 +47,7 @@ def test_parse_metadata_with_extras(project):
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
     )
     candidate = Candidate(req, project.environment)
-    assert candidate.is_wheel
+    assert candidate.ireq.is_wheel
     assert sorted(candidate.get_dependencies_from_metadata()) == [
         'chardet; os_name == "nt"',
         "idna",
@@ -63,7 +61,7 @@ def test_parse_remote_link_metadata(project):
         f"http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, project.environment)
-    assert candidate.is_wheel
+    assert candidate.ireq.is_wheel
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
@@ -77,7 +75,7 @@ def test_extras_warning(project, recwarn):
         f"demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, project.environment)
-    assert candidate.is_wheel
+    assert candidate.ireq.is_wheel
     assert candidate.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',

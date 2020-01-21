@@ -6,6 +6,8 @@ from pip_shims import shims
 
 from pdm.exceptions import ProjectNotInitialized
 from pdm.models.caches import CandidateInfoCache, HashCache
+from pdm.ui import _IO
+from pdm import __version__
 
 
 def require_initialize(func):
@@ -25,7 +27,9 @@ class Context:
     """
 
     def __init__(self):
+        self.version = __version__
         self.project = None
+        self.io = _IO()
         self._initialized = False
 
     def init(self, project):

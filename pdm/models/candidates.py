@@ -3,12 +3,13 @@ from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import crayons
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
+from distlib.wheel import Wheel
+from pdm.context import context
 from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
@@ -20,8 +21,7 @@ if TYPE_CHECKING:
 vcs = shims.VcsSupport()
 
 
-def get_sdist(ireq: shims.InstallRequirement) -> Optional[EggInfoDistribution]:
-    egg_info = ireq.metadata_directory
+def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
     return EggInfoDistribution(egg_info) if egg_info else None
 
 
@@ -66,10 +66,6 @@ class Candidate:
     def __hash__(self):
         return hash((self.name, self.version))
 
-    @property
-    def is_wheel(self) -> bool:
-        return self.link.is_wheel
-
     @cached_property
     def ireq(self) -> shims.InstallRequirement:
         return self.req.as_ireq()
@@ -89,16 +85,18 @@ class Candidate:
         if self.metadata is not None:
             return self.metadata
         ireq = self.ireq
-        self.wheel = self.environment.build_wheel(ireq, self.hashes)
-        if not self.wheel:
+        built = self.environment.build(ireq, self.hashes)
+        if self.req.editable:
             if not self.req.is_local_dir and not self.req.is_vcs:
                 raise RequirementError(
                     "Editable installation is only supported for "
                     "local directory and VCS location."
                 )
-            sdist = get_sdist(ireq)
+            sdist = get_sdist(built)
             self.metadata = sdist.metadata if sdist else None
         else:
+            # It should be a wheel path.
+            self.wheel = Wheel(built)
             self.metadata = self.wheel.metadata
         if not self.name:
             self.name = self.metadata.name
@@ -197,6 +195,6 @@ class Candidate:
 
     def format(self) -> str:
         return (
-            f"{crayons.green(self.name, bold=True)} "
-            f"{crayons.yellow(str(self.version))}"
+            f"{context.io.green(self.name, bold=True)} "
+            f"{context.io.yellow(str(self.version))}"
         )

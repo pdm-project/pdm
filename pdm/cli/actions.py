@@ -1,12 +1,11 @@
 import itertools
 from typing import Dict, Iterable, Optional, Sequence
 
-import click
-import crayons
-import tomlkit
 import halo
+import tomlkit
 from pkg_resources import safe_name
 
+from pdm.context import context
 from pdm.exceptions import PdmUsageError
 from pdm.installers import Synchronizer, format_dist
 from pdm.models.candidates import Candidate, identify
@@ -163,9 +162,9 @@ def do_add(
         r.from_section = section
         tracked_names.add(key)
         requirements[key] = r
-    click.echo(
+    context.io.echo(
         f"Adding packages to {section} dependencies: "
-        + ", ".join(str(crayons.green(key, bold=True)) for key in requirements)
+        + ", ".join(str(context.io.green(key, bold=True)) for key in requirements)
     )
     project.add_dependencies(requirements)
     resolved = do_lock(project, strategy, tracked_names)
@@ -263,9 +262,9 @@ def do_remove(
     if toml_section not in project.tool_settings:
         raise PdmUsageError(f"No such section {toml_section!r} in pyproject.toml.")
     deps = project.tool_settings[toml_section]
-    click.echo(
+    context.io.echo(
         f"Removing packages from {section} dependencies: "
-        + ", ".join(str(crayons.green(name, bold=True)) for name in packages)
+        + ", ".join(str(context.io.green(name, bold=True)) for name in packages)
     )
     for name in packages:
         matched_name = next(
@@ -286,5 +285,6 @@ def do_remove(
 
 def do_list(project):
     working_set = project.environment.get_working_set()
-    for dist in working_set:
-        click.echo(format_dist(working_set, dist))
+    for key in working_set:
+        dist = working_set[key][0]
+        context.io.echo(format_dist(dist))

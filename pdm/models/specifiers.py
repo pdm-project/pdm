@@ -409,6 +409,9 @@ class PySpecSet(SpecifierSet):
         else:
             return self._upper_bound[:2]
 
+    def supports_py2(self) -> bool:
+        return self._lower_bound[0] < 3
+
 
 class ImpossiblePySpecSet(PySpecSet):
     @property

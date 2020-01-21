@@ -1,14 +1,14 @@
-import os
 import subprocess
 from typing import Dict, List, Tuple
 
-import click
-import crayons
-from pip._vendor.pkg_resources import Distribution, WorkingSet
+from pip._vendor.pkg_resources import Distribution, EggInfoDistribution
 from pip_shims import shims
 
 import distlib.scripts
 from distlib.wheel import Wheel
+from vistir import cd
+
+from pdm.context import context
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
@@ -22,21 +22,18 @@ SETUPTOOLS_SHIM = (
 )
 
 
-def _is_dist_editable(working_set: WorkingSet, dist: Distribution) -> bool:
-    for entry in working_set.entries:
-        if os.path.isfile(os.path.join(entry, dist.project_name + ".egg-link")):
-            return True
-    return False
+def _is_dist_editable(dist: Distribution) -> bool:
+    return isinstance(dist, EggInfoDistribution)
 
 
-def format_dist(working_set: WorkingSet, dist: Distribution) -> str:
+def format_dist(dist: Distribution) -> str:
     formatter = "{name} {version}{path}"
     path = ""
-    if _is_dist_editable(working_set, dist):
-        path = f"(-e {dist.location})"
+    if _is_dist_editable(dist):
+        path = f" (-e {dist.location})"
     return formatter.format(
-        name=crayons.green(dist.project_name, bold=True),
-        version=crayons.yellow(dist.version),
+        name=context.io.green(dist.project_name, bold=True),
+        version=context.io.yellow(dist.version),
         path=path,
     )
 
@@ -47,7 +44,7 @@ def _print_list_information(word, items, dry=False):
     template = "{count} package{suffix} {word}: {items}"
     suffix = "s" if len(items) > 1 else ""
     count = len(items)
-    items = ", ".join(str(crayons.green(item, bold=True)) for item in items)
+    items = ", ".join(str(context.io.green(item, bold=True)) for item in items)
     print(template.format(count=count, suffix=suffix, word=word, items=items))
 
 
@@ -59,7 +56,7 @@ class Installer:
         self.auto_confirm = auto_confirm
 
     def install(self, candidate: Candidate) -> None:
-        click.echo(f"Installing {candidate.format()}...")
+        context.io.echo(f"Installing {candidate.format()}...")
         candidate.get_metadata()
         if candidate.wheel:
             self.install_wheel(candidate.wheel)
@@ -79,7 +76,6 @@ class Installer:
     def install_editable(self, ireq: shims.InstallRequirement) -> None:
         setup_path = ireq.setup_py_path
         paths = self.environment.get_paths()
-        old_pwd = os.getcwd()
         install_args = [
             self.environment.python_executable,
             "-u",
@@ -92,19 +88,15 @@ class Installer:
             "--script-dir={}".format(paths["scripts"]),
             "--site-dirs={}".format(paths["platlib"]),
         ]
-        os.chdir(ireq.source_dir)
-        try:
-            with self.environment.activate():
-                subprocess.check_call(install_args)
-        finally:
-            os.chdir(old_pwd)
+        with self.environment.activate(), cd(ireq.unpacked_source_directory):
+            subprocess.check_call(install_args)
 
     def uninstall(self, name: str) -> None:
         working_set = self.environment.get_working_set()
         ireq = shims.install_req_from_line(name)
-        click.echo(
-            f"Uninstalling: {crayons.green(name, bold=True)} "
-            f"{crayons.yellow(working_set.by_key[name].version)}"
+        context.io.echo(
+            f"Uninstalling: {context.io.green(name, bold=True)} "
+            f"{context.io.yellow(working_set.by_key[name].version)}"
         )
 
         with self.environment.activate():
@@ -131,25 +123,23 @@ class Synchronizer:
         to_update, to_remove = [], []
         candidates = self.candidates.copy()
         environment = self.environment.marker_environment()
-        for dist in working_set:
-            if dist.key not in candidates:
-                to_remove.append(dist.key)
+        for key in working_set:
+            if key not in candidates:
+                to_remove.append(key)
             else:
-                can = candidates.pop(dist.key)
+                can = candidates.pop(key)
+                dist = working_set[key][0]
                 if can.marker and not can.marker.evaluate(environment):
-                    to_remove.append(dist.key)
-                elif (
-                    not _is_dist_editable(working_set, dist)
-                    and dist.version != can.version
-                ):
+                    to_remove.append(key)
+                elif _is_dist_editable(dist) or dist.version != can.version:
                     # XXX: An editable distribution is always considered as consistent.
-                    to_update.append(dist.key)
+                    to_update.append(key)
         to_add = list(
             {
                 strip_extras(name)[0]
                 for name, can in candidates.items()
                 if not (can.marker and not can.marker.evaluate(environment))
-                and strip_extras(name)[0] not in working_set.by_key
+                and not working_set[strip_extras(name)[0]]
             }
         )
         return to_add, to_update, to_remove
@@ -175,7 +165,7 @@ class Synchronizer:
         if clean:
             lists_to_check.append(to_remove)
         if not any(lists_to_check):
-            click.echo("All packages are synced to date, nothing to do.")
+            context.io.echo("All packages are synced to date, nothing to do.")
             return
         if to_add and not dry_run:
             self.install_candidates(
@@ -187,7 +177,7 @@ class Synchronizer:
             )
         if clean and to_remove and not dry_run:
             self.remove_distributions(to_remove)
-        click.echo()
+        context.io.echo()
         if to_add:
             _print_list_information("added", to_add, dry_run)
         if to_update:
