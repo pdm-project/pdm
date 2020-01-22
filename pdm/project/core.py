@@ -227,12 +227,20 @@ class Project:
                 )
             } or None
             result[identify(req)] = can
-        if section == "default" and self.meta.name:
+        if section in ("default", "__all__") and self.meta.name:
             result[safe_name(self.meta.name).lower()] = self.make_self_candidate()
         return result
 
     def get_content_hash(self, algo: str = "md5") -> str:
-        pyproject_content = tomlkit.dumps(self.tool_settings)
+        # Only calculate sources and dependencies sections. Otherwise lock file is
+        # considered as unchanged.
+        dump_data = {"sources": self.tool_settings.get("source", [])}
+        for section in self.iter_sections():
+            toml_section = (
+                "dependencies" if section == "default" else f"{section}-dependencies"
+            )
+            dump_data[toml_section] = self.tool_settings.get(toml_section)
+        pyproject_content = tomlkit.dumps(dump_data)
         hasher = hashlib.new(algo)
         hasher.update(pyproject_content.encode("utf-8"))
         return hasher.hexdigest()

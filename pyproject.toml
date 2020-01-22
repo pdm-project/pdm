@@ -1,6 +1,6 @@
 [tool.pdm]
 name = "pdm"
-version = "0.0.3"
+version = "0.0.4"
 description = "Python Development Master"
 author = "frostming <mianghong@gmail.com>"
 license = "MIT"
@@ -26,7 +26,6 @@ pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
 halo = "<1.0.0,>=0.0.28"
-crayons = "<1.0.0,>=0.3.0"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
@@ -35,10 +34,6 @@ pytest-mock = "*"
 
 [tool.pdm.cli]
 pdm = "pdm.cli.commands:cli"
-
-[build-system]
-requires = ["intreehooks"]
-build-backend = "intreehooks:loader"
 
 [tool.intreehooks]
 build-backend = "pdm.builders.api"
@@ -77,3 +72,7 @@ known_third_party = "pip_shims"
 
 [tool.black]
 line-length = 88
+[build-system]
+requires = ["intreehooks"]
+build-backend = "intreehooks:loader"
+

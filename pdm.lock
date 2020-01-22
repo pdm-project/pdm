@@ -13,7 +13,7 @@ summary = "Atomic file writes."
 
 [[package]]
 name = "attrs"
-sections = ["default", "dev"]
+sections = ["dev", "default"]
 version = "19.3.0"
 marker = "python_version >= \"2.7\""
 summary = "Classes Without Boilerplate"
@@ -34,7 +34,7 @@ summary = "Composable command line interface toolkit"
 
 [[package]]
 name = "colorama"
-sections = ["default", "dev"]
+sections = ["dev", "default"]
 version = "0.4.3"
 marker = "python_version >= \"2.7\""
 summary = "Cross-platform colored terminal text."
@@ -43,13 +43,14 @@ summary = "Cross-platform colored terminal text."
 name = "coverage"
 sections = ["dev"]
 version = "4.4.2"
-marker = "python_version >= \"2.7\" and python_version < \"4.0\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+marker = "python_version < \"4.0\" and python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
 summary = "Code coverage measurement for Python"
 
 [[package]]
 name = "crayons"
 sections = ["default"]
 version = "0.3.0"
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
 summary = "TextUI colors for Python."
 
 [package.dependencies]
@@ -85,7 +86,7 @@ six = ">=1.12.0"
 name = "importlib-metadata"
 sections = ["dev"]
 version = "1.4.0"
-marker = "python_version < \"3.8\" and python_version >= \"3.5\""
+marker = "python_version >= \"3.5\" and python_version < \"3.8\""
 summary = "Read metadata from Python packages"
 
 [package.dependencies]
@@ -109,7 +110,7 @@ summary = "More routines for operating on iterables, beyond itertools"
 
 [[package]]
 name = "packaging"
-sections = ["default", "dev"]
+sections = ["dev", "default"]
 version = "20.0"
 marker = "python_version >= \"2.7\""
 summary = "Core utilities for Python packages"
@@ -159,7 +160,7 @@ summary = "library with cross-python path, ini-parsing, io, code, log facilities
 
 [[package]]
 name = "pyparsing"
-sections = ["default", "dev"]
+sections = ["dev", "default"]
 version = "2.4.6"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python parsing module"
@@ -228,7 +229,7 @@ summary = "Easily download, build, install, upgrade, and uninstall Python packag
 
 [[package]]
 name = "six"
-sections = ["default", "dev"]
+sections = ["dev", "default"]
 version = "1.14.0"
 marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2\""
 summary = "Python 2 and 3 compatibility utilities"
@@ -302,7 +303,7 @@ summary = "Yet Another Terminal Spinner"
 name = "zipp"
 sections = ["dev"]
 version = "2.0.0"
-marker = "python_version < \"3.8\" and python_version >= \"3.6\""
+marker = "python_version >= \"3.6\" and python_version < \"3.8\""
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [package.dependencies]
@@ -477,5 +478,5 @@ more-itertools = "*"
 ]
 
 [root]
-content_hash = "md5:4b45d0f13be19f09d14bf4afb278ab9f"
+content_hash = "md5:9ae5428069db95310550281f82109e1d"
 meta_version = "0.0.1"

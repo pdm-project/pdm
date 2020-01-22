@@ -26,12 +26,11 @@ VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 VCS_REQ = re.compile(
     rf"(?P<vcs>{'|'.join(VCS_SCHEMA)})\+" r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
 )
-_PATH_START = r"(?:\.|/|[a-zA-Z]:[/\\])"
 FILE_REQ = re.compile(
     r"(?:(?P<url>\S+://[^\s;]+)|"
-    rf"(?P<path>{_PATH_START}(?:[^\s;]|\\ )*"
-    rf"|'{_PATH_START}(?:[^']|\\')*'"
-    rf"|\"{_PATH_START}(?:[^\"]|\\\")*\"))"
+    rf"(?P<path>(?:[^\s;]|\\ )*"
+    rf"|'(?:[^']|\\')*'"
+    rf"|\"(?:[^\"]|\\\")*\"))"
     r"(?P<marker>[\t ]*;[^\n]+)?"
 )
 
@@ -106,6 +105,9 @@ class Requirement:
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
+
+    def __str__(self) -> str:
+        return self.as_line()
 
     @classmethod
     def from_req_dict(cls, name: str, req_dict: RequirementDict) -> "Requirement":
@@ -381,19 +383,18 @@ def filter_requirements_with_extras(
 
 def parse_requirement(line: str, editable: bool = False) -> Requirement:
 
-    r = None
     m = VCS_REQ.match(line)
     if m is not None:
         r = VcsRequirement.parse(line, m.groupdict())
     else:
-        m = FILE_REQ.match(line)
-        if m is not None:
-            r = FileRequirement.parse(line, m.groupdict())
-    if r is None:
         try:
             r = NamedRequirement.parse(line)  # type: Requirement
         except RequirementParseError as e:
-            raise RequirementError(str(e)) from None
+            m = FILE_REQ.match(line)
+            if m is not None:
+                r = FileRequirement.parse(line, m.groupdict())
+            else:
+                raise RequirementError(str(e)) from None
         else:
             if r.url:
                 r = FileRequirement(name=r.name, url=r.url, extras=r.extras)

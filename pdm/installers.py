@@ -1,3 +1,4 @@
+import importlib
 import subprocess
 from typing import Dict, List, Tuple
 
@@ -11,7 +12,7 @@ from vistir import cd
 from pdm.context import context
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
-from pdm.models.requirements import strip_extras
+from pdm.models.requirements import strip_extras, parse_requirement
 
 SETUPTOOLS_SHIM = (
     "import setuptools, tokenize;__file__=%r;"
@@ -69,34 +70,38 @@ class Installer:
         scripts.executable = self.environment.python_executable
         scripts.script_template = scripts.script_template.replace(
             "import sys",
-            "import sys; sys.path.insert(0, {!r})".format(paths["platlib"]),
+            "import sys\nsys.path.insert(0, {!r})".format(paths["platlib"]),
         )
         wheel.install(paths, scripts)
 
     def install_editable(self, ireq: shims.InstallRequirement) -> None:
         setup_path = ireq.setup_py_path
         paths = self.environment.get_paths()
+        install_script = importlib.import_module(
+            "pdm._editable_install"
+        ).__file__.strip("co")
         install_args = [
             self.environment.python_executable,
             "-u",
-            "-c",
-            SETUPTOOLS_SHIM % setup_path,
-            "develop",
-            "--install-dir={}".format(paths["platlib"]),
-            "--no-deps",
-            "--prefix={}".format(paths["prefix"]),
-            "--script-dir={}".format(paths["scripts"]),
-            "--site-dirs={}".format(paths["platlib"]),
+            install_script,
+            setup_path,
+            paths["prefix"],
         ]
         with self.environment.activate(), cd(ireq.unpacked_source_directory):
             subprocess.check_call(install_args)
 
     def uninstall(self, name: str) -> None:
         working_set = self.environment.get_working_set()
-        ireq = shims.install_req_from_line(name)
+        dist = working_set[name]
+        req = parse_requirement(name)
+        if _is_dist_editable(dist):
+            ireq = shims.install_req_from_editable(dist.location)
+        else:
+            ireq = shims.install_req_from_line(name)
+        ireq.req = req
         context.io.echo(
             f"Uninstalling: {context.io.green(name, bold=True)} "
-            f"{context.io.yellow(working_set.by_key[name].version)}"
+            f"{context.io.yellow(working_set[name].version)}"
         )
 
         with self.environment.activate():
@@ -123,12 +128,11 @@ class Synchronizer:
         to_update, to_remove = [], []
         candidates = self.candidates.copy()
         environment = self.environment.marker_environment()
-        for key in working_set:
+        for key, dist in working_set.items():
             if key not in candidates:
                 to_remove.append(key)
             else:
                 can = candidates.pop(key)
-                dist = working_set[key][0]
                 if can.marker and not can.marker.evaluate(environment):
                     to_remove.append(key)
                 elif not _is_dist_editable(dist) and dist.version != can.version:
@@ -139,7 +143,7 @@ class Synchronizer:
                 strip_extras(name)[0]
                 for name, can in candidates.items()
                 if not (can.marker and not can.marker.evaluate(environment))
-                and not working_set[strip_extras(name)[0]]
+                and strip_extras(name)[0] not in working_set
             }
         )
         return to_add, to_update, to_remove

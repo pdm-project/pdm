@@ -79,7 +79,7 @@ def test_convert_req_dict_to_req_line(req, req_dict, result):
 @pytest.mark.parametrize(
     "line,expected",
     [
-        ("requests; os_name=>'nt'", "Parse error at \"'; os_nam"),
+        ("requests; os_name=>'nt'", "Invalid marker:"),
         ("./nonexist", r"The local path (.+)? does not exist"),
         ("./tests", r"The local path (.+)? is not installable"),
     ],

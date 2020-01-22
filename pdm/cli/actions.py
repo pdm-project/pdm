@@ -287,8 +287,7 @@ def do_remove(
 
 def do_list(project: Project) -> None:
     working_set = project.environment.get_working_set()
-    for key in working_set:
-        dist = working_set[key][0]
+    for key, dist in working_set.items():
         context.io.echo(format_dist(dist))
 
 

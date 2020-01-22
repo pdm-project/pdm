@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import collections
 import os
 import sys
 import sysconfig
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Iterator
 
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import pkg_resources
 from pip_shims import shims
+from pythonfinder import Finder
+from vistir.contextmanagers import temp_environ
+from vistir.path import normalize_path
 
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
@@ -23,14 +27,46 @@ from pdm.utils import (
     get_python_version,
     get_pep508_environment,
 )
-from pythonfinder import Finder
-from vistir.contextmanagers import temp_environ
-from vistir.path import normalize_path
 
 if TYPE_CHECKING:
     from pdm.models.specifiers import PySpecSet
     from pdm.project.config import Config
     from pdm._types import Source
+
+
+class WorkingSet(collections.abc.Mapping):
+    """A dict-like class that holds all installed packages in the lib directory."""
+
+    def __init__(
+        self,
+        paths: Optional[List[str]] = None,
+        python: Tuple[int, ...] = sys.version_info[:3],
+    ):
+        self.env = pkg_resources.Environment(paths, python=python)
+        self.pkg_ws = pkg_resources.WorkingSet(paths)
+        self.__add_editable_dists()
+
+    def __getitem__(self, key: str) -> pkg_resources.Distribution:
+        rv = self.env[key]
+        if rv:
+            return rv[0]
+        else:
+            raise KeyError(key)
+
+    def __len__(self) -> int:
+        return len(self.env._distmap)
+
+    def __iter__(self) -> Iterator[str]:
+        for item in self.env:
+            yield item
+
+    def __add_editable_dists(self):
+        """Editable distributions are not present in pkg_resources.WorkingSet,
+        Get them from self.env
+        """
+        missing_keys = [key for key in self if key not in self.pkg_ws.by_key]
+        for key in missing_keys:
+            self.pkg_ws.add(self[key])
 
 
 class Environment:
@@ -78,9 +114,9 @@ class Environment:
         with temp_environ():
             old_paths = os.getenv("PYTHONPATH")
             if old_paths:
-                new_paths = os.pathsep.join([paths["platlib"], old_paths])
+                new_paths = os.pathsep.join([paths["purelib"], old_paths])
             else:
-                new_paths = paths["platlib"]
+                new_paths = paths["purelib"]
             os.environ["PYTHONPATH"] = new_paths
             python_root = os.path.dirname(self.python_executable)
             os.environ["PATH"] = os.pathsep.join(
@@ -88,14 +124,17 @@ class Environment:
             )
             working_set = self.get_working_set()
             _old_ws = pkg_resources.working_set
-            pkg_resources.working_set = working_set
+            pkg_resources.working_set = working_set.pkg_ws
             # HACK: Replace the is_local with environment version so that packages can
             # be removed correctly.
+            _old_sitepackages = misc.site_packages
             _is_local = misc.is_local
             misc.is_local = req_uninstall.is_local = self.is_local
+            misc.site_packages = paths["purelib"]
             yield
             misc.is_local = req_uninstall.is_local = _is_local
             pkg_resources.working_set = _old_ws
+            misc.site_packages = _old_sitepackages
 
     def is_local(self, path) -> bool:
         return normalize_path(path).startswith(
@@ -199,10 +238,10 @@ class Environment:
             with builder_class(ireq) as builder:
                 return builder.build(**kwargs)
 
-    def get_working_set(self) -> pkg_resources.Environment:
+    def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
         paths = self.get_paths()
-        return pkg_resources.Environment(
+        return WorkingSet(
             [paths["platlib"]], python=get_python_version(self.python_executable)
         )
 
