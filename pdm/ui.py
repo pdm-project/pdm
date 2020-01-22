@@ -21,7 +21,7 @@ class _IO:
             setattr(self, color, functools.partial(self._style, fg=color))
 
     def disable(self) -> None:
-        self.disable_colors = False
+        self.disable_colors = True
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity

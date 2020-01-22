@@ -24,9 +24,10 @@ def test_sync_only_different(project, repository, synchronizer, capsys):
     )
     do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
-    assert "3 packages added" in out
+    assert "4 packages added" in out
     assert "1 package updated" in out
     assert "foo" in synchronizer.working_set
+    assert "test-project" in synchronizer.working_set
     assert synchronizer.working_set["chardet"] == "3.0.4"
 
 

@@ -1,4 +1,5 @@
 import itertools
+import shutil
 from typing import Dict, Iterable, Optional, Sequence
 
 import halo
@@ -292,16 +293,53 @@ def do_list(project: Project) -> None:
 
 
 def do_build(
-    project: Project, sdist: bool = True, wheel: bool = True, dest: str = "dist"
+    project: Project,
+    sdist: bool = True,
+    wheel: bool = True,
+    dest: str = "dist",
+    clean: bool = True,
 ):
     if not wheel and not sdist:
         context.io.echo("All artifacts are disabled, nothing to do.")
         return
     ireq = project.make_self_candidate(False).ireq
     ireq.source_dir = "."
+    if clean:
+        shutil.rmtree(dest, ignore_errors=True)
     if sdist:
         with SdistBuilder(ireq) as builder:
             builder.build(dest)
     if wheel:
         with WheelBuilder(ireq) as builder:
             builder.build(dest)
+
+
+def do_init(
+    project: Project,
+    name: str = "",
+    version: str = "",
+    license: str = "MIT",
+    author: str = "",
+    email: str = "",
+) -> None:
+    data = {
+        "tool": {
+            "pdm": {
+                "name": name,
+                "version": version,
+                "description": "",
+                "author": f"{author} <{email}>",
+                "license": license,
+                "homepage": "",
+                "dependencies": tomlkit.table(),
+                "dev-dependencies": tomlkit.table(),
+            }
+        },
+        "build-system": {"requires": "pdm", "build-backend": "pdm.builders.api"},
+    }
+    if not project.pyproject:
+        project._pyproject = data
+    else:
+        project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
+        project._pyproject["build-system"] = data["build-system"]
+    project.write_pyproject()

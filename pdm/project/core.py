@@ -77,7 +77,7 @@ class Project:
     @property
     def pyproject(self):
         # type: () -> Container
-        if not self._pyproject:
+        if not self._pyproject and self.pyproject_file.exists():
             data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
         return self._pyproject
@@ -197,7 +197,7 @@ class Project:
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
-        req = parse_requirement(".", editable)
+        req = parse_requirement(self.root.as_posix(), editable)
         req.name = self.meta.name
         return Candidate(
             req, self.environment, name=self.meta.name, version=self.meta.version
@@ -282,21 +282,6 @@ class Project:
         if show_message:
             context.io.echo("Changes are written to pyproject.toml.")
         self._pyproject = None
-
-    def init_pyproject(self) -> None:
-        if not self._pyproject:
-            self._pyproject = {}
-        self._pyproject.update(
-            {
-                "tool": {
-                    "pdm": {
-                        "dependencies": tomlkit.table(),
-                        "dev-dependencies": tomlkit.table(),
-                    }
-                }
-            }
-        )
-        self.write_pyproject()
 
     @property
     @pyproject_cache

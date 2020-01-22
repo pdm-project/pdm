@@ -329,17 +329,39 @@ def get_pep508_environment(executable: str) -> Dict[str, Any]:
     return json.loads(subprocess.check_output(args))
 
 
-def convert_hashes(hases: Dict[str, str]) -> Dict[str, List[str]]:
+def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
     """Convert Pipfile.lock hash lines into InstallRequirement option format.
 
     The option format uses a str-list mapping. Keys are hash algorithms, and
     the list contains all values of that algorithm.
     """
     result = {}
-    for hash_value in hases.values():
+    for hash_value in hashes.values():
         try:
             name, hash_value = hash_value.split(":")
         except ValueError:
             name = "sha256"
         result.setdefault(name, []).append(hash_value)
     return result
+
+
+def get_user_email_from_git() -> Tuple[str, str]:
+    """Get username and email from git config.
+    Return empty if not configured or git is not found.
+    """
+    git = shutil.which("git")
+    if not git:
+        return "", ""
+    try:
+        username = subprocess.check_output(
+            [git, "config", "user.name"], text=True
+        ).strip()
+    except subprocess.CalledProcessError:
+        username = ""
+    try:
+        email = subprocess.check_output(
+            [git, "config", "user.email"], text=True
+        ).strip()
+    except subprocess.CalledProcessError:
+        email = ""
+    return username, email

@@ -12,6 +12,7 @@ from pip._vendor.pkg_resources import safe_name
 
 import pytest
 
+from pdm.cli.actions import do_init
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers import Synchronizer
@@ -210,7 +211,7 @@ def project(tmp_path, mocker):
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.cli.commands.Project", return_value=p)
-    p.init_pyproject()
+    do_init(p, "test_project", "0.0.0")
     return p
 
 

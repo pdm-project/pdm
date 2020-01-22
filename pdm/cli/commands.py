@@ -17,6 +17,7 @@ from pdm.cli.options import (
 from pdm.context import context
 from pdm.exceptions import CommandNotFound
 from pdm.project import Project
+from pdm.utils import get_user_email_from_git
 
 pass_project = click.make_pass_decorator(Project, ensure=True)
 context_settings = {"ignore_unknown_options": True, "allow_extra_args": True}
@@ -213,6 +214,36 @@ def list_(project):
     "--no-wheel", "wheel", default=True, flag_value=False, help="Don't build wheels."
 )
 @click.option("-d", "--dest", default="dist", help="Target directory to put artifacts.")
+@click.option(
+    "--no-clean",
+    "clean",
+    default=True,
+    flag_value=False,
+    help="Do not clean the target directory.",
+)
 @pass_project
-def build(project, sdist, wheel, dest):
-    actions.do_build(project, sdist, wheel, dest)
+def build(project, sdist, wheel, dest, clean):
+    actions.do_build(project, sdist, wheel, dest, clean)
+
+
+@cli.command(help="Initialize a pyproject.toml for PDM.")
+@pass_project
+def init(project):
+    if project.pyproject_file.exists():
+        context.io.echo(
+            "{}".format(
+                context.io.cyan("pyproject.toml already exists, update it now.")
+            )
+        )
+    else:
+        context.io.echo(
+            "{}".format(context.io.cyan("Creating a pyproject.toml for PDM..."))
+        )
+    name = click.prompt(f"Project name", default=project.root.name)
+    version = click.prompt("Project version", default="0.0.0")
+    license = click.prompt("License(SPDX name)", default="MIT")
+
+    git_user, git_email = get_user_email_from_git()
+    author = click.prompt(f"Author name", default=git_user)
+    email = click.prompt(f"Author email", default=git_email)
+    actions.do_init(project, name, version, license, author, email)

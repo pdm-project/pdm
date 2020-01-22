@@ -131,7 +131,7 @@ class Synchronizer:
                 dist = working_set[key][0]
                 if can.marker and not can.marker.evaluate(environment):
                     to_remove.append(key)
-                elif _is_dist_editable(dist) or dist.version != can.version:
+                elif not _is_dist_editable(dist) and dist.version != can.version:
                     # XXX: An editable distribution is always considered as consistent.
                     to_update.append(key)
         to_add = list(
