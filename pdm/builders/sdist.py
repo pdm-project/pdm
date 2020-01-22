@@ -1,10 +1,45 @@
 import os
 import tarfile
-import time
-from io import BytesIO
+import tempfile
+from copy import copy
 
 from pdm.builders.base import Builder
 from pdm.context import context
+
+
+def normalize_file_permissions(st_mode):
+    """
+    Normalizes the permission bits in the st_mode field from stat to 644/755
+
+    Popular VCSs only track whether a file is executable or not. The exact
+    permissions can vary on systems with different umasks. Normalising
+    to 644 (non executable) or 755 (executable) makes builds more reproducible.
+    """
+    # Set 644 permissions, leaving higher bits of st_mode unchanged
+    new_mode = (st_mode | 0o644) & ~0o133
+    if st_mode & 0o100:
+        new_mode |= 0o111  # Executable: 644 -> 755
+
+    return new_mode
+
+
+def clean_tarinfo(tar_info):
+    """
+    Clean metadata from a TarInfo object to make it more reproducible.
+
+        - Set uid & gid to 0
+        - Set uname and gname to ""
+        - Normalise permissions to 644 or 755
+        - Set mtime if not None
+    """
+    ti = copy(tar_info)
+    ti.uid = 0
+    ti.gid = 0
+    ti.uname = ""
+    ti.gname = ""
+    ti.mode = normalize_file_permissions(ti.mode)
+
+    return ti
 
 
 class SdistBuilder(Builder):
@@ -27,23 +62,21 @@ class SdistBuilder(Builder):
             files_to_add = self.find_files_to_add(True)
 
             for relpath in files_to_add:
-                tar_info = tar.gettarinfo(
-                    str(relpath), arcname=os.path.join(tar_dir, str(relpath))
+                tar.add(
+                    relpath,
+                    arcname=os.path.join(tar_dir, str(relpath)),
+                    recursive=False,
                 )
                 context.io.echo(f" - Adding: {relpath}", verbosity=context.io.DETAIL)
-                if tar_info.isreg():
-                    with open(relpath, "rb") as f:
-                        tar.addfile(tar_info, f)
-                else:
-                    tar.addfile(tar_info)  # Symlinks & ?
 
-            pkg_info = self.format_pkginfo()
-
-            tar_info = tarfile.TarInfo(os.path.join(tar_dir, "PKG-INFO"))
-            tar_info.size = len(pkg_info)
-            tar_info.mtime = time.time()
+            fd, temp_name = tempfile.mkstemp(prefix="pkg-info")
+            pkg_info = self.format_pkginfo(False).encode("utf-8")
+            with open(fd, "wb") as f:
+                f.write(pkg_info)
+            tar.add(
+                temp_name, arcname=os.path.join(tar_dir, "PKG-INFO"), recursive=False
+            )
             context.io.echo(" - Adding: PKG-INFO", verbosity=context.io.DETAIL)
-            tar.addfile(tar_info, BytesIO(pkg_info.encode("utf-8")))
         finally:
             tar.close()
 

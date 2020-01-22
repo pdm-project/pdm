@@ -1,6 +1,6 @@
 [tool.pdm]
 name = "pdm"
-version = "0.0.1"
+version = "0.0.2"
 description = "Python Development Master"
 author = "frostming <mianghong@gmail.com>"
 license = "MIT"

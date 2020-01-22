@@ -1,14 +1,18 @@
+from __future__ import annotations
 import atexit
 import glob
 import os
+import textwrap
 from pathlib import Path
-from typing import List, Iterator, Dict
+from typing import List, Iterator, Dict, TYPE_CHECKING
 
-from pip_shims import shims
 from pkg_resources import normalize_path
 
 from pdm.exceptions import ProjectError
 from pdm.project import Project
+
+if TYPE_CHECKING:
+    from pip_shims import shims
 
 OPEN_README = """import codecs
 
@@ -171,10 +175,13 @@ class Builder:
         if not include_build:
             return
 
-        for pat in ("COPYING", "LICENSE", "README"):
+        for pat in ("COPYING", "LICENSE"):
             for path in glob.glob(pat + "*"):
                 if os.path.isfile(path):
                     yield path
+
+        if self.meta.readme and os.path.isfile(self.meta.readme):
+            yield self.meta.readme
 
         if self.project.pyproject_file.exists():
             yield "pyproject.toml"
@@ -258,7 +265,7 @@ class Builder:
             before="".join(before), after="".join(after), extra="".join(extra), **kwargs
         )
 
-    def format_pkginfo(self) -> str:
+    def format_pkginfo(self, full=True) -> str:
         meta = self.meta
         content = METADATA_BASE.format(
             name=meta.name or "UNKNOWN",
@@ -291,13 +298,15 @@ class Builder:
         for classifier in meta.classifiers or []:
             content += "Classifier: {}\n".format(classifier)
 
-        for dep in sorted(meta.install_requires):
-            content += "Requires-Dist: {}\n".format(dep)
+        if full:
+            for dep in sorted(meta.install_requires):
+                content += "Requires-Dist: {}\n".format(dep)
 
         for extra, reqs in sorted(self.meta.requires_extra.items()):
             content += "Provides-Extra: {}\n".format(extra)
-            for dep in reqs:
-                content += "Requires-Dist: {}\n".format(dep)
+            if full:
+                for dep in reqs:
+                    content += "Requires-Dist: {}\n".format(dep)
 
         for url in sorted(meta.project_urls or {}):
             content += "Project-URL: {}, {}\n".format(url, meta.project_urls[url])
@@ -306,9 +315,14 @@ class Builder:
             content += "Description-Content-Type: {}\n".format(
                 meta.long_description_content_type
             )
-
         if meta.readme:
-            content += "\n" + Path(meta.readme).read_text("utf-8") + "\n"
+            readme = Path(meta.readme).read_text("utf-8")
+            if full:
+                content += "\n" + readme + "\n"
+            else:
+                content += "Description: {}\n".format(
+                    textwrap.indent(readme, " " * 8).lstrip()
+                )
 
         return content
 

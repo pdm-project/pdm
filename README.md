@@ -14,6 +14,23 @@ you can probably find some goodness in `pdm`.
 
 **Open for feature requests, find yourself at https://github.com/pdm-project/call-for-features.**
 
+## Highlights of features
+* PEP 582 local package installer and runner, no virtualenv involved at all.
+* Simple and relatively fast dependency resolver, mainly for large binary distributions.
+* A PEP 517 build backend.
+
+## Why not virtualenv?
+Now the majority of Python packaging tools also act as virtualenv managers. It is for the benifit
+of isolating project environments. But things will get tricky when it comes to nested venvs: One
+installs the virtualenv manager using a venv capsulated Python, and create more venvs using the tool
+which is based on a capsulated Python. One day a minor release of Python out and one has to check
+all those venvs and upgrade them if required.
+
+While PEP 582, in the other hand, introduce a way to decouple Python interpreter with project
+environments. It is a relative new proposal and there are not many tools supporting it, among which
+there is [pyflow], but it is written with Rust and can't get much help from the big Python community.
+Moreover, due to the same reason, it can't act as a PEP 517 backend.
+
 ## Installation:
 
 ```bash
@@ -40,7 +57,7 @@ $ pip install --user pdm
 - [x] Running scripts with PEP 582 local packages.
 - [x] Console scripts are injected with local paths.
 - [x] A neet CLI.
-- [x] `add`, `lock`, `list`, `update`, `remove` commands.
+- [x] `add`, `lock`, `list`, `update`, `remove`, `build` commands.
 - [x] PEP 517 build backends.
 - [x] Continuous Integration.
 
