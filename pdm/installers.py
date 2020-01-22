@@ -50,8 +50,6 @@ def _print_list_information(word, items, dry=False):
 
 
 class Installer:
-    # TODO: Support PEP 517 builds
-
     def __init__(self, environment: Environment, auto_confirm: bool = True) -> None:
         self.environment = environment
         self.auto_confirm = auto_confirm
