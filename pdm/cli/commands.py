@@ -75,7 +75,6 @@ def cli():
 @verbose_option
 @pass_project
 def lock(project):
-    print(Project, project)
     actions.do_lock(project)
 
 
