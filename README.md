@@ -1,6 +1,6 @@
 # PDM - Python Development Master
 
-A modern Python package manager with PEP 582 support. [中文版本说明](README.md)
+A modern Python package manager with PEP 582 support. [中文版本说明](README_zh.md)
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 
