@@ -334,9 +334,7 @@ def get_python_version(executable: str) -> Tuple[Union[str, int], ...]:
 
 
 def get_pep508_environment(executable: str) -> Dict[str, Any]:
-    script = importlib.import_module("pdm.pep508").__file__
-    if script.endswith("pyc"):
-        script = script[:-1]
+    script = importlib.import_module("pdm.pep508").__file__.rstrip("co")
     args = [executable, script]
     return json.loads(subprocess.check_output(args))
 

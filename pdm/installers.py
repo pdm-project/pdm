@@ -79,7 +79,7 @@ class Installer:
         paths = self.environment.get_paths()
         install_script = importlib.import_module(
             "pdm._editable_install"
-        ).__file__.strip("co")
+        ).__file__.rstrip("co")
         install_args = [
             self.environment.python_executable,
             "-u",
