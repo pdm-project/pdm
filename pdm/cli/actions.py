@@ -335,7 +335,7 @@ def do_init(
                 "dev-dependencies": tomlkit.table(),
             }
         },
-        "build-system": {"requires": "pdm", "build-backend": "pdm.builders.api"},
+        "build-system": {"requires": ["pdm"], "build-backend": "pdm.builders.api"},
     }
     if not project.pyproject:
         project._pyproject = data

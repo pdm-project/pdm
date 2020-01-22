@@ -29,7 +29,7 @@ def prepare_metadata_for_build_wheel(metadata_directory, config_settings=None):
     builder = WheelBuilder(ireq)
 
     dist_info = Path(metadata_directory, builder.dist_info_name)
-    dist_info.makedirs(exist_ok=True)
+    dist_info.mkdir(exist_ok=True)
     with builder:
         if builder.meta.entry_points:
             with (dist_info / "entry_points.txt").open("w", encoding="utf-8") as f:
@@ -41,7 +41,7 @@ def prepare_metadata_for_build_wheel(metadata_directory, config_settings=None):
         with (dist_info / "METADATA").open("w", encoding="utf-8") as f:
             builder._write_metadata_file(f)
 
-        return dist_info.name
+    return dist_info.name
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
