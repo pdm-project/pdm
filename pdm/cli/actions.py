@@ -90,6 +90,7 @@ def do_lock(
     flat_reqs = list(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
     )
+    # TODO: switch reporter at io level.
     with halo.Halo(text="Resolving dependencies", spinner="dots") as spin:
         reporter = SpinnerReporter(flat_reqs, spin)
         mapping, dependencies, summaries = resolve(

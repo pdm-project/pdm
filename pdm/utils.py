@@ -209,6 +209,18 @@ def prepare_pip_source_args(
     return pip_args
 
 
+def get_pypi_source():
+    """Get what is defined in pip.conf as the index-url."""
+    install_cmd = InstallCommand()
+    options, _ = install_cmd.parser.parse_args([])
+    index_url = options.index_url
+    parsed = parse.urlparse(index_url)
+    verify_ssl = parsed.scheme == "https"
+    if any(parsed.hostname.startswith(host) for host in options.trusted_hosts):
+        verify_ssl = False
+    return {"url": index_url, "name": "pypi", "verify_ssl": verify_ssl}
+
+
 def get_finder(
     sources: List[Source],
     cache_dir: Optional[str] = None,

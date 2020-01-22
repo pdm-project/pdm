@@ -14,7 +14,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
 from pdm._types import CandidateInfo, Source
-from pdm.utils import _allow_all_wheels
+from pdm.utils import _allow_all_wheels, get_pypi_source
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -34,7 +34,7 @@ def cache_result(
 
 class BaseRepository:
     def __init__(self, sources: List[Source], environment: Environment) -> None:
-        self.sources = sources
+        self.sources = [get_pypi_source()] + sources
         self.environment = environment
         self._candidate_info_cache = context.make_candidate_info_cache()
         self._hash_cache = context.make_hash_cache()
