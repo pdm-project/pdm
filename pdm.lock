@@ -43,7 +43,7 @@ summary = "Cross-platform colored terminal text."
 name = "coverage"
 sections = ["dev"]
 version = "4.4.2"
-marker = "python_version < \"4.0\" and python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
 summary = "Code coverage measurement for Python"
 
 [[package]]
@@ -86,7 +86,7 @@ six = ">=1.12.0"
 name = "importlib-metadata"
 sections = ["dev"]
 version = "1.4.0"
-marker = "python_version >= \"3.5\" and python_version < \"3.8\""
+marker = "python_version < \"3.8\" and python_version >= \"3.5\""
 summary = "Read metadata from Python packages"
 
 [package.dependencies]
@@ -276,7 +276,7 @@ summary = "Miscellaneous utilities for dealing with filesystems, paths, projects
 colorama = "!=0.4.2,>=0.3.4"
 six = "*"
 yaspin = "*"
-vistir = ">=0.4"
+vistir = {marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\"", version = "==0.5.0"}
 
 [[package]]
 name = "wcwidth"

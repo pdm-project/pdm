@@ -233,7 +233,12 @@ def do_update(
     for name in packages:
         key = safe_name(name).lower()
         matched_name = next(
-            filter(lambda k: strip_extras(name)[0] == key, dependencies.keys()), None,
+            filter(
+                lambda k: safe_name(strip_extras(name)[0]).lower()
+                == safe_name(key).lower(),
+                dependencies.keys(),
+            ),
+            None,
         )
         if not matched_name:
             raise PdmUsageError(f"{name} is not found in {section} dependencies")
