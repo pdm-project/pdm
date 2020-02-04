@@ -82,6 +82,7 @@ class WheelBuilder(Builder):
         shutil.move(temp_path, target)
 
         context.io.echo("- Built {}".format(context.io.cyan(os.path.basename(target))))
+        return target
 
     @property
     def wheel_filename(self) -> str:

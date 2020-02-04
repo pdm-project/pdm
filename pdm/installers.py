@@ -28,15 +28,11 @@ def _is_dist_editable(dist: Distribution) -> bool:
 
 
 def format_dist(dist: Distribution) -> str:
-    formatter = "{name} {version}{path}"
+    formatter = "{version}{path}"
     path = ""
     if _is_dist_editable(dist):
         path = f" (-e {dist.location})"
-    return formatter.format(
-        name=context.io.green(dist.project_name, bold=True),
-        version=context.io.yellow(dist.version),
-        path=path,
-    )
+    return formatter.format(version=context.io.yellow(dist.version), path=path)
 
 
 def _print_list_information(word, items, dry=False):

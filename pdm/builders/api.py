@@ -49,7 +49,7 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     ireq = parse_requirement(".").as_ireq()
     ireq.source_dir = "."
     with WheelBuilder(ireq) as builder:
-        return builder.build(wheel_directory)
+        return Path(builder.build(wheel_directory)).name
 
 
 def build_sdist(sdist_directory, config_settings=None):
@@ -57,4 +57,4 @@ def build_sdist(sdist_directory, config_settings=None):
     ireq = parse_requirement(".").as_ireq()
     ireq.source_dir = "."
     with SdistBuilder(ireq) as builder:
-        return builder.build(sdist_directory)
+        return Path(builder.build(sdist_directory)).name

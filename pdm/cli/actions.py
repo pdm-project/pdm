@@ -2,6 +2,7 @@ import itertools
 import shutil
 from typing import Dict, Iterable, Optional, Sequence
 
+import click
 import halo
 import tomlkit
 from pkg_resources import safe_name
@@ -288,8 +289,12 @@ def do_remove(
 
 def do_list(project: Project) -> None:
     working_set = project.environment.get_working_set()
-    for key, dist in working_set.items():
-        context.io.echo(format_dist(dist))
+    formatter = click.HelpFormatter()
+    rows = [
+        (context.io.green(k, bold=True), format_dist(v)) for k, v in working_set.items()
+    ]
+    formatter.write_dl(rows)
+    context.io.echo(formatter.getvalue().rstrip("\n"))
 
 
 def do_build(
