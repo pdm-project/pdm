@@ -118,12 +118,13 @@ class BaseRepository:
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
         if (
-            candidate.hashes
-            or candidate.req.is_vcs
+            candidate.req.is_vcs
             or candidate.req.is_file_or_url
             and candidate.req.is_local_dir
         ):
             return
+        if candidate.hashes:
+            return candidate.hashes
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
         with _allow_all_wheels():
