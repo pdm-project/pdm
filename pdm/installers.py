@@ -53,10 +53,10 @@ class Installer:
     def install(self, candidate: Candidate) -> None:
         context.io.echo(f"Installing {candidate.format()}...")
         candidate.get_metadata()
-        if candidate.wheel:
-            self.install_wheel(candidate.wheel)
-        else:
+        if candidate.req.editable:
             self.install_editable(candidate.ireq)
+        else:
+            self.install_wheel(candidate.wheel)
 
     def install_wheel(self, wheel: Wheel) -> None:
         paths = self.environment.get_paths()

@@ -178,7 +178,7 @@ class Candidate:
     def as_lockfile_entry(self) -> Dict[str, Any]:
         result = {
             "name": self.name,
-            "sections": self.sections,
+            "sections": sorted(self.sections),
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
             "marker": str(self.marker) if self.marker else None,

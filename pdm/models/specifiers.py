@@ -373,7 +373,7 @@ class PySpecSet(SpecifierSet):
         result = []
         excludes = []
         full_excludes = []
-        for spec in self:
+        for spec in sorted(self, key=lambda spec: spec.version):
             op, version = spec.operator, spec.version
             if len(version.split(".")) < 3:
                 key = "python_version"
