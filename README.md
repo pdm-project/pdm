@@ -15,11 +15,13 @@ you can probably find some goodness in `pdm`.
 **Open for feature requests, find yourself at https://github.com/pdm-project/call-for-features.**
 
 ## Highlights of features
-* PEP 582 local package installer and runner, no virtualenv involved at all.
-* Simple and relatively fast dependency resolver, mainly for large binary distributions.
-* A PEP 517 build backend.
+
+- PEP 582 local package installer and runner, no virtualenv involved at all.
+- Simple and relatively fast dependency resolver, mainly for large binary distributions.
+- A PEP 517 build backend.
 
 ## Why not virtualenv?
+
 Now the majority of Python packaging tools also act as virtualenv managers. It is for the benifit
 of isolating project environments. But things will get tricky when it comes to nested venvs: One
 installs the virtualenv manager using a venv capsulated Python, and create more venvs using the tool
@@ -33,9 +35,12 @@ Moreover, due to the same reason, it can't act as a PEP 517 backend.
 
 ## Installation:
 
+PDM requires python version 3.7 or higher.
+
 ```bash
 $ pipx install pdm
 ```
+
 It is recommended to install `pdm` in an isolated enviroment, with `pipx`.
 
 Or you can install it under user site:
@@ -48,20 +53,6 @@ $ pip install --user pdm
 
 `python -m pdm --help` should be a good guidance.
 
-## 0.1.0 Roadmap
-
-- [x] A dependency resolver that just works.
-- [x] A PEP 582 installer.
-- [x] PEP 440 version specifiers.
-- [x] PEP 508 environment markers.
-- [x] Running scripts with PEP 582 local packages.
-- [x] Console scripts are injected with local paths.
-- [x] A neet CLI.
-- [x] `add`, `lock`, `list`, `update`, `remove`, `build` commands.
-- [x] PEP 517 build backends.
-- [x] Continuous Integration.
-
-
 ## Credits
 
 This project is strongly inspired by [pyflow] and [poetry].
@@ -69,6 +60,6 @@ This project is strongly inspired by [pyflow] and [poetry].
 [pyflow]: https://github.com/David-OConnor/pyflow
 [poetry]: https://github.com/python-poetry/poetry
 
-
 ## License
+
 This project is open sourced under MIT license, see the [LICENSE](LICENSE) file for more details.
