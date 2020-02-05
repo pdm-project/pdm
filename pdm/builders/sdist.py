@@ -3,6 +3,8 @@ import tarfile
 import tempfile
 from copy import copy
 
+from pkg_resources import to_filename, safe_version
+
 from pdm.builders.base import Builder
 from pdm.context import context
 
@@ -50,14 +52,15 @@ class SdistBuilder(Builder):
             os.makedirs(build_dir, exist_ok=True)
 
         context.io.echo("- Building {}...".format(context.io.cyan("sdist")))
+        version = to_filename(safe_version(self.meta.version))
 
         target = os.path.join(
-            build_dir, "{}-{}.tar.gz".format(self.meta.project_name, self.meta.version)
+            build_dir, "{}-{}.tar.gz".format(self.meta.project_name, version)
         )
         tar = tarfile.open(target, mode="w:gz", format=tarfile.PAX_FORMAT)
 
         try:
-            tar_dir = "{}-{}".format(self.meta.project_name, self.meta.version)
+            tar_dir = "{}-{}".format(self.meta.project_name, version)
 
             files_to_add = self.find_files_to_add(True)
 
