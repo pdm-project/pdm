@@ -25,7 +25,7 @@ from pdm._types import CandidateInfo
 from pdm.utils import get_finder
 from tests import FIXTURES
 
-context.io.disable()
+context.io.disable_colors()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):

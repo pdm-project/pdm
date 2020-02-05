@@ -121,6 +121,8 @@ def do_sync(
     :param dry_run: Print actions without actually running them.
     :param clean: whether to remove unneeded packages.
     """
+    if not project.lockfile_file.exists():
+        raise PdmUsageError("Lock file does not exist, nothing to sync.")
     clean = default if clean is None else clean
     candidates = {}
     for section in sections:

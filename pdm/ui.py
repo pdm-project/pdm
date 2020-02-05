@@ -15,13 +15,13 @@ class _IO:
 
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
-        self.disable_colors = disable_colors
+        self._disable_colors = disable_colors
 
         for color in COLORS:
             setattr(self, color, functools.partial(self._style, fg=color))
 
-    def disable(self) -> None:
-        self.disable_colors = True
+    def disable_colors(self) -> None:
+        self._disable_colors = True
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
@@ -33,7 +33,7 @@ class _IO:
             click.echo(message, err=err)
 
     def _style(self, text: str, *args, **kwargs) -> str:
-        if self.disable_colors:
+        if self._disable_colors:
             return text
         else:
             return click.style(text, *args, **kwargs)

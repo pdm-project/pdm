@@ -4,6 +4,7 @@ from pdm.cli.actions import do_add, do_update, do_sync, do_remove
 from collections import namedtuple
 
 from pdm.exceptions import PdmUsageError
+from pdm.models.requirements import parse_requirement
 
 Requirement = namedtuple("Requirement", "key")
 Candidate = namedtuple("Candidate", "req,version")
@@ -29,6 +30,12 @@ def test_sync_only_different(project, repository, synchronizer, capsys):
     assert "foo" in synchronizer.working_set
     assert "test-project" in synchronizer.working_set
     assert synchronizer.working_set["chardet"] == "3.0.4"
+
+
+def test_sync_no_lockfile(project):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    with pytest.raises(PdmUsageError):
+        do_sync(project)
 
 
 def test_sync_clean_packages(project, repository, synchronizer):
