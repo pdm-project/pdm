@@ -1,11 +1,22 @@
 import functools
-from typing import Any
+import re
+from itertools import zip_longest
+from typing import Any, List
 
 import click
 
 COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
 
 COLORS += tuple(f"bright_{color}" for color in COLORS)
+
+
+@functools.lru_cache()
+def _strip_styles(text):
+    return re.sub(r"\x1b\[\d+?m", "", text)
+
+
+def ljust(text, length):
+    return text + " " * (length - len(_strip_styles(text)))
 
 
 class _IO:
@@ -37,3 +48,17 @@ class _IO:
             return text
         else:
             return click.style(text, *args, **kwargs)
+
+    def display_columns(self, rows: List[str], header: List[str]) -> None:
+        """Print rows in aligned columns"""
+        sizes = list(
+            map(
+                lambda column: max(map(lambda x: len(_strip_styles(x)), column)),
+                zip_longest(header, *rows),
+            )
+        )
+        self.echo(" ".join(head.ljust(size) for head, size in zip(header, sizes)))
+        # Print a separator
+        self.echo(" ".join("-" * size for size in sizes))
+        for row in rows:
+            self.echo(" ".join(ljust(item, size) for item, size in zip(row, sizes)))

@@ -4,7 +4,6 @@ from typing import Dict, Iterable, Optional, Sequence
 
 from pkg_resources import safe_name
 
-import click
 import halo
 import tomlkit
 from pdm.builders import SdistBuilder, WheelBuilder
@@ -291,12 +290,11 @@ def do_remove(
 
 def do_list(project: Project) -> None:
     working_set = project.environment.get_working_set()
-    formatter = click.HelpFormatter()
     rows = [
-        (context.io.green(k, bold=True), format_dist(v)) for k, v in working_set.items()
+        (context.io.green(k, bold=True), format_dist(v))
+        for k, v in sorted(working_set.items())
     ]
-    formatter.write_dl(rows)
-    context.io.echo(formatter.getvalue().rstrip("\n"))
+    context.io.display_columns(rows, ["Package", "Version"])
 
 
 def do_build(
@@ -307,7 +305,7 @@ def do_build(
     clean: bool = True,
 ):
     if not wheel and not sdist:
-        context.io.echo("All artifacts are disabled, nothing to do.")
+        context.io.echo("All artifacts are disabled, nothing to do.", err=True)
         return
     ireq = project.make_self_candidate(False).ireq
     ireq.source_dir = "."
