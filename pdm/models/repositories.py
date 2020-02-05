@@ -4,6 +4,7 @@ import sys
 from functools import wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
+from pdm._types import CandidateInfo, Source
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
@@ -13,7 +14,6 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm._types import CandidateInfo, Source
 from pdm.utils import _allow_all_wheels, get_pypi_source
 
 if TYPE_CHECKING:

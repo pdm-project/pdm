@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 import pip_shims
 from pip._vendor import requests
 
-from pdm.exceptions import CorruptedCacheError
 from pdm._types import CandidateInfo
+from pdm.exceptions import CorruptedCacheError
 from vistir.contextmanagers import open_file
 
 if TYPE_CHECKING:

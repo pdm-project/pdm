@@ -1,7 +1,8 @@
-from setuptools.command import easy_install
-import sys
 import os
+import sys
 import tokenize
+
+from setuptools.command import easy_install
 
 
 def install(setup_py, prefix):

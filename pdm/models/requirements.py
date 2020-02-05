@@ -11,11 +11,11 @@ from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
 from pip_shims import path_to_url, url_to_path
 
+from pdm._types import RequirementDict
 from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm._types import RequirementDict
 from pdm.utils import (
     is_readonly_property,
     parse_name_version_from_wheel,

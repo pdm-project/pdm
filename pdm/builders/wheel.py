@@ -2,23 +2,22 @@ import contextlib
 import glob
 import hashlib
 import os
-import stat
 import shutil
+import stat
 import tempfile
 import zipfile
 from base64 import urlsafe_b64encode
 from io import StringIO
-
-from pkg_resources import to_filename, safe_version, safe_name
 from typing import List, Tuple
 
 from pip_shims import shims
-from vistir.path import normalize_path
+from pkg_resources import safe_name, safe_version, to_filename
 
 from pdm.builders.base import Builder
 from pdm.context import context
 from pdm.exceptions import WheelBuildError
-from pdm.utils import get_abi_tag, cached_property
+from pdm.utils import cached_property, get_abi_tag
+from vistir.path import normalize_path
 
 WHEEL_FILE_FORMAT = """\
 Wheel-Version: 1.0

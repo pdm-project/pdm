@@ -4,10 +4,10 @@ from pathlib import Path
 
 from pip_shims import shims
 
+from pdm import __version__
 from pdm.exceptions import ProjectNotInitialized
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.ui import _IO
-from pdm import __version__
 
 
 def require_initialize(func):

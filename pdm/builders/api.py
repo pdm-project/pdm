@@ -3,7 +3,7 @@ PEP-517 compliant buildsystem API
 """
 from pathlib import Path
 
-from pdm.builders import WheelBuilder, SdistBuilder
+from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.models.requirements import parse_requirement
 
 

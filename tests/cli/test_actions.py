@@ -1,8 +1,7 @@
-import pytest
-
-from pdm.cli.actions import do_add, do_update, do_sync, do_remove
 from collections import namedtuple
 
+import pytest
+from pdm.cli.actions import do_add, do_remove, do_sync, do_update
 from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 

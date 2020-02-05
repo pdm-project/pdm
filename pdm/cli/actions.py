@@ -2,12 +2,12 @@ import itertools
 import shutil
 from typing import Dict, Iterable, Optional, Sequence
 
+from pkg_resources import safe_name
+
 import click
 import halo
 import tomlkit
-from pkg_resources import safe_name
-
-from pdm.builders import WheelBuilder, SdistBuilder
+from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.context import context
 from pdm.exceptions import PdmUsageError
 from pdm.installers import Synchronizer, format_dist
@@ -15,12 +15,7 @@ from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
-from pdm.resolver import (
-    BaseProvider,
-    EagerUpdateProvider,
-    ReusePinProvider,
-    resolve,
-)
+from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, resolve
 from pdm.resolver.reporters import SpinnerReporter
 
 

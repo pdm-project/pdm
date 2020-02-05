@@ -2,7 +2,6 @@ import functools
 
 import pytest
 from click.testing import CliRunner
-
 from pdm.cli import actions, commands
 
 

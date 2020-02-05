@@ -3,7 +3,7 @@ import tarfile
 import tempfile
 from copy import copy
 
-from pkg_resources import to_filename, safe_version
+from pkg_resources import safe_version, to_filename
 
 from pdm.builders.base import Builder
 from pdm.context import context

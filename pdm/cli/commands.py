@@ -4,15 +4,14 @@ import subprocess
 
 import click
 from click._compat import term_len
-from click.formatting import measure_table, iter_rows, wrap_text, HelpFormatter
-
+from click.formatting import HelpFormatter, iter_rows, measure_table, wrap_text
 from pdm.cli import actions
 from pdm.cli.options import (
     dry_run_option,
     save_strategy_option,
     sections_option,
-    verbose_option,
     update_strategy_option,
+    verbose_option,
 )
 from pdm.context import context
 from pdm.exceptions import CommandNotFound

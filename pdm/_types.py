@@ -1,4 +1,4 @@
-from typing import Dict, Union, Tuple, List
+from typing import Dict, List, Tuple, Union
 
 Source = Dict[str, Union[str, bool]]
 RequirementDict = Union[str, Dict[str, Union[bool, str]]]

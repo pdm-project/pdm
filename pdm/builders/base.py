@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import atexit
 import glob
 import os
 import textwrap
 from pathlib import Path
-from typing import List, Iterator, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterator, List
 
 from pkg_resources import normalize_path
 

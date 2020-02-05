@@ -6,15 +6,12 @@ import sys
 import sysconfig
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Iterator
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
 
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import pkg_resources
 from pip_shims import shims
-from pythonfinder import Finder
-from vistir.contextmanagers import temp_environ
-from vistir.path import normalize_path
 
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
@@ -24,9 +21,12 @@ from pdm.utils import (
     convert_hashes,
     create_tracked_tempdir,
     get_finder,
-    get_python_version,
     get_pep508_environment,
+    get_python_version,
 )
+from pythonfinder import Finder
+from vistir.contextmanagers import temp_environ
+from vistir.path import normalize_path
 
 if TYPE_CHECKING:
     from pdm.models.specifiers import PySpecSet

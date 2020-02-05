@@ -7,12 +7,11 @@ from pip_shims import shims
 
 import distlib.scripts
 from distlib.wheel import Wheel
-from vistir import cd
-
 from pdm.context import context
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
-from pdm.models.requirements import strip_extras, parse_requirement
+from pdm.models.requirements import parse_requirement, strip_extras
+from vistir import cd
 
 SETUPTOOLS_SHIM = (
     "import setuptools, tokenize;__file__=%r;"

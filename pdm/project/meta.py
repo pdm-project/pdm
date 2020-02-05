@@ -3,12 +3,12 @@ from __future__ import annotations
 import glob
 import os
 import re
-from typing import TYPE_CHECKING, List, Dict, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
 import setuptools
-import vistir
 from pkg_resources import safe_name
 
+import vistir
 from pdm.exceptions import ProjectError
 from pdm.models.markers import Marker
 

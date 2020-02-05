@@ -5,21 +5,21 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
 
-import tomlkit
 from pip._vendor.pkg_resources import safe_name
-from vistir.contextmanagers import atomic_open_for_write
 
+import tomlkit
 from pdm._types import Source
 from pdm.context import context
 from pdm.exceptions import ProjectError
 from pdm.models.candidates import Candidate, identify
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository, PyPIRepository
-from pdm.models.requirements import Requirement, strip_extras, parse_requirement
+from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
 from pdm.utils import find_project_root
+from vistir.contextmanagers import atomic_open_for_write
 
 if TYPE_CHECKING:
     from tomlkit.container import Container

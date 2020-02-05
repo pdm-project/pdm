@@ -5,13 +5,24 @@ from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
 from pdm.models.candidates import identify
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, SimpleReporter, resolve
+from pdm.resolver import (
+    BaseProvider,
+    EagerUpdateProvider,
+    ReusePinProvider,
+    SimpleReporter,
+    resolve,
+)
 from tests import FIXTURES
 
 
 def resolve_requirements(
-    repository, lines, requires_python="", allow_prereleases=None,
-    strategy="reuse", preferred_pins=None, tracked_names=None
+    repository,
+    lines,
+    requires_python="",
+    allow_prereleases=None,
+    strategy="reuse",
+    preferred_pins=None,
+    tracked_names=None,
 ):
     requirements = {}
     if isinstance(lines, list):
@@ -28,16 +39,17 @@ def resolve_requirements(
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
         provider = provider_class(
-            preferred_pins, tracked_names or (), repository,
-            requires_python, allow_prereleases
+            preferred_pins,
+            tracked_names or (),
+            repository,
+            requires_python,
+            allow_prereleases,
         )
     flat_reqs = list(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
     )
     reporter = SimpleReporter(flat_reqs)
-    mapping, *_ = resolve(
-        provider, reporter, requirements, requires_python
-    )
+    mapping, *_ = resolve(provider, reporter, requirements, requires_python)
     return mapping
 
 
@@ -153,8 +165,7 @@ def test_resolving_marker_merging(project, repository):
         repository, ["foo; os_name=='nt' and python_version != '3.5'"]
     )
     assert (
-        str(result["foo"].marker)
-        == 'os_name == "nt" and python_version >= "2.7" '
+        str(result["foo"].marker) == 'os_name == "nt" and python_version >= "2.7" '
         'and python_version not in "3.4, 3.5"'
     )
 

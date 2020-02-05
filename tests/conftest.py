@@ -11,7 +11,7 @@ from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
 
 import pytest
-
+from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound
@@ -21,7 +21,6 @@ from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
-from pdm._types import CandidateInfo
 from pdm.utils import get_finder
 from tests import FIXTURES
 
