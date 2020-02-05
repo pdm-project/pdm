@@ -25,18 +25,17 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        lfs: true
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install pdm
-        pdm install -d
-    - name: Test
-      run: |
-        pdm run pytest --cov pdm tests
-
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install pdm
+          python -m pdm install -d
+      - name: Test
+        run: |
+          python -m pdm run pytest --cov pdm tests

@@ -326,7 +326,7 @@ class Builder:
 
         return content
 
-    def ensure_setup_py(self) -> None:
+    def ensure_setup_py(self, clean: bool = True) -> None:
         """Ensures the requirement has a setup.py ready."""
         # XXX: Currently only handle PDM project, and do nothing if not.
 
@@ -348,4 +348,5 @@ class Builder:
         def cleanup():
             os.unlink(setup_py_path)
 
-        atexit.register(cleanup)
+        if clean:
+            atexit.register(cleanup)

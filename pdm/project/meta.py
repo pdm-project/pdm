@@ -43,7 +43,18 @@ class PackageMeta:
         self.project = project
 
     name = MetaField("name")
-    version = MetaField("version")
+
+    def _get_version(self, value):
+        if isinstance(value, str):
+            return value
+        version_source = value.get("from")
+        with open(version_source, encoding="utf-8") as fp:
+            version = re.findall(
+                r"^__version__\s*=\s*[\"'](.+?)[\"']\s*$", fp.read(), re.M
+            )[0]
+        return version
+
+    version = MetaField("version", _get_version)
     homepage = MetaField("homepage")
     license = MetaField("license")
 
