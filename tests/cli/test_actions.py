@@ -7,29 +7,25 @@ from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
 Requirement = namedtuple("Requirement", "key")
-Candidate = namedtuple("Candidate", "req,version")
+Candidate = namedtuple("Candidate", "req,name,version")
 
 
 def make_candidate(name, version):
     req = Requirement(name)
-    return Candidate(req=req, version=version)
+    return Candidate(req=req, name=name, version=version)
 
 
-def test_sync_only_different(project, repository, synchronizer, capsys):
-    synchronizer.install_candidates(
-        [
-            make_candidate("foo", "0.1.0"),
-            make_candidate("chardet", "3.0.1"),
-            make_candidate("idna", "2.7"),
-        ]
-    )
+def test_sync_only_different(project, repository, working_set, capsys):
+    working_set.add_candidate(make_candidate("foo", "0.1.0"))
+    working_set.add_candidate(make_candidate("chardet", "3.0.1"))
+    working_set.add_candidate(make_candidate("idna", "2.7"))
     do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
     assert "4 packages added" in out
     assert "1 package updated" in out
-    assert "foo" in synchronizer.working_set
-    assert "test-project" in synchronizer.working_set
-    assert synchronizer.working_set["chardet"] == "3.0.4"
+    assert "foo" in working_set
+    assert "test-project" in working_set
+    assert working_set["chardet"].version == "3.0.4"
 
 
 def test_sync_no_lockfile(project):
@@ -38,35 +34,33 @@ def test_sync_no_lockfile(project):
         do_sync(project)
 
 
-def test_sync_clean_packages(project, repository, synchronizer):
-    synchronizer.install_candidates(
-        [
-            make_candidate("foo", "0.1.0"),
-            make_candidate("chardet", "3.0.1"),
-            make_candidate("idna", "2.7"),
-        ]
-    )
+def test_sync_clean_packages(project, repository, working_set):
+    for candidate in [
+        make_candidate("foo", "0.1.0"),
+        make_candidate("chardet", "3.0.1"),
+        make_candidate("idna", "2.7"),
+    ]:
+        working_set.add_candidate(candidate)
     do_add(project, packages=["requests"], sync=False)
     do_sync(project, clean=True)
-    assert "foo" not in synchronizer.working_set
+    assert "foo" not in working_set
 
 
-def test_sync_dry_run(project, repository, synchronizer):
-    synchronizer.install_candidates(
-        [
-            make_candidate("foo", "0.1.0"),
-            make_candidate("chardet", "3.0.1"),
-            make_candidate("idna", "2.7"),
-        ]
-    )
+def test_sync_dry_run(project, repository, working_set):
+    for candidate in [
+        make_candidate("foo", "0.1.0"),
+        make_candidate("chardet", "3.0.1"),
+        make_candidate("idna", "2.7"),
+    ]:
+        working_set.add_candidate(candidate)
     do_add(project, packages=["requests"], sync=False)
     do_sync(project, clean=True, dry_run=True)
-    assert "foo" in synchronizer.working_set
-    assert "requests" not in synchronizer.working_set
-    assert synchronizer.working_set["chardet"] == "3.0.1"
+    assert "foo" in working_set
+    assert "requests" not in working_set
+    assert working_set["chardet"].version == "3.0.1"
 
 
-def test_add_package(project, repository, synchronizer, is_dev):
+def test_add_package(project, repository, working_set, is_dev):
     do_add(project, is_dev, packages=["requests"])
     section = "dev-dependencies" if is_dev else "dependencies"
 
@@ -74,20 +68,20 @@ def test_add_package(project, repository, synchronizer, is_dev):
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
-        assert package in synchronizer.working_set
+        assert package in working_set
 
 
-def test_add_package_to_custom_package(project, repository, synchronizer):
+def test_add_package_to_custom_package(project, repository, working_set):
     do_add(project, section="test", packages=["requests"])
 
     assert "requests" in project.tool_settings["test-dependencies"]
     locked_candidates = project.get_locked_candidates("test")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
-        assert package in synchronizer.working_set
+        assert package in working_set
 
 
-def test_add_editable_package(project, repository, synchronizer, is_dev, vcs):
+def test_add_editable_package(project, repository, working_set, is_dev, vcs):
     do_add(
         project,
         is_dev,
@@ -97,13 +91,13 @@ def test_add_editable_package(project, repository, synchronizer, is_dev, vcs):
     assert "demo" in project.tool_settings[section]
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
-    assert "idna" in synchronizer.working_set
+    assert "idna" in working_set
 
 
-def test_add_no_install(project, repository, synchronizer):
+def test_add_no_install(project, repository, working_set):
     do_add(project, sync=False, packages=["requests"])
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
-        assert package not in synchronizer.working_set
+        assert package not in working_set
 
 
 def test_add_package_save_exact(project, repository):
@@ -176,7 +170,7 @@ def test_add_package_update_eager(project, repository):
     assert locked_candidates["pytz"].version == "2019.3"
 
 
-def test_update_all_packages(project, repository, synchronizer, capsys):
+def test_update_all_packages(project, repository, working_set, capsys):
     do_add(project, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -204,7 +198,7 @@ def test_update_all_packages(project, repository, synchronizer, capsys):
     assert "All packages are synced to date" in out
 
 
-def test_update_specified_packages(project, repository, synchronizer):
+def test_update_specified_packages(project, repository, working_set):
     do_add(project, sync=False, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -225,7 +219,7 @@ def test_update_specified_packages(project, repository, synchronizer):
     assert locked_candidates["chardet"].version == "3.0.4"
 
 
-def test_update_specified_packages_eager_mode(project, repository, synchronizer):
+def test_update_specified_packages_eager_mode(project, repository, working_set):
     do_add(project, sync=False, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -247,23 +241,23 @@ def test_update_specified_packages_eager_mode(project, repository, synchronizer)
     assert locked_candidates["pytz"].version == "2019.3"
 
 
-def test_remove_package(project, repository, synchronizer, is_dev):
+def test_remove_package(project, repository, working_set, is_dev):
     do_add(project, dev=is_dev, packages=["requests", "pytz"])
     do_remove(project, dev=is_dev, packages=["pytz"])
     locked_candidates = project.get_locked_candidates()
     assert "pytz" not in locked_candidates
-    assert "pytz" not in synchronizer.working_set
+    assert "pytz" not in working_set
 
 
-def test_remove_package_no_sync(project, repository, synchronizer):
+def test_remove_package_no_sync(project, repository, working_set):
     do_add(project, packages=["requests", "pytz"])
     do_remove(project, sync=False, packages=["pytz"])
     locked_candidates = project.get_locked_candidates()
     assert "pytz" not in locked_candidates
-    assert "pytz" in synchronizer.working_set
+    assert "pytz" in working_set
 
 
-def test_remove_package_not_exist(project, repository, synchronizer):
+def test_remove_package_not_exist(project, repository, working_set):
     do_add(project, packages=["requests", "pytz"])
     with pytest.raises(PdmUsageError):
         do_remove(project, sync=False, packages=["django"])
@@ -277,7 +271,7 @@ def test_add_remove_no_package(project, repository):
         do_remove(project, packages=())
 
 
-def test_update_with_package_and_sections_argument(project, repository, synchronizer):
+def test_update_with_package_and_sections_argument(project, repository, working_set):
     do_add(project, packages=["requests", "pytz"])
     with pytest.raises(PdmUsageError):
         do_update(project, sections=("default", "dev"), packages=("requests",))
@@ -286,24 +280,22 @@ def test_update_with_package_and_sections_argument(project, repository, synchron
         do_update(project, default=False, packages=("requests",))
 
 
-def test_add_package_with_mismatch_marker(project, repository, synchronizer, mocker):
+def test_add_package_with_mismatch_marker(project, repository, working_set, mocker):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
     )
     do_add(project, packages=["requests", "pytz; platform_system!='Darwin'"])
-    assert "pytz" not in synchronizer.working_set
+    assert "pytz" not in working_set
 
 
-def test_add_dependency_from_multiple_parents(
-    project, repository, synchronizer, mocker
-):
+def test_add_dependency_from_multiple_parents(project, repository, working_set, mocker):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
     )
     do_add(project, packages=["requests", "chardet; platform_system!='Darwin'"])
-    assert "chardet" in synchronizer.working_set
+    assert "chardet" in working_set
 
 
 def test_list_packages(capsys):
