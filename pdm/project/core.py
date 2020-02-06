@@ -228,7 +228,7 @@ class Project:
             } or None
             result[identify(req)] = can
         if section in ("default", "__all__") and self.meta.name:
-            result[safe_name(self.meta.name).lower()] = self.make_self_candidate()
+            result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
         return result
 
     def get_content_hash(self, algo: str = "md5") -> str:

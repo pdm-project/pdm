@@ -96,7 +96,7 @@ def test_resolve_allow_prereleases(project, repository):
 
 def test_resolve_with_extras(project, repository):
 
-    result = resolve_requirements(repository, ["requests[security]"])
+    result = resolve_requirements(repository, ["requests[socks]"])
     assert result["pysocks"].version == "1.5.6"
 
 
@@ -115,7 +115,7 @@ def test_resolve_local_artifacts(project, repository, requirement_line):
 @pytest.mark.parametrize(
     "line",
     [
-        f"{(FIXTURES / 'projects/demo').as_posix()}",
+        (FIXTURES / "projects/demo").as_posix(),
         "git+https://github.com/test-root/demo.git#egg=demo",
     ],
 )
@@ -183,3 +183,11 @@ def test_requirements_from_different_sections(project, repository):
     requirements = {"default": ["foo"], "dev": ["foo<0.2.0"]}
     result = resolve_requirements(repository, requirements)
     assert result["foo"].version == "0.1.0"
+
+
+def test_resolve_two_extras_from_the_same_package(project, repository):
+    # Case borrowed from pypa/pip#7096
+    line = (FIXTURES / "projects/demo_extras").as_posix() + "[extra1,extra2]"
+    result = resolve_requirements(repository, [line])
+    assert "pysocks" in result
+    assert "pyopenssl" in result

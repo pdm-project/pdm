@@ -1,3 +1,4 @@
+import collections
 import json
 import os
 import shutil
@@ -15,8 +16,8 @@ from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound
-from pdm.installers import Synchronizer
 from pdm.models.candidates import Candidate
+from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
@@ -160,41 +161,51 @@ class TestProject(Project):
     pass
 
 
-class MockSynchronizer(Synchronizer):
-    def __init__(self):
-        super().__init__({}, None)
-        self.working_set = {}
+Distribution = collections.namedtuple("Distribution", "key,version")
 
-    def compare_with_working_set(self):
-        working_set = self.working_set
-        to_update, to_remove = [], []
-        environment = self.environment.marker_environment()
-        candidates = self.candidates.copy()
-        for key, version in working_set.items():
-            if key not in candidates:
-                to_remove.append(key)
-            else:
-                can = candidates.pop(key)
-                if can.marker and not can.marker.evaluate(environment):
-                    to_remove.append(key)
-                elif version != can.version:
-                    to_update.append(key)
-        to_add = [
-            name
-            for name, can in candidates.items()
-            if not (can.marker and not can.marker.evaluate(environment))
-        ]
-        return to_add, to_update, to_remove
 
-    def install_candidates(self, candidates):
-        self.working_set.update({can.req.key: can.version for can in candidates})
+class MockWorkingSet(collections.abc.MutableMapping):
+    def __init__(self, *args, **kwargs):
+        self.pkg_ws = None
+        self._data = {}
 
-    def remove_distributions(self, distributions):
-        for dist in distributions:
-            try:
-                del self.working_set[dist]
-            except KeyError:
-                pass
+    def add_candidate(self, candidate):
+        key = safe_name(candidate.name).lower()
+        self._data[key] = Distribution(key, candidate.version)
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def __delitem__(self, key):
+        del self._data[key]
+
+
+@pytest.fixture()
+def working_set(mocker):
+    rv = MockWorkingSet()
+    mocker.patch.object(Environment, "get_working_set", return_value=rv)
+
+    def install(candidate):
+        rv.add_candidate(candidate)
+
+    def uninstall(name):
+        del rv[safe_name(name).lower()]
+
+    installer = mocker.MagicMock()
+    installer.install.side_effect = install
+    installer.uninstall.side_effect = uninstall
+    mocker.patch("pdm.installers.Installer", return_value=installer)
+
+    yield rv
 
 
 def get_local_finder(*args, **kwargs):
@@ -219,19 +230,6 @@ def repository(project):
     rv = TestRepository([], project.environment)
     project.get_repository = lambda: rv
     return rv
-
-
-@pytest.fixture()
-def synchronizer(mocker):
-    rv = MockSynchronizer()
-
-    def new_synchronizer(candidates, environment):
-        rv.candidates = candidates
-        rv.environment = environment
-        return rv
-
-    mocker.patch("pdm.cli.actions.Synchronizer", new_synchronizer)
-    yield rv
 
 
 @pytest.fixture()
