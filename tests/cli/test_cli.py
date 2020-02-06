@@ -64,3 +64,8 @@ def test_list_command(project, invoke, mocker):
     do_list = mocker.patch.object(actions, "do_list")
     invoke(["list"], obj=project)
     do_list.assert_called_once()
+
+
+def test_run_command(invoke, capfd):
+    invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
+    assert "pdm/__pypackages__" in capfd.readouterr()[0]

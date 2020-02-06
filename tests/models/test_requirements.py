@@ -63,6 +63,14 @@ REQUIREMENTS = [
         f"demo @ {FILE_PREFIX}"
         + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
     ),
+    (
+        (FIXTURES / "projects/demo").as_posix() + "[security]",
+        (
+            "demo",
+            {"path": (FIXTURES / "projects/demo").as_posix(), "extras": ["security"]},
+        ),
+        f"demo[security] @ {FILE_PREFIX}" + (FIXTURES / "projects/demo").as_posix(),
+    ),
 ]
 
 

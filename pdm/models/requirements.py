@@ -27,11 +27,11 @@ VCS_REQ = re.compile(
     rf"(?P<vcs>{'|'.join(VCS_SCHEMA)})\+" r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
 )
 FILE_REQ = re.compile(
-    r"(?:(?P<url>\S+://[^\s;]+)|"
-    rf"(?P<path>(?:[^\s;]|\\ )*"
+    r"(?:(?P<url>\S+://[^\s\[\];]+)|"
+    rf"(?P<path>(?:[^\s;\[\]]|\\ )*"
     rf"|'(?:[^']|\\')*'"
     rf"|\"(?:[^\"]|\\\")*\"))"
-    r"(?P<marker>[\t ]*;[^\n]+)?"
+    r"(?P<extras>\[[^\[\]]+\])?(?P<marker>[\t ]*;[^\n]+)?"
 )
 
 
@@ -224,8 +224,14 @@ class FileRequirement(Requirement):
 
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "FileRequirement":
+        extras = parsed.get("extras")
+        if extras:
+            extras = tuple(e.strip() for e in extras[1:-1].split(","))
         r = cls(
-            url=parsed.get("url"), path=parsed.get("path"), marker=parsed.get("marker")
+            url=parsed.get("url"),
+            path=parsed.get("path"),
+            marker=parsed.get("marker"),
+            extras=extras,
         )
         return r
 

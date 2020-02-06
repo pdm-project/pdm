@@ -1,9 +1,10 @@
 from collections import namedtuple
 
 import pytest
-from pdm.cli.actions import do_add, do_remove, do_sync, do_update
+from pdm.cli.actions import do_add, do_list, do_lock, do_remove, do_sync, do_update
 from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
+from pdm.project import Project
 
 Requirement = namedtuple("Requirement", "key")
 Candidate = namedtuple("Candidate", "req,version")
@@ -303,3 +304,20 @@ def test_add_dependency_from_multiple_parents(
     )
     do_add(project, packages=["requests", "chardet; platform_system!='Darwin'"])
     assert "chardet" in synchronizer.working_set
+
+
+def test_list_packages(capsys):
+    do_list(Project())
+    out, _ = capsys.readouterr()
+    assert "pdm" in out
+    assert "tomlkit" in out
+    assert "halo" in out
+
+
+def test_lock_dependencies(project, repository):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    do_lock(project)
+    assert project.lockfile_file.exists()
+    locked = project.get_locked_candidates()
+    for package in ("requests", "idna", "chardet", "certifi"):
+        assert package in locked
