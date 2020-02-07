@@ -33,11 +33,11 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 
 PDM 需要 Python 3.7 或更高版本。
 
+强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。
+
 ```bash
 $ pipx install pdm
 ```
-
-强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。
 
 或者你可以将它安装在用户目录下:
 
@@ -49,13 +49,33 @@ $ pip install --user pdm
 
 作者很懒，还没来得及写，先用 `python -m pdm --help` 查看帮助吧。
 
-## Credits
+## 常见问题
+
+### 1. `__pypackages__` 里都包含什么?
+
+PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并未说明可执行程序应该如何存放。PDM 会把 `bin`(可执行程序), `include`(头文件),
+以及 `lib` 都放在 `__pypackage__/X.Y` 下面。
+
+### 2. 如何运行 `__pypackages__` 下的可执行程序?
+
+推荐的方式是在你的命令前面加上 `pdm run`, 你也可以直接运行 `bin` 下面的可执行程序。PDM 的安装器已经在可执行程序里面注入了本地包路径了。
+
+### 3. 使用 PDM 时会载入哪些三方库路径?
+
+PDM 会首先在 `__pypackage__` 中寻找，然后会在选择的 Python 解释器对应的 `site-packages` 中寻找包。
+
+### 4. 我能把 `__pypackage__` 保存下来用来部署到别的机器上吗?
+
+最好别这样搞，`__pypackage__` 下面安装的包是和操作系统相关的，所以除非是纯 Python 的包，都会有兼容性的问题。你应该把 `pdm.lock`
+纳入版本管理，然后在目标环境中执行 `pdm sync`。
+
+## 鸣谢
 
 本项目的受到 [pyflow] 与 [poetry] 的很多启发。
 
 [pyflow]: https://github.com/David-OConnor/pyflow
 [poetry]: https://github.com/python-poetry/poetry
 
-## License
+## 使用许可
 
 本项目基于 MIT 协议开源，具体可查看 [LICENSE](LICENSE)。
