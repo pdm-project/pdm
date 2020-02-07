@@ -324,6 +324,7 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
     return None
 
 
+@functools.lru_cache()
 def get_python_version(executable: str) -> Tuple[Union[str, int], ...]:
     args = [
         executable,

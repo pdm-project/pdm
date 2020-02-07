@@ -1,5 +1,3 @@
-import os
-import shutil
 import subprocess
 import sys
 
@@ -122,14 +120,14 @@ def install(project, sections, dev, default, lock):
 @pass_project
 def run(project, command, args):
     with project.environment.activate():
-        expanded_command = shutil.which(command, path=os.getenv("PATH"))
+        expanded_command = project.environment.which(command)
         if not expanded_command:
             raise click.UsageError(
                 "Command {} is not found on your PATH.".format(
                     context.io.green(f"'{command}'")
                 )
             )
-        subprocess.run([expanded_command] + list(args))
+        sys.exit(subprocess.call([expanded_command] + list(args)))
 
 
 @cli.command(help="Synchronizes current working set with lock file.")
