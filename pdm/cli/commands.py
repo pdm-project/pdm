@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 
 import click
 from click._compat import term_len
@@ -14,7 +15,6 @@ from pdm.cli.options import (
     verbose_option,
 )
 from pdm.context import context
-from pdm.exceptions import CommandNotFound
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git
 
@@ -62,12 +62,27 @@ class ColoredHelpFormatter(HelpFormatter):
 click.core.HelpFormatter = ColoredHelpFormatter
 
 
-@click.group(help="PDM - Python Development Master")
+class PdmGroup(click.Group):
+    def main(self, *args, **kwargs):
+        # Catches all unhandled exceptions and reraise them with PdmException
+        try:
+            super().main(*args, **kwargs)
+        except Exception:
+            etype, err, traceback = sys.exc_info()
+            if context.io.verbosity > context.io.NORMAL:
+                raise err.with_traceback(traceback)
+            else:
+                context.io.echo("{}: {}".format(etype.__name__, err), err=True)
+                sys.exit(1)
+
+
+@click.group(cls=PdmGroup)
 @verbose_option
 @click.version_option(
     prog_name=context.io._style("pdm", bold=True), version=context.version
 )
 def cli():
+    """PDM - Python Development Master"""
     pass
 
 
@@ -109,7 +124,11 @@ def run(project, command, args):
     with project.environment.activate():
         expanded_command = shutil.which(command, path=os.getenv("PATH"))
         if not expanded_command:
-            raise CommandNotFound(command)
+            raise click.UsageError(
+                "Command {} is not found on your PATH.".format(
+                    context.io.green(f"'{command}'")
+                )
+            )
         subprocess.run([expanded_command] + list(args))
 
 
@@ -226,6 +245,7 @@ def build(project, sdist, wheel, dest, clean):
 
 
 @cli.command(help="Initialize a pyproject.toml for PDM.")
+@verbose_option
 @pass_project
 def init(project):
     if project.pyproject_file.exists():

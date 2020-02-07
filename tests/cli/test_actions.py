@@ -1,9 +1,10 @@
 from collections import namedtuple
 
+import click
 import pytest
 from distlib.wheel import Wheel
 from pdm.cli import actions
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
@@ -31,7 +32,7 @@ def test_sync_only_different(project, repository, working_set, capsys):
 
 def test_sync_no_lockfile(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    with pytest.raises(PdmUsageError):
+    with pytest.raises(PdmException):
         actions.do_sync(project)
 
 
@@ -260,24 +261,24 @@ def test_remove_package_no_sync(project, repository, working_set):
 
 def test_remove_package_not_exist(project, repository, working_set):
     actions.do_add(project, packages=["requests", "pytz"])
-    with pytest.raises(PdmUsageError):
+    with pytest.raises(PdmException):
         actions.do_remove(project, sync=False, packages=["django"])
 
 
 def test_add_remove_no_package(project, repository):
-    with pytest.raises(PdmUsageError):
+    with pytest.raises(click.BadParameter):
         actions.do_add(project, packages=())
 
-    with pytest.raises(PdmUsageError):
+    with pytest.raises(click.BadParameter):
         actions.do_remove(project, packages=())
 
 
 def test_update_with_package_and_sections_argument(project, repository, working_set):
     actions.do_add(project, packages=["requests", "pytz"])
-    with pytest.raises(PdmUsageError):
+    with pytest.raises(click.BadParameter):
         actions.do_update(project, sections=("default", "dev"), packages=("requests",))
 
-    with pytest.raises(PdmUsageError):
+    with pytest.raises(click.BadParameter):
         actions.do_update(project, default=False, packages=("requests",))
 
 
