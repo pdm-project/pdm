@@ -22,10 +22,15 @@ vcs = shims.VcsSupport()
 
 
 def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
+    """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
 
 
 def identify(req: Union[Candidate, Requirement]) -> Optional[str]:
+    """Get the identity of a candidate or requirement.
+    The result carries the extras information to distinguish from the same package
+    with different extras.
+    """
     if isinstance(req, Candidate):
         req = req.req
     if req.key is None:
@@ -37,7 +42,11 @@ def identify(req: Union[Candidate, Requirement]) -> Optional[str]:
 
 
 class Candidate:
-    """A concrete candidate that can be downloaded and installed."""
+    """A concrete candidate that can be downloaded and installed.
+    A candidate comes from the PyPI index of a package, or from the requirement itself
+    (for file or VCS requirements). Each candidate has a name, version and several
+    dependencies together with package metadata.
+    """
 
     def __init__(
         self,
@@ -48,6 +57,13 @@ class Candidate:
         link=None,  # type: shims.Link
     ):
         # type: (...) -> None
+        """
+        :param req: the requirement that produces this candidate.
+        :param environment: the bound environment instance.
+        :param name: the name of the candidate.
+        :param version: the version of the candidate.
+        :param link: the file link of the candidate.
+        """
         self.req = req
         self.environment = environment
         self.name = name or self.req.project_name
@@ -82,6 +98,9 @@ class Candidate:
         return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
 
     def get_metadata(self) -> Optional[Metadata]:
+        """Get the metadata of the candidate.
+        For editable requirements, egg info are produced, otherwise a wheel is built.
+        """
         if self.metadata is not None:
             return self.metadata
         ireq = self.ireq
@@ -117,6 +136,7 @@ class Candidate:
         environment,  # type: Environment
     ):
         # type: (...) -> Candidate
+        """Build a candidate from pip's InstallationCandidate."""
         inst = cls(
             req,
             environment,
@@ -127,6 +147,7 @@ class Candidate:
         return inst
 
     def get_dependencies_from_metadata(self) -> List[str]:
+        """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         metadata = self.get_metadata()
         result = []
@@ -156,6 +177,7 @@ class Candidate:
 
     @property
     def requires_python(self) -> str:
+        """The Python version constraint of the candidate."""
         if self._requires_python is not None:
             return self._requires_python
         requires_python = self.link.requires_python or ""
@@ -176,6 +198,7 @@ class Candidate:
         return requires_python
 
     def as_lockfile_entry(self) -> Dict[str, Any]:
+        """Build a lockfile entry dictionary for the candidate."""
         result = {
             "name": self.name,
             "sections": sorted(self.sections),
@@ -194,6 +217,7 @@ class Candidate:
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
+        """Format for output."""
         return (
             f"{context.io.green(self.name, bold=True)} "
             f"{context.io.yellow(str(self.version))}"

@@ -33,13 +33,20 @@ def cache_result(
 
 
 class BaseRepository:
+    """A Repository acts as the source of packages and metadata."""
+
     def __init__(self, sources: List[Source], environment: Environment) -> None:
+        """
+        :param sources: a list of sources to download packages from.
+        :param environment: the bound environment instance.
+        """
         self.sources = [get_pypi_source()] + sources
         self.environment = environment
         self._candidate_info_cache = context.make_candidate_info_cache()
         self._hash_cache = context.make_hash_cache()
 
     def get_filtered_sources(self, req: Requirement) -> List[Source]:
+        """Get matching sources based on the index attribute."""
         if not req.index:
             return self.sources
         return [source for source in self.sources if source["name"] == req.index]
@@ -47,6 +54,7 @@ class BaseRepository:
     def get_dependencies(
         self, candidate: Candidate
     ) -> Tuple[List[Requirement], PySpecSet, str]:
+        """Get (dependencies, python_specifier, summary) of the candidate."""
         requirements, requires_python, summary = [], "", ""
         last_ext_info = None
         for getter in self.dependency_generators():
@@ -58,7 +66,7 @@ class BaseRepository:
             break
         else:
             if last_ext_info is not None:
-                raise last_ext_info[0].with_traceback(last_ext_info[2])
+                raise last_ext_info[1].with_traceback(last_ext_info[2])
         requirements = [parse_requirement(line) for line in requirements]
         if candidate.req.extras:
             # HACK: If this candidate has extras, add the original candidate
@@ -77,6 +85,15 @@ class BaseRepository:
         allow_prereleases: Optional[bool] = None,
         allow_all: bool = False,
     ) -> List[Candidate]:
+        """Find matching candidates of a requirement.
+
+        :param requirement: the given requirement.
+        :param requires_python: the Python version constraint.
+        :param allow_prereleases: whether allow prerelease versions, or let us determine
+            if not given. If no non-prerelease is available, prereleases will be used.
+        :param allow_all: whether allow all wheels.
+        :returns: a list of candidates.
+        """
         if requirement.is_named:
             return self._find_named_matches(
                 requirement, requires_python, allow_prereleases
@@ -117,6 +134,8 @@ class BaseRepository:
         return deps, requires_python, summary
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+        """Get hashes of all possible installable candidates of a given package version.
+        """
         if (
             candidate.req.is_vcs
             or candidate.req.is_file_or_url
@@ -137,10 +156,15 @@ class BaseRepository:
             }
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+        """Return an iterable of getter functions to get dependencies, which will be
+        called one by one.
+        """
         raise NotImplementedError
 
 
 class PyPIRepository(BaseRepository):
+    """Get package and metadata from PyPI source."""
+
     @cache_result
     def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateInfo:
         if not candidate.name or not candidate.version:

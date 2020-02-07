@@ -10,12 +10,15 @@ from pdm.utils import join_list_with
 
 
 class Marker(PackageMarker):
+    """A subclass of Marker that supports union and intersection merging."""
+
     def copy(self) -> "Marker":
         inst = self.__class__('os_name == "nt"')
         inst._markers = copy.deepcopy(self._markers)
         return inst
 
     def __and__(self, other: Optional[PackageMarker]) -> "Marker":
+        """Intersect the two markers."""
         if other is None or self == other:
             return self
         lhs = f"({self})" if "or" in self._markers else str(self)
@@ -32,6 +35,7 @@ class Marker(PackageMarker):
         return type(self)(marker_str)
 
     def __or__(self, other: Optional[PackageMarker]) -> "Marker":
+        """Union the two markers."""
         if None in (self, other):
             return None
         if self == other:
@@ -133,6 +137,7 @@ def _build_pyspec_from_marker(markers):
     groups = [PySpecSet()]
     for marker in markers:
         if isinstance(marker, list):
+            # It is a submarker
             groups[-1] = groups[-1] & _build_pyspec_from_marker(marker)
         elif isinstance(marker, tuple):
             key, op, version = [i.value for i in marker]
@@ -165,6 +170,7 @@ def _build_pyspec_from_marker(markers):
 
 
 def join_metaset(metaset: Tuple[Optional[Marker], PySpecSet]) -> Optional[Marker]:
+    """Join marker and python specifier into a new marker."""
     marker, pyspec = metaset
     py_marker = pyspec.as_marker_string() or None
     py_marker = Marker(py_marker) if py_marker else None

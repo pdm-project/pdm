@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class CandidateInfoCache:
+    """Cache manager to hold (dependencies, requires_python, summary) info."""
+
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
         self._cache = {}  # type: Dict[str, Any]

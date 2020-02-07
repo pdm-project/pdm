@@ -71,7 +71,13 @@ class WorkingSet(collections.abc.Mapping):
 
 
 class Environment:
+    """Environment dependent stuff related to the selected Python interpreter."""
+
     def __init__(self, python_requires: PySpecSet, config: Config) -> None:
+        """
+        :param python_requires: the project's python requires constraint.
+        :param config: the project's configuration.
+        """
         self.python_requires = python_requires
         self.config = config
 
@@ -98,6 +104,7 @@ class Environment:
         )
 
     def get_paths(self) -> Dict[str, str]:
+        """Get paths like ``sysconfig.get_paths()`` for installation."""
         paths = sysconfig.get_paths()
         scripts = "Scripts" if os.name == "nt" else "bin"
         packages_path = self.packages_path
@@ -111,6 +118,9 @@ class Environment:
 
     @contextmanager
     def activate(self):
+        """Activate the environment. Manipulate the ``PYTHONPATH`` and patches ``pip``
+        to be aware of local packages. This method acts like a context manager.
+        """
         paths = self.get_paths()
         with temp_environ():
             old_paths = os.getenv("PYTHONPATH")
@@ -138,12 +148,14 @@ class Environment:
             misc.site_packages = _old_sitepackages
 
     def is_local(self, path) -> bool:
+        """PEP 582 version of ``is_local()`` function."""
         return normalize_path(path).startswith(
             normalize_path(self.packages_path.as_posix())
         )
 
     @cached_property
     def packages_path(self) -> Path:
+        """The local packages path."""
         if self.config.get("packages_path") is not None:
             return self.config.get("packages_path")
         pypackages = (
@@ -190,6 +202,11 @@ class Environment:
         sources: Optional[List[Source]] = None,
         ignore_requires_python: bool = False,
     ) -> shims.PackageFinder:
+        """Return the package finder of given index sources.
+
+        :param sources: a list of sources the finder should search in.
+        :param ignore_requires_python: whether to ignore the python version constraint.
+        """
         sources = sources or []
         python_version = get_python_version(self.python_executable)[:2]
         finder = get_finder(
@@ -204,7 +221,13 @@ class Environment:
     def build(
         self, ireq: shims.InstallRequirement, hashes: Optional[Dict[str, str]] = None
     ) -> str:
-        """A local candidate has already everything in local, no need to download."""
+        """Build egg_info directory for editable candidates and a wheel for others.
+
+        :param ireq: the InstallRequirment of the candidate.
+        :param hashes: a dictionary of filename: hash_value to check against downloaded
+        artifacts.
+        :returns: The full path of the built artifact.
+        """
         from pdm.builders import EditableBuilder
         from pdm.builders import WheelBuilder
 
