@@ -324,3 +324,18 @@ def test_build_distributions(tmp_path):
     assert wheel.name == "pdm"
     tarball = next(tmp_path.glob("*.tar.gz"))
     assert tarball.exists()
+
+
+def test_project_no_init_error(project_no_init):
+
+    for handler in (
+        actions.do_add,
+        actions.do_build,
+        actions.do_list,
+        actions.do_lock,
+        actions.do_update,
+    ):
+        with pytest.raises(
+            PdmException, match="The pyproject.toml has not been initialized yet"
+        ):
+            handler(project_no_init)

@@ -69,3 +69,12 @@ def test_list_command(project, invoke, mocker):
 def test_run_command(invoke, capfd):
     invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
     assert "pdm/__pypackages__" in capfd.readouterr()[0]
+
+
+def test_uncaught_error(invoke, mocker):
+    mocker.patch.object(actions, "do_list", side_effect=RuntimeError("test error"))
+    result = invoke(["list"])
+    assert "RuntimeError: test error" in result.output
+
+    result = invoke(["list", "-v"])
+    assert isinstance(result.exception, RuntimeError)
