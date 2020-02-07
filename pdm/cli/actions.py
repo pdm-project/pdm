@@ -4,11 +4,12 @@ from typing import Dict, Iterable, Optional, Sequence
 
 from pkg_resources import safe_name
 
+import click
 import halo
 import tomlkit
 from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.context import context
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import ProjectError
 from pdm.installers import Synchronizer, format_dist
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import parse_requirement, strip_extras
@@ -19,6 +20,9 @@ from pdm.resolver.reporters import SpinnerReporter
 
 
 def format_lockfile(mapping, fetched_dependencies, summary_collection):
+    """Format lock file from a dict of resolved candidates, a mapping of dependencies
+    and a collection of package summaries.
+    """
     packages = tomlkit.aot()
     metadata = tomlkit.table()
     for k, v in sorted(mapping.items()):
@@ -52,6 +56,15 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
     return doc
 
 
+def check_project_file(project: Project) -> None:
+    """Check the existence of the project file and throws an error on failure."""
+    if not project.tool_settings:
+        raise ProjectError(
+            "The pyproject.toml has not been initialized yet. You can do this "
+            "by running {}.".format(context.io.green("'pdm init'"))
+        )
+
+
 def do_lock(
     project: Project,
     strategy: str = "all",
@@ -63,6 +76,7 @@ def do_lock(
     :param strategy: update stratege: reuse/eager/all
     :param tracked_names: required when using eager strategy
     """
+    check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
     repository = project.get_repository()
     requirements = project.all_dependencies
@@ -116,7 +130,7 @@ def do_sync(
     :param clean: whether to remove unneeded packages.
     """
     if not project.lockfile_file.exists():
-        raise PdmUsageError("Lock file does not exist, nothing to sync.")
+        raise ProjectError("Lock file does not exist, nothing to sync.")
     clean = default if clean is None else clean
     candidates = {}
     for section in sections:
@@ -150,8 +164,11 @@ def do_add(
     :param editables: editable requirements
     :param packages: normal requirements
     """
+    check_project_file(project)
     if not editables and not packages:
-        raise PdmUsageError("Must specify at least one package or editable package.")
+        raise click.BadParameter(
+            "Must specify at least one package or editable package."
+        )
     section = "dev" if dev else section or "default"
     tracked_names = set()
     requirements = {}
@@ -214,8 +231,9 @@ def do_update(
     :param packages: specified packages to update
     :return: None
     """
+    check_project_file(project)
     if len(packages) > 0 and (len(sections) > 1 or not default):
-        raise PdmUsageError(
+        raise click.BadParameter(
             "packages argument can't be used together with multple -s or --no-default."
         )
     if not packages:
@@ -227,19 +245,26 @@ def do_update(
     dependencies = project.get_dependencies(section)
     tracked_names = set()
     for name in packages:
-        key = safe_name(name).lower()
         matched_name = next(
             filter(
-                lambda k: safe_name(strip_extras(name)[0]).lower()
-                == safe_name(key).lower(),
+                lambda k: safe_name(strip_extras(k)[0]).lower()
+                == safe_name(name).lower(),
                 dependencies.keys(),
             ),
             None,
         )
         if not matched_name:
-            raise PdmUsageError(f"{name} is not found in {section} dependencies")
+            raise ProjectError(
+                "{} does not exist in {} dependencies.".format(
+                    context.io.green(name, bold=True), section
+                )
+            )
         tracked_names.add(matched_name)
-
+    context.io.echo(
+        "Updating packages: {}.".format(
+            ", ".join(context.io.green(v, bold=True) for v in tracked_names)
+        )
+    )
     do_lock(project, strategy, tracked_names)
     do_sync(project, sections=(section,), default=False, clean=False)
 
@@ -260,12 +285,15 @@ def do_remove(
     :param packages: Package names to be removed
     :return: None
     """
+    check_project_file(project)
     if not packages:
-        raise PdmUsageError("Must specify at least one package to remove.")
+        raise click.BadParameter("Must specify at least one package to remove.")
     section = "dev" if dev else section or "default"
     toml_section = f"{section}-dependencies" if section != "default" else "dependencies"
     if toml_section not in project.tool_settings:
-        raise PdmUsageError(f"No such section {toml_section!r} in pyproject.toml.")
+        raise ProjectError(
+            f"No such section {context.io.yellow(toml_section)} in pyproject.toml."
+        )
     deps = project.tool_settings[toml_section]
     context.io.echo(
         f"Removing packages from {section} dependencies: "
@@ -274,12 +302,18 @@ def do_remove(
     for name in packages:
         matched_name = next(
             filter(
-                lambda k: safe_name(k).lower() == safe_name(name).lower(), deps.keys()
+                lambda k: safe_name(strip_extras(k)[0]).lower()
+                == safe_name(name).lower(),
+                deps.keys(),
             ),
             None,
         )
         if not matched_name:
-            raise PdmUsageError(f"{name!r} does not exist under {toml_section!r}.")
+            raise ProjectError(
+                "{} does not exist in {} dependencies.".format(
+                    context.io.green(name, bold=True), section
+                )
+            )
         del deps[matched_name]
 
     project.write_pyproject()
@@ -289,6 +323,7 @@ def do_remove(
 
 
 def do_list(project: Project) -> None:
+    check_project_file(project)
     working_set = project.environment.get_working_set()
     rows = [
         (context.io.green(k, bold=True), format_dist(v))
@@ -304,6 +339,8 @@ def do_build(
     dest: str = "dist",
     clean: bool = True,
 ):
+    """Build artifacts for distribution."""
+    check_project_file(project)
     if not wheel and not sdist:
         context.io.echo("All artifacts are disabled, nothing to do.", err=True)
         return
@@ -327,6 +364,7 @@ def do_init(
     author: str = "",
     email: str = "",
 ) -> None:
+    """Bootstrap the project and create a pyproject.toml"""
     data = {
         "tool": {
             "pdm": {

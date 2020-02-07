@@ -38,10 +38,10 @@ class _IO:
         self.verbosity = verbosity
 
     def echo(
-        self, message: Any = None, err: bool = False, verbosity: int = NORMAL
+        self, message: Any = None, err: bool = False, verbosity: int = NORMAL, **kwargs
     ) -> None:
         if self.verbosity >= verbosity:
-            click.echo(message, err=err)
+            click.echo(message, err=err, **kwargs)
 
     def _style(self, text: str, *args, **kwargs) -> str:
         if self._disable_colors:

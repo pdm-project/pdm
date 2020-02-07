@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import collections
 import os
+import shutil
 import sys
 import sysconfig
 from contextlib import contextmanager
@@ -248,3 +249,14 @@ class Environment:
     def marker_environment(self) -> Dict[str, Any]:
         """Get environment for marker evaluation"""
         return get_pep508_environment(self.python_executable)
+
+    def which(self, command: str) -> str:
+        """Get the full path of the given executable against this environment."""
+        if not os.path.isabs(command) and command.startswith("python"):
+            python = os.path.splitext(command)[0]
+            version = python[6:]
+            this_version = get_python_version(self.python_executable)
+            if not version or ".".join(map(str, this_version)).startswith(version):
+                return self.python_executable
+        # Fallback to use shutil.which to find the executable
+        return shutil.which(command, path=os.getenv("PATH"))

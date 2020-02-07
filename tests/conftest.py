@@ -226,6 +226,16 @@ def project(tmp_path, mocker):
 
 
 @pytest.fixture()
+def project_no_init(tmp_path, mocker):
+    p = TestProject(tmp_path.as_posix())
+    p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
+    mocker.patch("pdm.utils.get_finder", get_local_finder)
+    mocker.patch("pdm.models.environment.get_finder", get_local_finder)
+    mocker.patch("pdm.cli.commands.Project", return_value=p)
+    return p
+
+
+@pytest.fixture()
 def repository(project):
     rv = TestRepository([], project.environment)
     project.get_repository = lambda: rv

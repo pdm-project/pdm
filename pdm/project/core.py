@@ -25,32 +25,6 @@ if TYPE_CHECKING:
     from tomlkit.container import Container
 
 
-def pyproject_cache(func):
-    """Caches the function's result as long as the project file isn't changed."""
-    _cache = _missing = object()
-
-    def getter(self, *args, **kwargs):
-        nonlocal _cache
-        if self._pyproject is None or _cache is _missing:
-            _cache = func(self, *args, **kwargs)
-        return _cache
-
-    return getter
-
-
-def lockfile_cache(func):
-    """Caches the function's result as long as the project file isn't changed."""
-    _cache = _missing = object()
-
-    def getter(self, *args, **kwargs):
-        nonlocal _cache
-        if self._lockfile is None or _cache is _missing:
-            _cache = func(self, *args, **kwargs)
-        return _cache
-
-    return getter
-
-
 class Project:
     PYPROJECT_FILENAME = "pyproject.toml"
     PDM_NAMESPACE = "tool.pdm"
@@ -83,10 +57,11 @@ class Project:
         return self._pyproject
 
     @property
-    @pyproject_cache
     def tool_settings(self):
         # type: () -> Union[Container, Dict]
         data = self.pyproject
+        if not data:
+            return {}
         for sec in self.PDM_NAMESPACE.split("."):
             data = data.setdefault(sec, {})
         return data
@@ -108,19 +83,16 @@ class Project:
         return self._config
 
     @property
-    @pyproject_cache
     def is_pdm(self) -> bool:
         if not self.pyproject_file.is_file():
             return False
         return bool(self.tool_settings)
 
     @property
-    @pyproject_cache
     def environment(self) -> Environment:
         return Environment(self.python_requires, self.config)
 
     @property
-    @pyproject_cache
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.tool_settings.get("python_requires", ""))
 
@@ -139,12 +111,10 @@ class Project:
         return result
 
     @property
-    @pyproject_cache
     def dependencies(self) -> Dict[str, Requirement]:
         return self.get_dependencies()
 
     @property
-    @pyproject_cache
     def dev_dependencies(self) -> Dict[str, Requirement]:
         return self.get_dependencies("dev")
 
@@ -157,19 +127,16 @@ class Project:
             yield section
 
     @property
-    @pyproject_cache
     def all_dependencies(self) -> Dict[str, Dict[str, Requirement]]:
         return {
             section: self.get_dependencies(section) for section in self.iter_sections()
         }
 
     @property
-    @pyproject_cache
     def allow_prereleases(self) -> Optional[bool]:
         return self.tool_settings.get("allow_prereleases")
 
     @property
-    @pyproject_cache
     def sources(self) -> Optional[List[Source]]:
         return self.tool_settings.get("source")
 
@@ -292,6 +259,5 @@ class Project:
         self._pyproject = None
 
     @property
-    @pyproject_cache
     def meta(self) -> PackageMeta:
         return PackageMeta(self)

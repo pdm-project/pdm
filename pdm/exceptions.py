@@ -1,9 +1,16 @@
+import traceback
+
 import click
+from click._compat import get_text_stderr
+from pdm.context import context
 
 
-class PdmException(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
+class PdmException(click.ClickException):
+    def show(self, file=None):
+        if file is None:
+            file = get_text_stderr()
+        context.io.echo("Error: %s" % (self.format_message(),), file=file)
+        context.io.echo(traceback.format_exc(), verbosity=context.io.DETAIL, file=file)
 
 
 class RequirementError(PdmException, ValueError):
@@ -18,25 +25,18 @@ class WheelBuildError(PdmException):
     pass
 
 
-class ProjectNotInitialized(PdmException):
-    pass
-
-
 class CorruptedCacheError(PdmException):
-    pass
-
-
-class PdmUsageError(PdmException, click.UsageError):
     pass
 
 
 class CandidateInfoNotFound(PdmException):
     def __init__(self, candidate):
-        super().__init__()
+        message = (
+            "No metadata information is available for "
+            f"{context.io.green(str(candidate))}."
+        )
         self.candidate = candidate
-
-    def __str__(self):
-        return f"No metadata information is available for {self.candidate}"
+        super().__init__(message)
 
 
 class ExtrasError(UserWarning):
@@ -62,37 +62,32 @@ class ResolutionError(PdmException):
 
 class ResolutionImpossible(ResolutionError):
     def __init__(self, requirements):
-        super(ResolutionImpossible, self).__init__()
+        super().__init__("Resolution impossible")
         self.requirements = requirements
 
 
 class ResolutionTooDeep(ResolutionError):
     def __init__(self, round_count):
-        super(ResolutionTooDeep, self).__init__(round_count)
+        super().__init__(round_count)
         self.round_count = round_count
 
 
 class NoVersionsAvailable(ResolutionError):
     def __init__(self, requirement, parent):
-        super(NoVersionsAvailable, self).__init__()
+        super().__init__(
+            "No version available for {}.".format(
+                context.io.green(requirement.as_line())
+            )
+        )
         self.requirement = requirement
         self.parent = parent
 
 
 class RequirementsConflicted(ResolutionError):
     def __init__(self, requirements):
-        super(RequirementsConflicted, self).__init__()
+        super(RequirementsConflicted, self).__init__("Requirements conflicted")
         self.requirements = requirements
 
 
 class NoPythonVersion(PdmException):
     pass
-
-
-class CommandNotFound(PdmUsageError):
-    def __init__(self, command):
-        super.__init__(command)
-        self.command = command
-
-    def __str__(self):
-        return f"'{self.command}' is not found in your PATH."

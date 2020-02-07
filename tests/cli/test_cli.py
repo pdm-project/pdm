@@ -1,4 +1,5 @@
 import functools
+import os
 
 import pytest
 from click.testing import CliRunner
@@ -67,5 +68,26 @@ def test_list_command(project, invoke, mocker):
 
 
 def test_run_command(invoke, capfd):
-    invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
-    assert "pdm/__pypackages__" in capfd.readouterr()[0]
+    result = invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
+    assert result.exit_code == 0
+    assert os.sep.join(["pdm", "__pypackages__"]) in capfd.readouterr()[0]
+
+
+def test_run_command_not_found(invoke):
+    result = invoke(["run", "foobar"])
+    assert result.exit_code == 2
+    assert "Error: Command 'foobar' is not found on your PATH." in result.output
+
+
+def test_run_pass_exit_code(invoke):
+    result = invoke(["run", "python", "-c", "1/0"])
+    assert result.exit_code == 1
+
+
+def test_uncaught_error(invoke, mocker):
+    mocker.patch.object(actions, "do_list", side_effect=RuntimeError("test error"))
+    result = invoke(["list"])
+    assert "RuntimeError: test error" in result.output
+
+    result = invoke(["list", "-v"])
+    assert isinstance(result.exception, RuntimeError)
