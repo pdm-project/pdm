@@ -264,3 +264,11 @@ def init(project):
     author = click.prompt(f"Author name", default=git_user)
     email = click.prompt(f"Author email", default=git_email)
     actions.do_init(project, name, version, license, author, email)
+
+
+@cli.command()
+@click.argument("python")
+@pass_project
+def use(project, python):
+    """Use the given python version as base interpreter."""
+    actions.do_use(project, python)

@@ -84,6 +84,7 @@ class Environment:
     @cached_property
     def python_executable(self) -> str:
         """Get the Python interpreter path."""
+        path = None
         if self.config["python"]:
             path = self.config["python"]
             try:
@@ -96,11 +97,23 @@ class Environment:
             for python in finder.find_all_python_versions():
                 version = ".".join(map(str, get_python_version(python.path.as_posix())))
                 if self.python_requires.contains(version):
-                    return python.path.as_posix()
+                    path = python.path.as_posix()
             if self.python_requires.contains(".".join(map(str, sys.version_info[:3]))):
-                return sys.executable
+                path = sys.executable
+            if path:
+                python_version = ".".join(map(str, get_python_version(path)))
+                context.io.echo(
+                    "Using Python interpreter: {} ({})".format(
+                        context.io.green(path), python_version
+                    )
+                )
+                self.config["python"] = path
+                self.config.save_config()
+                return path
         raise NoPythonVersion(
-            "No python matching {} is found on the system.".format(self.python_requires)
+            "No Python that satisfies {} is found on the system.".format(
+                self.python_requires
+            )
         )
 
     def get_paths(self) -> Dict[str, str]:
