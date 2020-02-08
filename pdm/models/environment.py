@@ -107,7 +107,7 @@ class Environment:
                         context.io.green(path), python_version
                     )
                 )
-                self.config["python"] = path
+                self.config["python"] = Path(path).as_posix()
                 self.config.save_config()
                 return path
         raise NoPythonVersion(

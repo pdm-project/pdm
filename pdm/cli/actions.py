@@ -1,6 +1,6 @@
 import itertools
-import os
 import shutil
+from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence
 
 from pkg_resources import safe_name
@@ -395,7 +395,7 @@ def do_use(project: Project, python: str) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    if os.path.isabs(python):
+    if Path(python).is_absolute():
         python_path = python
     else:
         python_path = shutil.which(python)
@@ -417,5 +417,6 @@ def do_use(project: Project, python: str) -> None:
             context.io.green(python_path), python_version
         )
     )
-    project.config["python"] = python_path
+
+    project.config["python"] = Path(python_path).as_posix()
     project.config.save_config()
