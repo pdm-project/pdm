@@ -1,15 +1,17 @@
 import itertools
 import shutil
+from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence
 
 from pkg_resources import safe_name
 
 import click
 import halo
+import pythonfinder
 import tomlkit
 from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.context import context
-from pdm.exceptions import ProjectError
+from pdm.exceptions import NoPythonVersion, ProjectError
 from pdm.installers import Synchronizer, format_dist
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import parse_requirement, strip_extras
@@ -17,6 +19,7 @@ from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
 from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, resolve
 from pdm.resolver.reporters import SpinnerReporter
+from pdm.utils import get_python_version
 
 
 def format_lockfile(mapping, fetched_dependencies, summary_collection):
@@ -386,3 +389,34 @@ def do_init(
         project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
         project._pyproject["build-system"] = data["build-system"]
     project.write_pyproject()
+
+
+def do_use(project: Project, python: str) -> None:
+    """Use the specified python version and save in project config.
+    The python can be a version string or interpreter path.
+    """
+    if Path(python).is_absolute():
+        python_path = python
+    else:
+        python_path = shutil.which(python)
+        if not python_path:
+            finder = pythonfinder.Finder()
+            try:
+                python_path = finder.find_python_version(python).path.as_posix()
+            except AttributeError:
+                raise NoPythonVersion(f"Python {python} is not found on the system.")
+
+    python_version = ".".join(map(str, get_python_version(python_path)))
+    if not project.python_requires.contains(python_version):
+        raise NoPythonVersion(
+            "The target Python version {} doesn't satisfy "
+            "the Python requirement: {}".format(python_version, project.python_requires)
+        )
+    context.io.echo(
+        "Using Python interpreter: {} ({})".format(
+            context.io.green(python_path), python_version
+        )
+    )
+
+    project.config["python"] = Path(python_path).as_posix()
+    project.config.save_config()

@@ -1,5 +1,7 @@
 import functools
 import os
+import shutil
+from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -91,3 +93,19 @@ def test_uncaught_error(invoke, mocker):
 
     result = invoke(["list", "-v"])
     assert isinstance(result.exception, RuntimeError)
+
+
+def test_use_command(project, invoke):
+    python_path = Path(shutil.which("python")).as_posix()
+    result = invoke(["use", "python"], obj=project)
+    assert result.exit_code == 0
+    config_content = project.root.joinpath(".pdm.toml").read_text()
+    assert python_path in config_content
+
+    result = invoke(["use", python_path], obj=project)
+    assert result.exit_code == 0
+
+    project.tool_settings["python_requires"] = ">=3.6"
+    project.write_pyproject()
+    result = invoke(["use", "2.7"], obj=project)
+    assert result.exit_code == 1

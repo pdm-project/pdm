@@ -56,7 +56,7 @@ class Config(MutableMapping):
                 temp = temp.setdefault(part, {})
             temp[last] = value
 
-        with file_path.open(encoding="utf-8") as fp:
+        with file_path.open("w", encoding="utf-8") as fp:
             fp.write(tomlkit.dumps(toml_data))
         self._dirty.clear()
 
