@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
 
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
-from pip._vendor import pkg_resources
+from pip._vendor import packaging, pkg_resources
 from pip_shims import shims
 
 from pdm.context import context
@@ -153,11 +153,14 @@ class Environment:
             # be removed correctly.
             _old_sitepackages = misc.site_packages
             _is_local = misc.is_local
+            _evaluate_marker = pkg_resources.evaluate_marker
+            pkg_resources.evaluate_marker = self.evaluate_marker
             misc.is_local = req_uninstall.is_local = self.is_local
             misc.site_packages = paths["purelib"]
             yield
             misc.is_local = req_uninstall.is_local = _is_local
             pkg_resources.working_set = _old_ws
+            pkg_resources.evaluate_marker = _evaluate_marker
             misc.site_packages = _old_sitepackages
 
     def is_local(self, path) -> bool:
@@ -165,6 +168,10 @@ class Environment:
         return normalize_path(path).startswith(
             normalize_path(self.packages_path.as_posix())
         )
+
+    def evaluate_marker(self, text: str, extra=None) -> bool:
+        marker = packaging.markers.Marker(text)
+        return marker.evaluate(self.marker_environment)
 
     @cached_property
     def packages_path(self) -> Path:
@@ -282,6 +289,7 @@ class Environment:
             [paths["platlib"]], python=get_python_version(self.python_executable)
         )
 
+    @cached_property
     def marker_environment(self) -> Dict[str, Any]:
         """Get environment for marker evaluation"""
         return get_pep508_environment(self.python_executable)

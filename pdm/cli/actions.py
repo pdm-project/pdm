@@ -336,7 +336,9 @@ def do_list(project: Project, graph: bool = False) -> None:
     check_project_file(project)
     working_set = project.environment.get_working_set()
     if graph:
-        context.io.echo(format_dependency_graph(build_dependency_graph(working_set)))
+        with project.environment.activate():
+            dep_graph = build_dependency_graph(working_set)
+        context.io.echo(format_dependency_graph(dep_graph))
     else:
         rows = [
             (context.io.green(k, bold=True), format_dist(v))

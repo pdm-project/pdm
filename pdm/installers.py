@@ -120,7 +120,7 @@ class Synchronizer:
         working_set = self.environment.get_working_set()
         to_update, to_remove = [], []
         candidates = self.candidates.copy()
-        environment = self.environment.marker_environment()
+        environment = self.environment.marker_environment
         for key, dist in working_set.items():
             if key not in candidates:
                 to_remove.append(key)

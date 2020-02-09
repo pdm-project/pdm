@@ -92,7 +92,7 @@ class WheelBuilder(Builder):
     @cached_property
     def tag(self) -> str:
         if self.meta.build:
-            info = self.project.environment.marker_environment()
+            info = self.project.environment.marker_environment
             platform = to_filename(
                 safe_name(info["platform_system"] + "-" + info["platform_machine"])
             )
