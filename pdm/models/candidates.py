@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import functools
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
@@ -24,6 +25,34 @@ vcs = shims.VcsSupport()
 def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
+
+
+@functools.lru_cache(128)
+def get_requirements_from_dist(
+    dist: EggInfoDistribution, extras: Sequence[str]
+) -> List[str]:
+    """Get requirements of a distribution, with given extras."""
+    extras_in_metadata = []
+    result = []
+    dep_map = dist._build_dep_map()
+    for extra, reqs in dep_map.items():
+        reqs = [Requirement.from_pkg_requirement(r) for r in reqs]
+        if not extra:
+            # requirements without extras are always required.
+            result.extend(r.as_line() for r in reqs)
+        else:
+            new_extra, _, marker = extra.partition(":")
+            extras_in_metadata.append(new_extra.strip())
+            # Only include requirements that match one of extras.
+            if not new_extra.strip() or safe_extra(new_extra.strip()) in extras:
+                marker = Marker(marker) if marker else None
+                for r in reqs:
+                    r.marker = marker
+                    result.append(r.as_line())
+    extras_not_found = [e for e in extras if e not in extras_in_metadata]
+    if extras_not_found:
+        warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
+    return result
 
 
 def identify(req: Union[Candidate, Requirement]) -> Optional[str]:
@@ -78,6 +107,10 @@ class Candidate:
 
         self.wheel = None
         self.metadata = None
+
+        # Dependencies from lockfile content.
+        self.dependencies = None
+        self.summary = None
 
     def __hash__(self):
         return hash((self.name, self.version))
@@ -150,30 +183,12 @@ class Candidate:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         metadata = self.get_metadata()
-        result = []
         if self.req.editable:
             if not metadata:
-                return result
-            extras_in_metadata = []
-            dep_map = self.ireq.get_dist()._build_dep_map()
-            for extra, reqs in dep_map.items():
-                reqs = [Requirement.from_pkg_requirement(r) for r in reqs]
-                if not extra:
-                    result.extend(r.as_line() for r in reqs)
-                else:
-                    new_extra, _, marker = extra.partition(":")
-                    extras_in_metadata.append(new_extra.strip())
-                    if not new_extra.strip() or safe_extra(new_extra.strip()) in extras:
-                        marker = Marker(marker) if marker else None
-                        for r in reqs:
-                            r.marker = marker
-                            result.append(r.as_line())
-            extras_not_found = [e for e in extras if e not in extras_in_metadata]
-            if extras_not_found:
-                warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
+                return []
+            return get_requirements_from_dist(self.ireq.get_dist(), extras)
         else:
-            result = filter_requirements_with_extras(metadata.run_requires, extras)
-        return result
+            return filter_requirements_with_extras(metadata.run_requires, extras)
 
     @property
     def requires_python(self) -> str:
@@ -196,6 +211,10 @@ class Candidate:
         if requires_python.isdigit():
             requires_python = f">={requires_python},<{int(requires_python) + 1}"
         return requires_python
+
+    @requires_python.setter
+    def requires_python(self, value: str) -> None:
+        self._requires_python = value
 
     def as_lockfile_entry(self) -> Dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""

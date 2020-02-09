@@ -210,11 +210,15 @@ def remove(project, dev, section, sync, packages):
     actions.do_remove(project, dev, section, sync, packages)
 
 
-@cli.command(name="list", help="List packages installed in current working set.")
+@cli.command(name="list")
 @verbose_option
+@click.option(
+    "--graph", is_flag=True, default=False, help="Display a graph of dependencies."
+)
 @pass_project
-def list_(project):
-    actions.do_list(project)
+def list_(project, graph):
+    """List packages installed in the current working set."""
+    actions.do_list(project, graph)
 
 
 @cli.command(help="Build artifacts for distribution.")

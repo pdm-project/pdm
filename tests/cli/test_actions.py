@@ -339,3 +339,11 @@ def test_project_no_init_error(project_no_init):
             PdmException, match="The pyproject.toml has not been initialized yet"
         ):
             handler(project_no_init)
+
+
+def test_list_dependency_graph(capsys):
+    project = Project()
+    actions.do_list(project, True)
+    content, _ = capsys.readouterr()
+    assert "halo 0.0.28 [ required: <1.0.0,>=0.0.28 ]" in content
+    assert "six 1.14.0 [ required: >=1.12.0 ]" in content

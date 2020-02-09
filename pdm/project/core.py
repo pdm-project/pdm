@@ -184,9 +184,17 @@ class Project:
             if version:
                 package["version"] = f"=={version}"
             package_name = package.pop("name")
+            summary = package.pop("summary", None)
+            dependencies = [
+                Requirement.from_req_dict(k, v)
+                for k, v in package.pop("dependencies", {}).items()
+            ]
             req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(req, self.environment, name=package_name, version=version)
             can.marker = req.marker
+            can.requires_python = str(req.requires_python)
+            can.dependencies = dependencies
+            can.summary = summary
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(
