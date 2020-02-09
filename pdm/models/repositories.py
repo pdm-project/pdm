@@ -201,8 +201,14 @@ class PyPIRepository(BaseRepository):
                 return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
 
+    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
+        if candidate.dependencies is None:
+            raise CandidateInfoNotFound(candidate)
+        return candidate.dependencies, candidate.requires_python, candidate.summary
+
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (
+            self._get_dependencies_from_lockfile,
             self._get_dependencies_from_cache,
             self._get_dependencies_from_json,
             self._get_dependencies_from_metadata,
