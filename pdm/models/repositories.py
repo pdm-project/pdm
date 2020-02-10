@@ -155,6 +155,15 @@ class BaseRepository:
                 for c in matching_candidates
             }
 
+    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
+        if candidate.dependencies is None:
+            raise CandidateInfoNotFound(candidate)
+        return (
+            [dep.as_line() for dep in candidate.dependencies],
+            candidate.requires_python,
+            candidate.summary,
+        )
+
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
         called one by one.
@@ -200,11 +209,6 @@ class PyPIRepository(BaseRepository):
                 )
                 return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
-
-    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
-        if candidate.dependencies is None:
-            raise CandidateInfoNotFound(candidate)
-        return candidate.dependencies, candidate.requires_python, candidate.summary
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (
