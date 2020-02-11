@@ -141,12 +141,25 @@ class Synchronizer:
         )
         return to_add, to_update, to_remove
 
-    def install_candidates(self, candidates: List[Candidate]) -> None:
+    def install_candidates(
+        self, candidates: List[Candidate], update: bool = False
+    ) -> None:
+        """Install candidates.
+
+        :param candidates: a list of candidates to be installed.
+        :param update: whether to remove existed packages.
+        """
         installer = self.get_installer()
         for can in candidates:
+            if update:
+                installer.uninstall(can.name)
             installer.install(can)
 
     def remove_distributions(self, distributions: List[str]) -> None:
+        """Remove distributions with given names.
+
+        :param distributions: a list of names to be removed.
+        """
         installer = self.get_installer()
         for name in distributions:
             installer.uninstall(name)
@@ -170,7 +183,8 @@ class Synchronizer:
             )
         if to_update and not dry_run:
             self.install_candidates(
-                [can for k, can in self.candidates.items() if k in to_update]
+                [can for k, can in self.candidates.items() if k in to_update],
+                update=True,
             )
         if clean and to_remove and not dry_run:
             self.remove_distributions(to_remove)

@@ -181,10 +181,20 @@ def add(project, dev, section, sync, save, strategy, editables, packages):
 @verbose_option
 @sections_option
 @update_strategy_option
+@save_strategy_option
+@click.option(
+    "-u",
+    "--unconstrained",
+    is_flag=True,
+    default=False,
+    help="Ignore the version constraint of packages.",
+)
 @click.argument("packages", nargs=-1)
 @pass_project
-def update(project, dev, sections, default, strategy, packages):
-    actions.do_update(project, dev, sections, default, strategy, packages)
+def update(project, dev, sections, default, strategy, save, unconstrained, packages):
+    actions.do_update(
+        project, dev, sections, default, strategy, save, unconstrained, packages
+    )
 
 
 @cli.command(help="Remove packages from pyproject.toml")

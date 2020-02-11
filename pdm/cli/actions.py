@@ -14,7 +14,7 @@ from pdm.context import context
 from pdm.exceptions import NoPythonVersion, ProjectError
 from pdm.installers import Synchronizer, format_dist
 from pdm.models.candidates import Candidate, identify
-from pdm.models.requirements import parse_requirement, strip_extras
+from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
 from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, resolve
@@ -59,6 +59,29 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
     return doc
 
 
+def save_version_specifiers(
+    requirements: Dict[str, Requirement],
+    resolved: Dict[str, Candidate],
+    save_strategy: str,
+) -> None:
+    """Rewrite the version specifiers according to the resolved result and save strategy
+
+    :param requirements: the requirements to be updated
+    :param resolved: the resolved mapping
+    :param save_strategy: compatible/wildcard/exact
+    """
+    for name, r in requirements.items():
+        if r.is_named and not r.specifier:
+            if save_strategy == "exact":
+                r.specifier = get_specifier(f"=={resolved[name].version}")
+            elif save_strategy == "compatible":
+                version = str(resolved[name].version)
+                next_major_version = ".".join(
+                    map(str, bump_version(tuple(version.split(".")), 0))
+                )
+                r.specifier = get_specifier(f">={version},<{next_major_version}")
+
+
 def check_project_file(project: Project) -> None:
     """Check the existence of the project file and throws an error on failure."""
     if not project.tool_settings:
@@ -72,17 +95,20 @@ def do_lock(
     project: Project,
     strategy: str = "all",
     tracked_names: Optional[Iterable[str]] = None,
+    requirements: Optional[Dict[str, Dict[str, Requirement]]] = None,
 ) -> Dict[str, Candidate]:
     """Performs the locking process and update lockfile.
 
     :param project: the project instance
     :param strategy: update stratege: reuse/eager/all
     :param tracked_names: required when using eager strategy
+    :param requirements: An optional dictionary of requirements, read from pyproject
+        if not given.
     """
     check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
     repository = project.get_repository()
-    requirements = project.all_dependencies
+    requirements = requirements or project.all_dependencies
     allow_prereleases = project.allow_prereleases
     requires_python = project.python_requires
     if strategy == "all":
@@ -186,21 +212,13 @@ def do_add(
         f"Adding packages to {section} dependencies: "
         + ", ".join(str(context.io.green(key, bold=True)) for key in requirements)
     )
-    project.add_dependencies(requirements)
-    resolved = do_lock(project, strategy, tracked_names)
-    for name in tracked_names:
-        r = requirements[name]
-        if r.is_named and not r.specifier:
-            if save == "exact":
-                r.specifier = get_specifier(f"=={resolved[name].version}")
-            elif save == "compatible":
-                version = str(resolved[name].version)
-                next_major_version = ".".join(
-                    map(str, bump_version(tuple(version.split(".")), 0))
-                )
-                r.specifier = get_specifier(f">={version},<{next_major_version}")
+    all_dependencies = project.all_dependencies
+    all_dependencies.setdefault(section, {}).update(requirements)
+    resolved = do_lock(project, strategy, tracked_names, all_dependencies)
+
     # Update dependency specifiers and lockfile hash.
-    project.add_dependencies(requirements, False)
+    save_version_specifiers(requirements, resolved, save)
+    project.add_dependencies(requirements)
     lockfile = project.lockfile
     lockfile["root"]["content_hash"] = "md5:" + project.get_content_hash("md5")
     project.write_lockfile(lockfile, False)
@@ -222,6 +240,8 @@ def do_update(
     sections: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",
+    save: str = "compatible",
+    unconstrained: bool = False,
     packages: Sequence[str] = (),
 ) -> None:
     """Update specified packages or all packages
@@ -231,6 +251,8 @@ def do_update(
     :param sections: update speicified sections
     :param default: update default
     :param strategy: update strategy (reuse/eager)
+    :param save: save strategy (compatible/exact/wildcard)
+    :param unconstrained: ignore version constraint
     :param packages: specified packages to update
     :return: None
     """
@@ -240,12 +262,18 @@ def do_update(
             "packages argument can't be used together with multple -s or --no-default."
         )
     if not packages:
+        if unconstrained:
+            raise click.BadArgumentUsage(
+                "--unconstrained must be used with package names given."
+            )
         # pdm update with no packages given, same as 'lock' + 'sync'
         do_lock(project)
         do_sync(project, sections, dev, default, clean=False)
         return
     section = sections[0] if sections else ("dev" if dev else "default")
-    dependencies = project.get_dependencies(section)
+    all_dependencies = project.all_dependencies
+    dependencies = all_dependencies[section]
+    updated_deps = {}
     tracked_names = set()
     for name in packages:
         matched_name = next(
@@ -262,14 +290,24 @@ def do_update(
                     context.io.green(name, bold=True), section
                 )
             )
+        if unconstrained:
+            dependencies[matched_name].specifier = get_specifier("")
         tracked_names.add(matched_name)
+        updated_deps[matched_name] = dependencies[matched_name]
     context.io.echo(
         "Updating packages: {}.".format(
             ", ".join(context.io.green(v, bold=True) for v in tracked_names)
         )
     )
-    do_lock(project, strategy, tracked_names)
+    resolved = do_lock(project, strategy, tracked_names, all_dependencies)
     do_sync(project, sections=(section,), default=False, clean=False)
+    if unconstrained:
+        # Need to update version constraints
+        save_version_specifiers(updated_deps, resolved, save)
+        project.add_dependencies(updated_deps)
+        lockfile = project.lockfile
+        lockfile["root"]["content_hash"] = "md5:" + project.get_content_hash("md5")
+        project.write_lockfile(lockfile, False)
 
 
 def do_remove(
@@ -305,9 +343,7 @@ def do_remove(
     for name in packages:
         matched_name = next(
             filter(
-                lambda k: safe_name(strip_extras(k)[0]).lower()
-                == safe_name(name).lower(),
-                deps.keys(),
+                lambda k: safe_name(k).lower() == safe_name(name).lower(), deps.keys(),
             ),
             None,
         )
