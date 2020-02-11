@@ -281,7 +281,10 @@ class Environment:
                     )
                     # Preserve the downloaded file so that it won't be cleared.
                     if downloaded and only_download:
-                        shutil.copy(downloaded, download_dir)
+                        try:
+                            shutil.copy(downloaded, download_dir)
+                        except shutil.SameFileError:
+                            pass
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (context.cache("wheels") / ireq.link.filename).as_posix()

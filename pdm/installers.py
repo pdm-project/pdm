@@ -2,7 +2,7 @@ import importlib
 import subprocess
 from typing import Dict, List, Tuple
 
-from pip._vendor.pkg_resources import Distribution, EggInfoDistribution
+from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_name
 from pip_shims import shims
 
 import distlib.scripts
@@ -44,13 +44,14 @@ def _print_list_information(word, items, dry=False):
     print(template.format(count=count, suffix=suffix, word=word, items=items))
 
 
-class Installer:
+class Installer:  # pragma: no cover
+    """The installer that performs the installation and uninstallation actions."""
+
     def __init__(self, environment: Environment, auto_confirm: bool = True) -> None:
         self.environment = environment
         self.auto_confirm = auto_confirm
 
     def install(self, candidate: Candidate) -> None:
-        context.io.echo(f"Installing {candidate.format()}...")
         candidate.get_metadata()
         if candidate.req.editable:
             self.install_editable(candidate.ireq)
@@ -81,21 +82,18 @@ class Installer:
             paths["prefix"],
         ]
         with self.environment.activate(), cd(ireq.unpacked_source_directory):
-            subprocess.check_call(install_args)
+            result = subprocess.run(install_args, capture_output=True, check=True)
+        context.io.echo(result.stdout, verbosity=context.io.DETAIL)
+        if result.stderr:
+            context.io.echo(result.stderr, err=True, verbosity=context.io.DETAIL)
 
-    def uninstall(self, name: str) -> None:
-        working_set = self.environment.get_working_set()
-        dist = working_set[name]
-        req = parse_requirement(name)
+    def uninstall(self, dist: Distribution) -> None:
+        req = parse_requirement(dist.project_name)
         if _is_dist_editable(dist):
             ireq = shims.install_req_from_editable(dist.location)
         else:
-            ireq = shims.install_req_from_line(name)
+            ireq = shims.install_req_from_line(dist.project_name)
         ireq.req = req
-        context.io.echo(
-            f"Uninstalling: {context.io.green(name, bold=True)} "
-            f"{context.io.yellow(working_set[name].version)}"
-        )
 
         with self.environment.activate():
             pathset = ireq.uninstall(auto_confirm=self.auto_confirm)
@@ -150,9 +148,18 @@ class Synchronizer:
         :param update: whether to remove existed packages.
         """
         installer = self.get_installer()
+        working_set = self.environment.get_working_set()
         for can in candidates:
             if update:
-                installer.uninstall(can.name)
+                dist = working_set[safe_name(can.name).lower()]
+                context.io.echo(
+                    f"Updating {context.io.green(can.name, bold=True)} "
+                    f"{context.io.yellow(dist.version)} -> "
+                    f"{context.io.yellow(can.version)}"
+                )
+                installer.uninstall(dist)
+            else:
+                context.io.echo(f"Installing {can.format()}...")
             installer.install(can)
 
     def remove_distributions(self, distributions: List[str]) -> None:
@@ -161,8 +168,14 @@ class Synchronizer:
         :param distributions: a list of names to be removed.
         """
         installer = self.get_installer()
+        working_set = self.environment.get_working_set()
         for name in distributions:
-            installer.uninstall(name)
+            dist = working_set[name]
+            context.io.echo(
+                f"Uninstalling: {context.io.green(name, bold=True)} "
+                f"{context.io.yellow(dist.version)}"
+            )
+            installer.uninstall(dist)
 
     def synchronize(self, clean: bool = True, dry_run: bool = False) -> None:
         """Synchronize the working set with pinned candidates.

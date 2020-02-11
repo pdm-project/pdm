@@ -20,26 +20,20 @@ First, you need to install base dependencies in a venv. Although PDM uses local 
 dependencies, venv is still needed to start up PDM at the first time:
 
 ```bash
-$ python -m venv env
-$ . env/bin/activate
-(env) $ pip install pdm
-(env) $ python -m pdm install -d
+$ python setup_dev.py
 ```
 
 Now, all dependencies are installed into local `__pypackages__` directory, which will be used for development
 after this point. The `pdm` executable located at `__pypackages__/<VERSION>/bin` can be run directly from outside,
 which is installed in editable mode, or you can use `python -m pdm` from inside the venv.
 
-TIP: create alias for the editable `pdm` executable to reduce the command length. If you run `pdm` in the local package
-directory, the venv you created before won't be needed anymore, feel free to remove it.
-
 ### Run tests
 
 ```bash
-(env) $ python -m pdm run pytest tests
+$ pdm run pytest tests
 ```
 
-The test suites are still simple and require a lot more, please help write more test cases.
+The test suite is still simple and requires to be supplied, please help write more test cases.
 
 ### Code style
 
