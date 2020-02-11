@@ -18,7 +18,12 @@ from pip_shims import shims
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
 from pdm.utils import (
-    _allow_all_wheels, cached_property, convert_hashes, create_tracked_tempdir, get_finder, get_pep508_environment,
+    _allow_all_wheels,
+    cached_property,
+    convert_hashes,
+    create_tracked_tempdir,
+    get_finder,
+    get_pep508_environment,
     get_python_version,
 )
 from pythonfinder import Finder
