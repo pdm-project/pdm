@@ -16,8 +16,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
-from pip_shims import Wheel as PipWheel
-from pip_shims.compat import get_session, resolve_possible_shim
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
 from distlib.wheel import Wheel
@@ -126,6 +124,8 @@ def get_package_finder(
     :return: A :class:`pip._internal.index.package_finder.PackageFinder` instance
     :rtype: :class:`pip._internal.index.package_finder.PackageFinder`
     """
+    from pip_shims.compat import get_session, resolve_possible_shim
+
     if install_cmd is None:
         install_cmd_provider = resolve_possible_shim(install_cmd_provider)
         assert isinstance(install_cmd_provider, (type, functools.partial))
@@ -287,7 +287,7 @@ def _wheel_support_index_min(self, tags=None):
 
 
 @contextmanager
-def _allow_all_wheels():
+def allow_all_wheels():
     """Monkey patch pip.Wheel to allow all wheels
 
     The usual checks against platforms and Python versions are ignored to allow
@@ -295,6 +295,8 @@ def _allow_all_wheels():
     and set a new one, or else the results from the previous non-patched calls
     will interfere.
     """
+    from pip._internal.models.wheel import Wheel as PipWheel
+
     original_wheel_supported = PipWheel.supported
     original_support_index_min = PipWheel.support_index_min
 

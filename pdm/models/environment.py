@@ -11,14 +11,13 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
 
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
-from pip._internal.utils.temp_dir import global_tempdir_manager
 from pip._vendor import packaging, pkg_resources
 from pip_shims import shims
 
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
 from pdm.utils import (
-    _allow_all_wheels,
+    allow_all_wheels,
     cached_property,
     convert_hashes,
     create_tracked_tempdir,
@@ -249,12 +248,13 @@ class Environment:
         artifacts.
         :returns: The full path of the built artifact.
         """
+        from pip._internal.utils.temp_dir import global_tempdir_manager
         from pdm.builders import EditableBuilder
         from pdm.builders import WheelBuilder
 
         kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
-            with _allow_all_wheels():
+            with allow_all_wheels():
                 # temporarily allow all wheels to get a link.
                 ireq.populate_link(finder, False, bool(hashes))
             if not ireq.editable and not ireq.req.name:
