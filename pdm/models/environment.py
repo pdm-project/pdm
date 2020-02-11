@@ -17,7 +17,7 @@ from pip_shims import shims
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
 from pdm.utils import (
-    _allow_all_wheels,
+    allow_all_wheels,
     cached_property,
     convert_hashes,
     create_tracked_tempdir,
@@ -248,12 +248,13 @@ class Environment:
         artifacts.
         :returns: The full path of the built artifact.
         """
+        from pip._internal.utils.temp_dir import global_tempdir_manager
         from pdm.builders import EditableBuilder
         from pdm.builders import WheelBuilder
 
         kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
-            with _allow_all_wheels():
+            with allow_all_wheels():
                 # temporarily allow all wheels to get a link.
                 ireq.populate_link(finder, False, bool(hashes))
             if not ireq.editable and not ireq.req.name:
@@ -262,18 +263,25 @@ class Environment:
                 ireq.ensure_has_source_dir(kwargs["build_dir"])
 
             download_dir = kwargs["download_dir"]
+            only_download = False
             if ireq.link.is_wheel:
                 download_dir = kwargs["wheel_download_dir"]
+                only_download = True
             if hashes:
                 ireq.options["hashes"] = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
-                shims.shim_unpack(
-                    link=ireq.link,
-                    download_dir=download_dir,
-                    location=ireq.source_dir,
-                    hashes=ireq.hashes(False),
-                    session=finder.session,
-                )
+                with global_tempdir_manager():
+                    downloaded = shims.shim_unpack(
+                        link=ireq.link,
+                        download_dir=download_dir,
+                        location=ireq.source_dir,
+                        hashes=ireq.hashes(False),
+                        only_download=only_download,
+                        session=finder.session,
+                    )
+                    # Preserve the downloaded file so that it won't be cleared.
+                    if downloaded and only_download:
+                        shutil.copy(downloaded, download_dir)
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (context.cache("wheels") / ireq.link.filename).as_posix()

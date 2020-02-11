@@ -16,15 +16,13 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
-from pip_shims import Wheel as PipWheel
-from pip_shims.backports import get_session, resolve_possible_shim
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
 from distlib.wheel import Wheel
 from pdm._types import Source
 
 if TYPE_CHECKING:
-    from pip_shims.backports import TCommand, TShimmedFunc, Values, TSession, TFinder
+    from pip_shims.compat import TCommand, TShimmedFunc, Values, TSession, TFinder
 
 try:
     from functools import cached_property
@@ -50,7 +48,7 @@ def get_abi_tag(python_version):
     (CPython 2, PyPy).
     A replacement for pip._internal.models.pep425tags:get_abi_tag()
     """
-    from pip._internal.pep425tags import get_config_var, get_abbr_impl, get_flag
+    from wheel.pep425tags import get_config_var, get_abbr_impl, get_flag
 
     soabi = get_config_var("SOABI")
     impl = get_abbr_impl()
@@ -61,9 +59,7 @@ def get_abi_tag(python_version):
         m = ""
         u = ""
         is_cpython = impl == "cp"
-        if get_flag(
-            "Py_DEBUG", lambda: hasattr(sys, "gettotalrefcount"), warn=is_cpython
-        ):
+        if get_flag("Py_DEBUG", lambda: hasattr(sys, "gettotalrefcount"), warn=False):
             d = "d"
         if python_version < (3, 8) and get_flag(
             "WITH_PYMALLOC", lambda: is_cpython, warn=is_cpython
@@ -128,6 +124,8 @@ def get_package_finder(
     :return: A :class:`pip._internal.index.package_finder.PackageFinder` instance
     :rtype: :class:`pip._internal.index.package_finder.PackageFinder`
     """
+    from pip_shims.compat import get_session, resolve_possible_shim
+
     if install_cmd is None:
         install_cmd_provider = resolve_possible_shim(install_cmd_provider)
         assert isinstance(install_cmd_provider, (type, functools.partial))
@@ -289,7 +287,7 @@ def _wheel_support_index_min(self, tags=None):
 
 
 @contextmanager
-def _allow_all_wheels():
+def allow_all_wheels():
     """Monkey patch pip.Wheel to allow all wheels
 
     The usual checks against platforms and Python versions are ignored to allow
@@ -297,6 +295,8 @@ def _allow_all_wheels():
     and set a new one, or else the results from the previous non-patched calls
     will interfere.
     """
+    from pip._internal.models.wheel import Wheel as PipWheel
+
     original_wheel_supported = PipWheel.supported
     original_support_index_min = PipWheel.support_index_min
 

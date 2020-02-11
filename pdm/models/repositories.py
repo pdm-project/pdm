@@ -14,7 +14,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import _allow_all_wheels, get_pypi_source
+from pdm.utils import allow_all_wheels, get_pypi_source
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -146,7 +146,7 @@ class BaseRepository:
             return candidate.hashes
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
-        with _allow_all_wheels():
+        with allow_all_wheels():
             matching_candidates = self.find_matches(req, allow_all=True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
@@ -231,7 +231,7 @@ class PyPIRepository(BaseRepository):
         if allow_prereleases is None:
             allow_prereleases = requirement.allow_prereleases
 
-        with self.environment.get_finder(sources) as finder, _allow_all_wheels():
+        with self.environment.get_finder(sources) as finder, allow_all_wheels():
             cans = [
                 Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)

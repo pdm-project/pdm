@@ -37,8 +37,10 @@ class WheelBuilder(Builder):
             return self._build_other(build_dir, **kwargs)
         return self._build_pdm(build_dir, **kwargs)
 
+    def _build_wheel(self, build_dir, **kwargs):
+        return shims.build_one(self.ireq, build_dir, [], [])
+
     def _build_other(self, build_dir: str, **kwargs) -> str:
-        finder = kwargs.pop("finder")
         if not self.ireq.req.name:
             # Name is not available for a tarball distribution. Get the package name
             # from package's egg info.
@@ -49,15 +51,10 @@ class WheelBuilder(Builder):
             req.name = self.ireq.metadata["Name"]
             self.ireq.req = req
 
-        with shims.make_preparer(
-            finder=finder, session=finder.session, **kwargs
-        ) as preparer:
-            wheel_cache = context.make_wheel_cache()
-            builder = shims.WheelBuilder(preparer=preparer, wheel_cache=wheel_cache)
-            wheel_path = builder._build_one(self.ireq, build_dir)
-            if not wheel_path or not os.path.exists(wheel_path):
-                raise WheelBuildError(str(self.ireq))
-            return wheel_path
+        wheel_path = self._build_wheel(build_dir, **kwargs)
+        if not wheel_path or not os.path.exists(wheel_path):
+            raise WheelBuildError(str(self.ireq))
+        return wheel_path
 
     def _build_pdm(self, build_dir: str, **kwargs) -> str:
         if not os.path.exists(build_dir):

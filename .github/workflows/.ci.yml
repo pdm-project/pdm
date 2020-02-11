@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install pdm
-          python -m pdm install -d
+          pdm install -d
       - name: Test
         run: |
           python -m pdm run pytest --cov pdm --cov-config=setup.cfg tests

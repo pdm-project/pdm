@@ -173,7 +173,7 @@ class Candidate:
         inst = cls(
             req,
             environment,
-            name=candidate.project,
+            name=candidate.name,
             version=candidate.version,
             link=candidate.link,
         )
