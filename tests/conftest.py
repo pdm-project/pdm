@@ -197,8 +197,8 @@ def working_set(mocker):
     def install(candidate):
         rv.add_candidate(candidate)
 
-    def uninstall(name):
-        del rv[safe_name(name).lower()]
+    def uninstall(dist):
+        del rv[dist.key]
 
     installer = mocker.MagicMock()
     installer.install.side_effect = install
