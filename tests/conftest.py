@@ -248,7 +248,10 @@ def vcs(mocker):
     mocker.patch(
         "pip._internal.vcs.versioncontrol.VcsSupport.get_backend", return_value=ret
     )
-    mocker.patch("pip._internal.download._get_used_vcs_backend", return_value=ret)
+    mocker.patch(
+        "pip._internal.vcs.versioncontrol.VcsSupport.get_backend_for_scheme",
+        return_value=ret,
+    )
     yield ret
 
 

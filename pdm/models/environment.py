@@ -11,18 +11,14 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
 
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
+from pip._internal.utils.temp_dir import global_tempdir_manager
 from pip._vendor import packaging, pkg_resources
 from pip_shims import shims
 
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
 from pdm.utils import (
-    _allow_all_wheels,
-    cached_property,
-    convert_hashes,
-    create_tracked_tempdir,
-    get_finder,
-    get_pep508_environment,
+    _allow_all_wheels, cached_property, convert_hashes, create_tracked_tempdir, get_finder, get_pep508_environment,
     get_python_version,
 )
 from pythonfinder import Finder
@@ -262,18 +258,25 @@ class Environment:
                 ireq.ensure_has_source_dir(kwargs["build_dir"])
 
             download_dir = kwargs["download_dir"]
+            only_download = False
             if ireq.link.is_wheel:
                 download_dir = kwargs["wheel_download_dir"]
+                only_download = True
             if hashes:
                 ireq.options["hashes"] = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
-                shims.shim_unpack(
-                    link=ireq.link,
-                    download_dir=download_dir,
-                    location=ireq.source_dir,
-                    hashes=ireq.hashes(False),
-                    session=finder.session,
-                )
+                with global_tempdir_manager():
+                    downloaded = shims.shim_unpack(
+                        link=ireq.link,
+                        download_dir=download_dir,
+                        location=ireq.source_dir,
+                        hashes=ireq.hashes(False),
+                        only_download=only_download,
+                        session=finder.session,
+                    )
+                    # Preserve the downloaded file so that it won't be cleared.
+                    if downloaded and only_download:
+                        shutil.copy(downloaded, download_dir)
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (context.cache("wheels") / ireq.link.filename).as_posix()

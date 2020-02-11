@@ -2,11 +2,7 @@ import copy
 
 from pdm.models.markers import PySpecSet, join_metaset
 from pdm.models.requirements import strip_extras
-from pdm.resolver.providers import (  # noqa
-    BaseProvider,
-    EagerUpdateProvider,
-    ReusePinProvider,
-)
+from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider  # noqa
 from pdm.resolver.reporters import SimpleReporter  # noqa
 from pdm.resolver.resolvers import Resolver
 
