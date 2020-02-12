@@ -71,9 +71,7 @@ def test_list_command(project, invoke, mocker):
 
 def test_info_command(project, invoke):
     result = invoke(["info"], obj=project)
-    assert (
-        f"Python Interpreter: {project.environment.python_executable}" in result.output
-    )
+    assert f"Project Root: {project.root.as_posix()}" in result.output
 
     result = invoke(["info", "--python"], obj=project)
     assert result.output.strip() == project.environment.python_executable
