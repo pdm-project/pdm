@@ -69,6 +69,21 @@ def test_list_command(project, invoke, mocker):
     do_list.assert_called_once()
 
 
+def test_info_command(project, invoke):
+    result = invoke(["info"], obj=project)
+    assert "Project Root:" in result.output
+    assert project.root.as_posix() in result.output
+
+    result = invoke(["info", "--python"], obj=project)
+    assert result.output.strip() == project.environment.python_executable
+
+    result = invoke(["info", "--project"], obj=project)
+    assert result.output.strip() == project.root.as_posix()
+
+    result = invoke(["info", "--env"], obj=project)
+    assert result.exit_code == 0
+
+
 def test_run_command(invoke, capfd):
     result = invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
     assert result.exit_code == 0

@@ -1,7 +1,7 @@
 import functools
 import re
 from itertools import zip_longest
-from typing import Any, List
+from typing import Any, List, Optional
 
 import click
 
@@ -49,16 +49,23 @@ class _IO:
         else:
             return click.style(text, *args, **kwargs)
 
-    def display_columns(self, rows: List[str], header: List[str]) -> None:
-        """Print rows in aligned columns"""
+    def display_columns(
+        self, rows: List[str], header: Optional[List[str]] = None
+    ) -> None:
+        """Print rows in aligned columns.
+
+        :param rows: a rows of data to be displayed.
+        :param header: a list of header strings.
+        """
         sizes = list(
             map(
                 lambda column: max(map(lambda x: len(_strip_styles(x)), column)),
-                zip_longest(header, *rows),
+                zip_longest(header or [], *rows, fillvalue=""),
             )
         )
-        self.echo(" ".join(head.ljust(size) for head, size in zip(header, sizes)))
-        # Print a separator
-        self.echo(" ".join("-" * size for size in sizes))
+        if header:
+            self.echo(" ".join(head.ljust(size) for head, size in zip(header, sizes)))
+            # Print a separator
+            self.echo(" ".join("-" * size for size in sizes))
         for row in rows:
             self.echo(" ".join(ljust(item, size) for item, size in zip(row, sizes)))

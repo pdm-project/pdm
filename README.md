@@ -12,8 +12,6 @@ with `Pipenv` or `Poetry` and don't want to introduce another package manager,
 just stick to it. But if you are missing something that is not present in those tools,
 you can probably find some goodness in `pdm`.
 
-**Open for feature requests, find yourself at https://github.com/pdm-project/call-for-features.**
-
 ## Highlights of features
 
 - PEP 582 local package installer and runner, no virtualenv involved at all.

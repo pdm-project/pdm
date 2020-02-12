@@ -1,4 +1,5 @@
 import itertools
+import json
 import shutil
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence
@@ -454,7 +455,7 @@ def do_use(project: Project, python: str) -> None:
             except AttributeError:
                 raise NoPythonVersion(f"Python {python} is not found on the system.")
 
-    python_version = ".".join(map(str, get_python_version(python_path)))
+    python_version = get_python_version(python_path, True)
     if not project.python_requires.contains(python_version):
         raise NoPythonVersion(
             "The target Python version {} doesn't satisfy "
@@ -468,3 +469,31 @@ def do_use(project: Project, python: str) -> None:
 
     project.config["python"] = Path(python_path).as_posix()
     project.config.save_config()
+
+
+def do_info(
+    project: Project,
+    python: bool = False,
+    show_project: bool = False,
+    env: bool = False,
+) -> None:
+    """Show project information."""
+    python_path = project.environment.python_executable
+    python_version = get_python_version(python_path)
+    if not python and not show_project and not env:
+        rows = [
+            (
+                context.io.cyan("Python Interpreter:", bold=True),
+                python_path + f" ({python_version})",
+            ),
+            (context.io.cyan("Project Root:", bold=True), project.root.as_posix()),
+        ]
+        context.io.display_columns(rows)
+        return
+
+    if python:
+        context.io.echo(python_path)
+    if show_project:
+        context.io.echo(project.root.as_posix())
+    if env:
+        context.io.echo(json.dumps(project.environment.marker_environment, indent=2))

@@ -1,21 +1,22 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: ""
 labels: bug
-assignees: ''
-
+assignees: ""
 ---
 
 - [ ] I have searched the issue tracker and believe that this is not a duplicate.
 
-### Steps to reproduce
+## Steps to reproduce
+
 <!--Describe the minimized example of how to reproduce the bug-->
 
-### Expected behavior
+## Expected behavior
+
 <!--A clear and concise description of what you expected to happen.-->
 
-### Environment Information
+## Environment Information
 
 **pdm version**:
 

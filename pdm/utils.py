@@ -14,7 +14,7 @@ import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
@@ -325,13 +325,17 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
 
 
 @functools.lru_cache()
-def get_python_version(executable: str) -> Tuple[Union[str, int], ...]:
+def get_python_version(executable, as_string=False):
+    """Get the version of the Python interperter."""
     args = [
         executable,
         "-c",
         "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))",
     ]
-    return tuple(json.loads(subprocess.check_output(args)))
+    result = tuple(json.loads(subprocess.check_output(args)))
+    if not as_string:
+        return result
+    return ".".join(map(str, result))
 
 
 def get_pep508_environment(executable: str) -> Dict[str, Any]:

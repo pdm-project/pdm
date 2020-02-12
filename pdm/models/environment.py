@@ -92,24 +92,33 @@ class Environment:
                 return path
             except Exception:
                 pass
+
+        path = None
+        version = None
+        # First try what `python` refers to.
+        path = shutil.which("python")
+        if path:
+            version = get_python_version(path, True)
         else:
             finder = Finder()
             for python in finder.find_all_python_versions():
                 version = ".".join(map(str, get_python_version(python.path.as_posix())))
                 if self.python_requires.contains(version):
                     path = python.path.as_posix()
-            if self.python_requires.contains(".".join(map(str, sys.version_info[:3]))):
-                path = sys.executable
-            if path:
-                python_version = ".".join(map(str, get_python_version(path)))
-                context.io.echo(
-                    "Using Python interpreter: {} ({})".format(
-                        context.io.green(path), python_version
-                    )
+                    break
+            else:
+                version = ".".join(map(str, sys.version_info[:3]))
+                if self.python_requires.contains(version):
+                    path = sys.executable
+        if path:
+            context.io.echo(
+                "Using Python interpreter: {} ({})".format(
+                    context.io.green(path), version
                 )
-                self.config["python"] = Path(path).as_posix()
-                self.config.save_config()
-                return path
+            )
+            self.config["python"] = Path(path).as_posix()
+            self.config.save_config()
+            return path
         raise NoPythonVersion(
             "No Python that satisfies {} is found on the system.".format(
                 self.python_requires
@@ -310,8 +319,8 @@ class Environment:
         if not os.path.isabs(command) and command.startswith("python"):
             python = os.path.splitext(command)[0]
             version = python[6:]
-            this_version = get_python_version(self.python_executable)
-            if not version or ".".join(map(str, this_version)).startswith(version):
+            this_version = get_python_version(self.python_executable, True)
+            if not version or this_version.startswith(version):
                 return self.python_executable
         # Fallback to use shutil.which to find the executable
         return shutil.which(command, path=os.getenv("PATH"))
