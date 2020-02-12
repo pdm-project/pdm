@@ -40,7 +40,7 @@ def main():
         / ".".join(map(str, sys.version_info[:2]))
         / scripts_dir
         / "pdm"
-    )
+    ).absolute()
 
     print(f"\nDeleting venv {venv_path}...")
     shutil.rmtree(venv_path, ignore_errors=True)

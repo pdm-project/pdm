@@ -31,6 +31,7 @@ halo = "<1.0.0,>=0.0.28"
 pytest = "*"
 pytest-cov = "*"
 pytest-mock = "*"
+towncrier = "<20.0.0,>=19.2.0"
 
 [tool.pdm.cli]
 pdm = "pdm.cli.commands:cli"
@@ -53,6 +54,46 @@ known_third_party = "pip_shims"
 
 [tool.black]
 line-length = 88
+
+[tool.towncrier]
+package = "pdm"
+filename = "CHANGELOG.md"
+issue_format = "[#{issue}](https://github.com/frostming/pdm/issues/{issue})"
+directory = "news/"
+title_format = "Release v{version} ({project_date})"
+template = "news/towncrier_template.md"
+underlines = "-~^"
+
+  [[tool.towncrier.type]]
+  directory = "feature"
+  name = "Features & Improvements"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "bugfix"
+  name = "Bug Fixes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "doc"
+  name = "Improved Documentation"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "dep"
+  name = "Dependencies"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "removal"
+  name = "Removals and Deprecations"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "misc"
+  name = "Miscellany"
+  showcontent = true
+
 [build-system]
 requires = ["intreehooks"]
 build-backend = "intreehooks:loader"
