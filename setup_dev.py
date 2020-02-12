@@ -27,13 +27,17 @@ def main():
     print("Installing base requirements...")
     subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "pdm"])
 
+    subprocess.check_call(
+        [venv_python.as_posix(), "-m", "pip", "install", "pip", "pip_shims", "-U"]
+    )
+
     print("Setup project for development...")
     subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "install", "-d"])
 
     pdm_path = (
         BASE_DIR
         / "__pypackages__"
-        / ".".join(sys.version_info[:2])
+        / ".".join(map(str, sys.version_info[:2]))
         / scripts_dir
         / "pdm"
     )
