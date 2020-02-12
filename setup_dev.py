@@ -5,7 +5,6 @@ convention of setuptools but it is not basically a setuptools setup script.
 After running this script, an editable version of pdm will be installed into
 `__packages__`.
 """
-# Standard Library
 import os
 import shutil
 import subprocess
@@ -38,7 +37,7 @@ def main():
     pdm_path = (
         BASE_DIR
         / "__pypackages__"
-        / ".".join(sys.version_info[:2])
+        / ".".join(map(str, sys.version_info[:2]))
         / scripts_dir
         / "pdm"
     )
