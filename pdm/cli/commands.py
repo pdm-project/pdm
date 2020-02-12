@@ -286,3 +286,15 @@ def init(project):
 def use(project, python):
     """Use the given python version as base interpreter."""
     actions.do_use(project, python)
+
+
+@cli.command()
+@click.option("-p", "--python", is_flag=True, help="Show the interpreter path.")
+@click.option(
+    "-d", "--project", "show_project", is_flag=True, help="Show the project root path."
+)
+@click.option("--env", is_flag=True, help="Show PEP508 environment markers.")
+@pass_project
+def info(project, python, show_project, env):
+    """Show the project information."""
+    actions.do_info(project, python, show_project, env)
