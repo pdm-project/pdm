@@ -5,6 +5,7 @@ convention of setuptools but it is not basically a setuptools setup script.
 After running this script, an editable version of pdm will be installed into
 `__packages__`.
 """
+# Standard Library
 import os
 import shutil
 import subprocess
@@ -26,6 +27,10 @@ def main():
 
     print("Installing base requirements...")
     subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "pdm"])
+
+    subprocess.check_call(
+        [venv_python.as_posix(), "-m", "pip", "install", "pip", "pip_shims", "-U",]
+    )
 
     print("Setup project for development...")
     subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "install", "-d"])
