@@ -455,7 +455,7 @@ def do_use(project: Project, python: str) -> None:
             except AttributeError:
                 raise NoPythonVersion(f"Python {python} is not found on the system.")
 
-    python_version = ".".join(map(str, get_python_version(python_path)))
+    python_version = get_python_version(python_path, True)
     if not project.python_requires.contains(python_version):
         raise NoPythonVersion(
             "The target Python version {} doesn't satisfy "
@@ -479,7 +479,7 @@ def do_info(
 ) -> None:
     """Show project information."""
     python_path = project.environment.python_executable
-    python_version = ".".join(map(str, get_python_version(python_path)))
+    python_version = get_python_version(python_path)
     if not python and not show_project and not env:
         rows = [
             (
