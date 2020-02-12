@@ -43,7 +43,7 @@ summary = "Cross-platform colored terminal text."
 name = "coverage"
 sections = ["dev"]
 version = "4.4.2"
-marker = "python_version >= \"2.7\" and python_version < \"4.0\" and python_version not in \"3.0, 3.1, 3.2, 3.3, 3.4\""
+marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\""
 summary = "Code coverage measurement for Python"
 
 [[package]]
@@ -96,7 +96,7 @@ zipp = ">=0.5"
 name = "incremental"
 sections = ["dev"]
 version = "17.5.0"
-summary = ""
+summary = "UNKNOWN"
 
 [[package]]
 name = "jinja2"
@@ -316,7 +316,7 @@ summary = "Miscellaneous utilities for dealing with filesystems, paths, projects
 colorama = "!=0.4.2,>=0.3.4"
 six = "*"
 yaspin = "*"
-vistir = {marker = "python_version >= \"2.7\" and python_version not in \"3.0, 3.1, 3.2, 3.3\"", version = "==0.5.0"}
+vistir = ">=0.4"
 
 [[package]]
 name = "wcwidth"
@@ -566,6 +566,5 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 ]
 
 [root]
-content_hash = "md5:8ec515deecaf048153dca8ca3e57572b"
+content_hash = "md5:b1e4f14a9b7fea899f6f57f7b3c081a1"
 meta_version = "0.0.1"
-
