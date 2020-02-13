@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from pdm.cli import actions, commands
+from pdm.models.requirements import parse_requirement
 
 
 @pytest.fixture()
@@ -124,3 +125,16 @@ def test_use_command(project, invoke):
     project.write_pyproject()
     result = invoke(["use", "2.7"], obj=project)
     assert result.exit_code == 1
+
+
+def test_install_with_lockfile(project, invoke, working_set, repository):
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    result = invoke(["install"], obj=project)
+    assert "Lock file" not in result.output
+
+    project.add_dependencies({"pytz": parse_requirement("pytz")})
+    result = invoke(["install"], obj=project)
+    assert "Lock file hash doesn't match" in result.output
+    assert "pytz" in project.get_locked_candidates()
+    assert project.is_lockfile_hash_match()

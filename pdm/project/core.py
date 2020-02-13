@@ -177,7 +177,7 @@ class Project:
             return {}
         section = section or "default"
         result = {}
-        for package in [dict(p) for p in self.lockfile["package"]]:
+        for package in [dict(p) for p in self.lockfile.get("package", [])]:
             if section != "__all__" and section not in package["sections"]:
                 continue
             version = package.get("version")

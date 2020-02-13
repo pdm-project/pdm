@@ -103,10 +103,15 @@ def lock(project):
 )
 @pass_project
 def install(project, sections, dev, default, lock):
-    if lock and not (
-        project.lockfile_file.is_file() and project.is_lockfile_hash_match()
-    ):
-        actions.do_lock(project)
+    if lock:
+        if not project.lockfile_file.exists():
+            context.io.echo("Lock file does not exist, trying to generate one...")
+            actions.do_lock(project, strategy="all")
+        elif not project.is_lockfile_hash_match():
+            context.io.echo(
+                "Lock file hash doesn't match pyproject.toml, regenerating..."
+            )
+            actions.do_lock(project, strategy="reuse")
     actions.do_sync(project, sections, dev, default, False, False)
 
 
