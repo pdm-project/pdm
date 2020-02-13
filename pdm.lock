@@ -566,6 +566,5 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 ]
 
 [root]
-content_hash = "md5:8ec515deecaf048153dca8ca3e57572b"
+content_hash = "md5:b1e4f14a9b7fea899f6f57f7b3c081a1"
 meta_version = "0.0.1"
-
