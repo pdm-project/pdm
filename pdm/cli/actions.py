@@ -479,7 +479,7 @@ def do_info(
 ) -> None:
     """Show project information."""
     python_path = project.environment.python_executable
-    python_version = get_python_version(python_path)
+    python_version = get_python_version(python_path, True)
     if not python and not show_project and not env:
         rows = [
             (

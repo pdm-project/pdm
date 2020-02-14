@@ -84,7 +84,6 @@ class Environment:
     @cached_property
     def python_executable(self) -> str:
         """Get the Python interpreter path."""
-        path = None
         if self.config["python"]:
             path = self.config["python"]
             try:
@@ -93,8 +92,6 @@ class Environment:
             except Exception:
                 pass
 
-        path = None
-        version = None
         # First try what `python` refers to.
         path = shutil.which("python")
         if path:
@@ -102,7 +99,7 @@ class Environment:
         else:
             finder = Finder()
             for python in finder.find_all_python_versions():
-                version = ".".join(map(str, get_python_version(python.path.as_posix())))
+                version = get_python_version(python.path.as_posix(), True)
                 if self.python_requires.contains(version):
                     path = python.path.as_posix()
                     break
