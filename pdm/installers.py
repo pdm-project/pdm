@@ -2,24 +2,16 @@ import importlib
 import subprocess
 from typing import Dict, List, Tuple
 
-from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_name
-from pip_shims import shims
-
 import distlib.scripts
 from distlib.wheel import Wheel
+from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_name
+from pip_shims import shims
+from vistir import cd
+
 from pdm.context import context
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import parse_requirement, strip_extras
-from vistir import cd
-
-SETUPTOOLS_SHIM = (
-    "import setuptools, tokenize;__file__=%r;"
-    "f=getattr(tokenize, 'open', open)(__file__);"
-    "code=f.read().replace('\\r\\n', '\\n');"
-    "f.close();"
-    "exec(compile(code, __file__, 'exec'))"
-)
 
 
 def _is_dist_editable(dist: Distribution) -> bool:

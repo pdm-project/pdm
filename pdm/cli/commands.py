@@ -4,6 +4,7 @@ import sys
 import click
 from click._compat import term_len
 from click.formatting import HelpFormatter, iter_rows, measure_table, wrap_text
+
 from pdm.cli import actions
 from pdm.cli.options import (
     dry_run_option,

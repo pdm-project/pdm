@@ -12,12 +12,12 @@ from typing import List, Tuple
 
 from pip_shims import shims
 from pkg_resources import safe_name, safe_version, to_filename
+from vistir.path import normalize_path
 
 from pdm.builders.base import Builder
 from pdm.context import context
 from pdm.exceptions import WheelBuildError
 from pdm.utils import cached_property, get_abi_tag
-from vistir.path import normalize_path
 
 WHEEL_FILE_FORMAT = """\
 Wheel-Version: 1.0

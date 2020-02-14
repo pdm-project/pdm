@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from pdm.models.requirements import Requirement, RequirementError, parse_requirement
 from tests import FIXTURES
 

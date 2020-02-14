@@ -1,6 +1,7 @@
 import itertools
 
 import pytest
+
 from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
 from pdm.models.candidates import identify
 from pdm.models.requirements import parse_requirement

@@ -3,6 +3,7 @@ from collections import namedtuple
 import click
 import pytest
 from distlib.wheel import Wheel
+
 from pdm.cli import actions
 from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement

@@ -13,6 +13,10 @@ from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
 from pip_shims import shims
+from pythonfinder import Finder
+from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
+from vistir.contextmanagers import temp_environ
+from vistir.path import normalize_path
 
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
@@ -25,10 +29,6 @@ from pdm.utils import (
     get_pep508_environment,
     get_python_version,
 )
-from pythonfinder import Finder
-from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
-from vistir.contextmanagers import temp_environ
-from vistir.path import normalize_path
 
 if TYPE_CHECKING:
     from pdm.models.specifiers import PySpecSet

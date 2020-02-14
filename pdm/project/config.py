@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterable
 
 import appdirs
 import tomlkit
+
 from pdm.exceptions import NoConfigError
 
 

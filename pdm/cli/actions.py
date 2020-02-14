@@ -4,12 +4,12 @@ import shutil
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence
 
-from pkg_resources import safe_name
-
 import click
 import halo
 import pythonfinder
 import tomlkit
+from pkg_resources import safe_name
+
 from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion, ProjectError
