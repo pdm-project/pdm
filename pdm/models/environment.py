@@ -26,6 +26,7 @@ from pdm.utils import (
     get_python_version,
 )
 from pythonfinder import Finder
+from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 from vistir.contextmanagers import temp_environ
 from vistir.path import normalize_path
 
@@ -84,13 +85,15 @@ class Environment:
     @cached_property
     def python_executable(self) -> str:
         """Get the Python interpreter path."""
-        if self.config["python"]:
-            path = self.config["python"]
+        if self.config.get("python.path"):
+            path = self.config["python.path"]
             try:
                 get_python_version(path)
                 return path
             except Exception:
                 pass
+        if PYENV_INSTALLED and self.config.get("python.use_pyenv", True):
+            return os.path.join(PYENV_ROOT, "shims", "python")
 
         # First try what `python` refers to.
         path = shutil.which("python")
@@ -113,7 +116,7 @@ class Environment:
                     context.io.green(path), version
                 )
             )
-            self.config["python"] = Path(path).as_posix()
+            self.config["python.path"] = Path(path).as_posix()
             self.config.save_config()
             return path
         raise NoPythonVersion(

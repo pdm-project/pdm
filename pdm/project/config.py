@@ -10,8 +10,6 @@ from pdm.exceptions import NoConfigError
 class Config(MutableMapping):
     DEFAULT_CONFIG = {
         "cache_dir": appdirs.user_cache_dir("pdm"),
-        "python": None,
-        "packages_path": None,
     }
 
     def __init__(self, project_root: Path):
@@ -20,7 +18,7 @@ class Config(MutableMapping):
         self._dirty = {}
 
         self._project_config_file = self.project_root / ".pdm.toml"
-        self._global_config_file = Path(appdirs.user_config_dir("pdm")) / ".pdm.toml"
+        self._global_config_file = Path(appdirs.user_config_dir("pdm")) / "config.toml"
         self._project_config = self.load_config(self._project_config_file)
         self._global_config = self.load_config(self._global_config_file)
         # First load user config, then project config
@@ -67,8 +65,6 @@ class Config(MutableMapping):
             raise NoConfigError(key) from None
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if key not in self.DEFAULT_CONFIG:
-            raise NoConfigError(key)
         self._dirty[key] = value
         self._data[key] = value
 
