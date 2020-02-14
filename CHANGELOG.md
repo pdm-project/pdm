@@ -1,3 +1,28 @@
+Release v0.2.0 (2020-02-14)
+---------------------------
+
+### Features & Improvements
+
+- New option: `pdm list --graph` to show a dependency graph of the working set. [#10](https://github.com/frostming/pdm/issues/10)
+- New option: `pdm update --unconstrained` to ignore the version constraint of given packages. [#13](https://github.com/frostming/pdm/issues/13)
+- Improve the error message when project is not initialized before running comands. [#19](https://github.com/frostming/pdm/issues/19)
+- Pinned candidates in lock file are reused when relocking during `pdm install`. [#33](https://github.com/frostming/pdm/issues/33)
+- Use the pyenv interperter value if pyenv is installed. [#36](https://github.com/frostming/pdm/issues/36)
+- Introduce a new command `pdm info` to show project environment information. [#9](https://github.com/frostming/pdm/issues/9)
+
+### Bug Fixes
+
+- Fix a bug that candidate hashes will be lost when reused. [#11](https://github.com/frostming/pdm/issues/11)
+
+### Dependencies
+
+- Update `pip` to `20.0`, update `pip_shims` to `0.5.0`. [#28](https://github.com/frostming/pdm/issues/28)
+
+### Miscellany
+
+- Add a script named `setup_dev.py` for the convenience to setup pdm for development. [#29](https://github.com/frostming/pdm/issues/29)
+
+
 Release v0.1.2 (2020-02-09)
 ---------------------------
 
