@@ -4,12 +4,12 @@ import functools
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
-from pip._vendor.pkg_resources import safe_extra
-from pip_shims import shims
-
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
 from distlib.wheel import Wheel
+from pip._vendor.pkg_resources import safe_extra
+from pip_shims import shims
+
 from pdm.context import context
 from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker

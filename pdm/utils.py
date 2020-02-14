@@ -16,9 +16,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
+from distlib.wheel import Wheel
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
 
-from distlib.wheel import Wheel
 from pdm._types import Source
 
 if TYPE_CHECKING:

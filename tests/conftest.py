@@ -7,11 +7,11 @@ from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
+import pytest
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
 
-import pytest
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init
 from pdm.context import context

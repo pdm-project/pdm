@@ -54,7 +54,17 @@ not_skip = "__init__.py"
 skip_glob = ["*/setup.py"]
 filter_files = true
 known_first_party = "pdm"
-known_third_party = "pip_shims"
+known_third_party = [
+    "click",
+    "halo",
+    "vistir",
+    "distlib",
+    "pythonfinder",
+    "pytest",
+    "tomlkit",
+    "appdirs",
+    "pip_shims"
+]
 
 [tool.black]
 line-length = 88

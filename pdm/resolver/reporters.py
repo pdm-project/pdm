@@ -4,6 +4,7 @@ import time
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import halo
+
 from pdm.context import context
 
 if TYPE_CHECKING:

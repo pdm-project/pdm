@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+
 from pdm.cli import actions, commands
 from pdm.models.requirements import parse_requirement
 

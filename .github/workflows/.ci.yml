@@ -38,4 +38,5 @@ jobs:
           pdm install -d
       - name: Test
         run: |
+          rm .pdm.toml
           python -m pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests

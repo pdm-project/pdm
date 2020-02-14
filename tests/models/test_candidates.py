@@ -1,4 +1,5 @@
 import pytest
+
 from pdm.exceptions import ExtrasError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement

@@ -4,12 +4,12 @@ import shutil
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence
 
-from pkg_resources import safe_name
-
 import click
 import halo
 import pythonfinder
 import tomlkit
+from pkg_resources import safe_name
+
 from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion, ProjectError
@@ -467,7 +467,7 @@ def do_use(project: Project, python: str) -> None:
         )
     )
 
-    project.config["python"] = Path(python_path).as_posix()
+    project.config["python.path"] = Path(python_path).as_posix()
     project.config.save_config()
 
 

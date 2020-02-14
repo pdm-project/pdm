@@ -28,10 +28,6 @@ class Context:
         self.project = project
 
     @property
-    def initialized(self) -> bool:
-        return self._initialized
-
-    @property
     def cache_dir(self) -> Path:
         return Path(self.project.config.get("cache_dir"))
 
