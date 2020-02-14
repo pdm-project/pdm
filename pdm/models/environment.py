@@ -97,9 +97,10 @@ class Environment:
 
         # First try what `python` refers to.
         path = shutil.which("python")
+        version = None
         if path:
             version = get_python_version(path, True)
-        else:
+        if not version or not self.python_requires.contains(version):
             finder = Finder()
             for python in finder.find_all_python_versions():
                 version = get_python_version(python.path.as_posix(), True)

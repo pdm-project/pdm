@@ -1,3 +1,4 @@
+import sys
 from collections import namedtuple
 
 import click
@@ -85,6 +86,8 @@ def test_add_package_to_custom_package(project, repository, working_set):
 
 
 def test_add_editable_package(project, repository, working_set, is_dev, vcs):
+    # Ensure that correct python version is used.
+    actions.do_use(project, sys.executable)
     actions.do_add(
         project,
         is_dev,
