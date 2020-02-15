@@ -1,3 +1,4 @@
+"""A compatible script to install editable distributions."""
 import os
 import sys
 import tokenize
@@ -15,16 +16,16 @@ def install(setup_py, prefix):
         code = f.read().replace("\\r\\n", "\n")
     sys.argv[1:] = [
         "develop",
-        f"--install-dir={install_dir}",
+        "--install-dir={0}".format(install_dir),
         "--no-deps",
-        f"--prefix={prefix}",
-        f"--script-dir={scripts_dir}",
-        f"--site-dirs={install_dir}",
+        "--prefix={0}".format(prefix),
+        "--script-dir={0}".format(scripts_dir),
+        "--site-dirs={0}".format(install_dir),
     ]
     # Patches the script writer to inject library path
     easy_install.ScriptWriter.template = easy_install.ScriptWriter.template.replace(
         "import sys",
-        "import sys\nsys.path.insert(0, {!r})".format(install_dir.replace("\\", "/")),
+        "import sys\nsys.path.insert(0, {0!r})".format(install_dir.replace("\\", "/")),
     )
     exec(compile(code, __file__, "exec"))
 

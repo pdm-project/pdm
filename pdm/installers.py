@@ -74,10 +74,15 @@ class Installer:  # pragma: no cover
             paths["prefix"],
         ]
         with self.environment.activate(), cd(ireq.unpacked_source_directory):
-            result = subprocess.run(install_args, capture_output=True, check=True)
+            try:
+                result = subprocess.run(install_args, capture_output=True, check=True)
+            except subprocess.CalledProcessError as ex:
+                result = ex
         context.io.echo(result.stdout, verbosity=context.io.DETAIL)
         if result.stderr:
             context.io.echo(result.stderr, err=True, verbosity=context.io.DETAIL)
+        if result.returncode:
+            raise result from None
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)
