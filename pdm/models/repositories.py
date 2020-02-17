@@ -14,7 +14,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import allow_all_wheels, get_pypi_source
+from pdm.utils import allow_all_wheels
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -40,7 +40,7 @@ class BaseRepository:
         :param sources: a list of sources to download packages from.
         :param environment: the bound environment instance.
         """
-        self.sources = [get_pypi_source()] + sources
+        self.sources = sources
         self.environment = environment
         self._candidate_info_cache = context.make_candidate_info_cache()
         self._hash_cache = context.make_hash_cache()

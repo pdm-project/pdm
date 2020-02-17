@@ -3,6 +3,7 @@
 A modern Python package manager with PEP 582 support. [中文版本说明](README_zh.md)
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 
 ## What is PDM?
 
@@ -58,7 +59,7 @@ $ pip install --user pdm
 PEP 582 is a draft proposal which still needs a lot of polishment, for instance, it doesn't mention how to manage
 CLI executables. PDM take the decision to put `bin`, `include` together with `lib` under `__pypackage__/X.Y`.
 
-### 2. How to run CLI scripts in the local package directory?
+### 2. How do I run CLI scripts in the local package directory?
 
 The recommended way is to prefix your command with `pdm run`. It is also possible to run CLI scripts directly from
 the outside, the PDM's installer has already injected the package path to the `sys.path` in the entry script file.
@@ -72,6 +73,9 @@ and could lead to some confusion around which packages are being used, though.
 
 You'd better not. The packages installed inside `__pypackages__` are OS dependent. Instead, you should keep `pdm.lock`
 in VCS and do `pdm sync` on the target environment to deploy.
+
+### 5. Can I use `pdm` to manage a Python 2.7 project?
+Sure. The `pdm` itself can be installed under Python 3.7+ only, but it doesn't restrict the Python used by the project.
 
 ## Credits
 

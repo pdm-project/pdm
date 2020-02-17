@@ -19,7 +19,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.utils import find_project_root
+from pdm.utils import find_project_root, get_pypi_source
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
@@ -137,8 +137,11 @@ class Project:
         return self.tool_settings.get("allow_prereleases")
 
     @property
-    def sources(self) -> Optional[List[Source]]:
-        return self.tool_settings.get("source")
+    def sources(self) -> List[Source]:
+        sources = self.tool_settings.get("source", [])
+        if not any(source.get("name") == "pypi" for source in sources):
+            sources.insert(0, get_pypi_source())
+        return sources
 
     def get_repository(self) -> BaseRepository:
         sources = self.sources or []
