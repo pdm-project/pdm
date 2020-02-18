@@ -75,8 +75,8 @@ REQUIREMENTS = [
     (
         'requests; python_version=="3.7.*"',
         ("requests", {"version": "*", "marker": 'python_version == "3.7.*"'}),
-        'requests; python_version == "3.7.*"'
-    )
+        'requests; python_version == "3.7.*"',
+    ),
 ]
 
 
