@@ -144,11 +144,12 @@ def _build_pyspec_from_marker(markers):
             if key == "python_version":
                 if op == ">":
                     int_versions = [int(ver) for ver in version.split(".")]
-                    int_versions += 1
+                    int_versions[-1] += 1
                     version = ".".join(str(v) for v in int_versions)
                     op = ">="
                 elif op in ("==", "!="):
-                    version += ".*"
+                    if len(version.split(".")) < 3:
+                        version += ".*"
                 elif op in ("in", "not in"):
                     version = " ".join(v + ".*" for v in split_version(version))
             if op == "in":

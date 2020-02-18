@@ -38,7 +38,7 @@ def bump_version(
 def _complete_version(
     version: Tuple[int, ...], complete_with: int = 0
 ) -> Tuple[int, ...]:
-    assert len(version) <= 3
+    assert len(version) <= 3, version
     return version + (3 - len(version)) * (complete_with,)
 
 
