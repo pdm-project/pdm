@@ -1,3 +1,12 @@
+Release v0.2.1 (2020-02-18)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that short python_version markers can't be parsed correctly. [#38](https://github.com/frostming/pdm/issues/38)
+- Make `_editable_intall.py` compatible with Py2.
+
+
 Release v0.2.0 (2020-02-14)
 ---------------------------
 
