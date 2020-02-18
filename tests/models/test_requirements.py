@@ -72,6 +72,11 @@ REQUIREMENTS = [
         ),
         f"demo[security] @ {FILE_PREFIX}" + (FIXTURES / "projects/demo").as_posix(),
     ),
+    (
+        'requests; python_version=="3.7.*"',
+        ("requests", {"version": "*", "marker": 'python_version == "3.7.*"'}),
+        'requests; python_version == "3.7.*"',
+    ),
 ]
 
 
