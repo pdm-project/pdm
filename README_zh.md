@@ -52,7 +52,7 @@ $ pip install --user pdm
 ### 1. `__pypackages__` 里都包含什么?
 
 PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并未说明可执行程序应该如何存放。PDM 会把 `bin`(可执行程序), `include`(头文件),
-以及 `lib` 都放在 `__pypackage__/X.Y` 下面。
+以及 `lib` 都放在 `__pypackages__/X.Y` 下面。
 
 ### 2. 如何运行 `__pypackages__` 下的可执行程序?
 
@@ -60,11 +60,11 @@ PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并
 
 ### 3. 使用 PDM 时会载入哪些三方库路径?
 
-PDM 会首先在 `__pypackage__` 中寻找，然后会在选择的 Python 解释器对应的 `site-packages` 中寻找包。
+PDM 会首先在 `__pypackages__` 中寻找，然后会在选择的 Python 解释器对应的 `site-packages` 中寻找包。
 
-### 4. 我能把 `__pypackage__` 保存下来用来部署到别的机器上吗?
+### 4. 我能把 `__pypackages__` 保存下来用来部署到别的机器上吗?
 
-最好别这样搞，`__pypackage__` 下面安装的包是和操作系统相关的，所以除非是纯 Python 的包，都会有兼容性的问题。你应该把 `pdm.lock`
+最好别这样搞，`__pypackages__` 下面安装的包是和操作系统相关的，所以除非是纯 Python 的包，都会有兼容性的问题。你应该把 `pdm.lock`
 纳入版本管理，然后在目标环境中执行 `pdm sync`。
 
 ### 5. 我能用`pdm`管理一个 Python 2.7 的项目吗？
