@@ -57,7 +57,7 @@ $ pip install --user pdm
 ### 1. What is put in `__pypackages__`?
 
 PEP 582 is a draft proposal which still needs a lot of polishment, for instance, it doesn't mention how to manage
-CLI executables. PDM take the decision to put `bin`, `include` together with `lib` under `__pypackages_/X.Y`.
+CLI executables. PDM take the decision to put `bin`, `include` together with `lib` under `__pypackages__/X.Y`.
 
 ### 2. How do I run CLI scripts in the local package directory?
 
