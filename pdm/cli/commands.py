@@ -2,7 +2,6 @@ import subprocess
 import sys
 
 import click
-from cfonts import render
 from click._compat import term_len
 from click.formatting import HelpFormatter, iter_rows, measure_table, wrap_text
 
@@ -70,8 +69,10 @@ class PdmGroup(click.Group):
         self.format_epilog(ctx, formatter)
 
     def format_help_text(self, ctx, formatter):
+        from cfonts import render
+
         formatter.write(
-            render("PDM", font="slick", colors=["red", "cyan"], space=False)
+            render("PDM", font="slick", gradient=["red", "green"], space=False)
         )
         formatter.write_paragraph()
         formatter.write_text(self.help)
