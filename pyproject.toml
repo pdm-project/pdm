@@ -66,7 +66,8 @@ known_third_party = [
     "pytest",
     "tomlkit",
     "appdirs",
-    "pip_shims"
+    "pip_shims",
+    "cfonts"
 ]
 
 [tool.black]

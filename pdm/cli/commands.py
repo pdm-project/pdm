@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 import click
+from cfonts import render
 from click._compat import term_len
 from click.formatting import HelpFormatter, iter_rows, measure_table, wrap_text
 
@@ -62,6 +63,20 @@ click.core.HelpFormatter = ColoredHelpFormatter
 
 
 class PdmGroup(click.Group):
+    def format_help(self, ctx, formatter):
+        self.format_help_text(ctx, formatter)
+        self.format_usage(ctx, formatter)
+        self.format_options(ctx, formatter)
+        self.format_epilog(ctx, formatter)
+
+    def format_help_text(self, ctx, formatter):
+        formatter.write(
+            render("PDM", font="slick", colors=["red", "cyan"], space=False)
+        )
+        formatter.write_paragraph()
+        formatter.write_text(self.help)
+        formatter.write_paragraph()
+
     def main(self, *args, **kwargs):
         # Catches all unhandled exceptions and reraise them with PdmException
         try:
