@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.8"
 ]
 
-
 [tool.pdm.dependencies]
 appdirs = "*"
 click = "*"
@@ -31,7 +30,7 @@ pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
 halo = "<1.0.0,>=0.0.28"
-
+python-cfonts = "<2.0.0,>=1.0.0"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
