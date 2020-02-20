@@ -64,4 +64,4 @@ jobs:
       - name: Test
         run: |
           Set-Variable -Name pdm -Value "__pypackages__/${{ matrix.python-version }}/Scripts/pdm"
-          $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests
+          & $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests
