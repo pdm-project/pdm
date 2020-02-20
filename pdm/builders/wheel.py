@@ -12,7 +12,6 @@ from typing import List, Tuple
 
 from pip_shims import shims
 from pkg_resources import safe_name, safe_version, to_filename
-from vistir.path import normalize_path
 
 from pdm.builders.base import Builder
 from pdm.context import context
@@ -134,8 +133,8 @@ class WheelBuilder(Builder):
 
     def _write_record(self, fp):
         for row in self._records:
-            row = normalize_path(row[0]), *row[1:]
-            fp.write(",".join(row) + "\n")
+            fp.write("{},sha256={},{}\n".format(*row))
+        fp.write(self.dist_info_name + "/RECORD,,\n")
 
     def _write_metadata(self, wheel):
         dist_info = self.dist_info_name
@@ -155,7 +154,6 @@ class WheelBuilder(Builder):
                     self._add_file(wheel, path, f"{dist_info}/{path}")
 
         with self._write_to_zip(wheel, dist_info + "/RECORD") as f:
-            self._records.append((dist_info + "/RECORD", "", ""))
             self._write_record(f)
 
     @contextlib.contextmanager

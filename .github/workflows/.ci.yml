@@ -16,13 +16,13 @@ jobs:
         run: |
           pip install pre-commit
           pre-commit run --all-files
-  Testing:
+  UnixTesting:
     needs: Linting
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: [3.7, 3.8]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -32,11 +32,36 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      - name: Install editable PDM
         run: |
-          python -m pip install pdm
-          pdm install -d
+          python setup_dev.py
+          rm .pdm.toml
+      - name: Test
+        shell: bash
+        run: |
+          pdm="__pypackages__/${{ matrix.python-version }}/bin/pdm"
+          $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests
+
+  WindowsTesting:
+    needs: Linting
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install editable PDM
+        run: |
+          python setup_dev.py
+          rm .pdm.toml
       - name: Test
         run: |
-          rm .pdm.toml
-          python -m pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests
+          Set-Variable -Name pdm -Value "__pypackages__/${{ matrix.python-version }}/Scripts/pdm"
+          & $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests

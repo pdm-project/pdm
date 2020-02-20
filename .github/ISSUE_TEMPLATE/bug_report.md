@@ -14,6 +14,10 @@ assignees: ""
 
 <!--Describe the minimized example of how to reproduce the bug-->
 
+## Actual behavior
+
+<!--A clear and concise description the result of the above steps-->
+
 ## Expected behavior
 
 <!--A clear and concise description of what you expected to happen.-->

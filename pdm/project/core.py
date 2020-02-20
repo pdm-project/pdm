@@ -153,8 +153,6 @@ class Project:
             "meta_version": self.PYPROJECT_VERSION,
             "content_hash": f"md5:{content_hash}",
         }
-        if self.sources:
-            data.update({"source": self.sources})
         return data
 
     def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
