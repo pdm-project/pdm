@@ -1,3 +1,19 @@
+Release v0.2.2 (2020-02-20)
+---------------------------
+
+### Features & Improvements
+
+- Add a fancy greeting banner when user types `pdm --help`. [#42](https://github.com/frostming/pdm/issues/42)
+
+### Bug Fixes
+
+- Fix the RECORD file in built wheel. [#41](https://github.com/frostming/pdm/issues/41)
+
+### Dependencies
+
+- Add dependency `python-cfonts` to display banner. [#42](https://github.com/frostming/pdm/issues/42)
+
+
 Release v0.2.1 (2020-02-18)
 ---------------------------
 
