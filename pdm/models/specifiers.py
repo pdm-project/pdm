@@ -158,39 +158,73 @@ class PySpecSet(SpecifierSet):
             return tuple(e if isinstance(e, int) else -1 for e in item)
 
         sorted_excludes = sorted(excludes, key=comp_key)
+        wildcard_excludes = set(
+            version[:-1] for version in sorted_excludes if version[-1] == "*"
+        )
+        # Remove versions that are already excluded by another wildcard exclude.
+        sorted_excludes = [
+            version
+            for version in sorted_excludes
+            if version[-1] == "*"
+            or not any(_version_part_match(wv, version) for wv in wildcard_excludes)
+        ]
+
         if lower == self.MIN_VERSION and upper == self.MAX_VERSION:
             # Nothing we can do here, it is a non-constraint.
             self._lower_bound, self._upper_bound = lower, upper
             self._excludes = sorted_excludes
             return
-        wildcard_excludes = set()
-        for version in list(sorted_excludes):
-            if any(_version_part_match(wv, version) for wv in wildcard_excludes):
-                sorted_excludes.remove(version)
-                continue
+        for version in list(sorted_excludes):  # from to low to high
+            if comp_key(version) >= comp_key(upper):
+                sorted_excludes[:] = []
+                break
+
             if version[-1] == "*":
                 valid_length = len(version) - 1
                 valid_version = version[:valid_length]
-                wildcard_excludes.add(valid_version)
-                if (
-                    valid_version < lower[:valid_length]
-                    or valid_version > upper[:valid_length]
-                ):
+
+                if valid_version < lower[:valid_length]:
                     # Useless excludes
                     sorted_excludes.remove(version)
                 elif _version_part_match(valid_version, lower):
-                    # The lower bound is excluded
+                    # The lower bound is excluded, e.g: >=3.7.3,!=3.7.*
+                    # bump the lower version in the last common bit: >=3.8.0
                     lower = bump_version(version, -2)
                     sorted_excludes.remove(version)
-                elif _version_part_match(valid_version, upper):
-                    upper = _complete_version(valid_version)
-                    sorted_excludes.remove(version)
+                else:
+                    break
             else:
-                if version < lower or version >= upper:
+                if version < lower:
                     sorted_excludes.remove(version)
                 elif version == lower:
                     lower = bump_version(version)
                     sorted_excludes.remove(version)
+                else:
+                    break
+        for version in sorted_excludes[::-1]:  # from high to low
+            if comp_key(version) >= comp_key(upper):
+                sorted_excludes.remove(version)
+                continue
+
+            if version[-1] == "*":
+                valid_length = len(version) - 1
+                valid_version = version[:valid_length]
+
+                if _version_part_match(valid_version, upper):
+                    # The upper bound is excluded, e.g: <3.7.3,!=3.7.*
+                    # set the upper to the zero version: <3.7.0
+                    upper = _complete_version(valid_version)
+                    sorted_excludes.remove(version)
+                elif bump_version(version, -2) == upper:
+                    # The upper bound is adjacent to the excluded one: <3.7.0,!=3.6.*
+                    # Move the upper bound to below the excluded: <3.6.0
+                    upper = valid_version + (0,)
+                    sorted_excludes.remove(version)
+                else:
+                    break
+            else:
+                break
+
         self._lower_bound = lower
         self._upper_bound = upper
         self._excludes = sorted_excludes
