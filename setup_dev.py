@@ -44,6 +44,7 @@ def main():
 
     print(f"\nDeleting venv {venv_path}...")
     shutil.rmtree(venv_path, ignore_errors=True)
+    subprocess.check_call([pdm_path, "use", sys.executable])
 
     print(
         f"An editable version of pdm is installed at {pdm_path}, "
