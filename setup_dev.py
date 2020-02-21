@@ -32,8 +32,8 @@ def main():
     )
 
     print("Setup project for development...")
-    subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "use", sys.executable])
     subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "install", "-d"])
+    subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "use", sys.executable])
 
     pdm_path = (
         BASE_DIR
