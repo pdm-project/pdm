@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           pdm="__pypackages__/${{ matrix.python-version }}/bin/pdm"
-          $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests
+          $pdm run pytest -n auto tests
 
   WindowsTesting:
     needs: Linting
@@ -59,9 +59,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install editable PDM
         run: |
+          pip install wheel
           python setup_dev.py
-          rm .pdm.toml
       - name: Test
         run: |
           Set-Variable -Name pdm -Value "__pypackages__/${{ matrix.python-version }}/Scripts/pdm"
-          & $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg tests
+          & $pdm run pytest -n auto tests

@@ -62,14 +62,14 @@ def get_abi_tag(python_version):
         if get_flag("Py_DEBUG", lambda: hasattr(sys, "gettotalrefcount"), warn=False):
             d = "d"
         if python_version < (3, 8) and get_flag(
-            "WITH_PYMALLOC", lambda: is_cpython, warn=is_cpython
+            "WITH_PYMALLOC", lambda: is_cpython, warn=False
         ):
             m = "m"
         if python_version < (3, 3) and get_flag(
             "Py_UNICODE_SIZE",
             lambda: sys.maxunicode == 0x10FFFF,
             expected=4,
-            warn=is_cpython,
+            warn=False,
         ):
             u = "u"
         abi = "%s%s%s%s%s" % (impl, "".join(map(str, python_version)), d, m, u)
