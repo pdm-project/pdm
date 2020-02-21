@@ -34,8 +34,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install editable PDM
         run: |
+          pip install wheel
           python setup_dev.py
-          rm .pdm.toml
       - name: Test
         shell: bash
         run: |
