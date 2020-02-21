@@ -137,6 +137,8 @@ class Candidate:
         if self.metadata is not None:
             return self.metadata
         ireq = self.ireq
+        if self.link and not ireq.link:
+            ireq.link = self.link
         built = self.environment.build(ireq, self.hashes)
         if self.req.editable:
             if not self.req.is_local_dir and not self.req.is_vcs:
