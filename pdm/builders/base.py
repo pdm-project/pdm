@@ -95,7 +95,9 @@ def _format_list(data: List[str], indent=4) -> str:
 def _format_dict_list(data: Dict[str, List[str]], indent=4) -> str:
     result = ["{"]
     for key, value in data.items():
-        result.append(" " * indent + repr(key) + ": " + _format_list(value, indent + 4))
+        result.append(
+            " " * indent + repr(key) + ": " + _format_list(value, indent + 4) + ","
+        )
     result.append(" " * (indent - 4) + "}")
     return "\n".join(result)
 
@@ -254,7 +256,7 @@ class Builder:
             before.append(
                 "EXTRAS_REQUIRE = {}\n".format(_format_dict_list(meta.extras_require))
             )
-            extra.append("    'install_requires': EXTRAS_REQUIRE,\n")
+            extra.append("    'extras_require': EXTRAS_REQUIRE,\n")
         if meta.python_requires:
             extra.append("    'python_requires': {!r},\n".format(meta.python_requires))
         if meta.entry_points:

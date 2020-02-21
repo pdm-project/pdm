@@ -72,7 +72,12 @@ class PdmGroup(click.Group):
         from cfonts import render
 
         formatter.write(
-            render("PDM", font="slick", gradient=["red", "green"], space=False)
+            render(
+                "PDM",
+                font="slick",
+                gradient=["bright_red", "bright_green"],
+                space=False
+            )
         )
         formatter.write_paragraph()
         formatter.write_text(self.help)
