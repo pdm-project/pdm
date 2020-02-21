@@ -76,7 +76,7 @@ class PdmGroup(click.Group):
                 "PDM",
                 font="slick",
                 gradient=["bright_red", "bright_green"],
-                space=False
+                space=False,
             )
         )
         formatter.write_paragraph()
