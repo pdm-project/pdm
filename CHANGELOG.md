@@ -1,3 +1,11 @@
+Release v0.2.3 (2020-02-21)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that editable build generates a malformed `setup.py`.
+
+
 Release v0.2.2 (2020-02-20)
 ---------------------------
 
