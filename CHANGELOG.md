@@ -1,3 +1,12 @@
+Release v0.2.4 (2020-02-21)
+---------------------------
+
+### Bug Fixes
+
+- Use the project local interpreter to build wheels. [#43](https://github.com/frostming/pdm/issues/43)
+- Correctly merge Python specifiers when possible. [#4](https://github.com/frostming/pdm/issues/4)
+
+
 Release v0.2.3 (2020-02-21)
 ---------------------------
 
