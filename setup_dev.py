@@ -32,6 +32,7 @@ def main():
     )
 
     print("Setup project for development...")
+    subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "use", sys.executable])
     subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "install", "-d"])
 
     pdm_path = (
@@ -44,7 +45,6 @@ def main():
 
     print(f"\nDeleting venv {venv_path}...")
     shutil.rmtree(venv_path, ignore_errors=True)
-    subprocess.check_call([pdm_path, "use", sys.executable])
 
     print(
         f"An editable version of pdm is installed at {pdm_path}, "
