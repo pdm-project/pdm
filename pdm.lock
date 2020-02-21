@@ -399,7 +399,7 @@ summary = "Yet Another Terminal Spinner"
 [[package]]
 name = "zipp"
 sections = ["dev"]
-version = "2.2.0"
+version = "3.0.0"
 marker = "python_version >= \"3.6\" and python_version < \"3.8\""
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
@@ -641,9 +641,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "yaspin-0.16.0-py2.py3-none-any.whl", hash = "sha256:e88bf9c9fe4ac588e3620588aadae655dfc20f1f7460338394ef4693bdc2b800"},
     {file = "yaspin-0.16.0.tar.gz", hash = "sha256:efca3eb7162e575d3ab2e49743cd9bd1f5ec2adc7d85b9489ab145a3f6460ed4"},
 ]
-"zipp 2.2.0" = [
-    {file = "zipp-2.2.0-py36-none-any.whl", hash = "sha256:d65287feb793213ffe11c0f31b81602be31448f38aeb8ffc2eb286c4f6f6657e"},
-    {file = "zipp-2.2.0.tar.gz", hash = "sha256:5c56e330306215cd3553342cfafc73dda2c60792384117893f3a83f8a1209f50"},
+"zipp 3.0.0" = [
+    {file = "zipp-3.0.0-py3-none-any.whl", hash = "sha256:12248a63bbdf7548f89cb4c7cda4681e537031eda29c02ea29674bc6854460c2"},
+    {file = "zipp-3.0.0.tar.gz", hash = "sha256:7c0f8e91abc0dc07a5068f315c52cb30c66bfbc581e5b50704c8a2f6ebae794a"},
 ]
 
 [root]

@@ -162,16 +162,19 @@ class Environment:
             # HACK: Replace the is_local with environment version so that packages can
             # be removed correctly.
             _old_sitepackages = misc.site_packages
+            misc.site_packages = paths["purelib"]
             _is_local = misc.is_local
+            misc.is_local = req_uninstall.is_local = self.is_local
             _evaluate_marker = pkg_resources.evaluate_marker
             pkg_resources.evaluate_marker = self.evaluate_marker
-            misc.is_local = req_uninstall.is_local = self.is_local
-            misc.site_packages = paths["purelib"]
+            sys_executable = sys.executable
+            sys.executable = self.python_executable
             yield
-            misc.is_local = req_uninstall.is_local = _is_local
-            pkg_resources.working_set = _old_ws
+            sys.executable = sys_executable
             pkg_resources.evaluate_marker = _evaluate_marker
+            misc.is_local = req_uninstall.is_local = _is_local
             misc.site_packages = _old_sitepackages
+            pkg_resources.working_set = _old_ws
 
     def is_local(self, path) -> bool:
         """PEP 582 version of ``is_local()`` function."""
@@ -300,7 +303,7 @@ class Environment:
                 return (context.cache("wheels") / ireq.link.filename).as_posix()
             builder_class = EditableBuilder if ireq.editable else WheelBuilder
             kwargs["finder"] = finder
-            with builder_class(ireq) as builder:
+            with builder_class(ireq) as builder, self.activate():
                 return builder.build(**kwargs)
 
     def get_working_set(self) -> WorkingSet:
