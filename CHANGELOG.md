@@ -1,3 +1,17 @@
+Release v0.2.5 (2020-02-22)
+---------------------------
+
+### Features & Improvements
+
+- Allow specifying Python interpreter via `--python` option in `pdm init`. [#49](https://github.com/frostming/pdm/issues/49)
+- Set `python_requires` when initializing and defaults to `>={current_version}`. [#50](https://github.com/frostming/pdm/issues/50)
+
+### Bug Fixes
+
+- Always consider wheels before tarballs; correctly merge markers from different parents. [#47](https://github.com/frostming/pdm/issues/47)
+- Filter out incompatible wheels when installing. [#48](https://github.com/frostming/pdm/issues/48)
+
+
 Release v0.2.4 (2020-02-21)
 ---------------------------
 
