@@ -44,7 +44,7 @@ class Installer:  # pragma: no cover
         self.auto_confirm = auto_confirm
 
     def install(self, candidate: Candidate) -> None:
-        candidate.get_metadata()
+        candidate.get_metadata(allow_all_wheels=False)
         if candidate.req.editable:
             self.install_editable(candidate.ireq)
         else:
