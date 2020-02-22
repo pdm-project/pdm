@@ -116,18 +116,24 @@ def test_uncaught_error(invoke, mocker):
 
 def test_use_command(project, invoke):
     python_path = Path(shutil.which("python")).as_posix()
-    result = invoke(["use", "python"], obj=project)
+    result = invoke(["use", "-f", "python"], obj=project)
     assert result.exit_code == 0
     config_content = project.root.joinpath(".pdm.toml").read_text()
     assert python_path in config_content
 
-    result = invoke(["use", python_path], obj=project)
+    result = invoke(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
 
     project.tool_settings["python_requires"] = ">=3.6"
     project.write_pyproject()
     result = invoke(["use", "2.7"], obj=project)
     assert result.exit_code == 1
+
+
+def test_use_python_by_version(project, invoke):
+    python_version = ".".join(map(str, sys.version_info[:2]))
+    result = invoke(["use", "-f", python_version], obj=project)
+    assert result.exit_code == 0
 
 
 def test_install_with_lockfile(project, invoke, working_set, repository):
@@ -149,35 +155,14 @@ def test_init_command(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
-    result = invoke(["init"], input="test-project\n\n\n\n\n\n", obj=project_no_init)
+    result = invoke(
+        ["init"], input="python\ntest-project\n\n\n\n\n\n", obj=project_no_init
+    )
+    print(result.output)
     assert result.exit_code == 0
     python_version = ".".join(
         map(str, get_python_version(project_no_init.environment.python_executable)[:2])
     )
-    do_init.assert_called_with(
-        project_no_init,
-        "test-project",
-        "0.0.0",
-        "MIT",
-        "Testing",
-        "me@example.org",
-        f">={python_version}",
-    )
-
-
-def test_init_command_python_option(project_no_init, invoke, mocker):
-    mocker.patch(
-        "pdm.cli.commands.get_user_email_from_git",
-        return_value=("Testing", "me@example.org"),
-    )
-    do_init = mocker.patch.object(actions, "do_init")
-    result = invoke(
-        ["init", "--python", sys.executable],
-        input="test-project\n\n\n\n\n\n",
-        obj=project_no_init,
-    )
-    assert result.exit_code == 0
-    python_version = ".".join(map(str, sys.version_info[:2]))
     do_init.assert_called_with(
         project_no_init,
         "test-project",
