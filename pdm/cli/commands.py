@@ -15,7 +15,7 @@ from pdm.cli.options import (
 )
 from pdm.context import context
 from pdm.project import Project
-from pdm.utils import get_user_email_from_git
+from pdm.utils import get_python_version, get_user_email_from_git
 
 pass_project = click.make_pass_decorator(Project, ensure=True)
 context_settings = {"ignore_unknown_options": True, "allow_extra_args": True}
@@ -283,10 +283,19 @@ def build(project, sdist, wheel, dest, clean):
     actions.do_build(project, sdist, wheel, dest, clean)
 
 
-@cli.command(help="Initialize a pyproject.toml for PDM.")
+@cli.command()
 @verbose_option
+@click.option(
+    "-p",
+    "--python",
+    help="Specify the Python interperter version or path to use.",
+    metavar="PYTHON",
+)
 @pass_project
-def init(project):
+def init(project, python):
+    """Initialize a pyproject.toml for PDM."""
+    if python:
+        actions.do_use(project, python)
     if project.pyproject_file.exists():
         context.io.echo(
             "{}".format(
@@ -304,14 +313,21 @@ def init(project):
     git_user, git_email = get_user_email_from_git()
     author = click.prompt(f"Author name", default=git_user)
     email = click.prompt(f"Author email", default=git_email)
-    actions.do_init(project, name, version, license, author, email)
+    python_version = ".".join(
+        map(str, get_python_version(project.environment.python_executable)[:2])
+    )
+    python_requires = click.prompt(
+        "Python requires('*' to allow any)", default=f">={python_version}"
+    )
+
+    actions.do_init(project, name, version, license, author, email, python_requires)
 
 
 @cli.command()
 @click.argument("python")
 @pass_project
 def use(project, python):
-    """Use the given python version as base interpreter."""
+    """Use the given python version or path as base interpreter."""
     actions.do_use(project, python)
 
 
