@@ -252,13 +252,17 @@ class Environment:
         finder.session.close()
 
     def build(
-        self, ireq: shims.InstallRequirement, hashes: Optional[Dict[str, str]] = None
+        self,
+        ireq: shims.InstallRequirement,
+        hashes: Optional[Dict[str, str]] = None,
+        allow_all: bool = True,
     ) -> str:
         """Build egg_info directory for editable candidates and a wheel for others.
 
         :param ireq: the InstallRequirment of the candidate.
         :param hashes: a dictionary of filename: hash_value to check against downloaded
         artifacts.
+        :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
         from pip._internal.utils.temp_dir import global_tempdir_manager
@@ -267,8 +271,11 @@ class Environment:
 
         kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
-            with allow_all_wheels():
-                # temporarily allow all wheels to get a link.
+            if allow_all:
+                with allow_all_wheels():
+                    # temporarily allow all wheels to get a link.
+                    ireq.populate_link(finder, False, bool(hashes))
+            else:
                 ireq.populate_link(finder, False, bool(hashes))
             if not ireq.editable and not ireq.req.name:
                 ireq.source_dir = kwargs["build_dir"]

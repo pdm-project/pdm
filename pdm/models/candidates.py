@@ -130,7 +130,7 @@ class Candidate:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
         return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
 
-    def get_metadata(self) -> Optional[Metadata]:
+    def get_metadata(self, allow_all_wheels: bool = True) -> Optional[Metadata]:
         """Get the metadata of the candidate.
         For editable requirements, egg info are produced, otherwise a wheel is built.
         """
@@ -139,7 +139,7 @@ class Candidate:
         ireq = self.ireq
         if self.link and not ireq.link:
             ireq.link = self.link
-        built = self.environment.build(ireq, self.hashes)
+        built = self.environment.build(ireq, self.hashes, allow_all_wheels)
         if self.req.editable:
             if not self.req.is_local_dir and not self.req.is_vcs:
                 raise RequirementError(
