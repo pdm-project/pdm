@@ -285,7 +285,12 @@ def build(project, sdist, wheel, dest, clean):
 
 @cli.command()
 @verbose_option
-@click.option("-p", "--python", help="Specify the Python interperter to use.")
+@click.option(
+    "-p",
+    "--python",
+    help="Specify the Python interperter version or path to use.",
+    metavar="PYTHON",
+)
 @pass_project
 def init(project, python):
     """Initialize a pyproject.toml for PDM."""
@@ -322,7 +327,7 @@ def init(project, python):
 @click.argument("python")
 @pass_project
 def use(project, python):
-    """Use the given python version as base interpreter."""
+    """Use the given python version or path as base interpreter."""
     actions.do_use(project, python)
 
 
