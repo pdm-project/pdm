@@ -443,22 +443,41 @@ def do_init(
     project.write_pyproject()
 
 
-def do_use(project: Project, python: str) -> None:
+def do_use(project: Project, python: str, first: bool = False) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    if Path(python).is_absolute():
-        python_path = python
-    else:
-        python_path = shutil.which(python)
+    if not all(c.isdigit() for c in python.split(".")):
+        if Path(python).exists():
+            python_path = Path(python).absolute().as_posix()
+        else:
+            python_path = shutil.which(python)
         if not python_path:
-            finder = pythonfinder.Finder()
-            try:
-                python_path = finder.find_python_version(python).path.as_posix()
-            except AttributeError:
-                raise NoPythonVersion(f"Python {python} is not found on the system.")
+            raise NoPythonVersion(f"{python} is not a valid Python.")
+        python_version = get_python_version(python_path, True)
+    else:
+        finder = pythonfinder.Finder()
+        pythons = []
+        args = [int(v) for v in python.split(".")]
+        for i, entry in enumerate(finder.find_all_python_versions(*args)):
+            python_version = get_python_version(entry.path.as_posix(), True)
+            pythons.append((entry.path.as_posix(), python_version))
+        if not pythons:
+            raise NoPythonVersion(f"Python {python} is not available on the system.")
 
-    python_version = get_python_version(python_path, True)
+        if not first and len(pythons) > 1:
+            for i, (path, python_version) in enumerate(pythons):
+                context.io.echo(f"{i}: {context.io.green(path)} ({python_version})")
+            selection = click.prompt(
+                "Please select:",
+                type=click.Choice([str(i) for i in range(len(pythons))]),
+                default="0",
+                show_choices=False,
+            )
+        else:
+            selection = 0
+        python_path, python_version = pythons[int(selection)]
+
     if not project.python_requires.contains(python_version):
         raise NoPythonVersion(
             "The target Python version {} doesn't satisfy "

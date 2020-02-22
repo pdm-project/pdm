@@ -285,17 +285,12 @@ def build(project, sdist, wheel, dest, clean):
 
 @cli.command()
 @verbose_option
-@click.option(
-    "-p",
-    "--python",
-    help="Specify the Python interperter version or path to use.",
-    metavar="PYTHON",
-)
 @pass_project
-def init(project, python):
+def init(project):
     """Initialize a pyproject.toml for PDM."""
-    if python:
-        actions.do_use(project, python)
+    python = click.prompt("Please enter the Python interpreter to use")
+    actions.do_use(project, python)
+
     if project.pyproject_file.exists():
         context.io.echo(
             "{}".format(
@@ -324,11 +319,14 @@ def init(project, python):
 
 
 @cli.command()
+@click.option(
+    "-f", "--first", is_flag=True, help="Select the first matched interpreter."
+)
 @click.argument("python")
 @pass_project
-def use(project, python):
+def use(project, first, python):
     """Use the given python version or path as base interpreter."""
-    actions.do_use(project, python)
+    actions.do_use(project, python, first)
 
 
 @cli.command()
