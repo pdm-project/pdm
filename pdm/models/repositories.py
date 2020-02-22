@@ -155,15 +155,6 @@ class BaseRepository:
                 for c in matching_candidates
             }
 
-    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
-        if candidate.dependencies is None:
-            raise CandidateInfoNotFound(candidate)
-        return (
-            [dep.as_line() for dep in candidate.dependencies],
-            candidate.requires_python,
-            candidate.summary,
-        )
-
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
         called one by one.
@@ -212,7 +203,6 @@ class PyPIRepository(BaseRepository):
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (
-            self._get_dependencies_from_lockfile,
             self._get_dependencies_from_cache,
             self._get_dependencies_from_json,
             self._get_dependencies_from_metadata,
@@ -241,19 +231,20 @@ class PyPIRepository(BaseRepository):
                 c
                 for c in cans
                 if requirement.specifier.contains(c.version, allow_prereleases)
+                and (allow_all or requires_python.is_subset(c.requires_python))
             ),
-            key=lambda c: (c.version, c.ireq.is_wheel),
+            key=lambda c: (c.version, c.link.is_wheel),
         )
-        if not allow_all:
-            sorted_cans = [
-                can
-                for can in sorted_cans
-                if requires_python.is_subset(can.requires_python)
-            ]
+
         if not sorted_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
             sorted_cans = sorted(
-                (c for c in cans if requirement.specifier.contains(c.version, True)),
+                (
+                    c
+                    for c in cans
+                    if requirement.specifier.contains(c.version, True)
+                    and (allow_all or requires_python.is_subset(c.requires_python))
+                ),
                 key=lambda c: c.version,
             )
         return sorted_cans

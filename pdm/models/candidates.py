@@ -108,10 +108,6 @@ class Candidate:
         self.wheel = None
         self.metadata = None
 
-        # Dependencies from lockfile content.
-        self.dependencies = None
-        self.summary = None
-
     def __hash__(self):
         return hash((self.name, self.version))
 
