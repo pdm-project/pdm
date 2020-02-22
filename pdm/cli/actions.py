@@ -415,6 +415,7 @@ def do_init(
     license: str = "MIT",
     author: str = "",
     email: str = "",
+    python_requires: str = "",
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
     data = {
@@ -432,6 +433,8 @@ def do_init(
         },
         "build-system": {"requires": ["pdm"], "build-backend": "pdm.builders.api"},
     }
+    if python_requires and python_requires != "*":
+        data["tool"]["pdm"]["python_requires"] = python_requires
     if not project.pyproject:
         project._pyproject = data
     else:

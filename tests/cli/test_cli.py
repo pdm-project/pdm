@@ -1,6 +1,7 @@
 import functools
 import os
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from click.testing import CliRunner
 
 from pdm.cli import actions, commands
 from pdm.models.requirements import parse_requirement
+from pdm.utils import get_python_version
 
 
 @pytest.fixture()
@@ -139,3 +141,49 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
     assert "Lock file hash doesn't match" in result.output
     assert "pytz" in project.get_locked_candidates()
     assert project.is_lockfile_hash_match()
+
+
+def test_init_command(project_no_init, invoke, mocker):
+    mocker.patch(
+        "pdm.cli.commands.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    do_init = mocker.patch.object(actions, "do_init")
+    result = invoke(["init"], input="test-project\n\n\n\n\n\n", obj=project_no_init)
+    assert result.exit_code == 0
+    python_version = ".".join(
+        map(str, get_python_version(project_no_init.environment.python_executable)[:2])
+    )
+    do_init.assert_called_with(
+        project_no_init,
+        "test-project",
+        "0.0.0",
+        "MIT",
+        "Testing",
+        "me@example.org",
+        f">={python_version}",
+    )
+
+
+def test_init_command_python_option(project_no_init, invoke, mocker):
+    mocker.patch(
+        "pdm.cli.commands.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    do_init = mocker.patch.object(actions, "do_init")
+    result = invoke(
+        ["init", "--python", sys.executable],
+        input="test-project\n\n\n\n\n\n",
+        obj=project_no_init,
+    )
+    assert result.exit_code == 0
+    python_version = ".".join(map(str, sys.version_info[:2]))
+    do_init.assert_called_with(
+        project_no_init,
+        "test-project",
+        "0.0.0",
+        "MIT",
+        "Testing",
+        "me@example.org",
+        f">={python_version}",
+    )
