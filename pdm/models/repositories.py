@@ -96,7 +96,7 @@ class BaseRepository:
         """
         if requirement.is_named:
             return self._find_named_matches(
-                requirement, requires_python, allow_prereleases
+                requirement, requires_python, allow_prereleases, allow_all
             )
         else:
             # Fetch metadata so that resolver can know the candidate's name.
@@ -146,8 +146,7 @@ class BaseRepository:
             return candidate.hashes
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
-        with allow_all_wheels():
-            matching_candidates = self.find_matches(req, allow_all=True)
+        matching_candidates = self.find_matches(req, allow_all=True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
             return {
