@@ -16,7 +16,7 @@ jobs:
         run: |
           pip install pre-commit
           pre-commit run --all-files
-  UnixTesting:
+  Testing:
     needs: Linting
     runs-on: ${{ matrix.os }}
     strategy:
@@ -49,7 +49,7 @@ jobs:
           pdm="__pypackages__/${{ matrix.python-version }}/bin/pdm"
           $pdm run pytest -n auto tests
       - name: Test Windows
-        if: matrix.os == 'windoes-latest'
+        if: matrix.os == 'windows-latest'
         run: |
           Set-Variable -Name pdm -Value "__pypackages__/${{ matrix.python-version }}/Scripts/pdm"
           & $pdm run pytest -n auto tests
