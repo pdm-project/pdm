@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release-pypi:
+    name: release-pypi
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+          architecture: 'x64'
+      - name: Cache packages
+        uses: actions/cache@v1
+        with:
+          path: __pypackages__
+          # Look to see if there is a cache hit for the corresponding requirements file
+          key: release-packages-${{ hashFiles('pdm.lock') }}
+      - name: Install editable PDM
+        run: |
+          pip install wheel
+          python setup_dev.py
+      - name: Build artifacts
+        run: |
+          __pypackages__/3.7/bin/pdm build -v
+      - name: Test Build
+        run: |
+          python3 -m venv fresh_env
+          . fresh_env/bin/activate
+          pip install dist/*.whl
+          pdm --help
+      - name: Upload to Pypi
+        run: |
+          pip install twine
+          twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
