@@ -1,3 +1,16 @@
+Release v0.2.6 (2020-02-25)
+---------------------------
+
+### Features & Improvements
+
+- Improve the user interface of selecting Python interpreter. [#54](https://github.com/frostming/pdm/issues/54)
+
+### Bug Fixes
+
+- Fix the wheel installer to correctly unparse the flags of console scripts. [#56](https://github.com/frostming/pdm/issues/56)
+- Fix a bug that OS-dependent hashes are not saved. [#57](https://github.com/frostming/pdm/issues/57)
+
+
 Release v0.2.5 (2020-02-22)
 ---------------------------
 
