@@ -10,9 +10,13 @@ nav:
   - dependency.md
   - project.md
   - pyproject.md
+  - contributing.md
+  - changelog.md
 
 markdown_extensions:
   - codehilite
   - admonition
+  - markdown_include.include:
+      base_path: docs
 
 copyright: Copyright &copy; 2019 <a href="https://frostming.com">Frost Ming</a>

@@ -184,6 +184,12 @@ summary = "Python implementation of Markdown."
 setuptools = ">=36"
 
 [[package]]
+name = "markdown-include"
+sections = ["doc"]
+version = "0.5.1"
+summary = "This is an extension to Python-Markdown which provides an \"include\" function, similar to that found in LaTeX (and also the C pre-processor and Fortran). I originally wrote it for my FORD Fortran auto-documentation generator."
+
+[[package]]
 name = "MarkupSafe"
 sections = ["dev", "doc"]
 version = "1.1.1"
@@ -631,6 +637,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "Markdown-3.2.1.tar.gz", hash = "sha256:90fee683eeabe1a92e149f7ba74e5ccdc81cd397bd6c516d93a8da0ef90b6902"},
     {file = "Markdown-3.2.1-py2.py3-none-any.whl", hash = "sha256:e4795399163109457d4c5af2183fbe6b60326c17cfdf25ce6e7474c6624f725d"},
 ]
+"markdown-include 0.5.1" = [
+    {file = "markdown-include-0.5.1.tar.gz", hash = "sha256:72a45461b589489a088753893bc95c5fa5909936186485f4ed55caa57d10250f"},
+]
 "markupsafe 1.1.1" = [
     {file = "MarkupSafe-1.1.1.tar.gz", hash = "sha256:29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b"},
     {file = "MarkupSafe-1.1.1-cp27-cp27m-macosx_10_6_intel.whl", hash = "sha256:09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161"},
@@ -819,5 +828,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 ]
 
 [root]
-content_hash = "md5:6d0678b224441c7ed23a4b55635634aa"
+content_hash = "md5:1d8507364a68b2bceeb51c92201d79dc"
 meta_version = "0.0.1"
+
