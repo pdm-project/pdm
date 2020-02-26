@@ -34,3 +34,22 @@ Install PDM into user site with `pip`:
 ```bash
 $ pip install --user pdm
 ```
+
+## Use with IDE
+
+Now there are not built-in support or plugins for PEP 582 in most IDEs, you have to configure your tools manually.
+
+### PyCharm
+
+Mark `__pypackages__/<major.minor>/lib` as Sources Root.
+
+### VSCode
+
+Add following in the `settings.json`:
+
+```json
+{
+  ...
+  "python.autoComplete.extraPaths": ["__pypackages__/<major.minor>/lib"]
+}
+```
