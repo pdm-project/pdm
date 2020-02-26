@@ -5,6 +5,8 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 
+[Documentation](https://frostming.github.io/pdm)
+
 ## What is PDM?
 
 PDM is meant to be a next generation Python package management tool.
