@@ -1,0 +1,26 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-doc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+          with:
+            python-version: 3.7
+            architecture: 'x64'
+      - name: Build pages
+        run: |
+          pip install mkdocs mkdocs-material
+          cd docs && mkdocs build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.REPO_TOKEN }}
+          publish_dir: ./docs/site

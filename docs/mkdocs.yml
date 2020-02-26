@@ -1,0 +1,18 @@
+site_name: PDM - Python Development Master
+
+repo_url: https://github.com/frostming/pdm
+
+theme:
+  name: material
+
+nav:
+  - index.md
+  - dependency.md
+  - project.md
+  - pyproject.md
+
+markdown_extensions:
+  - codehilite
+  - admonition
+
+copyright: Copyright &copy; 2019 <a href="https://frostming.com">Frost Ming</a>

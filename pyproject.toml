@@ -40,6 +40,10 @@ towncrier = "<20.0.0,>=19.2.0"
 pytest-sugar = "<1.0.0,>=0.9.2"
 pytest-xdist = "<2.0.0,>=1.31.0"
 
+[tool.pdm.doc-dependencies]
+mkdocs = "<2.0.0,>=1.1"
+mkdocs-material = "<5.0.0,>=4.6.3"
+
 [tool.pdm.cli]
 pdm = "pdm.cli.commands:cli"
 

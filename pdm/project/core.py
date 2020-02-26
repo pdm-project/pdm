@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
@@ -207,8 +208,8 @@ class Project:
             toml_section = (
                 "dependencies" if section == "default" else f"{section}-dependencies"
             )
-            dump_data[toml_section] = self.tool_settings.get(toml_section)
-        pyproject_content = tomlkit.dumps(dump_data)
+            dump_data[toml_section] = dict(self.tool_settings.get(toml_section, {}))
+        pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)
         hasher.update(pyproject_content.encode("utf-8"))
         return hasher.hexdigest()

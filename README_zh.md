@@ -3,6 +3,9 @@
 一个现代的 Python 包管理器，支持 PEP 582。[English version README](README.md)
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+
+[文档](https://frostming.github.io/pdm)
 
 ## 这个项目是啥?
 
