@@ -16,6 +16,8 @@ nav:
 markdown_extensions:
   - codehilite
   - admonition
+  - toc:
+      permalink: "#"
   - markdown_include.include:
       base_path: docs
 

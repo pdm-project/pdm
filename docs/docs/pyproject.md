@@ -28,6 +28,47 @@ excludes = [
 If neither `includes` or `excludes` is given, PDM is also smart enough to include top level packages and all data files in them.
 Packages can also lie in `src` directory that PDM can find it.
 
+## Dependency specification
+
+### Named requirement
+
+```toml
+requests = ">=2.20.0"
+pytz = "*"
+```
+`"*"` means there is no constraint of what version should be used.
+
+### Requirement given by file URL
+
+```toml
+pdm = {url="https://github.com/frostming/marko/archive/0.2.6.zip"}
+```
+
+### Requirement given by local path
+
+```toml
+requests = {path="/path/to/requests"}
+```
+In this case, the path should be a **directory** on local machine. If you want to install a local **file**,
+use `url = "file:///path/to/file` instead.
+
+### VCS requirement
+
+```toml
+requests = {git="https://github.com/frostming/marko.git", ref="master"}
+```
+PDM supports all VCS schemes that are supported by `pip`.
+
+### Editable requirement
+
+Both VCS requirement and local directory requirement can have an `editable = true` flag, meaning it should be installed in editable mode.
+
+### Requirement with markers
+
+```toml
+requests = {version=">=2.20.0", marker="os_name!='nt'"}
+```
+
 ## Console scripts
 
 The following content:

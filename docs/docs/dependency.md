@@ -28,7 +28,7 @@ python_requires = ">=3.7"
 
 If `pyproject.toml` is already present, it will be updated with `tool.pdm` contents.
 
-For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](/pyproject).
+For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](pyproject.md).
 
 ## Add dependencies
 
