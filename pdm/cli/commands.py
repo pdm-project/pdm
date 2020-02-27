@@ -6,18 +6,18 @@ from click._compat import term_len
 from click.formatting import HelpFormatter, iter_rows, measure_table, wrap_text
 
 from pdm.cli import actions
+from pdm.cli.config import config
 from pdm.cli.options import (
     dry_run_option,
+    pass_project,
     save_strategy_option,
     sections_option,
     update_strategy_option,
     verbose_option,
 )
 from pdm.context import context
-from pdm.project import Project
 from pdm.utils import get_python_version, get_user_email_from_git
 
-pass_project = click.make_pass_decorator(Project, ensure=True)
 context_settings = {"ignore_unknown_options": True, "allow_extra_args": True}
 
 
@@ -339,3 +339,6 @@ def use(project, first, python):
 def info(project, python, show_project, env):
     """Show the project information."""
     actions.do_info(project, python, show_project, env)
+
+
+cli.add_command(config)

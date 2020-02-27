@@ -20,7 +20,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.utils import find_project_root, get_pypi_source
+from pdm.utils import find_project_root
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
@@ -141,7 +141,14 @@ class Project:
     def sources(self) -> List[Source]:
         sources = self.tool_settings.get("source", [])
         if not any(source.get("name") == "pypi" for source in sources):
-            sources.insert(0, get_pypi_source())
+            sources.insert(
+                0,
+                {
+                    "url": self.config["pypi.url"],
+                    "verify_ssl": self.config["pypi.verify_ssl"],
+                    "name": "pypi",
+                },
+            )
         return sources
 
     def get_repository(self) -> BaseRepository:

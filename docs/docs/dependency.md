@@ -116,3 +116,35 @@ black 19.10b0
 └── typed-ast 1.4.1 [ required: >=1.4.0 ]
 bump2version 1.0.0
 ```
+
+## Set PyPI index URL
+
+### Set in configuration
+
+You can specify a PyPI mirror URL by following commands:
+```bash
+$ pdm config set -g pypi.url https://testpypi.org/simple
+```
+By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback
+to `https://pypi.org/simple` if none is found.
+
+## Add extra sources of packages
+
+Sometimes your packages may exist on a private repository other than PyPI(and its mirrors).
+These sources should be preserved in `pyproject.toml` and shipped with the project in deployment.
+
+```toml
+[[tool.pdm.source]]
+url = "http://example.com/private/index"
+verify_ssl = false  # Don't verify SSL, it is required when you are using `HTTP` or the certificate is trusted.
+name = "private"
+```
+Use the name `name = "pypi"` if you want to override the configurated PyPI index.
+
+
+## Specify the index for one single dependency
+You can specify which index should be consulted only for one single dependency:
+
+```toml
+requests = {version = "*", index = "private"}
+```

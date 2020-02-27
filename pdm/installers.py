@@ -383,13 +383,13 @@ class Synchronizer:
             if update:
                 dist = working_set[safe_name(can.name).lower()]
                 context.io.echo(
-                    f"Updating {context.io.green(can.name, bold=True)} "
+                    f"  - Updating {context.io.green(can.name, bold=True)} "
                     f"{context.io.yellow(dist.version)} -> "
                     f"{context.io.yellow(can.version)}"
                 )
                 installer.uninstall(dist)
             else:
-                context.io.echo(f"Installing {can.format()}...")
+                context.io.echo(f"  - Installing {can.format()}...")
             installer.install(can)
 
     def remove_distributions(self, distributions: List[str]) -> None:
@@ -402,7 +402,7 @@ class Synchronizer:
         for name in distributions:
             dist = working_set[name]
             context.io.echo(
-                f"Uninstalling: {context.io.green(name, bold=True)} "
+                f"  - Uninstalling: {context.io.green(name, bold=True)} "
                 f"{context.io.yellow(dist.version)}"
             )
             installer.uninstall(dist)

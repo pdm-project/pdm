@@ -54,7 +54,8 @@ class ProjectError(PdmException):
 
 
 class NoConfigError(PdmException, KeyError):
-    pass
+    def __init__(self, key):
+        super().__init__("No such config item: {}".format(key))
 
 
 class ResolutionError(PdmException):

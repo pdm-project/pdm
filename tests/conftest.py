@@ -215,24 +215,20 @@ def get_local_finder(*args, **kwargs):
 
 
 @pytest.fixture()
-def project(tmp_path, mocker):
+def project_no_init(tmp_path, mocker):
     p = TestProject(tmp_path.as_posix())
-    p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
-    mocker.patch("pdm.cli.commands.Project", return_value=p)
-    do_init(p, "test_project", "0.0.0")
+    mocker.patch("pdm.cli.options.Project", return_value=p)
+    mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
+    p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     return p
 
 
 @pytest.fixture()
-def project_no_init(tmp_path, mocker):
-    p = TestProject(tmp_path.as_posix())
-    p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    mocker.patch("pdm.utils.get_finder", get_local_finder)
-    mocker.patch("pdm.models.environment.get_finder", get_local_finder)
-    mocker.patch("pdm.cli.commands.Project", return_value=p)
-    return p
+def project(project_no_init):
+    do_init(project_no_init, "test_project", "0.0.0")
+    return project_no_init
 
 
 @pytest.fixture()
