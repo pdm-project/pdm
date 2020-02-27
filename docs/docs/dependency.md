@@ -119,11 +119,9 @@ bump2version 1.0.0
 
 ## Set PyPI index URL
 
-### Set in configuration
-
 You can specify a PyPI mirror URL by following commands:
 ```bash
-$ pdm config set -g pypi.url https://testpypi.org/simple
+$ pdm config set pypi.url https://testpypi.org/simple
 ```
 By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback
 to `https://pypi.org/simple` if none is found.

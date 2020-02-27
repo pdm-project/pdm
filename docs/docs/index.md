@@ -39,14 +39,14 @@ $ pip install --user pdm
 
 Now there are not built-in support or plugins for PEP 582 in most IDEs, you have to configure your tools manually.
 
-!!! note
-    PDM will write and store project-wide configurations in `.pdm.toml` and you are recommended to add following lines
-    in the `.gitignore`:
 
-    ```
-    .pdm.toml
-    __pypackages__/
-    ```
+PDM will write and store project-wide configurations in `.pdm.toml` and you are recommended to add following lines
+in the `.gitignore`:
+
+```
+.pdm.toml
+__pypackages__/
+```
 
 ### PyCharm
 
