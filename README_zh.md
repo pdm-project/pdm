@@ -5,7 +5,7 @@
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 
-<script id="asciicast-OKzNEKz1Lj0wmCVtcIqefskim" src="https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.js" async></script>
+[![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
 
 [📖 文档](https://frostming.github.io/pdm)
 
