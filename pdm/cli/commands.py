@@ -9,11 +9,11 @@ from pdm.cli import actions
 from pdm.cli.config import config
 from pdm.cli.options import (
     dry_run_option,
+    pass_project,
     save_strategy_option,
     sections_option,
     update_strategy_option,
     verbose_option,
-    pass_project,
 )
 from pdm.context import context
 from pdm.utils import get_python_version, get_user_email_from_git

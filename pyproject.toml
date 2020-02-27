@@ -51,30 +51,6 @@ pdm = "pdm.cli.commands:cli"
 [tool.intreehooks]
 build-backend = "pdm.builders.api"
 
-[tool.isort]
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-use_parentheses = true
-force_grid_wrap = 0
-atomic = true
-not_skip = "__init__.py"
-skip_glob = ["*/setup.py"]
-filter_files = true
-known_first_party = "pdm"
-known_third_party = [
-    "click",
-    "halo",
-    "vistir",
-    "distlib",
-    "pythonfinder",
-    "pytest",
-    "tomlkit",
-    "appdirs",
-    "pip_shims",
-    "cfonts"
-]
-
 [tool.black]
 line-length = 88
 
