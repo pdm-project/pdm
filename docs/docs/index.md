@@ -1,9 +1,11 @@
 # Introduction
 
 PDM is a modern Python package manager with [PEP 582] support. It installs and manages packages
- in a similar way to `npm` that doesn't need to create a virtualenv at all!
+in a similar way to `npm` that doesn't need to create a virtualenv at all!
 
-[PEP 582]: https://www.python.org/dev/peps/pep-0582/
+<script id="asciicast-OKzNEKz1Lj0wmCVtcIqefskim" src="https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.js" async></script>
+
+[pep 582]: https://www.python.org/dev/peps/pep-0582/
 
 ## Feature highlights
 
@@ -20,6 +22,7 @@ PDM requires Python 3.7+ to be installed. It works on multiple platforms includi
     PDM itself needs Python 3.7+.
 
 ### Recommended installation method
+
 To avoid messing up with the system Python environemnt, the most recommended way to install PDM
 is via [pipx](https://pypi.org/project/pipx):
 
@@ -38,7 +41,6 @@ $ pip install --user pdm
 ## Use with IDE
 
 Now there are not built-in support or plugins for PEP 582 in most IDEs, you have to configure your tools manually.
-
 
 PDM will write and store project-wide configurations in `.pdm.toml` and you are recommended to add following lines
 in the `.gitignore`:

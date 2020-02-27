@@ -5,7 +5,9 @@
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 
-[文档](https://frostming.github.io/pdm)
+<script id="asciicast-OKzNEKz1Lj0wmCVtcIqefskim" src="https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.js" async></script>
+
+[📖 文档](https://frostming.github.io/pdm)
 
 ## 这个项目是啥?
 
@@ -71,6 +73,7 @@ PDM 会首先在 `__pypackages__` 中寻找，然后会在选择的 Python 解�
 纳入版本管理，然后在目标环境中执行 `pdm sync`。
 
 ### 5. 我能用`pdm`管理一个 Python 2.7 的项目吗？
+
 当然可以。只是`pdm`本身的安装需要 Python 版本高于 3.7，它并不限制项目使用的 Python 版本。
 
 ## 鸣谢
