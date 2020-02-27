@@ -1,6 +1,9 @@
 import click
 
 from pdm.context import context
+from pdm.project import Project
+
+pass_project = click.make_pass_decorator(Project, ensure=True)
 
 
 def verbose_option(f):

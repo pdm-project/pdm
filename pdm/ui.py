@@ -1,7 +1,8 @@
+import contextlib
 import functools
 import re
 from itertools import zip_longest
-from typing import Any, List, Optional
+from typing import List, Optional
 
 import click
 
@@ -27,6 +28,7 @@ class _IO:
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
         self._disable_colors = disable_colors
+        self._indent = ""
 
         for color in COLORS:
             setattr(self, color, functools.partial(self._style, fg=color))
@@ -38,10 +40,10 @@ class _IO:
         self.verbosity = verbosity
 
     def echo(
-        self, message: Any = None, err: bool = False, verbosity: int = NORMAL, **kwargs
+        self, message: str = "", err: bool = False, verbosity: int = NORMAL, **kwargs
     ) -> None:
         if self.verbosity >= verbosity:
-            click.echo(message, err=err, **kwargs)
+            click.echo(self._indent + str(message), err=err, **kwargs)
 
     def _style(self, text: str, *args, **kwargs) -> str:
         if self._disable_colors:
@@ -69,3 +71,11 @@ class _IO:
             self.echo(" ".join("-" * size for size in sizes))
         for row in rows:
             self.echo(" ".join(ljust(item, size) for item, size in zip(row, sizes)))
+
+    @contextlib.contextmanager
+    def indent(self, prefix):
+        """Indent the following lines with a prefix."""
+        _indent = self._indent
+        self._indent += prefix
+        yield
+        self._indent = _indent

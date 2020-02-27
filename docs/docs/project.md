@@ -44,3 +44,45 @@ $ pdm build
 - Built pdm_test-0.0.0-py3-none-any.whl
 ```
 The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine).
+
+## Show the current Python environment
+
+```bash
+$ pdm info
+Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
+Project Root:       D:/Workspace/pdm
+                                                                                                                                   [10:42]
+$ pdm info --env
+{
+  "implementation_name": "cpython",
+  "implementation_version": "3.8.0",
+  "os_name": "nt",
+  "platform_machine": "AMD64",
+  "platform_release": "10",
+  "platform_system": "Windows",
+  "platform_version": "10.0.18362",
+  "python_full_version": "3.8.0",
+  "platform_python_implementaiton": "CPython",
+  "python_version": "3.8",
+  "sys_platform": "win32"
+}
+```
+
+## Configrate the project
+
+Show the configurations:
+```bash
+$ pdm config
+```
+Get one single configuration:
+```bash
+$ pdm config get pypi.url
+```
+Change a configuration value and store in home configuration:
+```bash
+$ pdm config set pypi.url "https://testpypi.org/simple"
+```
+Change a configuration value and store in `.pdm.toml`:
+```bash
+$ pdm config set --local pypi.url "https://testpypi.org/simple"
+```

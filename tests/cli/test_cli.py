@@ -172,3 +172,40 @@ def test_init_command(project_no_init, invoke, mocker):
         "me@example.org",
         f">={python_version}",
     )
+
+
+def test_config_command(project, invoke):
+    result = invoke(["config"], obj=project)
+    assert result.exit_code == 0
+    assert "python.use_pyenv = True" in result.output
+
+    result = invoke(["config", "-v"], obj=project)
+    assert result.exit_code == 0
+    assert "Use the pyenv interpreter" in result.output
+
+
+def test_config_get_command(project, invoke):
+    result = invoke(["config", "get", "python.use_pyenv"], obj=project)
+    assert result.exit_code == 0
+    assert result.output.strip() == "True"
+
+    result = invoke(["config", "get", "foo.bar"], obj=project)
+    assert result.exit_code != 0
+
+
+def test_config_set_command(project, invoke):
+    result = invoke(["config", "set", "python.use_pyenv", "false"], obj=project)
+    assert result.exit_code == 0
+    result = invoke(["config", "get", "python.use_pyenv"], obj=project)
+    assert result.output.strip() == "False"
+
+    result = invoke(["config", "set", "foo.bar"], obj=project)
+    assert result.exit_code != 0
+
+
+def test_config_project_global_precedence(project, invoke):
+    invoke(["config", "set", "cache_dir", "/path/to/foo"], obj=project)
+    invoke(["config", "set", "-l", "cache_dir", "/path/to/bar"], obj=project)
+
+    result = invoke(["config", "get", "cache_dir"], obj=project)
+    assert result.output.strip() == "/path/to/bar"

@@ -6,12 +6,25 @@ import appdirs
 import tomlkit
 
 from pdm.exceptions import NoConfigError
+from pdm.utils import get_pypi_source
 
 
 class Config(MutableMapping):
+    """A dict-like object for configuration key and values"""
+
+    HOME_CONFIG = Path(appdirs.user_config_dir("pdm"))
+    CONFIG_ITEMS = {
+        "cache_dir": "The root directory of cached files",
+        "python.path": "The Python interpreter path",
+        "python.use_pyenv": "Use the pyenv interpreter",
+        "pypi.url": "The URL of PyPI mirror, defaults to https://pypi.org/simple",
+        "pypi.verify_ssl": "Verify SSL certificate when query PyPI",
+    }
     DEFAULT_CONFIG = {
         "cache_dir": appdirs.user_cache_dir("pdm"),
+        "python.use_pyenv": True,
     }
+    DEFAULT_CONFIG.update(get_pypi_source())
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
@@ -19,7 +32,7 @@ class Config(MutableMapping):
         self._dirty = {}
 
         self._project_config_file = self.project_root / ".pdm.toml"
-        self._global_config_file = Path(appdirs.user_config_dir("pdm")) / "config.toml"
+        self._global_config_file = self.HOME_CONFIG / "config.toml"
         self._project_config = self.load_config(self._project_config_file)
         self._global_config = self.load_config(self._global_config_file)
         # First load user config, then project config
@@ -66,6 +79,13 @@ class Config(MutableMapping):
             raise NoConfigError(key) from None
 
     def __setitem__(self, key: str, value: Any) -> None:
+        if key not in self.CONFIG_ITEMS:
+            raise NoConfigError(key)
+        if isinstance(value, str):
+            if value.lower() == "false":
+                value = False
+            elif value.lower() == "true":
+                value = True
         self._dirty[key] = value
         self._data[key] = value
 
