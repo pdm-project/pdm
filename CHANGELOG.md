@@ -1,3 +1,20 @@
+Release v0.3.0 (2020-02-28)
+---------------------------
+
+### Features & Improvements
+
+- Add a new command `pdm config` to inspect configurations. [#26](https://github.com/frostming/pdm/issues/26)
+- Add a new command `pdm cache clear` to clean caches. [#63](https://github.com/frostming/pdm/issues/63)
+
+### Bug Fixes
+
+- Correctly show dependency graph when circular dependencies exist. [#62](https://github.com/frostming/pdm/issues/62)
+
+### Improved Documentation
+
+- Write the initial documentation for PDM. [#14](https://github.com/frostming/pdm/issues/14)
+
+
 Release v0.2.6 (2020-02-25)
 ---------------------------
 
