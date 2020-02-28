@@ -4,11 +4,11 @@ from pdm.cli.options import pass_project, verbose_option
 from pdm.context import context
 
 
-@click.group(invoke_without_command=True)
+@click.group(invoke_without_command=True, name="config")
 @verbose_option
 @pass_project
 @click.pass_context
-def config(ctx, project):
+def config_cmd(ctx, project):
     """Display the current configuration"""
     config_ins = project.config
     if ctx.invoked_subcommand:
@@ -43,7 +43,7 @@ def config(ctx, project):
             context.io.echo(f"{context.io.cyan(key)} = {config_ins[key]}")
 
 
-@config.command()
+@config_cmd.command()
 @click.argument("name")
 @pass_project
 def get(project, name):
@@ -51,7 +51,7 @@ def get(project, name):
     context.io.echo(project.config[name])
 
 
-@config.command(name="set")
+@config_cmd.command(name="set")
 @click.option(
     "-l", "--local", is_flag=True, help="Store the configuration into home config file."
 )

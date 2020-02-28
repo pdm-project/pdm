@@ -161,7 +161,14 @@ class TestProject(Project):
     pass
 
 
-Distribution = collections.namedtuple("Distribution", "key,version")
+class Distribution:
+    def __init__(self, key, version):
+        self.key = key
+        self.version = version
+        self.dependencies = []
+
+    def requires(self, extras=()):
+        return self.dependencies
 
 
 class MockWorkingSet(collections.abc.MutableMapping):
@@ -169,9 +176,8 @@ class MockWorkingSet(collections.abc.MutableMapping):
         self.pkg_ws = None
         self._data = {}
 
-    def add_candidate(self, candidate):
-        key = safe_name(candidate.name).lower()
-        self._data[key] = Distribution(key, candidate.version)
+    def add_distribution(self, dist):
+        self._data[dist.key] = dist
 
     def __getitem__(self, key):
         return self._data[key]
@@ -190,12 +196,16 @@ class MockWorkingSet(collections.abc.MutableMapping):
 
 
 @pytest.fixture()
-def working_set(mocker):
+def working_set(mocker, repository):
     rv = MockWorkingSet()
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate):
-        rv.add_candidate(candidate)
+        dependencies = repository.get_dependencies(candidate)[0]
+        key = safe_name(candidate.name).lower()
+        dist = Distribution(key, candidate.version)
+        dist.dependencies = dependencies
+        rv.add_distribution(dist)
 
     def uninstall(dist):
         del rv[dist.key]

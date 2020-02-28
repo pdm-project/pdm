@@ -9,20 +9,20 @@ from pdm.cli import actions
 from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
+from tests.conftest import Distribution
 
 Requirement = namedtuple("Requirement", "key")
-Candidate = namedtuple("Candidate", "req,name,version")
 
 
-def make_candidate(name, version):
+def make_distribution(name, version):
     req = Requirement(name)
-    return Candidate(req=req, name=name, version=version)
+    return Distribution(req.key, version)
 
 
 def test_sync_only_different(project, repository, working_set, capsys):
-    working_set.add_candidate(make_candidate("foo", "0.1.0"))
-    working_set.add_candidate(make_candidate("chardet", "3.0.1"))
-    working_set.add_candidate(make_candidate("idna", "2.7"))
+    working_set.add_distribution(make_distribution("foo", "0.1.0"))
+    working_set.add_distribution(make_distribution("chardet", "3.0.1"))
+    working_set.add_distribution(make_distribution("idna", "2.7"))
     actions.do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
     assert "4 packages added" in out
@@ -40,11 +40,11 @@ def test_sync_no_lockfile(project):
 
 def test_sync_clean_packages(project, repository, working_set):
     for candidate in [
-        make_candidate("foo", "0.1.0"),
-        make_candidate("chardet", "3.0.1"),
-        make_candidate("idna", "2.7"),
+        make_distribution("foo", "0.1.0"),
+        make_distribution("chardet", "3.0.1"),
+        make_distribution("idna", "2.7"),
     ]:
-        working_set.add_candidate(candidate)
+        working_set.add_distribution(candidate)
     actions.do_add(project, packages=["requests"], sync=False)
     actions.do_sync(project, clean=True)
     assert "foo" not in working_set
@@ -52,11 +52,11 @@ def test_sync_clean_packages(project, repository, working_set):
 
 def test_sync_dry_run(project, repository, working_set):
     for candidate in [
-        make_candidate("foo", "0.1.0"),
-        make_candidate("chardet", "3.0.1"),
-        make_candidate("idna", "2.7"),
+        make_distribution("foo", "0.1.0"),
+        make_distribution("chardet", "3.0.1"),
+        make_distribution("idna", "2.7"),
     ]:
-        working_set.add_candidate(candidate)
+        working_set.add_distribution(candidate)
     actions.do_add(project, packages=["requests"], sync=False)
     actions.do_sync(project, clean=True, dry_run=True)
     assert "foo" in working_set
@@ -351,6 +351,17 @@ def test_list_dependency_graph(capsys):
     content, _ = capsys.readouterr()
     assert "halo 0.0.28 [ required: <1.0.0,>=0.0.28 ]" in content
     assert "six 1.14.0 [ required: >=1.12.0 ]" in content
+
+
+def test_list_dependency_graph_with_circular(project, capsys, repository, working_set):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_candidate("foo-bar", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
+    repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
+    actions.do_add(project, packages=["foo"])
+    actions.do_list(project, True)
+    content, _ = capsys.readouterr()
+    assert "foo [circular]" in content
 
 
 def test_update_unconstrained_without_packages(project, repository, working_set):
