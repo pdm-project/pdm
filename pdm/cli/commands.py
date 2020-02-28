@@ -6,6 +6,7 @@ from click._compat import term_len
 from click.formatting import HelpFormatter, iter_rows, measure_table, wrap_text
 
 from pdm.cli import actions
+from pdm.cli.cache import cache_cmd
 from pdm.cli.config import config_cmd
 from pdm.cli.options import (
     dry_run_option,
@@ -342,3 +343,4 @@ def info(project, python, show_project, env):
 
 
 cli.add_command(config_cmd)
+cli.add_command(cache_cmd)
