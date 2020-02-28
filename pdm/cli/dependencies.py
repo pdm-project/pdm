@@ -52,9 +52,9 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
                 node_with_extras.add(name)
             graph.add(node)
 
-        for k in reqs:
-            child = add_package(k, working_set.get(strip_extras(k)[0]))
-            graph.connect(node, child)
+            for k in reqs:
+                child = add_package(k, working_set.get(strip_extras(k)[0]))
+                graph.connect(node, child)
 
         return node
 
@@ -79,15 +79,22 @@ NON_LAST_PREFIX = "│   "
 
 
 def format_package(
-    graph: DirectedGraph, package: Package, required: str = "", prefix: str = ""
+    graph: DirectedGraph,
+    package: Package,
+    required: str = "",
+    prefix: str = "",
+    visited=None,
 ) -> str:
     """Format one package.
 
-    :param graph: the dependency graph.
-    :param package: the package instance.
-    :param required: the version required by its parent.
-    :param prefix: prefix text for children.
+    :param graph: the dependency graph
+    :param package: the package instance
+    :param required: the version required by its parent
+    :param prefix: prefix text for children
+    :param visited: the visited package collection
     """
+    if visited is None:
+        visited = set()
     result = []
     version = (
         context.io.red("[ not installed ]")
@@ -98,8 +105,13 @@ def format_package(
         and not SpecifierSet(required).contains(package.version)
         else context.io.yellow(package.version)
     )
+    if package.name in visited:
+        version = context.io.red("[circular]")
     required = f"[ required: {required} ]" if required else ""
     result.append(f"{context.io.green(package.name, bold=True)} {version} {required}\n")
+    if package.name in visited:
+        return "".join(result)
+    visited.add(package.name)
     try:
         *children, last = sorted(graph.iter_children(package), key=lambda p: p.name)
     except ValueError:  # No children nodes
@@ -110,13 +122,17 @@ def format_package(
             result.append(
                 prefix
                 + NON_LAST_CHILD
-                + format_package(graph, child, required, prefix + NON_LAST_PREFIX)
+                + format_package(
+                    graph, child, required, prefix + NON_LAST_PREFIX, visited.copy()
+                )
             )
         required = str(package.requirements[last.name].specifier or "Any")
         result.append(
             prefix
             + LAST_CHILD
-            + format_package(graph, last, required, prefix + LAST_PREFIX)
+            + format_package(
+                graph, last, required, prefix + LAST_PREFIX, visited.copy()
+            )
         )
     return "".join(result)
 
@@ -125,5 +141,5 @@ def format_dependency_graph(graph: DirectedGraph) -> str:
     """Format dependency graph for output."""
     content = []
     for package in graph.iter_children(None):
-        content.append(format_package(graph, package, prefix=""))
+        content.append(format_package(graph, package, prefix="", visited=set()))
     return "".join(content).strip()

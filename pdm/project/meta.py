@@ -59,10 +59,12 @@ class PackageMeta:
     license = MetaField("license")
 
     def _get_name(self, value):
-        return _NAME_EMAIL_RE.match(value).group(1)
+        m = _NAME_EMAIL_RE.match(value)
+        return m.group(1) if m else None
 
     def _get_email(self, value):
-        return _NAME_EMAIL_RE.match(value).group(2)
+        m = _NAME_EMAIL_RE.match(value)
+        return m.group(2) if m else None
 
     author = MetaField("author", _get_name)
     author_email = MetaField("author", _get_email)
@@ -91,7 +93,13 @@ class PackageMeta:
 
     @property
     def install_requires(self) -> List[str]:
-        return [r.as_line() for r in self.project.get_dependencies().values()]
+        # Exclude editable requirements for not supported in `install_requires`
+        # field.
+        return [
+            r.as_line()
+            for r in self.project.get_dependencies().values()
+            if not r.editable
+        ]
 
     @property
     def extras_require(self) -> Dict[str, List[str]]:
