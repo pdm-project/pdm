@@ -232,6 +232,17 @@ class PySpecSet(SpecifierSet):
         if not self.is_impossible:
             super().__init__(str(self))
 
+    def _comp_key(self):
+        return (self._lower_bound, self._upper_bound, tuple(self._excludes))
+
+    def __hash__(self):
+        return hash(self._comp_key())
+
+    def __eq__(self, other):
+        if not isinstance(other, PySpecSet):
+            return False
+        return self._comp_key() == other._comp_key()
+
     @property
     def is_impossible(self) -> bool:
         if (
@@ -448,6 +459,12 @@ class PySpecSet(SpecifierSet):
 
 
 class ImpossiblePySpecSet(PySpecSet):
+    def __init__(self, version_str="", analyze=True):
+        super().__init__(version_str=version_str, analyze=False)
+        # Make sure the spec set is impossible
+        self._lower_bound = self.MAX_VERSION
+        self._upper_bound = self.MIN_VERSION
+
     @property
     def is_impossible(self):
         return True

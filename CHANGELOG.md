@@ -1,3 +1,11 @@
+Release v0.3.1 (2020-03-07)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that `ImpossiblePySpec`'s hash clashes with normal one.
+
+
 Release v0.3.0 (2020-02-28)
 ---------------------------
 
