@@ -1,3 +1,15 @@
+Release v0.3.2 (2020-03-08)
+---------------------------
+
+### Features & Improvements
+
+- Display all availible Python interpreters if users don't give on in `pdm init`. [#67](https://github.com/frostming/pdm/issues/67)
+
+### Bug Fixes
+
+- Regard `4.0` as infinite upper bound when checking subsetting. [#66](https://github.com/frostming/pdm/issues/66)
+
+
 Release v0.3.1 (2020-03-07)
 ---------------------------
 
