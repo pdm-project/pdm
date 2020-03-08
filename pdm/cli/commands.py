@@ -289,7 +289,9 @@ def build(project, sdist, wheel, dest, clean):
 @pass_project
 def init(project):
     """Initialize a pyproject.toml for PDM."""
-    python = click.prompt("Please enter the Python interpreter to use")
+    python = click.prompt(
+        "Please enter the Python interpreter to use", default="", show_default=False
+    )
     actions.do_use(project, python)
 
     if project.pyproject_file.exists():

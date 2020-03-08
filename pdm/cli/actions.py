@@ -447,7 +447,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    if not all(c.isdigit() for c in python.split(".")):
+    if python and not all(c.isdigit() for c in python.split(".")):
         if Path(python).exists():
             python_path = Path(python).absolute().as_posix()
         else:
@@ -458,7 +458,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     else:
         finder = pythonfinder.Finder()
         pythons = []
-        args = [int(v) for v in python.split(".")]
+        args = [int(v) for v in python.split(".") if v != ""]
         for i, entry in enumerate(finder.find_all_python_versions(*args)):
             python_version = get_python_version(entry.path.as_posix(), True)
             pythons.append((entry.path.as_posix(), python_version))
