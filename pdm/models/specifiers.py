@@ -86,6 +86,7 @@ class PySpecSet(SpecifierSet):
         (3, 6): 10,
         (3, 7): 6,
     }
+    MAX_MAJOR_VERSION = 4
     MIN_VERSION = (-1, -1, -1)
     MAX_VERSION = (99, 99, 99)
 
@@ -381,6 +382,10 @@ class PySpecSet(SpecifierSet):
         if self.is_allow_all:
             return True
         other = type(self)(str(other))
+        if other._upper_bound[0] >= self.MAX_MAJOR_VERSION:
+            # XXX: narrow down the upper bound to ``MAX_MAJOR_VERSION``
+            # So that `>=3.6,<4.0` is considered a superset of `>=3.7`, see issues/66
+            other._upper_bound = (self.MAX_MAJOR_VERSION, 0, 0)
         if (
             self._lower_bound > other._lower_bound
             or self._upper_bound < other._upper_bound
@@ -398,6 +403,8 @@ class PySpecSet(SpecifierSet):
         if self.is_impossible:
             return False
         other = type(self)(str(other))
+        if other._upper_bound[0] >= self.MAX_MAJOR_VERSION:
+            other._upper_bound = self.MAX_VERSION
         if other.is_allow_all:
             return True
         if (

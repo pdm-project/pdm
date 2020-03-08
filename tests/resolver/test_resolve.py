@@ -200,3 +200,9 @@ def test_resolve_two_extras_from_the_same_package(project, repository):
     result = resolve_requirements(repository, [line])
     assert "pysocks" in result
     assert "pyopenssl" in result
+
+
+def test_resolve_package_with_dummy_upbound(project, repository):
+    repository.add_candidate("foo", "0.1.0", ">=3.6,<4.0")
+    result = resolve_requirements(repository, ["foo"], ">=3.5")
+    assert "foo" in result
