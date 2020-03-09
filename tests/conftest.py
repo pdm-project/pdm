@@ -232,6 +232,7 @@ def project_no_init(tmp_path, mocker):
     mocker.patch("pdm.cli.options.Project", return_value=p)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
+    p.config._dirty = {}
     return p
 
 

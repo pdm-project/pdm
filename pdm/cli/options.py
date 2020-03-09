@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import click
 
 from pdm.context import context
@@ -96,3 +98,46 @@ def update_strategy_option(f):
         )(f)
     )
     return f
+
+
+def global_option(f):
+    def callback(ctx, param, value):
+        if value:
+            ctx.obj = Project.create_global()
+        return value
+
+    return click.option(
+        "-g",
+        "--global",
+        default=False,
+        expose_value=False,
+        is_flag=True,
+        callback=callback,
+        is_eager=True,
+        help="Use the global project",
+    )(f)
+
+
+def project_option(allow_global=True):
+    def callback(ctx, param, value):
+        if value:
+            project = ctx.ensure_object(Project)
+            project.root = Path(value).absolute()
+            project.init_global_project()
+        return value
+
+    def decorator(f):
+        f = pass_project(f)
+        f = click.option(
+            "-p",
+            "--project",
+            metavar="PROJECT",
+            help="Specify a project root directory",
+            expose_value=False,
+            callback=callback,
+        )(f)
+        if allow_global:
+            f = global_option(f)
+        return f
+
+    return decorator

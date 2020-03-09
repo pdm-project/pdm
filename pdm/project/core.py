@@ -14,7 +14,7 @@ from pdm._types import Source
 from pdm.context import context
 from pdm.exceptions import ProjectError
 from pdm.models.candidates import Candidate, identify
-from pdm.models.environment import Environment
+from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
@@ -31,15 +31,23 @@ class Project:
     PDM_NAMESPACE = "tool.pdm"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
     PYPROJECT_VERSION = "0.0.1"
+    GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     repository_class = PyPIRepository
 
-    def __init__(self, root_path: Optional[str] = None) -> None:
+    @classmethod
+    def create_global(cls, root_path: Optional[str] = None) -> "Project":
         if root_path is None:
-            root_path = find_project_root() or ""
+            root_path = cls.GLOBAL_PROJECT
+        project = cls(root_path)
+        project.is_global = True
+        return project
+
+    def __init__(self, root_path: Optional[str] = None) -> None:
+        self.is_global = False
+        if root_path is None:
+            root_path = find_project_root()
         self.root = Path(root_path).absolute()
-        self.pyproject_file = self.root / self.PYPROJECT_FILENAME
-        self.lockfile_file = self.root / "pdm.lock"
 
         self._pyproject = None  # type: Optional[Container]
         self._lockfile = None  # type: Optional[Container]
@@ -48,6 +56,14 @@ class Project:
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"
+
+    @property
+    def pyproject_file(self) -> Path:
+        return self.root / self.PYPROJECT_FILENAME
+
+    @property
+    def lockfile_file(self) -> Path:
+        return self.root / "pdm.lock"
 
     @property
     def pyproject(self):
@@ -64,7 +80,10 @@ class Project:
         if not data:
             return {}
         for sec in self.PDM_NAMESPACE.split("."):
-            data = data.setdefault(sec, {})
+            # setdefault has bug
+            if sec not in data:
+                data[sec] = {}
+            data = data[sec]
         return data
 
     @property
@@ -91,6 +110,8 @@ class Project:
 
     @property
     def environment(self) -> Environment:
+        if self.is_global:
+            return GlobalEnvironment(self.python_requires, self.config)
         return Environment(self.python_requires, self.config)
 
     @property
@@ -203,7 +224,7 @@ class Project:
                 )
             } or None
             result[identify(req)] = can
-        if section in ("default", "__all__") and self.meta.name:
+        if not self.is_global and section in ("default", "__all__") and self.meta.name:
             result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
         return result
 
@@ -232,6 +253,7 @@ class Project:
     def add_dependencies(
         self, requirements: Dict[str, Requirement], show_message: bool = True
     ) -> None:
+        print(self.pyproject, self.tool_settings)
         for name, dep in requirements.items():
             if dep.from_section == "default":
                 deps = self.tool_settings["dependencies"]
@@ -270,3 +292,17 @@ class Project:
     @property
     def meta(self) -> PackageMeta:
         return PackageMeta(self)
+
+    def init_global_project(self) -> None:
+        if not self.is_global:
+            return
+        if not self.pyproject_file.exists():
+            self.root.mkdir(parents=True, exist_ok=True)
+            self.pyproject_file.write_text(
+                """\
+[tool.pdm.dependencies]
+
+[tool.pdm.dev-dependencies]
+"""
+            )
+            self._pyproject = None

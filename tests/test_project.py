@@ -2,6 +2,8 @@ import os
 
 import pytest
 
+from pdm.project import Project
+
 
 def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
@@ -29,18 +31,6 @@ def test_project_config_set_invalid_key(project):
         config["foo"] = "bar"
 
 
-def test_project_config_save_global_local(project):
-    config = project.config
-    config["cache_dir"] = "foo_path"
-    config.save_config(True)
-    assert config._global_config["cache_dir"] == "foo_path"
-
-    config["cache_dir"] = "some_path"
-    config.save_config(False)
-    assert config._global_config["cache_dir"] == "foo_path"
-    assert config._project_config["cache_dir"] == "some_path"
-
-
 def test_project_sources_overriding(project):
     project.config["pypi.url"] = "https://testpypi.org/simple"
     assert project.sources[0]["url"] == "https://testpypi.org/simple"
@@ -49,3 +39,9 @@ def test_project_sources_overriding(project):
         {"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}
     ]
     assert project.sources[0]["url"] == "https://example.org/simple"
+
+
+def test_global_project(tmp_path):
+    project = Project.create_global(tmp_path.as_posix())
+    project.init_global_project()
+    assert project.environment.is_global
