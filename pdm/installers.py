@@ -273,7 +273,7 @@ def _print_list_information(word, items, dry=False):
     suffix = "s" if len(items) > 1 else ""
     count = len(items)
     items = ", ".join(str(context.io.green(item, bold=True)) for item in items)
-    print(template.format(count=count, suffix=suffix, word=word, items=items))
+    context.io.echo(template.format(count=count, suffix=suffix, word=word, items=items))
 
 
 class Installer:  # pragma: no cover

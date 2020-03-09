@@ -253,7 +253,6 @@ class Project:
     def add_dependencies(
         self, requirements: Dict[str, Requirement], show_message: bool = True
     ) -> None:
-        print(self.pyproject, self.tool_settings)
         for name, dep in requirements.items():
             if dep.from_section == "default":
                 deps = self.tool_settings["dependencies"]
