@@ -380,3 +380,16 @@ def get_user_email_from_git() -> Tuple[str, str]:
     except subprocess.CalledProcessError:
         email = ""
     return username, email
+
+
+def add_ssh_scheme_to_git_uri(uri: str) -> str:
+    """Cleans VCS uris from pip format"""
+    # Add scheme for parsing purposes, this is also what pip does
+    if "://" not in uri:
+        uri = "ssh://" + uri
+        parsed = parse.urlparse(uri)
+        if ":" in parsed.netloc:
+            netloc, _, path_start = parsed.netloc.rpartition(":")
+            path = "/{0}{1}".format(path_start, parsed.path)
+            uri = parse.urlunparse(parsed._replace(netloc=netloc, path=path))
+    return uri

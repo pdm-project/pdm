@@ -17,6 +17,7 @@ from pdm.models.markers import Marker, get_marker, split_marker_element
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
+    add_ssh_scheme_to_git_uri,
     is_readonly_property,
     parse_name_version_from_wheel,
     url_without_fragments,
@@ -338,7 +339,7 @@ class VcsRequirement(FileRequirement):
 
     def _parse_url(self) -> None:
         if self.url.startswith("git@"):
-            self.url = "ssh://" + self.url[4:].replace(":", "/")
+            self.url = add_ssh_scheme_to_git_uri(self.url)
         if not self.name:
             self._parse_name_from_url()
         if not self.name:
