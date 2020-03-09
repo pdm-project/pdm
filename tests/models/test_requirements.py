@@ -77,6 +77,11 @@ REQUIREMENTS = [
         ("requests", {"version": "*", "marker": 'python_version == "3.7.*"'}),
         'requests; python_version == "3.7.*"',
     ),
+    (
+        "git+git@github.com:pypa/pip.git#egg=pip",
+        ("pip", {"git": "ssh://git@github.com/pypa/pip.git"}),
+        "git+ssh://git@github.com/pypa/pip.git#egg=pip",
+    ),
 ]
 
 
