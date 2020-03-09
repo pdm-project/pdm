@@ -20,6 +20,7 @@ from vistir.path import normalize_path
 
 from pdm.context import context
 from pdm.exceptions import NoPythonVersion
+from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
@@ -28,10 +29,10 @@ from pdm.utils import (
     get_finder,
     get_pep508_environment,
     get_python_version,
+    get_sys_config_paths,
 )
 
 if TYPE_CHECKING:
-    from pdm.models.specifiers import PySpecSet
     from pdm.project.config import Config
     from pdm._types import Source
 
@@ -74,6 +75,8 @@ class WorkingSet(collections.abc.Mapping):
 class Environment:
     """Environment dependent stuff related to the selected Python interpreter."""
 
+    is_global = False
+
     def __init__(self, python_requires: PySpecSet, config: Config) -> None:
         """
         :param python_requires: the project's python requires constraint.
@@ -86,14 +89,17 @@ class Environment:
     def python_executable(self) -> str:
         """Get the Python interpreter path."""
         if self.config.get("python.path"):
-            path = self.config["python.path"]
-            try:
-                get_python_version(path)
-                return path
-            except Exception:
-                pass
+            return self.config["python.path"]
         if PYENV_INSTALLED and self.config.get("python.use_pyenv", True):
             return os.path.join(PYENV_ROOT, "shims", "python")
+        if "VIRTUAL_ENV" in os.environ:
+            context.io.echo(
+                "An activated virtualenv is detected, reuse the interpreter now.",
+                err=True,
+                verbosity=context.io.DETAIL,
+            )
+            scripts_dir = "Scripts" if os.name == "nt" else "bin"
+            return os.path.join(os.environ["VIRTUAL_ENV"], scripts_dir, "python")
 
         # First try what `python` refers to.
         path = shutil.which("python")
@@ -335,3 +341,30 @@ class Environment:
                 return self.python_executable
         # Fallback to use shutil.which to find the executable
         return shutil.which(command, path=os.getenv("PATH"))
+
+
+class GlobalEnvironment(Environment):
+    """Global environment"""
+
+    is_global = True
+
+    def __init__(self, python_requires: PySpecSet, config: Config) -> None:
+        super().__init__(python_requires, config)
+        self.python_requires = PySpecSet(
+            "==" + get_python_version(self.python_executable, True)
+        )
+
+    def get_paths(self) -> Dict[str, str]:
+        paths = get_sys_config_paths(self.python_executable)
+        paths["prefix"] = paths["data"]
+        paths["headers"] = paths["include"]
+        return paths
+
+    def is_local(self, path) -> bool:
+        return normalize_path(path).startswith(
+            normalize_path(self.get_paths()["prefix"])
+        )
+
+    @property
+    def packages_path(self) -> Optional[Path]:
+        return None

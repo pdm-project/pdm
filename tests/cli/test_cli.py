@@ -67,6 +67,11 @@ def test_build_command(project, invoke, mocker):
     do_build.assert_called_once()
 
 
+def test_build_global_project_forbidden(invoke):
+    result = invoke(["build", "-g"])
+    assert result.exit_code != 0
+
+
 def test_list_command(project, invoke, mocker):
     do_list = mocker.patch.object(actions, "do_list")
     invoke(["list"], obj=project)
@@ -81,11 +86,16 @@ def test_info_command(project, invoke):
     result = invoke(["info", "--python"], obj=project)
     assert result.output.strip() == project.environment.python_executable
 
-    result = invoke(["info", "--project"], obj=project)
+    result = invoke(["info", "--directory"], obj=project)
     assert result.output.strip() == project.root.as_posix()
 
     result = invoke(["info", "--env"], obj=project)
     assert result.exit_code == 0
+
+
+def test_info_global_project(invoke):
+    result = invoke(["info", "-g", "--directory"])
+    assert "global-project" in result.output.strip()
 
 
 def test_run_command(invoke, capfd):
@@ -202,12 +212,15 @@ def test_config_set_command(project, invoke):
     result = invoke(["config", "set", "foo.bar"], obj=project)
     assert result.exit_code != 0
 
+    result = invoke(["config", "set", "-l", "cache_dir", "/path/to/bar"], obj=project)
+    assert result.exit_code != 0
+
 
 def test_config_project_global_precedence(project, invoke):
-    invoke(["config", "set", "cache_dir", "/path/to/foo"], obj=project)
-    invoke(["config", "set", "-l", "cache_dir", "/path/to/bar"], obj=project)
+    invoke(["config", "set", "python.path", "/path/to/foo"], obj=project)
+    invoke(["config", "set", "-l", "python.path", "/path/to/bar"], obj=project)
 
-    result = invoke(["config", "get", "cache_dir"], obj=project)
+    result = invoke(["config", "get", "python.path"], obj=project)
     assert result.output.strip() == "/path/to/bar"
 
 

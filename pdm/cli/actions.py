@@ -111,7 +111,7 @@ def do_lock(
     repository = project.get_repository()
     requirements = requirements or project.all_dependencies
     allow_prereleases = project.allow_prereleases
-    requires_python = project.python_requires
+    requires_python = project.environment.python_requires
     if strategy == "all":
         provider = BaseProvider(repository, requires_python, allow_prereleases)
     else:
@@ -392,6 +392,8 @@ def do_build(
     clean: bool = True,
 ):
     """Build artifacts for distribution."""
+    if project.is_global:
+        raise ProjectError("Not allowed to build based on the global project.")
     check_project_file(project)
     if not wheel and not sdist:
         context.io.echo("All artifacts are disabled, nothing to do.", err=True)

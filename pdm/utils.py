@@ -338,6 +338,17 @@ def get_python_version(executable, as_string=False):
     return ".".join(map(str, result))
 
 
+@functools.lru_cache()
+def get_sys_config_paths(executable: str) -> Dict[str, str]:
+    """Return the sys_config.get_paths() result for the python interpreter"""
+    args = [
+        executable,
+        "-c",
+        "import sysconfig,json;print(json.dumps(sysconfig.get_paths()))",
+    ]
+    return json.loads(subprocess.check_output(args))
+
+
 def get_pep508_environment(executable: str) -> Dict[str, Any]:
     script = importlib.import_module("pdm.pep508").__file__.rstrip("co")
     args = [executable, script]

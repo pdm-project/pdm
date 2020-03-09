@@ -294,10 +294,11 @@ class Installer:  # pragma: no cover
         paths = self.environment.get_paths()
         maker = distlib.scripts.ScriptMaker(None, None)
         maker.executable = self.environment.python_executable
-        maker.script_template = maker.script_template.replace(
-            "import sys",
-            "import sys\nsys.path.insert(0, {!r})".format(paths["platlib"]),
-        )
+        if not self.environment.is_global:
+            maker.script_template = maker.script_template.replace(
+                "import sys",
+                "import sys\nsys.path.insert(0, {!r})".format(paths["platlib"]),
+            )
         _install_wheel(wheel, paths, maker)
 
     def install_editable(self, ireq: shims.InstallRequirement) -> None:
@@ -312,6 +313,8 @@ class Installer:  # pragma: no cover
             install_script,
             setup_path,
             paths["prefix"],
+            paths["purelib"],
+            paths["scripts"],
         ]
         with self.environment.activate(), cd(ireq.unpacked_source_directory):
             capture_output = context.io.verbosity < context.io.DETAIL

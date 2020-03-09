@@ -10,7 +10,7 @@ from pdm.cli.cache import cache_cmd
 from pdm.cli.config import config_cmd
 from pdm.cli.options import (
     dry_run_option,
-    pass_project,
+    project_option,
     save_strategy_option,
     sections_option,
     update_strategy_option,
@@ -109,7 +109,7 @@ def cli():
 
 @cli.command(help="Lock dependencies.")
 @verbose_option
-@pass_project
+@project_option()
 def lock(project):
     actions.do_lock(project)
 
@@ -124,7 +124,7 @@ def lock(project):
     default=True,
     help="Don't do lock if lockfile is not found or outdated.",
 )
-@pass_project
+@project_option()
 def install(project, sections, dev, default, lock):
     if lock:
         if not project.lockfile_file.exists():
@@ -145,7 +145,7 @@ def install(project, sections, dev, default, lock):
 @verbose_option
 @click.argument("command")
 @click.argument("args", nargs=-1)
-@pass_project
+@project_option()
 def run(project, command, args):
     with project.environment.activate():
         expanded_command = project.environment.which(command)
@@ -168,7 +168,7 @@ def run(project, command, args):
     default=None,
     help="Whether to remove unneeded packages from working set.",
 )
-@pass_project
+@project_option()
 def sync(project, sections, dev, default, dry_run, clean):
     actions.do_sync(project, sections, dev, default, dry_run, clean)
 
@@ -200,7 +200,7 @@ def sync(project, sections, dev, default, dry_run, clean):
     metavar="EDITABLES",
 )
 @click.argument("packages", nargs=-1)
-@pass_project
+@project_option()
 def add(project, dev, section, sync, save, strategy, editables, packages):
     actions.do_add(project, dev, section, sync, save, strategy, editables, packages)
 
@@ -218,7 +218,7 @@ def add(project, dev, section, sync, save, strategy, editables, packages):
     help="Ignore the version constraint of packages.",
 )
 @click.argument("packages", nargs=-1)
-@pass_project
+@project_option()
 def update(project, dev, sections, default, strategy, save, unconstrained, packages):
     actions.do_update(
         project, dev, sections, default, strategy, save, unconstrained, packages
@@ -243,7 +243,7 @@ def update(project, dev, sections, default, strategy, save, unconstrained, packa
     help="Only write pyproject.toml and do not uninstall packages.",
 )
 @click.argument("packages", nargs=-1)
-@pass_project
+@project_option()
 def remove(project, dev, section, sync, packages):
     actions.do_remove(project, dev, section, sync, packages)
 
@@ -253,7 +253,7 @@ def remove(project, dev, section, sync, packages):
 @click.option(
     "--graph", is_flag=True, default=False, help="Display a graph of dependencies."
 )
-@pass_project
+@project_option()
 def list_(project, graph):
     """List packages installed in the current working set."""
     actions.do_list(project, graph)
@@ -279,14 +279,14 @@ def list_(project, graph):
     flag_value=False,
     help="Do not clean the target directory.",
 )
-@pass_project
+@project_option(False)
 def build(project, sdist, wheel, dest, clean):
     actions.do_build(project, sdist, wheel, dest, clean)
 
 
 @cli.command()
 @verbose_option
-@pass_project
+@project_option()
 def init(project):
     """Initialize a pyproject.toml for PDM."""
     python = click.prompt(
@@ -326,19 +326,19 @@ def init(project):
     "-f", "--first", is_flag=True, help="Select the first matched interpreter."
 )
 @click.argument("python")
-@pass_project
+@project_option()
 def use(project, first, python):
     """Use the given python version or path as base interpreter."""
     actions.do_use(project, python, first)
 
 
 @cli.command()
-@click.option("-p", "--python", is_flag=True, help="Show the interpreter path.")
+@click.option("--python", is_flag=True, help="Show the interpreter path.")
 @click.option(
-    "-d", "--project", "show_project", is_flag=True, help="Show the project root path."
+    "--directory", "show_project", is_flag=True, help="Show the project root path."
 )
 @click.option("--env", is_flag=True, help="Show PEP508 environment markers.")
-@pass_project
+@project_option()
 def info(project, python, show_project, env):
     """Show the project information."""
     actions.do_info(project, python, show_project, env)

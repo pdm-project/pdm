@@ -12,13 +12,17 @@ from pdm.utils import get_pypi_source
 class Config(MutableMapping):
     """A dict-like object for configuration key and values"""
 
-    HOME_CONFIG = Path(appdirs.user_config_dir("pdm"))
+    HOME_CONFIG = Path.home() / ".pdm" / "config.toml"
     CONFIG_ITEMS = {
-        "cache_dir": "The root directory of cached files",
-        "python.path": "The Python interpreter path",
-        "python.use_pyenv": "Use the pyenv interpreter",
-        "pypi.url": "The URL of PyPI mirror, defaults to https://pypi.org/simple",
-        "pypi.verify_ssl": "Verify SSL certificate when query PyPI",
+        # config name: (config_description, not_for_project)
+        "cache_dir": ("The root directory of cached files", True),
+        "python.path": ("The Python interpreter path", False),
+        "python.use_pyenv": ("Use the pyenv interpreter", False),
+        "pypi.url": (
+            "The URL of PyPI mirror, defaults to https://pypi.org/simple",
+            False,
+        ),
+        "pypi.verify_ssl": ("Verify SSL certificate when query PyPI", False),
     }
     DEFAULT_CONFIG = {
         "cache_dir": appdirs.user_cache_dir("pdm"),
@@ -32,11 +36,11 @@ class Config(MutableMapping):
         self._dirty = {}
 
         self._project_config_file = self.project_root / ".pdm.toml"
-        self._global_config_file = self.HOME_CONFIG / "config.toml"
+        self._home_config_file = self.HOME_CONFIG / "config.toml"
         self._project_config = self.load_config(self._project_config_file)
-        self._global_config = self.load_config(self._global_config_file)
+        self._home_config = self.load_config(self._home_config_file)
         # First load user config, then project config
-        for config in (self._global_config, self._project_config):
+        for config in (self._home_config, self._project_config):
             self._data.update(dict(config))
 
     def load_config(self, file_path: Path) -> Dict[str, Any]:
@@ -55,10 +59,17 @@ class Config(MutableMapping):
             return {}
         return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
-    def save_config(self, is_global: bool = False) -> None:
-        data = self._global_config if is_global else self._project_config
+    def save_config(self, for_proejct: bool = True) -> None:
+        not_for_project_keys = [k for k in self._dirty if self.CONFIG_ITEMS[k][1]]
+        if not_for_project_keys and for_proejct:
+            raise ValueError(
+                "Config item {} can not be saved in project config.".format(
+                    ",".join(not_for_project_keys)
+                )
+            )
+        data = self._project_config if for_proejct else self._home_config
         data.update(self._dirty)
-        file_path = self._global_config_file if is_global else self._project_config_file
+        file_path = self._project_config_file if for_proejct else self._home_config_file
         file_path.parent.mkdir(exist_ok=True)
         toml_data = {}
         for key, value in data.items():

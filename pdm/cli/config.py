@@ -1,31 +1,31 @@
 import click
 
-from pdm.cli.options import pass_project, verbose_option
+from pdm.cli.options import pass_project, project_option, verbose_option
 from pdm.context import context
 
 
 @click.group(invoke_without_command=True, name="config")
 @verbose_option
-@pass_project
+@project_option()
 @click.pass_context
 def config_cmd(ctx, project):
     """Display the current configuration"""
     config_ins = project.config
     if ctx.invoked_subcommand:
         return
-    global_keys = set(config_ins._global_config.keys()) | set(
+    global_keys = set(config_ins._home_config.keys()) | set(
         config_ins.DEFAULT_CONFIG.keys()
     )
     local_keys = set(config_ins._project_config.keys())
-    context.io.echo("Home configuration ({}):".format(config_ins._global_config_file))
+    context.io.echo("Home configuration ({}):".format(config_ins._home_config_file))
     with context.io.indent("  "):
         for key in sorted(global_keys):
-            if key in config_ins._global_config:
-                value = config_ins._global_config[key]
+            if key in config_ins._home_config:
+                value = config_ins._home_config[key]
             else:
                 value = config_ins[key]
             context.io.echo(
-                context.io.yellow(config_ins.CONFIG_ITEMS[key]),
+                context.io.yellow("# " + config_ins.CONFIG_ITEMS[key][0]),
                 verbosity=context.io.DETAIL,
             )
             context.io.echo(f"{context.io.cyan(key)} = {value}")
@@ -37,7 +37,7 @@ def config_cmd(ctx, project):
     with context.io.indent("  "):
         for key in sorted(local_keys):
             context.io.echo(
-                context.io.yellow(config_ins.CONFIG_ITEMS[key]),
+                context.io.yellow("# " + config_ins.CONFIG_ITEMS[key][0]),
                 verbosity=context.io.DETAIL,
             )
             context.io.echo(f"{context.io.cyan(key)} = {config_ins[key]}")
@@ -53,11 +53,14 @@ def get(project, name):
 
 @config_cmd.command(name="set")
 @click.option(
-    "-l", "--local", is_flag=True, help="Store the configuration into home config file."
+    "-l",
+    "--local",
+    is_flag=True,
+    help="Store the configuration into project config file.",
 )
 @click.argument("name")
 @click.argument("value")
 @pass_project
 def set_config_value(project, local, name, value):
     project.config[name] = value
-    project.config.save_config(not local)
+    project.config.save_config(local)
