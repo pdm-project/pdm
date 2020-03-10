@@ -491,8 +491,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
         )
     )
 
-    project.config["python.path"] = Path(python_path).as_posix()
-    project.config.save_config()
+    project.project_config["python.path"] = Path(python_path).as_posix()
 
 
 def do_info(

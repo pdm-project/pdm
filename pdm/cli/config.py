@@ -10,37 +10,31 @@ from pdm.context import context
 @click.pass_context
 def config_cmd(ctx, project):
     """Display the current configuration"""
-    config_ins = project.config
     if ctx.invoked_subcommand:
         return
-    global_keys = set(config_ins._home_config.keys()) | set(
-        config_ins.DEFAULT_CONFIG.keys()
+
+    context.io.echo(
+        "Home configuration ({}):".format(project.global_config._config_file)
     )
-    local_keys = set(config_ins._project_config.keys())
-    context.io.echo("Home configuration ({}):".format(config_ins._home_config_file))
     with context.io.indent("  "):
-        for key in sorted(global_keys):
-            if key in config_ins._home_config:
-                value = config_ins._home_config[key]
-            else:
-                value = config_ins[key]
+        for key in sorted(project.global_config):
             context.io.echo(
-                context.io.yellow("# " + config_ins.CONFIG_ITEMS[key][0]),
+                context.io.yellow("# " + project.global_config.CONFIG_ITEMS[key][0]),
                 verbosity=context.io.DETAIL,
             )
-            context.io.echo(f"{context.io.cyan(key)} = {value}")
+            context.io.echo(f"{context.io.cyan(key)} = {project.global_config[key]}")
 
     context.io.echo()
     context.io.echo(
-        "Project configuration ({}):".format(config_ins._project_config_file)
+        "Project configuration ({}):".format(project.project_config._config_file)
     )
     with context.io.indent("  "):
-        for key in sorted(local_keys):
+        for key in sorted(project.project_config):
             context.io.echo(
-                context.io.yellow("# " + config_ins.CONFIG_ITEMS[key][0]),
+                context.io.yellow("# " + project.project_config.CONFIG_ITEMS[key][0]),
                 verbosity=context.io.DETAIL,
             )
-            context.io.echo(f"{context.io.cyan(key)} = {config_ins[key]}")
+            context.io.echo(f"{context.io.cyan(key)} = {project.project_config[key]}")
 
 
 @config_cmd.command()
@@ -61,6 +55,22 @@ def get(project, name):
 @click.argument("name")
 @click.argument("value")
 @pass_project
-def set_config_value(project, local, name, value):
-    project.config[name] = value
-    project.config.save_config(local)
+def set_config_item(project, local, name, value):
+    """Set a configuration value"""
+    config = project.project_config if local else project.global_config
+    config[name] = value
+
+
+@config_cmd.command(name="del")
+@click.option(
+    "-l",
+    "--local",
+    is_flag=True,
+    help="Delete the configuration item from project config file.",
+)
+@click.argument("name")
+@pass_project
+def del_config_item(project, local, name):
+    """Delete a configuration value"""
+    config = project.project_config if local else project.global_config
+    del config[name]

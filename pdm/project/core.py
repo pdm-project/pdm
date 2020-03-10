@@ -20,7 +20,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.utils import find_project_root
+from pdm.utils import cached_property, find_project_root
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
@@ -45,13 +45,17 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         self.is_global = False
-        if root_path is None:
-            root_path = find_project_root()
-        self.root = Path(root_path).absolute()
-
         self._pyproject = None  # type: Optional[Container]
         self._lockfile = None  # type: Optional[Container]
-        self._config = None  # type: Optional[Config]
+
+        if root_path is None:
+            root_path = find_project_root()
+        if root_path is None and self.global_config["auto_global"]:
+            self.root = self.GLOBAL_PROJECT
+            self.is_global = True
+        else:
+            self.root = Path(root_path or "").absolute()
+
         context.init(self)
 
     def __repr__(self) -> str:
@@ -97,10 +101,21 @@ class Project:
         return self._lockfile
 
     @property
-    def config(self) -> Config:
-        if not self._config:
-            self._config = Config(self.root)
-        return self._config
+    def config(self) -> Dict[str, Any]:
+        """A read-only dict configuration, any modifications won't land in the file."""
+        result = dict(self.global_config)
+        result.update(self.project_config)
+        return result
+
+    @cached_property
+    def global_config(self) -> Config:
+        """Read-and-writable configuration dict for global settings"""
+        return Config(Path.home() / ".pdm" / "config.toml", is_global=True)
+
+    @cached_property
+    def project_config(self) -> Config:
+        """Read-and-writable configuration dict for project settings"""
+        return Config(self.root / ".pdm.toml")
 
     @property
     def is_pdm(self) -> bool:
@@ -111,8 +126,8 @@ class Project:
     @property
     def environment(self) -> Environment:
         if self.is_global:
-            return GlobalEnvironment(self.python_requires, self.config)
-        return Environment(self.python_requires, self.config)
+            return GlobalEnvironment(self)
+        return Environment(self)
 
     @property
     def python_requires(self) -> PySpecSet:

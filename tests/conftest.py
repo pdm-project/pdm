@@ -22,7 +22,8 @@ from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
-from pdm.utils import get_finder
+from pdm.project.config import Config
+from pdm.utils import cached_property, get_finder
 from tests import FIXTURES
 
 context.io.disable_colors()
@@ -158,7 +159,13 @@ class TestRepository(BaseRepository):
 
 
 class TestProject(Project):
-    pass
+    def __init__(self, root_path):
+        self.GLOBAL_PROJECT = Path(root_path) / ".pdm-home" / "global-project"
+        super().__init__(root_path)
+
+    @cached_property
+    def global_config(self):
+        return Config(self.root / ".pdm-home" / "config.toml", is_global=True)
 
 
 class Distribution:
@@ -231,8 +238,7 @@ def project_no_init(tmp_path, mocker):
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.cli.options.Project", return_value=p)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
-    p.config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    p.config._dirty = {}
+    p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     return p
 
 
