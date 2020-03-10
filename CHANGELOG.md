@@ -1,3 +1,23 @@
+Release v0.4.0 (2020-03-10)
+---------------------------
+
+### Features & Improvements
+
+- Global project support
+  - Add a new option `-g/--global` to manage global project. The default location is at `~/.pdm/global-project`.
+  - Use the virtualenv interpreter when detected inside an activated venv.
+  - Add a new option `-p/--project` to select project root other than the default one. [#30](https://github.com/frostming/pdm/issues/30)
+- Add a new command `pdm config del` to delete an existing config item. [#71](https://github.com/frostming/pdm/issues/71)
+
+### Bug Fixes
+
+- Fix a URL parsing issue that username will be dropped in the SSH URL. [#68](https://github.com/frostming/pdm/issues/68)
+
+### Improved Documentation
+
+- Add docs for global project and selecting project path. [#30](https://github.com/frostming/pdm/issues/30)
+
+
 Release v0.3.2 (2020-03-08)
 ---------------------------
 
