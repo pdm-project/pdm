@@ -104,7 +104,8 @@ almost the same as normal project except that `pyproject.toml` will be created a
 and it doesn't support build features. The idea is taken from Haskell's [stack](https://docs.haskellstack.org).
 
 However, unlike `stack`, PDM won't use global project automatically if a local project is not found.
-Users should pass `-g/--global` explicity to activate it, since it is not very pleasing if packages go to a wrong place.
+By default, users should pass `-g/--global` explicity to activate it, since it is not very pleasing if packages go to a wrong place.
+To change this behavior, simply change the config `auto_global` to `true`.
 
 !!! danger "NOTE"
     Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
