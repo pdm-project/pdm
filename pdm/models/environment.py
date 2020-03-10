@@ -33,7 +33,7 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from pdm.project.config import Config
+    from pdm.project import Project
     from pdm._types import Source
 
 
@@ -77,13 +77,13 @@ class Environment:
 
     is_global = False
 
-    def __init__(self, python_requires: PySpecSet, config: Config) -> None:
+    def __init__(self, project: Project) -> None:
         """
-        :param python_requires: the project's python requires constraint.
-        :param config: the project's configuration.
+        :param project: the project instance
         """
-        self.python_requires = python_requires
-        self.config = config
+        self.python_requires = project.python_requires
+        self.config = project.config
+        self.project = project
 
     @cached_property
     def python_executable(self) -> str:
@@ -123,8 +123,7 @@ class Environment:
                     context.io.green(path), version
                 )
             )
-            self.config["python.path"] = Path(path).as_posix()
-            self.config.save_config()
+            self.project.project_config["python.path"] = Path(path).as_posix()
             return path
         raise NoPythonVersion(
             "No Python that satisfies {} is found on the system.".format(
@@ -198,7 +197,7 @@ class Environment:
         if self.config.get("packages_path") is not None:
             return self.config.get("packages_path")
         pypackages = (
-            self.config.project_root
+            self.project.root
             / "__pypackages__"
             / ".".join(map(str, get_python_version(self.python_executable)[:2]))
         )
@@ -348,8 +347,8 @@ class GlobalEnvironment(Environment):
 
     is_global = True
 
-    def __init__(self, python_requires: PySpecSet, config: Config) -> None:
-        super().__init__(python_requires, config)
+    def __init__(self, project: Project) -> None:
+        super().__init__(project)
         self.python_requires = PySpecSet(
             "==" + get_python_version(self.python_executable, True)
         )

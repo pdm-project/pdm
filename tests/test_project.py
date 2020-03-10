@@ -13,7 +13,7 @@ def test_project_python_with_pyenv_support(project, mocker):
     mocker.patch("pdm.models.environment.PYENV_INSTALLED", True)
     assert project.environment.python_executable == pyenv_python
 
-    project.config["python.use_pyenv"] = False
+    project.project_config["python.use_pyenv"] = False
     assert project.environment.python_executable != pyenv_python
 
 
@@ -25,14 +25,14 @@ def test_project_config_items(project):
 
 
 def test_project_config_set_invalid_key(project):
-    config = project.config
+    config = project.project_config
 
     with pytest.raises(KeyError):
         config["foo"] = "bar"
 
 
 def test_project_sources_overriding(project):
-    project.config["pypi.url"] = "https://testpypi.org/simple"
+    project.project_config["pypi.url"] = "https://testpypi.org/simple"
     assert project.sources[0]["url"] == "https://testpypi.org/simple"
 
     project.tool_settings["source"] = [
