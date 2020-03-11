@@ -41,6 +41,7 @@ class Project:
             root_path = cls.GLOBAL_PROJECT
         project = cls(root_path)
         project.is_global = True
+        project.init_global_project()
         return project
 
     def __init__(self, root_path: Optional[str] = None) -> None:
@@ -53,6 +54,7 @@ class Project:
         if root_path is None and self.global_config["auto_global"]:
             self.root = self.GLOBAL_PROJECT
             self.is_global = True
+            self.init_global_project()
         else:
             self.root = Path(root_path or "").absolute()
 
@@ -315,6 +317,9 @@ class Project:
             self.pyproject_file.write_text(
                 """\
 [tool.pdm.dependencies]
+pip = "*"
+setuptools = "*"
+wheels = "*"
 
 [tool.pdm.dev-dependencies]
 """
