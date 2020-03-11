@@ -6,9 +6,7 @@ author = "frostming <mianghong@gmail.com>"
 license = "MIT"
 python_requires = ">=3.7"
 readme = "README.md"
-
-homepage = "https://github.com/pdm-project/pdm"
-repository = "https://github.com/pdm-project/pdm"
+homepage = "https://pdm.fming.dev"
 
 keywords = ["packaging", "dependency", "workflow"]
 
@@ -20,6 +18,10 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8"
 ]
+
+[tool.pdm.project_urls]
+Repository = "https://github.com/frostming/pdm"
+Documentation = "https://pdm.fming.dev"
 
 [tool.pdm.dependencies]
 appdirs = "*"

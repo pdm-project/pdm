@@ -7,7 +7,7 @@
 
 [![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
 
-[📖 文档](https://frostming.github.io/pdm)
+[📖 文档](https://pdm.fming.dev)
 
 ## 这个项目是啥?
 

@@ -7,7 +7,7 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 
 [![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
 
-[📖 Documentation](https://frostming.github.io/pdm)
+[📖 Documentation](https://pdm.fming.dev)
 
 ## What is PDM?
 
