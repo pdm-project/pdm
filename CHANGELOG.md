@@ -1,3 +1,11 @@
+Release v0.4.1 (2020-03-11)
+---------------------------
+
+### Features & Improvements
+
+- Add a minimal dependency set for global project. [#72](https://github.com/frostming/pdm/issues/72)
+
+
 Release v0.4.0 (2020-03-10)
 ---------------------------
 
