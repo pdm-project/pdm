@@ -1,4 +1,4 @@
-from pdm.cli.commands import cli
+from pdm.cli import main
 
 if __name__ == "__main__":
-    cli.main()
+    main()
