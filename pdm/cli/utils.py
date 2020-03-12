@@ -1,11 +1,105 @@
 from __future__ import annotations
 
+import argparse
+
+import cfonts
+
 from packaging.specifiers import SpecifierSet
 from pdm.context import context
 from pdm.models.candidates import identify
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
 from pdm.resolver.structs import DirectedGraph
+
+
+class PdmFormatter(argparse.HelpFormatter):
+    def _format_action(self, action):
+        # determine the required width and the entry label
+        help_position = min(self._action_max_length + 2, self._max_help_position)
+        help_width = max(self._width - help_position, 11)
+        action_width = help_position - self._current_indent - 2
+        action_header = self._format_action_invocation(action)
+
+        # no help; start on same line and add a final newline
+        if not action.help:
+            tup = self._current_indent, "", action_header
+            action_header = "%*s%s\n" % tup
+
+        # short action name; start on the same line and pad two spaces
+        elif len(action_header) <= action_width:
+            tup = self._current_indent, "", action_width, action_header
+            action_header = "%*s%-*s  " % tup
+            indent_first = 0
+
+        # long action name; start on the next line
+        else:
+            tup = self._current_indent, "", action_header
+            action_header = "%*s%s\n" % tup
+            indent_first = help_position
+
+        # collect the pieces of the action help
+        parts = [context.io.cyan(action_header)]
+
+        # if there was help for the action, add lines of help text
+        if action.help:
+            help_text = self._expand_help(action)
+            help_lines = self._split_lines(help_text, help_width)
+            parts.append("%*s%s\n" % (indent_first, "", help_lines[0]))
+            for line in help_lines[1:]:
+                parts.append("%*s%s\n" % (help_position, "", line))
+
+        # or add a newline if the description doesn't end with one
+        elif not action_header.endswith("\n"):
+            parts.append("\n")
+
+        # if there are any sub-actions, add their help as well
+        for subaction in self._iter_indented_subactions(action):
+            parts.append(self._format_action(subaction))
+
+        # return a single string
+        return self._join_parts(parts)
+
+
+class PdmParser(argparse.ArgumentParser):
+    def format_help(self):
+        formatter = self._get_formatter()
+        if getattr(self, "is_root", False):
+            banner = (
+                cfonts.render(
+                    "PDM",
+                    font="slick",
+                    gradient=["bright_red", "bright_green"],
+                    space=False,
+                )
+                + "\n"
+            )
+            formatter._add_item(lambda x: x, [banner])
+        # description
+        formatter.add_text(self.description)
+
+        # usage
+        formatter.add_usage(
+            self.usage,
+            self._actions,
+            self._mutually_exclusive_groups,
+            prefix=context.io.yellow("Usage: ", bold=True),
+        )
+
+        # positionals, optionals and user-defined groups
+        for action_group in self._action_groups:
+            formatter.start_section(
+                context.io.yellow(action_group.title, bold=True)
+                if action_group.title
+                else None
+            )
+            formatter.add_text(action_group.description)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+
+        # epilog
+        formatter.add_text(self.epilog)
+        # determine help from format above
+        return formatter.format_help()
 
 
 class Package:

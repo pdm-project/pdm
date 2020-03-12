@@ -7,7 +7,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from pdm.cli import actions, commands
+from pdm import cli
+from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
 from pdm.utils import get_python_version
 
@@ -15,7 +16,7 @@ from pdm.utils import get_python_version
 @pytest.fixture()
 def invoke():
     runner = CliRunner()
-    return functools.partial(runner.invoke, commands.cli)
+    return functools.partial(runner.invoke, cli, prog_name="pdm")
 
 
 def test_help_option(invoke):
@@ -86,7 +87,7 @@ def test_info_command(project, invoke):
     result = invoke(["info", "--python"], obj=project)
     assert result.output.strip() == project.environment.python_executable
 
-    result = invoke(["info", "--directory"], obj=project)
+    result = invoke(["info", "--where"], obj=project)
     assert result.output.strip() == project.root.as_posix()
 
     result = invoke(["info", "--env"], obj=project)
@@ -94,7 +95,7 @@ def test_info_command(project, invoke):
 
 
 def test_info_global_project(invoke):
-    result = invoke(["info", "-g", "--directory"])
+    result = invoke(["info", "-g", "--where"])
     assert "global-project" in result.output.strip()
 
 
@@ -106,8 +107,8 @@ def test_run_command(invoke, capfd):
 
 def test_run_command_not_found(invoke):
     result = invoke(["run", "foobar"])
-    assert result.exit_code == 2
-    assert "Error: Command 'foobar' is not found on your PATH." in result.output
+    assert "Command 'foobar' is not found on your PATH." in result.output
+    assert result.exit_code == 1
 
 
 def test_run_pass_exit_code(invoke):
@@ -118,7 +119,7 @@ def test_run_pass_exit_code(invoke):
 def test_uncaught_error(invoke, mocker):
     mocker.patch.object(actions, "do_list", side_effect=RuntimeError("test error"))
     result = invoke(["list"])
-    assert "RuntimeError: test error" in result.output
+    assert "[RuntimeError]: test error" in result.output
 
     result = invoke(["list", "-v"])
     assert isinstance(result.exception, RuntimeError)
@@ -161,7 +162,7 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
 
 def test_init_command(project_no_init, invoke, mocker):
     mocker.patch(
-        "pdm.cli.commands.get_user_email_from_git",
+        "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")

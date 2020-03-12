@@ -1,17 +1,12 @@
-import traceback
-
-import click
-from click._compat import get_text_stderr
-
 from pdm.context import context
 
 
-class PdmException(click.ClickException):
-    def show(self, file=None):
-        if file is None:
-            file = get_text_stderr()
-        context.io.echo("Error: %s" % (self.format_message(),), file=file)
-        context.io.echo(traceback.format_exc(), verbosity=context.io.DETAIL, file=file)
+class PdmException(Exception):
+    pass
+
+
+class PdmUsageError(PdmException):
+    pass
 
 
 class RequirementError(PdmException, ValueError):

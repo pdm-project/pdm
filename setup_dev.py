@@ -21,20 +21,21 @@ def main():
     scripts_dir = "Scripts" if os.name == "nt" else "bin"
     venv_python = venv_path / scripts_dir / "python"
 
-    print(f"Creating a venv using {sys.executable} at {venv_path}...")
+    print(f"Creating a venv using {sys.executable} at {venv_path}...", flush=True)
     subprocess.check_call([sys.executable, "-m", "venv", venv_path.as_posix()])
 
-    print("Installing base requirements...")
+    print("Installing base requirements...", flush=True)
     subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "pdm"])
 
     subprocess.check_call(
         [venv_python.as_posix(), "-m", "pip", "install", "pip", "pip_shims", "-U"]
     )
 
-    print("Setup project for development...")
+    print("Setup project for development...", flush=True)
+    venv_pdm = (venv_python.parent / "pdm").as_posix()
 
-    subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "use", sys.executable])
-    subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "install", "-d"])
+    subprocess.check_call([venv_pdm, "use", sys.executable])
+    subprocess.check_call([venv_pdm, "install", "-d"])
 
     pdm_path = (
         BASE_DIR
@@ -44,12 +45,13 @@ def main():
         / "pdm"
     ).absolute()
 
-    print(f"\nDeleting venv {venv_path}...")
+    print(f"\nDeleting venv {venv_path}...", flush=True)
     shutil.rmtree(venv_path, ignore_errors=True)
 
     print(
         f"An editable version of pdm is installed at {pdm_path}, "
-        "you can create an alias for it for convenience."
+        "you can create an alias for it for convenience.",
+        flush=True,
     )
 
 

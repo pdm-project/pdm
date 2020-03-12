@@ -12,7 +12,7 @@ from pkg_resources import safe_name
 
 from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.context import context
-from pdm.exceptions import NoPythonVersion, ProjectError
+from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.installers import Synchronizer, format_dist
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -196,9 +196,7 @@ def do_add(
     """
     check_project_file(project)
     if not editables and not packages:
-        raise click.BadParameter(
-            "Must specify at least one package or editable package."
-        )
+        raise PdmUsageError("Must specify at least one package or editable package.")
     section = "dev" if dev else section or "default"
     tracked_names = set()
     requirements = {}
@@ -259,12 +257,12 @@ def do_update(
     """
     check_project_file(project)
     if len(packages) > 0 and (len(sections) > 1 or not default):
-        raise click.BadParameter(
+        raise PdmUsageError(
             "packages argument can't be used together with multple -s or --no-default."
         )
     if not packages:
         if unconstrained:
-            raise click.BadArgumentUsage(
+            raise PdmUsageError(
                 "--unconstrained must be used with package names given."
             )
         # pdm update with no packages given, same as 'lock' + 'sync'
@@ -329,7 +327,7 @@ def do_remove(
     """
     check_project_file(project)
     if not packages:
-        raise click.BadParameter("Must specify at least one package to remove.")
+        raise PdmUsageError("Must specify at least one package to remove.")
     section = "dev" if dev else section or "default"
     toml_section = f"{section}-dependencies" if section != "default" else "dependencies"
     if toml_section not in project.tool_settings:
@@ -368,7 +366,7 @@ def do_list(project: Project, graph: bool = False) -> None:
     :param project: the project instance.
     :param graph: whether to display a graph.
     """
-    from pdm.cli.dependencies import build_dependency_graph, format_dependency_graph
+    from pdm.cli.utils import build_dependency_graph, format_dependency_graph
 
     check_project_file(project)
     working_set = project.environment.get_working_set()
