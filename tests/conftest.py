@@ -236,7 +236,6 @@ def project_no_init(tmp_path, mocker):
     p = TestProject(tmp_path.as_posix())
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
-    mocker.patch("pdm.cli.options.Project", return_value=p)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     return p

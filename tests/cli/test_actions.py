@@ -1,12 +1,11 @@
 import sys
 from collections import namedtuple
 
-import click
 import pytest
 from distlib.wheel import Wheel
 
 from pdm.cli import actions
-from pdm.exceptions import PdmException
+from pdm.exceptions import PdmException, PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 from tests.conftest import Distribution
@@ -270,19 +269,19 @@ def test_remove_package_not_exist(project, repository, working_set):
 
 
 def test_add_remove_no_package(project, repository):
-    with pytest.raises(click.BadParameter):
+    with pytest.raises(PdmUsageError):
         actions.do_add(project, packages=())
 
-    with pytest.raises(click.BadParameter):
+    with pytest.raises(PdmUsageError):
         actions.do_remove(project, packages=())
 
 
 def test_update_with_package_and_sections_argument(project, repository, working_set):
     actions.do_add(project, packages=["requests", "pytz"])
-    with pytest.raises(click.BadParameter):
+    with pytest.raises(PdmUsageError):
         actions.do_update(project, sections=("default", "dev"), packages=("requests",))
 
-    with pytest.raises(click.BadParameter):
+    with pytest.raises(PdmUsageError):
         actions.do_update(project, default=False, packages=("requests",))
 
 
@@ -366,7 +365,7 @@ def test_list_dependency_graph_with_circular(project, capsys, repository, workin
 
 def test_update_unconstrained_without_packages(project, repository, working_set):
     actions.do_add(project, packages=("requests",))
-    with pytest.raises(click.BadArgumentUsage):
+    with pytest.raises(PdmUsageError):
         actions.do_update(project, unconstrained=True)
 
 

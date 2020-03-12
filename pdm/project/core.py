@@ -38,7 +38,7 @@ class Project:
     @classmethod
     def create_global(cls, root_path: Optional[str] = None) -> "Project":
         if root_path is None:
-            root_path = cls.GLOBAL_PROJECT
+            root_path = cls.GLOBAL_PROJECT.as_posix()
         project = cls(root_path)
         project.is_global = True
         project.init_global_project()

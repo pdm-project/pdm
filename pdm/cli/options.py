@@ -1,143 +1,155 @@
-from pathlib import Path
+import argparse
 
-import click
-
-from pdm.context import context
 from pdm.project import Project
 
-pass_project = click.make_pass_decorator(Project, ensure=True)
+
+class Option:
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(*self.args, **self.kwargs)
+
+    def add_to_group(self, group: argparse._ArgumentGroup) -> None:
+        group.add_argument(*self.args, **self.kwargs)
 
 
-def verbose_option(f):
-    def callback(ctx, param, value):
-        context.io.set_verbosity(value)
-        return value
+class ArgumentGroup(object):
+    def __init__(
+        self, name=None, parser=None, is_mutually_exclusive=False, required=None
+    ):
+        self.name = name
+        self.options = []
+        self.parser = parser
+        self.required = required
+        self.is_mutually_exclusive = is_mutually_exclusive
+        self.argument_group = None
 
-    return click.option(
-        "-v",
-        "--verbose",
-        count=True,
-        callback=callback,
-        expose_value=False,
-        help="-v for detailed output and -vv for more detailed.",
-    )(f)
+    def add_argument(self, *args, **kwargs):
+        self.options.append(Option(*args, **kwargs))
 
+    def add_to_parser(self, parser):
+        if self.is_mutually_exclusive:
+            group = parser.add_mutually_exclusive_group(required=self.required)
+        else:
+            group = parser.add_argument_group(self.name)
+        for option in self.options:
+            option.add_to_group(group)
+        self.argument_group = group
+        self.parser = parser
 
-def dry_run_option(f):
-    return click.option(
-        "--dry-run",
-        is_flag=True,
-        default=False,
-        help="Only prints actions without actually running them.",
-    )(f)
-
-
-def sections_option(f):
-    name = f.__name__
-
-    f = click.option(
-        "-s",
-        "--section",
-        "sections",
-        metavar="SECTIONS",
-        multiple=True,
-        help=f"Specify section(s) to {name}.",
-    )(f)
-    f = click.option(
-        "-d",
-        "--dev",
-        default=False,
-        is_flag=True,
-        help=f"Also {name} dev dependencies.",
-    )(f)
-    f = click.option(
-        "--no-default",
-        "default",
-        flag_value=False,
-        default=True,
-        help=f"Don't {name} dependencies from default seciton.",
-    )(f)
-    return f
+    def add_to_group(self, group):
+        self.add_to_parser(group)
 
 
-def save_strategy_option(f):
-    f = click.option(
-        "--save-compatible",
-        "save",
-        flag_value="compatible",
-        help="Save compatible version specifiers.",
-        default=True,
-    )(f)
-    f = click.option(
-        "--save-exact",
-        "save",
-        flag_value="exact",
-        help="Save exactly pinned version specifiers.",
-    )(f)
-    f = click.option(
-        "--save-wildcard",
-        "save",
-        flag_value="wildcard",
-        help="Save wildcard unpinned version specifiers.",
-    )(f)
-    return f
+verbose_option = Option(
+    "-v",
+    "--verbose",
+    action="count",
+    default=0,
+    help="-v for detailed output and -vv for more detailed",
+)
 
 
-def update_strategy_option(f):
-    f = click.option(
-        "--update-reuse",
-        "strategy",
-        flag_value="reuse",
-        help="Reuse pinned versions already present in lock file if possible.",
-    )(
-        click.option(
-            "--update-eager",
-            "strategy",
-            flag_value="eager",
-            help="Try to update the packages and their dependencies recursively.",
-        )(f)
-    )
-    return f
+dry_run_option = Option(
+    "--dry-run",
+    action="store_true",
+    default=False,
+    help="Only prints actions without actually running them.",
+)
+
+sections_group = ArgumentGroup()
+sections_group.add_argument(
+    "-s",
+    "--section",
+    dest="sections",
+    metavar="SECTION",
+    action="append",
+    help="Specify section(s) to include",
+    default=[],
+)
+sections_group.add_argument(
+    "-d", "--dev", default=False, action="store_true", help="Include dev dependencies",
+)
+sections_group.add_argument(
+    "--no-default",
+    dest="default",
+    action="store_false",
+    default=True,
+    help="Don't include dependencies from default seciton",
+)
 
 
-def global_option(f):
-    def callback(ctx, param, value):
-        if value:
-            ctx.obj = Project.create_global()
-        return value
+save_strategy_group = ArgumentGroup("save_strategy", is_mutually_exclusive=True)
+save_strategy_group.add_argument(
+    "--save-compatible",
+    action="store_const",
+    dest="save_strategy",
+    const="compatible",
+    help="Save compatible version specifiers",
+    default="compatible",
+)
+save_strategy_group.add_argument(
+    "--save-wildcard",
+    action="store_const",
+    dest="save_strategy",
+    const="wildcard",
+    help="Save wildcard version specifiers",
+    default="compatible",
+)
+save_strategy_group.add_argument(
+    "--save-exact",
+    action="store_const",
+    dest="save_strategy",
+    const="exact",
+    help="Save exact version specifiers",
+    default="compatible",
+)
 
-    return click.option(
-        "-g",
-        "--global",
-        default=False,
-        expose_value=False,
-        is_flag=True,
-        callback=callback,
-        is_eager=True,
-        help="Use the global project",
-    )(f)
+update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)
+update_strategy_group.add_argument(
+    "--update-reuse",
+    action="store_const",
+    dest="update_strategy",
+    const="reuse",
+    help="Reuse pinned versions already present in lock file if possible",
+)
+update_strategy_group.add_argument(
+    "--update-eager",
+    action="store_const",
+    dest="update_strategy",
+    const="eager",
+    help="Try to update the packages and their dependencies recursively",
+)
 
+global_option = Option(
+    "-g",
+    "--global",
+    dest="project",
+    nargs="?",
+    type=Project.create_global,
+    const=Project.create_global(),
+    help="Use the global project, accepts an optional path to the project directory",
+)
 
-def project_option(allow_global=True):
-    def callback(ctx, param, value):
-        if value:
-            project = ctx.ensure_object(Project)
-            project.root = Path(value).absolute()
-            project.init_global_project()
-        return value
+clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
+clean_group.add_argument("--clean", action="store_true", help="clean unused packages")
+clean_group.add_argument(
+    "--no-clean", action="store_false", help="don't clean unused packages"
+)
 
-    def decorator(f):
-        f = pass_project(f)
-        f = click.option(
-            "-p",
-            "--project",
-            metavar="PROJECT",
-            help="Specify a project root directory",
-            expose_value=False,
-            callback=callback,
-        )(f)
-        if allow_global:
-            f = global_option(f)
-        return f
+sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
+sync_group.add_argument("--sync", action="store_true", help="sync packages")
+sync_group.add_argument("--no-sync", action="store_false", help="don't sync packages")
 
-    return decorator
+packages_group = ArgumentGroup("packages")
+packages_group.add_argument(
+    "-e",
+    "--editable",
+    dest="editables",
+    action="append",
+    help="Specify editable packages",
+    default=[],
+)
+packages_group.add_argument("packages", nargs="*", help="Specify packages")

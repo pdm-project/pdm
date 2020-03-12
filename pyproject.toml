@@ -32,7 +32,7 @@ pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
 halo = "<1.0.0,>=0.0.28"
-python-cfonts = "<2.0.0,>=1.0.0"
+python-cfonts = "*"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
@@ -48,7 +48,7 @@ mkdocs-material = "<5.0.0,>=4.6.3"
 markdown-include = "<1.0.0,>=0.5.1"
 
 [tool.pdm.cli]
-pdm = "pdm.cli.commands:cli"
+pdm = "pdm.cli:main"
 
 [tool.intreehooks]
 build-backend = "pdm.builders.api"
