@@ -87,7 +87,7 @@ def test_info_command(project, invoke):
     result = invoke(["info", "--python"], obj=project)
     assert result.output.strip() == project.environment.python_executable
 
-    result = invoke(["info", "--directory"], obj=project)
+    result = invoke(["info", "--where"], obj=project)
     assert result.output.strip() == project.root.as_posix()
 
     result = invoke(["info", "--env"], obj=project)
@@ -95,7 +95,7 @@ def test_info_command(project, invoke):
 
 
 def test_info_global_project(invoke):
-    result = invoke(["info", "-g", "--directory"])
+    result = invoke(["info", "-g", "--where"])
     assert "global-project" in result.output.strip()
 
 
