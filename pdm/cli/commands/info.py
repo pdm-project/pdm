@@ -13,17 +13,17 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            "--python", action="store_true", help="Show the interpreter path."
+            "--python", action="store_true", help="Show the interpreter path"
         )
         parser.add_argument(
-            "--directory",
-            dest="show_project",
+            "--where",
+            dest="where",
             action="store_true",
-            help="Show the project root path.",
+            help="Show the project root path",
         )
         parser.add_argument(
-            "--env", action="store_true", help="Show PEP508 environment markers."
+            "--env", action="store_true", help="Show PEP 508 environment markers"
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        actions.do_info(project, options.python, options.show_project, options.env)
+        actions.do_info(project, options.python, options.where, options.env)

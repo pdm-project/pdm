@@ -103,22 +103,13 @@ If the option is passed, `~/.pdm/global-project` will be used as the project dir
 almost the same as normal project except that `pyproject.toml` will be created automatically for you
 and it doesn't support build features. The idea is taken from Haskell's [stack](https://docs.haskellstack.org).
 
-However, unlike `stack`, PDM won't use global project automatically if a local project is not found.
-By default, users should pass `-g/--global` explicity to activate it, since it is not very pleasing if packages go to a wrong place.
+However, unlike `stack`, by default, PDM won't use global project automatically if a local project is not found.
+Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
 To change this behavior, simply change the config `auto_global` to `true`.
+
+If you want global project to track another project file other than `~/.pdm/global-project`, you can provide the
+project path following `-g/--global`.
 
 !!! danger "NOTE"
     Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
     remove packages installed in your system Python.
-
-## Choose another directory as project root
-
-The default project root is `cwd` or the nearest parent(at a max depth of 3) with a valid `pyproject.toml`,
-or `~/.pdm/global-project` if `-g/--global` flag is on. If you would like a different directory, pass it
-with `-p/--project` option. The project-level configuration will be changed, too.
-
-!!! note "TIPS"
-    With the help of `-g/--global` and `-p/--project` options, you can gain a familiar experience of the
-    old "venv" manners: inside an activated venv: `pdm install -gp .` will install all dependencies into the
-    venv's library path. To make this happen, check the content of `.pdm.toml` and make sure `python.path`
-    is correct.

@@ -17,24 +17,24 @@ class Command(BaseCommand):
             dest="sdist",
             default=True,
             action="store_false",
-            help="Don't build source tarballs.",
+            help="Don't build source tarballs",
         )
         parser.add_argument(
             "--no-wheel",
             dest="wheel",
             default=True,
             action="store_false",
-            help="Don't build wheels.",
+            help="Don't build wheels",
         )
         parser.add_argument(
-            "-d", "--dest", default="dist", help="Target directory to put artifacts."
+            "-d", "--dest", default="dist", help="Target directory to put artifacts"
         )
         parser.add_argument(
             "--no-clean",
             dest="clean",
             default=True,
             action="store_false",
-            help="Do not clean the target directory.",
+            help="Do not clean the target directory",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
