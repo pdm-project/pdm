@@ -1,10 +1,13 @@
+import dataclasses
+import os
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 
 import appdirs
 import tomlkit
 
+from pdm.context import context
 from pdm.exceptions import NoConfigError
 from pdm.utils import get_pypi_source
 
@@ -31,36 +34,74 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
 
+@dataclasses.dataclass
+class ConfigItem:
+    """An item of configuration, with following attributes:
+
+    - description: the config description
+    - default: the default value, if given, will show in `pdm config`
+    - global_only: not allowed to save in project config
+    - env_var: the env var name to take value from
+    """
+
+    _NOT_SET = object()
+
+    description: str
+    default: Any = _NOT_SET
+    global_only: bool = False
+    env_var: Optional[str] = None
+
+    def should_show(self) -> bool:
+        return self.default is not self._NOT_SET
+
+
 class Config(MutableMapping):
     """A dict-like object for configuration key and values"""
 
     HOME_CONFIG = Path.home() / ".pdm" / "config.toml"
-    CONFIG_ITEMS = {
-        # config name: (config_description, not_for_project)
-        "cache_dir": ("The root directory of cached files", True),
-        "auto_global": (
+
+    pypi_url, verify_ssl = get_pypi_source()
+    _config_map = {
+        "cache_dir": ConfigItem(
+            "The root directory of cached files", appdirs.user_cache_dir("pdm"), True
+        ),
+        "auto_global": ConfigItem(
             "Use global package implicity if no local project is found",
-            True,
-        ),
-        "python.path": ("The Python interpreter path", False),
-        "python.use_pyenv": ("Use the pyenv interpreter", False),
-        "pypi.url": (
-            "The URL of PyPI mirror, defaults to https://pypi.org/simple",
             False,
+            True,
+            "PDM_AUTO_GLOBAL",
         ),
-        "pypi.verify_ssl": ("Verify SSL certificate when query PyPI", False),
-    }
-    DEFAULT_CONFIG = {
-        "auto_global": False,
-        "cache_dir": appdirs.user_cache_dir("pdm"),
-        "python.use_pyenv": True,
-    }
-    DEFAULT_CONFIG.update(get_pypi_source())
+        "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
+        "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True),
+        "pypi.url": ConfigItem(
+            "The URL of PyPI mirror, defaults to https://pypi.org/simple",
+            pypi_url,
+            env_var="PDM_PYPI_URL",
+        ),
+        "pypi.verify_ssl": ConfigItem(
+            "Verify SSL certificate when query PyPI", verify_ssl
+        ),
+        "use_venv": ConfigItem(
+            "Install packages into the activated venv site packages instead of PEP 582",
+            False,
+            env_var="PDM_USE_VENV",
+        ),
+    }  # type: Dict[str, ConfigItem]
+    del pypi_url, verify_ssl
+
+    @classmethod
+    def get_defaults(cls):
+        return {k: v.default for k, v in cls._config_map.items() if v.should_show()}
+
+    @classmethod
+    def add_config(cls, name: str, item: ConfigItem) -> None:
+        """Add or modify a config item"""
+        cls._config_map[name] = item
 
     def __init__(self, config_file: Path, is_global: bool = False):
         self._data = {}
         if is_global:
-            self._data.update(self.DEFAULT_CONFIG)
+            self._data.update(self.get_defaults())
 
         self.is_global = is_global
         self._config_file = config_file
@@ -82,15 +123,17 @@ class Config(MutableMapping):
             fp.write(tomlkit.dumps(toml_data))
 
     def __getitem__(self, key: str) -> Any:
-        try:
-            return self._data[key]
-        except KeyError:
-            raise NoConfigError(key) from None
+        if key not in self._data:
+            raise NoConfigError(key)
+        env_var = self._config_map[key].env_var
+        if env_var is not None and env_var in os.environ:
+            return os.environ[env_var]
+        return self._data[key]
 
     def __setitem__(self, key: str, value: Any) -> None:
-        if key not in self.CONFIG_ITEMS:
+        if key not in self._config_map:
             raise NoConfigError(key)
-        if not self.is_global and self.CONFIG_ITEMS[key][1]:
+        if not self.is_global and self._config_map[key].global_only:
             raise ValueError(
                 f"Config item '{key}' is not allowed to set in project config."
             )
@@ -99,7 +142,14 @@ class Config(MutableMapping):
                 value = False
             elif value.lower() == "true":
                 value = True
-
+        env_var = self._config_map[key].env_var
+        if env_var is not None and env_var in os.environ:
+            context.io.echo(
+                context.io.yellow(
+                    "WARNING: the config is shadowed by env var '{}', "
+                    "set value won't take effect.".format(env_var)
+                )
+            )
         self._data[key] = value
         self._file_data[key] = value
         self._save_config()
@@ -117,4 +167,12 @@ class Config(MutableMapping):
         except KeyError:
             pass
         else:
+            env_var = self._config_map[key].env_var
+            if env_var is not None and env_var in os.environ:
+                context.io.echo(
+                    context.io.yellow(
+                        "WARNING: the config is shadowed by env var '{}', "
+                        "set value won't take effect.".format(env_var)
+                    )
+                )
             self._save_config()

@@ -216,7 +216,7 @@ def get_pypi_source():
     verify_ssl = parsed.scheme == "https"
     if any(parsed.hostname.startswith(host) for host in options.trusted_hosts):
         verify_ssl = False
-    return {"pypi.url": index_url, "pypi.verify_ssl": verify_ssl}
+    return index_url, verify_ssl
 
 
 def get_finder(

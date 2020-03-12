@@ -22,7 +22,7 @@ class Command(BaseCommand):
             for key in sorted(project.global_config):
                 context.io.echo(
                     context.io.yellow(
-                        "# " + project.global_config.CONFIG_ITEMS[key][0]
+                        "# " + project.global_config._config_map[key].description
                     ),
                     verbosity=context.io.DETAIL,
                 )
@@ -38,7 +38,7 @@ class Command(BaseCommand):
             for key in sorted(project.project_config):
                 context.io.echo(
                     context.io.yellow(
-                        "# " + project.project_config.CONFIG_ITEMS[key][0]
+                        "# " + project.project_config._config_map[key].description
                     ),
                     verbosity=context.io.DETAIL,
                 )
