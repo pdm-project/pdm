@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from vistir.contextmanagers import temp_environ
 
 from pdm import cli
 from pdm.cli import actions
@@ -215,6 +216,24 @@ def test_config_set_command(project, invoke):
 
     result = invoke(["config", "set", "-l", "cache_dir", "/path/to/bar"], obj=project)
     assert result.exit_code != 0
+
+
+def test_config_env_var_shadowing(project, invoke):
+    with temp_environ():
+        os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
+        result = invoke(["config", "get", "pypi.url"], obj=project)
+        assert result.output.strip() == "https://example.org/simple"
+
+        result = invoke(
+            ["config", "set", "pypi.url", "https://testpypi.org/pypi"], obj=project
+        )
+        assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
+        result = invoke(["config", "get", "pypi.url"], obj=project)
+        assert result.output.strip() == "https://example.org/simple"
+
+        del os.environ["PDM_PYPI_URL"]
+        result = invoke(["config", "get", "pypi.url"], obj=project)
+        assert result.output.strip() == "https://testpypi.org/pypi"
 
 
 def test_config_project_global_precedence(project, invoke):

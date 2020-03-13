@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
@@ -128,6 +129,11 @@ class Project:
     @property
     def environment(self) -> Environment:
         if self.is_global:
+            return GlobalEnvironment(self)
+        if self.config["use_venv"] and "VIRTUAL_ENV" in os.environ:
+            scripts_dir = "Scripts" if os.name == "nt" else "bin"
+            python_path = os.path.join(os.environ["VIRTUAL_ENV"], scripts_dir, "python")
+            self.project_config["python.path"] = python_path
             return GlobalEnvironment(self)
         return Environment(self)
 

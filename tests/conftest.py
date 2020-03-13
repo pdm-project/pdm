@@ -2,6 +2,7 @@ import collections
 import json
 import os
 import shutil
+import sys
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Tuple
@@ -13,7 +14,7 @@ from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
 
 from pdm._types import CandidateInfo
-from pdm.cli.actions import do_init
+from pdm.cli.actions import do_init, do_use
 from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
@@ -238,6 +239,7 @@ def project_no_init(tmp_path, mocker):
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
+    do_use(p, sys.executable)
     return p
 
 

@@ -16,6 +16,7 @@ nav:
 markdown_extensions:
   - codehilite
   - admonition
+  - tables
   - toc:
       permalink: "#"
   - markdown_include.include:

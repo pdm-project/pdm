@@ -113,3 +113,23 @@ project path following `-g/--global`.
 !!! danger "NOTE"
     Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
     remove packages installed in your system Python.
+
+
+## Working inside a virtualenv
+
+Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
+by the configuration item `use_venv`, when it is set to `True`, PDM will use the virtualenv **when it is activated**.
+
+## Configurations
+
+| Config Item | Description | Default Value | Available in Project | Env var |
+| ----------- | ----------- | ------------- | -------------------- | ------- |
+| `cache_dir` | The root directory of cached files | The default cache location on OS | No | |
+| `auto_global` | Use global package implicity if no local project is found | `False` | No | `PDM_AUTO_GLOBAL` |
+| `use_venv` | Install packages into the activated venv site packages instead of PEP 582 | `False` | Yes | `PDM_USE_VENV` |
+| `python.path` | The Python interpreter path | | Yes | `PDM_PYTHON_PATH` |
+| `python.use_pyenv` | Use the pyenv interpreter | `True` | Yes | |
+| `pypi.url` | The URL of PyPI mirror | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes | `PDM_PYPI_URL` |
+| `pypi.verify_ssl` | Verify SSL certificate when query PyPI | Read `trusted-hosts` in `pip.conf`, defaults to `True` | Yes | |
+
+*If the env var is set, the value will take precendence over what is saved in the config file.*
