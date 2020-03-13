@@ -8,6 +8,7 @@ from pdm.project import Project
 def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
 
+    del project.project_config["python.path"]
     pyenv_python = os.path.join(PYENV_ROOT, "shims", "python")
 
     mocker.patch("pdm.models.environment.PYENV_INSTALLED", True)
