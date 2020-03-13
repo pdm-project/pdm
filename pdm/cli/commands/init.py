@@ -4,7 +4,7 @@ import click
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.context import context
+from pdm.iostream import stream
 from pdm.project import Project
 from pdm.utils import get_python_version, get_user_email_from_git
 
@@ -19,14 +19,14 @@ class Command(BaseCommand):
         actions.do_use(project, python)
 
         if project.pyproject_file.exists():
-            context.io.echo(
+            stream.echo(
                 "{}".format(
-                    context.io.cyan("pyproject.toml already exists, update it now.")
+                    stream.cyan("pyproject.toml already exists, update it now.")
                 )
             )
         else:
-            context.io.echo(
-                "{}".format(context.io.cyan("Creating a pyproject.toml for PDM..."))
+            stream.echo(
+                "{}".format(stream.cyan("Creating a pyproject.toml for PDM..."))
             )
         name = click.prompt(f"Project name", default=project.root.name)
         version = click.prompt("Project version", default="0.0.0")

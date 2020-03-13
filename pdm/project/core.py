@@ -5,15 +5,18 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
+import halo
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
+from pip_shims import shims
 from vistir.contextmanagers import atomic_open_for_write
 
 from pdm._types import Source
-from pdm.context import context
 from pdm.exceptions import ProjectError
+from pdm.iostream import stream
+from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate, identify
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
@@ -21,6 +24,8 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
+from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider
+from pdm.resolver.reporters import SpinnerReporter
 from pdm.utils import cached_property, find_project_root, get_venv_python
 
 if TYPE_CHECKING:
@@ -28,13 +33,13 @@ if TYPE_CHECKING:
 
 
 class Project:
+    """Core project class"""
+
     PYPROJECT_FILENAME = "pyproject.toml"
     PDM_NAMESPACE = "tool.pdm"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
     PYPROJECT_VERSION = "0.0.1"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
-
-    repository_class = PyPIRepository
 
     @classmethod
     def create_global(cls, root_path: Optional[str] = None) -> "Project":
@@ -49,6 +54,7 @@ class Project:
         self.is_global = False
         self._pyproject = None  # type: Optional[Container]
         self._lockfile = None  # type: Optional[Container]
+        self.core = None
 
         if root_path is None:
             root_path = find_project_root()
@@ -58,8 +64,6 @@ class Project:
             self.init_global_project()
         else:
             self.root = Path(root_path or "").absolute()
-
-        context.init(self)
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"
@@ -126,7 +130,7 @@ class Project:
             return False
         return bool(self.tool_settings)
 
-    @property
+    @cached_property
     def environment(self) -> Environment:
         if self.is_global:
             return GlobalEnvironment(self)
@@ -193,9 +197,55 @@ class Project:
             )
         return sources
 
-    def get_repository(self) -> BaseRepository:
+    def get_repository(self, cls: Optional[Type[BaseRepository]]) -> BaseRepository:
+        """Get the repository object"""
+        if cls is None:
+            cls = PyPIRepository
         sources = self.sources or []
-        return self.repository_class(sources, self.environment)
+        return cls(sources, self.environment)
+
+    def get_provider(
+        self, strategy: str = "all", tracked_names: Optional[Iterable[str]] = None,
+    ) -> BaseProvider:
+        """Build a provider class for resolver.
+
+        :param strategy: the resolve strategy
+        :param tracked_names: the names of packages that needs to update
+        :returns: The provider object
+        """
+        repository = self.get_repository(cls=self.core.repository_class)
+        allow_prereleases = self.allow_prereleases
+        requires_python = self.environment.python_requires
+        if strategy == "all":
+            provider = BaseProvider(repository, requires_python, allow_prereleases)
+        else:
+            provider_class = (
+                ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
+            )
+            preferred_pins = self.get_locked_candidates("__all__")
+            provider = provider_class(
+                preferred_pins,
+                tracked_names or (),
+                repository,
+                requires_python,
+                allow_prereleases,
+            )
+        return provider
+
+    def get_reporter(
+        self,
+        requirements: Dict[str, Dict[str, Requirement]],
+        tracked_names: Optional[Iterable[str]] = None,
+        spinner: Optional[halo.Halo] = None,
+    ) -> SpinnerReporter:
+        """Return the reporter object to construct a resolver.
+
+        :param requirements: requirements to resolve
+        :param tracked_names: the names of packages that needs to update
+        :param spinner: optional spinner object
+        :returns: a reporter
+        """
+        return SpinnerReporter(spinner)
 
     def get_project_metadata(self) -> Dict[str, Any]:
         content_hash = self.get_content_hash("md5")
@@ -211,7 +261,7 @@ class Project:
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
         if show_message:
-            context.io.echo("Changes are written to pdm.lock.")
+            stream.echo("Changes are written to pdm.lock.")
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
@@ -306,7 +356,7 @@ class Project:
         ) as f:
             f.write(tomlkit.dumps(self.pyproject))
         if show_message:
-            context.io.echo("Changes are written to pyproject.toml.")
+            stream.echo("Changes are written to pyproject.toml.")
         self._pyproject = None
 
     @property
@@ -329,3 +379,28 @@ wheels = "*"
 """
             )
             self._pyproject = None
+
+    @property
+    def cache_dir(self) -> Path:
+        return Path(self.config.get("cache_dir"))
+
+    def cache(self, name: str) -> Path:
+        path = self.cache_dir / name
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def make_wheel_cache(self) -> shims.WheelCache:
+        return shims.WheelCache(
+            self.cache_dir.as_posix(), shims.FormatControl(set(), set())
+        )
+
+    def make_candidate_info_cache(self) -> CandidateInfoCache:
+
+        python_hash = hashlib.sha1(
+            str(self.environment.python_requires).encode()
+        ).hexdigest()
+        file_name = f"package_meta_{python_hash}.json"
+        return CandidateInfoCache(self.cache_dir / file_name)
+
+    def make_hash_cache(self) -> HashCache:
+        return HashCache(directory=self.cache("hashes").as_posix())

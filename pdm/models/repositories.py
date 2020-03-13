@@ -5,7 +5,6 @@ from functools import wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
 from pdm._types import CandidateInfo, Source
-from pdm.context import context
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
@@ -42,8 +41,8 @@ class BaseRepository:
         """
         self.sources = sources
         self.environment = environment
-        self._candidate_info_cache = context.make_candidate_info_cache()
-        self._hash_cache = context.make_hash_cache()
+        self._candidate_info_cache = environment.project.make_candidate_info_cache()
+        self._hash_cache = environment.project.make_hash_cache()
 
     def get_filtered_sources(self, req: Requirement) -> List[Source]:
         """Get matching sources based on the index attribute."""

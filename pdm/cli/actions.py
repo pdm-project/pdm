@@ -1,4 +1,3 @@
-import itertools
 import json
 import shutil
 from pathlib import Path
@@ -11,15 +10,14 @@ import tomlkit
 from pkg_resources import safe_name
 
 from pdm.builders import SdistBuilder, WheelBuilder
-from pdm.context import context
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.installers import Synchronizer, format_dist
+from pdm.iostream import stream
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
-from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider, resolve
-from pdm.resolver.reporters import SpinnerReporter
+from pdm.resolver import resolve
 from pdm.utils import get_python_version
 
 
@@ -88,7 +86,7 @@ def check_project_file(project: Project) -> None:
     if not project.tool_settings:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
-            "by running {}.".format(context.io.green("'pdm init'"))
+            "by running {}.".format(stream.green("'pdm init'"))
         )
 
 
@@ -108,32 +106,15 @@ def do_lock(
     """
     check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
-    repository = project.get_repository()
+    provider = project.get_provider(strategy, tracked_names)
     requirements = requirements or project.all_dependencies
-    allow_prereleases = project.allow_prereleases
-    requires_python = project.environment.python_requires
-    if strategy == "all":
-        provider = BaseProvider(repository, requires_python, allow_prereleases)
-    else:
-        provider_class = (
-            ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
-        )
-        preferred_pins = project.get_locked_candidates("__all__")
-        provider = provider_class(
-            preferred_pins,
-            tracked_names or (),
-            repository,
-            requires_python,
-            allow_prereleases,
-        )
-    flat_reqs = list(
-        itertools.chain(*[deps.values() for _, deps in requirements.items()])
-    )
+
     # TODO: switch reporter at io level.
     with halo.Halo(text="Resolving dependencies", spinner="dots") as spin:
-        reporter = SpinnerReporter(flat_reqs, spin)
+        reporter = project.get_reporter(requirements, tracked_names, spin)
+        resolver = project.core.resolver_class(provider, reporter)
         mapping, dependencies, summaries = resolve(
-            provider, reporter, requirements, requires_python
+            resolver, requirements, project.environment.python_requires
         )
         data = format_lockfile(mapping, dependencies, summaries)
         spin.succeed("Resolution success")
@@ -207,9 +188,9 @@ def do_add(
         r.from_section = section
         tracked_names.add(key)
         requirements[key] = r
-    context.io.echo(
+    stream.echo(
         f"Adding packages to {section} dependencies: "
-        + ", ".join(str(context.io.green(key, bold=True)) for key in requirements)
+        + ", ".join(str(stream.green(key, bold=True)) for key in requirements)
     )
     all_dependencies = project.all_dependencies
     all_dependencies.setdefault(section, {}).update(requirements)
@@ -286,16 +267,16 @@ def do_update(
         if not matched_name:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
-                    context.io.green(name, bold=True), section
+                    stream.green(name, bold=True), section
                 )
             )
         if unconstrained:
             dependencies[matched_name].specifier = get_specifier("")
         tracked_names.add(matched_name)
         updated_deps[matched_name] = dependencies[matched_name]
-    context.io.echo(
+    stream.echo(
         "Updating packages: {}.".format(
-            ", ".join(context.io.green(v, bold=True) for v in tracked_names)
+            ", ".join(stream.green(v, bold=True) for v in tracked_names)
         )
     )
     resolved = do_lock(project, strategy, tracked_names, all_dependencies)
@@ -332,12 +313,12 @@ def do_remove(
     toml_section = f"{section}-dependencies" if section != "default" else "dependencies"
     if toml_section not in project.tool_settings:
         raise ProjectError(
-            f"No such section {context.io.yellow(toml_section)} in pyproject.toml."
+            f"No such section {stream.yellow(toml_section)} in pyproject.toml."
         )
     deps = project.tool_settings[toml_section]
-    context.io.echo(
+    stream.echo(
         f"Removing packages from {section} dependencies: "
-        + ", ".join(str(context.io.green(name, bold=True)) for name in packages)
+        + ", ".join(str(stream.green(name, bold=True)) for name in packages)
     )
     for name in packages:
         matched_name = next(
@@ -349,7 +330,7 @@ def do_remove(
         if not matched_name:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
-                    context.io.green(name, bold=True), section
+                    stream.green(name, bold=True), section
                 )
             )
         del deps[matched_name]
@@ -373,13 +354,13 @@ def do_list(project: Project, graph: bool = False) -> None:
     if graph:
         with project.environment.activate():
             dep_graph = build_dependency_graph(working_set)
-        context.io.echo(format_dependency_graph(dep_graph))
+        stream.echo(format_dependency_graph(dep_graph))
     else:
         rows = [
-            (context.io.green(k, bold=True), format_dist(v))
+            (stream.green(k, bold=True), format_dist(v))
             for k, v in sorted(working_set.items())
         ]
-        context.io.display_columns(rows, ["Package", "Version"])
+        stream.display_columns(rows, ["Package", "Version"])
 
 
 def do_build(
@@ -394,7 +375,7 @@ def do_build(
         raise ProjectError("Not allowed to build based on the global project.")
     check_project_file(project)
     if not wheel and not sdist:
-        context.io.echo("All artifacts are disabled, nothing to do.", err=True)
+        stream.echo("All artifacts are disabled, nothing to do.", err=True)
         return
     ireq = project.make_self_candidate(False).ireq
     ireq.source_dir = "."
@@ -467,7 +448,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
 
         if not first and len(pythons) > 1:
             for i, (path, python_version) in enumerate(pythons):
-                context.io.echo(f"{i}: {context.io.green(path)} ({python_version})")
+                stream.echo(f"{i}: {stream.green(path)} ({python_version})")
             selection = click.prompt(
                 "Please select:",
                 type=click.Choice([str(i) for i in range(len(pythons))]),
@@ -483,9 +464,9 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
             "The target Python version {} doesn't satisfy "
             "the Python requirement: {}".format(python_version, project.python_requires)
         )
-    context.io.echo(
+    stream.echo(
         "Using Python interpreter: {} ({})".format(
-            context.io.green(python_path), python_version
+            stream.green(python_path), python_version
         )
     )
 
@@ -504,17 +485,17 @@ def do_info(
     if not python and not show_project and not env:
         rows = [
             (
-                context.io.cyan("Python Interpreter:", bold=True),
+                stream.cyan("Python Interpreter:", bold=True),
                 python_path + f" ({python_version})",
             ),
-            (context.io.cyan("Project Root:", bold=True), project.root.as_posix()),
+            (stream.cyan("Project Root:", bold=True), project.root.as_posix()),
         ]
-        context.io.display_columns(rows)
+        stream.display_columns(rows)
         return
 
     if python:
-        context.io.echo(python_path)
+        stream.echo(python_path)
     if show_project:
-        context.io.echo(project.root.as_posix())
+        stream.echo(project.root.as_posix())
     if env:
-        context.io.echo(json.dumps(project.environment.marker_environment, indent=2))
+        stream.echo(json.dumps(project.environment.marker_environment, indent=2))

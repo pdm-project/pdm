@@ -1,4 +1,4 @@
-from pdm.context import context
+from pdm.iostream import stream
 
 
 class PdmException(Exception):
@@ -29,7 +29,7 @@ class CandidateInfoNotFound(PdmException):
     def __init__(self, candidate):
         message = (
             "No metadata information is available for "
-            f"{context.io.green(str(candidate))}."
+            f"{stream.green(str(candidate))}."
         )
         self.candidate = candidate
         super().__init__(message)
@@ -72,9 +72,7 @@ class ResolutionTooDeep(ResolutionError):
 class NoVersionsAvailable(ResolutionError):
     def __init__(self, requirement, parent):
         super().__init__(
-            "No version available for {}.".format(
-                context.io.green(requirement.as_line())
-            )
+            "No version available for {}.".format(stream.green(requirement.as_line()))
         )
         self.requirement = requirement
         self.parent = parent

@@ -16,6 +16,9 @@ def test_project_python_with_pyenv_support(project, mocker):
     mocker.patch("pdm.models.environment.PYENV_INSTALLED", True)
     assert project.environment.python_executable == pyenv_python
 
+    # Clean cache
+    del project.environment.__dict__["python_executable"]
+
     project.project_config["python.use_pyenv"] = False
     assert project.environment.python_executable != pyenv_python
 

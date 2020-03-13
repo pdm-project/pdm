@@ -6,7 +6,7 @@ from copy import copy
 from pkg_resources import safe_version, to_filename
 
 from pdm.builders.base import Builder
-from pdm.context import context
+from pdm.iostream import stream
 
 
 def normalize_file_permissions(st_mode):
@@ -51,7 +51,7 @@ class SdistBuilder(Builder):
         if not os.path.exists(build_dir):
             os.makedirs(build_dir, exist_ok=True)
 
-        context.io.echo("- Building {}...".format(context.io.cyan("sdist")))
+        stream.echo("- Building {}...".format(stream.cyan("sdist")))
         version = to_filename(safe_version(self.meta.version))
 
         target = os.path.join(
@@ -70,7 +70,7 @@ class SdistBuilder(Builder):
                     arcname=os.path.join(tar_dir, str(relpath)),
                     recursive=False,
                 )
-                context.io.echo(f" - Adding: {relpath}", verbosity=context.io.DETAIL)
+                stream.echo(f" - Adding: {relpath}", verbosity=stream.DETAIL)
 
             fd, temp_name = tempfile.mkstemp(prefix="pkg-info")
             pkg_info = self.format_pkginfo(False).encode("utf-8")
@@ -79,10 +79,10 @@ class SdistBuilder(Builder):
             tar.add(
                 temp_name, arcname=os.path.join(tar_dir, "PKG-INFO"), recursive=False
             )
-            context.io.echo(" - Adding: PKG-INFO", verbosity=context.io.DETAIL)
+            stream.echo(" - Adding: PKG-INFO", verbosity=stream.DETAIL)
         finally:
             tar.close()
 
-        context.io.echo("- Built {}".format(context.io.cyan(os.path.basename(target))))
+        stream.echo("- Built {}".format(stream.cyan(os.path.basename(target))))
 
         return target

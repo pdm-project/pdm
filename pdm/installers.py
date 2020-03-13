@@ -8,7 +8,7 @@ from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_na
 from pip_shims import shims
 from vistir import cd
 
-from pdm.context import context
+from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import parse_requirement, strip_extras
@@ -16,6 +16,14 @@ from pdm.models.requirements import parse_requirement, strip_extras
 
 def _is_dist_editable(dist: Distribution) -> bool:
     return isinstance(dist, EggInfoDistribution)
+
+
+def format_dist(dist: Distribution) -> str:
+    formatter = "{version}{path}"
+    path = ""
+    if _is_dist_editable(dist):
+        path = f" (-e {dist.location})"
+    return formatter.format(version=stream.yellow(dist.version), path=path)
 
 
 def _install_wheel(wheel, paths, maker, **kwargs):
@@ -258,24 +266,6 @@ def _install_wheel(wheel, paths, maker, **kwargs):
             shutil.rmtree(workdir)
 
 
-def format_dist(dist: Distribution) -> str:
-    formatter = "{version}{path}"
-    path = ""
-    if _is_dist_editable(dist):
-        path = f" (-e {dist.location})"
-    return formatter.format(version=context.io.yellow(dist.version), path=path)
-
-
-def _print_list_information(word, items, dry=False):
-    if dry:
-        word = "to be " + word
-    template = "{count} package{suffix} {word}: {items}"
-    suffix = "s" if len(items) > 1 else ""
-    count = len(items)
-    items = ", ".join(str(context.io.green(item, bold=True)) for item in items)
-    context.io.echo(template.format(count=count, suffix=suffix, word=word, items=items))
-
-
 class Installer:  # pragma: no cover
     """The installer that performs the installation and uninstallation actions."""
 
@@ -317,7 +307,7 @@ class Installer:  # pragma: no cover
             paths["scripts"],
         ]
         with self.environment.activate(), cd(ireq.unpacked_source_directory):
-            capture_output = context.io.verbosity < context.io.DETAIL
+            capture_output = stream.verbosity < stream.DETAIL
             subprocess.run(install_args, capture_output=capture_output, check=True)
 
     def uninstall(self, dist: Distribution) -> None:
@@ -342,6 +332,15 @@ class Synchronizer:
     ) -> None:
         self.candidates = candidates
         self.environment = environment
+
+    def _print_list_information(self, word, items, dry=False):
+        if dry:
+            word = "to be " + word
+        template = "{count} package{suffix} {word}: {items}"
+        suffix = "s" if len(items) > 1 else ""
+        count = len(items)
+        items = ", ".join(str(stream.green(item, bold=True)) for item in items)
+        stream.echo(template.format(count=count, suffix=suffix, word=word, items=items))
 
     def get_installer(self) -> Installer:
         return Installer(self.environment)
@@ -385,14 +384,14 @@ class Synchronizer:
         for can in candidates:
             if update:
                 dist = working_set[safe_name(can.name).lower()]
-                context.io.echo(
-                    f"  - Updating {context.io.green(can.name, bold=True)} "
-                    f"{context.io.yellow(dist.version)} -> "
-                    f"{context.io.yellow(can.version)}"
+                stream.echo(
+                    f"  - Updating {stream.green(can.name, bold=True)} "
+                    f"{stream.yellow(dist.version)} -> "
+                    f"{stream.yellow(can.version)}"
                 )
                 installer.uninstall(dist)
             else:
-                context.io.echo(f"  - Installing {can.format()}...")
+                stream.echo(f"  - Installing {can.format()}...")
             installer.install(can)
 
     def remove_distributions(self, distributions: List[str]) -> None:
@@ -404,9 +403,9 @@ class Synchronizer:
         working_set = self.environment.get_working_set()
         for name in distributions:
             dist = working_set[name]
-            context.io.echo(
-                f"  - Uninstalling: {context.io.green(name, bold=True)} "
-                f"{context.io.yellow(dist.version)}"
+            stream.echo(
+                f"  - Uninstalling: {stream.green(name, bold=True)} "
+                f"{stream.yellow(dist.version)}"
             )
             installer.uninstall(dist)
 
@@ -421,7 +420,7 @@ class Synchronizer:
         if clean:
             lists_to_check.append(to_remove)
         if not any(lists_to_check):
-            context.io.echo("All packages are synced to date, nothing to do.")
+            stream.echo("All packages are synced to date, nothing to do.")
             return
         if to_add and not dry_run:
             self.install_candidates(
@@ -434,10 +433,10 @@ class Synchronizer:
             )
         if clean and to_remove and not dry_run:
             self.remove_distributions(to_remove)
-        context.io.echo()
+        stream.echo()
         if to_add:
-            _print_list_information("added", to_add, dry_run)
+            self._print_list_information("added", to_add, dry_run)
         if to_update:
-            _print_list_information("updated", to_update, dry_run)
+            self._print_list_information("updated", to_update, dry_run)
         if clean and to_remove:
-            _print_list_information("removed", to_remove, dry_run)
+            self._print_list_information("removed", to_remove, dry_run)

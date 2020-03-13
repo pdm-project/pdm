@@ -5,7 +5,7 @@ import argparse
 import cfonts
 
 from packaging.specifiers import SpecifierSet
-from pdm.context import context
+from pdm.iostream import stream
 from pdm.models.candidates import identify
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
@@ -38,7 +38,7 @@ class PdmFormatter(argparse.HelpFormatter):
             indent_first = help_position
 
         # collect the pieces of the action help
-        parts = [context.io.cyan(action_header)]
+        parts = [stream.cyan(action_header)]
 
         # if there was help for the action, add lines of help text
         if action.help:
@@ -63,6 +63,7 @@ class PdmFormatter(argparse.HelpFormatter):
 class PdmParser(argparse.ArgumentParser):
     def format_help(self):
         formatter = self._get_formatter()
+        formatter.io = stream
         if getattr(self, "is_root", False):
             banner = (
                 cfonts.render(
@@ -84,13 +85,13 @@ class PdmParser(argparse.ArgumentParser):
             self.usage,
             self._actions,
             self._mutually_exclusive_groups,
-            prefix=context.io.yellow("Usage", bold=True) + ": ",
+            prefix=stream.yellow("Usage", bold=True) + ": ",
         )
 
         # positionals, optionals and user-defined groups
         for action_group in self._action_groups:
             formatter.start_section(
-                context.io.yellow(action_group.title, bold=True)
+                stream.yellow(action_group.title, bold=True)
                 if action_group.title
                 else None
             )
@@ -193,18 +194,18 @@ def format_package(
         visited = set()
     result = []
     version = (
-        context.io.red("[ not installed ]")
+        stream.red("[ not installed ]")
         if not package.version
-        else context.io.red(package.version)
+        else stream.red(package.version)
         if required
         and required != "Any"
         and not SpecifierSet(required).contains(package.version)
-        else context.io.yellow(package.version)
+        else stream.yellow(package.version)
     )
     if package.name in visited:
-        version = context.io.red("[circular]")
+        version = stream.red("[circular]")
     required = f"[ required: {required} ]" if required else ""
-    result.append(f"{context.io.green(package.name, bold=True)} {version} {required}\n")
+    result.append(f"{stream.green(package.name, bold=True)} {version} {required}\n")
     if package.name in visited:
         return "".join(result)
     visited.add(package.name)

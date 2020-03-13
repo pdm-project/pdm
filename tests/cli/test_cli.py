@@ -8,8 +8,8 @@ import pytest
 from click.testing import CliRunner
 from vistir.contextmanagers import temp_environ
 
-from pdm import cli
 from pdm.cli import actions
+from pdm.core import main
 from pdm.models.requirements import parse_requirement
 from pdm.utils import get_python_version
 
@@ -17,7 +17,7 @@ from pdm.utils import get_python_version
 @pytest.fixture()
 def invoke():
     runner = CliRunner()
-    return functools.partial(runner.invoke, cli, prog_name="pdm")
+    return functools.partial(runner.invoke, main, prog_name="pdm")
 
 
 def test_help_option(invoke):
@@ -100,6 +100,7 @@ def test_info_global_project(invoke):
     assert "global-project" in result.output.strip()
 
 
+@pytest.mark.skipif("VIRTUAL_ENV" in os.environ, reason="venv is not using PEP 582")
 def test_run_command(invoke, capfd):
     result = invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
     assert result.exit_code == 0
@@ -149,7 +150,7 @@ def test_use_python_by_version(project, invoke):
 
 
 def test_install_with_lockfile(project, invoke, working_set, repository):
-    result = invoke(["lock"], obj=project)
+    result = invoke(["lock", "-v"], obj=project)
     assert result.exit_code == 0
     result = invoke(["install"], obj=project)
     assert "Lock file" not in result.output
@@ -170,7 +171,6 @@ def test_init_command(project_no_init, invoke, mocker):
     result = invoke(
         ["init"], input="python\ntest-project\n\n\n\n\n\n", obj=project_no_init
     )
-    print(result.output)
     assert result.exit_code == 0
     python_version = ".".join(
         map(str, get_python_version(project_no_init.environment.python_executable)[:2])

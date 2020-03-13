@@ -18,8 +18,8 @@ from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 from vistir.contextmanagers import temp_environ
 from vistir.path import normalize_path
 
-from pdm.context import context
 from pdm.exceptions import NoPythonVersion
+from pdm.iostream import stream
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     allow_all_wheels,
@@ -83,21 +83,21 @@ class Environment:
         :param project: the project instance
         """
         self.python_requires = project.python_requires
-        self.config = project.config
         self.project = project
 
     @cached_property
     def python_executable(self) -> str:
         """Get the Python interpreter path."""
-        if self.config.get("python.path"):
-            return self.config["python.path"]
-        if PYENV_INSTALLED and self.config.get("python.use_pyenv", True):
+        config = self.project.config
+        if config.get("python.path"):
+            return config["python.path"]
+        if PYENV_INSTALLED and config.get("python.use_pyenv", True):
             return os.path.join(PYENV_ROOT, "shims", "python")
         if "VIRTUAL_ENV" in os.environ:
-            context.io.echo(
+            stream.echo(
                 "An activated virtualenv is detected, reuse the interpreter now.",
                 err=True,
-                verbosity=context.io.DETAIL,
+                verbosity=stream.DETAIL,
             )
             return get_venv_python()
 
@@ -118,10 +118,8 @@ class Environment:
                 if self.python_requires.contains(version):
                     path = sys.executable
         if path:
-            context.io.echo(
-                "Using Python interpreter: {} ({})".format(
-                    context.io.green(path), version
-                )
+            stream.echo(
+                "Using Python interpreter: {} ({})".format(stream.green(path), version)
             )
             self.project.project_config["python.path"] = Path(path).as_posix()
             return path
@@ -194,8 +192,6 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
-        if self.config.get("packages_path") is not None:
-            return self.config.get("packages_path")
         pypackages = (
             self.project.root
             / "__pypackages__"
@@ -212,8 +208,8 @@ class Environment:
             build_dir = src_dir
         else:
             build_dir = create_tracked_tempdir(prefix="pdm-build")
-        download_dir = context.cache("pkgs")
-        wheel_download_dir = context.cache("wheels")
+        download_dir = self.project.cache("pkgs")
+        wheel_download_dir = self.project.cache("wheels")
         return {
             "build_dir": build_dir,
             "src_dir": src_dir,
@@ -249,7 +245,7 @@ class Environment:
         python_version = get_python_version(self.python_executable)[:2]
         finder = get_finder(
             sources,
-            context.cache_dir.as_posix(),
+            self.project.cache_dir.as_posix(),
             python_version,
             ignore_requires_python,
         )
@@ -312,7 +308,7 @@ class Environment:
                             pass
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
-                return (context.cache("wheels") / ireq.link.filename).as_posix()
+                return (self.project.cache("wheels") / ireq.link.filename).as_posix()
             builder_class = EditableBuilder if ireq.editable else WheelBuilder
             kwargs["finder"] = finder
             with builder_class(ireq) as builder, self.activate():

@@ -8,7 +8,7 @@ from pdm.resolver.providers import (  # noqa
     ReusePinProvider,
 )
 from pdm.resolver.reporters import SimpleReporter  # noqa
-from pdm.resolver.resolvers import Resolver
+from pdm.resolver.resolvers import Resolver  # noqa
 
 
 def _trace_visit_vertex(graph, current, target, visited, path, paths):
@@ -114,8 +114,8 @@ def _get_sections_from_top_requirements(traces):
     return all_sections
 
 
-def resolve(provider, reporter, requirements, requires_python):
-    resolver = Resolver(provider, reporter)
+def resolve(resolver, requirements, requires_python):
+    provider, reporter = resolver.provider, resolver.reporter
     state = resolver.resolve({k: reqs.values() for k, reqs in requirements.items()})
     for key, reqs in requirements.items():
         # For tarball source distributions, the requirement will be updated after
