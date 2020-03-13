@@ -74,6 +74,8 @@ class PdmParser(argparse.ArgumentParser):
                 + "\n"
             )
             formatter._add_item(lambda x: x, [banner])
+            self._positionals.title = "Commands"
+        self._optionals.title = "Options"
         # description
         formatter.add_text(self.description)
 
@@ -82,7 +84,7 @@ class PdmParser(argparse.ArgumentParser):
             self.usage,
             self._actions,
             self._mutually_exclusive_groups,
-            prefix=context.io.yellow("Usage: ", bold=True),
+            prefix=context.io.yellow("Usage", bold=True) + ": ",
         )
 
         # positionals, optionals and user-defined groups

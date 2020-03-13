@@ -113,3 +113,13 @@ project path following `-g/--global`.
 !!! danger "NOTE"
     Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
     remove packages installed in your system Python.
+
+
+## Working inside a virtualenv
+
+Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
+by the configuration item `use_venv`, when it is set to `True`, PDM will use the virtualenv **when it is activated**.
+
+## Configurations
+
+You can have a full overview of all config items with `pdm config`.
