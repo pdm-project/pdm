@@ -1,7 +1,7 @@
 # Write a plugin
 
 PDM is aiming at being a community driven package manager.
-It is shipped with a full-featured and plug-in system, with which you can:
+It is shipped with a full-featured plug-in system, with which you can:
 
 - Develop a new command for PDM
 - Add additional options to existing PDM commands
