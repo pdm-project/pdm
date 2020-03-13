@@ -4,6 +4,9 @@ from pdm.project import Project
 
 
 class Option:
+    """A reusable option object which delegates all arguments to parser.add_argument().
+    """
+
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
@@ -15,7 +18,11 @@ class Option:
         group.add_argument(*self.args, **self.kwargs)
 
 
-class ArgumentGroup(object):
+class ArgumentGroup:
+    """A reusable argument group object which can call `add_argument()`
+    to add more arguments. And itself will be registered to the parser later.
+    """
+
     def __init__(
         self, name=None, parser=None, is_mutually_exclusive=False, required=None
     ):
