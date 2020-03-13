@@ -23,7 +23,7 @@ COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
 
 class Core:
-    """A high level project that manages all classes and configurations
+    """A high level object that manages all classes and configurations
     """
 
     def __init__(self):

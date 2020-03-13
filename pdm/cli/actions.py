@@ -11,7 +11,7 @@ from pkg_resources import safe_name
 
 from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
-from pdm.installers import Synchronizer, format_dist
+from pdm.installers import format_dist
 from pdm.iostream import stream
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -150,7 +150,7 @@ def do_sync(
         candidates.update(project.get_locked_candidates("dev"))
     if default:
         candidates.update(project.get_locked_candidates())
-    handler = Synchronizer(candidates, project.environment)
+    handler = project.core.synchronizer_class(candidates, project.environment)
     handler.synchronize(clean=clean, dry_run=dry_run)
 
 
