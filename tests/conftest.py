@@ -1,4 +1,5 @@
 import collections
+import functools
 import json
 import os
 import shutil
@@ -9,6 +10,7 @@ from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import pytest
+from click.testing import CliRunner
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
@@ -279,3 +281,9 @@ def is_editable(request):
 @pytest.fixture(params=[False, True])
 def is_dev(request):
     return request.param
+
+
+@pytest.fixture()
+def invoke():
+    runner = CliRunner()
+    return functools.partial(runner.invoke, main, prog_name="pdm")

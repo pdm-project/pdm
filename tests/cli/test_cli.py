@@ -1,23 +1,14 @@
-import functools
 import os
 import shutil
 import sys
 from pathlib import Path
 
 import pytest
-from click.testing import CliRunner
 from vistir.contextmanagers import temp_environ
 
 from pdm.cli import actions
-from pdm.core import main
 from pdm.models.requirements import parse_requirement
 from pdm.utils import get_python_version
-
-
-@pytest.fixture()
-def invoke():
-    runner = CliRunner()
-    return functools.partial(runner.invoke, main, prog_name="pdm")
 
 
 def test_help_option(invoke):
