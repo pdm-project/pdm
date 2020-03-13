@@ -404,3 +404,17 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
             path = "/{0}{1}".format(path_start, parsed.path)
             uri = parse.urlunparse(parsed._replace(netloc=netloc, path=path))
     return uri
+
+
+def get_venv_python() -> Optional[str]:
+    """Get the python interpreter path of venv"""
+    if "VIRTUAL_ENV" not in os.environ:
+        return None
+    venv = os.environ["VIRTUAL_ENV"]
+    if os.name == "nt":
+        suffix = ".exe"
+        scripts = "Scripts"
+    else:
+        suffix = ""
+        scripts = "bin"
+    return os.path.join(venv, scripts, f"python{suffix}")

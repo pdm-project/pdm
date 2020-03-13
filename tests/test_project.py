@@ -53,6 +53,7 @@ def test_global_project(tmp_path):
 def test_project_use_venv(project, mocker):
     del project.project_config["python.path"]
     scripts = "Scripts" if os.name == "nt" else "bin"
+    suffix = ".exe" if os.name else ""
 
     with temp_environ():
         os.environ["VIRTUAL_ENV"] = "/path/to/env"
@@ -60,5 +61,8 @@ def test_project_use_venv(project, mocker):
 
         project.project_config["use_venv"] = True
         env = project.environment
-        assert Path(env.python_executable) == Path("/path/to/env") / scripts / "python"
+        assert (
+            Path(env.python_executable)
+            == Path("/path/to/env") / scripts / f"python{suffix}"
+        )
         assert env.is_global

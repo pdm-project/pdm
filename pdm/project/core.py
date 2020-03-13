@@ -21,7 +21,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.utils import cached_property, find_project_root
+from pdm.utils import cached_property, find_project_root, get_venv_python
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
@@ -131,9 +131,7 @@ class Project:
         if self.is_global:
             return GlobalEnvironment(self)
         if self.config["use_venv"] and "VIRTUAL_ENV" in os.environ:
-            scripts_dir = "Scripts" if os.name == "nt" else "bin"
-            python_path = os.path.join(os.environ["VIRTUAL_ENV"], scripts_dir, "python")
-            self.project_config["python.path"] = python_path
+            self.project_config["python.path"] = get_venv_python()
             return GlobalEnvironment(self)
         return Environment(self)
 

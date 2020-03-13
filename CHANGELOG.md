@@ -1,3 +1,12 @@
+Release v0.4.2 (2020-03-13)
+---------------------------
+
+### Features & Improvements
+
+- Refactor the CLI part, switch from `click` to `argparse`, for better extensibility. [#73](https://github.com/frostming/pdm/issues/73)
+- Allow users to configure to install packages into venv when it is activated. [#74](https://github.com/frostming/pdm/issues/74)
+
+
 Release v0.4.1 (2020-03-11)
 ---------------------------
 

@@ -30,6 +30,7 @@ from pdm.utils import (
     get_pep508_environment,
     get_python_version,
     get_sys_config_paths,
+    get_venv_python,
 )
 
 if TYPE_CHECKING:
@@ -98,8 +99,7 @@ class Environment:
                 err=True,
                 verbosity=context.io.DETAIL,
             )
-            scripts_dir = "Scripts" if os.name == "nt" else "bin"
-            return os.path.join(os.environ["VIRTUAL_ENV"], scripts_dir, "python")
+            return get_venv_python()
 
         # First try what `python` refers to.
         path = shutil.which("python")
