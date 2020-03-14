@@ -1,3 +1,19 @@
+Release v0.5.0 (2020-03-14)
+---------------------------
+
+### Features & Improvements
+
+- Introduce a super easy-to-extend plug-in system to PDM. [#75](https://github.com/frostming/pdm/issues/75)
+
+### Improved Documentation
+
+- Documentation on how to write a plugin. [#75](https://github.com/frostming/pdm/issues/75)
+
+### Bug Fixes
+
+- Fix a typo in metadata parsing from `plugins` to `entry_points`
+
+
 Release v0.4.2 (2020-03-13)
 ---------------------------
 

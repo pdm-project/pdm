@@ -62,7 +62,7 @@ class HelloCommand(BaseCommand):
 ```
 
 !!! note
-    The default options are loaded first, then `add_arguments()` is called.
+The default options are loaded first, then `add_arguments()` is called.
 
 ### Register the command to the core object
 
@@ -132,6 +132,17 @@ which are not covered in the above example:
 Now you have defined your plugin already, let's distribute it to PyPI. PDM's plugins are discovered by entry point types.
 Create an `pdm.plugin` entry point and point to your plugin callable(yeah, it don't need to be a function, any callable object can work):
 
+**PDM**:
+
+```toml
+# pyproject.toml
+
+[tool.pdm.entry_points."pdm.plugin"]
+hello = "my_plugin:hello_plugin"
+```
+
+Note that `pdm.plugin` is wrapped with double quotes to be regarded as a single key.
+
 **setuptools**:
 
 ```python
@@ -142,13 +153,4 @@ setup(
     entry_points={"pdm.plugin": ["hello = my_plugin:hello_plugin"]}
     ...
 )
-```
-
-**PDM**:
-
-```toml
-# pyproject.toml
-
-[tool.pdm.entry_points."pdm.plugin"]
-hello = "my_plugin:hello_plugin"
 ```
