@@ -3,8 +3,8 @@ import subprocess
 import sys
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.context import context
 from pdm.exceptions import PdmUsageError
+from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -25,7 +25,7 @@ class Command(BaseCommand):
             if not expanded_command:
                 raise PdmUsageError(
                     "Command {} is not found on your PATH.".format(
-                        context.io.green(f"'{options.command}'")
+                        stream.green(f"'{options.command}'")
                     )
                 )
             sys.exit(subprocess.call([expanded_command] + list(options.args)))

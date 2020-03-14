@@ -14,8 +14,8 @@ from pip_shims import shims
 from pkg_resources import safe_name, safe_version, to_filename
 
 from pdm.builders.base import Builder
-from pdm.context import context
 from pdm.exceptions import WheelBuildError
+from pdm.iostream import stream
 from pdm.utils import cached_property, get_abi_tag
 
 WHEEL_FILE_FORMAT = """\
@@ -59,7 +59,7 @@ class WheelBuilder(Builder):
         if not os.path.exists(build_dir):
             os.makedirs(build_dir, exist_ok=True)
 
-        context.io.echo("- Building {}...".format(context.io.cyan("wheel")))
+        stream.echo("- Building {}...".format(stream.cyan("wheel")))
         self._records.clear()
         fd, temp_path = tempfile.mkstemp(suffix=".whl")
         os.close(fd)
@@ -76,7 +76,7 @@ class WheelBuilder(Builder):
             os.unlink(target)
         shutil.move(temp_path, target)
 
-        context.io.echo("- Built {}".format(context.io.cyan(os.path.basename(target))))
+        stream.echo("- Built {}".format(stream.cyan(os.path.basename(target))))
         return target
 
     @property
@@ -171,7 +171,7 @@ class WheelBuilder(Builder):
         hash_digest = urlsafe_b64encode(hashsum.digest()).decode("ascii").rstrip("=")
 
         wheel.writestr(zi, b, compress_type=zipfile.ZIP_DEFLATED)
-        context.io.echo(f" - Adding: {rel_path}", verbosity=context.io.DETAIL)
+        stream.echo(f" - Adding: {rel_path}", verbosity=stream.DETAIL)
         self._records.append((rel_path, hash_digest, str(len(b))))
 
     def _build(self, wheel):
@@ -190,7 +190,7 @@ class WheelBuilder(Builder):
         if os.sep != "/":
             # We always want to have /-separated paths in the zip file and in RECORD
             rel_path = rel_path.replace(os.sep, "/")
-        context.io.echo(f" - Adding: {rel_path}", verbosity=context.io.DETAIL)
+        stream.echo(f" - Adding: {rel_path}", verbosity=stream.DETAIL)
         zinfo = zipfile.ZipInfo(rel_path)
 
         # Normalize permission bits to either 755 (executable) or 644
@@ -221,7 +221,9 @@ class WheelBuilder(Builder):
     def _write_wheel_file(self, fp):
         fp.write(
             WHEEL_FILE_FORMAT.format(
-                version=context.version, pure_lib=self.meta.build is None, tag=self.tag
+                version=self.meta.version,
+                pure_lib=self.meta.build is None,
+                tag=self.tag,
             )
         )
 

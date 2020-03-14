@@ -48,7 +48,7 @@ mkdocs-material = "<5.0.0,>=4.6.3"
 markdown-include = "<1.0.0,>=0.5.1"
 
 [tool.pdm.cli]
-pdm = "pdm.cli:main"
+pdm = "pdm.core:main"
 
 [tool.intreehooks]
 build-backend = "pdm.builders.api"

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 
 import halo
 
-from pdm.context import context
+from pdm.iostream import stream
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
@@ -81,9 +81,8 @@ class SimpleReporter:
         pass
 
 
-class SpinnerReporter(SimpleReporter):
-    def __init__(self, requirements: List[Requirement], spinner: halo.Halo) -> None:
-        super().__init__(requirements)
+class SpinnerReporter:
+    def __init__(self, spinner: halo.Halo) -> None:
         self.spinner = spinner
 
     def starting_round(self, index: int) -> None:
@@ -107,7 +106,7 @@ class SpinnerReporter(SimpleReporter):
         self.spinner.stop_and_persist(text="Finish resolving")
 
     def resolve_criteria(self, name):
-        self.spinner.text = f"Resolving {context.io.green(name, bold=True)}"
+        self.spinner.text = f"Resolving {stream.green(name, bold=True)}"
 
     def pin_candidate(self, name, criterion, candidate, child_names):
         self.spinner.text = f"Resolved: {candidate.format()}"

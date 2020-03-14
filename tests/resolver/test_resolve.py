@@ -9,6 +9,7 @@ from pdm.models.specifiers import PySpecSet
 from pdm.resolver import (
     BaseProvider,
     EagerUpdateProvider,
+    Resolver,
     ReusePinProvider,
     SimpleReporter,
     resolve,
@@ -50,7 +51,8 @@ def resolve_requirements(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
     )
     reporter = SimpleReporter(flat_reqs)
-    mapping, *_ = resolve(provider, reporter, requirements, requires_python)
+    resolver = Resolver(provider, reporter)
+    mapping, *_ = resolve(resolver, requirements, requires_python)
     return mapping
 
 

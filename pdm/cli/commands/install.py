@@ -3,7 +3,7 @@ import argparse
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
-from pdm.context import context
+from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -23,10 +23,10 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.lock:
             if not project.lockfile_file.exists():
-                context.io.echo("Lock file does not exist, trying to generate one...")
+                stream.echo("Lock file does not exist, trying to generate one...")
                 actions.do_lock(project, strategy="all")
             elif not project.is_lockfile_hash_match():
-                context.io.echo(
+                stream.echo(
                     "Lock file hash doesn't match pyproject.toml, regenerating..."
                 )
                 actions.do_lock(project, strategy="reuse")

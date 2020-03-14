@@ -10,8 +10,8 @@ from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
 
-from pdm.context import context
 from pdm.exceptions import ExtrasError, RequirementError
+from pdm.iostream import stream
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property
@@ -236,6 +236,6 @@ class Candidate:
     def format(self) -> str:
         """Format for output."""
         return (
-            f"{context.io.green(self.name, bold=True)} "
-            f"{context.io.yellow(str(self.version))}"
+            f"{stream.green(self.name, bold=True)} "
+            f"{stream.yellow(str(self.version))}"
         )

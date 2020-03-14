@@ -20,7 +20,7 @@ def ljust(text, length):
     return text + " " * (length - len(_strip_styles(text)))
 
 
-class _IO:
+class IOStream:
     NORMAL = 0
     DETAIL = 1
     DEBUG = 2
@@ -79,3 +79,6 @@ class _IO:
         self._indent += prefix
         yield
         self._indent = _indent
+
+
+stream = IOStream()

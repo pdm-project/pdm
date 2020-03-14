@@ -7,8 +7,8 @@ from typing import Any, Dict, Iterable, Optional
 import appdirs
 import tomlkit
 
-from pdm.context import context
 from pdm.exceptions import NoConfigError
+from pdm.iostream import stream
 from pdm.utils import get_pypi_source
 
 
@@ -144,8 +144,8 @@ class Config(MutableMapping):
                 value = True
         env_var = self._config_map[key].env_var
         if env_var is not None and env_var in os.environ:
-            context.io.echo(
-                context.io.yellow(
+            stream.echo(
+                stream.yellow(
                     "WARNING: the config is shadowed by env var '{}', "
                     "set value won't take effect.".format(env_var)
                 )
@@ -169,8 +169,8 @@ class Config(MutableMapping):
         else:
             env_var = self._config_map[key].env_var
             if env_var is not None and env_var in os.environ:
-                context.io.echo(
-                    context.io.yellow(
+                stream.echo(
+                    stream.yellow(
                         "WARNING: the config is shadowed by env var '{}', "
                         "set value won't take effect.".format(env_var)
                     )

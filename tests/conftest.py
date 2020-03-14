@@ -1,4 +1,5 @@
 import collections
+import functools
 import json
 import os
 import shutil
@@ -9,14 +10,16 @@ from typing import Callable, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import pytest
+from click.testing import CliRunner
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
-from pdm.context import context
+from pdm.core import main
 from pdm.exceptions import CandidateInfoNotFound
+from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
@@ -27,7 +30,7 @@ from pdm.project.config import Config
 from pdm.utils import cached_property, get_finder
 from tests import FIXTURES
 
-context.io.disable_colors()
+stream.disable_colors()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -235,6 +238,7 @@ def get_local_finder(*args, **kwargs):
 @pytest.fixture()
 def project_no_init(tmp_path, mocker):
     p = TestProject(tmp_path.as_posix())
+    p.core = main
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
@@ -250,9 +254,9 @@ def project(project_no_init):
 
 
 @pytest.fixture()
-def repository(project):
+def repository(project, mocker):
     rv = TestRepository([], project.environment)
-    project.get_repository = lambda: rv
+    mocker.patch.object(project, "get_repository", return_value=rv)
     return rv
 
 
@@ -277,3 +281,9 @@ def is_editable(request):
 @pytest.fixture(params=[False, True])
 def is_dev(request):
     return request.param
+
+
+@pytest.fixture()
+def invoke():
+    runner = CliRunner()
+    return functools.partial(runner.invoke, main, prog_name="pdm")

@@ -3,7 +3,7 @@ import shutil
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.context import context
+from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -26,5 +26,5 @@ class ClearCommand(BaseCommand):
     arguments = [verbose_option]
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        shutil.rmtree(context.cache_dir, ignore_errors=True)
-        context.io.echo("Caches are cleared successfully.")
+        shutil.rmtree(project.cache_dir, ignore_errors=True)
+        stream.echo("Caches are cleared successfully.")

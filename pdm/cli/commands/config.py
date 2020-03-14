@@ -1,7 +1,7 @@
 import argparse
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.context import context
+from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -15,36 +15,32 @@ class Command(BaseCommand):
         DeleteCommand.register_to(subparsers, "del")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        context.io.echo(
+        stream.echo(
             "Home configuration ({}):".format(project.global_config._config_file)
         )
-        with context.io.indent("  "):
+        with stream.indent("  "):
             for key in sorted(project.global_config):
-                context.io.echo(
-                    context.io.yellow(
+                stream.echo(
+                    stream.yellow(
                         "# " + project.global_config._config_map[key].description
                     ),
-                    verbosity=context.io.DETAIL,
+                    verbosity=stream.DETAIL,
                 )
-                context.io.echo(
-                    f"{context.io.cyan(key)} = {project.global_config[key]}"
-                )
+                stream.echo(f"{stream.cyan(key)} = {project.global_config[key]}")
 
-        context.io.echo()
-        context.io.echo(
+        stream.echo()
+        stream.echo(
             "Project configuration ({}):".format(project.project_config._config_file)
         )
-        with context.io.indent("  "):
+        with stream.indent("  "):
             for key in sorted(project.project_config):
-                context.io.echo(
-                    context.io.yellow(
+                stream.echo(
+                    stream.yellow(
                         "# " + project.project_config._config_map[key].description
                     ),
-                    verbosity=context.io.DETAIL,
+                    verbosity=stream.DETAIL,
                 )
-                context.io.echo(
-                    f"{context.io.cyan(key)} = {project.project_config[key]}"
-                )
+                stream.echo(f"{stream.cyan(key)} = {project.project_config[key]}")
 
 
 class GetCommand(BaseCommand):
@@ -56,7 +52,7 @@ class GetCommand(BaseCommand):
         parser.add_argument("name", help="Config name")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        context.io.echo(project.config[options.name])
+        stream.echo(project.config[options.name])
 
 
 class SetCommand(BaseCommand):
