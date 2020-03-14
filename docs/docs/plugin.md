@@ -62,7 +62,7 @@ class HelloCommand(BaseCommand):
 ```
 
 !!! note
-The default options are loaded first, then `add_arguments()` is called.
+    The default options are loaded first, then `add_arguments()` is called.
 
 ### Register the command to the core object
 
