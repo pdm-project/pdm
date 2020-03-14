@@ -37,9 +37,6 @@ class Core:
         self.parser = None
         self.subparsers = None
 
-        # store old state to avoid modification on the same object
-        self._previous_configs = Config._config_map.copy()
-
     def init_parser(self):
         self.parser = PdmParser(
             prog="pdm",
@@ -72,7 +69,6 @@ class Core:
 
     def main(self, args=None, prog_name=None, obj=None, **extra):
         """The main entry function"""
-        Config._config_map = self._previous_configs.copy()
         self.init_parser()
         self.load_plugins()
 

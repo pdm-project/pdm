@@ -127,6 +127,7 @@ by the configuration item `use_venv`, when it is set to `True`, PDM will use the
 | `cache_dir` | The root directory of cached files | The default cache location on OS | No | |
 | `auto_global` | Use global package implicity if no local project is found | `False` | No | `PDM_AUTO_GLOBAL` |
 | `use_venv` | Install packages into the activated venv site packages instead of PEP 582 | `False` | Yes | `PDM_USE_VENV` |
+| `parallel_install` | Whether to perform installation and uninstallation in parallel | `True` | Yes | `PDM_PARALLEL_INSTALL` |
 | `python.path` | The Python interpreter path | | Yes | `PDM_PYTHON_PATH` |
 | `python.use_pyenv` | Use the pyenv interpreter | `True` | Yes | |
 | `pypi.url` | The URL of PyPI mirror | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes | `PDM_PYPI_URL` |

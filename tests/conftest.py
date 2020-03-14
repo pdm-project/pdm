@@ -208,10 +208,13 @@ class MockWorkingSet(collections.abc.MutableMapping):
 
 @pytest.fixture()
 def working_set(mocker, repository):
+    from pip._internal.utils import logging
+
     rv = MockWorkingSet()
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate):
+        logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
         key = safe_name(candidate.name).lower()
         dist = Distribution(key, candidate.version)
@@ -242,9 +245,12 @@ def project_no_init(tmp_path, mocker):
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
+    old_config_map = Config._config_map.copy()
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     do_use(p, sys.executable)
-    return p
+    yield p
+    # Restore the config items
+    Config._config_map = old_config_map
 
 
 @pytest.fixture()

@@ -71,6 +71,11 @@ class Config(MutableMapping):
             True,
             "PDM_AUTO_GLOBAL",
         ),
+        "parallel_install": ConfigItem(
+            "Whether to perform installation and uninstallation in parallel",
+            True,
+            env_var="PDM_PARALLEL_INSTALL",
+        ),
         "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
         "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True),
         "pypi.url": ConfigItem(
