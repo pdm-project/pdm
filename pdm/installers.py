@@ -369,11 +369,11 @@ class DummyExecutor:
             future.set_exception(exc)
         return future
 
-    def close(self):
-        pass
+    def __enter__(self):
+        return self
 
-    def join(self):
-        pass
+    def __exit__(self, *args, **kwargs):
+        return
 
 
 class Synchronizer:
@@ -384,14 +384,11 @@ class Synchronizer:
     RETRY_TIMES = 1
 
     def __init__(
-        self,
-        candidates: Dict[str, Candidate],
-        environment: Environment,
-        parallel: bool = True,
+        self, candidates: Dict[str, Candidate], environment: Environment,
     ) -> None:
         self.candidates = candidates
         self.environment = environment
-        self.parallel = parallel
+        self.parallel = environment.project.config["parallel_install"]
         self.working_set = environment.get_working_set()
 
     @contextlib.contextmanager
@@ -478,12 +475,12 @@ class Synchronizer:
         added, updated, removed = result["add"], result["update"], result["remove"]
         if added:
             self._print_section_title("installed", len(added), dry_run)
-            for item in added:
+            for item in sorted(added, key=lambda x: x.name):
                 stream.echo(f"  - {item.format()}")
             stream.echo()
         if updated:
             self._print_section_title("updated", len(updated), dry_run)
-            for old, can in updated:
+            for old, can in sorted(updated, key=lambda x: x[1].name):
                 stream.echo(
                     f"  - {stream.green(can.name, bold=True)} "
                     f"{stream.yellow(old.version)} "
@@ -492,7 +489,7 @@ class Synchronizer:
             stream.echo()
         if removed:
             self._print_section_title("removed", len(removed), dry_run)
-            for dist in removed:
+            for dist in sorted(removed, key=lambda x: x.key):
                 stream.echo(
                     f"  - {stream.green(dist.key, bold=True)} "
                     f"{stream.yellow(dist.version)}"
@@ -594,4 +591,3 @@ class Synchronizer:
                 ),
                 verbosity=stream.DEBUG,
             )
-

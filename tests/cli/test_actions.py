@@ -24,10 +24,18 @@ def test_sync_only_different(project, repository, working_set, capsys):
     working_set.add_distribution(make_distribution("idna", "2.7"))
     actions.do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
-    print(out)
     assert "4 packages are installed" in out
     assert "1 package is updated" in out
     assert "foo" in working_set
+    assert "test-project" in working_set
+    assert working_set["chardet"].version == "3.0.4"
+
+
+def test_sync_in_sequential_mode(project, repository, working_set, capsys):
+    project.project_config["parallel_install"] = False
+    actions.do_add(project, packages=["requests"])
+    out, _ = capsys.readouterr()
+    assert "6 packages are installed" in out
     assert "test-project" in working_set
     assert working_set["chardet"].version == "3.0.4"
 

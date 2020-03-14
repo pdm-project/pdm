@@ -63,7 +63,7 @@ def test_plugin_replace_command(invoke, mocker, project):
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_load_multiple_plugings(invoke, mocker):
+def test_load_multiple_plugings(invoke, mocker, project):
     mocker.patch.object(
         pkg_resources,
         "iter_entry_points",
