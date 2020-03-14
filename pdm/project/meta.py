@@ -134,8 +134,8 @@ class PackageMeta:
             result["console_scripts"] = [
                 f"{key} = {value}" for key, value in settings["cli"].items()
             ]
-        if "plugins" in settings:
-            for plugin, value in settings["plugins"].items():
+        if "entry_points" in settings:
+            for plugin, value in settings["entry_points"].items():
                 result[plugin] = [f"{k} = {v}" for k, v in value.items()]
         return result
 

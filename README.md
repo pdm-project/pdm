@@ -22,6 +22,7 @@ you can probably find some goodness in `pdm`.
 - PEP 582 local package installer and runner, no virtualenv involved at all.
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
 - A PEP 517 build backend.
+- A full-featured plug-in system.
 
 ## Why not virtualenv?
 

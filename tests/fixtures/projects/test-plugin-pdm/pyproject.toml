@@ -1,0 +1,14 @@
+[build-system]
+requires = ["pdm"]
+build-backend = "pdm.builders.api"
+
+[tool.pdm]
+name = "test-plugin-pdm"
+version = "0.0.1"
+
+[tool.pdm.dependencies]
+
+[tool.pdm.dev-dependencies]
+
+[tool.pdm.entry_points."pdm.plugin"]
+hello = "hello:main"

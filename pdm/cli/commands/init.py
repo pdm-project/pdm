@@ -13,11 +13,6 @@ class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        python = click.prompt(
-            "Please enter the Python interpreter to use", default="", show_default=False
-        )
-        actions.do_use(project, python)
-
         if project.pyproject_file.exists():
             stream.echo(
                 "{}".format(
@@ -28,6 +23,10 @@ class Command(BaseCommand):
             stream.echo(
                 "{}".format(stream.cyan("Creating a pyproject.toml for PDM..."))
             )
+        python = click.prompt(
+            "Please enter the Python interpreter to use", default="", show_default=False
+        )
+        actions.do_use(project, python)
         name = click.prompt(f"Project name", default=project.root.name)
         version = click.prompt("Project version", default="0.0.0")
         license = click.prompt("License(SPDX name)", default="MIT")
