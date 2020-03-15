@@ -76,8 +76,12 @@ class Core:
         options = self.parser.parse_args(args or None)
         stream.set_verbosity(options.verbose)
 
+        if obj is not None:
+            options.project = obj
+        if options.global_project:
+            options.project = options.global_project
         if not getattr(options, "project", None):
-            options.project = obj or options.global_project or self.project_class()
+            options.project = self.project_class()
 
         # Add reverse reference for core object
         options.project.core = self
@@ -103,6 +107,7 @@ class Core:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """
+        command.project_class = self.project_class
         command.register_to(self.subparsers, name)
 
     @staticmethod

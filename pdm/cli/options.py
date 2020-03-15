@@ -133,7 +133,7 @@ update_strategy_group.add_argument(
 global_option = Option(
     "-g",
     "--global",
-    dest="project",
+    dest="global_project",
     nargs="?",
     type=Project.create_global,
     const=Project.create_global(),
