@@ -1,0 +1,7 @@
+--index-url=https://pypi.org/simple
+--extra-index-url=https://pypi.example.com/simple
+webassets==2.0
+werkzeug==0.16.0
+whoosh==2.7.4; sys_platform == "win32"
+wtforms==2.2.1 --hash=sha256:0cdbac3e7f6878086c334aa25dc5a33869a3954e9d1e015130d65a69309b3b61 --hash=sha256:e3ee092c827582c50877cdbd49e9ce6d2c5c1f6561f849b3b068c1b8029626f1
+-e git+https://github.com/pypa/pip.git@master#egg=pip

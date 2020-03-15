@@ -14,8 +14,8 @@ from pdm.models.candidates import identify
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
-from pdm.resolver.structs import DirectedGraph
 from pdm.project import Project
+from pdm.resolver.structs import DirectedGraph
 
 if TYPE_CHECKING:
     from pathlib import Path

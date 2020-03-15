@@ -4,6 +4,7 @@ import os
 
 import tomlkit
 from packaging.markers import default_environment
+
 from pdm.models.markers import Marker
 
 MARKER_KEYS = list(default_environment().keys())
@@ -41,6 +42,8 @@ def convert(filename):
             "requires"
         ].get("python_version")
         result["python_requires"] = f">={python_version}"
+    if "source" in data:
+        result["source"] = data["source"]
     result["dependencies"] = {
         k: convert_pipfile_requirement(req)
         for k, req in data.get("packages", {}).items()

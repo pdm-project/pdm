@@ -464,6 +464,10 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
     if not project.pyproject_file.exists():
         project.pyproject = {"tool": {"pdm": {}}}
     project.tool_settings.update(tool_settings)
+    project.pyproject["build-system"] = {
+        "requires": ["pdm"],
+        "build-backend": ["pdm.builders.api"],
+    }
     project.write_pyproject()
 
 

@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "poetry"
+version = "1.0.0"
+description = "Python dependency management and packaging made easy."
+authors = [
+    "Sébastien Eustace <sebastien@eustace.io>"
+]
+license = "MIT"
+
+readme = "README.md"
+
+homepage = "https://python-poetry.org/"
+repository = "https://github.com/python-poetry/poetry"
+documentation = "https://python-poetry.org/docs"
+
+[tool.poetry.dependencies]
+python = "~2.7 || ^3.4"
+cleo = { version = "^0.7.6", markers = "python_version ~= '2.7'" }
+cachecontrol = { version = "^0.12.4", extras = ["filecache"], python = "^3.4" }
+flask = { git = "https://github.com/pallets/flask.git", rev = "38eb5d3b" }
+psycopg2 = { version = "^2.7", optional = true }
+mysqlclient = { version = "^1.3", optional = true }
+
+[tool.poetry.dev-dependencies]
+my-dir = { path = "../my-package/" }
+my-file = { path = "../my-package/dist/my-package-0.1.0.tar.gz" }
+
+[tool.poetry.extras]
+mysql = ["mysqlclient"]
+pgsql = ["psycopg2"]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
+
+[tool.poetry.plugins."blogtool.parsers"]
+".rst" = "some_module:SomeClass"
+
+[tool.poetry.scripts]
+poetry = 'poetry.console:run'
