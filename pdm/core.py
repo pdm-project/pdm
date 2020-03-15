@@ -62,7 +62,7 @@ class Core:
                 klass = module.Command  # type: Type[BaseCommand]
             except AttributeError:
                 continue
-            self.register_command(klass, name)
+            self.register_command(klass, klass.name or name)
 
     def __call__(self, *args, **kwargs):
         return self.main(*args, **kwargs)
@@ -76,7 +76,7 @@ class Core:
         stream.set_verbosity(options.verbose)
 
         if not getattr(options, "project", None):
-            options.project = obj or self.project_class()
+            options.project = obj or options.global_project or self.project_class()
 
         # Add reverse reference for core object
         options.project.core = self

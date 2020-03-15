@@ -13,6 +13,9 @@ class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        if not options.global_project:
+            # Initialize at current working directory unless `-g` is pased
+            project = Project(".")
         if project.pyproject_file.exists():
             stream.echo(
                 "{}".format(
