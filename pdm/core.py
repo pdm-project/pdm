@@ -72,6 +72,7 @@ class Core:
         self.init_parser()
         self.load_plugins()
 
+        self.parser.set_defaults(global_project=None)
         options = self.parser.parse_args(args or None)
         stream.set_verbosity(options.verbose)
 
