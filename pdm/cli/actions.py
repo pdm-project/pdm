@@ -10,84 +10,23 @@ import tomlkit
 from pkg_resources import safe_name
 
 from pdm.builders import SdistBuilder, WheelBuilder
+from pdm.cli.utils import (
+    check_project_file,
+    find_importable_files,
+    format_lockfile,
+    format_toml,
+    save_version_specifiers,
+)
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.formats import FORMATS
 from pdm.installers import format_dist
 from pdm.iostream import stream
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
-from pdm.models.specifiers import bump_version, get_specifier
+from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
 from pdm.utils import get_python_version
-
-
-def format_lockfile(mapping, fetched_dependencies, summary_collection):
-    """Format lock file from a dict of resolved candidates, a mapping of dependencies
-    and a collection of package summaries.
-    """
-    packages = tomlkit.aot()
-    metadata = tomlkit.table()
-    for k, v in sorted(mapping.items()):
-        base = tomlkit.table()
-        base.update(v.as_lockfile_entry())
-        base.add("summary", summary_collection[strip_extras(k)[0]])
-        deps = tomlkit.table()
-        for r in fetched_dependencies[k].values():
-            name, req = r.as_req_dict()
-            if getattr(req, "items", None) is not None:
-                inline = tomlkit.inline_table()
-                inline.update(req)
-                deps.add(name, inline)
-            else:
-                deps.add(name, req)
-        if len(deps) > 0:
-            base.add("dependencies", deps)
-        packages.append(base)
-        if v.hashes:
-            key = f"{k} {v.version}"
-            array = tomlkit.array()
-            array.multiline(True)
-            for filename, hash_value in v.hashes.items():
-                inline = tomlkit.inline_table()
-                inline.update({"file": filename, "hash": hash_value})
-                array.append(inline)
-            if array:
-                metadata.add(key, array)
-    doc = tomlkit.document()
-    doc.update({"package": packages, "metadata": metadata})
-    return doc
-
-
-def save_version_specifiers(
-    requirements: Dict[str, Requirement],
-    resolved: Dict[str, Candidate],
-    save_strategy: str,
-) -> None:
-    """Rewrite the version specifiers according to the resolved result and save strategy
-
-    :param requirements: the requirements to be updated
-    :param resolved: the resolved mapping
-    :param save_strategy: compatible/wildcard/exact
-    """
-    for name, r in requirements.items():
-        if r.is_named and not r.specifier:
-            if save_strategy == "exact":
-                r.specifier = get_specifier(f"=={resolved[name].version}")
-            elif save_strategy == "compatible":
-                version = str(resolved[name].version)
-                next_major_version = ".".join(
-                    map(str, bump_version(tuple(version.split(".")), 0))
-                )
-                r.specifier = get_specifier(f">={version},<{next_major_version}")
-
-
-def check_project_file(project: Project) -> None:
-    """Check the existence of the project file and throws an error on failure."""
-    if not project.tool_settings:
-        raise ProjectError(
-            "The pyproject.toml has not been initialized yet. You can do this "
-            "by running {}.".format(stream.green("'pdm init'"))
-        )
 
 
 def do_lock(
@@ -448,7 +387,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
 
         if not first and len(pythons) > 1:
             for i, (path, python_version) in enumerate(pythons):
-                stream.echo(f"{i}: {stream.green(path)} ({python_version})")
+                stream.echo(f"{i}. {stream.green(path)} ({python_version})")
             selection = click.prompt(
                 "Please select:",
                 type=click.Choice([str(i) for i in range(len(pythons))]),
@@ -499,3 +438,57 @@ def do_info(
         stream.echo(project.root.as_posix())
     if env:
         stream.echo(json.dumps(project.environment.marker_environment, indent=2))
+
+
+def do_import(project: Project, filename: str, format: Optional[str] = None) -> None:
+    """Import project metadata from given file.
+
+    :param project: the project instance
+    :param filename: the file name
+    :param format: the file format, or guess if not given.
+    """
+    if not format:
+        for key in FORMATS:
+            if FORMATS[key].check_fingerprint(filename):
+                break
+        else:
+            raise PdmUsageError(
+                "Can't derive the file format automatically, "
+                "please specify it via '-f/--format' option."
+            )
+    else:
+        key = format
+    tool_settings = FORMATS[key].convert(filename)
+    format_toml(tool_settings)
+
+    if not project.pyproject_file.exists():
+        project.pyproject = {"tool": {"pdm": {}}}
+    project.tool_settings.update(tool_settings)
+    project.write_pyproject()
+
+
+def ask_for_import(project: Project) -> None:
+    """Show possible importable files and ask user to decide"""
+    importable_files = list(find_importable_files(project))
+    if not importable_files:
+        return
+    stream.echo(
+        stream.cyan("Found following files from other formats that you may import:")
+    )
+    for i, (key, filepath) in enumerate(importable_files):
+        stream.echo(f"{i}. {stream.green(filepath.as_posix())} ({key})")
+    stream.echo(
+        "{}. {}".format(
+            len(importable_files),
+            stream.yellow("don't do anything, I will import later."),
+        )
+    )
+    choice = click.prompt(
+        "Please select:",
+        type=click.Choice([str(i) for i in range(len(importable_files) + 1)]),
+        show_default=False,
+    )
+    if int(choice) == len(importable_files):
+        return
+    key, filepath = importable_files[int(choice)]
+    do_import(project, filepath, key)

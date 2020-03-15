@@ -84,6 +84,10 @@ class Project:
             self._pyproject = data
         return self._pyproject
 
+    @pyproject.setter
+    def pyproject(self, data):
+        self._pyproject = data
+
     @property
     def tool_settings(self):
         # type: () -> Union[Container, Dict]

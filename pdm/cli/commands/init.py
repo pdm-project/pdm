@@ -45,3 +45,4 @@ class Command(BaseCommand):
         )
 
         actions.do_init(project, name, version, license, author, email, python_requires)
+        actions.ask_for_import(project)
