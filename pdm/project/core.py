@@ -295,7 +295,7 @@ class Project:
                 )
             } or None
             result[identify(req)] = can
-        if not self.is_global and section in ("default", "__all__") and self.meta.name:
+        if section in ("default", "__all__") and self.meta.name and self.meta.version:
             result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
         return result
 
