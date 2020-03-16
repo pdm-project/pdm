@@ -202,7 +202,8 @@ class PyPIRepository(BaseRepository):
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (
             self._get_dependencies_from_cache,
-            self._get_dependencies_from_json,
+            # PyPI JSON API seems not trustable
+            # self._get_dependencies_from_json,
             self._get_dependencies_from_metadata,
         )
 
