@@ -33,13 +33,8 @@ REQUIREMENTS = [
         None,
     ),
     (
-        "git+http://git.example.com/MyProject#egg=MyProject",
-        ("MyProject", {"git": "http://git.example.com/MyProject"}),
-        None,
-    ),
-    (
-        "git+http://git.example.com/MyProject#egg=MyProject",
-        ("MyProject", {"git": "http://git.example.com/MyProject"}),
+        "git+http://git.example.com/MyProject.git@master#egg=MyProject",
+        ("MyProject", {"git": "http://git.example.com/MyProject.git", "ref": "master"}),
         None,
     ),
     (
