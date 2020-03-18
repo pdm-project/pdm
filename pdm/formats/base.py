@@ -25,8 +25,9 @@ class _MetaConverterMeta(abc.ABCMeta):
 class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
-    def __init__(self, source):
+    def __init__(self, source, filename=None):
         self._data = {}
+        self.filename = filename
         self._convert(dict(source))
 
     def __getitem__(self, k):

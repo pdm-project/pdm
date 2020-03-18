@@ -59,7 +59,7 @@ def parse_requirement_file(filename):
     return ireqs, finder
 
 
-def check_fingerprint(filename):
+def check_fingerprint(project, filename):
     import tomlkit
 
     with open(filename, encoding="utf-8") as fp:
@@ -78,7 +78,7 @@ def convert_url_to_source(url, name=None):
     return {"name": name, "url": url, "verify_ssl": url.startswith("https://")}
 
 
-def convert(filename):
+def convert(project, filename):
     ireqs, finder = parse_requirement_file(str(filename))
     reqs = [requirement_from_ireq(ireq) for ireq in ireqs]
 

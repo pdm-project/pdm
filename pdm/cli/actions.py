@@ -449,7 +449,7 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
     """
     if not format:
         for key in FORMATS:
-            if FORMATS[key].check_fingerprint(filename):
+            if FORMATS[key].check_fingerprint(project, filename):
                 break
         else:
             raise PdmUsageError(
@@ -458,7 +458,7 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
             )
     else:
         key = format
-    tool_settings = FORMATS[key].convert(filename)
+    tool_settings = FORMATS[key].convert(project, filename)
     format_toml(tool_settings)
 
     if not project.pyproject_file.exists():

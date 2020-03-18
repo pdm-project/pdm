@@ -346,5 +346,5 @@ def find_importable_files(project: Project) -> Iterable[Tuple[str, Path]]:
         if not project_file.exists():
             continue
         for key, module in FORMATS.items():
-            if module.check_fingerprint(project_file.as_posix()):
+            if module.check_fingerprint(project, project_file.as_posix()):
                 yield key, project_file

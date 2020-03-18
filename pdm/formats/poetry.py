@@ -9,7 +9,7 @@ from pdm.models.markers import Marker
 from pdm.models.specifiers import PySpecSet
 
 
-def check_fingerprint(filename):
+def check_fingerprint(project, filename):
     with open(filename, encoding="utf-8") as fp:
         data = tomlkit.parse(fp.read())
 
@@ -118,6 +118,6 @@ class PoetryMetaConverter(MetaConverter):
         return {key: _convert_req(req) for key, req in value.items()}
 
 
-def convert(filename):
+def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
         return dict(PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"]))

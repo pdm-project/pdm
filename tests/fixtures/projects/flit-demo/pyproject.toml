@@ -1,0 +1,38 @@
+[tool.flit.metadata]
+module="flit"
+author="Thomas Kluyver"
+author-email="thomas@kluyver.me.uk"
+home-page="https://github.com/takluyver/flit"
+requires = [
+    "requests >=2.6",
+    "configparser; python_version == '2.7'",
+]
+dist-name = "pyflit"
+requires-python=">=3.5"
+description-file="README.rst"
+classifiers=[
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.flit.metadata.urls]
+Documentation = "https://flit.readthedocs.io/en/latest/"
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest >=2.7.3",
+    "pytest-cov",
+]
+doc = ["sphinx"]
+
+[tool.flit.scripts]
+flit = "flit:main"
+
+[tool.flit.entrypoints."pygments.lexers"]
+dogelang = "dogelang.lexer:DogeLexer"
+
+[tool.flit.sdist]
+include = ["doc/"]
+exclude = ["doc/*.html"]

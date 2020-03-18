@@ -27,11 +27,11 @@ def convert_pipfile_requirement(req):
     return req
 
 
-def check_fingerprint(filename):
+def check_fingerprint(project, filename):
     return os.path.basename(filename) == "Pipfile"
 
 
-def convert(filename):
+def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
         data = tomlkit.parse(fp.read())
     result = {}
