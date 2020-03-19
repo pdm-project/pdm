@@ -117,6 +117,21 @@ class PoetryMetaConverter(MetaConverter):
     def dev_dependencies(self, value):
         return {key: _convert_req(req) for key, req in value.items()}
 
+    @convert_from()
+    def includes(self, source):
+        result = []
+        for item in source.pop("packages", []):
+            include = item["include"]
+            if item.get("from"):
+                include = f"{item.get('from')}/{include}"
+            result.append(include)
+        result.extend(source.pop("include", []))
+        return result
+
+    @convert_from("exclude")
+    def excludes(self, value):
+        return value
+
 
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:

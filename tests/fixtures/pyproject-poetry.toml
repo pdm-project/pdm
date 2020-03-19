@@ -13,6 +13,14 @@ homepage = "https://python-poetry.org/"
 repository = "https://github.com/python-poetry/poetry"
 documentation = "https://python-poetry.org/docs"
 
+packages = [
+    {include="my_package", from="lib"},
+    {include="tests", format="sdist"}
+]
+
+include = ["CHANGELOG.md"]
+exclude = ["my_package/excluded.py"]
+
 [tool.poetry.dependencies]
 python = "~2.7 || ^3.4"
 cleo = { version = "^0.7.6", markers = "python_version ~= '2.7'" }

@@ -54,6 +54,8 @@ def test_convert_poetry(project):
     assert result["entry_points"]["blogtool.parsers"] == {
         ".rst": "some_module:SomeClass"
     }
+    assert result["includes"] == ["lib/my_package", "tests", "CHANGELOG.md"]
+    assert result["excludes"] == ["my_package/excluded.py"]
 
 
 def test_convert_flit(project):
