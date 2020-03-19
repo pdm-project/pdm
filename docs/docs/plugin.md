@@ -125,7 +125,7 @@ which are not covered in the above example:
 - `core.repository_class`: change the class of repository object, which controls how to look for candidates and metadata of a package
 - `core.resolver_class`: change the resolver class, to control the resolution process
 - `core.synchronizer_class`: change the synchronizer_class, to control the installation process
-- `core.parser = None`: add arguments to the **root** argument parser
+- `core.parser`: add arguments to the **root** argument parser
 
 ## Publish your plugin
 

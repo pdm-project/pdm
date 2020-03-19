@@ -260,6 +260,18 @@ def project(project_no_init):
 
 
 @pytest.fixture()
+def fixture_project(project_no_init):
+    """Initailize a project from a fixture project"""
+
+    def func(project_name):
+        source = FIXTURES / "projects" / project_name
+        shutil.copytree(source, project_no_init.root, dirs_exist_ok=True)
+        return project_no_init
+
+    return func
+
+
+@pytest.fixture()
 def repository(project, mocker):
     rv = TestRepository([], project.environment)
     mocker.patch.object(project, "get_repository", return_value=rv)
