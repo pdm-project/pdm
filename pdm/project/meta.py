@@ -48,7 +48,7 @@ class PackageMeta:
         if isinstance(value, str):
             return value
         version_source = value.get("from")
-        with open(version_source, encoding="utf-8") as fp:
+        with self.project.root.joinpath(version_source).open(encoding="utf-8") as fp:
             version = re.findall(
                 r"^__version__\s*=\s*[\"'](.+?)[\"']\s*$", fp.read(), re.M
             )[0]

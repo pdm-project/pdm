@@ -378,7 +378,7 @@ def do_build(
         stream.echo("All artifacts are disabled, nothing to do.", err=True)
         return
     ireq = project.make_self_candidate(False).ireq
-    ireq.source_dir = "."
+    ireq.source_dir = project.root.as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
     if sdist:

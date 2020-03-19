@@ -1,0 +1,17 @@
+[build-system]
+build-backend = "pdm.builders.api"
+requires = ["pdm"]
+
+[tool]
+[tool.pdm]
+author = "frostming <mianghong@gmail.com>"
+description = ""
+homepage = ""
+license = "MIT"
+name = "demo-module"
+python_requires = ">=3.5"
+version = { from = "foo_module.py" }
+
+[tool.pdm.dependencies]
+
+[tool.pdm.dev-dependencies]

@@ -182,7 +182,13 @@ class WheelBuilder(Builder):
 
     def _copy_module(self, wheel):
         for path in self.find_files_to_add():
-            self._add_file(wheel, str(path))
+            rel_path = None
+            if self.package_dir:
+                try:
+                    rel_path = path.relative_to(self.package_dir).as_posix()
+                except ValueError:
+                    pass
+            self._add_file(wheel, str(path), rel_path)
 
     def _add_file(self, wheel, full_path, rel_path=None):
         if not rel_path:

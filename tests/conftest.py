@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import sys
+from distutils.dir_util import copy_tree
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Tuple
@@ -257,6 +258,18 @@ def project_no_init(tmp_path, mocker):
 def project(project_no_init):
     do_init(project_no_init, "test_project", "0.0.0")
     return project_no_init
+
+
+@pytest.fixture()
+def fixture_project(project_no_init):
+    """Initailize a project from a fixture project"""
+
+    def func(project_name):
+        source = FIXTURES / "projects" / project_name
+        copy_tree(source.as_posix(), project_no_init.root.as_posix())
+        return project_no_init
+
+    return func
 
 
 @pytest.fixture()

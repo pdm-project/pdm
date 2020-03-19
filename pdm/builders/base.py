@@ -72,9 +72,9 @@ def _merge_globs(include_globs, excludes_globs):
     return includes, excludes
 
 
-def _find_top_packages() -> List[str]:
+def _find_top_packages(root) -> List[str]:
     result = []
-    for path in os.listdir("."):
+    for path in os.listdir(root):
         if (
             os.path.isdir(path)
             and os.path.exists(os.path.join(path, "__init__.py"))
@@ -111,6 +111,7 @@ class Builder:
         self.ireq = ireq
         self.project = Project(ireq.unpacked_source_directory)
         self._old_cwd = None
+        self.package_dir = None
 
     def __enter__(self) -> "Builder":
         self._old_cwd = os.getcwd()
@@ -134,11 +135,17 @@ class Builder:
         dont_find_froms = []
 
         if not self.meta.includes:
-            find_froms = ["src"] if os.path.isdir("src") else _find_top_packages()
+            if os.path.isdir("src"):
+                find_froms = ["src"]
+                self.package_dir = "src"
+            else:
+                find_froms = _find_top_packages(".")
             if not find_froms:
                 includes = ["*.py"]
         else:
             for pat in self.meta.includes:
+                if os.path.basename(pat) == "*":
+                    pat = pat[:-2]
                 if "*" in pat or os.path.isfile(pat):
                     includes.append(pat)
                 else:
@@ -157,6 +164,12 @@ class Builder:
         includes, excludes = _merge_globs(include_globs, excludes_globs)
 
         for path in find_froms:
+            if (
+                not os.path.isfile(os.path.join(path, "__init__.py"))
+                and _find_top_packages(path)
+                and not self.package_dir
+            ):
+                self.package_dir = path
 
             for root, dirs, filenames in os.walk(path):
                 if root == "__pycache__" or any(
@@ -189,7 +202,7 @@ class Builder:
         if self.project.pyproject_file.exists():
             yield "pyproject.toml"
 
-    def find_files_to_add(self, include_build: bool = False) -> List[str]:
+    def find_files_to_add(self, include_build: bool = False) -> List[Path]:
         """Traverse the project path and return a list of file names
         that should be included in a sdist distribution.
         If include_build is True, will include files like LICENSE, README and pyproject
