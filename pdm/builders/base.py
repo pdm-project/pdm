@@ -164,12 +164,16 @@ class Builder:
         includes, excludes = _merge_globs(include_globs, excludes_globs)
 
         for path in find_froms:
+            path_base = os.path.dirname(path)
+            if not path_base or path_base == ".":
+                # the path is top level itself
+                path_base = path
             if (
-                not os.path.isfile(os.path.join(path, "__init__.py"))
-                and _find_top_packages(path)
+                not os.path.isfile(os.path.join(path_base, "__init__.py"))
+                and _find_top_packages(path_base)
                 and not self.package_dir
-            ):
-                self.package_dir = path
+            ):  # Determine package_dir smartly
+                self.package_dir = path_base
 
             for root, dirs, filenames in os.walk(path):
                 if root == "__pycache__" or any(

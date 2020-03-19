@@ -65,6 +65,7 @@ class Requirement:
         "project_name",
         "url",
         "path",
+        "ref",
         "index",
         "version",
         "allow_prereleases",
@@ -145,7 +146,7 @@ class Requirement:
             r["version"] = "*"
         if len(r) == 1 and next(iter(r), None) == "version":
             r = r["version"]
-        for attr in ["index", "allow_prereleases"]:
+        for attr in ["index", "allow_prereleases", "ref"]:
             if getattr(self, attr) is not None:
                 r[attr] = getattr(self, attr)
         return self.project_name, r
@@ -344,7 +345,13 @@ class VcsRequirement(FileRequirement):
             self._parse_name_from_url()
         if not self.name:
             raise RequirementError("VCS requirement must provide a 'egg=' fragment.")
-        self.repo = url_without_fragments(self.url)
+        repo = url_without_fragments(self.url)
+        ref = None
+        parsed = urlparse.urlparse(repo)
+        if "@" in parsed.path:
+            path, ref = parsed.path.split("@", 1)
+            repo = urlparse.urlunparse(parsed._replace(path=path))
+        self.repo, self.ref = repo, ref
 
     @staticmethod
     def _build_url_from_req_dict(name: str, url: str, req_dict: RequirementDict) -> str:

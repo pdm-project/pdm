@@ -1,4 +1,7 @@
 import argparse
+import sys
+
+import click
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
@@ -21,6 +24,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        if not project.tool_settings and click._compat.isatty(sys.stdout):
+            actions.ask_for_import(project)
+
         if options.lock:
             if not project.lockfile_file.exists():
                 stream.echo("Lock file does not exist, trying to generate one...")
