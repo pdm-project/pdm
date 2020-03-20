@@ -94,3 +94,29 @@ format of `[tool.pdm.cli]` format:
 [tool.pdm.entry_points.pytest11]
 myplugin = "mypackage.plugin:pytest_plugin"
 ```
+
+## Build C extensions
+
+Currently building C extensions still rely on `setuptools`. You should write a python script which contains
+a function named `build` and accepts the arguments dictionary of `setup()` as the only parameter.
+In the function, update the dictionary with your `ext_modules` settings.
+
+Here is an example taken from `MarkupSafe`:
+
+```python
+# build.py
+from setuptools import Extension
+
+ext_modules = [Extension("markupsafe._speedups", ["src/markupsafe/_speedups.c"])]
+
+def build(setup_kwargs):
+    setup_kwargs.update(ext_modules=ext_modules)
+```
+
+Now, specify the build script path via `build` in the `pyproject.toml`:
+
+```toml
+# pyproject.toml
+[tool.pdm]
+build = "build.py"
+```

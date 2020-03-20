@@ -195,6 +195,9 @@ class Builder:
         if not include_build:
             return
 
+        if self.meta.build and os.path.isfile(self.meta.build):
+            yield self.meta.build
+
         for pat in ("COPYING", "LICENSE"):
             for path in glob.glob(pat + "*"):
                 if os.path.isfile(path):
@@ -228,6 +231,16 @@ class Builder:
             "description": meta.description,
             "url": meta.homepage,
         }
+
+        if meta.build:
+            # The build script must contain a `build(setup_kwargs)`, we just import
+            # and execute it.
+            after.extend(
+                [
+                    "from {} import build\n".format(meta.build.split(".")[0]),
+                    "build(setup_kwargs)\n",
+                ]
+            )
 
         package_paths = meta.convert_package_paths()
         if package_paths["packages"]:
