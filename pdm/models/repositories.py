@@ -200,12 +200,10 @@ class PyPIRepository(BaseRepository):
         raise CandidateInfoNotFound(candidate)
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
-        return (
-            self._get_dependencies_from_cache,
-            # PyPI JSON API seems not trustable
-            # self._get_dependencies_from_json,
-            self._get_dependencies_from_metadata,
-        )
+        yield self._get_dependencies_from_cache
+        if self.environment.project.config["pypi.json_api"]:
+            yield self._get_dependencies_from_json
+        yield self._get_dependencies_from_metadata
 
     def _find_named_matches(
         self,

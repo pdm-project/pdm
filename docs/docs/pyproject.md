@@ -97,9 +97,9 @@ myplugin = "mypackage.plugin:pytest_plugin"
 
 ## Build C extensions
 
-Currently building C extensions still rely on `setuptools`. You should write a python script which contains
-a function named `build` and accepts the arguments dictionary of `setup()` as the only parameter.
-In the function, update the dictionary with your `ext_modules` settings.
+Currently building C extensions still relies on `setuptools`. You should write a python script which contains
+a function named `build` and accepts the parameter dictionary of `setup()` as the only argument.
+Update the dictionary with your `ext_modules` settings in the function.
 
 Here is an example taken from `MarkupSafe`:
 

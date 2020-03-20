@@ -86,6 +86,11 @@ class Config(MutableMapping):
         "pypi.verify_ssl": ConfigItem(
             "Verify SSL certificate when query PyPI", verify_ssl
         ),
+        "pypi.json_api": ConfigItem(
+            "Consult PyPI's JSON API for package metadata",
+            True,
+            env_var="PDM_PYPI_JSON_API",
+        ),
         "use_venv": ConfigItem(
             "Install packages into the activated venv site packages instead of PEP 582",
             False,
