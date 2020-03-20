@@ -120,6 +120,19 @@ project path following `-g/--global`.
 Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
 by the configuration item `use_venv`, when it is set to `True`, PDM will use the virtualenv **when it is activated**.
 
+## Import project metadata from existing project files
+
+If you are already other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
+PDM provides `import` command so that you don't have to initialize the project manually, it now supports:
+
+1. Pipenv's `Pipfile`
+2. Poetry's section in `pyproject.toml`
+3. Flit's section in `pyproject.toml`
+4. `requirements.txt` format used by Pip
+
+Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import
+if your PDM project has not been initialized yet.
+
 ## Configurations
 
 | Config Item | Description | Default Value | Available in Project | Env var |
