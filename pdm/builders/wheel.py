@@ -4,6 +4,7 @@ import hashlib
 import os
 import shutil
 import stat
+import subprocess
 import tempfile
 import zipfile
 from base64 import urlsafe_b64encode
@@ -178,7 +179,30 @@ class WheelBuilder(Builder):
         if not self.meta.build:
             return
         self.ensure_setup_py()
-        # TODO: C extension build
+        setup_py = self.ireq.setup_py_path
+        build_args = [
+            self.project.environment.python_executable,
+            setup_py,
+            "build",
+            "-b",
+            str(self.project.root / "build"),
+        ]
+        subprocess.run(
+            build_args, capture_output=stream.verbosity >= stream.DETAIL, check=True
+        )
+        build_dir = self.project.root / "build"
+        lib_dir = next(build_dir.glob("lib.*"), None)
+        if not lib_dir:
+            return
+        for pkg in lib_dir.glob("**/*"):
+            if pkg.is_dir():
+                continue
+
+            rel_path = str(pkg.relative_to(lib_dir))
+
+            if rel_path in wheel.namelist():
+                continue
+            self._add_file(wheel, pkg, rel_path)
 
     def _copy_module(self, wheel):
         for path in self.find_files_to_add():
