@@ -1,1 +1,0 @@
-Fix wheel builds when `package_dir` is mapped.

@@ -1,3 +1,23 @@
+Release v0.6.0 (2020-03-20)
+---------------------------
+
+### Features & Improvements
+
+- Support specifying build script for C extensions. [#23](https://github.com/frostming/pdm/issues/23)
+- Add test cases for `pdm build`. [#81](https://github.com/frostming/pdm/issues/81)
+- Make it configurable whether to consult PyPI JSON API since it may be not trustable.
+- Support parallel installation.
+- Add new command `pmd import` to import project metadata from `Pipfile`, `poetry`, `flit`, `requirements.txt`.
+  [#79](https://github.com/frostming/pdm/issues/79)
+- `pdm init` and `pdm install` will auto-detect possibile files that can be imported.
+
+### Bug Fixes
+
+- Fix wheel builds when `package_dir` is mapped. [#81](https://github.com/frostming/pdm/issues/81)
+- `pdm init` will use the current directory rather than finding the parents when
+global project is not activated.
+
+
 Release v0.5.0 (2020-03-14)
 ---------------------------
 
