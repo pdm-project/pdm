@@ -49,7 +49,9 @@ def do_lock(
     requirements = requirements or project.all_dependencies
 
     # TODO: switch reporter at io level.
-    with halo.Halo(text="Resolving dependencies", spinner="dots") as spin:
+    with halo.Halo(
+        text="Resolving dependencies", spinner="dots"
+    ) as spin, stream.logging("lock"):
         reporter = project.get_reporter(requirements, tracked_names, spin)
         resolver = project.core.resolver_class(provider, reporter)
         mapping, dependencies, summaries = resolve(

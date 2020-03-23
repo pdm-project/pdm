@@ -48,6 +48,10 @@ class ProjectError(PdmException):
     pass
 
 
+class InstallationError(PdmException):
+    pass
+
+
 class NoConfigError(PdmException, KeyError):
     def __init__(self, key):
         super().__init__("No such config item: {}".format(key))

@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import importlib
+import os
 import subprocess
 import traceback
 from collections import defaultdict
@@ -15,6 +16,7 @@ from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_na
 from pip_shims import shims
 from vistir import cd
 
+from pdm.exceptions import InstallationError
 from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
@@ -316,8 +318,8 @@ class Installer:  # pragma: no cover
             paths["scripts"],
         ]
         with self.environment.activate(), cd(ireq.unpacked_source_directory):
-            capture_output = stream.verbosity < stream.DETAIL
-            subprocess.run(install_args, capture_output=capture_output, check=True)
+            result = subprocess.run(install_args, capture_output=True, check=True)
+            stream.logger.debug(result.stdout.decode("utf-8"))
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)
@@ -379,7 +381,7 @@ class DummyExecutor:
 class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
-    BAR_FILLED_CHAR = "▉"
+    BAR_FILLED_CHAR = "=" if os.name == "nt" else "▉"
     BAR_EMPTY_CHAR = " "
     RETRY_TIMES = 1
 
@@ -407,7 +409,10 @@ class Synchronizer:
         else:
             executor = DummyExecutor()
         with executor:
-            yield bar, executor
+            try:
+                yield bar, executor
+            except KeyboardInterrupt:
+                pass
 
     def get_installer(self) -> Installer:
         return Installer(self.environment)
@@ -474,11 +479,12 @@ class Synchronizer:
     def summarize(self, result, dry_run=False):
         added, updated, removed = result["add"], result["update"], result["remove"]
         if added:
+            stream.echo("\n")
             self._print_section_title("installed", len(added), dry_run)
             for item in sorted(added, key=lambda x: x.name):
                 stream.echo(f"  - {item.format()}")
-            stream.echo()
         if updated:
+            stream.echo("\n")
             self._print_section_title("updated", len(updated), dry_run)
             for old, can in sorted(updated, key=lambda x: x[1].name):
                 stream.echo(
@@ -486,8 +492,8 @@ class Synchronizer:
                     f"{stream.yellow(old.version)} "
                     f"-> {stream.yellow(can.version)}"
                 )
-            stream.echo()
         if removed:
+            stream.echo("\n")
             self._print_section_title("removed", len(removed), dry_run)
             for dist in sorted(removed, key=lambda x: x.key):
                 stream.echo(
@@ -540,29 +546,9 @@ class Synchronizer:
                 result[section].append(future.result())
             bar.update(1)
 
-        with self.progressbar(
-            "Synchronizing:", sum(len(l) for l in to_do.values())
-        ) as (bar, pool):
-
-            for section in to_do:
-                for key in to_do[section]:
-                    future = pool.submit(handlers[section], key)
-                    future.add_done_callback(
-                        functools.partial(
-                            update_progress, section=section, key=key, bar=bar
-                        )
-                    )
-
-        # Retry for failed items
-        for i in range(self.RETRY_TIMES):
-            if not any(failed.values()):
-                break
-            to_do = failed
-            failed = defaultdict(list)
-            errors.clear()
+        with stream.logging("install"):
             with self.progressbar(
-                f"Retrying ({i + 1}/{self.RETRY_TIMES}):",
-                sum(len(l) for l in to_do.values()),
+                "Synchronizing:", sum(len(l) for l in to_do.values())
             ) as (bar, pool):
 
                 for section in to_do:
@@ -573,7 +559,28 @@ class Synchronizer:
                                 update_progress, section=section, key=key, bar=bar
                             )
                         )
-        stream.echo()
+
+            # Retry for failed items
+            for i in range(self.RETRY_TIMES):
+                if not any(failed.values()):
+                    break
+                to_do = failed
+                failed = defaultdict(list)
+                errors.clear()
+                with self.progressbar(
+                    f"Retrying ({i + 1}/{self.RETRY_TIMES}):",
+                    sum(len(l) for l in to_do.values()),
+                ) as (bar, pool):
+
+                    for section in to_do:
+                        for key in to_do[section]:
+                            future = pool.submit(handlers[section], key)
+                            future.add_done_callback(
+                                functools.partial(
+                                    update_progress, section=section, key=key, bar=bar
+                                )
+                            )
+        # End installation
         self.summarize(result)
         if not any(failed.values()):
             return
@@ -591,3 +598,4 @@ class Synchronizer:
                 ),
                 verbosity=stream.DEBUG,
             )
+        raise InstallationError()
