@@ -8,6 +8,7 @@ from tempfile import mktemp
 from typing import List, Optional
 
 import click
+import halo
 
 COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
 
@@ -105,6 +106,11 @@ class IOStream:
                 os.remove(file_name)
             except OSError:
                 pass
+
+    @contextlib.contextmanager
+    def open_spinner(self, title: str, spinner: str = "dots"):
+        with halo.Halo(title, spinner=spinner) as spin:
+            yield spin
 
 
 stream = IOStream()
