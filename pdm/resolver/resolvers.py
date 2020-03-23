@@ -204,7 +204,6 @@ class Resolution(object):
             # Any pin may modify any criterion during the loop. Criteria are
             # replaced, not updated in-place, so we need to read this value
             # in the loop instead of outside. (sarugaku/resolvelib#5)
-            self._r.resolve_criteria(name)
             criterion = self._criteria[name]
 
             if self._is_current_pin_satisfying(name, criterion):

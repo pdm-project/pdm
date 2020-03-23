@@ -12,6 +12,10 @@ if TYPE_CHECKING:
     from pdm.resolver.resolvers import State
 
 
+def log_title(title):
+    stream.logger.info("=" * 8 + title + "=" * 8)
+
+
 class SpinnerReporter:
     def __init__(self, spinner: halo.Halo, requirements: List[Requirement]) -> None:
         self.spinner = spinner
@@ -25,8 +29,7 @@ class SpinnerReporter:
     def starting(self) -> None:
         """Called before the resolution actually starts.
         """
-        stream.logger.info("Start resolving requirements")
-        stream.logger.info("============================")
+        log_title("Start resolving requirements")
         for req in self.requirements:
             stream.logger.info("\t" + req.as_line())
 
@@ -36,8 +39,7 @@ class SpinnerReporter:
         This is NOT called if the resolution ends at this round. Use `ending`
         if you want to report finalization. The index is zero-based.
         """
-        stream.logger.info("Ending round {}".format(index))
-        stream.logger.info("===============")
+        log_title("Ending round {}".format(index))
         if not self._previous:
             added = state.mapping.values()
             changed = []
@@ -63,19 +65,19 @@ class SpinnerReporter:
         """
         self.spinner.stop_and_persist(text="Finish resolving")
 
-        stream.logger.info("Resolution Result")
-        stream.logger.info("=================")
+        log_title("Resolution Result")
         stream.logger.info("Stable pins:")
         for k, can in state.mapping.items():
             stream.logger.info(f"\t{can.name}\t{can.version}")
 
-    def resolve_criteria(self, name):
-        self.spinner.text = f"Resolving {stream.green(name, bold=True)}"
-        stream.logger.info(f"\tResolving package\t{name}")
-
     def pin_candidate(self, name, criterion, candidate, child_names):
         self.spinner.text = f"Resolved: {candidate.format()}"
-        stream.logger.info(f"\tFound candidate\t{candidate.name}\t{candidate.version}")
+        stream.logger.info("Package constraints:")
+        for req, parent in criterion.information:
+            stream.logger.info(
+                f"\t{req.as_line()}\t<= {getattr(parent, 'name', parent)}"
+            )
+        stream.logger.info(f"Found candidate\t{candidate.name} {candidate.version}")
 
     def extract_metadata(self):
         self.spinner.start("Extracting package metadata")

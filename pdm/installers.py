@@ -564,6 +564,9 @@ class Synchronizer:
             for i in range(self.RETRY_TIMES):
                 if not any(failed.values()):
                     break
+                stream.echo(
+                    stream.yellow("\nSome packages failed to install, retrying...")
+                )
                 to_do = failed
                 failed = defaultdict(list)
                 errors.clear()

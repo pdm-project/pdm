@@ -7,7 +7,7 @@ from pdm.resolver.providers import (  # noqa
     EagerUpdateProvider,
     ReusePinProvider,
 )
-from pdm.resolver.reporters import SimpleReporter  # noqa
+from pdm.resolver.reporters import SpinnerReporter  # noqa
 from pdm.resolver.resolvers import Resolver  # noqa
 
 
