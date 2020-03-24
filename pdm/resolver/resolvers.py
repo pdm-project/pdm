@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
     from pdm.resolver.providers import BaseProvider
-    from pdm.resolver.reporters import SimpleReporter
+    from pdm.resolver.reporters import SpinnerReporter
 
 RequirementInformation = collections.namedtuple(
     "RequirementInformation", ["requirement", "parent"]
@@ -86,7 +86,7 @@ class Resolution(object):
     the resolution process, and holds the results afterwards.
     """
 
-    def __init__(self, provider: BaseProvider, reporter: SimpleReporter):
+    def __init__(self, provider: BaseProvider, reporter: SpinnerReporter):
         self._p = provider
         self._r = reporter
         self._roots = []  # type: List[str]
@@ -204,7 +204,6 @@ class Resolution(object):
             # Any pin may modify any criterion during the loop. Criteria are
             # replaced, not updated in-place, so we need to read this value
             # in the loop instead of outside. (sarugaku/resolvelib#5)
-            self._r.resolve_criteria(name)
             criterion = self._criteria[name]
 
             if self._is_current_pin_satisfying(name, criterion):
@@ -265,7 +264,7 @@ class Resolver(object):
     """The thing that performs the actual resolution work.
     """
 
-    def __init__(self, provider: BaseProvider, reporter: SimpleReporter) -> None:
+    def __init__(self, provider: BaseProvider, reporter: SpinnerReporter) -> None:
         self.provider = provider
         self.reporter = reporter
 

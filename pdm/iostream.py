@@ -1,10 +1,14 @@
 import contextlib
 import functools
+import logging
+import os
 import re
 from itertools import zip_longest
+from tempfile import mktemp
 from typing import List, Optional
 
 import click
+import halo
 
 COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
 
@@ -29,6 +33,7 @@ class IOStream:
         self.verbosity = verbosity
         self._disable_colors = disable_colors
         self._indent = ""
+        self.logger = None
 
         for color in COLORS:
             setattr(self, color, functools.partial(self._style, fg=color))
@@ -79,6 +84,33 @@ class IOStream:
         self._indent += prefix
         yield
         self._indent = _indent
+
+    @contextlib.contextmanager
+    def logging(self, type_: str = "install"):
+        file_name = mktemp(".log", f"pdm-{type_}-")
+
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
+        handler = logging.FileHandler(file_name, encoding="utf-8")
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        pip_logger = logging.getLogger("pip")
+        pip_logger.handlers[:] = [handler]
+        try:
+            self.logger = logger
+            yield logger
+        except Exception:
+            self.echo(self.yellow(f"See {file_name} for detailed debug log."))
+        else:
+            try:
+                os.remove(file_name)
+            except OSError:
+                pass
+
+    @contextlib.contextmanager
+    def open_spinner(self, title: str, spinner: str = "dots"):
+        with halo.Halo(title, spinner=spinner) as spin:
+            yield spin
 
 
 stream = IOStream()

@@ -249,7 +249,10 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
-        return SpinnerReporter(spinner)
+        flat_reqs = [
+            req for req_set in requirements.values() for req in req_set.values()
+        ]
+        return SpinnerReporter(spinner, flat_reqs)
 
     def get_project_metadata(self) -> Dict[str, Any]:
         content_hash = self.get_content_hash("md5")

@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence
 
 import click
-import halo
 import pythonfinder
 import tomlkit
 from pkg_resources import safe_name
@@ -48,8 +47,9 @@ def do_lock(
     provider = project.get_provider(strategy, tracked_names)
     requirements = requirements or project.all_dependencies
 
-    # TODO: switch reporter at io level.
-    with halo.Halo(text="Resolving dependencies", spinner="dots") as spin:
+    with stream.open_spinner(
+        title="Resolving dependencies", spinner="dots"
+    ) as spin, stream.logging("lock"):
         reporter = project.get_reporter(requirements, tracked_names, spin)
         resolver = project.core.resolver_class(provider, reporter)
         mapping, dependencies, summaries = resolve(

@@ -3,6 +3,7 @@ import itertools
 import pytest
 
 from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
+from pdm.iostream import stream
 from pdm.models.candidates import identify
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -11,7 +12,7 @@ from pdm.resolver import (
     EagerUpdateProvider,
     Resolver,
     ReusePinProvider,
-    SimpleReporter,
+    SpinnerReporter,
     resolve,
 )
 from tests import FIXTURES
@@ -50,9 +51,10 @@ def resolve_requirements(
     flat_reqs = list(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
     )
-    reporter = SimpleReporter(flat_reqs)
-    resolver = Resolver(provider, reporter)
-    mapping, *_ = resolve(resolver, requirements, requires_python)
+    with stream.open_spinner("Resolving dependencies") as spin:
+        reporter = SpinnerReporter(spin, flat_reqs)
+        resolver = Resolver(provider, reporter)
+        mapping, *_ = resolve(resolver, requirements, requires_python)
     return mapping
 
 
