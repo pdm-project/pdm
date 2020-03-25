@@ -552,7 +552,7 @@ class Synchronizer:
                 "Synchronizing:", sum(len(l) for l in to_do.values())
             ) as (bar, pool):
                 # First update packages, then remove and add
-                for section in reversed(to_do):
+                for section in sorted(to_do, reverse=True):
                     # setup toolkits are installed sequentially before other packages.
                     for key in sorted(
                         to_do[section], key=lambda x: x not in self.SEQUENTIAL_PACKAGES
@@ -581,7 +581,7 @@ class Synchronizer:
                     sum(len(l) for l in to_do.values()),
                 ) as (bar, pool):
 
-                    for section in reversed(to_do):
+                    for section in sorted(to_do, reverse=True):
                         for key in sorted(
                             to_do[section],
                             key=lambda x: x not in self.SEQUENTIAL_PACKAGES,
