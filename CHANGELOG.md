@@ -1,3 +1,15 @@
+Release v0.6.1 (2020-03-25)
+---------------------------
+
+### Features & Improvements
+
+- Redirect output messages to log file for installation and locking. [#84](https://github.com/frostming/pdm/issues/84)
+
+### Bug Fixes
+
+- Fix a bug that parallel installation fails due to setuptools reinstalling. [#83](https://github.com/frostming/pdm/issues/83)
+
+
 Release v0.6.0 (2020-03-20)
 ---------------------------
 
