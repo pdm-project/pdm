@@ -51,11 +51,11 @@ def resolve_requirements(
     flat_reqs = list(
         itertools.chain(*[deps.values() for _, deps in requirements.items()])
     )
-    with stream.open_spinner("Resolving dependencies") as spin:
+    with stream.open_spinner("Resolving dependencies") as spin, stream.logging("lock"):
         reporter = SpinnerReporter(spin, flat_reqs)
         resolver = Resolver(provider, reporter)
         mapping, *_ = resolve(resolver, requirements, requires_python)
-    return mapping
+        return mapping
 
 
 def test_resolve_named_requirement(project, repository):

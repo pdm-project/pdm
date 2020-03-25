@@ -101,6 +101,7 @@ class IOStream:
             yield logger
         except Exception:
             self.echo(self.yellow(f"See {file_name} for detailed debug log."))
+            raise
         else:
             try:
                 os.remove(file_name)
