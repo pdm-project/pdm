@@ -384,6 +384,7 @@ class Synchronizer:
     BAR_FILLED_CHAR = "=" if os.name == "nt" else "▉"
     BAR_EMPTY_CHAR = " "
     RETRY_TIMES = 1
+    SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
 
     def __init__(
         self, candidates: Dict[str, Candidate], environment: Environment,
@@ -550,15 +551,20 @@ class Synchronizer:
             with self.progressbar(
                 "Synchronizing:", sum(len(l) for l in to_do.values())
             ) as (bar, pool):
-
-                for section in to_do:
-                    for key in to_do[section]:
+                # First update packages, then remove and add
+                for section in reversed(to_do):
+                    # setup toolkits are installed sequentially before other packages.
+                    for key in sorted(
+                        to_do[section], key=lambda x: x not in self.SEQUENTIAL_PACKAGES
+                    ):
                         future = pool.submit(handlers[section], key)
                         future.add_done_callback(
                             functools.partial(
                                 update_progress, section=section, key=key, bar=bar
                             )
                         )
+                        if key in self.SEQUENTIAL_PACKAGES:
+                            future.result()
 
             # Retry for failed items
             for i in range(self.RETRY_TIMES):
@@ -575,14 +581,19 @@ class Synchronizer:
                     sum(len(l) for l in to_do.values()),
                 ) as (bar, pool):
 
-                    for section in to_do:
-                        for key in to_do[section]:
+                    for section in reversed(to_do):
+                        for key in sorted(
+                            to_do[section],
+                            key=lambda x: x not in self.SEQUENTIAL_PACKAGES,
+                        ):
                             future = pool.submit(handlers[section], key)
                             future.add_done_callback(
                                 functools.partial(
                                     update_progress, section=section, key=key, bar=bar
                                 )
                             )
+                            if key in self.SEQUENTIAL_PACKAGES:
+                                future.result()
         # End installation
         self.summarize(result)
         if not any(failed.values()):
