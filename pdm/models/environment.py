@@ -15,8 +15,6 @@ from pip._vendor import packaging, pkg_resources
 from pip_shims import shims
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
-from vistir.contextmanagers import temp_environ
-from vistir.path import normalize_path
 
 from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
@@ -31,6 +29,7 @@ from pdm.utils import (
     get_python_version,
     get_sys_config_paths,
     get_venv_python,
+    temp_environ,
 )
 
 if TYPE_CHECKING:
@@ -181,8 +180,8 @@ class Environment:
 
     def is_local(self, path) -> bool:
         """PEP 582 version of ``is_local()`` function."""
-        return normalize_path(path).startswith(
-            normalize_path(self.packages_path.as_posix())
+        return misc.normalize_path(path).startswith(
+            misc.normalize_path(self.packages_path.as_posix())
         )
 
     def evaluate_marker(self, text: str, extra=None) -> bool:
@@ -356,8 +355,8 @@ class GlobalEnvironment(Environment):
         return paths
 
     def is_local(self, path) -> bool:
-        return normalize_path(path).startswith(
-            normalize_path(self.get_paths()["prefix"])
+        return misc.normalize_path(path).startswith(
+            misc.normalize_path(self.get_paths()["prefix"])
         )
 
     @property

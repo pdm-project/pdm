@@ -11,7 +11,6 @@ import halo
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
 from pip_shims import shims
-from vistir.contextmanagers import atomic_open_for_write
 
 from pdm._types import Source
 from pdm.exceptions import ProjectError
@@ -26,7 +25,12 @@ from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
 from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider
 from pdm.resolver.reporters import SpinnerReporter
-from pdm.utils import cached_property, find_project_root, get_venv_python
+from pdm.utils import (
+    atomic_open_for_write,
+    cached_property,
+    find_project_root,
+    get_venv_python,
+)
 
 if TYPE_CHECKING:
     from tomlkit.container import Container

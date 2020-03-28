@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import pip_shims
 from pip._vendor import requests
-from vistir.contextmanagers import open_file
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
+from pdm.utils import open_file
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate

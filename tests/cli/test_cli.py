@@ -4,11 +4,10 @@ import sys
 from pathlib import Path
 
 import pytest
-from vistir.contextmanagers import temp_environ
 
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
-from pdm.utils import get_python_version
+from pdm.utils import get_python_version, temp_environ
 
 
 def test_help_option(invoke):

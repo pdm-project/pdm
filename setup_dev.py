@@ -28,7 +28,16 @@ def main():
     subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "pdm"])
 
     subprocess.check_call(
-        [venv_python.as_posix(), "-m", "pip", "install", "pip", "pip_shims", "-U"]
+        [
+            venv_python.as_posix(),
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "pip",
+            "pip_shims",
+            "vistir",
+        ]
     )
 
     print("Setup project for development...", flush=True)

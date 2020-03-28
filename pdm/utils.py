@@ -14,10 +14,10 @@ import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
-from pip_shims.shims import InstallCommand, PackageFinder, TargetPython
+from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
 
 from pdm._types import Source
 
@@ -418,3 +418,66 @@ def get_venv_python() -> Optional[str]:
         suffix = ""
         scripts = "bin"
     return os.path.join(venv, scripts, f"python{suffix}")
+
+
+@contextmanager
+def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"):
+    fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
+    try:
+        f = open(fd, "w", encoding=encoding)
+        yield f
+    except Exception:
+        f.close()
+        os.unlink(name)
+        raise
+    else:
+        f.close()
+        try:
+            os.unlink(filename)
+        except OSError:
+            pass
+        os.rename(name, filename)
+
+
+@contextmanager
+def cd(path: str):
+    _old_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(_old_cwd)
+
+
+@contextmanager
+def temp_environ():
+    environ = os.environ.copy()
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(environ)
+
+
+@contextmanager
+def open_file(url, session=None):
+    if url.startswith("file://"):
+        local_path = url_to_path(url)
+        if os.path.isdir(local_path):
+            raise ValueError("Cannot open directory for read: {}".format(url))
+        else:
+            with open(local_path, "rb") as local_file:
+                yield local_file
+    else:
+        headers = {"Accept-Encoding": "identity"}
+        with session.get(url, headers=headers, stream=True) as resp:
+            try:
+                raw = getattr(resp, "raw", None)
+                result = raw if raw else resp
+                yield result
+            finally:
+                if raw:
+                    conn = getattr(raw, "_connection")
+                    if conn is not None:
+                        conn.close()
+                result.close()
