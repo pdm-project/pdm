@@ -390,3 +390,8 @@ def test_update_ignore_constraints(project, repository, working_set):
     actions.do_update(project, unconstrained=True, packages=("pytz",))
     assert project.tool_settings["dependencies"]["pytz"] == "<2021.0.0,>=2020.2"
     assert project.get_locked_candidates()["pytz"].version == "2020.2"
+
+
+def test_init_validate_python_requires(project_no_init):
+    with pytest.raises(ValueError):
+        actions.do_init(project_no_init, python_requires="3.7")
