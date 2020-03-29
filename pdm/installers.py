@@ -433,7 +433,7 @@ class Synchronizer:
                 elif not _is_dist_editable(dist) and dist.version != can.version:
                     # XXX: An editable distribution is always considered as consistent.
                     to_update.append(key)
-            elif key not in self.all_candidates:
+            elif key not in self.all_candidates and key != "wheel":
                 # Remove package only if it is not required by any section
                 to_remove.append(key)
         to_add = list(
@@ -596,22 +596,26 @@ class Synchronizer:
                             )
                             if key in self.SEQUENTIAL_PACKAGES:
                                 future.result()
-        # End installation
-        self.summarize(result)
-        if not any(failed.values()):
-            return
-        stream.echo(stream.red("[ERROR]", bold=True))
-        if failed["add"] + failed["update"]:
-            stream.echo(
-                f"Installation failed: {', '.join(failed['add'] + failed['update'])}"
-            )
-        if failed["remove"]:
-            stream.echo(f"Removal failed: {', '.join(failed['remove'])}")
-        for error in errors:
-            stream.echo(
-                "".join(
-                    traceback.format_exception(type(error), error, error.__traceback__)
-                ),
-                verbosity=stream.DEBUG,
-            )
-        raise InstallationError()
+            # End installation
+            self.summarize(result)
+            if not any(failed.values()):
+                return
+            stream.echo("\n")
+            error_msg = []
+            if failed["add"] + failed["update"]:
+                error_msg.append(
+                    "Installation failed: "
+                    f"{', '.join(failed['add'] + failed['update'])}"
+                )
+            if failed["remove"]:
+                error_msg.append(f"Removal failed: {', '.join(failed['remove'])}")
+            for error in errors:
+                stream.echo(
+                    "".join(
+                        traceback.format_exception(
+                            type(error), error, error.__traceback__
+                        )
+                    ),
+                    verbosity=stream.DEBUG,
+                )
+            raise InstallationError("\n" + "\n".join(error_msg))
