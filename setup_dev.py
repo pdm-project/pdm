@@ -44,6 +44,7 @@ def main():
     venv_pdm = (venv_python.parent / "pdm").as_posix()
 
     subprocess.check_call([venv_pdm, "use", sys.executable])
+    subprocess.check_call([venv_pdm, "config", "set", "parallel_install", "false"])
     subprocess.check_call([venv_pdm, "install", "-d"])
 
     pdm_path = (
