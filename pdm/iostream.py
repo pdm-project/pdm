@@ -91,7 +91,10 @@ class IOStream:
 
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
-        handler = logging.FileHandler(file_name, encoding="utf-8")
+        if self.verbosity >= self.DETAIL:
+            handler = logging.StreamHandler()
+        else:
+            handler = logging.FileHandler(file_name, encoding="utf-8")
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
         pip_logger = logging.getLogger("pip")
@@ -100,7 +103,8 @@ class IOStream:
             self.logger = logger
             yield logger
         except Exception:
-            self.echo(self.yellow(f"See {file_name} for detailed debug log."))
+            if self.verbosity < self.DETAIL:
+                self.echo(self.yellow(f"See {file_name} for detailed debug log."))
             raise
         else:
             try:

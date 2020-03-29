@@ -82,6 +82,7 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
+        self._wheel_ensured = False
 
     @cached_property
     def python_executable(self) -> str:
@@ -307,7 +308,11 @@ class Environment:
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (self.project.cache("wheels") / ireq.link.filename).as_posix()
-            builder_class = EditableBuilder if ireq.editable else WheelBuilder
+            if ireq.editable:
+                builder_class = EditableBuilder
+            else:
+                builder_class = WheelBuilder
+                self.ensure_wheel_package()
             kwargs["finder"] = finder
             with builder_class(ireq) as builder, self.activate():
                 return builder.build(**kwargs)
@@ -334,6 +339,19 @@ class Environment:
                 return self.python_executable
         # Fallback to use shutil.which to find the executable
         return shutil.which(command, path=os.getenv("PATH"))
+
+    def ensure_wheel_package(self) -> None:
+        """Ensure wheel package is available and install if it isn't."""
+        from pdm.installers import Installer
+        from pdm.models.requirements import parse_requirement
+        from pdm.models.candidates import Candidate
+
+        if self._wheel_ensured or "wheel" in self.get_working_set():
+            return
+        req = parse_requirement("wheel")
+        candidate = Candidate(req, self, "wheel")
+        Installer(self).install(candidate)
+        self._wheel_ensured = True
 
 
 class GlobalEnvironment(Environment):
