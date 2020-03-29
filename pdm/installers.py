@@ -392,6 +392,7 @@ class Synchronizer:
         self.candidates = candidates
         self.environment = environment
         self.parallel = environment.project.config["parallel_install"]
+        self.all_candidates = environment.project.get_locked_candidates("__all__")
         self.working_set = environment.get_working_set()
 
     @contextlib.contextmanager
@@ -425,15 +426,16 @@ class Synchronizer:
         candidates = self.candidates.copy()
         environment = self.environment.marker_environment
         for key, dist in working_set.items():
-            if key not in candidates:
-                to_remove.append(key)
-            else:
+            if key in candidates:
                 can = candidates.pop(key)
                 if can.marker and not can.marker.evaluate(environment):
                     to_remove.append(key)
                 elif not _is_dist_editable(dist) and dist.version != can.version:
                     # XXX: An editable distribution is always considered as consistent.
                     to_update.append(key)
+            elif key not in self.all_candidates:
+                # Remove package only if it is not required by any section
+                to_remove.append(key)
         to_add = list(
             {
                 strip_extras(name)[0]
