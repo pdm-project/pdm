@@ -18,7 +18,6 @@ from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
 from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
-from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
@@ -341,12 +340,6 @@ class GlobalEnvironment(Environment):
     """Global environment"""
 
     is_global = True
-
-    def __init__(self, project: Project) -> None:
-        super().__init__(project)
-        self.python_requires = PySpecSet(
-            "==" + get_python_version(self.python_executable, True)
-        )
 
     def get_paths(self) -> Dict[str, str]:
         paths = get_sys_config_paths(self.python_executable)

@@ -423,6 +423,7 @@ def get_venv_python() -> Optional[str]:
 @contextmanager
 def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"):
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
+    filename = str(filename)
     try:
         f = open(fd, "w", encoding=encoding)
         yield f
