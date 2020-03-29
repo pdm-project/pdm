@@ -277,6 +277,15 @@ def test_remove_package_not_exist(project, repository, working_set):
         actions.do_remove(project, sync=False, packages=["django"])
 
 
+def test_remove_package_exist_in_multi_section(project, repository, working_set):
+    actions.do_add(project, packages=["requests"])
+    actions.do_add(project, dev=True, packages=["urllib3"])
+    actions.do_remove(project, dev=True, packages=["urllib3"])
+    assert "urllib3" not in project.tool_settings["dev-dependencies"]
+    assert "urllib3" in working_set
+    assert "requests" in working_set
+
+
 def test_add_remove_no_package(project, repository):
     with pytest.raises(PdmUsageError):
         actions.do_add(project, packages=())
