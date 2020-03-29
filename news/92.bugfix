@@ -1,1 +1,0 @@
-Fix an issue of remove command that will unexpectedly uninstall packages in default section.

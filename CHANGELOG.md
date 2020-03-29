@@ -1,3 +1,18 @@
+Release v0.6.2 (2020-03-29)
+---------------------------
+
+### Bug Fixes
+
+- Validate user input for `python_requires` when initializing project. [#89](https://github.com/frostming/pdm/issues/89)
+- Ensure `wheel` package is available before building packages. [#90](https://github.com/frostming/pdm/issues/90)
+- Fix an issue of remove command that will unexpectedly uninstall packages in default section. [#92](https://github.com/frostming/pdm/issues/92)
+
+### Dependencies
+
+- Update dependencies `pythonfinder`, `python-cfonts`, `pip-shims` and many others.
+  Drop dependency `vistir`. [#89](https://github.com/frostming/pdm/issues/89)
+
+
 Release v0.6.1 (2020-03-25)
 ---------------------------
 
