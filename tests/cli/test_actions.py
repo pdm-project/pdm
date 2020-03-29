@@ -357,7 +357,7 @@ def test_list_dependency_graph(capsys):
     project = Project()
     actions.do_list(project, True)
     content, _ = capsys.readouterr()
-    assert "halo 0.0.28 [ required: <1.0.0,>=0.0.28 ]" in content
+    assert "halo 0.0.29 [ required: <1.0.0,>=0.0.28 ]" in content
     assert "six 1.14.0 [ required: >=1.12.0 ]" in content
 
 
@@ -390,3 +390,8 @@ def test_update_ignore_constraints(project, repository, working_set):
     actions.do_update(project, unconstrained=True, packages=("pytz",))
     assert project.tool_settings["dependencies"]["pytz"] == "<2021.0.0,>=2020.2"
     assert project.get_locked_candidates()["pytz"].version == "2020.2"
+
+
+def test_init_validate_python_requires(project_no_init):
+    with pytest.raises(ValueError):
+        actions.do_init(project_no_init, python_requires="3.7")

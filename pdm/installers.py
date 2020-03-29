@@ -14,13 +14,13 @@ from distlib.wheel import Wheel
 from pip._internal.utils import logging as pip_logging
 from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_name
 from pip_shims import shims
-from vistir import cd
 
 from pdm.exceptions import InstallationError
 from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import parse_requirement, strip_extras
+from pdm.utils import cd
 
 
 def _is_dist_editable(dist: Distribution) -> bool:

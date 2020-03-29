@@ -6,11 +6,11 @@ import re
 from typing import TYPE_CHECKING, Dict, List, Union
 
 import setuptools
-import vistir
 from pkg_resources import safe_name
 
 from pdm.exceptions import ProjectError
 from pdm.models.markers import Marker
+from pdm.utils import cd
 
 if TYPE_CHECKING:
     from pdm.project import Project
@@ -148,7 +148,7 @@ class PackageMeta:
         package_data = {"": ["*"]}
         exclude_package_data = {}
 
-        with vistir.cd(self.project.root.as_posix()):
+        with cd(self.project.root.as_posix()):
             if not self.includes:
                 if os.path.isdir("src"):
                     package_dir[""] = "src"

@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 
 import pytest
-from vistir import temp_environ
 
 from pdm.project import Project
+from pdm.utils import temp_environ
 
 
 def test_project_python_with_pyenv_support(project, mocker):
