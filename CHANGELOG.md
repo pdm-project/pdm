@@ -1,3 +1,11 @@
+Release v0.6.3 (2020-03-30)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug of moving files across different file system. [#95](https://github.com/frostming/pdm/issues/95)
+
+
 Release v0.6.2 (2020-03-29)
 ---------------------------
 
