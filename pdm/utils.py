@@ -437,7 +437,7 @@ def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"
             os.unlink(filename)
         except OSError:
             pass
-        os.rename(name, filename)
+        shutil.move(name, filename)
 
 
 @contextmanager
