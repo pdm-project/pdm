@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
@@ -149,9 +148,11 @@ class Project:
                 "==" + get_python_version(env.python_executable, True)
             )
             return env
-        if self.config["use_venv"] and "VIRTUAL_ENV" in os.environ:
-            self.project_config["python.path"] = get_venv_python()
-            return GlobalEnvironment(self)
+        if self.config["use_venv"]:
+            venv_python = get_venv_python(self.root)
+            if venv_python:
+                self.project_config["python.path"] = venv_python
+                return GlobalEnvironment(self)
         return Environment(self)
 
     @property

@@ -406,18 +406,25 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
-def get_venv_python() -> Optional[str]:
+def get_venv_python(root: Path) -> Optional[str]:
     """Get the python interpreter path of venv"""
-    if "VIRTUAL_ENV" not in os.environ:
-        return None
-    venv = os.environ["VIRTUAL_ENV"]
     if os.name == "nt":
         suffix = ".exe"
         scripts = "Scripts"
     else:
         suffix = ""
         scripts = "bin"
-    return os.path.join(venv, scripts, f"python{suffix}")
+    venv = None
+    if "VIRTUAL_ENV" in os.environ:
+        venv = os.environ["VIRTUAL_ENV"]
+    else:
+        for possible_dir in ("venv", ".venv", "env"):
+            if (root / possible_dir / scripts / f"python{suffix}").exists():
+                venv = str(root / possible_dir)
+                break
+    if venv:
+        return os.path.join(venv, scripts, f"python{suffix}")
+    return None
 
 
 @contextmanager
