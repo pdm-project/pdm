@@ -98,7 +98,7 @@ class Environment:
                 err=True,
                 verbosity=stream.DETAIL,
             )
-            return get_venv_python()
+            return get_venv_python(self.project.root)
 
         # First try what `python` refers to.
         path = shutil.which("python")
