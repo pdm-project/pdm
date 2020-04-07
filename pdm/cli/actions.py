@@ -409,8 +409,12 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
             stream.green(python_path), python_version
         )
     )
-
-    project.project_config["python.path"] = Path(python_path).as_posix()
+    old_path = Path(project.config.get("python.path"))
+    new_path = Path(python_path)
+    project.project_config["python.path"] = new_path.as_posix()
+    if old_path != new_path:
+        stream.echo(stream.cyan("Updating executable scripts..."))
+        project.environment.update_shebangs(new_path.as_posix())
 
 
 def do_info(
