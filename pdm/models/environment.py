@@ -362,7 +362,7 @@ class Environment:
         maker.executable = new_path
         shebang = maker._get_shebang("utf-8").rstrip()
         for child in Path(scripts).iterdir():
-            if not child.is_file() or child.suffix not in (".exe", ".py"):
+            if not child.is_file() or child.suffix not in (".exe", ".py", ""):
                 continue
             child.write_bytes(
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)

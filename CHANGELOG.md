@@ -1,3 +1,11 @@
+Release v0.6.5 (2020-04-07)
+---------------------------
+
+### Bug Fixes
+
+- Unix style executable script suffix is missing.
+
+
 Release v0.6.4 (2020-04-07)
 ---------------------------
 
