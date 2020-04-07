@@ -1,3 +1,12 @@
+Release v0.6.4 (2020-04-07)
+---------------------------
+
+### Features & Improvements
+
+- Update shebang lines in the exetuable scripts when doing `pdm use`. [#96](https://github.com/frostming/pdm/issues/96)
+- Auto detect commonly used venv directories. [#97](https://github.com/frostming/pdm/issues/97)
+
+
 Release v0.6.3 (2020-03-30)
 ---------------------------
 
