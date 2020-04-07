@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import collections
 import os
+import re
 import shutil
 import sys
 import sysconfig
@@ -9,6 +10,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
 
+from distlib.scripts import ScriptMaker
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
@@ -352,6 +354,19 @@ class Environment:
         candidate = Candidate(req, self, "wheel")
         Installer(self).install(candidate)
         self._wheel_ensured = True
+
+    def update_shebangs(self, new_path: str) -> None:
+        """Update the shebang lines"""
+        scripts = self.get_paths()["scripts"]
+        maker = ScriptMaker(None, None)
+        maker.executable = new_path
+        shebang = maker._get_shebang("utf-8").rstrip()
+        for child in Path(scripts).iterdir():
+            if not child.is_file() or child.suffix not in (".exe", ".py"):
+                continue
+            child.write_bytes(
+                re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
+            )
 
 
 class GlobalEnvironment(Environment):
