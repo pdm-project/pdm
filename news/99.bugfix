@@ -1,0 +1,1 @@
+Fix a bug of building wheels with C extensions that the platform in file name is incorrect.

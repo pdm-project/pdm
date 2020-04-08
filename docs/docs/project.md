@@ -115,10 +115,13 @@ project path following `-g/--global`.
     remove packages installed in your system Python.
 
 
-## Working inside a virtualenv
+## Working with a virtualenv
 
 Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
-by the configuration item `use_venv`, when it is set to `True`, PDM will use the virtualenv **when it is activated**.
+by the configuration item `use_venv`. When it is set to `True` PDM will use the virtualenv if:
+
+- an virtualenv is already activated.
+- any of `venv`, `.venv`, `env` is an valid virtualenv folder.
 
 ## Import project metadata from existing project files
 
