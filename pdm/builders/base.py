@@ -215,7 +215,7 @@ class Builder:
         If include_build is True, will include files like LICENSE, README and pyproject
         Produce a paths list relative to the source dir.
         """
-        return sorted(Path(p) for p in set(self._find_files_iter(include_build)))
+        return sorted(set(Path(p) for p in self._find_files_iter(include_build)))
 
     def format_setup_py(self) -> str:
         before, extra, after = [], [], []
