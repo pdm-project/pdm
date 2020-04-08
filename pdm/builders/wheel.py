@@ -12,12 +12,12 @@ from io import StringIO
 from typing import List, Tuple
 
 from pip_shims import shims
-from pkg_resources import safe_name, safe_version, to_filename
+from pkg_resources import safe_version, to_filename
 
 from pdm.builders.base import Builder
 from pdm.exceptions import WheelBuildError
 from pdm.iostream import stream
-from pdm.utils import cached_property, get_abi_tag
+from pdm.utils import cached_property, get_abi_tag, get_platform
 
 WHEEL_FILE_FORMAT = """\
 Wheel-Version: 1.0
@@ -90,9 +90,7 @@ class WheelBuilder(Builder):
     def tag(self) -> str:
         if self.meta.build:
             info = self.project.environment.marker_environment
-            platform = to_filename(
-                safe_name(info["platform_system"] + "-" + info["platform_machine"])
-            )
+            platform = get_platform()
             implementation = info["implementation_name"]
             impl_name = (
                 "cp"
@@ -198,7 +196,7 @@ class WheelBuilder(Builder):
             if pkg.is_dir():
                 continue
 
-            rel_path = str(pkg.relative_to(lib_dir))
+            rel_path = pkg.relative_to(lib_dir).as_posix()
 
             if rel_path in wheel.namelist():
                 continue

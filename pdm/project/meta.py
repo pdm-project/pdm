@@ -164,9 +164,10 @@ class PackageMeta:
                     if include.replace("\\", "/").endswith("/*"):
                         include = include[:-2]
                     if "*" not in include and os.path.isdir(include):
+                        include = include.rstrip("/\\")
                         temp = setuptools.find_packages(include)
                         if os.path.exists(include + "/__init__.py"):
-                            temp.append(include)
+                            temp = [include] + [f"{include}.{part}" for part in temp]
                         elif temp:
                             package_dir[""] = include
                         packages_set.update(temp)
