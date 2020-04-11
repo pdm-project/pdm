@@ -66,7 +66,7 @@ PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并
 
 ### 3. 使用 PDM 时会载入哪些三方库路径?
 
-PDM 会首先在 `__pypackages__` 中寻找，然后会在选择的 Python 解释器对应的 `site-packages` 中寻找包。
+只有本项目的 `__pypackages__` 中的包会被载入，也就是说，Python 的 `site-packages` 目录不会被载入，完全项目隔离。
 
 ### 4. 我能把 `__pypackages__` 保存下来用来部署到别的机器上吗?
 
