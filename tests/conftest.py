@@ -28,7 +28,7 @@ from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.config import Config
-from pdm.utils import cached_property, get_finder
+from pdm.utils import cached_property, get_finder, temp_environ
 from tests import FIXTURES
 
 stream.disable_colors()
@@ -249,7 +249,9 @@ def project_no_init(tmp_path, mocker):
     old_config_map = Config._config_map.copy()
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     do_use(p, sys.executable)
-    yield p
+    with temp_environ():
+        os.environ.pop("VIRTUAL_ENV", None)
+        yield p
     # Restore the config items
     Config._config_map = old_config_map
 
@@ -257,6 +259,8 @@ def project_no_init(tmp_path, mocker):
 @pytest.fixture()
 def project(project_no_init):
     do_init(project_no_init, "test_project", "0.0.0")
+    # Clean the cached property
+    project_no_init.__dict__.pop("environment", None)
     return project_no_init
 
 

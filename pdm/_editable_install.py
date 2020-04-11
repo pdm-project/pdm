@@ -12,6 +12,10 @@ def install(setup_py, prefix, lib_dir, bin_dir):
 
     with getattr(tokenize, "open", open)(setup_py) as f:
         code = f.read().replace("\\r\\n", "\n")
+    if os.path.exists(os.path.join(lib_dir, "site.py")):
+        # Remove the custom site.py for editable install.
+        # It will be added back after installation is done.
+        os.remove(os.path.join(lib_dir, "site.py"))
     sys.argv[1:] = [
         "develop",
         "--install-dir={0}".format(lib_dir),

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import collections
 import os
+import pkgutil
 import re
 import shutil
 import sys
@@ -144,9 +145,11 @@ class Environment:
         return paths
 
     @contextmanager
-    def activate(self):
+    def activate(self, site_packages: bool = False):
         """Activate the environment. Manipulate the ``PYTHONPATH`` and patches ``pip``
         to be aware of local packages. This method acts like a context manager.
+
+        :param site_packages: whether to inject base site-packages into the sub env.
         """
         paths = self.get_paths()
         with temp_environ():
@@ -160,6 +163,8 @@ class Environment:
             os.environ["PATH"] = os.pathsep.join(
                 [python_root, paths["scripts"], os.environ["PATH"]]
             )
+            if site_packages:
+                os.environ["PDM_SITE_PACKAGES"] = "1"
             working_set = self.get_working_set()
             _old_ws = pkg_resources.working_set
             pkg_resources.working_set = working_set.pkg_ws
@@ -316,7 +321,7 @@ class Environment:
                 builder_class = WheelBuilder
                 self.ensure_wheel_package()
             kwargs["finder"] = finder
-            with builder_class(ireq) as builder, self.activate():
+            with builder_class(ireq) as builder, self.activate(True):
                 return builder.build(**kwargs)
 
     def get_working_set(self) -> WorkingSet:
@@ -368,6 +373,12 @@ class Environment:
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
 
+    def write_site_py(self) -> None:
+        """Write a custom site.py into the package library folder."""
+        dest_path = Path(self.get_paths()["purelib"]) / "site.py"
+        content = pkgutil.get_data("pdm.installers", "site.py")
+        dest_path.write_bytes(content)
+
 
 class GlobalEnvironment(Environment):
     """Global environment"""
@@ -387,4 +398,7 @@ class GlobalEnvironment(Environment):
 
     @property
     def packages_path(self) -> Optional[Path]:
+        return None
+
+    def write_site_py(self) -> None:
         return None

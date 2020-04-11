@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import sys
@@ -89,13 +90,6 @@ def test_info_command(project, invoke):
 def test_info_global_project(invoke):
     result = invoke(["info", "-g", "--where"])
     assert "global-project" in result.output.strip()
-
-
-@pytest.mark.skipif("VIRTUAL_ENV" in os.environ, reason="venv is not using PEP 582")
-def test_run_command(invoke, capfd):
-    result = invoke(["run", "python", "-c", "import halo;print(halo.__file__)"])
-    assert result.exit_code == 0
-    assert os.sep.join(["pdm", "__pypackages__"]) in capfd.readouterr()[0]
 
 
 def test_run_command_not_found(invoke):
@@ -255,3 +249,12 @@ def test_import_other_format_file(project, invoke, filename):
     requirements_file = FIXTURES / filename
     result = invoke(["import", str(requirements_file)], obj=project)
     assert result.exit_code == 0
+
+
+def test_pep508_not_loading_site_packages(project, invoke, capfd):
+    invoke(
+        ["run", "python", "-c", "import sys,json;print(json.dumps(sys.path))"],
+        obj=project,
+    )
+    sys_path = json.loads(capfd.readouterr()[0])
+    assert not any("site-packages" in p for p in sys_path)
