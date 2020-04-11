@@ -251,7 +251,7 @@ def test_import_other_format_file(project, invoke, filename):
     assert result.exit_code == 0
 
 
-def test_pep508_not_loading_site_packages(project, invoke, capfd):
+def test_pep582_not_loading_site_packages(project, invoke, capfd):
     invoke(
         ["run", "python", "-c", "import sys,json;print(json.dumps(sys.path))"],
         obj=project,
