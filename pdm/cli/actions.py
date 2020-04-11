@@ -362,6 +362,7 @@ def do_init(
         project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
         project._pyproject["build-system"] = data["build-system"]
     project.write_pyproject()
+    project.environment.write_site_py()
 
 
 def do_use(project: Project, python: str, first: bool = False) -> None:

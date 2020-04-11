@@ -314,7 +314,7 @@ class Installer:  # pragma: no cover
             paths["purelib"],
             paths["scripts"],
         ]
-        with self.environment.activate(), cd(ireq.unpacked_source_directory):
+        with self.environment.activate(True), cd(ireq.unpacked_source_directory):
             result = subprocess.run(install_args, capture_output=True, check=True)
             stream.logger.debug(result.stdout.decode("utf-8"))
 

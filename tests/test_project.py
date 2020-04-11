@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from pdm.project import Project
-from pdm.utils import temp_environ
 
 
 def test_project_python_with_pyenv_support(project, mocker):
@@ -58,14 +57,13 @@ def test_project_use_venv(project, mocker):
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
 
-    with temp_environ():
-        os.environ["VIRTUAL_ENV"] = "/path/to/env"
-        mocker.patch("pdm.models.environment.get_python_version", return_value="3.7.0")
+    os.environ["VIRTUAL_ENV"] = "/path/to/env"
+    mocker.patch("pdm.models.environment.get_python_version", return_value="3.7.0")
 
-        project.project_config["use_venv"] = True
-        env = project.environment
-        assert (
-            Path(env.python_executable)
-            == Path("/path/to/env") / scripts / f"python{suffix}"
-        )
-        assert env.is_global
+    project.project_config["use_venv"] = True
+    env = project.environment
+    assert (
+        Path(env.python_executable)
+        == Path("/path/to/env") / scripts / f"python{suffix}"
+    )
+    assert env.is_global

@@ -197,6 +197,8 @@ class Synchronizer:
             to_remove = []
         lists_to_check = [to_add, to_update, to_remove]
         if not any(lists_to_check):
+            if not dry_run:
+                self.environment.write_site_py()
             stream.echo("All packages are synced to date, nothing to do.")
             return
 
@@ -280,6 +282,7 @@ class Synchronizer:
                                 future.result()
             # End installation
             self.summarize(result)
+            self.environment.write_site_py()
             if not any(failed.values()):
                 return
             stream.echo("\n")
