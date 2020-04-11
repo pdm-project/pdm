@@ -228,7 +228,7 @@ def working_set(mocker, repository):
     installer = mocker.MagicMock()
     installer.install.side_effect = install
     installer.uninstall.side_effect = uninstall
-    mocker.patch("pdm.installers.Installer", return_value=installer)
+    mocker.patch("pdm.installers.synchronizers.Installer", return_value=installer)
 
     yield rv
 

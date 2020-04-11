@@ -18,7 +18,7 @@ from pdm.cli.utils import (
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
-from pdm.installers import format_dist
+from pdm.installers.installers import format_dist
 from pdm.iostream import stream
 from pdm.models.candidates import Candidate, identify
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
