@@ -3,6 +3,7 @@ import operator
 import re
 
 import tomlkit
+import tomlkit.exceptions
 
 from pdm.formats.base import MetaConverter, convert_from
 from pdm.models.markers import Marker
@@ -11,7 +12,10 @@ from pdm.models.specifiers import PySpecSet
 
 def check_fingerprint(project, filename):
     with open(filename, encoding="utf-8") as fp:
-        data = tomlkit.parse(fp.read())
+        try:
+            data = tomlkit.parse(fp.read())
+        except tomlkit.exceptions.TOMLKitError:
+            return False
 
     return "tool" in data and "poetry" in data["tool"]
 

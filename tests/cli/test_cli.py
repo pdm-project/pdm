@@ -8,6 +8,7 @@ import pytest
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
 from pdm.utils import get_python_version, temp_environ
+from tests import FIXTURES
 
 
 def test_help_option(invoke):
@@ -239,3 +240,18 @@ def test_cache_clear_command(project, invoke, mocker):
     result = invoke(["cache", "clear"], obj=project)
     assert result.exit_code == 0
     m.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "requirements.txt",
+        "Pipfile",
+        "pyproject-poetry.toml",
+        "projects/flit-demo/pyproject.toml",
+    ],
+)
+def test_import_other_format_file(project, invoke, filename):
+    requirements_file = FIXTURES / filename
+    result = invoke(["import", str(requirements_file)], obj=project)
+    assert result.exit_code == 0
