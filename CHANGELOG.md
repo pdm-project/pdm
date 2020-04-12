@@ -1,3 +1,16 @@
+Release v0.7.0 (2020-04-12)
+---------------------------
+
+### Features & Improvements
+
+- Disable loading of site-packages under PEP 582 mode. [#100](https://github.com/frostming/pdm/issues/100)
+
+### Bug Fixes
+
+- Fix a bug that TOML parsing error is not correctly captured. [#101](https://github.com/frostming/pdm/issues/101)
+- Fix a bug of building wheels with C extensions that the platform in file name is incorrect. [#99](https://github.com/frostming/pdm/issues/99)
+
+
 Release v0.6.5 (2020-04-07)
 ---------------------------
 
