@@ -1,3 +1,10 @@
+Release v0.7.1 (2020-04-13)
+---------------------------
+
+### Bug Fixes
+
+- Editable packages requires `setuptools` to be installed in the isolated environment.
+
 Release v0.7.0 (2020-04-12)
 ---------------------------
 
