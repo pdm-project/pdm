@@ -115,7 +115,7 @@ class Synchronizer:
                 elif not is_dist_editable(dist) and dist.version != can.version:
                     # XXX: An editable distribution is always considered as consistent.
                     to_update.append(key)
-            elif key not in self.all_candidates and key != "wheel":
+            elif key not in self.all_candidates and key not in ("wheel", "setuptools"):
                 # Remove package only if it is not required by any section
                 to_remove.append(key)
         to_add = list(

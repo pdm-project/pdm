@@ -85,7 +85,7 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
-        self._wheel_ensured = False
+        self._essential_installed = False
 
     @cached_property
     def python_executable(self) -> str:
@@ -315,11 +315,11 @@ class Environment:
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (self.project.cache("wheels") / ireq.link.filename).as_posix()
+            self.ensure_essential_packages()
             if ireq.editable:
                 builder_class = EditableBuilder
             else:
                 builder_class = WheelBuilder
-                self.ensure_wheel_package()
             kwargs["finder"] = finder
             with builder_class(ireq) as builder, self.activate(True):
                 return builder.build(**kwargs)
@@ -347,18 +347,23 @@ class Environment:
         # Fallback to use shutil.which to find the executable
         return shutil.which(command, path=os.getenv("PATH"))
 
-    def ensure_wheel_package(self) -> None:
-        """Ensure wheel package is available and install if it isn't."""
+    def ensure_essential_packages(self) -> None:
+        """Ensure wheel and setuptools are available and install if not"""
         from pdm.installers import Installer
         from pdm.models.requirements import parse_requirement
         from pdm.models.candidates import Candidate
 
-        if self._wheel_ensured or "wheel" in self.get_working_set():
+        if self._essential_installed:
             return
-        req = parse_requirement("wheel")
-        candidate = Candidate(req, self, "wheel")
-        Installer(self).install(candidate)
-        self._wheel_ensured = True
+        installer = Installer(self)
+        working_set = self.get_working_set()
+        for package in ("setuptools", "wheel"):
+            if package in working_set:
+                continue
+            req = parse_requirement(package)
+            candidate = Candidate(req, self, package)
+            installer.install(candidate)
+        self._essential_installed = True
 
     def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""

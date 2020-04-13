@@ -29,6 +29,8 @@ def test_sync_only_different(project, repository, working_set, capsys):
     assert "foo" in working_set
     assert "test-project" in working_set
     assert working_set["chardet"].version == "3.0.4"
+    for package in ("wheel", "setuptools"):
+        assert package in working_set
 
 
 def test_sync_in_sequential_mode(project, repository, working_set, capsys):
