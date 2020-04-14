@@ -13,7 +13,7 @@ from pip_shims import path_to_url, url_to_path
 
 from pdm._types import RequirementDict
 from pdm.exceptions import ExtrasError, RequirementError
-from pdm.models.markers import Marker, get_marker, split_marker_element
+from pdm.models.markers import Marker, get_marker, split_marker_extras
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
@@ -380,12 +380,10 @@ def filter_requirements_with_extras(
             if not _r.marker:
                 result.append(req)
             else:
-                elements, rest = split_marker_element(str(_r.marker), "extra")
-                extras_in_meta.extend(e[1] for e in elements)
+                elements, rest = split_marker_extras(_r.marker)
+                extras_in_meta.extend(e for e in elements)
                 _r.marker = rest
-                if not elements or any(
-                    extra == e[1] for extra in extras for e in elements
-                ):
+                if not elements or set(extras) & set(elements):
                     result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]

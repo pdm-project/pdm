@@ -1,7 +1,7 @@
 import copy
 import operator
 from functools import reduce
-from typing import Any, Iterable, Optional, Tuple, Union
+from typing import Any, Optional, Sequence, Tuple, Union
 
 from pip._vendor.packaging.markers import Marker as PackageMarker
 
@@ -85,29 +85,33 @@ def get_marker(marker: Union[PackageMarker, Marker, None]) -> Optional[Marker]:
     return Marker(str(marker)) if marker else None
 
 
-def split_marker_element(
-    text: str, element: str
-) -> Tuple[Iterable[Tuple[str, str]], Optional[Marker]]:
+def split_marker_extras(
+    marker: PackageMarker,
+) -> Tuple[Sequence[str], Optional[Marker]]:
     """An element can be stripped from the marker only if all parts are connected
     with `and` operater. The rest part are returned as a string or `None` if all are
     stripped.
 
-    :param text: the input marker string
-    :param element: the element to be stripped
+    :param marker: the input marker string
     :returns: an iterable of (op, value) pairs together with the stripped part.
     """
-    if text is None:
-        return [], text
-    marker = Marker(text)
     if "or" in marker._markers:
-        return [], marker
+        if "and" in marker._markers or any(
+            not isinstance(p, tuple) or p[0].value != "extra"
+            for p in marker._markers
+            if p != "or"
+        ):
+            return [], marker
     result = []
-    bare_markers = [m for m in marker._markers if m != "and"]
+    bare_markers = [m for m in marker._markers if m not in ("and", "or")]
     for m in bare_markers[:]:
         if not isinstance(m, tuple):
             continue
-        if m[0].value == element:
-            result.append(tuple(e.value for e in m[1:]))
+        if m[0].value == "extra":
+            if m[1].value == "==":
+                result.append(m[2].value)
+            elif m[1].value == "in":
+                result.extend(v.strip() for v in m[2].value.split(","))
             bare_markers.remove(m)
     new_markers = join_list_with(bare_markers, "and")
     if not new_markers:
