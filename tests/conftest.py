@@ -24,7 +24,7 @@ from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.config import Config
@@ -103,6 +103,7 @@ class TestRepository(BaseRepository):
         deps = pypi_data.get("dependencies", [])
         for extra in candidate.req.extras or ():
             deps.extend(pypi_data.get("extras_require", {}).get(extra, []))
+        deps = filter_requirements_with_extras(deps, candidate.req.extras or ())
         return deps, pypi_data.get("requires_python", ""), ""
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:

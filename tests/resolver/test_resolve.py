@@ -210,3 +210,13 @@ def test_resolve_package_with_dummy_upbound(project, repository):
     repository.add_candidate("foo", "0.1.0", ">=3.6,<4.0")
     result = resolve_requirements(repository, ["foo"], ">=3.5")
     assert "foo" in result
+
+
+def test_resolve_dependency_with_extra_marker(project, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["pytz; extra=='tz' or extra=='all'"])
+    result = resolve_requirements(repository, ["foo"])
+    assert "pytz" not in result
+
+    result = resolve_requirements(repository, ["foo[tz]"])
+    assert "pytz" in result
