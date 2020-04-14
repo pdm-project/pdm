@@ -413,7 +413,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     old_path = project.config.get("python.path")
     new_path = python_path
     project.project_config["python.path"] = Path(new_path).as_posix()
-    if old_path and Path(old_path) != Path(new_path):
+    if old_path and Path(old_path) != Path(new_path) and not project.is_global:
         stream.echo(stream.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)
 
