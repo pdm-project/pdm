@@ -120,6 +120,7 @@ update_strategy_group.add_argument(
     action="store_const",
     dest="update_strategy",
     const="reuse",
+    default="reuse",
     help="Reuse pinned versions already present in lock file if possible",
 )
 update_strategy_group.add_argument(
