@@ -59,7 +59,7 @@ class Command(BaseCommand):
     """Search for PyPI packages"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("query")
+        parser.add_argument("query", help="Query string to search")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         result = project.get_repository().search(options.query)
