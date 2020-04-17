@@ -148,6 +148,6 @@ if your PDM project has not been initialized yet.
 | `python.use_pyenv` | Use the pyenv interpreter | `True` | Yes | |
 | `pypi.url` | The URL of PyPI mirror | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes | `PDM_PYPI_URL` |
 | `pypi.verify_ssl` | Verify SSL certificate when query PyPI | Read `trusted-hosts` in `pip.conf`, defaults to `True` | Yes | |
-| `pypi.json_api` | Consult PyPI's JSON API for package metadata | `True` | Yes | `PDM_PYPI_JSON_API` |
+| `pypi.json_api` | Consult PyPI's JSON API for package metadata | `False` | Yes | `PDM_PYPI_JSON_API` |
 
 *If the env var is set, the value will take precendence over what is saved in the config file.*

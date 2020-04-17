@@ -213,7 +213,9 @@ class Project:
             )
         return sources
 
-    def get_repository(self, cls: Optional[Type[BaseRepository]]) -> BaseRepository:
+    def get_repository(
+        self, cls: Optional[Type[BaseRepository]] = None
+    ) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = PyPIRepository

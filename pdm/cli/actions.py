@@ -429,6 +429,7 @@ def do_info(
     python_version = get_python_version(python_path, True)
     if not python and not show_project and not env:
         rows = [
+            (stream.cyan("PDM version:", bold=True), project.core.version),
             (
                 stream.cyan("Python Interpreter:", bold=True),
                 python_path + f" ({python_version})",

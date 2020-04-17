@@ -25,6 +25,10 @@ class CorruptedCacheError(PdmException):
     pass
 
 
+class PackageIndexError(PdmException):
+    pass
+
+
 class CandidateInfoNotFound(PdmException):
     def __init__(self, candidate):
         message = (

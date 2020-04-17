@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
+from packaging.version import parse as parse_version
 from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
 
 from pdm._types import Source
@@ -500,3 +501,8 @@ def get_platform():
         # pip pull request #3497
         result = "linux_i686"
     return result
+
+
+def highest_version(versions: List[str]) -> str:
+    """Return the highest version of a given list."""
+    return max(versions, key=parse_version)

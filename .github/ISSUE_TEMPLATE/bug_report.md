@@ -24,9 +24,7 @@ assignees: ""
 
 ## Environment Information
 
-**pdm version**:
-
-```bash
+``bash
 # Paste the output of `pdm info && pdm info --env` below:
 
 ```
