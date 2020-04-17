@@ -264,3 +264,13 @@ def test_search_package(project, invoke):
     result = invoke(["search", "requests"], obj=project)
     assert result.exit_code == 0
     assert len(result.output.splitlines()) > 0
+
+
+def test_show_package_on_pypi(invoke):
+    result = invoke(["show", "ipython"])
+    assert result.exit_code == 0
+    assert "ipython" in result.output.splitlines()[0]
+
+    result = invoke(["show", "requests"])
+    assert result.exit_code == 0
+    assert "requests" in result.output.splitlines()[0]
