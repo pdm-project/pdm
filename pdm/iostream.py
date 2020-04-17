@@ -57,7 +57,7 @@ class IOStream:
             return click.style(text, *args, **kwargs)
 
     def display_columns(
-        self, rows: List[str], header: Optional[List[str]] = None
+        self, rows: List[List[str]], header: Optional[List[str]] = None
     ) -> None:
         """Print rows in aligned columns.
 

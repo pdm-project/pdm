@@ -258,3 +258,9 @@ def test_pep582_not_loading_site_packages(project, invoke, capfd):
     )
     sys_path = json.loads(capfd.readouterr()[0])
     assert not any("site-packages" in p for p in sys_path)
+
+
+def test_search_package(project, invoke):
+    result = invoke(["search", "requests"], obj=project)
+    assert result.exit_code == 0
+    assert len(result.output.splitlines()) > 0

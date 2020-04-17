@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import sys
+import xmlrpc.client as xmlrpc_client
 from functools import wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
-from pdm._types import CandidateInfo, Source
-from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
+from pdm._types import CandidateInfo, SearchResult, Source
+from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError, PackageIndexError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -13,7 +14,8 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import allow_all_wheels
+from pdm.models.xmlrpc import PyPIXmlrpcTransport
+from pdm.utils import allow_all_wheels, highest_version
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -159,6 +161,14 @@ class BaseRepository:
         """
         raise NotImplementedError
 
+    def search(self, query: str) -> SearchResult:
+        """Search package by name or summary.
+
+        :param query: query string
+        :returns: search result, a dictionary of name: package metadata
+        """
+        raise NotImplementedError
+
 
 class PyPIRepository(BaseRepository):
     """Get package and metadata from PyPI source."""
@@ -245,3 +255,34 @@ class PyPIRepository(BaseRepository):
                 key=lambda c: c.version,
             )
         return sorted_cans
+
+    def search(self, query: str) -> SearchResult:
+        pypi_simple = self.sources[0]["url"]
+        if not pypi_simple.endswith("/simple"):
+            raise PackageIndexError(f"{pypi_simple} doesn't support '/pypi' endpoint.")
+        pypi_url = pypi_simple[:-6] + "pypi"
+        with self.environment.get_finder() as finder:
+            transport = PyPIXmlrpcTransport(pypi_url, finder.session)
+            pypi = xmlrpc_client.ServerProxy(pypi_url, transport)
+            hits = pypi.search({"name": query, "summary": query}, "or")
+
+        packages = {}
+        for hit in hits:
+            name = hit["name"]
+            summary = hit["summary"]
+            version = hit["version"]
+
+            if name not in packages.keys():
+                packages[name] = {
+                    "name": name,
+                    "summary": summary,
+                    "versions": [version],
+                }
+            else:
+                packages[name]["versions"].append(version)
+
+                # if this is the highest version, replace summary and score
+                if version == highest_version(packages[name]["versions"]):
+                    packages[name]["summary"] = summary
+
+        return list(packages.values())
