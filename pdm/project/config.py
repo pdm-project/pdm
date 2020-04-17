@@ -34,6 +34,14 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
 
+def ensure_boolean(val):
+    """Coerce a string value to a boolean value"""
+    if not isinstance(val, str):
+        return val
+
+    return val and val.lower() not in ("false", "no", "0")
+
+
 @dataclasses.dataclass
 class ConfigItem:
     """An item of configuration, with following attributes:
@@ -88,7 +96,7 @@ class Config(MutableMapping):
         ),
         "pypi.json_api": ConfigItem(
             "Consult PyPI's JSON API for package metadata",
-            True,
+            False,
             env_var="PDM_PYPI_JSON_API",
         ),
         "use_venv": ConfigItem(
@@ -137,7 +145,10 @@ class Config(MutableMapping):
             raise NoConfigError(key)
         env_var = self._config_map[key].env_var
         if env_var is not None and env_var in os.environ:
-            return os.environ[env_var]
+            env_value = os.environ[env_var]
+            if isinstance(self._config_map[key].default, bool):
+                env_value = ensure_boolean(env_value)
+            return env_value
         return self._data[key]
 
     def __setitem__(self, key: str, value: Any) -> None:
