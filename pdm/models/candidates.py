@@ -221,7 +221,7 @@ class Candidate:
             "sections": sorted(self.sections),
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
-            "marker": str(self.marker) if self.marker else None,
+            "marker": str(self.marker).replace('"', "'") if self.marker else None,
             "editable": self.req.editable,
         }
         if self.req.is_vcs:

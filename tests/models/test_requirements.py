@@ -12,7 +12,7 @@ REQUIREMENTS = [
     ("requests<2.21.0,>=2.20.0", ("requests", "<2.21.0,>=2.20.0"), None),
     (
         'requests==2.19.0; os_name == "nt"',
-        ("requests", {"version": "==2.19.0", "marker": 'os_name == "nt"'}),
+        ("requests", {"version": "==2.19.0", "marker": "os_name == 'nt'"}),
         None,
     ),
     (
@@ -21,7 +21,7 @@ REQUIREMENTS = [
             "requests",
             {
                 "version": "==2.8.*,>=2.8.1",
-                "marker": 'python_version < "2.7"',
+                "marker": "python_version < '2.7'",
                 "extras": ["security", "tests"],
             },
         ),
@@ -69,7 +69,7 @@ REQUIREMENTS = [
     ),
     (
         'requests; python_version=="3.7.*"',
-        ("requests", {"version": "*", "marker": 'python_version == "3.7.*"'}),
+        ("requests", {"version": "*", "marker": "python_version == '3.7.*'"}),
         'requests; python_version == "3.7.*"',
     ),
     (

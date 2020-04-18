@@ -14,7 +14,7 @@ def test_convert_pipfile(project):
 
     assert result["dependencies"]["requests"] == "*"
     assert result["dependencies"]["pywinusb"]["version"] == "*"
-    assert result["dependencies"]["pywinusb"]["marker"] == 'sys_platform == "win32"'
+    assert result["dependencies"]["pywinusb"]["marker"] == "sys_platform == 'win32'"
 
     assert result["source"][0]["url"] == "https://pypi.python.org/simple"
 
@@ -26,7 +26,7 @@ def test_convert_requirements_file(project):
 
     assert len(result["source"]) == 2
     assert result["dependencies"]["webassets"] == "==2.0"
-    assert result["dependencies"]["whoosh"]["marker"] == 'sys_platform == "win32"'
+    assert result["dependencies"]["whoosh"]["marker"] == "sys_platform == 'win32'"
     assert result["dependencies"]["pip"]["editable"]
     assert result["dependencies"]["pip"]["git"] == "https://github.com/pypa/pip.git"
 

@@ -139,7 +139,7 @@ class Requirement:
         elif self.url:
             r["url"] = self.url
         if self.marker:
-            r["marker"] = str(self.marker)
+            r["marker"] = str(self.marker).replace('"', "'")
         if self.specifier:
             r["version"] = str(self.specifier)
         elif self.is_named:
