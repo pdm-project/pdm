@@ -41,9 +41,9 @@ def test_convert_poetry(project):
     assert result["version"] == "1.0.0"
     assert "Repository" in result["project_urls"]
     assert result["python_requires"] == ">=2.7,<4.0,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-    assert result["dependencies"]["cleo"]["marker"] == 'python_version ~= "2.7"'
+    assert result["dependencies"]["cleo"]["marker"] == "python_version ~= '2.7'"
     assert result["dependencies"]["cachecontrol"]["marker"] == (
-        'python_version >= "3.4" and python_version < "4.0"'
+        "python_version >= '3.4' and python_version < '4.0'"
     )
     assert "psycopg2" not in result["dependencies"]
     assert "psycopg2" in result["pgsql-dependencies"]
@@ -74,7 +74,7 @@ def test_convert_flit(project):
         == "https://flit.readthedocs.io/en/latest/"
     )
     assert result["dependencies"]["requests"] == ">=2.6"
-    assert result["dependencies"]["configparser"]["marker"] == 'python_version == "2.7"'
+    assert result["dependencies"]["configparser"]["marker"] == "python_version == '2.7'"
 
     assert sorted(result["extras"]) == ["doc", "test"]
     assert result["test-dependencies"]["pytest"] == ">=2.7.3"

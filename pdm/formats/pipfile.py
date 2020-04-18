@@ -23,7 +23,7 @@ def convert_pipfile_requirement(req):
 
     if markers:
         marker = functools.reduce(operator.and_, markers)
-        req["marker"] = str(marker)
+        req["marker"] = str(marker).replace('"', "'")
     return req
 
 
