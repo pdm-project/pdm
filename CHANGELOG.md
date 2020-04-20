@@ -1,3 +1,18 @@
+Release v0.8.0 (2020-04-20)
+---------------------------
+
+### Features & Improvements
+
+- Add a new command to search for packages [#111](https://github.com/frostming/pdm/issues/111)
+- Add `show` command to show package metadata. [#114](https://github.com/frostming/pdm/issues/114)
+
+### Bug Fixes
+
+- Fix a bug that environment markers cannot be evaluated correctly if extra's are connected with "or". [#107](https://github.com/frostming/pdm/issues/107)
+- Don't consult PyPI JSON API by default for package metadata. [#112](https://github.com/frostming/pdm/issues/112)
+- Elimate backslashes in markers for TOML documents. [#115](https://github.com/frostming/pdm/issues/115)
+
+
 Release v0.7.1 (2020-04-13)
 ---------------------------
 
