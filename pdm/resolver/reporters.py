@@ -5,18 +5,19 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import halo
 
 from pdm.iostream import stream
+from resolvelib import BaseReporter
 
 if TYPE_CHECKING:
+    from resolvelib.resolvers import State
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
-    from pdm.resolver.resolvers import State
 
 
 def log_title(title):
     stream.logger.info("=" * 8 + title + "=" * 8)
 
 
-class SpinnerReporter:
+class SpinnerReporter(BaseReporter):
     def __init__(self, spinner: halo.Halo, requirements: List[Requirement]) -> None:
         self.spinner = spinner
         self.requirements = requirements
@@ -69,15 +70,6 @@ class SpinnerReporter:
         stream.logger.info("Stable pins:")
         for k, can in state.mapping.items():
             stream.logger.info(f"\t{can.name}\t{can.version}")
-
-    def pin_candidate(self, name, criterion, candidate, child_names):
-        self.spinner.text = f"Resolved: {candidate.format()}"
-        stream.logger.info("Package constraints:")
-        for req, parent in criterion.information:
-            stream.logger.info(
-                f"\t{req.as_line()}\t<= {getattr(parent, 'name', parent)}"
-            )
-        stream.logger.info(f"Found candidate\t{candidate.name} {candidate.version}")
 
     def extract_metadata(self):
         self.spinner.start("Extracting package metadata")

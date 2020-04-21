@@ -33,6 +33,7 @@ pythonfinder = "*"
 tomlkit = "*"
 halo = "<1.0.0,>=0.0.28"
 python-cfonts = "*"
+resolvelib = "<1.0.0,>=0.3.0"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"

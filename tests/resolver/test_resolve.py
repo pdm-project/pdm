@@ -2,19 +2,14 @@ import itertools
 
 import pytest
 
-from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
 from pdm.iostream import stream
 from pdm.models.candidates import identify
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import (
-    BaseProvider,
-    EagerUpdateProvider,
-    Resolver,
-    ReusePinProvider,
-    SpinnerReporter,
-    resolve,
-)
+from pdm.resolver import resolve
+from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
+from pdm.resolver.reporters import SpinnerReporter
+from resolvelib.resolvers import RequirementsConflicted, ResolutionImpossible, Resolver
 from tests import FIXTURES
 
 
@@ -160,7 +155,7 @@ def test_resolve_conflicting_dependencies(project, repository):
 
 def test_resolve_no_available_versions(project, repository):
     repository.add_candidate("foo", "0.1.0")
-    with pytest.raises(NoVersionsAvailable):
+    with pytest.raises(RequirementsConflicted):
         resolve_requirements(repository, ["foo>=0.2.0"])
 
 

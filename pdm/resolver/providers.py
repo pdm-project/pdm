@@ -4,10 +4,11 @@ from pdm.models.candidates import Candidate, identify
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver.resolvers import RequirementInformation
+from resolvelib import AbstractProvider
+from resolvelib.resolvers import RequirementInformation
 
 
-class BaseProvider:
+class BaseProvider(AbstractProvider):
     def __init__(
         self,
         repository: BaseRepository,
@@ -83,7 +84,7 @@ class ReusePinProvider(BaseProvider):
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
-    def is_satisfied_by(self, requirement, candidate):
+    def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         # If this is a tracking package, tell the resolver out of using the
         # preferred pin, and into a "normal" candidate selection process.
         if getattr(candidate, "_preferred", False):
@@ -112,7 +113,7 @@ class EagerUpdateProvider(ReusePinProvider):
         specified packages to upgrade, and free their pins when it has a chance.
         """
 
-    def is_satisfied_by(self, requirement, candidate):
+    def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         # If this is a tracking package, tell the resolver out of using the
         # preferred pin, and into a "normal" candidate selection process.
         if self.identify(requirement) in self.tracked_names and getattr(
@@ -121,7 +122,7 @@ class EagerUpdateProvider(ReusePinProvider):
             return False
         return super().is_satisfied_by(requirement, candidate)
 
-    def get_dependencies(self, candidate):
+    def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
         # If this package is being tracked for upgrade, remove pins of its
         # dependencies, and start tracking these new packages.
         dependencies = super().get_dependencies(candidate)
@@ -131,7 +132,12 @@ class EagerUpdateProvider(ReusePinProvider):
                 self.tracked_names.add(name)
         return dependencies
 
-    def get_preference(self, resolution, candidates, information):
+    def get_preference(
+        self,
+        resolution: Candidate,
+        candidates: List[Candidate],
+        information: List[RequirementInformation],
+    ) -> int:
         # Resolve tracking packages so we have a chance to unpin them first.
         name = self.identify(candidates[0])
         if name in self.tracked_names:

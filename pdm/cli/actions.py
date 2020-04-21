@@ -1,7 +1,7 @@
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence
 
 import click
 import pythonfinder
@@ -32,7 +32,7 @@ def do_lock(
     project: Project,
     strategy: str = "all",
     tracked_names: Optional[Iterable[str]] = None,
-    requirements: Optional[Dict[str, Dict[str, Requirement]]] = None,
+    requirements: Optional[List[Requirement]] = None,
 ) -> Dict[str, Candidate]:
     """Performs the locking process and update lockfile.
 
@@ -45,7 +45,10 @@ def do_lock(
     check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
-    requirements = requirements or project.all_dependencies
+    if not requirements:
+        requirements = [
+            r for deps in project.all_dependencies.values() for r in deps.values()
+        ]
 
     with stream.open_spinner(
         title="Resolving dependencies", spinner="dots"
