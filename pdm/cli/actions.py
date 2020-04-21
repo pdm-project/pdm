@@ -136,7 +136,8 @@ def do_add(
     )
     all_dependencies = project.all_dependencies
     all_dependencies.setdefault(section, {}).update(requirements)
-    resolved = do_lock(project, strategy, tracked_names, all_dependencies)
+    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+    resolved = do_lock(project, strategy, tracked_names, reqs)
 
     # Update dependency specifiers and lockfile hash.
     save_version_specifiers(requirements, resolved, save)
@@ -221,7 +222,8 @@ def do_update(
             ", ".join(stream.green(v, bold=True) for v in tracked_names)
         )
     )
-    resolved = do_lock(project, strategy, tracked_names, all_dependencies)
+    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+    resolved = do_lock(project, strategy, tracked_names, reqs)
     do_sync(project, sections=(section,), default=False, clean=False)
     if unconstrained:
         # Need to update version constraints

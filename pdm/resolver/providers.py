@@ -41,8 +41,14 @@ class BaseProvider(AbstractProvider):
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if not candidate.version or not requirement.is_named:
             return True
+        allow_prereleases = requirement.allow_prereleases
+        if allow_prereleases is None:
+            allow_prereleases = self.allow_prereleases
+        if allow_prereleases is None:
+            # if not specified, should allow what `find_matches()` returns
+            allow_prereleases = True
         return requirement.specifier.contains(
-            candidate.version
+            candidate.version, allow_prereleases
         ) and self.requires_python.is_subset(candidate.requires_python)
 
     def get_dependencies(self, candidate: Candidate) -> List[Requirement]:

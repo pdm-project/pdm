@@ -5,12 +5,33 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 from pdm.models.candidates import identify
 from pdm.models.markers import PySpecSet, join_metaset
 from pdm.models.requirements import strip_extras
+from resolvelib.resolvers import Criterion, Resolution
 
 if TYPE_CHECKING:
-    from resolvelib.resolvers import Result, Resolver, Criterion
+    from resolvelib.resolvers import Result, Resolver
     from pdm.models.candidates import Candidate
     from pdm.models.markers import Marker
     from pdm.models.requirements import Requirement
+
+
+# Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
+def _merge_into_criterion(self, requirement, parent):
+    self._r.adding_requirement(requirement)
+    name = self._p.identify(requirement)
+    try:
+        crit = self.state.criteria[name]
+    except KeyError:
+        crit = Criterion.from_requirement(self._p, requirement, parent)
+    else:
+        crit = crit.merged_with(self._p, requirement, parent)
+    if not name:
+        # For local packages, name is only available after candidate is resolved
+        name = self._p.identify(requirement)
+    return name, crit
+
+
+Resolution._merge_into_criterion = _merge_into_criterion
+del _merge_into_criterion
 
 
 def _build_marker_and_pyspec(
