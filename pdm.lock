@@ -373,7 +373,7 @@ colorama = "*"
 [[package]]
 name = "pythonfinder"
 sections = ["default"]
-version = "1.2.2"
+version = "1.2.3"
 marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'"
 summary = "A cross-platform python discovery tool to help locate python on any system."
 
@@ -696,9 +696,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "python-cfonts-1.2.0.tar.gz", hash = "sha256:27c5ac08fdb0a46a7d1a8ef9031cc9456475a29921a721555fad1f59715e5d37"},
     {file = "python_cfonts-1.2.0-py2.py3-none-any.whl", hash = "sha256:b5f0657fee522afc294a2311738cbfaaebcc11b703d7c96ce31ae064b3ac43bd"},
 ]
-"pythonfinder 1.2.2" = [
-    {file = "pythonfinder-1.2.2.tar.gz", hash = "sha256:6cab0773cb811e946b4eb76b1f2e4faf7c657c848f0e0682f6f8291cd1091a2a"},
-    {file = "pythonfinder-1.2.2-py2.py3-none-any.whl", hash = "sha256:73cf4cdcb4a6754fd29a5b96120679bde7c1f587bd1fb63b748d3a5fef6e4090"},
+"pythonfinder 1.2.3" = [
+    {file = "pythonfinder-1.2.3.tar.gz", hash = "sha256:e05bc7f8c66c7f4258ea2067bd483cbb0bf87592a3d08a4968d694ca56f46cfe"},
+    {file = "pythonfinder-1.2.3-py2.py3-none-any.whl", hash = "sha256:b1acde43cfc6f5aea1ad66bdd18cf33bbc6dc1f1fcc2dbeb158733eb13012c2d"},
 ]
 "pyyaml 5.3.1" = [
     {file = "PyYAML-5.3.1.tar.gz", hash = "sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d"},
@@ -771,4 +771,3 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [root]
 content_hash = "md5:f3bd93e01dcced158b474959f3021f3d"
 meta_version = "0.0.1"
-
