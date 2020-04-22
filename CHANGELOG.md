@@ -1,3 +1,11 @@
+Release v0.8.1 (2020-04-22)
+---------------------------
+
+### Dependencies
+
+- Switch to upstream `resolvelib 0.3.0`. [#116](https://github.com/frostming/pdm/issues/116)
+
+
 Release v0.8.0 (2020-04-20)
 ---------------------------
 
