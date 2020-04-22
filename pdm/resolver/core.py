@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
 
 from pdm.models.candidates import identify
 from pdm.models.markers import PySpecSet, join_metaset
@@ -39,11 +39,14 @@ def _build_marker_and_pyspec(
     criterion: Criterion,
     pythons: Dict[str, PySpecSet],
     all_metasets: Dict[str, Tuple[Optional[Marker], PySpecSet]],
+    keep_unresolved: Set[Optional[str]],
 ) -> Tuple[Optional[Marker], PySpecSet]:
 
     metasets = None
 
     for r, parent in criterion.information:
+        if parent and identify(parent) in keep_unresolved:
+            continue
         python = pythons[strip_extras(key)[0]]
         marker, pyspec = r.marker_no_python, r.requires_python
         pyspec = python & pyspec
@@ -78,20 +81,50 @@ def _calculate_markers_and_pyspecs(
 ) -> Dict[str, Tuple[Optional[Marker], PySpecSet]]:
     all_metasets = {}
     unresolved = {k for k in result.mapping}
+    circular = {}
 
     while unresolved:
         new_metasets = {}
         for k in unresolved:
             crit = result.criteria[k]  # type: Criterion
+            keep_unresolved = circular.get(k, set())
             # All parents must be resolved first
-            if any(p and identify(p) in unresolved for p in crit.iter_parent()):
+            if any(
+                p and identify(p) in (unresolved - keep_unresolved)
+                for p in crit.iter_parent()
+            ):
                 continue
-            new_metasets[k] = _build_marker_and_pyspec(k, crit, pythons, all_metasets)
+            new_metasets[k] = _build_marker_and_pyspec(
+                k, crit, pythons, all_metasets, keep_unresolved
+            )
             result.mapping[k].sections = list(set(_get_sections(crit)))
 
-        all_metasets.update(new_metasets)
-        for key in new_metasets:
-            unresolved.remove(key)
+        if new_metasets:
+            all_metasets.update(new_metasets)
+            for key in new_metasets:
+                unresolved.remove(key)
+        else:
+            # No progress, there are likely circular dependencies.
+            # Pick one package and keep its parents unresolved now, we will get into it
+            # after all others are resolved.
+            package = next((p for p in unresolved if p not in circular), None)
+            if not package:
+                break
+            crit = result.criteria[package]
+            unresolved_parents = set(
+                filter(
+                    lambda p: p in unresolved and p != package,
+                    (identify(p) for p in crit.iter_parent() if p),
+                )
+            )
+            circular[package] = unresolved_parents
+
+    for key in circular:
+        crit = result.criteria[key]
+        all_metasets[key] = _build_marker_and_pyspec(
+            key, crit, pythons, all_metasets, set()
+        )
+        result.mapping[key].sections = list(set(_get_sections(crit)))
 
     return all_metasets
 
