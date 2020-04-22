@@ -22,7 +22,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider
+from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
 from pdm.resolver.reporters import SpinnerReporter
 from pdm.utils import (
     atomic_open_for_write,
@@ -31,6 +31,7 @@ from pdm.utils import (
     get_python_version,
     get_venv_python,
 )
+from resolvelib.reporters import BaseReporter
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
@@ -252,10 +253,10 @@ class Project:
 
     def get_reporter(
         self,
-        requirements: Dict[str, Dict[str, Requirement]],
+        requirements: List[Requirement],
         tracked_names: Optional[Iterable[str]] = None,
         spinner: Optional[halo.Halo] = None,
-    ) -> SpinnerReporter:
+    ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 
         :param requirements: requirements to resolve
@@ -263,10 +264,7 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
-        flat_reqs = [
-            req for req_set in requirements.values() for req in req_set.values()
-        ]
-        return SpinnerReporter(spinner, flat_reqs)
+        return SpinnerReporter(spinner, requirements)
 
     def get_project_metadata(self) -> Dict[str, Any]:
         content_hash = self.get_content_hash("md5")

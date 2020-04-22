@@ -17,7 +17,7 @@ from pdm.iostream import stream
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
-from pdm.resolver import Resolver
+from resolvelib import Resolver
 
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 

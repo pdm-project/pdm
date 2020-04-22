@@ -2,19 +2,14 @@ import itertools
 
 import pytest
 
-from pdm.exceptions import NoVersionsAvailable, ResolutionImpossible
 from pdm.iostream import stream
 from pdm.models.candidates import identify
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import (
-    BaseProvider,
-    EagerUpdateProvider,
-    Resolver,
-    ReusePinProvider,
-    SpinnerReporter,
-    resolve,
-)
+from pdm.resolver import resolve
+from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
+from pdm.resolver.reporters import SpinnerReporter
+from resolvelib.resolvers import ResolutionImpossible, Resolver
 from tests import FIXTURES
 
 
@@ -54,7 +49,7 @@ def resolve_requirements(
     with stream.open_spinner("Resolving dependencies") as spin, stream.logging("lock"):
         reporter = SpinnerReporter(spin, flat_reqs)
         resolver = Resolver(provider, reporter)
-        mapping, *_ = resolve(resolver, requirements, requires_python)
+        mapping, *_ = resolve(resolver, flat_reqs, requires_python)
         return mapping
 
 
@@ -160,14 +155,14 @@ def test_resolve_conflicting_dependencies(project, repository):
 
 def test_resolve_no_available_versions(project, repository):
     repository.add_candidate("foo", "0.1.0")
-    with pytest.raises(NoVersionsAvailable):
+    with pytest.raises(ResolutionImpossible):
         resolve_requirements(repository, ["foo>=0.2.0"])
 
 
 def test_resolving_marker_merging(project, repository):
     repository.add_candidate("foo", "0.1.0", ">=2.7, !=3.4.*")
     result = resolve_requirements(
-        repository, ["foo; os_name=='nt' and python_version != '3.5'"]
+        repository, ["foo; os_name=='nt' and python_version != '3.5'"], ">=3.6"
     )
     assert (
         str(result["foo"].marker) == 'os_name == "nt" and python_version >= "2.7" '
@@ -207,7 +202,7 @@ def test_resolve_two_extras_from_the_same_package(project, repository):
 
 
 def test_resolve_package_with_dummy_upbound(project, repository):
-    repository.add_candidate("foo", "0.1.0", ">=3.6,<4.0")
+    repository.add_candidate("foo", "0.1.0", ">=3.5,<4.0")
     result = resolve_requirements(repository, ["foo"], ">=3.5")
     assert "foo" in result
 
