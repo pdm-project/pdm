@@ -32,9 +32,9 @@ class Command(BaseCommand):
         req = parse_requirement(package)
         repository = project.get_repository()
         # reverse the result so that latest is at first.
-        matches = repository.find_matches(
+        matches = repository.find_candidates(
             req, project.environment.python_requires, True
-        )[::-1]
+        )
         latest = next(iter(matches))
         latest_stable = next(filter(filter_stable, matches), None)
         installed = project.environment.get_working_set().get(package)
