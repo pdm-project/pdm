@@ -22,8 +22,6 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
-from pdm.resolver.reporters import SpinnerReporter
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
@@ -31,10 +29,11 @@ from pdm.utils import (
     get_python_version,
     get_venv_python,
 )
-from resolvelib.reporters import BaseReporter
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
+    from pdm.resolver.providers import BaseProvider
+    from resolvelib.reporters import BaseReporter
 
 
 class Project:
@@ -232,6 +231,8 @@ class Project:
         :param tracked_names: the names of packages that needs to update
         :returns: The provider object
         """
+        from pdm.resolver.providers import ReusePinProvider, EagerUpdateProvider
+
         repository = self.get_repository(cls=self.core.repository_class)
         allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
@@ -264,6 +265,8 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
+        from pdm.resolver.reporters import SpinnerReporter
+
         return SpinnerReporter(spinner, requirements)
 
     def get_project_metadata(self) -> Dict[str, Any]:

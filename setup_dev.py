@@ -25,19 +25,8 @@ def main():
     subprocess.check_call([sys.executable, "-m", "venv", venv_path.as_posix()])
 
     print("Installing base requirements...", flush=True)
-    subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "pdm"])
-
     subprocess.check_call(
-        [
-            venv_python.as_posix(),
-            "-m",
-            "pip",
-            "install",
-            "-U",
-            "pip",
-            "pip_shims",
-            "vistir",
-        ]
+        [venv_python.as_posix(), "-m", "pip", "install", "--no-build-isolation", "."]
     )
 
     print("Setup project for development...", flush=True)
