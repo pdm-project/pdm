@@ -15,7 +15,7 @@ from pdm._types import Source
 from pdm.exceptions import ProjectError
 from pdm.iostream import stream
 from pdm.models.caches import CandidateInfoCache, HashCache
-from pdm.models.candidates import Candidate, identify
+from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -171,7 +171,7 @@ class Project:
         for name, dep in deps.items():
             req = Requirement.from_req_dict(name, dep)
             req.from_section = section or "default"
-            result[identify(req)] = req
+            result[req.identify()] = req
         return result
 
     @property
@@ -307,13 +307,14 @@ class Project:
             req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(req, self.environment, name=package_name, version=version)
             can.marker = req.marker
+            can.requires_python = req.requires_python
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(
                     f"{package_name} {version}", []
                 )
             } or None
-            result[identify(req)] = can
+            result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:
             result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
         return result

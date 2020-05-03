@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
 
-from pdm.models.candidates import identify
 from pdm.models.markers import PySpecSet, join_metaset
 from pdm.models.requirements import strip_extras
 from resolvelib.resolvers import Criterion, Resolution
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 # Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
 def _merge_into_criterion(self, requirement, parent):
-    self._r.adding_requirement(requirement)
+    self._r.adding_requirement(requirement, parent)
     name = self._p.identify(requirement)
     try:
         crit = self.state.criteria[name]
@@ -34,6 +33,10 @@ Resolution._merge_into_criterion = _merge_into_criterion
 del _merge_into_criterion
 
 
+def _identify_parent(parent: Optional[Candidate]) -> None:
+    return parent.identify() if parent else None
+
+
 def _build_marker_and_pyspec(
     key: str,
     criterion: Criterion,
@@ -45,7 +48,7 @@ def _build_marker_and_pyspec(
     metasets = None
 
     for r, parent in criterion.information:
-        if parent and identify(parent) in keep_unresolved:
+        if parent and _identify_parent(parent) in keep_unresolved:
             continue
         python = pythons[strip_extras(key)[0]]
         marker, pyspec = r.marker_no_python, r.requires_python
@@ -54,7 +57,7 @@ def _build_marker_and_pyspec(
         if not parent:
             parent_metaset = None, PySpecSet()
         else:
-            parent_metaset = all_metasets[identify(parent)]
+            parent_metaset = all_metasets[_identify_parent(parent)]
         child_marker = (
             parent_metaset[0] & marker if any((parent_metaset[0], marker)) else None
         )
@@ -90,7 +93,7 @@ def _calculate_markers_and_pyspecs(
             keep_unresolved = circular.get(k, set())
             # All parents must be resolved first
             if any(
-                p and identify(p) in (unresolved - keep_unresolved)
+                p and _identify_parent(p) in (unresolved - keep_unresolved)
                 for p in crit.iter_parent()
             ):
                 continue
@@ -114,7 +117,7 @@ def _calculate_markers_and_pyspecs(
             unresolved_parents = set(
                 filter(
                     lambda p: p in unresolved and p != package,
-                    (identify(p) for p in crit.iter_parent() if p),
+                    (_identify_parent(p) for p in crit.iter_parent() if p),
                 )
             )
             circular[package] = unresolved_parents

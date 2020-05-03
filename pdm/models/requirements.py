@@ -100,6 +100,12 @@ class Requirement:
         except InvalidMarker as e:
             raise RequirementError("Invalid marker: %s" % str(e)) from None
 
+    def identify(self) -> Optional[str]:
+        if not self.key:
+            return None
+        extras = "[{}]".format(",".join(sorted(self.extras))) if self.extras else ""
+        return self.key + extras
+
     def __getattr__(self, attr: str) -> Any:
         if attr in self.attributes:
             return None
