@@ -1,3 +1,11 @@
+Release v0.8.2 (2020-05-03)
+---------------------------
+
+### Bug Fixes
+
+- Update resolvers to `resolvelib` 0.4.0. [#118](https://github.com/frostming/pdm/issues/118)
+
+
 Release v0.8.1 (2020-04-22)
 ---------------------------
 
