@@ -54,11 +54,15 @@ class BaseProvider(AbstractProvider):
             return not candidate.req.is_named and candidate.req.url == requirement.url
         if not candidate.version:
             candidate.get_metadata()
+        if getattr(candidate, "_preferred", False) and not candidate._requires_python:
+            candidate.requires_python = str(
+                self.repository.get_dependencies(candidate)[1]
+            )
         allow_prereleases = requirement.allow_prereleases
         if allow_prereleases is None:
             allow_prereleases = self.allow_prereleases
         if allow_prereleases is None:
-            # if not specified, should allow what `find_matches()` returns
+            # if not specified, should allow what `find_candidates()` returns
             allow_prereleases = True
         return requirement.specifier.contains(
             candidate.version, allow_prereleases

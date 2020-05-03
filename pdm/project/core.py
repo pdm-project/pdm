@@ -231,7 +231,11 @@ class Project:
         :param tracked_names: the names of packages that needs to update
         :returns: The provider object
         """
-        from pdm.resolver.providers import ReusePinProvider, EagerUpdateProvider
+        from pdm.resolver.providers import (
+            BaseProvider,
+            ReusePinProvider,
+            EagerUpdateProvider,
+        )
 
         repository = self.get_repository(cls=self.core.repository_class)
         allow_prereleases = self.allow_prereleases
@@ -310,7 +314,6 @@ class Project:
             req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(req, self.environment, name=package_name, version=version)
             can.marker = req.marker
-            can.requires_python = req.requires_python
             can.hashes = {
                 item["file"]: item["hash"]
                 for item in self.lockfile["metadata"].get(

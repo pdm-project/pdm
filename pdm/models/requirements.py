@@ -85,6 +85,16 @@ class Requirement:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
 
+    def __hash__(self):
+        hashCmp = (
+            self.key,
+            self.url,
+            self.specifier,
+            frozenset(self.extras) if self.extras else None,
+            str(self.marker) if self.marker else None,
+        )
+        return hash(hashCmp)
+
     @property
     def marker(self) -> Optional[Marker]:
         return self._marker
@@ -112,7 +122,7 @@ class Requirement:
         raise AttributeError(attr)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.name}>"
+        return f"<{self.__class__.__name__} {self.as_line()}>"
 
     def __str__(self) -> str:
         return self.as_line()

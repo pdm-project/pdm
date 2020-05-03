@@ -298,13 +298,13 @@ class Environment:
                 ireq.options["hashes"] = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
                 with global_tempdir_manager():
-                    downloaded = shims.shim_unpack(
-                        link=ireq.link,
-                        download_dir=download_dir,
-                        location=ireq.source_dir,
-                        hashes=ireq.hashes(False),
-                        only_download=only_download,
-                        session=finder.session,
+                    downloader = shims.Downloader(finder.session, "off")
+                    downloaded = shims.unpack_url(
+                        ireq.link,
+                        ireq.source_dir,
+                        downloader,
+                        download_dir,
+                        ireq.hashes(False),
                     )
                     # Preserve the downloaded file so that it won't be cleared.
                     if downloaded and only_download:

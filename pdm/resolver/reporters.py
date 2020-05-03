@@ -76,4 +76,5 @@ class SpinnerReporter(BaseReporter):
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution.
         """
+        self.spinner.text = "Resolving: " + candidate.format()
         stream.logger.info(f"\tNew pin: {candidate.name}-{candidate.version}")
