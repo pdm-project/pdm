@@ -20,7 +20,7 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.installers.installers import format_dist
 from pdm.iostream import stream
-from pdm.models.candidates import Candidate, identify
+from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
@@ -126,7 +126,7 @@ def do_add(
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:
-        key = identify(r)
+        key = r.identify()
         r.from_section = section
         tracked_names.add(key)
         requirements[key] = r

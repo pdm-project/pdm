@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from distlib.database import EggInfoDistribution
 from distlib.metadata import Metadata
@@ -55,21 +55,6 @@ def get_requirements_from_dist(
     return result
 
 
-def identify(req: Union[Candidate, Requirement]) -> Optional[str]:
-    """Get the identity of a candidate or requirement.
-    The result carries the extras information to distinguish from the same package
-    with different extras.
-    """
-    if isinstance(req, Candidate):
-        req = req.req
-    if req.key is None:
-        # Name attribute may be None for local tarballs.
-        # It will be picked up in the following get_dependencies calls.
-        return None
-    extras = "[{}]".format(",".join(sorted(req.extras))) if req.extras else ""
-    return req.key + extras
-
-
 class Candidate:
     """A concrete candidate that can be downloaded and installed.
     A candidate comes from the PyPI index of a package, or from the requirement itself
@@ -114,6 +99,9 @@ class Candidate:
     @cached_property
     def ireq(self) -> shims.InstallRequirement:
         return self.req.as_ireq()
+
+    def identify(self) -> str:
+        return self.req.identify()
 
     def __eq__(self, other: "Candidate") -> bool:
         if self.req.is_named:

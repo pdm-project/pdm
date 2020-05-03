@@ -25,19 +25,8 @@ def main():
     subprocess.check_call([sys.executable, "-m", "venv", venv_path.as_posix()])
 
     print("Installing base requirements...", flush=True)
-    subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "pdm"])
-
     subprocess.check_call(
-        [
-            venv_python.as_posix(),
-            "-m",
-            "pip",
-            "install",
-            "-U",
-            "pip",
-            "pip_shims",
-            "vistir",
-        ]
+        [venv_python.as_posix(), "-m", "pip", "install", "-U", "pip<20.1", "pdm"]
     )
 
     print("Setup project for development...", flush=True)
@@ -45,7 +34,7 @@ def main():
 
     subprocess.check_call([venv_pdm, "use", sys.executable])
     subprocess.check_call([venv_pdm, "config", "set", "parallel_install", "false"])
-    subprocess.check_call([venv_pdm, "install", "-d"])
+    subprocess.check_call([venv_python.as_posix(), "-m", "pdm", "install", "-dvv"])
 
     pdm_path = (
         BASE_DIR

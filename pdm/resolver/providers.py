@@ -1,6 +1,6 @@
 from typing import Dict, Iterable, List, Optional, Union
 
-from pdm.models.candidates import Candidate, identify
+from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
@@ -23,7 +23,7 @@ class BaseProvider(AbstractProvider):
         self.fetched_dependencies = {}  # type: Dict[str, Dict[str, List[Requirement]]]
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
-        return identify(req)
+        return req.identify()
 
     def get_preference(
         self,
@@ -33,19 +33,36 @@ class BaseProvider(AbstractProvider):
     ) -> int:
         return len(candidates)
 
-    def find_matches(self, requirement: Requirement) -> List[Candidate]:
-        return self.repository.find_matches(
-            requirement, self.requires_python, self.allow_prereleases
-        )
+    def find_matches(self, requirements: List[Requirement]) -> Iterable[Candidate]:
+        file_req = next((req for req in requirements if not req.is_named), None)
+        if file_req:
+            can = Candidate(file_req, self.repository.environment)
+            can.get_metadata()
+            candidates = [can]
+        else:
+            candidates = self.repository.find_candidates(
+                requirements[0], self.requires_python, self.allow_prereleases
+            )
+        return [
+            can
+            for can in candidates
+            if all(self.is_satisfied_by(r, can) for r in requirements)
+        ]
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
-        if not candidate.version or not requirement.is_named:
-            return True
+        if not requirement.is_named:
+            return not candidate.req.is_named and candidate.req.url == requirement.url
+        if not candidate.version:
+            candidate.get_metadata()
+        if getattr(candidate, "_preferred", False) and not candidate._requires_python:
+            candidate.requires_python = str(
+                self.repository.get_dependencies(candidate)[1]
+            )
         allow_prereleases = requirement.allow_prereleases
         if allow_prereleases is None:
             allow_prereleases = self.allow_prereleases
         if allow_prereleases is None:
-            # if not specified, should allow what `find_matches()` returns
+            # if not specified, should allow what `find_candidates()` returns
             allow_prereleases = True
         return requirement.specifier.contains(
             candidate.version, allow_prereleases
@@ -90,21 +107,13 @@ class ReusePinProvider(BaseProvider):
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
-    def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
-        # If this is a tracking package, tell the resolver out of using the
-        # preferred pin, and into a "normal" candidate selection process.
-        if getattr(candidate, "_preferred", False):
-            return True
-        return super().is_satisfied_by(requirement, candidate)
-
-    def find_matches(self, requirement: Requirement) -> List[Candidate]:
-        result = super().find_matches(requirement)
-        ident = self.identify(requirement)
+    def find_matches(self, requirements: List[Requirement]) -> Iterable[Candidate]:
+        ident = self.identify(requirements[0])
         if ident not in self.tracked_names and ident in self.preferred_pins:
             pin = self.preferred_pins[ident]
             pin._preferred = True
-            result.append(pin)
-        return result
+            yield pin
+        yield from super().find_matches(requirements)
 
 
 class EagerUpdateProvider(ReusePinProvider):

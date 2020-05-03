@@ -41,25 +41,6 @@ class SpinnerReporter(BaseReporter):
         if you want to report finalization. The index is zero-based.
         """
         log_title("Ending round {}".format(index))
-        if not self._previous:
-            added = state.mapping.values()
-            changed = []
-        else:
-            added = [can for k, can in state.mapping.items() if k not in self._previous]
-            changed = [
-                (self._previous[k], can)
-                for k, can in state.mapping.items()
-                if k in self._previous and self._previous[k] != can
-            ]
-        if added:
-            stream.logger.info("New pins:")
-            for can in added:
-                stream.logger.info(f"\t{can.name}\t{can.version}")
-        if changed:
-            stream.logger.info("Changed pins:")
-            for (old, new) in changed:
-                stream.logger.info(f"\t{new.name}\t{old.version} -> {new.version}")
-        self._previous = state.mapping
 
     def ending(self, state: State) -> None:
         """Called before the resolution ends successfully.
@@ -73,3 +54,27 @@ class SpinnerReporter(BaseReporter):
 
     def extract_metadata(self):
         self.spinner.start("Extracting package metadata")
+
+    def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:
+        """Called when adding a new requirement into the resolve criteria.
+
+        :param requirement: The additional requirement to be applied to filter
+            the available candidaites.
+        :param parent: The candidate that requires ``requirement`` as a
+            dependency, or None if ``requirement`` is one of the root
+            requirements passed in from ``Resolver.resolve()``.
+        """
+        parent_line = f"(from {parent.name}-{parent.version})" if parent else ""
+        stream.logger.info(f"\tAdding requirement {requirement.as_line()}{parent_line}")
+
+    def backtracking(self, candidate: Candidate) -> None:
+        """Called when rejecting a candidate during backtracking.
+        """
+        stream.logger.info(f"Candidate rejected: {candidate.name}-{candidate.version}")
+        stream.logger.info("Backtracking...")
+
+    def pinning(self, candidate: Candidate) -> None:
+        """Called when adding a candidate to the potential solution.
+        """
+        self.spinner.text = "Resolving: " + candidate.format()
+        stream.logger.info(f"\tNew pin: {candidate.name}-{candidate.version}")

@@ -15,15 +15,13 @@ from pdm._types import Source
 from pdm.exceptions import ProjectError
 from pdm.iostream import stream
 from pdm.models.caches import CandidateInfoCache, HashCache
-from pdm.models.candidates import Candidate, identify
+from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
-from pdm.resolver.reporters import SpinnerReporter
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
@@ -31,10 +29,11 @@ from pdm.utils import (
     get_python_version,
     get_venv_python,
 )
-from resolvelib.reporters import BaseReporter
 
 if TYPE_CHECKING:
     from tomlkit.container import Container
+    from pdm.resolver.providers import BaseProvider
+    from resolvelib.reporters import BaseReporter
 
 
 class Project:
@@ -171,7 +170,7 @@ class Project:
         for name, dep in deps.items():
             req = Requirement.from_req_dict(name, dep)
             req.from_section = section or "default"
-            result[identify(req)] = req
+            result[req.identify()] = req
         return result
 
     @property
@@ -232,6 +231,12 @@ class Project:
         :param tracked_names: the names of packages that needs to update
         :returns: The provider object
         """
+        from pdm.resolver.providers import (
+            BaseProvider,
+            ReusePinProvider,
+            EagerUpdateProvider,
+        )
+
         repository = self.get_repository(cls=self.core.repository_class)
         allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
@@ -264,6 +269,8 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
+        from pdm.resolver.reporters import SpinnerReporter
+
         return SpinnerReporter(spinner, requirements)
 
     def get_project_metadata(self) -> Dict[str, Any]:
@@ -313,7 +320,7 @@ class Project:
                     f"{package_name} {version}", []
                 )
             } or None
-            result[identify(req)] = can
+            result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:
             result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
         return result

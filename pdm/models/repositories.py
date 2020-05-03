@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 import xmlrpc.client as xmlrpc_client
-from functools import wraps
+from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
 from pdm._types import CandidateInfo, SearchResult, Source
@@ -79,39 +79,13 @@ class BaseRepository:
             requirements.append(self_req)
         return requirements, PySpecSet(requires_python), summary
 
-    def find_matches(
+    def find_candidates(
         self,
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
         allow_all: bool = False,
-    ) -> List[Candidate]:
-        """Find matching candidates of a requirement.
-
-        :param requirement: the given requirement.
-        :param requires_python: the Python version constraint.
-        :param allow_prereleases: whether allow prerelease versions, or let us determine
-            if not given. If no non-prerelease is available, prereleases will be used.
-        :param allow_all: whether allow all wheels.
-        :returns: a list of candidates.
-        """
-        if requirement.is_named:
-            return self._find_named_matches(
-                requirement, requires_python, allow_prereleases, allow_all
-            )
-        else:
-            # Fetch metadata so that resolver can know the candidate's name.
-            can = Candidate(requirement, self.environment)
-            can.get_metadata()
-            return [can]
-
-    def _find_named_matches(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
-    ) -> List[Candidate]:
+    ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
         """
@@ -147,7 +121,7 @@ class BaseRepository:
             return candidate.hashes
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
-        matching_candidates = self.find_matches(req, allow_all=True)
+        matching_candidates = self.find_candidates(req, allow_all=True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
             return {
@@ -215,13 +189,14 @@ class PyPIRepository(BaseRepository):
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata
 
-    def _find_named_matches(
+    @lru_cache()
+    def find_candidates(
         self,
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
         allow_all: bool = False,
-    ) -> List[Candidate]:
+    ) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
@@ -241,6 +216,7 @@ class PyPIRepository(BaseRepository):
                 and (allow_all or requires_python.is_subset(c.requires_python))
             ),
             key=lambda c: (c.version, c.link.is_wheel),
+            reverse=True,
         )
 
         if not sorted_cans and allow_prereleases is None:
@@ -253,6 +229,7 @@ class PyPIRepository(BaseRepository):
                     and (allow_all or requires_python.is_subset(c.requires_python))
                 ),
                 key=lambda c: c.version,
+                reverse=True,
             )
         return sorted_cans
 
