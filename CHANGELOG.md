@@ -1,3 +1,11 @@
+Release v0.8.3 (2020-05-15)
+---------------------------
+
+### Bug Fixes
+
+- Fix the version constraint parsing of wheel metadata. [#120](https://github.com/frostming/pdm/issues/120)
+
+
 Release v0.8.2 (2020-05-03)
 ---------------------------
 
