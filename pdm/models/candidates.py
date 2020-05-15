@@ -5,7 +5,6 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from distlib.database import EggInfoDistribution
-from distlib.metadata import Metadata
 from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
@@ -17,6 +16,7 @@ from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property
 
 if TYPE_CHECKING:
+    from distlib.metadata import Metadata
     from pdm.models.environment import Environment
 
 vcs = shims.VcsSupport()
@@ -25,6 +25,23 @@ vcs = shims.VcsSupport()
 def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
+
+
+def _patch_version_parsing():
+    """Monkey patches the version parsing to allow empty parts in version constraint
+    list.
+    """
+    from distlib.version import VersionScheme
+
+    def is_valid_constraint_list(self, s):
+        s = ",".join(v for v in s.strip().split(",") if v)
+        return self.is_valid_matcher("dummy_name (%s)" % s)
+
+    VersionScheme.is_valid_constraint_list = is_valid_constraint_list
+
+
+_patch_version_parsing()
+del _patch_version_parsing
 
 
 @functools.lru_cache(128)

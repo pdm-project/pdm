@@ -85,3 +85,11 @@ def test_extras_warning(project, recwarn):
     assert str(warning.message) == "Extras not found: ('foo',)"
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
+
+
+def test_parse_abnormal_specifiers(project):
+    req = parse_requirement(
+        f"http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"
+    )
+    candidate = Candidate(req, project.environment)
+    assert candidate.get_dependencies_from_metadata()
