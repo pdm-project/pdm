@@ -1,4 +1,5 @@
 import hashlib
+import urllib.parse
 
 from pip._internal.req.req_file import parse_requirements
 
@@ -89,3 +90,23 @@ def convert(project, filename):
         data["source"] = sources
 
     return data
+
+
+def export(project, candidates, options):
+    lines = []
+    for candidate in candidates:
+        req = candidate.req.as_line()
+        lines.append(req)
+        if options.hashes and candidate.hashes:
+            for item in candidate.hashes.values():
+                lines.append(f" \\\n    --hash={item}")
+        lines.append("\n")
+    sources = project.tool_settings.get("source", [])
+    for source in sources:
+        url = source["url"]
+        prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"
+        lines.append(f"{prefix} {url}\n")
+        if not source["verify_ssl"]:
+            host = urllib.parse.urlparse(url).hostname
+            lines.append(f"--trusted-host {host}\n")
+    return "".join(lines)

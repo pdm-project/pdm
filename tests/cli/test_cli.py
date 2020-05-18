@@ -274,3 +274,25 @@ def test_show_package_on_pypi(invoke):
     result = invoke(["show", "requests"])
     assert result.exit_code == 0
     assert "requests" in result.output.splitlines()[0]
+
+
+def test_export_to_requirements_txt(invoke, fixture_project):
+    project = fixture_project("demo-package")
+    requirements_txt = project.root / "requirements.txt"
+    requirements_no_hashes = project.root / "requirements_simple.txt"
+
+    result = invoke(["export"], obj=project)
+    assert result.exit_code == 0
+    assert result.output.strip() == requirements_txt.read_text().strip()
+
+    result = invoke(["export", "--without-hashes"], obj=project)
+    assert result.exit_code == 0
+    assert result.output.strip() == requirements_no_hashes.read_text().strip()
+
+    result = invoke(
+        ["export", "-o", str(project.root / "requirements_output.txt")], obj=project
+    )
+    assert result.exit_code == 0
+    assert (
+        project.root / "requirements_output.txt"
+    ).read_text() == requirements_txt.read_text()
