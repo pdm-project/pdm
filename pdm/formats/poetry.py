@@ -142,3 +142,7 @@ class PoetryMetaConverter(MetaConverter):
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
         return dict(PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"]))
+
+
+def export(project, candidates, options):
+    raise NotImplementedError()

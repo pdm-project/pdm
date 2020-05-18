@@ -316,9 +316,7 @@ class Project:
             can.marker = req.marker
             can.hashes = {
                 item["file"]: item["hash"]
-                for item in self.lockfile["metadata"].get(
-                    f"{package_name} {version}", []
-                )
+                for item in self.lockfile["metadata"].get(f"{req.key} {version}", [])
             } or None
             result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:

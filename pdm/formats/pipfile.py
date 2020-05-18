@@ -53,3 +53,7 @@ def convert(project, filename):
         for k, req in data.get("dev-packages", {}).items()
     }
     return result
+
+
+def export(project, candidates, options):
+    raise NotImplementedError()

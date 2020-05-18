@@ -13,6 +13,12 @@ python_requires = ">=3.5"
 version = { from = "my_package/__init__.py" }
 readme = "README.md"
 
+[[tool.pdm.source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "testpypi"
+
 [tool.pdm.dependencies]
+flask = "*"
 
 [tool.pdm.dev-dependencies]
