@@ -5,7 +5,7 @@ The following examples are run on Ubuntu 18.04, a few changes must be done if yo
 
 ## Initialize a project
 
-```bash
+```console
 $ mkdir pdm-test && cd pdm-test
 $ pdm init
 ```
@@ -32,7 +32,7 @@ For details of the meaning of each field in `pyproject.toml`, please refer to [P
 
 ## Add dependencies
 
-```bash
+```console
 $ pdm add requests
 $ pdm add -d pytest
 ```
@@ -62,12 +62,12 @@ for the dependency):
 
 To update all dependencies in the lock file:
 
-```bash
+```console
 $ pdm update
 ```
 
 To update the specified package(s):
-```bash
+```console
 $ pdm update requests
 ```
 ### About update strategy
@@ -82,7 +82,7 @@ and keep other dependencies as they are.
 
 To remove existing dependencies from project file and the library directory:
 
-```bash
+```console
 $ pdm remove requests
 ```
 
@@ -98,7 +98,7 @@ Besides, `pdm sync` can also remove unneeded packages if `--clean` option is giv
 
 Similar to `pip list`, you can list all packages installed in the packages directory:
 
-```bash
+```console
 $ pdm list
 ```
 Or show a dependency graph by:
@@ -120,7 +120,7 @@ bump2version 1.0.0
 ## Set PyPI index URL
 
 You can specify a PyPI mirror URL by following commands:
-```bash
+```console
 $ pdm config set pypi.url https://testpypi.org/simple
 ```
 By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback

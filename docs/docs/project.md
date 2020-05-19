@@ -36,7 +36,7 @@ So, make sure you write `python_requires` properly if you don't want any outdate
 
 ## Build distribution artifacts
 
-```bash
+```console
 $ pdm build
 - Building sdist...
 - Built pdm-test-0.0.0.tar.gz
@@ -47,7 +47,7 @@ The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/t
 
 ## Show the current Python environment
 
-```bash
+```console
 $ pdm info
 Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
 Project Root:       D:/Workspace/pdm
@@ -71,19 +71,19 @@ $ pdm info --env
 ## Configrate the project
 
 Show the configurations:
-```bash
+```console
 $ pdm config
 ```
 Get one single configuration:
-```bash
+```console
 $ pdm config get pypi.url
 ```
 Change a configuration value and store in home configuration:
-```bash
+```console
 $ pdm config set pypi.url "https://testpypi.org/simple"
 ```
 Change a configuration value and store in `.pdm.toml`:
-```bash
+```console
 $ pdm config set --local pypi.url "https://testpypi.org/simple"
 ```
 
@@ -135,6 +135,15 @@ PDM provides `import` command so that you don't have to initialize the project m
 
 Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import
 if your PDM project has not been initialized yet.
+
+## Export locked packeges to alternative formats
+
+You can also export `pdm.lock` to other formats, to ease the CI flow or image building process. Currently,
+only `requirements.txt` format is supported:
+
+```console
+$ pdm export -o requirements.txt
+```
 
 ## Configurations
 

@@ -26,7 +26,7 @@ PDM requires Python 3.7+ to be installed. It works on multiple platforms includi
 To avoid messing up with the system Python environemnt, the most recommended way to install PDM
 is via [pipx](https://pypi.org/project/pipx):
 
-```bash
+```console
 $ pipx install pdm
 ```
 
@@ -34,7 +34,7 @@ $ pipx install pdm
 
 Install PDM into user site with `pip`:
 
-```bash
+```console
 $ pip install --user pdm
 ```
 
