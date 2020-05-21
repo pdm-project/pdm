@@ -36,12 +36,19 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache packages
+      - name: Set PY
+        run: echo "::set-env name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
+      - name: Cache PIP
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PY }}
+      - name: Cache PEP 582 packages
         uses: actions/cache@v1
         with:
           path: __pypackages__
           # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ matrix.os }}-packages-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
+          key: ${{ runner.os }}-packages-${{ env.PY }}-${{ hashFiles('pdm.lock') }}
       - name: Install editable PDM
         run: |
           pip install wheel
