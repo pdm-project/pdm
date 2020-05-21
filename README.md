@@ -4,6 +4,7 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![Docker Build Status](https://img.shields.io/docker/build/frostming/pdm)](https://hub.docker.com/repository/docker/frostming/pdm)
 
 [![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
 
@@ -56,6 +57,12 @@ $ pip install --user pdm
 ## Usage
 
 `python -m pdm --help` should be a good guidance.
+
+## Docker image
+
+```console
+$ docker pull frostming/pdm
+```
 
 ## FAQ
 
