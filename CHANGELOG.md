@@ -1,3 +1,15 @@
+Release v0.8.4 (2020-05-21)
+---------------------------
+
+### Features & Improvements
+
+- Add a new command `export` to export to alternative formats. [#117](https://github.com/frostming/pdm/issues/117)
+
+### Miscellany
+
+- Add Dockerfile and pushed to Docker Hub. [#122](https://github.com/frostming/pdm/issues/122)
+
+
 Release v0.8.3 (2020-05-15)
 ---------------------------
 
