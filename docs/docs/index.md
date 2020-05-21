@@ -38,6 +38,18 @@ Install PDM into user site with `pip`:
 $ pip install --user pdm
 ```
 
+### Use the docker image
+
+PDM also provides a docker image to ease your deployment flow, to use it, write a Dockerfile with following content:
+```Dockerfile
+FROM frostming/pdm
+
+COPY . /app
+
+# -- Replace with the correct path to your app's main executable
+CMD ["pdm", "run", "python", "main.py"]
+```
+
 ## Use with IDE
 
 Now there are not built-in support or plugins for PEP 582 in most IDEs, you have to configure your tools manually.
