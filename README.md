@@ -18,6 +18,20 @@ with `Pipenv` or `Poetry` and don't want to introduce another package manager,
 just stick to it. But if you are missing something that is not present in those tools,
 you can probably find some goodness in `pdm`.
 
+PEP 582 proposes a project structure as below:
+
+```
+foo
+    __pypackages__
+        3.8
+            lib
+                bottle
+    myscript.py
+```
+
+There is a `__pypackages__` directory in the project root to hold all dependent libraries, just like what `npm` does.
+Read more about the specification [here](https://www.python.org/dev/peps/pep-0582/#specification).
+
 ## Highlights of features
 
 - PEP 582 local package installer and runner, no virtualenv involved at all.
