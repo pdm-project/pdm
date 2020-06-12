@@ -31,6 +31,7 @@ from pdm.utils import (
     get_python_version,
     get_sys_config_paths,
     get_venv_python,
+    populate_link,
     temp_environ,
 )
 
@@ -272,7 +273,6 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        from pip._internal.utils.temp_dir import global_tempdir_manager
         from pdm.builders import EditableBuilder
         from pdm.builders import WheelBuilder
 
@@ -281,9 +281,9 @@ class Environment:
             if allow_all:
                 with allow_all_wheels():
                     # temporarily allow all wheels to get a link.
-                    ireq.populate_link(finder, False, bool(hashes))
+                    populate_link(finder, ireq, False)
             else:
-                ireq.populate_link(finder, False, bool(hashes))
+                populate_link(finder, ireq, False)
             if not ireq.editable and not ireq.req.name:
                 ireq.source_dir = kwargs["build_dir"]
             else:
@@ -295,23 +295,22 @@ class Environment:
                 download_dir = kwargs["wheel_download_dir"]
                 only_download = True
             if hashes:
-                ireq.options["hashes"] = convert_hashes(hashes)
+                ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
-                with global_tempdir_manager():
-                    downloader = shims.Downloader(finder.session, "off")
-                    downloaded = shims.unpack_url(
-                        ireq.link,
-                        ireq.source_dir,
-                        downloader,
-                        download_dir,
-                        ireq.hashes(False),
-                    )
-                    # Preserve the downloaded file so that it won't be cleared.
-                    if downloaded and only_download:
-                        try:
-                            shutil.copy(downloaded, download_dir)
-                        except shutil.SameFileError:
-                            pass
+                downloader = shims.Downloader(finder.session, "off")
+                downloaded = shims.unpack_url(
+                    ireq.link,
+                    ireq.source_dir,
+                    downloader,
+                    download_dir,
+                    ireq.hashes(False),
+                )
+                # Preserve the downloaded file so that it won't be cleared.
+                if downloaded and only_download:
+                    try:
+                        shutil.copy(downloaded.path, download_dir)
+                    except shutil.SameFileError:
+                        pass
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (self.project.cache("wheels") / ireq.link.filename).as_posix()

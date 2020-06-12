@@ -19,7 +19,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
 from packaging.version import parse as parse_version
-from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
+from pip_shims.shims import (
+    InstallCommand,
+    InstallRequirement,
+    PackageFinder,
+    TargetPython,
+    url_to_path,
+)
 
 from pdm._types import Source
 
@@ -506,3 +512,13 @@ def get_platform():
 def highest_version(versions: List[str]) -> str:
     """Return the highest version of a given list."""
     return max(versions, key=parse_version)
+
+
+def populate_link(
+    finder: PackageFinder, ireq: InstallRequirement, upgrade: bool = False
+):
+    """Populate ireq's link attribute"""
+    if ireq.link:
+        return
+    link = finder.find_requirement(ireq, upgrade)
+    ireq.link = link

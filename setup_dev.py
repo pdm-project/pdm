@@ -26,7 +26,7 @@ def main():
 
     print("Installing base requirements...", flush=True)
     subprocess.check_call(
-        [venv_python.as_posix(), "-m", "pip", "install", "-U", "pip<20.1", "pdm"]
+        [venv_python.as_posix(), "-m", "pip", "install", "-U", "pip", "pdm"]
     )
 
     print("Setup project for development...", flush=True)

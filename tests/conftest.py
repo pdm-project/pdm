@@ -243,6 +243,14 @@ def get_local_finder(*args, **kwargs):
     return finder
 
 
+@pytest.fixture(autouse=True)
+def pip_global_tempdir_manager():
+    from pip._internal.utils.temp_dir import global_tempdir_manager
+
+    with global_tempdir_manager():
+        yield
+
+
 @pytest.fixture()
 def project_no_init(tmp_path, mocker):
     p = TestProject(tmp_path.as_posix())

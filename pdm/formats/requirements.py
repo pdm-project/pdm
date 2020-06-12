@@ -55,8 +55,13 @@ def requirement_from_ireq(ireq):
 
 
 def parse_requirement_file(filename):
+    from pip._internal.req.constructors import install_req_from_parsed_requirement
+
     finder = get_finder([])
-    ireqs = list(parse_requirements(filename, finder.session, finder))
+    ireqs = [
+        install_req_from_parsed_requirement(pr)
+        for pr in parse_requirements(filename, finder.session, finder)
+    ]
     return ireqs, finder
 
 
