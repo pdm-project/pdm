@@ -38,7 +38,7 @@ class Command(BaseCommand):
         if options.default:
             # Don't include self candidate
             temp = project.get_locked_candidates()
-            temp.pop(project.meta.name)
+            temp.pop(project.meta.name, None)
             candidates.extend(temp.values())
         if options.dev:
             candidates.extend(project.get_locked_candidates("dev").values())
