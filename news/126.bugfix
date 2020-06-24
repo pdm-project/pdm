@@ -1,1 +1,0 @@
-Fix a bug that `pdm export` fails when the project doesn't have `name` property.

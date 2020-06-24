@@ -1,3 +1,15 @@
+Release v0.8.5 (2020-06-24)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that `pdm export` fails when the project doesn't have `name` property. [#126](https://github.com/frostming/pdm/issues/126)
+
+### Dependencies
+
+- Upgrade dependency `pip` to `20.1`. [#125](https://github.com/frostming/pdm/issues/125)
+
+
 Release v0.8.4 (2020-05-21)
 ---------------------------
 
