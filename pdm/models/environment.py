@@ -248,6 +248,8 @@ class Environment:
         :param sources: a list of sources the finder should search in.
         :param ignore_requires_python: whether to ignore the python version constraint.
         """
+        if sources is None:
+            sources = self.project.sources
         sources = sources or []
         python_version = get_python_version(self.python_executable)[:2]
         finder = get_finder(
