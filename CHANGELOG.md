@@ -1,3 +1,11 @@
+Release v0.8.6 (2020-07-09)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that extra sources are not respected when fetching distributions. [#127](https://github.com/frostming/pdm/issues/127)
+
+
 Release v0.8.5 (2020-06-24)
 ---------------------------
 

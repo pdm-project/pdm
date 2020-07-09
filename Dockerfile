@@ -11,7 +11,7 @@ WORKDIR /app
 
 ONBUILD COPY pyproject.toml pyproject.toml
 ONBUILD COPY pdm.lock pdm.lock
-ONBUILD RUN pdm sync -d
+ONBUILD RUN pdm sync
 
 CMD ["pdm"]
 
