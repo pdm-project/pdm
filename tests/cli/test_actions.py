@@ -368,7 +368,8 @@ def test_list_dependency_graph(capsys):
     project = Project()
     actions.do_list(project, True)
     content, _ = capsys.readouterr()
-    assert "halo 0.0.29 [ required: <1.0.0,>=0.0.28 ]" in content
+    assert "[ required: <1.0.0,>=0.0.28 ]" in content
+    assert "halo" in content
 
 
 def test_list_dependency_graph_with_circular(project, capsys, repository, working_set):

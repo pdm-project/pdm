@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
 
-from pdm.models.markers import PySpecSet, join_metaset
-from pdm.models.requirements import strip_extras
 from resolvelib.resolvers import Criterion, Resolution
 
+from pdm.models.markers import PySpecSet, join_metaset
+from pdm.models.requirements import strip_extras
+
 if TYPE_CHECKING:
-    from resolvelib.resolvers import Result, Resolver
+    from resolvelib.resolvers import Resolver, Result
+
     from pdm.models.candidates import Candidate
     from pdm.models.markers import Marker
     from pdm.models.requirements import Requirement

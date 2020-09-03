@@ -1,11 +1,12 @@
 from typing import Dict, Iterable, List, Optional, Union
 
+from resolvelib import AbstractProvider
+from resolvelib.resolvers import RequirementInformation
+
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
-from resolvelib import AbstractProvider
-from resolvelib.resolvers import RequirementInformation
 
 
 class BaseProvider(AbstractProvider):
@@ -119,14 +120,14 @@ class ReusePinProvider(BaseProvider):
 class EagerUpdateProvider(ReusePinProvider):
     """A specialized provider to handle an "eager" upgrade strategy.
 
-        An eager upgrade tries to upgrade not only packages specified, but also
-        their dependencies (recursively). This contrasts to the "only-if-needed"
-        default, which only promises to upgrade the specified package, and
-        prevents touching anything else if at all possible.
+    An eager upgrade tries to upgrade not only packages specified, but also
+    their dependencies (recursively). This contrasts to the "only-if-needed"
+    default, which only promises to upgrade the specified package, and
+    prevents touching anything else if at all possible.
 
-        The provider is implemented as to keep track of all dependencies of the
-        specified packages to upgrade, and free their pins when it has a chance.
-        """
+    The provider is implemented as to keep track of all dependencies of the
+    specified packages to upgrade, and free their pins when it has a chance.
+    """
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         # If this is a tracking package, tell the resolver out of using the

@@ -7,6 +7,7 @@ from typing import Optional, Type
 
 import click
 import pkg_resources
+from resolvelib import Resolver
 
 from pdm import __version__
 from pdm.cli.commands.base import BaseCommand
@@ -17,14 +18,12 @@ from pdm.iostream import stream
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
-from resolvelib import Resolver
 
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
 
 class Core:
-    """A high level object that manages all classes and configurations
-    """
+    """A high level object that manages all classes and configurations"""
 
     def __init__(self):
         self.version = __version__

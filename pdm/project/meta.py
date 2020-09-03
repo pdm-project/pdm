@@ -42,7 +42,7 @@ class PackageMeta:
     def __init__(self, project: Project) -> None:
         self.project = project
 
-    name = MetaField("name")
+    name: str = MetaField("name")
 
     def _get_version(self, value):
         if isinstance(value, str):
@@ -54,9 +54,9 @@ class PackageMeta:
             )[0]
         return version
 
-    version = MetaField("version", _get_version)
-    homepage = MetaField("homepage")
-    license = MetaField("license")
+    version: str = MetaField("version", _get_version)
+    homepage: str = MetaField("homepage")
+    license: str = MetaField("license")
 
     def _get_name(self, value):
         m = _NAME_EMAIL_RE.match(value)
@@ -66,17 +66,17 @@ class PackageMeta:
         m = _NAME_EMAIL_RE.match(value)
         return m.group(2) if m else None
 
-    author = MetaField("author", _get_name)
-    author_email = MetaField("author", _get_email)
-    maintainer = MetaField("maintainer", _get_name)
-    maintainer_email = MetaField("maintainer", _get_email)
-    classifiers = MetaField("classifiers")
-    description = MetaField("description")
-    keywords = MetaField("keywords")
-    project_urls = MetaField("project_urls")
-    includes = MetaField("includes")
-    excludes = MetaField("excludes")
-    build = MetaField("build")
+    author: str = MetaField("author", _get_name)
+    author_email: str = MetaField("author", _get_email)
+    maintainer: str = MetaField("maintainer", _get_name)
+    maintainer_email: str = MetaField("maintainer", _get_email)
+    classifiers: List[str] = MetaField("classifiers")
+    description: str = MetaField("description")
+    keywords: str = MetaField("keywords")
+    project_urls: Dict[str, str] = MetaField("project_urls")
+    includes: List[str] = MetaField("includes")
+    excludes: List[str] = MetaField("excludes")
+    build: str = MetaField("build")
 
     @property
     def project_name(self) -> str:
@@ -87,9 +87,9 @@ class PackageMeta:
             return "text/markdown"
         return None
 
-    readme = MetaField("readme")
-    long_description_content_type = MetaField("readme", _determine_content_type)
-    _extras = MetaField("extras")
+    readme: str = MetaField("readme")
+    long_description_content_type: str = MetaField("readme", _determine_content_type)
+    _extras: List[str] = MetaField("extras")
 
     @property
     def install_requires(self) -> List[str]:
@@ -103,6 +103,7 @@ class PackageMeta:
 
     @property
     def extras_require(self) -> Dict[str, List[str]]:
+        """For setup.py extras_require field"""
         if not self._extras:
             return {}
         return {
@@ -112,6 +113,7 @@ class PackageMeta:
 
     @property
     def requires_extra(self) -> Dict[str, List[str]]:
+        """For PKG-INFO metadata"""
         if not self._extras:
             return {}
         result = {}
@@ -140,8 +142,7 @@ class PackageMeta:
         return result
 
     def convert_package_paths(self) -> Dict[str, Union[List, Dict]]:
-        """Return a {package_dir, packages, package_data, exclude_package_data} dict.
-        """
+        """Return a {package_dir, packages, package_data, exclude_package_data} dict."""
         package_dir = {}
         packages = []
         py_modules = []

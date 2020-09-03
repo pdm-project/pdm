@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import cfonts
 import tomlkit
 from packaging.specifiers import SpecifierSet
+from resolvelib.structs import DirectedGraph
 
 from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
@@ -14,11 +15,11 @@ from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
-from resolvelib.structs import DirectedGraph
 
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Dict, Iterable, Tuple
+
     from pdm.models.candidates import Candidate
 
 

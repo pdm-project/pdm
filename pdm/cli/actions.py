@@ -267,7 +267,8 @@ def do_remove(
     for name in packages:
         matched_name = next(
             filter(
-                lambda k: safe_name(k).lower() == safe_name(name).lower(), deps.keys(),
+                lambda k: safe_name(k).lower() == safe_name(name).lower(),
+                deps.keys(),
             ),
             None,
         )

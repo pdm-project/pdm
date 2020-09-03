@@ -1,4 +1,5 @@
 import pytest
+from resolvelib.resolvers import ResolutionImpossible, Resolver
 
 from pdm.iostream import stream
 from pdm.models.requirements import parse_requirement
@@ -6,7 +7,6 @@ from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve
 from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
 from pdm.resolver.reporters import SpinnerReporter
-from resolvelib.resolvers import ResolutionImpossible, Resolver
 from tests import FIXTURES
 
 

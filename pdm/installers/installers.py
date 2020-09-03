@@ -16,6 +16,7 @@ from pdm.utils import cd
 if TYPE_CHECKING:
     from distlib.wheel import Wheel
     from pip._vendor.pkg_resources import Distribution
+
     from pdm.models.candidates import Candidate
     from pdm.models.environment import Environment
 
@@ -36,23 +37,24 @@ def _install_wheel(wheel, paths, maker, **kwargs):
     # TODO: This is a patched version of `wheel.install()` and to be deleted after
     # fixed in upstream.
     import codecs
-    import os
-    import sys
-    import posixpath
-    import tempfile
-    import shutil
     import json
+    import os
+    import posixpath
+    import shutil
+    import sys
+    import tempfile
     from zipfile import ZipFile
+
     from distlib.wheel import (
-        message_from_file,
-        FileOperator,
         CSVReader,
-        text_type,
         DistlibException,
+        FileOperator,
+        InstalledDistribution,
         convert_path,
         logger,
-        InstalledDistribution,
+        message_from_file,
         read_exports,
+        text_type,
     )
 
     METADATA_FILENAME = "pydist.json"

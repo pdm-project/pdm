@@ -36,8 +36,8 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from pdm.project import Project
     from pdm._types import Source
+    from pdm.project import Project
 
 
 class WorkingSet(collections.abc.Mapping):
@@ -275,8 +275,7 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        from pdm.builders import EditableBuilder
-        from pdm.builders import WheelBuilder
+        from pdm.builders import EditableBuilder, WheelBuilder
 
         kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
@@ -351,8 +350,8 @@ class Environment:
     def ensure_essential_packages(self) -> None:
         """Ensure wheel and setuptools are available and install if not"""
         from pdm.installers import Installer
-        from pdm.models.requirements import parse_requirement
         from pdm.models.candidates import Candidate
+        from pdm.models.requirements import parse_requirement
 
         if self._essential_installed:
             return

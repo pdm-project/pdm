@@ -1,15 +1,15 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: stable
+    rev: 20.8b1
     hooks:
       - id: black
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.8
+    rev: 3.8.3
     hooks:
       - id: flake8
 
   - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v4.3.21
+    rev: v5.4.2
     hooks:
       - id: isort
         exclude: ^.*/?setup\.py$
