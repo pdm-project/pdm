@@ -56,7 +56,11 @@ def get_abi_tag(python_version):
     (CPython 2, PyPy).
     A replacement for pip._internal.models.pep425tags:get_abi_tag()
     """
-    from wheel.pep425tags import get_config_var, get_abbr_impl, get_flag
+    try:
+        from wheel.pep425tags import get_config_var, get_abbr_impl, get_flag
+    except ModuleNotFoundError:
+        from wheel.bdist_wheel import get_config_var, get_flag
+        from packaging.tags import interpreter_name as get_abbr_impl
 
     soabi = get_config_var("SOABI")
     impl = get_abbr_impl()
@@ -521,4 +525,7 @@ def populate_link(
     if ireq.link:
         return
     link = finder.find_requirement(ireq, upgrade)
+    if not link:
+        return
+    link = getattr(link, "link", link)
     ireq.link = link
