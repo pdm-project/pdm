@@ -30,13 +30,13 @@ class Command(BaseCommand):
             "Please enter the Python interpreter to use", default="", show_default=False
         )
         actions.do_use(project, python)
-        name = click.prompt(f"Project name", default=project.root.name)
+        name = click.prompt("Project name", default=project.root.name)
         version = click.prompt("Project version", default="0.0.0")
         license = click.prompt("License(SPDX name)", default="MIT")
 
         git_user, git_email = get_user_email_from_git()
-        author = click.prompt(f"Author name", default=git_user)
-        email = click.prompt(f"Author email", default=git_email)
+        author = click.prompt("Author name", default=git_user)
+        email = click.prompt("Author email", default=git_email)
         python_version = ".".join(
             map(str, get_python_version(project.environment.python_executable)[:2])
         )

@@ -59,7 +59,7 @@ def test_parse_metadata_with_extras(project):
 
 def test_parse_remote_link_metadata(project):
     req = parse_requirement(
-        f"http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
+        "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, project.environment)
     assert candidate.ireq.is_wheel
@@ -73,7 +73,7 @@ def test_parse_remote_link_metadata(project):
 
 def test_extras_warning(project, recwarn):
     req = parse_requirement(
-        f"demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
+        "demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, project.environment)
     assert candidate.ireq.is_wheel
@@ -89,7 +89,7 @@ def test_extras_warning(project, recwarn):
 
 def test_parse_abnormal_specifiers(project):
     req = parse_requirement(
-        f"http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"
+        "http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"
     )
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata()
