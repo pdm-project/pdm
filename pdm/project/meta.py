@@ -142,8 +142,7 @@ class PackageMeta:
         return result
 
     def convert_package_paths(self) -> Dict[str, Union[List, Dict]]:
-        """Return a {package_dir, packages, package_data, exclude_package_data} dict.
-        """
+        """Return a {package_dir, packages, package_data, exclude_package_data} dict."""
         package_dir = {}
         packages = []
         py_modules = []

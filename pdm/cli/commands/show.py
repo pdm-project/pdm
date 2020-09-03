@@ -23,7 +23,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            "package", type=normalize_package, help="Specify the package name",
+            "package",
+            type=normalize_package,
+            help="Specify the package name",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

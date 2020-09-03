@@ -109,7 +109,8 @@ class BaseRepository:
         return deps, requires_python, summary
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
-        """Get hashes of all possible installable candidates of a given package version.
+        """Get hashes of all possible installable candidates
+        of a given package version.
         """
         if (
             candidate.req.is_vcs

@@ -30,7 +30,7 @@ from pip_shims.shims import (
 from pdm._types import Source
 
 if TYPE_CHECKING:
-    from pip_shims.compat import TCommand, TShimmedFunc, Values, TSession, TFinder
+    from pip_shims.compat import TCommand, TFinder, TSession, TShimmedFunc, Values
 
 try:
     from functools import cached_property
@@ -57,10 +57,10 @@ def get_abi_tag(python_version):
     A replacement for pip._internal.models.pep425tags:get_abi_tag()
     """
     try:
-        from wheel.pep425tags import get_config_var, get_abbr_impl, get_flag
+        from wheel.pep425tags import get_abbr_impl, get_config_var, get_flag
     except ModuleNotFoundError:
-        from wheel.bdist_wheel import get_config_var, get_flag
         from packaging.tags import interpreter_name as get_abbr_impl
+        from wheel.bdist_wheel import get_config_var, get_flag
 
     soabi = get_config_var("SOABI")
     impl = get_abbr_impl()

@@ -31,9 +31,10 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from tomlkit.container import Container
-    from pdm.resolver.providers import BaseProvider
     from resolvelib.reporters import BaseReporter
+    from tomlkit.container import Container
+
+    from pdm.resolver.providers import BaseProvider
 
 
 class Project:
@@ -223,7 +224,9 @@ class Project:
         return cls(sources, self.environment)
 
     def get_provider(
-        self, strategy: str = "all", tracked_names: Optional[Iterable[str]] = None,
+        self,
+        strategy: str = "all",
+        tracked_names: Optional[Iterable[str]] = None,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
@@ -233,8 +236,8 @@ class Project:
         """
         from pdm.resolver.providers import (
             BaseProvider,
-            ReusePinProvider,
             EagerUpdateProvider,
+            ReusePinProvider,
         )
 
         repository = self.get_repository(cls=self.core.repository_class)

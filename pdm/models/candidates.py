@@ -17,6 +17,7 @@ from pdm.utils import cached_property
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
+
     from pdm.models.environment import Environment
 
 vcs = shims.VcsSupport()

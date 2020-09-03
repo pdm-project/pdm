@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import halo
+from resolvelib import BaseReporter
 
 from pdm.iostream import stream
-from resolvelib import BaseReporter
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import State
+
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
 
@@ -28,8 +29,7 @@ class SpinnerReporter(BaseReporter):
         pass
 
     def starting(self) -> None:
-        """Called before the resolution actually starts.
-        """
+        """Called before the resolution actually starts."""
         log_title("Start resolving requirements")
         for req in self.requirements:
             stream.logger.info("\t" + req.as_line())
@@ -43,8 +43,7 @@ class SpinnerReporter(BaseReporter):
         log_title("Ending round {}".format(index))
 
     def ending(self, state: State) -> None:
-        """Called before the resolution ends successfully.
-        """
+        """Called before the resolution ends successfully."""
         self.spinner.stop_and_persist(text="Finish resolving")
 
         log_title("Resolution Result")
@@ -68,13 +67,11 @@ class SpinnerReporter(BaseReporter):
         stream.logger.info(f"\tAdding requirement {requirement.as_line()}{parent_line}")
 
     def backtracking(self, candidate: Candidate) -> None:
-        """Called when rejecting a candidate during backtracking.
-        """
+        """Called when rejecting a candidate during backtracking."""
         stream.logger.info(f"Candidate rejected: {candidate.name}-{candidate.version}")
         stream.logger.info("Backtracking...")
 
     def pinning(self, candidate: Candidate) -> None:
-        """Called when adding a candidate to the potential solution.
-        """
+        """Called when adding a candidate to the potential solution."""
         self.spinner.text = "Resolving: " + candidate.format()
         stream.logger.info(f"\tNew pin: {candidate.name}-{candidate.version}")
