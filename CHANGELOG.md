@@ -1,3 +1,11 @@
+Release v0.8.7 (2020-09-04)
+---------------------------
+
+### Bug Fixes
+
+- Fix a compatibility issue with `wheel==0.35`. [#135](https://github.com/frostming/pdm/issues/135)
+
+
 Release v0.8.6 (2020-07-09)
 ---------------------------
 
