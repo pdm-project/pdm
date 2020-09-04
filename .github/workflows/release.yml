@@ -29,6 +29,8 @@ jobs:
       - name: Build artifacts
         run: |
           __pypackages__/3.7/bin/pdm build -v
+        env:
+          PYTHONPATH: '__pypackages__/3.7/lib'
       - name: Test Build
         run: |
           python3 -m venv fresh_env
