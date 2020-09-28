@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import sys
-from functools import wraps
+import xmlrpc.client as xmlrpc_client
+from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
-from pdm._types import CandidateInfo, Source
-from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
+from pdm._types import CandidateInfo, SearchResult, Source
+from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError, PackageIndexError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -13,7 +14,8 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import allow_all_wheels
+from pdm.models.xmlrpc import PyPIXmlrpcTransport
+from pdm.utils import allow_all_wheels, highest_version
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -77,39 +79,13 @@ class BaseRepository:
             requirements.append(self_req)
         return requirements, PySpecSet(requires_python), summary
 
-    def find_matches(
+    def find_candidates(
         self,
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
         allow_all: bool = False,
-    ) -> List[Candidate]:
-        """Find matching candidates of a requirement.
-
-        :param requirement: the given requirement.
-        :param requires_python: the Python version constraint.
-        :param allow_prereleases: whether allow prerelease versions, or let us determine
-            if not given. If no non-prerelease is available, prereleases will be used.
-        :param allow_all: whether allow all wheels.
-        :returns: a list of candidates.
-        """
-        if requirement.is_named:
-            return self._find_named_matches(
-                requirement, requires_python, allow_prereleases, allow_all
-            )
-        else:
-            # Fetch metadata so that resolver can know the candidate's name.
-            can = Candidate(requirement, self.environment)
-            can.get_metadata()
-            return [can]
-
-    def _find_named_matches(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
-    ) -> List[Candidate]:
+    ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
         """
@@ -133,7 +109,8 @@ class BaseRepository:
         return deps, requires_python, summary
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
-        """Get hashes of all possible installable candidates of a given package version.
+        """Get hashes of all possible installable candidates
+        of a given package version.
         """
         if (
             candidate.req.is_vcs
@@ -145,7 +122,7 @@ class BaseRepository:
             return candidate.hashes
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
-        matching_candidates = self.find_matches(req, allow_all=True)
+        matching_candidates = self.find_candidates(req, allow_all=True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
             return {
@@ -156,6 +133,14 @@ class BaseRepository:
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
         called one by one.
+        """
+        raise NotImplementedError
+
+    def search(self, query: str) -> SearchResult:
+        """Search package by name or summary.
+
+        :param query: query string
+        :returns: search result, a dictionary of name: package metadata
         """
         raise NotImplementedError
 
@@ -205,13 +190,14 @@ class PyPIRepository(BaseRepository):
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata
 
-    def _find_named_matches(
+    @lru_cache()
+    def find_candidates(
         self,
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
         allow_prereleases: Optional[bool] = None,
         allow_all: bool = False,
-    ) -> List[Candidate]:
+    ) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
@@ -231,6 +217,7 @@ class PyPIRepository(BaseRepository):
                 and (allow_all or requires_python.is_subset(c.requires_python))
             ),
             key=lambda c: (c.version, c.link.is_wheel),
+            reverse=True,
         )
 
         if not sorted_cans and allow_prereleases is None:
@@ -243,5 +230,37 @@ class PyPIRepository(BaseRepository):
                     and (allow_all or requires_python.is_subset(c.requires_python))
                 ),
                 key=lambda c: c.version,
+                reverse=True,
             )
         return sorted_cans
+
+    def search(self, query: str) -> SearchResult:
+        pypi_simple = self.sources[0]["url"]
+        if not pypi_simple.endswith("/simple"):
+            raise PackageIndexError(f"{pypi_simple} doesn't support '/pypi' endpoint.")
+        pypi_url = pypi_simple[:-6] + "pypi"
+        with self.environment.get_finder() as finder:
+            transport = PyPIXmlrpcTransport(pypi_url, finder.session)
+            pypi = xmlrpc_client.ServerProxy(pypi_url, transport)
+            hits = pypi.search({"name": query, "summary": query}, "or")
+
+        packages = {}
+        for hit in hits:
+            name = hit["name"]
+            summary = hit["summary"]
+            version = hit["version"]
+
+            if name not in packages.keys():
+                packages[name] = {
+                    "name": name,
+                    "summary": summary,
+                    "versions": [version],
+                }
+            else:
+                packages[name]["versions"].append(version)
+
+                # if this is the highest version, replace summary and score
+                if version == highest_version(packages[name]["versions"]):
+                    packages[name]["summary"] = summary
+
+        return list(packages.values())

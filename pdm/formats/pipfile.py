@@ -23,7 +23,7 @@ def convert_pipfile_requirement(req):
 
     if markers:
         marker = functools.reduce(operator.and_, markers)
-        req["marker"] = str(marker)
+        req["marker"] = str(marker).replace('"', "'")
     return req
 
 
@@ -53,3 +53,7 @@ def convert(project, filename):
         for k, req in data.get("dev-packages", {}).items()
     }
     return result
+
+
+def export(project, candidates, options):
+    raise NotImplementedError()

@@ -25,6 +25,10 @@ class CorruptedCacheError(PdmException):
     pass
 
 
+class PackageIndexError(PdmException):
+    pass
+
+
 class CandidateInfoNotFound(PdmException):
     def __init__(self, candidate):
         message = (
@@ -55,37 +59,6 @@ class InstallationError(PdmException):
 class NoConfigError(PdmException, KeyError):
     def __init__(self, key):
         super().__init__("No such config item: {}".format(key))
-
-
-class ResolutionError(PdmException):
-    pass
-
-
-class ResolutionImpossible(ResolutionError):
-    def __init__(self, requirements):
-        super().__init__("Resolution impossible")
-        self.requirements = requirements
-
-
-class ResolutionTooDeep(ResolutionError):
-    def __init__(self, round_count):
-        super().__init__(round_count)
-        self.round_count = round_count
-
-
-class NoVersionsAvailable(ResolutionError):
-    def __init__(self, requirement, parent):
-        super().__init__(
-            "No version available for {}.".format(stream.green(requirement.as_line()))
-        )
-        self.requirement = requirement
-        self.parent = parent
-
-
-class RequirementsConflicted(ResolutionError):
-    def __init__(self, requirements):
-        super(RequirementsConflicted, self).__init__("Requirements conflicted")
-        self.requirements = requirements
 
 
 class NoPythonVersion(PdmException):

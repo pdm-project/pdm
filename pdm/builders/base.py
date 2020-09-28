@@ -7,7 +7,7 @@ import textwrap
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Iterator, List
 
-from pkg_resources import normalize_path
+from pip._vendor.pkg_resources import normalize_path
 
 from pdm.exceptions import ProjectError
 from pdm.project import Project

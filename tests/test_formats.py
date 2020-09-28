@@ -14,7 +14,7 @@ def test_convert_pipfile(project):
 
     assert result["dependencies"]["requests"] == "*"
     assert result["dependencies"]["pywinusb"]["version"] == "*"
-    assert result["dependencies"]["pywinusb"]["marker"] == 'sys_platform == "win32"'
+    assert result["dependencies"]["pywinusb"]["marker"] == "sys_platform == 'win32'"
 
     assert result["source"][0]["url"] == "https://pypi.python.org/simple"
 
@@ -26,7 +26,7 @@ def test_convert_requirements_file(project):
 
     assert len(result["source"]) == 2
     assert result["dependencies"]["webassets"] == "==2.0"
-    assert result["dependencies"]["whoosh"]["marker"] == 'sys_platform == "win32"'
+    assert result["dependencies"]["whoosh"]["marker"] == "sys_platform == 'win32'"
     assert result["dependencies"]["pip"]["editable"]
     assert result["dependencies"]["pip"]["git"] == "https://github.com/pypa/pip.git"
 
@@ -41,9 +41,9 @@ def test_convert_poetry(project):
     assert result["version"] == "1.0.0"
     assert "Repository" in result["project_urls"]
     assert result["python_requires"] == ">=2.7,<4.0,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-    assert result["dependencies"]["cleo"]["marker"] == 'python_version ~= "2.7"'
+    assert result["dependencies"]["cleo"]["marker"] == "python_version ~= '2.7'"
     assert result["dependencies"]["cachecontrol"]["marker"] == (
-        'python_version >= "3.4" and python_version < "4.0"'
+        "python_version >= '3.4' and python_version < '4.0'"
     )
     assert "psycopg2" not in result["dependencies"]
     assert "psycopg2" in result["pgsql-dependencies"]
@@ -74,7 +74,7 @@ def test_convert_flit(project):
         == "https://flit.readthedocs.io/en/latest/"
     )
     assert result["dependencies"]["requests"] == ">=2.6"
-    assert result["dependencies"]["configparser"]["marker"] == 'python_version == "2.7"'
+    assert result["dependencies"]["configparser"]["marker"] == "python_version == '2.7'"
 
     assert sorted(result["extras"]) == ["doc", "test"]
     assert result["test-dependencies"]["pytest"] == ">=2.7.3"

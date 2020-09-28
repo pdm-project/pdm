@@ -7,6 +7,7 @@ from typing import Optional, Type
 
 import click
 import pkg_resources
+from resolvelib import Resolver
 
 from pdm import __version__
 from pdm.cli.commands.base import BaseCommand
@@ -17,14 +18,12 @@ from pdm.iostream import stream
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
-from pdm.resolver import Resolver
 
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
 
 class Core:
-    """A high level object that manages all classes and configurations
-    """
+    """A high level object that manages all classes and configurations"""
 
     def __init__(self):
         self.version = __version__
@@ -69,6 +68,8 @@ class Core:
 
     def main(self, args=None, prog_name=None, obj=None, **extra):
         """The main entry function"""
+        from pip._internal.utils.temp_dir import global_tempdir_manager
+
         self.init_parser()
         self.load_plugins()
 
@@ -93,7 +94,8 @@ class Core:
             sys.exit(1)
         else:
             try:
-                f(options.project, options)
+                with global_tempdir_manager():
+                    f(options.project, options)
             except Exception:
                 etype, err, traceback = sys.exc_info()
                 if stream.verbosity > stream.NORMAL:

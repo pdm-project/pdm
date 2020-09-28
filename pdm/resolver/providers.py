@@ -1,13 +1,15 @@
 from typing import Dict, Iterable, List, Optional, Union
 
-from pdm.models.candidates import Candidate, identify
+from resolvelib import AbstractProvider
+from resolvelib.resolvers import RequirementInformation
+
+from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver.resolvers import RequirementInformation
 
 
-class BaseProvider:
+class BaseProvider(AbstractProvider):
     def __init__(
         self,
         repository: BaseRepository,
@@ -22,7 +24,7 @@ class BaseProvider:
         self.fetched_dependencies = {}  # type: Dict[str, Dict[str, List[Requirement]]]
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
-        return identify(req)
+        return req.identify()
 
     def get_preference(
         self,
@@ -32,16 +34,39 @@ class BaseProvider:
     ) -> int:
         return len(candidates)
 
-    def find_matches(self, requirement: Requirement) -> List[Candidate]:
-        return self.repository.find_matches(
-            requirement, self.requires_python, self.allow_prereleases
-        )
+    def find_matches(self, requirements: List[Requirement]) -> Iterable[Candidate]:
+        file_req = next((req for req in requirements if not req.is_named), None)
+        if file_req:
+            can = Candidate(file_req, self.repository.environment)
+            can.get_metadata()
+            candidates = [can]
+        else:
+            candidates = self.repository.find_candidates(
+                requirements[0], self.requires_python, self.allow_prereleases
+            )
+        return [
+            can
+            for can in candidates
+            if all(self.is_satisfied_by(r, can) for r in requirements)
+        ]
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
-        if not candidate.version or not requirement.is_named:
-            return True
+        if not requirement.is_named:
+            return not candidate.req.is_named and candidate.req.url == requirement.url
+        if not candidate.version:
+            candidate.get_metadata()
+        if getattr(candidate, "_preferred", False) and not candidate._requires_python:
+            candidate.requires_python = str(
+                self.repository.get_dependencies(candidate)[1]
+            )
+        allow_prereleases = requirement.allow_prereleases
+        if allow_prereleases is None:
+            allow_prereleases = self.allow_prereleases
+        if allow_prereleases is None:
+            # if not specified, should allow what `find_candidates()` returns
+            allow_prereleases = True
         return requirement.specifier.contains(
-            candidate.version
+            candidate.version, allow_prereleases
         ) and self.requires_python.is_subset(candidate.requires_python)
 
     def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
@@ -83,36 +108,28 @@ class ReusePinProvider(BaseProvider):
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
-    def is_satisfied_by(self, requirement, candidate):
-        # If this is a tracking package, tell the resolver out of using the
-        # preferred pin, and into a "normal" candidate selection process.
-        if getattr(candidate, "_preferred", False):
-            return True
-        return super().is_satisfied_by(requirement, candidate)
-
-    def find_matches(self, requirement: Requirement) -> List[Candidate]:
-        result = super().find_matches(requirement)
-        ident = self.identify(requirement)
+    def find_matches(self, requirements: List[Requirement]) -> Iterable[Candidate]:
+        ident = self.identify(requirements[0])
         if ident not in self.tracked_names and ident in self.preferred_pins:
             pin = self.preferred_pins[ident]
             pin._preferred = True
-            result.append(pin)
-        return result
+            yield pin
+        yield from super().find_matches(requirements)
 
 
 class EagerUpdateProvider(ReusePinProvider):
     """A specialized provider to handle an "eager" upgrade strategy.
 
-        An eager upgrade tries to upgrade not only packages specified, but also
-        their dependencies (recursively). This contrasts to the "only-if-needed"
-        default, which only promises to upgrade the specified package, and
-        prevents touching anything else if at all possible.
+    An eager upgrade tries to upgrade not only packages specified, but also
+    their dependencies (recursively). This contrasts to the "only-if-needed"
+    default, which only promises to upgrade the specified package, and
+    prevents touching anything else if at all possible.
 
-        The provider is implemented as to keep track of all dependencies of the
-        specified packages to upgrade, and free their pins when it has a chance.
-        """
+    The provider is implemented as to keep track of all dependencies of the
+    specified packages to upgrade, and free their pins when it has a chance.
+    """
 
-    def is_satisfied_by(self, requirement, candidate):
+    def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         # If this is a tracking package, tell the resolver out of using the
         # preferred pin, and into a "normal" candidate selection process.
         if self.identify(requirement) in self.tracked_names and getattr(
@@ -121,7 +138,7 @@ class EagerUpdateProvider(ReusePinProvider):
             return False
         return super().is_satisfied_by(requirement, candidate)
 
-    def get_dependencies(self, candidate):
+    def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
         # If this package is being tracked for upgrade, remove pins of its
         # dependencies, and start tracking these new packages.
         dependencies = super().get_dependencies(candidate)
@@ -131,7 +148,12 @@ class EagerUpdateProvider(ReusePinProvider):
                 self.tracked_names.add(name)
         return dependencies
 
-    def get_preference(self, resolution, candidates, information):
+    def get_preference(
+        self,
+        resolution: Candidate,
+        candidates: List[Candidate],
+        information: List[RequirementInformation],
+    ) -> int:
         # Resolve tracking packages so we have a chance to unpin them first.
         name = self.identify(candidates[0])
         if name in self.tracked_names:

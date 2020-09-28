@@ -4,7 +4,8 @@ from pdm.project import Project
 
 
 class Option:
-    """A reusable option object which delegates all arguments to parser.add_argument().
+    """A reusable option object which delegates all arguments
+    to parser.add_argument().
     """
 
     def __init__(self, *args, **kwargs):
@@ -77,7 +78,11 @@ sections_group.add_argument(
     default=[],
 )
 sections_group.add_argument(
-    "-d", "--dev", default=False, action="store_true", help="Include dev dependencies",
+    "-d",
+    "--dev",
+    default=False,
+    action="store_true",
+    help="Include dev dependencies",
 )
 sections_group.add_argument(
     "--no-default",
@@ -120,6 +125,7 @@ update_strategy_group.add_argument(
     action="store_const",
     dest="update_strategy",
     const="reuse",
+    default="reuse",
     help="Reuse pinned versions already present in lock file if possible",
 )
 update_strategy_group.add_argument(

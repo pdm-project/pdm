@@ -58,7 +58,9 @@ def _convert_req(req_dict):
             Marker(_convert_python(req_dict.pop("python")).as_marker_string())
         )
     if markers:
-        req_dict["marker"] = str(functools.reduce(operator.and_, markers))
+        req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace(
+            '"', "'"
+        )
     if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:
         req_dict["ref"] = req_dict.pop(
             "rev", req_dict.pop("tag", req_dict.pop("branch", None))
@@ -140,3 +142,7 @@ class PoetryMetaConverter(MetaConverter):
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
         return dict(PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"]))
+
+
+def export(project, candidates, options):
+    raise NotImplementedError()

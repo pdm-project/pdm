@@ -26,7 +26,7 @@ PDM requires Python 3.7+ to be installed. It works on multiple platforms includi
 To avoid messing up with the system Python environemnt, the most recommended way to install PDM
 is via [pipx](https://pypi.org/project/pipx):
 
-```bash
+```console
 $ pipx install pdm
 ```
 
@@ -34,8 +34,20 @@ $ pipx install pdm
 
 Install PDM into user site with `pip`:
 
-```bash
+```console
 $ pip install --user pdm
+```
+
+### Use the docker image
+
+PDM also provides a docker image to ease your deployment flow, to use it, write a Dockerfile with following content:
+```Dockerfile
+FROM frostming/pdm
+
+COPY . /app
+
+# -- Replace with the correct path to your app's main executable
+CMD ["pdm", "run", "python", "main.py"]
 ```
 
 ## Use with IDE

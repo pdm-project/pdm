@@ -5,8 +5,8 @@ This site.py is customized by PDM to drop system site-packages paths under PEP 5
 
 
 def __boot():
-    import sys
     import os
+    import sys
 
     PYTHONPATH = os.environ.get("PYTHONPATH")
     if PYTHONPATH is None or (sys.platform == "win32" and not PYTHONPATH):

@@ -15,6 +15,20 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 `poetry` 用着非常好，并不想引入一个新的包管理器，那么继续使用它们吧；但如果你发现有些东西这些
 工具不支持，那么你很可能可以在 `pdm` 中找到。
 
+PEP 582提出下面这种项目的目录结构：
+
+```
+foo
+    __pypackages__
+        3.8
+            lib
+                bottle
+    myscript.py
+```
+
+项目目录中包含一个`__pypackages__`目录，用来放置所有依赖的库文件，就像`npm`的`node_modules`一样。
+你可以在[这里](https://www.python.org/dev/peps/pep-0582/#specification)阅读更多提案的细节。
+
 ## 主要特性
 
 - PEP 582 本地项目库目录，支持安装与运行命令，完全不需要虚拟环境。

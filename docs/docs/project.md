@@ -36,7 +36,7 @@ So, make sure you write `python_requires` properly if you don't want any outdate
 
 ## Build distribution artifacts
 
-```bash
+```console
 $ pdm build
 - Building sdist...
 - Built pdm-test-0.0.0.tar.gz
@@ -47,7 +47,7 @@ The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/t
 
 ## Show the current Python environment
 
-```bash
+```console
 $ pdm info
 Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
 Project Root:       D:/Workspace/pdm
@@ -71,19 +71,19 @@ $ pdm info --env
 ## Configrate the project
 
 Show the configurations:
-```bash
+```console
 $ pdm config
 ```
 Get one single configuration:
-```bash
+```console
 $ pdm config get pypi.url
 ```
 Change a configuration value and store in home configuration:
-```bash
+```console
 $ pdm config set pypi.url "https://testpypi.org/simple"
 ```
 Change a configuration value and store in `.pdm.toml`:
-```bash
+```console
 $ pdm config set --local pypi.url "https://testpypi.org/simple"
 ```
 
@@ -136,6 +136,15 @@ PDM provides `import` command so that you don't have to initialize the project m
 Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import
 if your PDM project has not been initialized yet.
 
+## Export locked packeges to alternative formats
+
+You can also export `pdm.lock` to other formats, to ease the CI flow or image building process. Currently,
+only `requirements.txt` format is supported:
+
+```console
+$ pdm export -o requirements.txt
+```
+
 ## Configurations
 
 | Config Item | Description | Default Value | Available in Project | Env var |
@@ -148,6 +157,6 @@ if your PDM project has not been initialized yet.
 | `python.use_pyenv` | Use the pyenv interpreter | `True` | Yes | |
 | `pypi.url` | The URL of PyPI mirror | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes | `PDM_PYPI_URL` |
 | `pypi.verify_ssl` | Verify SSL certificate when query PyPI | Read `trusted-hosts` in `pip.conf`, defaults to `True` | Yes | |
-| `pypi.json_api` | Consult PyPI's JSON API for package metadata | `True` | Yes | `PDM_PYPI_JSON_API` |
+| `pypi.json_api` | Consult PyPI's JSON API for package metadata | `False` | Yes | `PDM_PYPI_JSON_API` |
 
 *If the env var is set, the value will take precendence over what is saved in the config file.*

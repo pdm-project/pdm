@@ -6,20 +6,20 @@ from typing import TYPE_CHECKING
 import cfonts
 import tomlkit
 from packaging.specifiers import SpecifierSet
+from resolvelib.structs import DirectedGraph
 
 from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
 from pdm.iostream import stream
-from pdm.models.candidates import identify
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
 from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
-from pdm.resolver.structs import DirectedGraph
 
 if TYPE_CHECKING:
     from pathlib import Path
     from typing import Dict, Iterable, Tuple
+
     from pdm.models.candidates import Candidate
 
 
@@ -149,7 +149,7 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
                 Requirement.from_pkg_requirement(r) for r in dist.requires(extras)
             ]
             for req in requirements:
-                reqs[identify(req)] = req
+                reqs[req.identify()] = req
             version = dist.version
         else:
             version = None

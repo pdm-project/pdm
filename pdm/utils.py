@@ -18,12 +18,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
-from pip_shims.shims import InstallCommand, PackageFinder, TargetPython, url_to_path
+from packaging.version import parse as parse_version
+from pip_shims.shims import (
+    InstallCommand,
+    InstallRequirement,
+    PackageFinder,
+    TargetPython,
+    url_to_path,
+)
 
 from pdm._types import Source
 
 if TYPE_CHECKING:
-    from pip_shims.compat import TCommand, TShimmedFunc, Values, TSession, TFinder
+    from pip_shims.compat import TCommand, TFinder, TSession, TShimmedFunc, Values
 
 try:
     from functools import cached_property
@@ -49,7 +56,11 @@ def get_abi_tag(python_version):
     (CPython 2, PyPy).
     A replacement for pip._internal.models.pep425tags:get_abi_tag()
     """
-    from wheel.pep425tags import get_config_var, get_abbr_impl, get_flag
+    try:
+        from wheel.pep425tags import get_abbr_impl, get_config_var, get_flag
+    except ModuleNotFoundError:
+        from packaging.tags import interpreter_name as get_abbr_impl
+        from wheel.bdist_wheel import get_config_var, get_flag
 
     soabi = get_config_var("SOABI")
     impl = get_abbr_impl()
@@ -500,3 +511,21 @@ def get_platform():
         # pip pull request #3497
         result = "linux_i686"
     return result
+
+
+def highest_version(versions: List[str]) -> str:
+    """Return the highest version of a given list."""
+    return max(versions, key=parse_version)
+
+
+def populate_link(
+    finder: PackageFinder, ireq: InstallRequirement, upgrade: bool = False
+):
+    """Populate ireq's link attribute"""
+    if ireq.link:
+        return
+    link = finder.find_requirement(ireq, upgrade)
+    if not link:
+        return
+    link = getattr(link, "link", link)
+    ireq.link = link

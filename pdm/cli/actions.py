@@ -1,7 +1,7 @@
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence
 
 import click
 import pythonfinder
@@ -20,7 +20,7 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.installers.installers import format_dist
 from pdm.iostream import stream
-from pdm.models.candidates import Candidate, identify
+from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
@@ -32,7 +32,7 @@ def do_lock(
     project: Project,
     strategy: str = "all",
     tracked_names: Optional[Iterable[str]] = None,
-    requirements: Optional[Dict[str, Dict[str, Requirement]]] = None,
+    requirements: Optional[List[Requirement]] = None,
 ) -> Dict[str, Candidate]:
     """Performs the locking process and update lockfile.
 
@@ -45,7 +45,10 @@ def do_lock(
     check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
-    requirements = requirements or project.all_dependencies
+    if not requirements:
+        requirements = [
+            r for deps in project.all_dependencies.values() for r in deps.values()
+        ]
 
     with stream.open_spinner(
         title="Resolving dependencies", spinner="dots"
@@ -123,7 +126,7 @@ def do_add(
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:
-        key = identify(r)
+        key = r.identify()
         r.from_section = section
         tracked_names.add(key)
         requirements[key] = r
@@ -133,7 +136,8 @@ def do_add(
     )
     all_dependencies = project.all_dependencies
     all_dependencies.setdefault(section, {}).update(requirements)
-    resolved = do_lock(project, strategy, tracked_names, all_dependencies)
+    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+    resolved = do_lock(project, strategy, tracked_names, reqs)
 
     # Update dependency specifiers and lockfile hash.
     save_version_specifiers(requirements, resolved, save)
@@ -218,7 +222,8 @@ def do_update(
             ", ".join(stream.green(v, bold=True) for v in tracked_names)
         )
     )
-    resolved = do_lock(project, strategy, tracked_names, all_dependencies)
+    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+    resolved = do_lock(project, strategy, tracked_names, reqs)
     do_sync(project, sections=(section,), default=False, clean=False)
     if unconstrained:
         # Need to update version constraints
@@ -262,7 +267,8 @@ def do_remove(
     for name in packages:
         matched_name = next(
             filter(
-                lambda k: safe_name(k).lower() == safe_name(name).lower(), deps.keys(),
+                lambda k: safe_name(k).lower() == safe_name(name).lower(),
+                deps.keys(),
             ),
             None,
         )
@@ -429,6 +435,7 @@ def do_info(
     python_version = get_python_version(python_path, True)
     if not python and not show_project and not env:
         rows = [
+            (stream.cyan("PDM version:", bold=True), project.core.version),
             (
                 stream.cyan("Python Interpreter:", bold=True),
                 python_path + f" ({python_version})",

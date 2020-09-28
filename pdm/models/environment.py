@@ -31,12 +31,13 @@ from pdm.utils import (
     get_python_version,
     get_sys_config_paths,
     get_venv_python,
+    populate_link,
     temp_environ,
 )
 
 if TYPE_CHECKING:
-    from pdm.project import Project
     from pdm._types import Source
+    from pdm.project import Project
 
 
 class WorkingSet(collections.abc.Mapping):
@@ -247,6 +248,8 @@ class Environment:
         :param sources: a list of sources the finder should search in.
         :param ignore_requires_python: whether to ignore the python version constraint.
         """
+        if sources is None:
+            sources = self.project.sources
         sources = sources or []
         python_version = get_python_version(self.python_executable)[:2]
         finder = get_finder(
@@ -272,18 +275,16 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        from pip._internal.utils.temp_dir import global_tempdir_manager
-        from pdm.builders import EditableBuilder
-        from pdm.builders import WheelBuilder
+        from pdm.builders import EditableBuilder, WheelBuilder
 
         kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
             if allow_all:
                 with allow_all_wheels():
                     # temporarily allow all wheels to get a link.
-                    ireq.populate_link(finder, False, bool(hashes))
+                    populate_link(finder, ireq, False)
             else:
-                ireq.populate_link(finder, False, bool(hashes))
+                populate_link(finder, ireq, False)
             if not ireq.editable and not ireq.req.name:
                 ireq.source_dir = kwargs["build_dir"]
             else:
@@ -295,23 +296,22 @@ class Environment:
                 download_dir = kwargs["wheel_download_dir"]
                 only_download = True
             if hashes:
-                ireq.options["hashes"] = convert_hashes(hashes)
+                ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
-                with global_tempdir_manager():
-                    downloaded = shims.shim_unpack(
-                        link=ireq.link,
-                        download_dir=download_dir,
-                        location=ireq.source_dir,
-                        hashes=ireq.hashes(False),
-                        only_download=only_download,
-                        session=finder.session,
-                    )
-                    # Preserve the downloaded file so that it won't be cleared.
-                    if downloaded and only_download:
-                        try:
-                            shutil.copy(downloaded, download_dir)
-                        except shutil.SameFileError:
-                            pass
+                downloader = shims.Downloader(finder.session, "off")
+                downloaded = shims.unpack_url(
+                    ireq.link,
+                    ireq.source_dir,
+                    downloader,
+                    download_dir,
+                    ireq.hashes(False),
+                )
+                # Preserve the downloaded file so that it won't be cleared.
+                if downloaded and only_download:
+                    try:
+                        shutil.copy(downloaded.path, download_dir)
+                    except shutil.SameFileError:
+                        pass
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (self.project.cache("wheels") / ireq.link.filename).as_posix()
@@ -350,8 +350,8 @@ class Environment:
     def ensure_essential_packages(self) -> None:
         """Ensure wheel and setuptools are available and install if not"""
         from pdm.installers import Installer
-        from pdm.models.requirements import parse_requirement
         from pdm.models.candidates import Candidate
+        from pdm.models.requirements import parse_requirement
 
         if self._essential_installed:
             return

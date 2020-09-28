@@ -69,7 +69,9 @@ class Synchronizer:
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
 
     def __init__(
-        self, candidates: Dict[str, Candidate], environment: Environment,
+        self,
+        candidates: Dict[str, Candidate],
+        environment: Environment,
     ) -> None:
         self.candidates = candidates
         self.environment = environment
@@ -235,7 +237,7 @@ class Synchronizer:
 
         with stream.logging("install"):
             with self.progressbar(
-                "Synchronizing:", sum(len(l) for l in to_do.values())
+                "Synchronizing:", sum(len(lst) for lst in to_do.values())
             ) as (bar, pool):
                 # First update packages, then remove and add
                 for section in sorted(to_do, reverse=True):
@@ -264,7 +266,7 @@ class Synchronizer:
                 errors.clear()
                 with self.progressbar(
                     f"Retrying ({i + 1}/{self.RETRY_TIMES}):",
-                    sum(len(l) for l in to_do.values()),
+                    sum(len(lst) for lst in to_do.values()),
                 ) as (bar, pool):
 
                     for section in sorted(to_do, reverse=True):

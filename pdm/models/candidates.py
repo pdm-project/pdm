@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import functools
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from distlib.database import EggInfoDistribution
-from distlib.metadata import Metadata
 from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
 from pip_shims import shims
@@ -17,6 +16,8 @@ from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property
 
 if TYPE_CHECKING:
+    from distlib.metadata import Metadata
+
     from pdm.models.environment import Environment
 
 vcs = shims.VcsSupport()
@@ -25,6 +26,23 @@ vcs = shims.VcsSupport()
 def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
+
+
+def _patch_version_parsing():
+    """Monkey patches the version parsing to allow empty parts in version constraint
+    list.
+    """
+    from distlib.version import VersionScheme
+
+    def is_valid_constraint_list(self, s):
+        s = ",".join(v for v in s.strip().split(",") if v)
+        return self.is_valid_matcher("dummy_name (%s)" % s)
+
+    VersionScheme.is_valid_constraint_list = is_valid_constraint_list
+
+
+_patch_version_parsing()
+del _patch_version_parsing
 
 
 @functools.lru_cache(128)
@@ -53,21 +71,6 @@ def get_requirements_from_dist(
     if extras_not_found:
         warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
     return result
-
-
-def identify(req: Union[Candidate, Requirement]) -> Optional[str]:
-    """Get the identity of a candidate or requirement.
-    The result carries the extras information to distinguish from the same package
-    with different extras.
-    """
-    if isinstance(req, Candidate):
-        req = req.req
-    if req.key is None:
-        # Name attribute may be None for local tarballs.
-        # It will be picked up in the following get_dependencies calls.
-        return None
-    extras = "[{}]".format(",".join(sorted(req.extras))) if req.extras else ""
-    return req.key + extras
 
 
 class Candidate:
@@ -114,6 +117,9 @@ class Candidate:
     @cached_property
     def ireq(self) -> shims.InstallRequirement:
         return self.req.as_ireq()
+
+    def identify(self) -> str:
+        return self.req.identify()
 
     def __eq__(self, other: "Candidate") -> bool:
         if self.req.is_named:
@@ -221,7 +227,7 @@ class Candidate:
             "sections": sorted(self.sections),
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
-            "marker": str(self.marker) if self.marker else None,
+            "marker": str(self.marker).replace('"', "'") if self.marker else None,
             "editable": self.req.editable,
         }
         if self.req.is_vcs:

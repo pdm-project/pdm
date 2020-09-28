@@ -92,3 +92,7 @@ def convert(project, filename):
         return dict(
             FlitMetaConverter(tomlkit.parse(fp.read())["tool"]["flit"], filename)
         )
+
+
+def export(project, candidates, options):
+    raise NotImplementedError()

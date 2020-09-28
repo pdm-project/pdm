@@ -15,15 +15,13 @@ from pdm._types import Source
 from pdm.exceptions import ProjectError
 from pdm.iostream import stream
 from pdm.models.caches import CandidateInfoCache, HashCache
-from pdm.models.candidates import Candidate, identify
+from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.meta import PackageMeta
-from pdm.resolver import BaseProvider, EagerUpdateProvider, ReusePinProvider
-from pdm.resolver.reporters import SpinnerReporter
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
@@ -33,7 +31,10 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from resolvelib.reporters import BaseReporter
     from tomlkit.container import Container
+
+    from pdm.resolver.providers import BaseProvider
 
 
 class Project:
@@ -170,7 +171,7 @@ class Project:
         for name, dep in deps.items():
             req = Requirement.from_req_dict(name, dep)
             req.from_section = section or "default"
-            result[identify(req)] = req
+            result[req.identify()] = req
         return result
 
     @property
@@ -213,7 +214,9 @@ class Project:
             )
         return sources
 
-    def get_repository(self, cls: Optional[Type[BaseRepository]]) -> BaseRepository:
+    def get_repository(
+        self, cls: Optional[Type[BaseRepository]] = None
+    ) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = PyPIRepository
@@ -221,7 +224,9 @@ class Project:
         return cls(sources, self.environment)
 
     def get_provider(
-        self, strategy: str = "all", tracked_names: Optional[Iterable[str]] = None,
+        self,
+        strategy: str = "all",
+        tracked_names: Optional[Iterable[str]] = None,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
@@ -229,6 +234,12 @@ class Project:
         :param tracked_names: the names of packages that needs to update
         :returns: The provider object
         """
+        from pdm.resolver.providers import (
+            BaseProvider,
+            EagerUpdateProvider,
+            ReusePinProvider,
+        )
+
         repository = self.get_repository(cls=self.core.repository_class)
         allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
@@ -250,10 +261,10 @@ class Project:
 
     def get_reporter(
         self,
-        requirements: Dict[str, Dict[str, Requirement]],
+        requirements: List[Requirement],
         tracked_names: Optional[Iterable[str]] = None,
         spinner: Optional[halo.Halo] = None,
-    ) -> SpinnerReporter:
+    ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 
         :param requirements: requirements to resolve
@@ -261,10 +272,9 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
-        flat_reqs = [
-            req for req_set in requirements.values() for req in req_set.values()
-        ]
-        return SpinnerReporter(spinner, flat_reqs)
+        from pdm.resolver.reporters import SpinnerReporter
+
+        return SpinnerReporter(spinner, requirements)
 
     def get_project_metadata(self) -> Dict[str, Any]:
         content_hash = self.get_content_hash("md5")
@@ -284,7 +294,7 @@ class Project:
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
-        req = parse_requirement(self.root.as_posix(), editable)
+        req = parse_requirement(shims.path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
         return Candidate(
             req, self.environment, name=self.meta.name, version=self.meta.version
@@ -309,11 +319,9 @@ class Project:
             can.marker = req.marker
             can.hashes = {
                 item["file"]: item["hash"]
-                for item in self.lockfile["metadata"].get(
-                    f"{package_name} {version}", []
-                )
+                for item in self.lockfile["metadata"].get(f"{req.key} {version}", [])
             } or None
-            result[identify(req)] = can
+            result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:
             result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
         return result

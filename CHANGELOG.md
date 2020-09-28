@@ -1,3 +1,82 @@
+Release v0.8.7 (2020-09-04)
+---------------------------
+
+### Bug Fixes
+
+- Fix a compatibility issue with `wheel==0.35`. [#135](https://github.com/frostming/pdm/issues/135)
+
+
+Release v0.8.6 (2020-07-09)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that extra sources are not respected when fetching distributions. [#127](https://github.com/frostming/pdm/issues/127)
+
+
+Release v0.8.5 (2020-06-24)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that `pdm export` fails when the project doesn't have `name` property. [#126](https://github.com/frostming/pdm/issues/126)
+
+### Dependencies
+
+- Upgrade dependency `pip` to `20.1`. [#125](https://github.com/frostming/pdm/issues/125)
+
+
+Release v0.8.4 (2020-05-21)
+---------------------------
+
+### Features & Improvements
+
+- Add a new command `export` to export to alternative formats. [#117](https://github.com/frostming/pdm/issues/117)
+
+### Miscellany
+
+- Add Dockerfile and pushed to Docker Hub. [#122](https://github.com/frostming/pdm/issues/122)
+
+
+Release v0.8.3 (2020-05-15)
+---------------------------
+
+### Bug Fixes
+
+- Fix the version constraint parsing of wheel metadata. [#120](https://github.com/frostming/pdm/issues/120)
+
+
+Release v0.8.2 (2020-05-03)
+---------------------------
+
+### Bug Fixes
+
+- Update resolvers to `resolvelib` 0.4.0. [#118](https://github.com/frostming/pdm/issues/118)
+
+
+Release v0.8.1 (2020-04-22)
+---------------------------
+
+### Dependencies
+
+- Switch to upstream `resolvelib 0.3.0`. [#116](https://github.com/frostming/pdm/issues/116)
+
+
+Release v0.8.0 (2020-04-20)
+---------------------------
+
+### Features & Improvements
+
+- Add a new command to search for packages [#111](https://github.com/frostming/pdm/issues/111)
+- Add `show` command to show package metadata. [#114](https://github.com/frostming/pdm/issues/114)
+
+### Bug Fixes
+
+- Fix a bug that environment markers cannot be evaluated correctly if extra's are connected with "or". [#107](https://github.com/frostming/pdm/issues/107)
+- Don't consult PyPI JSON API by default for package metadata. [#112](https://github.com/frostming/pdm/issues/112)
+- Elimate backslashes in markers for TOML documents. [#115](https://github.com/frostming/pdm/issues/115)
+
+
 Release v0.7.1 (2020-04-13)
 ---------------------------
 

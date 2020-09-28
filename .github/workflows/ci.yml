@@ -36,12 +36,19 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache packages
+      - name: Set PY
+        run: echo "::set-env name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
+      - name: Cache PIP
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PY }}
+      - name: Cache PEP 582 packages
         uses: actions/cache@v1
         with:
           path: __pypackages__
           # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ matrix.os }}-packages-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
+          key: ${{ runner.os }}-packages-${{ env.PY }}-${{ hashFiles('pdm.lock') }}
       - name: Install editable PDM
         run: |
           pip install wheel
@@ -49,11 +56,15 @@ jobs:
       - name: Test Unix
         if: matrix.os != 'windows-latest'
         shell: bash
+        env:
+          PYTHONPATH: '__pypackages__/${{ matrix.python-version }}/lib'
         run: |
           pdm="__pypackages__/${{ matrix.python-version }}/bin/pdm"
           $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg --cov-report=xml tests
       - name: Test Windows
         if: matrix.os == 'windows-latest'
+        env:
+          PYTHONPATH: '__pypackages__\${{ matrix.python-version }}\lib'
         run: |
           Set-Variable -Name pdm -Value "__pypackages__/${{ matrix.python-version }}/Scripts/pdm"
           & $pdm run pytest -n auto --cov pdm --cov-config=setup.cfg --cov-report=xml tests

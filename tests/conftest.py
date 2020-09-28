@@ -116,7 +116,7 @@ class TestRepository(BaseRepository):
     def get_hashes(self, candidate: Candidate) -> None:
         candidate.hashes = {}
 
-    def _find_named_matches(
+    def find_candidates(
         self,
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
@@ -134,7 +134,7 @@ class TestRepository(BaseRepository):
                 name=requirement.project_name,
                 version=version,
             )
-            c._requires_python = PySpecSet(candidate.get("requires_python", ""))
+            c.requires_python = candidate.get("requires_python", "")
             cans.append(c)
 
         sorted_cans = sorted(
@@ -144,6 +144,7 @@ class TestRepository(BaseRepository):
                 if requirement.specifier.contains(c.version, allow_prereleases)
             ),
             key=lambda c: c.version,
+            reverse=True,
         )
         if not allow_all:
             sorted_cans = [
@@ -156,6 +157,7 @@ class TestRepository(BaseRepository):
             sorted_cans = sorted(
                 (c for c in cans if requirement.specifier.contains(c.version, True)),
                 key=lambda c: c.version,
+                reverse=True,
             )
         return sorted_cans
 
@@ -239,6 +241,14 @@ def get_local_finder(*args, **kwargs):
     finder = get_finder(*args, **kwargs)
     finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
     return finder
+
+
+@pytest.fixture(autouse=True)
+def pip_global_tempdir_manager():
+    from pip._internal.utils.temp_dir import global_tempdir_manager
+
+    with global_tempdir_manager():
+        yield
 
 
 @pytest.fixture()
