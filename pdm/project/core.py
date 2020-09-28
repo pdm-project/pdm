@@ -294,7 +294,7 @@ class Project:
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
-        req = parse_requirement(self.root.as_posix(), editable)
+        req = parse_requirement(shims.path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
         return Candidate(
             req, self.environment, name=self.meta.name, version=self.meta.version
