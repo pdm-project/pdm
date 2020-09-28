@@ -10,7 +10,7 @@ homepage = ""
 license = "MIT"
 name = "demo-package-extra"
 python_requires = ">=3.5"
-version = { from = "src/my_package/__init__.py" }
+version = "0.1.0"
 extras = ["all=be|te"]
 
 [tool.pdm.dependencies]

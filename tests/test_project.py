@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 
+import distlib.wheel
 import pytest
-from pkg_resources import DistInfoDistribution
 
-from pdm.builders.api import prepare_metadata_for_build_wheel
+from pdm.builders.api import build_wheel
+from pdm.models.requirements import filter_requirements_with_extras
 from pdm.project import Project
 from pdm.utils import cd
 
@@ -74,9 +75,13 @@ def test_project_use_venv(project, mocker):
 
 def test_project_with_combined_extras(fixture_project):
     project = fixture_project("demo-combined-extras")
+    (project.root / "build").mkdir(exist_ok=True)
     with cd(project.root.as_posix()):
-        metadata_name = prepare_metadata_for_build_wheel(str(project.root / "build"))
-        metadata_dir = project.root / "build" / metadata_name
-    dist = DistInfoDistribution(metadata_dir)
-    all_requires = dist.requires(("all",))
-    assert len(all_requires) == 3
+        wheel_name = build_wheel(str(project.root / "build"))
+        wheel = distlib.wheel.Wheel(str(project.root / "build" / wheel_name))
+
+    all_requires = filter_requirements_with_extras(
+        wheel.metadata.run_requires, ("all",)
+    )
+    for dep in ("urllib3", "chardet", "idna"):
+        assert dep in all_requires
