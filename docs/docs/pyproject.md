@@ -25,6 +25,7 @@ excludes = [
     "mypackage/_temp/*"
 ]
 ```
+
 If neither `includes` or `excludes` is given, PDM is also smart enough to include top level packages and all data files in them.
 Packages can also lie in `src` directory that PDM can find it.
 
@@ -36,6 +37,7 @@ Packages can also lie in `src` directory that PDM can find it.
 requests = ">=2.20.0"
 pytz = "*"
 ```
+
 `"*"` means there is no constraint of what version should be used.
 
 ### Requirement given by file URL
@@ -49,6 +51,7 @@ pdm = {url="https://github.com/frostming/marko/archive/0.2.6.zip"}
 ```toml
 requests = {path="/path/to/requests"}
 ```
+
 In this case, the path should be a **directory** on local machine. If you want to install a local **file**,
 use `url = "file:///path/to/file` instead.
 
@@ -57,6 +60,7 @@ use `url = "file:///path/to/file` instead.
 ```toml
 requests = {git="https://github.com/frostming/marko.git", ref="master"}
 ```
+
 PDM supports all VCS schemes that are supported by `pip`.
 
 ### Editable requirement
@@ -69,14 +73,54 @@ Both VCS requirement and local directory requirement can have an `editable = tru
 requests = {version=">=2.20.0", marker="os_name!='nt'"}
 ```
 
+### Extras require
+
+You can have some requirements optional, by putting them under non-default dependency section, as follows:
+
+```toml
+[tool.pdm]
+extras = ["mysql"]
+
+[tool.pdm.mysql-dependencies]
+mysqlclient = "*"
+```
+
+Note that the `extras` definition is required, otherwise the requirments is not regarded as the package's requirements. The value is a list of dependency sections that you want to include as extras.
+
+You can also combine the requirements from several sections to an extra require:
+
+```toml
+[tool.pdm]
+extras = ["mysql", "postgres", "sql=mysql|postgres"]
+
+[tool.pdm.mysql-dependencies]
+mysqlclient = "*"
+
+[tool.pdm.postgres-dependencies]
+psycopg2 = "*"
+```
+
+This `pyproject.toml` produces the equivalent `extras_requires` as in `setup.py`:
+
+```py
+extras_require = {
+    "mysql": ["mysqlclient"],
+    "postgres": ["psycopg2"],
+    "sql": ["mysqlclient", "psycopg2"]
+}
+```
+
 ## Console scripts
 
 The following content:
+
 ```toml
 [tool.pdm.cli]
 mycli = "mycli.__main__:main"
 ```
+
 will be translated to setuptools style:
+
 ```python
 entry_points = {
     'console_scripts': [
