@@ -3,7 +3,7 @@ from __future__ import annotations
 import glob
 import os
 import re
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Tuple, Union
 
 import setuptools
 from pkg_resources import safe_name
@@ -13,6 +13,7 @@ from pdm.models.markers import Marker
 from pdm.utils import cd
 
 if TYPE_CHECKING:
+    from pdm.models.requirements import Requirement
     from pdm.project import Project
 
 
@@ -101,14 +102,27 @@ class PackageMeta:
             if not r.editable
         ]
 
+    def _get_extra_require(self, extra: str) -> Tuple[str, Iterable[Requirement]]:
+        if "=" in extra:
+            name, extras = extra.split("=")
+            name = name.strip()
+            extras = [e.strip() for e in extras.strip().split("|")]
+        else:
+            name, extras = extra, [extra]
+        extra_require = {}
+        for extra in extras:
+            extra_require.update(self.project.get_dependencies(extra))
+        return name, extra_require.values()
+
     @property
     def extras_require(self) -> Dict[str, List[str]]:
         """For setup.py extras_require field"""
         if not self._extras:
             return {}
         return {
-            extra: [r.as_line() for r in self.project.get_dependencies(extra).values()]
+            name: [r.as_line() for r in reqs]
             for extra in self._extras
+            for name, reqs in self._get_extra_require(extra)
         }
 
     @property
@@ -118,9 +132,10 @@ class PackageMeta:
             return {}
         result = {}
         for extra in self._extras:
-            current = result[extra] = []
-            for r in self.project.get_dependencies(extra).values():
-                r.marker = Marker(f"extra == {extra!r}") & r.marker
+            name, reqs = self._get_extra_require(extra)
+            current = result[name] = []
+            for r in reqs:
+                r.marker = Marker(f"extra == {name!r}") & r.marker
                 current.append(r.as_line())
         return result
 

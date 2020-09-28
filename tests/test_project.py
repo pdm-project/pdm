@@ -2,8 +2,11 @@ import os
 from pathlib import Path
 
 import pytest
+from pkg_resources import DistInfoDistribution
 
+from pdm.builders.api import prepare_metadata_for_build_wheel
 from pdm.project import Project
+from pdm.utils import cd
 
 
 def test_project_python_with_pyenv_support(project, mocker):
@@ -67,3 +70,13 @@ def test_project_use_venv(project, mocker):
         == Path("/path/to/env") / scripts / f"python{suffix}"
     )
     assert env.is_global
+
+
+def test_project_with_combined_extras(fixture_project):
+    project = fixture_project("demo-combined-extras")
+    with cd(project.root.as_posix()):
+        metadata_name = prepare_metadata_for_build_wheel(str(project.root / "build"))
+        metadata_dir = project.root / "build" / metadata_name
+    dist = DistInfoDistribution(metadata_dir)
+    all_requires = dist.requires(("all",))
+    assert len(all_requires) == 3
