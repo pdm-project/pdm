@@ -66,6 +66,10 @@ def test_resolve_requires_python(project, repository):
     assert result["django"].version == "2.2.9"
     assert "sqlparse" in result
 
+    result = resolve_requirements(repository, ["django; python_version>='3.7'"])
+    assert result["django"].version == "2.2.9"
+    assert "sqlparse" in result
+
 
 def test_resolve_allow_prereleases(project, repository):
     repository.add_candidate("foo", "1.0.0")

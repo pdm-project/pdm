@@ -95,6 +95,9 @@ class Requirement:
         )
         return hash(hashCmp)
 
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, Requirement) and hash(self) == hash(o)
+
     @property
     def marker(self) -> Optional[Marker]:
         return self._marker

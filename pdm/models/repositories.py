@@ -79,6 +79,9 @@ class BaseRepository:
             requirements.append(self_req)
         return requirements, PySpecSet(requires_python), summary
 
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+        raise NotImplementedError
+
     def find_candidates(
         self,
         requirement: Requirement,
@@ -89,7 +92,38 @@ class BaseRepository:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
         """
-        raise NotImplementedError
+        # `allow_prereleases` is None means leave it to specifier to decide whether to
+        # include prereleases
+        if allow_prereleases is None:
+            allow_prereleases = requirement.allow_prereleases
+
+        requires_python = requires_python & requirement.requires_python
+        cans = list(self._find_candidates(requirement))
+
+        sorted_cans = sorted(
+            (
+                c
+                for c in cans
+                if requirement.specifier.contains(c.version, allow_prereleases)
+                and (allow_all or requires_python.is_subset(c.requires_python))
+            ),
+            key=lambda c: (c.version, c.link.is_wheel),
+            reverse=True,
+        )
+
+        if not sorted_cans and allow_prereleases is None:
+            # No non-pre-releases is found, force pre-releases now
+            sorted_cans = sorted(
+                (
+                    c
+                    for c in cans
+                    if requirement.specifier.contains(c.version, True)
+                    and (allow_all or requires_python.is_subset(c.requires_python))
+                ),
+                key=lambda c: c.version,
+                reverse=True,
+            )
+        return sorted_cans
 
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
         try:
@@ -191,48 +225,13 @@ class PyPIRepository(BaseRepository):
         yield self._get_dependencies_from_metadata
 
     @lru_cache()
-    def find_candidates(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
-    ) -> Iterable[Candidate]:
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
-        # `allow_prereleases` is None means leave it to specifier to decide whether to
-        # include prereleases
-        if allow_prereleases is None:
-            allow_prereleases = requirement.allow_prereleases
-
         with self.environment.get_finder(sources) as finder, allow_all_wheels():
-            cans = [
+            return (
                 Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)
-            ]
-        sorted_cans = sorted(
-            (
-                c
-                for c in cans
-                if requirement.specifier.contains(c.version, allow_prereleases)
-                and (allow_all or requires_python.is_subset(c.requires_python))
-            ),
-            key=lambda c: (c.version, c.link.is_wheel),
-            reverse=True,
-        )
-
-        if not sorted_cans and allow_prereleases is None:
-            # No non-pre-releases is found, force pre-releases now
-            sorted_cans = sorted(
-                (
-                    c
-                    for c in cans
-                    if requirement.specifier.contains(c.version, True)
-                    and (allow_all or requires_python.is_subset(c.requires_python))
-                ),
-                key=lambda c: c.version,
-                reverse=True,
             )
-        return sorted_cans
 
     def search(self, query: str) -> SearchResult:
         pypi_simple = self.sources[0]["url"]
