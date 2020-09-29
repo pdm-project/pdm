@@ -122,7 +122,7 @@ class PackageMeta:
         return {
             name: [r.as_line() for r in reqs]
             for extra in self._extras
-            for name, reqs in self._get_extra_require(extra)
+            for name, reqs in [self._get_extra_require(extra)]
         }
 
     @property
