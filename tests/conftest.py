@@ -7,7 +7,7 @@ import sys
 from distutils.dir_util import copy_tree
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Tuple
 from urllib.parse import urlparse
 
 import pytest
@@ -25,7 +25,6 @@ from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import cached_property, get_finder, temp_environ
@@ -77,6 +76,10 @@ class MockVersionControl(versioncontrol.VersionControl):
         return "1234567890abcdef"
 
 
+class _FakeLink:
+    is_wheel = False
+
+
 class TestRepository(BaseRepository):
     def __init__(self, sources, environment):
         super().__init__(sources, environment)
@@ -116,17 +119,7 @@ class TestRepository(BaseRepository):
     def get_hashes(self, candidate: Candidate) -> None:
         candidate.hashes = {}
 
-    def find_candidates(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
-    ) -> List[Candidate]:
-        if allow_prereleases is None:
-            allow_prereleases = requirement.allow_prereleases
-
-        cans = []
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         for version, candidate in self._pypi_data.get(requirement.key, {}).items():
             c = Candidate(
                 requirement,
@@ -135,31 +128,8 @@ class TestRepository(BaseRepository):
                 version=version,
             )
             c.requires_python = candidate.get("requires_python", "")
-            cans.append(c)
-
-        sorted_cans = sorted(
-            (
-                c
-                for c in cans
-                if requirement.specifier.contains(c.version, allow_prereleases)
-            ),
-            key=lambda c: c.version,
-            reverse=True,
-        )
-        if not allow_all:
-            sorted_cans = [
-                can
-                for can in sorted_cans
-                if requires_python.is_subset(can.requires_python)
-            ]
-        if not sorted_cans and allow_prereleases is None:
-            # No non-pre-releases is found, force pre-releases now
-            sorted_cans = sorted(
-                (c for c in cans if requirement.specifier.contains(c.version, True)),
-                key=lambda c: c.version,
-                reverse=True,
-            )
-        return sorted_cans
+            c.link = _FakeLink()
+            yield c
 
     def load_fixtures(self):
         json_file = FIXTURES / "pypi.json"

@@ -65,22 +65,24 @@ class BaseProvider(AbstractProvider):
         if allow_prereleases is None:
             # if not specified, should allow what `find_candidates()` returns
             allow_prereleases = True
+        requires_python = self.requires_python & requirement.requires_python
         return requirement.specifier.contains(
             candidate.version, allow_prereleases
-        ) and self.requires_python.is_subset(candidate.requires_python)
+        ) and requires_python.is_subset(candidate.requires_python)
 
     def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
         deps, requires_python, summary = self.repository.get_dependencies(candidate)
 
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
-        valid_deps = [
-            dep
-            for dep in deps
-            if not (
+        valid_deps = []
+        for dep in deps:
+            if (
                 dep.requires_python & requires_python & self.requires_python
-            ).is_impossible
-        ]
+            ).is_impossible:
+                continue
+            dep.requires_python &= candidate.req.requires_python
+            valid_deps.append(dep)
 
         candidate_key = self.identify(candidate)
         self.fetched_dependencies[candidate_key] = {
