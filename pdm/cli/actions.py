@@ -8,7 +8,6 @@ import pythonfinder
 import tomlkit
 from pkg_resources import safe_name
 
-from pdm.builders import SdistBuilder, WheelBuilder
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
@@ -20,12 +19,13 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.installers.installers import format_dist
 from pdm.iostream import stream
+from pdm.models.builders import build_sdist, build_wheel
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import get_python_version
+from pdm.utils import cd, get_python_version
 
 
 def do_lock(
@@ -322,16 +322,13 @@ def do_build(
     if not wheel and not sdist:
         stream.echo("All artifacts are disabled, nothing to do.", err=True)
         return
-    ireq = project.make_self_candidate(False).ireq
-    ireq.source_dir = project.root.as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
-    if sdist:
-        with SdistBuilder(ireq) as builder:
-            builder.build(dest)
-    if wheel:
-        with WheelBuilder(ireq) as builder:
-            builder.build(dest)
+    with project.environment.activate(True), cd(project.root):
+        if sdist:
+            build_sdist(".", dest)
+        if wheel:
+            build_wheel(".", dest)
 
 
 def do_init(
@@ -357,7 +354,7 @@ def do_init(
                 "dev-dependencies": tomlkit.table(),
             }
         },
-        "build-system": {"requires": ["pdm"], "build-backend": "pdm.builders.api"},
+        "build-system": {"requires": ["pdm"], "build-backend": "pdm.pep517.api"},
     }
     if python_requires and python_requires != "*":
         get_specifier(python_requires)
@@ -479,7 +476,7 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
     project.tool_settings.update(tool_settings)
     project.pyproject["build-system"] = {
         "requires": ["pdm"],
-        "build-backend": ["pdm.builders.api"],
+        "build-backend": ["pdm.pep517.api"],
     }
     project.write_pyproject()
 

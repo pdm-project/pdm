@@ -26,6 +26,19 @@ marker = "python_version >= '2.7'"
 summary = "Classes Without Boilerplate"
 
 [[package]]
+name = "build"
+sections = ["default"]
+version = "0.0.4"
+marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
+summary = "UNKNOWN"
+
+[package.dependencies]
+packaging = "*"
+pep517 = "*"
+toml = "*"
+importlib-metadata = {marker = "python_version < '3.8'", version = "*"}
+
+[[package]]
 name = "cached-property"
 sections = ["default"]
 version = "1.5.1"
@@ -91,9 +104,9 @@ six = ">=1.12.0"
 
 [[package]]
 name = "importlib-metadata"
-sections = ["dev", "doc"]
+sections = ["default", "dev", "doc"]
 version = "1.7.0"
-marker = "python_version >= '3.5' and python_version < '3.8'"
+marker = "python_version >= '2.7' and python_version < '3.8'"
 summary = "Read metadata from Python packages"
 
 [package.dependencies]
@@ -103,7 +116,7 @@ zipp = ">=0.5"
 name = "incremental"
 sections = ["dev"]
 version = "17.5.0"
-summary = ""
+summary = "UNKNOWN"
 
 [[package]]
 name = "iniconfig"
@@ -172,7 +185,7 @@ summary = "A Python implementation of Lunr.js"
 future = ">=0.16.0"
 six = ">=1.11.0"
 nltk = {marker = "python_version > '2.7'", version = ">=3.2.5"}
-lunr = "==0.5.8"
+lunr = {marker = "python_version >= '3.5'", version = "==0.5.8"}
 
 [[package]]
 name = "markdown"
@@ -258,6 +271,25 @@ summary = "Core utilities for Python packages"
 [package.dependencies]
 pyparsing = ">=2.0.2"
 six = "*"
+
+[[package]]
+name = "pdm-pep517"
+sections = ["default"]
+version = "0.1.2"
+marker = "python_version >= '3.6'"
+summary = "PEP 517 support"
+
+[[package]]
+name = "pep517"
+sections = ["default"]
+version = "0.8.2"
+marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
+summary = "Wrappers to build Python packages using PEP 517 hooks"
+
+[package.dependencies]
+toml = "*"
+importlib-metadata = {marker = "python_version < '3.8'", version = "*"}
+zipp = {marker = "python_version < '3.8'", version = "*"}
 
 [[package]]
 name = "pip"
@@ -457,7 +489,7 @@ summary = "ANSII Color formatting for output in terminal."
 
 [[package]]
 name = "toml"
-sections = ["dev"]
+sections = ["default", "dev"]
 version = "0.10.1"
 summary = "Python Library for Tom's Obvious, Minimal Language"
 
@@ -503,7 +535,7 @@ summary = "A built-package format for Python"
 
 [[package]]
 name = "zipp"
-sections = ["dev", "doc"]
+sections = ["default", "dev", "doc"]
 version = "3.1.0"
 marker = "python_version >= '3.6' and python_version < '3.8'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
@@ -524,6 +556,10 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 "attrs 20.1.0" = [
     {file = "attrs-20.1.0-py2.py3-none-any.whl", hash = "sha256:2867b7b9f8326499ab5b0e2d12801fa5c98842d2cbd22b35112ae04bf85b4dff"},
     {file = "attrs-20.1.0.tar.gz", hash = "sha256:0ef97238856430dcf9228e07f316aefc17e8939fc8507e18c6501b761ef1a42a"},
+]
+"build 0.0.4" = [
+    {file = "build-0.0.4-py2.py3-none-any.whl", hash = "sha256:7170bc694b330329a938b286f08ad840f64c1e1353a145e2f397f461e3f0b280"},
+    {file = "build-0.0.4.tar.gz", hash = "sha256:5c6ca6cba06ea9a51623ce3197f019db8925ef3f06bf6d983fe5dcb16fcd1f6e"},
 ]
 "cached-property 1.5.1" = [
     {file = "cached_property-1.5.1-py2.py3-none-any.whl", hash = "sha256:3a026f1a54135677e7da5ce819b0c690f156f37976f3e30c5430740725203d7f"},
@@ -684,6 +720,14 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
 ]
+"pdm-pep517 0.1.2" = [
+    {file = "pdm_pep517-0.1.2-py3-none-any.whl", hash = "sha256:ac2eb10767162678769949db6ca2d1ff146181f9c5d49b3461a2d1d900f6174f"},
+    {file = "pdm-pep517-0.1.2.tar.gz", hash = "sha256:3a57e8c1dd356ce39c7c0b95da4808268f3eb4ab3b8c1430eb8042129c5bdd5c"},
+]
+"pep517 0.8.2" = [
+    {file = "pep517-0.8.2-py2.py3-none-any.whl", hash = "sha256:576c480be81f3e1a70a16182c762311eb80d1f8a7b0d11971e5234967d7a342c"},
+    {file = "pep517-0.8.2.tar.gz", hash = "sha256:8e6199cf1288d48a0c44057f112acf18aa5ebabbf73faa242f598fbe145ba29e"},
+]
 "pip 20.2.2" = [
     {file = "pip-20.2.2-py2.py3-none-any.whl", hash = "sha256:5244e51494f5d1dfbb89da492d4250cb07f9246644736d10ed6c45deb1a48500"},
     {file = "pip-20.2.2.tar.gz", hash = "sha256:58a3b0b55ee2278104165c7ee7bc8e2db6f635067f3c66cf637113ec5aa71584"},
@@ -832,5 +876,5 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 ]
 
 [root]
-content_hash = "md5:053be4630c93f8942df8ae712cf52681"
 meta_version = "0.0.1"
+content_hash = "md5:466bd8679fe8ac480133ad7dd36e2e4d"

@@ -1,6 +1,6 @@
 [tool.pdm]
 name = "pdm"
-version = {from = "pdm/__init__.py"}
+version = {from = "pdm/__version__.py"}
 description = "Python Development Master"
 author = "frostming <mianghong@gmail.com>"
 license = "MIT"
@@ -34,6 +34,8 @@ tomlkit = "*"
 halo = "<1.0.0,>=0.0.28"
 python-cfonts = "*"
 resolvelib = "<1.0.0,>=0.3.0"
+pdm-pep517 = "<1.0.0,>=0.1.0"
+build = "<1.0.0,>=0.0.4"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
@@ -49,9 +51,6 @@ markdown-include = "<1.0.0,>=0.5.1"
 
 [tool.pdm.cli]
 pdm = "pdm.core:main"
-
-[tool.intreehooks]
-build-backend = "pdm.builders.api"
 
 [tool.black]
 line-length = 88
@@ -96,6 +95,6 @@ underlines = "-~^"
   showcontent = true
 
 [build-system]
-requires = ["intreehooks"]
-build-backend = "intreehooks:loader"
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
 

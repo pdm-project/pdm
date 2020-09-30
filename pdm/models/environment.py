@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import collections
 import os
-import pkgutil
 import re
 import shutil
 import sys
 import sysconfig
+import textwrap
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
@@ -154,15 +154,15 @@ class Environment:
         """
         paths = self.get_paths()
         with temp_environ():
-            old_paths = os.getenv("PYTHONPATH")
-            if old_paths:
-                new_paths = os.pathsep.join([paths["purelib"], old_paths])
-            else:
-                new_paths = paths["purelib"]
-            os.environ["PYTHONPATH"] = new_paths
             python_root = os.path.dirname(self.python_executable)
-            os.environ["PATH"] = os.pathsep.join(
-                [python_root, paths["scripts"], os.environ["PATH"]]
+            os.environ.update(
+                {
+                    "PYTHONPATH": paths["purelib"],
+                    "PATH": os.pathsep.join(
+                        [python_root, paths["scripts"], os.environ["PATH"]]
+                    ),
+                    "PYTHONNOUSERSITE": "1",
+                }
             )
             if site_packages:
                 os.environ["PDM_SITE_PACKAGES"] = "1"
@@ -275,7 +275,7 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        from pdm.builders import EditableBuilder, WheelBuilder
+        from pdm.models.builders import build_egg_info, build_wheel
 
         kwargs = self._make_building_args(ireq)
         with self.get_finder() as finder:
@@ -315,14 +315,18 @@ class Environment:
             # Now all source is prepared, build it.
             if ireq.link.is_wheel:
                 return (self.project.cache("wheels") / ireq.link.filename).as_posix()
-            self.ensure_essential_packages()
-            if ireq.editable:
-                builder_class = EditableBuilder
-            else:
-                builder_class = WheelBuilder
-            kwargs["finder"] = finder
-            with builder_class(ireq) as builder, self.activate(True):
-                return builder.build(**kwargs)
+
+            with self.activate(True):
+                if ireq.editable:
+                    ret = build_egg_info(
+                        ireq.unpacked_source_directory, kwargs["build_dir"]
+                    )
+                    ireq.metadata_directory = ret
+                else:
+                    ret = build_wheel(
+                        ireq.unpacked_source_directory, kwargs["build_dir"]
+                    )
+            return ret
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
@@ -347,24 +351,6 @@ class Environment:
         # Fallback to use shutil.which to find the executable
         return shutil.which(command, path=os.getenv("PATH"))
 
-    def ensure_essential_packages(self) -> None:
-        """Ensure wheel and setuptools are available and install if not"""
-        from pdm.installers import Installer
-        from pdm.models.candidates import Candidate
-        from pdm.models.requirements import parse_requirement
-
-        if self._essential_installed:
-            return
-        installer = Installer(self)
-        working_set = self.get_working_set()
-        for package in ("setuptools", "wheel"):
-            if package in working_set:
-                continue
-            req = parse_requirement(package)
-            candidate = Candidate(req, self, package)
-            installer.install(candidate)
-        self._essential_installed = True
-
     def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""
         scripts = self.get_paths()["scripts"]
@@ -380,9 +366,44 @@ class Environment:
 
     def write_site_py(self) -> None:
         """Write a custom site.py into the package library folder."""
-        dest_path = Path(self.get_paths()["purelib"]) / "site.py"
-        content = pkgutil.get_data("pdm.installers", "site.py")
-        dest_path.write_bytes(content)
+        lib_dir = self.get_paths()["purelib"]
+        dest_path = Path(lib_dir) / "sitecustomize.py"
+
+        template = textwrap.dedent(
+            """
+            import os, site, sys
+            from distutils.sysconfig import get_python_lib
+
+            # First, drop system-sites related paths.
+            original_sys_path = sys.path[:]
+            known_paths = set()
+            system_sites = {{
+                os.path.normcase(site) for site in (
+                    get_python_lib(plat_specific=False),
+                    get_python_lib(plat_specific=True),
+                )
+            }}
+            for path in system_sites:
+                site.addsitedir(path, known_paths=known_paths)
+            system_paths = set(
+                os.path.normcase(path)
+                for path in sys.path[len(original_sys_path):]
+            )
+            if "PDM_SITE_PACKAGES" not in os.environ:
+                original_sys_path = [
+                    path for path in original_sys_path
+                    if os.path.normcase(path) not in system_paths
+                ]
+                sys.path = original_sys_path
+
+            # Second, add lib directories.
+            # ensuring .pth file are processed.
+            for path in {lib_dirs!r}:
+                assert not path in sys.path
+                site.addsitedir(path)
+            """
+        )
+        dest_path.write_text(template.format(lib_dirs=[lib_dir]))
 
 
 class GlobalEnvironment(Environment):

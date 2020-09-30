@@ -1,5 +1,5 @@
 [build-system]
-build-backend = "pdm.builders.api"
+build-backend = "pdm.pep517.api"
 requires = ["pdm"]
 
 [tool]

@@ -4,8 +4,8 @@ from pathlib import Path
 import distlib.wheel
 import pytest
 
-from pdm.builders.api import build_wheel
 from pdm.models.requirements import filter_requirements_with_extras
+from pdm.pep517.api import build_wheel
 from pdm.project import Project
 from pdm.utils import cd
 
