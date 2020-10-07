@@ -157,7 +157,7 @@ class Environment:
             python_root = os.path.dirname(self.python_executable)
             os.environ.update(
                 {
-                    "PYTHONPATH": paths["purelib"],
+                    "PYTHONPATH": (self.packages_path / "site").as_posix(),
                     "PATH": os.pathsep.join(
                         [python_root, paths["scripts"], os.environ["PATH"]]
                     ),
@@ -205,7 +205,7 @@ class Environment:
             / ".".join(map(str, get_python_version(self.python_executable)[:2]))
         )
         scripts = "Scripts" if os.name == "nt" else "bin"
-        for subdir in [scripts, "include", "lib"]:
+        for subdir in [scripts, "include", "lib", "site"]:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
@@ -367,7 +367,7 @@ class Environment:
     def write_site_py(self) -> None:
         """Write a custom site.py into the package library folder."""
         lib_dir = self.get_paths()["purelib"]
-        dest_path = Path(lib_dir) / "sitecustomize.py"
+        dest_path = self.packages_path / "site/sitecustomize.py"
 
         template = textwrap.dedent(
             """
@@ -399,7 +399,6 @@ class Environment:
             # Second, add lib directories.
             # ensuring .pth file are processed.
             for path in {lib_dirs!r}:
-                assert not path in sys.path
                 site.addsitedir(path)
             """
         )

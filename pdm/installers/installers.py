@@ -274,6 +274,13 @@ def _install_wheel(wheel, paths, maker, **kwargs):
             shutil.rmtree(workdir)
 
 
+EXE_INITIALIZE = """
+import sys
+with open({0!r}) as fp:
+    exec(compile(fp.read(), __file__, "exec"))
+""".strip()
+
+
 class Installer:  # pragma: no cover
     """The installer that performs the installation and uninstallation actions."""
 
@@ -295,9 +302,12 @@ class Installer:  # pragma: no cover
         maker = distlib.scripts.ScriptMaker(None, None)
         maker.executable = self.environment.python_executable
         if not self.environment.is_global:
+            site_custom_script = (
+                self.environment.packages_path / "site/sitecustomize.py"
+            ).as_posix()
             maker.script_template = maker.script_template.replace(
                 "import sys",
-                "import sys\nsys.path.insert(0, {!r})".format(paths["platlib"]),
+                EXE_INITIALIZE.format(site_custom_script),
             )
         _install_wheel(wheel, paths, maker)
 
@@ -305,7 +315,7 @@ class Installer:  # pragma: no cover
         setup_path = ireq.setup_py_path
         paths = self.environment.get_paths()
         install_script = importlib.import_module(
-            "pdm._editable_install"
+            "pdm.installers._editable_install"
         ).__file__.rstrip("co")
         install_args = [
             self.environment.python_executable,
@@ -317,8 +327,13 @@ class Installer:  # pragma: no cover
             paths["scripts"],
         ]
         with self.environment.activate(True), cd(ireq.unpacked_source_directory):
-            result = subprocess.run(install_args, capture_output=True, check=True)
+            result = subprocess.run(install_args, capture_output=True)
             stream.logger.debug(result.stdout.decode("utf-8"))
+            if result.returncode:
+                stream.logger.debug(result.stderr.decode("utf-8"))
+                raise RuntimeError(
+                    f"Call command: {install_args} returned non-zero status."
+                )
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)

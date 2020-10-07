@@ -97,7 +97,7 @@ class IOStream:
             handler = logging.FileHandler(file_name, encoding="utf-8")
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
-        pip_logger = logging.getLogger("pip")
+        pip_logger = logging.getLogger("pip.subprocessor")
         pip_logger.handlers[:] = [handler]
         try:
             self.logger = logger
