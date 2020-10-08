@@ -1,9 +1,11 @@
 import os
 import subprocess
 import sys
+import tempfile
+from typing import Iterable
 
 from build import ProjectBuilder
-from build.env import IsolatedEnvironment
+from build.env import IsolatedEnvironment as _Environment
 
 from pdm.exceptions import BuildError
 from pdm.iostream import stream
@@ -16,6 +18,34 @@ _SETUPTOOLS_SHIM = (
     "f.close();"
     "exec(compile(code, __file__, 'exec'))"
 )
+
+
+class IsolatedEnvironment(_Environment):
+    """A subclass of ``build.env.IsolatedEnvironment`` to provide rich output for PDM"""
+
+    def install(self, requirements: Iterable[str]) -> None:
+        if not requirements:
+            return
+        stream.logger.debug("Preparing isolated env for PEP 517 build...")
+        log_subprocessor([sys.executable, "-m", "ensurepip"], cwd=self.path)
+
+        with tempfile.NamedTemporaryFile(
+            "w+", prefix="build-reqs-", suffix=".txt", delete=False
+        ) as req_file:
+            req_file.write(os.linesep.join(requirements))
+            req_file.close()
+            cmd = [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--prefix",
+                self.path,
+                "-r",
+                os.path.abspath(req_file.name),
+            ]
+            log_subprocessor(cmd)
+            os.unlink(req_file.name)
 
 
 def log_subprocessor(cmd, cwd=None, extra_environ=None):

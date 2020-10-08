@@ -157,13 +157,16 @@ class Environment:
             python_root = os.path.dirname(self.python_executable)
             os.environ.update(
                 {
-                    "PYTHONPATH": (self.packages_path / "site").as_posix(),
                     "PATH": os.pathsep.join(
                         [python_root, paths["scripts"], os.environ["PATH"]]
                     ),
                     "PYTHONNOUSERSITE": "1",
                 }
             )
+            if self.packages_path:
+                os.environ.update(
+                    {"PYTHONPATH": (self.packages_path / "site").as_posix()}
+                )
             if site_packages:
                 os.environ["PDM_SITE_PACKAGES"] = "1"
             working_set = self.get_working_set()
