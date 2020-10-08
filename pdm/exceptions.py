@@ -63,3 +63,7 @@ class NoConfigError(PdmException, KeyError):
 
 class NoPythonVersion(PdmException):
     pass
+
+
+class BuildError(RuntimeError):
+    pass

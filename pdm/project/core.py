@@ -20,8 +20,8 @@ from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
+from pdm.pep517.metadata import Metadata
 from pdm.project.config import Config
-from pdm.project.meta import PackageMeta
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
@@ -387,8 +387,8 @@ class Project:
         self._pyproject = None
 
     @property
-    def meta(self) -> PackageMeta:
-        return PackageMeta(self)
+    def meta(self) -> Metadata:
+        return Metadata(self.pyproject_file)
 
     def init_global_project(self) -> None:
         if not self.is_global:

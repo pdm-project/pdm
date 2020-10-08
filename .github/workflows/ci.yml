@@ -7,25 +7,11 @@ on:
       - master
 
 jobs:
-  Linting:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.7
-      - name: Linting
-        run: |
-          pip install pre-commit
-          pre-commit run --all-files
   Testing:
-    needs: Linting
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, "3.9.0-alpha - 3.9.0"]
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
@@ -33,7 +19,7 @@ jobs:
         with:
           lfs: true
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set PY
@@ -49,22 +35,13 @@ jobs:
           path: __pypackages__
           # Look to see if there is a cache hit for the corresponding requirements file
           key: ${{ runner.os }}-packages-${{ env.PY }}-${{ hashFiles('pdm.lock') }}
-      - name: Install editable PDM
+      - name: Install Current PDM
         run: |
-          pip install wheel
-          python setup_dev.py
-      - name: Test Unix
-        if: matrix.os != 'windows-latest'
-        shell: bash
-        env:
-          PYTHONPATH: '__pypackages__/${{ matrix.python-version }}/lib'
+          pip install -U pip
+          pip install .
+      - name: Install Dev Dependencies
         run: |
-          pdm=__pypackages__/${{ matrix.python-version }}/bin/pdm
-          $pdm run pytest -n auto tests
-      - name: Test Windows
-        if: matrix.os == 'windows-latest'
-        env:
-          PYTHONPATH: '__pypackages__\${{ matrix.python-version }}\lib'
-        run: |
-          Set-Variable -Name pdm -Value "__pypackages__/${{ matrix.python-version }}/Scripts/pdm"
-          & $pdm run pytest -n auto tests
+          pdm config set parallel_install false
+          pdm install -dvv
+      - name: Run Tests
+        run: pdm run pytest -n auto tests

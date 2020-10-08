@@ -1,6 +1,6 @@
 [build-system]
 requires = ["pdm"]
-build-backend = "pdm.builders.api"
+build-backend = "pdm.pep517.api"
 
 [tool.pdm]
 name = "test-plugin-pdm"

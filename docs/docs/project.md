@@ -6,7 +6,7 @@ PDM can act as a PEP 517 build backend, to enable that, write the following line
 ```toml
 [build-system]
 requires = ["pdm"]
-build-backend = "pdm.builders.api"
+build-backend = "pdm.pep517.api"
 ```
 
 `pip` will read the backend settings to install or build a package.

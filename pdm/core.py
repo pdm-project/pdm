@@ -9,7 +9,7 @@ import click
 import pkg_resources
 from resolvelib import Resolver
 
-from pdm import __version__
+from pdm.__version__ import __version__
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
