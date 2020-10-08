@@ -1,6 +1,6 @@
 [tool.pdm]
 name = "pdm"
-version = {from = "pdm/__version__.py"}
+version = {use_scm = true}
 description = "Python Development Master"
 author = "frostming <mianghong@gmail.com>"
 license = "MIT"

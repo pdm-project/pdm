@@ -9,7 +9,6 @@ import click
 import pkg_resources
 from resolvelib import Resolver
 
-from pdm.__version__ import __version__
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
@@ -19,6 +18,11 @@ from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
 
+try:
+    import importlib.metadata as importlib_metadata
+except ModuleNotFoundError:
+    import importlib_metadata
+
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
 
@@ -26,7 +30,7 @@ class Core:
     """A high level object that manages all classes and configurations"""
 
     def __init__(self):
-        self.version = __version__
+        self.version = importlib_metadata.version(__name__.split(".")[0])
 
         self.project_class = Project
         self.repository_class = PyPIRepository

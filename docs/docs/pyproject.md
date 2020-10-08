@@ -12,6 +12,13 @@ There are several differences from the metadata of `setuptools`:
 You can specify a file source for `version` field like: `version = {from = "pdm/__init__.py"}`, in this form,
 the version will be read from the `__version__` variable in that file.
 
+PDM can also read version from SCM tags. If you are using git or hg as the version control system, define the
+`version` as follows:
+
+```toml
+version = {use_scm = true}
+```
+
 ## Include and exclude pacakge files
 
 The way of specifying include and exclude files are simple, they are given as a list of glob patterns:

@@ -335,7 +335,7 @@ def do_build(
         return
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
-    with project.environment.activate(True), cd(project.root):
+    with project.environment.activate(True), cd(project.root), stream.logging("build"):
         if sdist:
             build_sdist(".", dest)
         if wheel:
