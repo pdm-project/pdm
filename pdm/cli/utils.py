@@ -293,7 +293,10 @@ def format_dependency_graph(project: Project, graph: DirectedGraph) -> str:
     for package in sorted(graph.iter_children(None), key=lambda p: p.name):
         if package.name in all_dependencies:
             required = str(all_dependencies[package.name].specifier or "Any")
-        elif package.name == project.meta.project_name.lower():
+        elif (
+            not project.environment.is_global
+            and package.name == project.meta.project_name.lower()
+        ):
             required = "This project"
         else:
             required = ""
