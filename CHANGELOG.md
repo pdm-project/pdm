@@ -1,3 +1,26 @@
+Release v0.9.0 (2020-10-08)
+---------------------------
+
+### Features & Improvements
+
+- Allow users to combine several dependency sections to form an extra require. [#131](https://github.com/frostming/pdm/issues/131)
+- Split the PEP 517 backend to its own(battery included) package. [#134](https://github.com/frostming/pdm/issues/134)
+- Add a new option to list command to show reverse dependency graph. [#137](https://github.com/frostming/pdm/issues/137)
+
+### Bug Fixes
+
+- Fix a bug that spaces in path causes requirement parsing error. [#138](https://github.com/frostming/pdm/issues/138)
+- Fix a bug that requirement's python constraint is not respected when resolving. [#141](https://github.com/frostming/pdm/issues/141)
+
+### Dependencies
+
+- Update `pdm-pep517` to `0.2.0` that supports reading version from SCM. [#146](https://github.com/frostming/pdm/issues/146)
+
+### Miscellany
+
+- Add Python 3.9 to the CI version matrix to verify. [#144](https://github.com/frostming/pdm/issues/144)
+
+
 Release v0.8.7 (2020-09-04)
 ---------------------------
 
