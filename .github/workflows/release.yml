@@ -28,13 +28,13 @@ jobs:
           pip install .
       - name: Build artifacts
         run: |
-          pdm build -v .
+          pdm build -v
       - name: Test Build
         run: |
           python3 -m venv fresh_env
           . fresh_env/bin/activate
           pip install dist/*.whl
-          pdm --help
+          fresh_env/bin/pdm --help
       - name: Upload to Pypi
         run: |
           pip install twine
