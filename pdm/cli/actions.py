@@ -286,20 +286,31 @@ def do_remove(
         do_sync(project, sections=(section,), default=False, clean=True)
 
 
-def do_list(project: Project, graph: bool = False) -> None:
+def do_list(project: Project, graph: bool = False, reverse: bool = False) -> None:
     """Display a list of packages installed in the local packages directory.
 
     :param project: the project instance.
     :param graph: whether to display a graph.
+    :param reverse: wheter to display reverse graph.
     """
-    from pdm.cli.utils import build_dependency_graph, format_dependency_graph
+    from pdm.cli.utils import (
+        build_dependency_graph,
+        format_dependency_graph,
+        format_reverse_dependency_graph,
+    )
 
     check_project_file(project)
     working_set = project.environment.get_working_set()
+    if reverse and not graph:
+        raise PdmUsageError("--reverse must be used with --graph")
     if graph:
         with project.environment.activate():
             dep_graph = build_dependency_graph(working_set)
-        stream.echo(format_dependency_graph(dep_graph))
+        if reverse:
+            graph = format_reverse_dependency_graph(project, dep_graph)
+        else:
+            graph = format_dependency_graph(project, dep_graph)
+        stream.echo(graph)
     else:
         rows = [
             (stream.green(k, bold=True), format_dist(v))

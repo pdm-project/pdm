@@ -362,12 +362,11 @@ def test_project_no_init_error(project_no_init):
             handler(project_no_init)
 
 
-def test_list_dependency_graph(capsys):
-    project = Project()
+def test_list_dependency_graph(project, capsys, repository, working_set):
+    actions.do_add(project, packages=["requests"])
     actions.do_list(project, True)
     content, _ = capsys.readouterr()
-    assert "[ required: <1.0.0,>=0.0.28 ]" in content
-    assert "halo" in content
+    assert "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in content
 
 
 def test_list_dependency_graph_with_circular(project, capsys, repository, working_set):
@@ -379,6 +378,18 @@ def test_list_dependency_graph_with_circular(project, capsys, repository, workin
     actions.do_list(project, True)
     content, _ = capsys.readouterr()
     assert "foo [circular]" in content
+
+
+def test_list_reverse_without_graph_flag(project):
+    with pytest.raises(PdmException):
+        actions.do_list(project, reverse=True)
+
+
+def test_list_reverse_dependency_graph(project, capsys, repository, working_set):
+    actions.do_add(project, packages=["requests"])
+    actions.do_list(project, True, True)
+    content, _ = capsys.readouterr()
+    assert "└── requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in content
 
 
 def test_update_unconstrained_without_packages(project, repository, working_set):
