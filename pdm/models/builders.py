@@ -25,9 +25,9 @@ def log_subprocessor(cmd, cwd=None, extra_environ=None):
     capture_output = bool(stream.logger)
     proc = subprocess.run(cmd, cwd=cwd, env=env, capture_output=capture_output)
     if capture_output:
-        stream.logger.debug(proc.stdout)
+        stream.logger.debug(proc.stdout.decode("utf-8"))
     if proc.returncode:
-        stream.logger.debug(proc.stderr)
+        stream.logger.debug(proc.stderr.decode("utf-8"))
         raise BuildError(f"Call command {cmd} return non-zero status.")
 
 
