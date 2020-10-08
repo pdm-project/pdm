@@ -275,7 +275,7 @@ six = "*"
 [[package]]
 name = "pdm-pep517"
 sections = ["default"]
-version = "0.1.3"
+version = "0.2.0"
 marker = "python_version >= '3.6'"
 summary = "PEP 517 support"
 
@@ -720,9 +720,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
 ]
-"pdm-pep517 0.1.3" = [
-    {file = "pdm_pep517-0.1.3-py3-none-any.whl", hash = "sha256:d5a31db906e37f8e387c79f82436acb8b4503a1c846f972f87e43a3cb34d999e"},
-    {file = "pdm-pep517-0.1.3.tar.gz", hash = "sha256:b084e89222d412b930e17ff6a8bb4a02629d0df96bba7235f2b12fd1478e6fdd"},
+"pdm-pep517 0.2.0" = [
+    {file = "pdm_pep517-0.2.0-py3-none-any.whl", hash = "sha256:2f2b9bf81353a7a4e60e2e682d0e7fedc0d9869b8450c785f45fc4ac67c0f2f9"},
+    {file = "pdm-pep517-0.2.0.tar.gz", hash = "sha256:5b4ab654f1697fc384e7b84480373220cebd85529004477f4f0a09db701205ba"},
 ]
 "pep517 0.8.2" = [
     {file = "pep517-0.8.2-py2.py3-none-any.whl", hash = "sha256:576c480be81f3e1a70a16182c762311eb80d1f8a7b0d11971e5234967d7a342c"},

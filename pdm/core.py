@@ -9,7 +9,6 @@ import click
 import pkg_resources
 from resolvelib import Resolver
 
-from pdm.__version__ import __version__
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
@@ -26,7 +25,9 @@ class Core:
     """A high level object that manages all classes and configurations"""
 
     def __init__(self):
-        self.version = __version__
+        import importlib.metadata
+
+        self.version = importlib.metadata.version(__name__.split(".")[0])
 
         self.project_class = Project
         self.repository_class = PyPIRepository
