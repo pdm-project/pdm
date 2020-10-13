@@ -1,3 +1,16 @@
+Release v0.9.2 (2020-10-13)
+---------------------------
+
+### Features & Improvements
+
+- Cache the built wheels to accelerate resolution and installation process. [#153](https://github.com/frostming/pdm/issues/153)
+
+### Bug Fixes
+
+- Fix a bug that no wheel is matched when finding candidates to install. [#155](https://github.com/frostming/pdm/issues/155)
+- Fix a bug that installation in parallel will cause encoding initialization error on Ubuntu. [#156](https://github.com/frostming/pdm/issues/156)
+
+
 Release v0.9.1 (2020-10-13)
 ---------------------------
 
