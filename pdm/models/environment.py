@@ -35,9 +35,16 @@ from pdm.utils import (
     temp_environ,
 )
 
+try:
+    from pip._internal.utils.compatibility_tags import get_supported
+except ImportError:
+    from pip._internal.pep425tags import get_supported
+
 if TYPE_CHECKING:
     from pdm._types import Source
     from pdm.project import Project
+
+_egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
 
 
 class WorkingSet(collections.abc.Mapping):
@@ -281,13 +288,23 @@ class Environment:
         from pdm.models.builders import build_egg_info, build_wheel
 
         kwargs = self._make_building_args(ireq)
+        wheel_cache = self.project.make_wheel_cache()
         with self.get_finder() as finder:
-            if allow_all:
-                with allow_all_wheels():
-                    # temporarily allow all wheels to get a link.
-                    populate_link(finder, ireq, False)
-            else:
+            with allow_all_wheels(allow_all):
+                # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
+                cache_entry = wheel_cache.get_cache_entry(
+                    ireq.link,
+                    ireq.req.project_name,
+                    get_supported(
+                        version="".join(
+                            map(str, get_python_version(self.python_executable)[:2])
+                        )
+                    ),
+                )
+                if cache_entry is not None:
+                    stream.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                    ireq.link = cache_entry.link
             if not ireq.editable and not ireq.req.name:
                 ireq.source_dir = kwargs["build_dir"]
             else:
@@ -326,9 +343,25 @@ class Environment:
                     )
                     ireq.metadata_directory = ret
                 else:
-                    ret = build_wheel(
-                        ireq.unpacked_source_directory, kwargs["build_dir"]
+                    should_cache = False
+                    if ireq.link.is_vcs:
+                        vcs = shims.VcsSupport()
+                        vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
+                        if vcs_backend.is_immutable_rev_checkout(
+                            ireq.link.url, ireq.source_dir
+                        ):
+                            should_cache = True
+                    else:
+                        base, _ = ireq.link.splitext()
+                        if _egg_info_re.search(base) is not None:
+                            # Determine whether the string looks like an egg_info.
+                            should_cache = True
+                    output_dir = (
+                        wheel_cache.get_path_for_link(ireq.link)
+                        if should_cache
+                        else kwargs["build_dir"]
                     )
+                    ret = build_wheel(ireq.unpacked_source_directory, output_dir)
             return ret
 
     def get_working_set(self) -> WorkingSet:
