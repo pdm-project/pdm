@@ -23,6 +23,12 @@ _SETUPTOOLS_SHIM = (
 class IsolatedEnvironment(_Environment):
     """A subclass of ``build.env.IsolatedEnvironment`` to provide rich output for PDM"""
 
+    def __enter__(self) -> "IsolatedEnvironment":
+        inst = super().__enter__()
+        # Setting PYTHONHOME will cause encoding initialization error in threads.
+        os.environ.pop("PYTHONHOME", None)
+        return inst
+
     def install(self, requirements: Iterable[str]) -> None:
         if not requirements:
             return
@@ -64,26 +70,22 @@ def log_subprocessor(cmd, cwd=None, extra_environ=None):
 def build_wheel(src_dir: str, out_dir: str) -> str:
     """Build wheel and return the full path of the artifact."""
     builder = ProjectBuilder(srcdir=src_dir)
-    stream.echo("Building wheel...")
     with IsolatedEnvironment.for_current() as env, builder.hook.subprocess_runner(
         log_subprocessor
     ):
         env.install(builder.build_dependencies)
         filename = builder.hook.build_wheel(out_dir)
-    stream.echo(f"Built {filename}")
     return os.path.join(out_dir, filename)
 
 
 def build_sdist(src_dir: str, out_dir: str) -> str:
     """Build sdist and return the full path of the artifact."""
     builder = ProjectBuilder(srcdir=src_dir)
-    stream.echo("Building sdist...")
     with IsolatedEnvironment.for_current() as env, builder.hook.subprocess_runner(
         log_subprocessor
     ):
         env.install(builder.build_dependencies)
         filename = builder.hook.build_sdist(out_dir)
-    stream.echo(f"Built {filename}")
     return os.path.join(out_dir, filename)
 
 
@@ -105,8 +107,6 @@ def build_egg_info(src_dir: str, out_dir: str) -> str:
         env.install(["setuptools"])
         args = [sys.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
         args.extend(["egg_info", "--egg-base", out_dir])
-        stream.echo("Building egg info...")
         log_subprocessor(args, cwd=src_dir)
         filename = _find_egg_info(out_dir)
-    stream.echo(f"Built {filename}")
     return os.path.join(out_dir, filename)
