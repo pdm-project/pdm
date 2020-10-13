@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def log_title(title):
-    stream.logger.info("=" * 8 + title + "=" * 8)
+    stream.logger.info("=" * 8 + " " + title + " " + "=" * 8)
 
 
 class SpinnerReporter(BaseReporter):

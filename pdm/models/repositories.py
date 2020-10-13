@@ -228,10 +228,10 @@ class PyPIRepository(BaseRepository):
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
         with self.environment.get_finder(sources) as finder, allow_all_wheels():
-            return (
+            return [
                 Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)
-            )
+            ]
 
     def search(self, query: str) -> SearchResult:
         pypi_simple = self.sources[0]["url"]
