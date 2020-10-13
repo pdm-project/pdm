@@ -21,7 +21,27 @@ def _strip_styles(text):
 
 
 def ljust(text, length):
+    """Like str.ljust() but ignore all ANSI controlling characters."""
     return text + " " * (length - len(_strip_styles(text)))
+
+
+class DummySpinner:
+    """A dummy spinner class implementing needed interfaces.
+    But only display text onto screen.
+    """
+
+    def start(self, text: str):
+        stream.echo(text)
+
+    succeed = fail = stop_and_persist = start
+
+    text = property(lambda self: "", start)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
 
 
 class IOStream:
@@ -114,8 +134,12 @@ class IOStream:
 
     @contextlib.contextmanager
     def open_spinner(self, title: str, spinner: str = "dots"):
-        with halo.Halo(title, spinner=spinner) as spin:
-            yield spin
+        if self.verbosity >= self.DETAIL:
+            bar = DummySpinner()
+        else:
+            bar = halo.Halo(title, spinner=spinner)
+        with bar as bar:
+            yield bar
 
 
 stream = IOStream()
