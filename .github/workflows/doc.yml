@@ -17,8 +17,8 @@ jobs:
           architecture: "x64"
       - name: Build pages
         run: |
-          pip install mkdocs mkdocs-material markdown-include mkdocs-version
-          mkdocs-version build --minor --min-version=0.8.0 --base-dir docs
+          pip install mkdocs mkdocs-material markdown-include
+          cd docs && mkdocs build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
