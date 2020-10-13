@@ -56,7 +56,14 @@ def get_abi_tag(python_version):
     A replacement for pip._internal.models.pep425tags:get_abi_tag()
     """
     try:
-        from wheel.pep425tags import get_abbr_impl, get_config_var, get_flag
+        from wheel.pep425tags import get_abbr_impl, get_config_var
+        from wheel.pep425tags import get_flag as _get_flag
+
+        def get_flag(var, fallback, expected=True, warn=True):
+            return _get_flag(
+                var, fallback=lambda: fallback, expected=expected, warn=warn
+            )
+
     except ModuleNotFoundError:
         from packaging.tags import interpreter_name as get_abbr_impl
         from wheel.bdist_wheel import get_config_var, get_flag
@@ -70,15 +77,15 @@ def get_abi_tag(python_version):
         m = ""
         u = ""
         is_cpython = impl == "cp"
-        if get_flag("Py_DEBUG", lambda: hasattr(sys, "gettotalrefcount"), warn=False):
+        if get_flag("Py_DEBUG", hasattr(sys, "gettotalrefcount"), warn=False):
             d = "d"
         if python_version < (3, 8) and get_flag(
-            "WITH_PYMALLOC", lambda: is_cpython, warn=False
+            "WITH_PYMALLOC", is_cpython, warn=False
         ):
             m = "m"
         if python_version < (3, 3) and get_flag(
             "Py_UNICODE_SIZE",
-            lambda: sys.maxunicode == 0x10FFFF,
+            sys.maxunicode == 0x10FFFF,
             expected=4,
             warn=False,
         ):

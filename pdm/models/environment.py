@@ -293,18 +293,21 @@ class Environment:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
-                cache_entry = wheel_cache.get_cache_entry(
-                    ireq.link,
-                    ireq.req.project_name,
-                    get_supported(
-                        version="".join(
-                            map(str, get_python_version(self.python_executable)[:2])
+                if hashes is None:
+                    cache_entry = wheel_cache.get_cache_entry(
+                        ireq.link,
+                        ireq.req.project_name,
+                        get_supported(
+                            version="".join(
+                                map(str, get_python_version(self.python_executable)[:2])
+                            )
+                        ),
+                    )
+                    if cache_entry is not None:
+                        stream.logger.debug(
+                            "Using cached wheel link: %s", cache_entry.link
                         )
-                    ),
-                )
-                if cache_entry is not None:
-                    stream.logger.debug("Using cached wheel link: %s", cache_entry.link)
-                    ireq.link = cache_entry.link
+                        ireq.link = cache_entry.link
             if not ireq.editable and not ireq.req.name:
                 ireq.source_dir = kwargs["build_dir"]
             else:
