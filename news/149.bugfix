@@ -1,0 +1,1 @@
+Fix a bug that the result of `find_matched()` is exhaused when accessed twice.
