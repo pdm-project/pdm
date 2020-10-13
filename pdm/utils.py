@@ -298,7 +298,7 @@ def _wheel_support_index_min(self, tags=None):
 
 
 @contextmanager
-def allow_all_wheels():
+def allow_all_wheels(enable: bool = True):
     """Monkey patch pip.Wheel to allow all wheels
 
     The usual checks against platforms and Python versions are ignored to allow
@@ -307,6 +307,10 @@ def allow_all_wheels():
     will interfere.
     """
     from pip._internal.models.wheel import Wheel as PipWheel
+
+    if not enable:
+        yield
+        return
 
     original_wheel_supported = PipWheel.supported
     original_support_index_min = PipWheel.support_index_min
@@ -508,13 +512,14 @@ def highest_version(versions: List[str]) -> str:
 
 
 def populate_link(
-    finder: PackageFinder, ireq: InstallRequirement, upgrade: bool = False
+    finder: PackageFinder,
+    ireq: InstallRequirement,
+    upgrade: bool = False,
 ):
     """Populate ireq's link attribute"""
-    if ireq.link:
-        return
-    link = finder.find_requirement(ireq, upgrade)
-    if not link:
-        return
-    link = getattr(link, "link", link)
-    ireq.link = link
+    if not ireq.link:
+        link = finder.find_requirement(ireq, upgrade)
+        if not link:
+            return
+        link = getattr(link, "link", link)
+        ireq.link = link
