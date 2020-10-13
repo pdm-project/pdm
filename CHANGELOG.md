@@ -1,3 +1,15 @@
+Release v0.9.1 (2020-10-13)
+---------------------------
+
+### Features & Improvements
+
+- Display plain text instead of spinner bar under verbose mode. [#150](https://github.com/frostming/pdm/issues/150)
+
+### Bug Fixes
+
+- Fix a bug that the result of `find_matched()` is exhaused when accessed twice. [#149](https://github.com/frostming/pdm/issues/149)
+
+
 Release v0.9.0 (2020-10-08)
 ---------------------------
 
