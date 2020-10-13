@@ -337,9 +337,13 @@ def do_build(
         shutil.rmtree(dest, ignore_errors=True)
     with project.environment.activate(True), cd(project.root), stream.logging("build"):
         if sdist:
-            build_sdist(".", dest)
+            stream.echo("Building sdist...")
+            loc = build_sdist(".", dest)
+            stream.echo(f"Built sdist at {loc}")
         if wheel:
-            build_wheel(".", dest)
+            stream.echo("Building wheel...")
+            loc = build_wheel(".", dest)
+            stream.echo(f"Built wheel at {loc}")
 
 
 def do_init(
