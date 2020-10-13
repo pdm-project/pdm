@@ -14,11 +14,11 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: 3.7
-          architecture: 'x64'
+          architecture: "x64"
       - name: Build pages
         run: |
           pip install mkdocs mkdocs-material markdown-include mkdocs-version
-          mkdocs-version build --minor --min-version=v0.8.0 --base-dir docs
+          mkdocs-version build --minor --min-version=0.8.0 --base-dir docs
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
