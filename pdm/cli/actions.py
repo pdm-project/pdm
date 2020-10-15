@@ -369,7 +369,7 @@ def do_init(
                 "dev-dependencies": tomlkit.table(),
             }
         },
-        "build-system": {"requires": ["pdm"], "build-backend": "pdm.pep517.api"},
+        "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }
     if python_requires and python_requires != "*":
         get_specifier(python_requires)
