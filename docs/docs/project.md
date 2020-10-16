@@ -70,21 +70,24 @@ $ pdm info --env
 
 ## Configrate the project
 
-Show the configurations:
+PDM's `config` command works just like `git config`, except that `--list` isn't needed to
+show configurations.
+
+Show the current configurations:
 ```console
 $ pdm config
 ```
 Get one single configuration:
 ```console
-$ pdm config get pypi.url
+$ pdm config pypi.url
 ```
 Change a configuration value and store in home configuration:
 ```console
-$ pdm config set pypi.url "https://testpypi.org/simple"
+$ pdm config pypi.url "https://testpypi.org/simple"
 ```
 Change a configuration value and store in `.pdm.toml`:
 ```console
-$ pdm config set --local pypi.url "https://testpypi.org/simple"
+$ pdm config --local pypi.url "https://testpypi.org/simple"
 ```
 
 The configuration files are searched in the following order:
@@ -145,7 +148,7 @@ only `requirements.txt` format is supported:
 $ pdm export -o requirements.txt
 ```
 
-## Configurations
+## Available Configurations
 
 | Config Item | Description | Default Value | Available in Project | Env var |
 | ----------- | ----------- | ------------- | -------------------- | ------- |
