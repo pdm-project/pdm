@@ -73,5 +73,5 @@ def test_load_multiple_plugings(invoke, mocker, project):
     result = invoke(["hello"])
     assert result.output.strip() == "Hello world"
 
-    result = invoke(["config", "get", "foo"])
+    result = invoke(["config", "foo"])
     assert result.output.strip() == "bar"

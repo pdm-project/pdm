@@ -182,50 +182,50 @@ def test_config_command(project, invoke):
 
 
 def test_config_get_command(project, invoke):
-    result = invoke(["config", "get", "python.use_pyenv"], obj=project)
+    result = invoke(["config", "python.use_pyenv"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == "True"
 
-    result = invoke(["config", "get", "foo.bar"], obj=project)
+    result = invoke(["config", "foo.bar"], obj=project)
     assert result.exit_code != 0
 
 
 def test_config_set_command(project, invoke):
-    result = invoke(["config", "set", "python.use_pyenv", "false"], obj=project)
+    result = invoke(["config", "python.use_pyenv", "false"], obj=project)
     assert result.exit_code == 0
-    result = invoke(["config", "get", "python.use_pyenv"], obj=project)
+    result = invoke(["config", "python.use_pyenv"], obj=project)
     assert result.output.strip() == "False"
 
-    result = invoke(["config", "set", "foo.bar"], obj=project)
+    result = invoke(["config", "foo.bar"], obj=project)
     assert result.exit_code != 0
 
-    result = invoke(["config", "set", "-l", "cache_dir", "/path/to/bar"], obj=project)
+    result = invoke(["config", "-l", "cache_dir", "/path/to/bar"], obj=project)
     assert result.exit_code != 0
 
 
 def test_config_env_var_shadowing(project, invoke):
     with temp_environ():
         os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
-        result = invoke(["config", "get", "pypi.url"], obj=project)
+        result = invoke(["config", "pypi.url"], obj=project)
         assert result.output.strip() == "https://example.org/simple"
 
         result = invoke(
-            ["config", "set", "pypi.url", "https://testpypi.org/pypi"], obj=project
+            ["config", "pypi.url", "https://testpypi.org/pypi"], obj=project
         )
         assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
-        result = invoke(["config", "get", "pypi.url"], obj=project)
+        result = invoke(["config", "pypi.url"], obj=project)
         assert result.output.strip() == "https://example.org/simple"
 
         del os.environ["PDM_PYPI_URL"]
-        result = invoke(["config", "get", "pypi.url"], obj=project)
+        result = invoke(["config", "pypi.url"], obj=project)
         assert result.output.strip() == "https://testpypi.org/pypi"
 
 
 def test_config_project_global_precedence(project, invoke):
-    invoke(["config", "set", "python.path", "/path/to/foo"], obj=project)
-    invoke(["config", "set", "-l", "python.path", "/path/to/bar"], obj=project)
+    invoke(["config", "python.path", "/path/to/foo"], obj=project)
+    invoke(["config", "-l", "python.path", "/path/to/bar"], obj=project)
 
-    result = invoke(["config", "get", "python.path"], obj=project)
+    result = invoke(["config", "python.path"], obj=project)
     assert result.output.strip() == "/path/to/bar"
 
 
