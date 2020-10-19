@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib
-import subprocess
 from typing import TYPE_CHECKING
 
 import distlib.scripts
@@ -10,8 +9,8 @@ from pip._vendor.pkg_resources import EggInfoDistribution
 from pip_shims import shims
 
 from pdm.iostream import stream
+from pdm.models.builders import log_subprocessor
 from pdm.models.requirements import parse_requirement
-from pdm.utils import cd
 
 if TYPE_CHECKING:
     from distlib.wheel import Wheel
@@ -326,14 +325,9 @@ class Installer:  # pragma: no cover
             paths["purelib"],
             paths["scripts"],
         ]
-        with self.environment.activate(True), cd(ireq.unpacked_source_directory):
-            result = subprocess.run(install_args, capture_output=True)
-            stream.logger.debug(result.stdout.decode("utf-8"))
-            if result.returncode:
-                stream.logger.debug(result.stderr.decode("utf-8"))
-                raise RuntimeError(
-                    f"Call command: {install_args} returned non-zero status."
-                )
+        with self.environment.activate(True):
+            extra_env = {"INJECT_SITE": "1"} if not self.environment.is_global else None
+            log_subprocessor(install_args, ireq.unpacked_source_directory, extra_env)
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)

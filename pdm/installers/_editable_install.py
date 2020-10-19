@@ -1,6 +1,5 @@
 """A compatible script to install editable distributions."""
 import os
-import site
 import sys
 import tokenize
 
@@ -31,7 +30,7 @@ def install(setup_py, prefix, lib_dir, bin_dir):
         "--site-dirs={0}".format(lib_dir),
     ]
     sys.path.append(lib_dir)
-    if os.path.normpath(lib_dir) not in site.getsitepackages():
+    if os.getenv("INJECT_SITE", "").lower() in ("1", "true", "yes"):
         # Patches the script writer to inject library path
         easy_install.ScriptWriter.template = easy_install.ScriptWriter.template.replace(
             "import sys",

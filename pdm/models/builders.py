@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 import sys
@@ -6,6 +7,7 @@ from typing import Iterable
 
 from build import ProjectBuilder
 from build.env import IsolatedEnvironment as _Environment
+from pep517.wrappers import LoggerWrapper
 
 from pdm.exceptions import BuildError
 from pdm.iostream import stream
@@ -58,12 +60,15 @@ def log_subprocessor(cmd, cwd=None, extra_environ=None):
     env = os.environ.copy()
     if extra_environ:
         env.update(extra_environ)
-    capture_output = bool(stream.logger)
-    proc = subprocess.run(cmd, cwd=cwd, env=env, capture_output=capture_output)
-    if capture_output:
-        stream.logger.debug(proc.stdout.decode("utf-8"))
-    if proc.returncode:
-        stream.logger.debug(proc.stderr.decode("utf-8"))
+    try:
+        subprocess.check_call(
+            cmd,
+            cwd=cwd,
+            env=env,
+            stdout=LoggerWrapper(stream.logger, logging.DEBUG),
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError:
         raise BuildError(f"Call command {cmd} return non-zero status.")
 
 
