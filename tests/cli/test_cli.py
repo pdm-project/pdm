@@ -296,3 +296,9 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     assert (
         project.root / "requirements_output.txt"
     ).read_text() == requirements_txt.read_text()
+
+
+def test_completion_command(invoke):
+    result = invoke(["completion", "bash"])
+    assert result.exit_code == 0
+    assert "(completion)" in result.output
