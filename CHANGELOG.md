@@ -1,3 +1,16 @@
+Release v0.10.0 (2020-10-20)
+----------------------------
+
+### Features & Improvements
+
+- Change to Git style config command. [#157](https://github.com/frostming/pdm/issues/157)
+- Add a command to generate scripts for autocompletion, which is backed by `pycomplete`. [#159](https://github.com/frostming/pdm/issues/159)
+
+### Bug Fixes
+
+- Fix a bug that `sitecustomize.py` incorrectly gets injected into the editabl console scripts. [#158](https://github.com/frostming/pdm/issues/158)
+
+
 Release v0.9.2 (2020-10-13)
 ---------------------------
 
