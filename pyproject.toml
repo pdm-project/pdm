@@ -37,7 +37,7 @@ python-cfonts = "*"
 resolvelib = "<1.0.0,>=0.3.0"
 pdm-pep517 = "<1.0.0,>=0.1.0"
 build = "<1.0.0,>=0.0.4"
-pycomplete = "<1.0.0,>=0.1.0"
+pycomplete = "<1.0.0,>=0.2.0"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"

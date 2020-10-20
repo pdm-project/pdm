@@ -332,7 +332,7 @@ summary = "library with cross-python path, ini-parsing, io, code, log facilities
 [[package]]
 name = "pycomplete"
 sections = ["default"]
-version = "0.1.0"
+version = "0.2.0"
 marker = "python_version >= '3.6'"
 summary = "A Python library to generate static completion scripts for your CLI app"
 
@@ -751,9 +751,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "py-1.9.0-py2.py3-none-any.whl", hash = "sha256:366389d1db726cd2fcfc79732e75410e5fe4d31db13692115529d34069a043c2"},
     {file = "py-1.9.0.tar.gz", hash = "sha256:9ca6883ce56b4e8da7e79ac18787889fa5206c79dcc67fb065376cd2fe03f342"},
 ]
-"pycomplete 0.1.0" = [
-    {file = "pycomplete-0.1.0-py3-none-any.whl", hash = "sha256:57806964059614f674bec9cde8b854dfb79d5a73a03245f2b9f767d3ac94bdee"},
-    {file = "pycomplete-0.1.0.tar.gz", hash = "sha256:d0e1739169da3347c98bd5e69b290500a024788e4c3120f0be4d71d71eb750f1"},
+"pycomplete 0.2.0" = [
+    {file = "pycomplete-0.2.0-py3-none-any.whl", hash = "sha256:4390bf61c779004a3815e372c7fefff1fe1e80b44a77bd82624a951738094864"},
+    {file = "pycomplete-0.2.0.tar.gz", hash = "sha256:6b30ed9645bed538ca99c020d304394147848a42fe2bfa57da2891750d1a2545"},
 ]
 "pygments 2.6.1" = [
     {file = "Pygments-2.6.1-py3-none-any.whl", hash = "sha256:ff7a40b4860b727ab48fad6360eb351cc1b33cbf9b15a0f689ca5353e9463324"},
@@ -888,5 +888,4 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:8e45f22d2dd6bd94639691828497d282"
-
+content_hash = "md5:9416f11641de90ffcf21646fa61ce5c4"

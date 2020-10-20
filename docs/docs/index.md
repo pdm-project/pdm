@@ -18,8 +18,8 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 PDM requires Python 3.7+ to be installed. It works on multiple platforms including Windows, Linux and MacOS.
 
 !!! note
-    There is no restriction about what Python version that your project is using but installing
-    PDM itself needs Python 3.7+.
+There is no restriction about what Python version that your project is using but installing
+PDM itself needs Python 3.7+.
 
 ### Recommended installation method
 
@@ -53,7 +53,7 @@ CMD ["pdm", "run", "python", "main.py"]
 
 ## Shell Completion
 
-PDM supports generating completion scripts for Bash, Zsh or Fish. Here are some common locations for each shell:
+PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. Here are some common locations for each shell:
 
 ```bash
 # Bash
@@ -61,15 +61,27 @@ $ pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
 
 # Zsh
 # Make sure ~/.zfunc is added to fpath, before compinit.
-$ pdm completions zsh > ~/.zfunc/_pdm
+$ pdm completion zsh > ~/.zfunc/_pdm
 
 # Oh-My-Zsh
 $ mkdir $ZSH_CUSTOM/plugins/pdm
-$ pdm completions zsh > $ZSH_CUSTOM/plugins/pdm/_pdm
+$ pdm completion zsh > $ZSH_CUSTOM/plugins/pdm/_pdm
 # Then make sure pdm plugin is enabled in ~/.zshrc
 
 # Fish
-$ pdm completions fish > ~/.config/fish/completions/pdm.fish
+$ pdm completion fish > ~/.config/fish/completions/pdm.fish
+
+# Powershell
+# Create a directory to store completion scripts
+PS > mkdir $PROFILE\..\Completions
+PS > echo @'
+Get-ChildItem "$PROFILE\..\Completions\" | ForEach-Object {
+    . $_.FullName
+}
+'@ | Out-File -Append -Encoding utf8 $PROFILE
+# Generate script
+PS > Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+PS > pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
 ```
 
 ## Use with IDE
