@@ -23,7 +23,13 @@ PDM itself needs Python 3.7+.
 
 ### Recommended installation method
 
-To avoid messing up with the system Python environemnt, the most recommended way to install PDM
+If your are on MacOS and using `homebrew`, install it by:
+
+```bash
+$ brew install pdm
+```
+
+Otherwise, to avoid messing up with the system Python environemnt, the most recommended way to install PDM
 is via [pipx](https://pypi.org/project/pipx):
 
 ```console

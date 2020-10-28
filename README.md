@@ -56,7 +56,13 @@ For the same reason it can't act as a PEP 517 backend.
 
 PDM requires python version 3.7 or higher.
 
-It is recommended to install `pdm` in an isolated enviroment, with `pipx`.
+If your are on MacOS and using `homebrew`, install it by:
+
+```bash
+$ brew install pdm
+```
+
+Otherwise, it is recommended to install `pdm` in an isolated enviroment with `pipx`:
 
 ```bash
 $ pipx install pdm
