@@ -25,6 +25,30 @@ def ljust(text, length):
     return text + " " * (length - len(_strip_styles(text)))
 
 
+class IndentedHalo(halo.Halo):
+    """A subclass of halo.Halo that supports indentation"""
+
+    def __init__(self, text: str, *args, **kwargs) -> None:
+        self._indent = kwargs.pop("indent", "")
+        super().__init__(text, *args, **kwargs)
+
+    def _write(self, s, overwrite=False):
+        if s[:1] == "\r":
+            s = f"\r{self._indent}{s[1:]}"
+        else:
+            s = f"{self._indent}{s}"
+        return super()._write(s, overwrite)
+
+    def succeed(self, text):
+        return self.stop_and_persist(stream.green("✔"), text)
+
+    def fail(self, text):
+        return self.stop_and_persist(stream.red("✖"), text)
+
+    def warn(self, text):
+        return self.stop_and_persist(stream.yellow("⚠"), text)
+
+
 class DummySpinner:
     """A dummy spinner class implementing needed interfaces.
     But only display text onto screen.
@@ -138,10 +162,10 @@ class IOStream:
 
     @contextlib.contextmanager
     def open_spinner(self, title: str, spinner: str = "dots"):
-        if self.verbosity >= self.DETAIL:
+        if self.verbosity >= self.DETAIL or os.getenv("CI"):
             bar = DummySpinner()
         else:
-            bar = halo.Halo(title, spinner=spinner)
+            bar = IndentedHalo(title, spinner=spinner, indent=self._indent)
         with bar as bar:
             yield bar
 

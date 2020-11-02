@@ -1,6 +1,5 @@
 import contextlib
 import multiprocessing
-import os
 import traceback
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
@@ -62,8 +61,6 @@ class DummyExecutor:
 class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
-    BAR_FILLED_CHAR = "=" if os.name == "nt" else "▉"
-    BAR_EMPTY_CHAR = " "
     RETRY_TIMES = 1
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
 
@@ -127,16 +124,14 @@ class Synchronizer:
         """Install candidate"""
         can = self.candidates[key]
         installer = self.get_installer()
-        with stream.open_spinner(
-            f"Installing {stream.green(key, bold=True)}..."
-        ) as spinner:
+        with stream.open_spinner(f"Installing {can.format()}...") as spinner:
             try:
                 installer.install(can)
             except Exception:
-                spinner.fail(f"Install {stream.green(key, bold=True)} failed")
+                spinner.fail(f"Install {can.format()} failed")
                 raise
             else:
-                spinner.succeed(f"Install {stream.green(key, bold=True)} successful")
+                spinner.succeed(f"Install {can.format()} successful")
 
         return can
 
@@ -153,10 +148,16 @@ class Synchronizer:
                 installer.uninstall(dist)
                 installer.install(can)
             except Exception:
-                spinner.fail(f"Update {stream.green(key, bold=True)} failed")
+                spinner.fail(
+                    f"Update {stream.green(key, bold=True)} "
+                    f"-> {stream.yellow(can.version)} failed"
+                )
                 raise
             else:
-                spinner.succeed(f"Update {stream.green(key, bold=True)} successful")
+                spinner.succeed(
+                    f"Update {stream.green(key, bold=True)} "
+                    f"-> {stream.yellow(can.version)} successful"
+                )
         return dist, can
 
     def remove_distribution(self, key: str) -> Distribution:
@@ -167,20 +168,26 @@ class Synchronizer:
         installer = self.get_installer()
         dist = self.working_set[key]
         with stream.open_spinner(
-            f"Removing {stream.green(key, bold=True)}..."
+            f"Removing {stream.green(key, bold=True)} {stream.yellow(dist.version)}..."
         ) as spinner:
             try:
                 installer.uninstall(dist)
             except Exception:
-                spinner.fail(f"Remove {stream.green(key, bold=True)} failed")
+                spinner.fail(
+                    f"Remove {stream.green(key, bold=True)} "
+                    f"{stream.yellow(dist.version)} failed"
+                )
                 raise
             else:
-                spinner.succeed(f"Remove {stream.green(key, bold=True)} successful")
+                spinner.succeed(
+                    f"Remove {stream.green(key, bold=True)} "
+                    f"{stream.yellow(dist.version)} successful"
+                )
         return dist
 
     def _show_headline(self, packages: Dict[str, List[str]]) -> None:
         add, update, remove = packages["add"], packages["update"], packages["remove"]
-        results = [stream.bold("Updating working set:")]
+        results = [stream.bold("Synchronizing working set with lock file:")]
         results.extend(
             [
                 f"{stream.green(str(len(add)))} to add,",
@@ -248,14 +255,30 @@ class Synchronizer:
 
         sequential_jobs = []
         parallel_jobs = []
+        # Self package will be installed after all other dependencies are installed.
+        install_self = None
         for kind in to_do:
             for key in to_do[kind]:
-                if key in self.SEQUENTIAL_PACKAGES:
+                if key == self.environment.project.meta.project_name.lower():
+                    install_self = (kind, key)
+                elif key in self.SEQUENTIAL_PACKAGES:
+                    sequential_jobs.append((kind, key))
+                elif key in self.candidates and self.candidates[key].req.editable:
+                    # Editable packages are installed sequentially.
                     sequential_jobs.append((kind, key))
                 else:
                     parallel_jobs.append((kind, key))
 
         errors: List[str] = []
+        for job in sequential_jobs:
+            kind, key = job
+            try:
+                handlers[kind](key)
+            except Exception as err:
+                errors.append(f"{kind} {stream.green(key)} failed:\n")
+                errors.extend(
+                    traceback.format_exception(type(err), err, err.__traceback__)
+                )
 
         def update_progress(future, kind, key):
             if future.exception():
@@ -265,23 +288,21 @@ class Synchronizer:
                     traceback.format_exception(type(error), error, error.__traceback__)
                 )
 
-        with stream.logging("install"), self.create_executor() as executor:
+        with stream.logging("install"):
+            with stream.indent("  "), self.create_executor() as executor:
+                for job in parallel_jobs:
+                    kind, key = job
+                    future = executor.submit(handlers[kind], key)
+                    future.add_done_callback(
+                        partial(update_progress, kind=kind, key=key)
+                    )
 
-            for job in sequential_jobs:
-                kind, key = job
-                future = executor.submit(handlers[kind], key)
-                future.add_done_callback(partial(update_progress, kind=kind, key=key))
-                future.result()
-
-            for job in parallel_jobs:
-                kind, key = job
-                future = executor.submit(handlers[kind], key)
-                future.add_done_callback(partial(update_progress, kind=kind, key=key))
-
-        self.environment.write_site_py()
-        if not errors:
-            stream.echo("\nAll complete")
-            return
-        stream.echo(stream.red("\nERRORS:"))
-        stream.echo("".join(errors), err=True)
-        raise InstallationError("Some package operations are not complete yet")
+            if errors:
+                stream.echo(stream.red("\nERRORS:"))
+                stream.echo("".join(errors), err=True)
+                raise InstallationError("Some package operations are not complete yet")
+            self.environment.write_site_py()
+            if install_self:
+                stream.echo("Installing the project as an editable package...")
+                handlers[install_self[0]](install_self[1])
+            stream.echo("\nAll complete!")

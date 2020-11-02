@@ -60,7 +60,7 @@ def do_lock(
             resolver, requirements, project.environment.python_requires
         )
         data = format_lockfile(mapping, dependencies, summaries)
-        spin.succeed("Resolution success")
+        spin.succeed("Resolution succeeds")
     project.write_lockfile(data)
 
     return mapping
