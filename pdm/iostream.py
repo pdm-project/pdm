@@ -79,6 +79,9 @@ class IOStream:
         else:
             return click.style(text, *args, **kwargs)
 
+    def bold(self, text: str, **kwargs) -> str:
+        return self._style(text, bold=True, **kwargs)
+
     def display_columns(
         self, rows: List[List[str]], header: Optional[List[str]] = None
     ) -> None:

@@ -48,8 +48,9 @@ class SpinnerReporter(BaseReporter):
 
         log_title("Resolution Result")
         stream.logger.info("Stable pins:")
+        column_width = max(map(len, state.mapping.keys()))
         for k, can in state.mapping.items():
-            stream.logger.info(f"\t{can.name}\t{can.version}")
+            stream.logger.info(f"  {k.rjust(column_width)} {can.version}")
 
     def extract_metadata(self):
         self.spinner.start("Extracting package metadata")
