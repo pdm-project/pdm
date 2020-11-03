@@ -26,19 +26,6 @@ marker = "python_version >= '2.7'"
 summary = "Classes Without Boilerplate"
 
 [[package]]
-name = "build"
-sections = ["default"]
-version = "0.0.4"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
-summary = "UNKNOWN"
-
-[package.dependencies]
-packaging = "*"
-pep517 = "*"
-toml = "*"
-importlib-metadata = {marker = "python_version < '3.8'", version = "*"}
-
-[[package]]
 name = "cached-property"
 sections = ["default"]
 version = "1.5.1"
@@ -105,7 +92,7 @@ six = ">=1.12.0"
 [[package]]
 name = "importlib-metadata"
 sections = ["default", "dev", "doc"]
-version = "1.7.0"
+version = "2.0.0"
 marker = "python_version >= '2.7' and python_version < '3.8'"
 summary = "Read metadata from Python packages"
 
@@ -282,8 +269,7 @@ summary = "PEP 517 support"
 [[package]]
 name = "pep517"
 sections = ["default"]
-version = "0.8.2"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
+version = "0.9.1"
 summary = "Wrappers to build Python packages using PEP 517 hooks"
 
 [package.dependencies]
@@ -497,7 +483,8 @@ summary = "ANSII Color formatting for output in terminal."
 [[package]]
 name = "toml"
 sections = ["default", "dev"]
-version = "0.10.1"
+version = "0.10.2"
+marker = "python_version >= '2.6'"
 summary = "Python Library for Tom's Obvious, Minimal Language"
 
 [[package]]
@@ -543,7 +530,7 @@ summary = "A built-package format for Python"
 [[package]]
 name = "zipp"
 sections = ["default", "dev", "doc"]
-version = "3.1.0"
+version = "3.4.0"
 marker = "python_version >= '3.6' and python_version < '3.8'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
@@ -563,10 +550,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 "attrs 20.1.0" = [
     {file = "attrs-20.1.0-py2.py3-none-any.whl", hash = "sha256:2867b7b9f8326499ab5b0e2d12801fa5c98842d2cbd22b35112ae04bf85b4dff"},
     {file = "attrs-20.1.0.tar.gz", hash = "sha256:0ef97238856430dcf9228e07f316aefc17e8939fc8507e18c6501b761ef1a42a"},
-]
-"build 0.0.4" = [
-    {file = "build-0.0.4-py2.py3-none-any.whl", hash = "sha256:7170bc694b330329a938b286f08ad840f64c1e1353a145e2f397f461e3f0b280"},
-    {file = "build-0.0.4.tar.gz", hash = "sha256:5c6ca6cba06ea9a51623ce3197f019db8925ef3f06bf6d983fe5dcb16fcd1f6e"},
 ]
 "cached-property 1.5.1" = [
     {file = "cached_property-1.5.1-py2.py3-none-any.whl", hash = "sha256:3a026f1a54135677e7da5ce819b0c690f156f37976f3e30c5430740725203d7f"},
@@ -631,9 +614,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "halo-0.0.30-py3-none-any.whl", hash = "sha256:78750d4778488b79b12104f3a966259579df6b42eec0d7736b3125bfc4c01b10"},
     {file = "halo-0.0.30.tar.gz", hash = "sha256:ad1fb4d7e29fe846d323bf4a8bf9e65fddcb24c10258c13e964cab13278f9568"},
 ]
-"importlib-metadata 1.7.0" = [
-    {file = "importlib_metadata-1.7.0-py2.py3-none-any.whl", hash = "sha256:dc15b2969b4ce36305c51eebe62d418ac7791e9a157911d58bfb1f9ccd8e2070"},
-    {file = "importlib_metadata-1.7.0.tar.gz", hash = "sha256:90bb658cdbbf6d1735b6341ce708fc7024a3e14e99ffdc5783edea9f9b077f83"},
+"importlib-metadata 2.0.0" = [
+    {file = "importlib_metadata-2.0.0-py2.py3-none-any.whl", hash = "sha256:cefa1a2f919b866c5beb7c9f7b0ebb4061f30a8a9bf16d609b000e2dfaceb9c3"},
+    {file = "importlib_metadata-2.0.0.tar.gz", hash = "sha256:77a540690e24b0305878c37ffd421785a6f7e53c8b5720d211b211de8d0e95da"},
 ]
 "incremental 17.5.0" = [
     {file = "incremental-17.5.0-py2.py3-none-any.whl", hash = "sha256:717e12246dddf231a349175f48d74d93e2897244939173b01974ab6661406b9f"},
@@ -731,9 +714,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "pdm_pep517-0.2.0-py3-none-any.whl", hash = "sha256:2f2b9bf81353a7a4e60e2e682d0e7fedc0d9869b8450c785f45fc4ac67c0f2f9"},
     {file = "pdm-pep517-0.2.0.tar.gz", hash = "sha256:5b4ab654f1697fc384e7b84480373220cebd85529004477f4f0a09db701205ba"},
 ]
-"pep517 0.8.2" = [
-    {file = "pep517-0.8.2-py2.py3-none-any.whl", hash = "sha256:576c480be81f3e1a70a16182c762311eb80d1f8a7b0d11971e5234967d7a342c"},
-    {file = "pep517-0.8.2.tar.gz", hash = "sha256:8e6199cf1288d48a0c44057f112acf18aa5ebabbf73faa242f598fbe145ba29e"},
+"pep517 0.9.1" = [
+    {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},
+    {file = "pep517-0.9.1.tar.gz", hash = "sha256:aeb78601f2d1aa461960b43add204cc7955667687fbcf9cdb5170f00556f117f"},
 ]
 "pip 20.2.2" = [
     {file = "pip-20.2.2-py2.py3-none-any.whl", hash = "sha256:5244e51494f5d1dfbb89da492d4250cb07f9246644736d10ed6c45deb1a48500"},
@@ -850,9 +833,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 "termcolor 1.1.0" = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
 ]
-"toml 0.10.1" = [
-    {file = "toml-0.10.1-py2.py3-none-any.whl", hash = "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"},
-    {file = "toml-0.10.1.tar.gz", hash = "sha256:926b612be1e5ce0634a2ca03470f95169cf16f939018233a670519cb4ac58b0f"},
+"toml 0.10.2" = [
+    {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
+    {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
 ]
 "tomlkit 0.7.0" = [
     {file = "tomlkit-0.7.0-py2.py3-none-any.whl", hash = "sha256:6babbd33b17d5c9691896b0e68159215a9387ebfa938aa3ac42f4a4beeb2b831"},
@@ -881,11 +864,11 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "wheel-0.35.1-py2.py3-none-any.whl", hash = "sha256:497add53525d16c173c2c1c733b8f655510e909ea78cc0e29d374243544b77a2"},
     {file = "wheel-0.35.1.tar.gz", hash = "sha256:99a22d87add3f634ff917310a3d87e499f19e663413a52eb9232c447aa646c9f"},
 ]
-"zipp 3.1.0" = [
-    {file = "zipp-3.1.0-py3-none-any.whl", hash = "sha256:aa36550ff0c0b7ef7fa639055d797116ee891440eac1a56f378e2d3179e0320b"},
-    {file = "zipp-3.1.0.tar.gz", hash = "sha256:c599e4d75c98f6798c509911d08a22e6c021d074469042177c8c86fb92eefd96"},
+"zipp 3.4.0" = [
+    {file = "zipp-3.4.0-py3-none-any.whl", hash = "sha256:102c24ef8f171fd729d46599845e95c7ab894a4cf45f5de11a44cc7444fb1108"},
+    {file = "zipp-3.4.0.tar.gz", hash = "sha256:ed5eee1974372595f9e416cc7bbeeb12335201d8081ca8a0743c954d4446e5cb"},
 ]
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:9416f11641de90ffcf21646fa61ce5c4"
+content_hash = "md5:eccd95f156db3d9e7c8d525a3298971e"

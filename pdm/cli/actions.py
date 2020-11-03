@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
@@ -19,13 +20,13 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.installers.installers import format_dist
 from pdm.iostream import stream
-from pdm.models.builders import build_sdist, build_wheel
+from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import cd, get_python_version
+from pdm.utils import get_python_version
 
 
 def do_lock(
@@ -333,16 +334,20 @@ def do_build(
     if not wheel and not sdist:
         stream.echo("All artifacts are disabled, nothing to do.", err=True)
         return
+    if not os.path.isabs(dest):
+        dest = project.root.joinpath(dest).as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
-    with project.environment.activate(True), cd(project.root), stream.logging("build"):
+    with stream.logging("build"), EnvBuilder(
+        project.root, project.environment
+    ) as builder:
         if sdist:
             stream.echo("Building sdist...")
-            loc = build_sdist(".", dest)
+            loc = builder.build_sdist(dest)
             stream.echo(f"Built sdist at {loc}")
         if wheel:
             stream.echo("Building wheel...")
-            loc = build_wheel(".", dest)
+            loc = builder.build_wheel(dest)
             stream.echo(f"Built wheel at {loc}")
 
 

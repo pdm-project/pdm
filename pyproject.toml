@@ -36,7 +36,8 @@ halo = "<1.0.0,>=0.0.28"
 python-cfonts = "*"
 resolvelib = "<1.0.0,>=0.3.0"
 pdm-pep517 = "<1.0.0,>=0.1.0"
-build = "<1.0.0,>=0.0.4"
+importlib-metadata = {version = "*", marker = "python_version<'3.8'"}
+pep517 = "*"
 pycomplete = "<1.0.0,>=0.2.0"
 
 [tool.pdm.dev-dependencies]

@@ -53,7 +53,10 @@ class IOStream:
         self.verbosity = verbosity
         self._disable_colors = disable_colors
         self._indent = ""
-        self.logger = None
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(logging.NullHandler())
+        self.logger = logger
 
         for color in COLORS:
             setattr(self, color, functools.partial(self._style, fg=color))
@@ -109,18 +112,16 @@ class IOStream:
     def logging(self, type_: str = "install"):
         file_name = mktemp(".log", f"pdm-{type_}-")
 
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
+        logger = self.logger
         if self.verbosity >= self.DETAIL:
             handler = logging.StreamHandler()
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
         handler.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
+        logger.handlers[1:] = [handler]
         pip_logger = logging.getLogger("pip.subprocessor")
         pip_logger.handlers[:] = [handler]
         try:
-            self.logger = logger
             yield logger
         except Exception:
             if self.verbosity < self.DETAIL:
