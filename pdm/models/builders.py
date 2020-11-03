@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import logging
 import os
 import shutil
@@ -46,6 +47,8 @@ class LoggerWrapper(threading.Thread):
         # create the pipe and reader
         self.fd_read, self.fd_write = os.pipe()
         self.reader = os.fdopen(self.fd_read)
+        # A sentinel random string as stop sign
+        self._stop_bit = base64.b85encode(os.urandom(16)).decode()
 
         self.start()
 
@@ -58,26 +61,37 @@ class LoggerWrapper(threading.Thread):
 
     def run(self):
         for line in self.reader:
+            if line == self._stop_bit:
+                os.close(self.fd_read)
+                break
             self._write(self.remove_newline(line))
 
     def _write(self, message):
         self.logger.log(self.level, message)
+
+    def stop(self):
+        with os.fdopen(self.fd_write, "w+") as f:
+            f.write(self._stop_bit)
+        self.join()
 
 
 def log_subprocessor(cmd, cwd=None, extra_environ=None):
     env = os.environ.copy()
     if extra_environ:
         env.update(extra_environ)
+    outstream = LoggerWrapper(stream.logger, logging.DEBUG)
     try:
         subprocess.check_call(
             cmd,
             cwd=cwd,
             env=env,
-            stdout=LoggerWrapper(stream.logger, logging.DEBUG),
+            stdout=outstream,
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError:
         raise BuildError(f"Call command {cmd} return non-zero status.")
+    finally:
+        outstream.stop()
 
 
 def _download_pip_wheel(path):
