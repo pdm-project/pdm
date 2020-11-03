@@ -5,17 +5,17 @@ PDM can act as a PEP 517 build backend, to enable that, write the following line
 
 ```toml
 [build-system]
-requires = ["pdm"]
+requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
 ```
 
 `pip` will read the backend settings to install or build a package.
 
 !!! note "About editable installation"
-    As described, [PEP 517](https://www.python.org/dev/peps/pep-0517/) doesn't provide a
-    way to specify how to install a package in editable mode. So you can't install a PEP 517
-    package by `pip install -e <path_or_url>`. But PDM can install a "PDM package" in editable
-    mode.
+As described, [PEP 517](https://www.python.org/dev/peps/pep-0517/) doesn't provide a
+way to specify how to install a package in editable mode. So you can't install a PEP 517
+package by `pip install -e <path_or_url>`. But PDM can install a "PDM package" in editable
+mode.
 
 ## Choose a Python interpreter
 
@@ -33,7 +33,6 @@ to find the latest version of `foo`, whose `python_requires` version range is a 
 
 So, make sure you write `python_requires` properly if you don't want any outdated packages to be locked.
 
-
 ## Build distribution artifacts
 
 ```console
@@ -43,6 +42,7 @@ $ pdm build
 - Building wheel...
 - Built pdm_test-0.0.0-py3-none-any.whl
 ```
+
 The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine).
 
 ## Show the current Python environment
@@ -74,18 +74,25 @@ PDM's `config` command works just like `git config`, except that `--list` isn't 
 show configurations.
 
 Show the current configurations:
+
 ```console
 $ pdm config
 ```
+
 Get one single configuration:
+
 ```console
 $ pdm config pypi.url
 ```
+
 Change a configuration value and store in home configuration:
+
 ```console
 $ pdm config pypi.url "https://testpypi.org/simple"
 ```
+
 Change a configuration value and store in `.pdm.toml`:
+
 ```console
 $ pdm config --local pypi.url "https://testpypi.org/simple"
 ```
@@ -114,9 +121,8 @@ If you want global project to track another project file other than `~/.pdm/glob
 project path following `-g/--global`.
 
 !!! danger "NOTE"
-    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
-    remove packages installed in your system Python.
-
+Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
+remove packages installed in your system Python.
 
 ## Working with a virtualenv
 
@@ -150,16 +156,16 @@ $ pdm export -o requirements.txt
 
 ## Available Configurations
 
-| Config Item | Description | Default Value | Available in Project | Env var |
-| ----------- | ----------- | ------------- | -------------------- | ------- |
-| `cache_dir` | The root directory of cached files | The default cache location on OS | No | |
-| `auto_global` | Use global package implicity if no local project is found | `False` | No | `PDM_AUTO_GLOBAL` |
-| `use_venv` | Install packages into the activated venv site packages instead of PEP 582 | `False` | Yes | `PDM_USE_VENV` |
-| `parallel_install` | Whether to perform installation and uninstallation in parallel | `True` | Yes | `PDM_PARALLEL_INSTALL` |
-| `python.path` | The Python interpreter path | | Yes | `PDM_PYTHON_PATH` |
-| `python.use_pyenv` | Use the pyenv interpreter | `True` | Yes | |
-| `pypi.url` | The URL of PyPI mirror | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes | `PDM_PYPI_URL` |
-| `pypi.verify_ssl` | Verify SSL certificate when query PyPI | Read `trusted-hosts` in `pip.conf`, defaults to `True` | Yes | |
-| `pypi.json_api` | Consult PyPI's JSON API for package metadata | `False` | Yes | `PDM_PYPI_JSON_API` |
+| Config Item        | Description                                                               | Default Value                                                             | Available in Project | Env var                |
+| ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ---------------------- |
+| `cache_dir`        | The root directory of cached files                                        | The default cache location on OS                                          | No                   |                        |
+| `auto_global`      | Use global package implicity if no local project is found                 | `False`                                                                   | No                   | `PDM_AUTO_GLOBAL`      |
+| `use_venv`         | Install packages into the activated venv site packages instead of PEP 582 | `False`                                                                   | Yes                  | `PDM_USE_VENV`         |
+| `parallel_install` | Whether to perform installation and uninstallation in parallel            | `True`                                                                    | Yes                  | `PDM_PARALLEL_INSTALL` |
+| `python.path`      | The Python interpreter path                                               |                                                                           | Yes                  | `PDM_PYTHON_PATH`      |
+| `python.use_pyenv` | Use the pyenv interpreter                                                 | `True`                                                                    | Yes                  |                        |
+| `pypi.url`         | The URL of PyPI mirror                                                    | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes                  | `PDM_PYPI_URL`         |
+| `pypi.verify_ssl`  | Verify SSL certificate when query PyPI                                    | Read `trusted-hosts` in `pip.conf`, defaults to `True`                    | Yes                  |                        |
+| `pypi.json_api`    | Consult PyPI's JSON API for package metadata                              | `False`                                                                   | Yes                  | `PDM_PYPI_JSON_API`    |
 
-*If the env var is set, the value will take precendence over what is saved in the config file.*
+_If the env var is set, the value will take precendence over what is saved in the config file._

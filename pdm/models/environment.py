@@ -21,6 +21,7 @@ from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
 from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
+from pdm.models.builders import EnvBuilder
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
@@ -285,8 +286,6 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        from pdm.models.builders import build_egg_info, build_wheel
-
         kwargs = self._make_building_args(ireq)
         wheel_cache = self.project.make_wheel_cache()
         with self.get_finder() as finder:
@@ -339,11 +338,9 @@ class Environment:
             if ireq.link.is_wheel:
                 return (self.project.cache("wheels") / ireq.link.filename).as_posix()
 
-            with self.activate(True):
+            with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
                 if ireq.editable:
-                    ret = build_egg_info(
-                        ireq.unpacked_source_directory, kwargs["build_dir"]
-                    )
+                    ret = builder.build_egg_info(kwargs["build_dir"])
                     ireq.metadata_directory = ret
                 else:
                     should_cache = False
@@ -364,7 +361,7 @@ class Environment:
                         if should_cache
                         else kwargs["build_dir"]
                     )
-                    ret = build_wheel(ireq.unpacked_source_directory, output_dir)
+                    ret = builder.build_wheel(output_dir)
             return ret
 
     def get_working_set(self) -> WorkingSet:

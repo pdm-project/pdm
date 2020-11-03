@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "pdm.pep517.api"
-requires = ["pdm"]
+requires = ["pdm-pep517"]
 
 [tool]
 [tool.pdm]
