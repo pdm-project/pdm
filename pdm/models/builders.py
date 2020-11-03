@@ -70,7 +70,7 @@ class LoggerWrapper(threading.Thread):
         self.logger.log(self.level, message)
 
     def stop(self):
-        with os.fdopen(self.fd_write, "w+") as f:
+        with os.fdopen(self.fd_write, "w") as f:
             f.write(self._stop_bit)
         self.join()
 
