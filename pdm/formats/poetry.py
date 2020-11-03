@@ -25,7 +25,7 @@ VERSION_RE = re.compile(r"(\S+?)\s*(\d.*?)\s*(?=,|$)")
 
 def _convert_specifier(version):
     parts = []
-    for op, version in VERSION_RE.findall(version):
+    for op, version in VERSION_RE.findall(str(version)):
         if op == "~":
             op += "="
         elif op == "^":
