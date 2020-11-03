@@ -7,10 +7,7 @@ import subprocess
 import sys
 import tempfile
 import threading
-import zipapp
-import zipfile
 from pathlib import Path
-from tempfile import mkdtemp
 from typing import TYPE_CHECKING, Iterable, List, Optional
 
 import toml
@@ -83,8 +80,8 @@ def log_subprocessor(cmd, cwd=None, extra_environ=None):
         raise BuildError(f"Call command {cmd} return non-zero status.")
 
 
-def _download_and_make_pip_pyz(path):
-    dirname = tempfile.mkdtemp(prefix="pip-download-")
+def _download_pip_wheel(path):
+    dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
     try:
         log_subprocessor(
             [
@@ -98,10 +95,8 @@ def _download_and_make_pip_pyz(path):
                 "pip",
             ]
         )
-        wheel_file = next(Path(dirname).glob("pip-*.whl"))
-        with zipfile.ZipFile(wheel_file, "r") as zf:
-            zf.extractall(Path(dirname) / "extracted")
-        zipapp.create_archive(Path(dirname) / "extracted/pip", path)
+        wheel_file = next(dirname.glob("pip-*.whl"))
+        shutil.move(wheel_file, path)
     finally:
         shutil.rmtree(dirname, ignore_errors=True)
 
@@ -181,14 +176,14 @@ class EnvBuilder:
                 pass
             else:
                 return [self.executable, "-m", "pip"]
-        # Otherwise, download a zipball pip from the Internet.
-        pip_pyz = self._env.project.cache("pip.pyz")
-        if not pip_pyz.is_file():
-            _download_and_make_pip_pyz(pip_pyz)
-        return [self.executable, pip_pyz]
+        # Otherwise, download a pip wheel from the Internet.
+        pip_wheel = self._env.project.cache("pip.whl")
+        if not pip_wheel.is_file():
+            _download_pip_wheel(pip_wheel)
+        return [self.executable, str(pip_wheel / "pip")]
 
     def __enter__(self):
-        self._path = mkdtemp(prefix="pdm-build-env-")
+        self._path = tempfile.mkdtemp(prefix="pdm-build-env-")
         self.install(self._build_system["requires"])
         paths = get_sys_config_paths(
             self.executable, vars={"base": self._path, "platbase": self._path}
