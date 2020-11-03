@@ -101,3 +101,21 @@ underlines = "-~^"
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
 
+[tool.isort]
+profile = "black"
+atomic = true
+skip_glob = ["*/setup.py"]
+filter_files = true
+known_first_party = ["pdm"]
+known_third_party = [
+    "click",
+    "halo",
+    "distlib",
+    "pythonfinder",
+    "pytest",
+    "tomlkit",
+    "appdirs",
+    "pip_shims",
+    "cfonts",
+    "packaging",
+]
