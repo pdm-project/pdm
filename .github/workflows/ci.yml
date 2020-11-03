@@ -2,9 +2,19 @@ name: Tests
 
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "news/**"
+      - "*.md"
+      - Dockerfile
   push:
     branches:
       - master
+    paths-ignore:
+      - "docs/**"
+      - "news/**"
+      - "*.md"
+      - Dockerfile
 
 jobs:
   Testing:
