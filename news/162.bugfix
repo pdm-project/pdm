@@ -1,0 +1,1 @@
+Switch the PEP 517 build frontend from `build` to a home-grown version.
