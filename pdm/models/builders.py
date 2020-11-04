@@ -110,7 +110,7 @@ def _download_pip_wheel(path):
             ]
         )
         wheel_file = next(dirname.glob("pip-*.whl"))
-        shutil.move(wheel_file, path)
+        shutil.move(str(wheel_file), path)
     finally:
         shutil.rmtree(dirname, ignore_errors=True)
 
@@ -191,7 +191,7 @@ class EnvBuilder:
             else:
                 return [self.executable, "-m", "pip"]
         # Otherwise, download a pip wheel from the Internet.
-        pip_wheel = self._env.project.cache("pip.whl")
+        pip_wheel = self._env.project.cache_dir / "pip.whl"
         if not pip_wheel.is_file():
             _download_pip_wheel(pip_wheel)
         return [self.executable, str(pip_wheel / "pip")]

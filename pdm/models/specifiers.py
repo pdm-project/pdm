@@ -1,6 +1,6 @@
 import re
 from functools import lru_cache
-from typing import List, Optional, Set, Tuple, Union
+from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -52,19 +52,6 @@ def _convert_to_version(version_tuple: Tuple[Union[int, str], ...]) -> str:
     return ".".join(str(i) for i in version_tuple)
 
 
-def _restrict_versions_to_range(versions, lower, upper):
-    for version in versions:
-        try:
-            if version < lower:
-                continue
-            elif version >= upper:
-                break
-            else:  # lower <= version < upper
-                yield version
-        except TypeError:  # a wildcard match, count the version in.
-            yield version
-
-
 class PySpecSet(SpecifierSet):
     # TODO: fetch from python.org and cache
     MAX_PY_VERSIONS = {
@@ -83,8 +70,9 @@ class PySpecSet(SpecifierSet):
         (3, 3): 7,
         (3, 4): 10,
         (3, 5): 10,
-        (3, 6): 10,
-        (3, 7): 6,
+        (3, 6): 12,
+        (3, 7): 9,
+        (3, 8): 6,
     }
     MAX_MAJOR_VERSION = 4
     MIN_VERSION = (-1, -1, -1)
@@ -146,14 +134,17 @@ class PySpecSet(SpecifierSet):
                 raise InvalidPyVersion(
                     f"Unsupported version specifier: {spec.op}{spec.version}"
                 )
-        self._merge_bounds_and_excludes(lower_bound, upper_bound, excludes)
+        self._reorganize(lower_bound, upper_bound, excludes)
 
+    @classmethod
     def _merge_bounds_and_excludes(
-        self,
+        cls,
         lower: Tuple[int, int, int],
         upper: Tuple[int, int, int],
-        excludes: Set[Tuple[Union[int, str], ...]],
-    ) -> None:
+        excludes: Iterable[Tuple[Union[int, str], ...]],
+    ) -> Tuple[
+        Tuple[int, int, int], Tuple[int, int, int], List[Tuple[Union[int, str], ...]]
+    ]:
         def comp_key(item):
             # .* constraints are always considered before concrete constraints.
             return tuple(e if isinstance(e, int) else -1 for e in item)
@@ -170,11 +161,10 @@ class PySpecSet(SpecifierSet):
             or not any(_version_part_match(wv, version) for wv in wildcard_excludes)
         ]
 
-        if lower == self.MIN_VERSION and upper == self.MAX_VERSION:
+        if lower == cls.MIN_VERSION and upper == cls.MAX_VERSION:
             # Nothing we can do here, it is a non-constraint.
-            self._lower_bound, self._upper_bound = lower, upper
-            self._excludes = sorted_excludes
-            return
+            return lower, upper, sorted_excludes
+
         for version in list(sorted_excludes):  # from to low to high
             if comp_key(version) >= comp_key(upper):
                 sorted_excludes[:] = []
@@ -226,10 +216,14 @@ class PySpecSet(SpecifierSet):
             else:
                 break
 
-        self._lower_bound = lower
-        self._upper_bound = upper
-        self._excludes = sorted_excludes
-        # Regenerate specifiers with merged bounds and excludes.
+        return lower, upper, sorted_excludes
+
+    def _reorganize(self, lower_bound, upper_bound, excludes):
+        (
+            self._lower_bound,
+            self._upper_bound,
+            self._excludes,
+        ) = self._merge_bounds_and_excludes(lower_bound, upper_bound, excludes)
         if not self.is_impossible:
             super().__init__(str(self))
 
@@ -309,7 +303,7 @@ class PySpecSet(SpecifierSet):
         excludes = set(rv._excludes) | set(other._excludes)
         lower = max(rv._lower_bound, other._lower_bound)
         upper = min(rv._upper_bound, other._upper_bound)
-        rv._merge_bounds_and_excludes(lower, upper, excludes)
+        rv._reorganize(lower, upper, excludes)
         return rv
 
     @lru_cache()
@@ -331,7 +325,7 @@ class PySpecSet(SpecifierSet):
             excludes.update(
                 self._populate_version_range(left._upper_bound, right._lower_bound)
             )
-        rv._merge_bounds_and_excludes(lower, upper, excludes)
+        rv._reorganize(lower, upper, excludes)
         return rv
 
     def _populate_version_range(self, lower, upper):
@@ -386,17 +380,19 @@ class PySpecSet(SpecifierSet):
             # XXX: narrow down the upper bound to ``MAX_MAJOR_VERSION``
             # So that `>=3.6,<4.0` is considered a superset of `>=3.7`, see issues/66
             other._upper_bound = (self.MAX_MAJOR_VERSION, 0, 0)
+        lower, upper, excludes = self._merge_bounds_and_excludes(
+            other._lower_bound, other._upper_bound, self._excludes
+        )
         if (
             self._lower_bound > other._lower_bound
             or self._upper_bound < other._upper_bound
         ):
             return False
-        valid_excludes = set(
-            _restrict_versions_to_range(
-                self._excludes, other._lower_bound, other._upper_bound
-            )
+        return (
+            lower <= other._lower_bound
+            and upper >= other._upper_bound
+            and set(excludes) <= set(other._excludes)
         )
-        return valid_excludes <= set(other._excludes)
 
     @lru_cache()
     def is_subset(self, other: Union[str, SpecifierSet]) -> bool:
@@ -407,17 +403,19 @@ class PySpecSet(SpecifierSet):
             other._upper_bound = self.MAX_VERSION
         if other.is_allow_all:
             return True
+        lower, upper, excludes = self._merge_bounds_and_excludes(
+            self._lower_bound, self._upper_bound, other._excludes
+        )
         if (
             self._lower_bound < other._lower_bound
             or self._upper_bound > other._upper_bound
         ):
             return False
-        valid_excludes = set(
-            _restrict_versions_to_range(
-                other._excludes, self._lower_bound, self._upper_bound
-            )
+        return (
+            lower <= self._lower_bound
+            and upper >= self._upper_bound
+            and set(excludes) >= set(self._excludes)
         )
-        return valid_excludes <= set(self._excludes)
 
     def as_marker_string(self) -> str:
         if self.is_allow_all:
