@@ -1,3 +1,13 @@
+Release v0.10.1 (2020-11-04)
+----------------------------
+
+### Bug Fixes
+
+- Switch the PEP 517 build frontend from `build` to a home-grown version. [#162](https://github.com/frostming/pdm/issues/162)
+- Synchronize the output of `LogWrapper`. [#164](https://github.com/frostming/pdm/issues/164)
+- Fix a bug that `is_subset` and `is_superset` may return wrong result when wildcard excludes overlaps with the upper bound. [#165](https://github.com/frostming/pdm/issues/165)
+
+
 Release v0.10.0 (2020-10-20)
 ----------------------------
 

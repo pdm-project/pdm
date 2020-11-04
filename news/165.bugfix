@@ -1,1 +1,0 @@
-Fix a bug that `is_subset` and `is_superset` may return wrong result when wildcard excludes overlaps with the upper bound.
