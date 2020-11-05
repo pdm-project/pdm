@@ -1,3 +1,11 @@
+Release v0.10.2 (2020-11-05)
+----------------------------
+
+### Bug Fixes
+
+- Building editable distribution does not install `build-system.requires` any more. [#167](https://github.com/frostming/pdm/issues/167)
+
+
 Release v0.10.1 (2020-11-04)
 ----------------------------
 
