@@ -166,6 +166,7 @@ class EnvBuilder:
             src_dir,
             self._backend,
             backend_path=self._build_system.get("backend-path"),
+            runner=log_subprocessor,
             python_executable=self.executable,
         )
 
@@ -198,7 +199,6 @@ class EnvBuilder:
 
     def __enter__(self):
         self._path = tempfile.mkdtemp(prefix="pdm-build-env-")
-        self.install(self._build_system["requires"])
         paths = get_sys_config_paths(
             self.executable, vars={"base": self._path, "platbase": self._path}
         )
@@ -248,18 +248,18 @@ class EnvBuilder:
 
     def build_wheel(self, out_dir: str) -> str:
         """Build wheel and return the full path of the artifact."""
-        with self._hook.subprocess_runner(log_subprocessor):
-            requires = self._hook.get_requires_for_build_wheel()
-            self.install(requires)
-            filename = self._hook.build_wheel(out_dir)
+        self.install(self._build_system["requires"])
+        requires = self._hook.get_requires_for_build_wheel()
+        self.install(requires)
+        filename = self._hook.build_wheel(out_dir)
         return os.path.join(out_dir, filename)
 
     def build_sdist(self, out_dir: str) -> str:
         """Build sdist and return the full path of the artifact."""
-        with self._hook.subprocess_runner(log_subprocessor):
-            requires = self._hook.get_requires_for_build_sdist()
-            self.install(requires)
-            filename = self._hook.build_sdist(out_dir)
+        self.install(self._build_system["requires"])
+        requires = self._hook.get_requires_for_build_sdist()
+        self.install(requires)
+        filename = self._hook.build_sdist(out_dir)
         return os.path.join(out_dir, filename)
 
     def build_egg_info(self, out_dir: str) -> str:
