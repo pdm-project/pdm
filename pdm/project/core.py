@@ -123,6 +123,10 @@ class Project:
         result.update(self.project_config)
         return result
 
+    @property
+    def scripts(self) -> Dict[str, Union[str, Dict[str, str]]]:
+        return self.tool_settings.get("scripts")
+
     @cached_property
     def global_config(self) -> Config:
         """Read-and-writable configuration dict for global settings"""

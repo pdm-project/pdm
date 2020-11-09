@@ -385,7 +385,7 @@ class Environment:
             if not version or this_version.startswith(version):
                 return self.python_executable
         # Fallback to use shutil.which to find the executable
-        return shutil.which(command, path=os.getenv("PATH"))
+        return shutil.which(command, path=os.getenv("PATH")) or command
 
     def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""
