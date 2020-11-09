@@ -43,7 +43,7 @@ class Command(BaseCommand):
         if env:
             os.environ.update(env)
         if shell:
-            sys.exit(subprocess.call(args, shell=True))
+            sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
 
         command, *args = args
         expanded_command = os.path.expanduser(
@@ -127,4 +127,4 @@ class Command(BaseCommand):
             if project.scripts and options.command in project.scripts:
                 self._run_script(project, options.command, options.args)
             else:
-                self._run_command(project, options.command, options.args)
+                self._run_command(project, [options.command] + options.args)
