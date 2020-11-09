@@ -46,15 +46,14 @@ class Command(BaseCommand):
             sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
 
         command, *args = args
-        expanded_command = os.path.expanduser(
-            os.path.expandvars(project.environment.which(command))
-        )
+        expanded_command = project.environment.which(command)
         if not expanded_command:
             raise PdmUsageError(
                 "Command {} is not found on your PATH.".format(
                     stream.green(f"'{command}'")
                 )
             )
+        expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
         expanded_args = [os.path.expandvars(arg) for arg in [expanded_command] + args]
         if os.name == "nt":
             sys.exit(subprocess.call(expanded_args))
