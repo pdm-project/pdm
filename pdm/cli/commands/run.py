@@ -55,7 +55,9 @@ class Command(BaseCommand):
             )
         expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
         expanded_args = [os.path.expandvars(arg) for arg in [expanded_command] + args]
-        if os.name == "nt":
+        if os.name == "nt" or "CI" in os.environ:
+            # In order to make sure pytest is playing well,
+            # don't hand over the process under a testing environment.
             sys.exit(subprocess.call(expanded_args))
         else:
             os.execv(expanded_command, expanded_args)
