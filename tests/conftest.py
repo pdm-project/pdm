@@ -291,5 +291,5 @@ def is_dev(request):
 
 @pytest.fixture()
 def invoke():
-    runner = CliRunner()
+    runner = CliRunner(mix_stderr=False)
     return functools.partial(runner.invoke, main, prog_name="pdm")

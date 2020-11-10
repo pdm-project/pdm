@@ -107,8 +107,9 @@ class Command(BaseCommand):
                 "python",
                 "-c",
                 f"import sys, {module} as {short_name};"
-                f"sys.argv.extend({args!r});sys.exit({func})",
-            ]
+                f"sys.exit({short_name}.{func})",
+            ] + args
+        stream.echo(f"Running {kind} script: {stream.green(str(args))}", err=True)
         return self._run_command(project, args, **options)
 
     def _show_list(self, project: Project) -> None:
