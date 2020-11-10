@@ -169,3 +169,99 @@ $ pdm export -o requirements.txt
 | `pypi.json_api`    | Consult PyPI's JSON API for package metadata                              | `False`                                                                   | Yes                  | `PDM_PYPI_JSON_API`    |
 
 _If the env var is set, the value will take precendence over what is saved in the config file._
+
+## Run Scripts in Isolated Environment
+
+With PDM, you can run arbitrary scripts or commands with local packages loaded:
+
+```bash
+$ pdm run flask run -p 54321
+```
+
+PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.
+
+You can then run `pdm run <shortcut_name>` to invoke the script in the context of your PDM project. For example:
+
+```toml
+[tool.pdm.scripts]
+start_server = "flask run -p 54321"
+```
+
+And then in your terminal:
+
+```bash
+$ pdm run start_server
+Flask server started at http://127.0.0.1:54321
+```
+
+Any extra arguments will be appended to the command:
+
+```bash
+$ pdm run start_server -h 0.0.0.0
+Flask server started at http://0.0.0.0:54321
+```
+
+PDM supports 3 types of scripts:
+
+### Normal command
+
+Plain text scripts are regarded as normal command, or you can explictly specify it:
+
+```toml
+[tool.pdm.scripts]
+start_server = {cmd = "flask run -p 54321"}
+```
+
+### Shell script
+
+Shell scripts can be used to run more shell-specific tasks, such as pipeline and output redirecting.
+This is basically run via `subprocess.Popen()` with `shell=True`:
+
+```toml
+[tool.pdm.scripts]
+filter_error = {shell = "cat error.log|grep CRITICAL > critical.log"}
+```
+
+### Call a Python function
+
+The script can be also defined as calling a python function in the form `<module_name>:<func_name>`:
+
+```toml
+[tool.pdm.scripts]
+foobar = {call = "foo_package.bar_module:main"}
+```
+
+The function can be supplied with literal arguments:
+
+```toml
+[tool.pdm.scripts]
+foobar = {call = "foo_package.bar_module:main('dev')"}
+```
+
+### Environment variables expansion
+
+All environment variables set in the current shell can be seen by `pdm run` and will be expanded when executed.
+Besides, you can also define some fixed environment variables in your `pyproject.toml`:
+
+```toml
+[tool.pdm.scripts]
+start_server.cmd = "flask run -p 54321"
+start_server.env = {FOO = "bar", FLASK_ENV = "development"}
+```
+
+Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a compound dictionary.
+
+### Show the list of scripts shortcuts
+
+Use `pdm run --list/-l` to show the list of available script shortcuts:
+
+```bash
+$ pdm run --list
+Name        Type  Script           Description
+----------- ----- ---------------- ----------------------
+test_cmd    cmd   flask db upgrade
+test_script call  test_script:main call a python function
+test_shell  shell echo $FOO        shell command
+```
+
+You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
