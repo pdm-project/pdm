@@ -31,6 +31,7 @@ from pdm.utils import cached_property, get_finder, temp_environ
 from tests import FIXTURES
 
 stream.disable_colors()
+os.environ["CI"] = "1"
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -290,5 +291,5 @@ def is_dev(request):
 
 @pytest.fixture()
 def invoke():
-    runner = CliRunner()
+    runner = CliRunner(mix_stderr=False)
     return functools.partial(runner.invoke, main, prog_name="pdm")

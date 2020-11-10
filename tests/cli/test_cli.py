@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import sys
@@ -92,21 +91,10 @@ def test_info_global_project(invoke):
     assert "global-project" in result.output.strip()
 
 
-def test_run_command_not_found(invoke):
-    result = invoke(["run", "foobar"])
-    assert "Command 'foobar' is not found on your PATH." in result.output
-    assert result.exit_code == 1
-
-
-def test_run_pass_exit_code(invoke):
-    result = invoke(["run", "python", "-c", "1/0"])
-    assert result.exit_code == 1
-
-
 def test_uncaught_error(invoke, mocker):
     mocker.patch.object(actions, "do_list", side_effect=RuntimeError("test error"))
     result = invoke(["list"])
-    assert "[RuntimeError]: test error" in result.output
+    assert "[RuntimeError]: test error" in result.stderr
 
     result = invoke(["list", "-v"])
     assert isinstance(result.exception, RuntimeError)
@@ -249,15 +237,6 @@ def test_import_other_format_file(project, invoke, filename):
     requirements_file = FIXTURES / filename
     result = invoke(["import", str(requirements_file)], obj=project)
     assert result.exit_code == 0
-
-
-def test_pep582_not_loading_site_packages(project, invoke, capfd):
-    invoke(
-        ["run", "python", "-c", "import sys,json;print(json.dumps(sys.path))"],
-        obj=project,
-    )
-    sys_path = json.loads(capfd.readouterr()[0])
-    assert not any("site-packages" in p for p in sys_path)
 
 
 def test_search_package(project, invoke):

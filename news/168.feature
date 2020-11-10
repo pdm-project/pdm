@@ -1,0 +1,2 @@
+- Support custom script shortcuts defined in `[tool.pdm.scripts]` section.
+- Add `pdm run --list/-l` to show the list of script shortcuts.
