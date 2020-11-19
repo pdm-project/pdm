@@ -270,15 +270,16 @@ class Synchronizer:
                     parallel_jobs.append((kind, key))
 
         errors: List[str] = []
-        for job in sequential_jobs:
-            kind, key = job
-            try:
-                handlers[kind](key)
-            except Exception as err:
-                errors.append(f"{kind} {stream.green(key)} failed:\n")
-                errors.extend(
-                    traceback.format_exception(type(err), err, err.__traceback__)
-                )
+        with stream.indent("  "):
+            for job in sequential_jobs:
+                kind, key = job
+                try:
+                    handlers[kind](key)
+                except Exception as err:
+                    errors.append(f"{kind} {stream.green(key)} failed:\n")
+                    errors.extend(
+                        traceback.format_exception(type(err), err, err.__traceback__)
+                    )
 
         def update_progress(future, kind, key):
             if future.exception():
@@ -304,5 +305,6 @@ class Synchronizer:
             self.environment.write_site_py()
             if install_self:
                 stream.echo("Installing the project as an editable package...")
-                handlers[install_self[0]](install_self[1])
+                with stream.indent("  "):
+                    handlers[install_self[0]](install_self[1])
             stream.echo("\nAll complete!")

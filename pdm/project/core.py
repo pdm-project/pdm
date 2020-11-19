@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
-import halo
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
 from pip_shims import shims
@@ -34,6 +33,7 @@ if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
     from tomlkit.container import Container
 
+    from pdm._vendor import halo
     from pdm.resolver.providers import BaseProvider
 
 

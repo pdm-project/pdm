@@ -32,7 +32,6 @@ pip = ">=20.1"
 pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
-halo = "<1.0.0,>=0.0.28"
 python-cfonts = "*"
 resolvelib = "<1.0.0,>=0.3.0"
 pdm-pep517 = "<1.0.0,>=0.1.0"
@@ -145,7 +144,9 @@ protected-files = ["__init__.py", "README.md", "vendors.txt"]
 patches-dir = "vendors/patches"
 
 [tool.vendoring.transformations]
-substitute = []
+substitute = [
+  {match = 'import halo\.', replace = 'import pdm._vendor.halo'}
+]
 drop = [
     "bin/",
     "*.so",
@@ -166,5 +167,5 @@ colorama = []
 
 [tool.pytest.ini_options]
 filterwarnings = [
-  "ignore:DeprecationWarning"
+  "ignore::DeprecationWarning"
 ]

@@ -50,17 +50,19 @@ def do_lock(
         requirements = [
             r for deps in project.all_dependencies.values() for r in deps.values()
         ]
-
-    with stream.open_spinner(
-        title="Resolving dependencies", spinner="dots"
-    ) as spin, stream.logging("lock"):
-        reporter = project.get_reporter(requirements, tracked_names, spin)
-        resolver = project.core.resolver_class(provider, reporter)
-        mapping, dependencies, summaries = resolve(
-            resolver, requirements, project.environment.python_requires
-        )
-        data = format_lockfile(mapping, dependencies, summaries)
-        spin.succeed("Resolution succeeds")
+    with stream.logging("lock"):
+        # The context managers are nested to ensure the spinner is stopped before
+        # any message is thrown to the output.
+        with stream.open_spinner(
+            title="Resolving dependencies", spinner="dots"
+        ) as spin:
+            reporter = project.get_reporter(requirements, tracked_names, spin)
+            resolver = project.core.resolver_class(provider, reporter)
+            mapping, dependencies, summaries = resolve(
+                resolver, requirements, project.environment.python_requires
+            )
+            data = format_lockfile(mapping, dependencies, summaries)
+            spin.succeed("Resolution succeeds")
     project.write_lockfile(data)
 
     return mapping

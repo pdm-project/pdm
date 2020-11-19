@@ -91,20 +91,6 @@ marker = "python_version >= '3.5'"
 summary = "Clean single-source support for Python 3 and 2"
 
 [[package]]
-name = "halo"
-sections = ["default"]
-version = "0.0.31"
-marker = "python_version >= '3.4'"
-summary = "Beautiful terminal spinners in Python"
-
-[package.dependencies]
-log-symbols = ">=0.0.14"
-spinners = ">=0.0.24"
-termcolor = ">=1.1.0"
-colorama = ">=0.3.9"
-six = ">=1.12.0"
-
-[[package]]
 name = "idna"
 sections = ["dev"]
 version = "2.10"
@@ -177,16 +163,6 @@ six = "*"
 tornado = {marker = "python_version > '2.7'", version = "*"}
 
 [[package]]
-name = "log-symbols"
-sections = ["default"]
-version = "0.0.14"
-marker = "python_version >= '3.4'"
-summary = "Colored symbols for various log levels for Python"
-
-[package.dependencies]
-colorama = ">=0.3.9"
-
-[[package]]
 name = "lunr"
 sections = ["doc"]
 version = "0.5.8"
@@ -209,7 +185,7 @@ summary = "A Python implementation of Lunr.js"
 future = ">=0.16.0"
 six = ">=1.11.0"
 nltk = {marker = "python_version > '2.7'", version = ">=3.2.5"}
-lunr = {marker = "python_version >= '3.5'", version = "==0.5.8"}
+lunr = "==0.5.8"
 
 [[package]]
 name = "markdown"
@@ -373,7 +349,6 @@ Markdown = ">=3.2"
 name = "pyparsing"
 sections = ["default", "dev"]
 version = "2.4.7"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'"
 summary = "Python parsing module"
 
 [[package]]
@@ -518,20 +493,6 @@ marker = "python_version >= '2.7'"
 summary = "Python 2 and 3 compatibility utilities"
 
 [[package]]
-name = "spinners"
-sections = ["default"]
-version = "0.0.24"
-marker = "python_version >= '3.4'"
-summary = "Spinners for terminals"
-
-[[package]]
-name = "termcolor"
-sections = ["default"]
-version = "1.1.0"
-marker = "python_version >= '3.4'"
-summary = "ANSII Color formatting for output in terminal."
-
-[[package]]
 name = "toml"
 sections = ["default", "dev"]
 version = "0.10.2"
@@ -603,7 +564,7 @@ summary = "A built-package format for Python"
 name = "zipp"
 sections = ["default", "dev", "doc"]
 version = "3.4.0"
-marker = "python_version >= '3.6' and python_version < '4.0'"
+marker = "python_version >= '3.6' and python_version < '3.8'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
@@ -690,10 +651,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 "future 0.18.2" = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
-"halo 0.0.31" = [
-    {file = "halo-0.0.31-py2-none-any.whl", hash = "sha256:5350488fb7d2aa7c31a1344120cee67a872901ce8858f60da7946cef96c208ab"},
-    {file = "halo-0.0.31.tar.gz", hash = "sha256:7b67a3521ee91d53b7152d4ee3452811e1d2a6321975137762eb3d70063cc9d6"},
-]
 "idna 2.10" = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
@@ -724,10 +681,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 ]
 "livereload 2.6.3" = [
     {file = "livereload-2.6.3.tar.gz", hash = "sha256:776f2f865e59fde56490a56bcc6773b6917366bce0c267c60ee8aaf1a0959869"},
-]
-"log-symbols 0.0.14" = [
-    {file = "log_symbols-0.0.14-py3-none-any.whl", hash = "sha256:4952106ff8b605ab7d5081dd2c7e6ca7374584eff7086f499c06edd1ce56dcca"},
-    {file = "log_symbols-0.0.14.tar.gz", hash = "sha256:cf0bbc6fe1a8e53f0d174a716bc625c4f87043cc21eb55dd8a740cfe22680556"},
 ]
 "lunr 0.5.8" = [
     {file = "lunr-0.5.8-py2.py3-none-any.whl", hash = "sha256:aab3f489c4d4fab4c1294a257a30fec397db56f0a50273218ccc3efdbf01d6ca"},
@@ -939,13 +892,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
 ]
-"spinners 0.0.24" = [
-    {file = "spinners-0.0.24-py3-none-any.whl", hash = "sha256:2fa30d0b72c9650ad12bbe031c9943b8d441e41b4f5602b0ec977a19f3290e98"},
-    {file = "spinners-0.0.24.tar.gz", hash = "sha256:1eb6aeb4781d72ab42ed8a01dcf20f3002bf50740d7154d12fb8c9769bf9e27f"},
-]
-"termcolor 1.1.0" = [
-    {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
-]
 "toml 0.10.2" = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
@@ -1024,4 +970,4 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:9059fdfc6e81eb6771ea101fa975b56a"
+content_hash = "md5:5307e1dc97bc1df4e9488bc372f767a8"

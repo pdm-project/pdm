@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Provide log symbols for various log levels."""
-import platform
+import codecs
+import locale
+import os
+import sys
 
 from enum import Enum
 from pdm._vendor.colorama import init, deinit, Fore
@@ -30,13 +33,17 @@ def is_supported():
     boolean
         Whether operating system supports main symbols or not
     """
+    if os.getenv("DISABLE_UNICODE_OUTPUT"):
+        return False
+    encoding = getattr(sys.stdout, "encoding")
+    if encoding is None:
+        encoding = locale.getpreferredencoding(False)
 
-    os_arch = platform.system()
-
-    if os_arch != 'Windows':
-        return True
-
-    return False
+    try:
+        encoding = codecs.lookup(encoding).name
+    except Exception:
+        encoding = "utf-8"
+    return encoding == "utf-8"
 
 
 _SYMBOLS = _MAIN if is_supported() else _FALLBACKS

@@ -20,7 +20,6 @@ from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
 from pdm.core import main
 from pdm.exceptions import CandidateInfoNotFound
-from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
@@ -30,7 +29,6 @@ from pdm.project.config import Config
 from pdm.utils import cached_property, get_finder, temp_environ
 from tests import FIXTURES
 
-stream.disable_colors()
 os.environ["CI"] = "1"
 
 

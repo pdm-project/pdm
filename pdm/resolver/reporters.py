@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-import halo
 from resolvelib import BaseReporter
 
 from pdm.iostream import stream
@@ -10,6 +9,7 @@ from pdm.iostream import stream
 if TYPE_CHECKING:
     from resolvelib.resolvers import State
 
+    from pdm._vendor import halo
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
 
