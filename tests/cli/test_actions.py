@@ -326,7 +326,7 @@ def test_list_packages(capsys):
     out, _ = capsys.readouterr()
     assert "pdm" in out
     assert "tomlkit" in out
-    assert "halo" in out
+    assert "pip" in out
 
 
 def test_lock_dependencies(project, repository):
