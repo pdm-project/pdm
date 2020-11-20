@@ -2,7 +2,6 @@
 name = "apipkg"
 sections = ["dev"]
 version = "1.5"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "apipkg: namespace control and lazy-import mechanism"
 
 [[package]]
@@ -15,21 +14,19 @@ summary = "A small Python module for determining appropriate platform-specific d
 name = "atomicwrites"
 sections = ["dev"]
 version = "1.4.0"
-marker = "sys_platform == 'win32' and python_version >= '3.5'"
+marker = "sys_platform == 'win32'"
 summary = "Atomic file writes."
 
 [[package]]
 name = "attrs"
 sections = ["default", "dev"]
 version = "20.3.0"
-marker = "python_version >= '2.7'"
 summary = "Classes Without Boilerplate"
 
 [[package]]
 name = "cached-property"
 sections = ["default"]
 version = "1.5.2"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'"
 summary = "A decorator for caching properties in classes."
 
 [[package]]
@@ -50,21 +47,18 @@ summary = "Universal encoding detector for Python 2 and 3"
 name = "click"
 sections = ["default", "dev", "doc"]
 version = "7.1.2"
-marker = "python_version >= '2.7'"
 summary = "Composable command line interface toolkit"
 
 [[package]]
 name = "colorama"
 sections = ["default", "dev"]
 version = "0.4.4"
-marker = "python_version >= '2.7'"
 summary = "Cross-platform colored terminal text."
 
 [[package]]
 name = "coverage"
 sections = ["dev"]
 version = "5.3"
-marker = "python_version >= '2.7' and python_version < '4.0' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "Code coverage measurement for Python"
 
 [[package]]
@@ -77,7 +71,6 @@ summary = "Distribution utilities"
 name = "execnet"
 sections = ["dev"]
 version = "1.7.1"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "execnet: rapid multi-Python deployment"
 
 [package.dependencies]
@@ -87,7 +80,6 @@ apipkg = ">=1.4"
 name = "future"
 sections = ["doc"]
 version = "0.18.2"
-marker = "python_version >= '3.5'"
 summary = "Clean single-source support for Python 3 and 2"
 
 [[package]]
@@ -101,7 +93,7 @@ summary = "Internationalized Domain Names in Applications (IDNA)"
 name = "importlib-metadata"
 sections = ["default", "dev", "doc"]
 version = "2.0.0"
-marker = "python_version >= '2.7' and python_version < '4.0'"
+marker = "python_version < '4.0'"
 summary = "Read metadata from Python packages"
 
 [package.dependencies]
@@ -117,14 +109,12 @@ summary = "UNKNOWN"
 name = "iniconfig"
 sections = ["dev"]
 version = "1.1.1"
-marker = "python_version >= '3.5'"
 summary = "iniconfig: brain-dead simple config-ini parsing"
 
 [[package]]
 name = "jinja2"
 sections = ["dev", "doc"]
 version = "2.11.2"
-marker = "python_version >= '2.7'"
 summary = "A very fast and expressive template engine."
 
 [package.dependencies]
@@ -134,7 +124,7 @@ MarkupSafe = ">=0.23"
 name = "joblib"
 sections = ["doc"]
 version = "0.17.0"
-marker = "python_version >= '3.6'"
+marker = "python_version >= '2.8'"
 summary = "Lightweight pipelining: using Python functions as pipeline jobs."
 
 [[package]]
@@ -155,7 +145,6 @@ six = ">=1.11.0"
 name = "livereload"
 sections = ["doc"]
 version = "2.6.3"
-marker = "python_version >= '3.5'"
 summary = "Python LiveReload is an awesome tool for web developers"
 
 [package.dependencies]
@@ -166,7 +155,6 @@ tornado = {marker = "python_version > '2.7'", version = "*"}
 name = "lunr"
 sections = ["doc"]
 version = "0.5.8"
-marker = "python_version >= '3.5'"
 summary = "A Python implementation of Lunr.js"
 
 [package.dependencies]
@@ -178,7 +166,6 @@ name = "lunr"
 sections = ["doc"]
 version = "0.5.8"
 extras = ["languages"]
-marker = "python_version >= '3.5'"
 summary = "A Python implementation of Lunr.js"
 
 [package.dependencies]
@@ -191,7 +178,6 @@ lunr = "==0.5.8"
 name = "markdown"
 sections = ["doc"]
 version = "3.3.3"
-marker = "python_version >= '3.6'"
 summary = "Python implementation of Markdown."
 
 [package.dependencies]
@@ -210,14 +196,12 @@ markdown = "*"
 name = "MarkupSafe"
 sections = ["dev", "doc"]
 version = "1.1.1"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'"
 summary = "Safely add untrusted strings to HTML/XML markup."
 
 [[package]]
 name = "mkdocs"
 sections = ["doc"]
 version = "1.1.2"
-marker = "python_version >= '3.5'"
 summary = "Project documentation with Markdown."
 
 [package.dependencies]
@@ -245,7 +229,7 @@ pymdown-extensions = ">=6.3"
 name = "nltk"
 sections = ["doc"]
 version = "3.5"
-marker = "python_version >= '3.5'"
+marker = "python_version >= '2.8'"
 summary = "Natural Language Toolkit"
 
 [package.dependencies]
@@ -258,7 +242,6 @@ tqdm = "*"
 name = "packaging"
 sections = ["default", "dev"]
 version = "20.4"
-marker = "python_version >= '2.7'"
 summary = "Core utilities for Python packages"
 
 [package.dependencies]
@@ -269,7 +252,6 @@ six = "*"
 name = "pdm-pep517"
 sections = ["default"]
 version = "0.2.1"
-marker = "python_version >= '3.6'"
 summary = "PEP 517 support"
 
 [[package]]
@@ -287,14 +269,12 @@ zipp = {marker = "python_version < '3.8'", version = "*"}
 name = "pip"
 sections = ["default"]
 version = "20.2.4"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
 name = "pip-shims"
 sections = ["default"]
 version = "0.5.3"
-marker = "python_version >= '2.7' and python_full_version not in '3.0.0, 3.1.0, 3.2.0, 3.3.0, 3.4.0'"
 summary = "Compatibility shims for pip versions 8 thru current."
 
 [package.dependencies]
@@ -308,7 +288,6 @@ wheel = "*"
 name = "pluggy"
 sections = ["dev"]
 version = "0.13.1"
-marker = "python_version >= '3.5'"
 summary = "plugin and hook calling mechanisms for python"
 
 [package.dependencies]
@@ -318,28 +297,24 @@ importlib-metadata = {marker = "python_version < '3.8'", version = ">=0.12"}
 name = "py"
 sections = ["dev"]
 version = "1.9.0"
-marker = "python_version >= '2.7'"
 summary = "library with cross-python path, ini-parsing, io, code, log facilities"
 
 [[package]]
 name = "pycomplete"
 sections = ["default"]
 version = "0.3.1"
-marker = "python_version >= '3.6'"
 summary = "A Python library to generate static completion scripts for your CLI app"
 
 [[package]]
 name = "Pygments"
 sections = ["doc"]
 version = "2.7.2"
-marker = "python_version >= '3.5'"
 summary = "Pygments is a syntax highlighting package written in Python."
 
 [[package]]
 name = "pymdown-extensions"
 sections = ["doc"]
 version = "8.0.1"
-marker = "python_version >= '3.5'"
 summary = "Extension pack for Python Markdown."
 
 [package.dependencies]
@@ -362,7 +337,6 @@ summary = "Persistent/Functional/Immutable data structures"
 name = "pytest"
 sections = ["dev"]
 version = "6.1.2"
-marker = "python_version >= '3.5'"
 summary = "pytest: simple powerful testing with Python"
 
 [package.dependencies]
@@ -380,7 +354,6 @@ colorama = {marker = "sys_platform == 'win32'", version = "*"}
 name = "pytest-cov"
 sections = ["dev"]
 version = "2.10.1"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "Pytest plugin for measuring coverage."
 
 [package.dependencies]
@@ -391,7 +364,6 @@ coverage = ">=4.4"
 name = "pytest-forked"
 sections = ["dev"]
 version = "1.3.0"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "run tests in isolated forked subprocesses"
 
 [package.dependencies]
@@ -402,7 +374,6 @@ pytest = ">=3.10"
 name = "pytest-mock"
 sections = ["dev"]
 version = "3.3.1"
-marker = "python_version >= '3.5'"
 summary = "Thin-wrapper around the mock package for easier use with pytest"
 
 [package.dependencies]
@@ -412,7 +383,6 @@ pytest = ">=5.0"
 name = "pytest-xdist"
 sections = ["dev"]
 version = "1.34.0"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "pytest xdist plugin for distributed testing and loop-on-failing modes"
 
 [package.dependencies]
@@ -425,7 +395,6 @@ six = "*"
 name = "python-cfonts"
 sections = ["default"]
 version = "1.3.1"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "Sexy fonts for the console"
 
 [package.dependencies]
@@ -435,7 +404,6 @@ colorama = "*"
 name = "pythonfinder"
 sections = ["default"]
 version = "1.2.5"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'"
 summary = "A cross-platform python discovery tool to help locate python on any system."
 
 [package.dependencies]
@@ -449,14 +417,13 @@ packaging = "*"
 name = "PyYAML"
 sections = ["doc"]
 version = "5.3.1"
-marker = "python_version >= '3.5'"
 summary = "YAML parser and emitter for Python"
 
 [[package]]
 name = "regex"
 sections = ["doc"]
 version = "2020.11.13"
-marker = "python_version >= '3.5'"
+marker = "python_version >= '2.8'"
 summary = "Alternative regular expression module, to replace re."
 
 [[package]]
@@ -482,35 +449,30 @@ summary = "Resolve abstract dependencies into concrete ones"
 name = "setuptools"
 sections = ["default", "dev"]
 version = "50.3.2"
-marker = "python_version >= '3.5'"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
 [[package]]
 name = "six"
 sections = ["default", "dev", "doc"]
 version = "1.15.0"
-marker = "python_version >= '2.7'"
 summary = "Python 2 and 3 compatibility utilities"
 
 [[package]]
 name = "toml"
 sections = ["default", "dev"]
 version = "0.10.2"
-marker = "python_version >= '2.6'"
 summary = "Python Library for Tom's Obvious, Minimal Language"
 
 [[package]]
 name = "tomlkit"
 sections = ["default"]
 version = "0.7.0"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "Style preserving TOML library"
 
 [[package]]
 name = "tornado"
 sections = ["doc"]
 version = "6.1"
-marker = "python_version >= '3.5'"
 summary = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed."
 
 [[package]]
@@ -529,7 +491,7 @@ toml = "*"
 name = "tqdm"
 sections = ["doc"]
 version = "4.52.0"
-marker = "python_version >= '3.5'"
+marker = "python_version >= '2.8'"
 summary = "Fast, Extensible Progress Meter"
 
 [[package]]
@@ -557,14 +519,13 @@ packaging = "*"
 name = "wheel"
 sections = ["default"]
 version = "0.35.1"
-marker = "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'"
 summary = "A built-package format for Python"
 
 [[package]]
 name = "zipp"
 sections = ["default", "dev", "doc"]
 version = "3.4.0"
-marker = "python_version >= '3.6' and python_version < '3.8'"
+marker = "python_version < '4.0'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]

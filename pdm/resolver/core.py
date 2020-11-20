@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
 
 from resolvelib.resolvers import Criterion, Resolution
 
-from pdm.models.markers import PySpecSet, join_metaset
+from pdm.models.markers import PySpecSet
 from pdm.models.requirements import strip_extras
+from pdm.resolver.metaset import Metaset
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Resolver, Result
 
     from pdm.models.candidates import Candidate
-    from pdm.models.markers import Marker
     from pdm.models.requirements import Requirement
 
 
@@ -39,38 +39,27 @@ def _identify_parent(parent: Optional[Candidate]) -> None:
     return parent.identify() if parent else None
 
 
-def _build_marker_and_pyspec(
-    key: str,
+def _build_metaset(
     criterion: Criterion,
-    pythons: Dict[str, PySpecSet],
-    all_metasets: Dict[str, Tuple[Optional[Marker], PySpecSet]],
+    all_metasets: Dict[str, Metaset],
     keep_unresolved: Set[Optional[str]],
-) -> Tuple[Optional[Marker], PySpecSet]:
+) -> Metaset:
 
-    metasets = None
+    metaset = None
 
     for r, parent in criterion.information:
         if parent and _identify_parent(parent) in keep_unresolved:
             continue
-        python = pythons[strip_extras(key)[0]]
-        marker, pyspec = r.marker_no_python, r.requires_python
-        pyspec = python & pyspec
+        this_metaset = Metaset(r.marker)
         # Use 'and' to connect markers inherited from parent.
         if not parent:
-            parent_metaset = None, PySpecSet()
+            parent_metaset = Metaset()
         else:
             parent_metaset = all_metasets[_identify_parent(parent)]
-        child_marker = (
-            parent_metaset[0] & marker if any((parent_metaset[0], marker)) else None
-        )
-        child_pyspec = parent_metaset[1] & pyspec
-        if not metasets:
-            metasets = child_marker, child_pyspec
-        else:
-            # Use 'or' to connect metasets inherited from different parents.
-            marker = metasets[0] | child_marker if any((child_marker, marker)) else None
-            metasets = marker, metasets[1] | child_pyspec
-    return metasets or (None, PySpecSet())
+        merged = this_metaset & parent_metaset
+        # Use 'or' to connect metasets inherited from different parents.
+        metaset = metaset | merged if metaset is not None else merged
+    return metaset or Metaset()
 
 
 def _get_sections(crit: Criterion) -> Iterable[str]:
@@ -81,12 +70,14 @@ def _get_sections(crit: Criterion) -> Iterable[str]:
             yield from parent.sections
 
 
-def _calculate_markers_and_pyspecs(
-    result: Result, pythons: Dict[str, PySpecSet]
-) -> Dict[str, Tuple[Optional[Marker], PySpecSet]]:
-    all_metasets = {}
-    unresolved = {k for k in result.mapping}
-    circular = {}
+def extract_metadata(result: Result) -> Dict[str, Metaset]:
+    """Traverse through the parent dependencies till the top
+    and merge any requirement markers on the path.
+    Return a map of Metaset for each candidate.
+    """
+    all_metasets: Dict[str, Metaset] = {}
+    unresolved: Set[str] = {k for k in result.mapping}
+    circular: Dict[str, Set[str]] = {}
 
     while unresolved:
         new_metasets = {}
@@ -99,9 +90,7 @@ def _calculate_markers_and_pyspecs(
                 for p in crit.iter_parent()
             ):
                 continue
-            new_metasets[k] = _build_marker_and_pyspec(
-                k, crit, pythons, all_metasets, keep_unresolved
-            )
+            new_metasets[k] = _build_metaset(crit, all_metasets, keep_unresolved)
             result.mapping[k].sections = list(set(_get_sections(crit)))
 
         if new_metasets:
@@ -126,31 +115,27 @@ def _calculate_markers_and_pyspecs(
 
     for key in circular:
         crit = result.criteria[key]
-        all_metasets[key] = _build_marker_and_pyspec(
-            key, crit, pythons, all_metasets, set()
-        )
+        all_metasets[key] = _build_metaset(crit, all_metasets, set())
         result.mapping[key].sections = list(set(_get_sections(crit)))
 
     return all_metasets
 
 
-def _get_sections_from_top_requirements(traces):
-    all_sections = {}
-    for key, trace in traces.items():
-        all_sections[key] = set(item[0][2:-2] for item in trace)
-    return all_sections
-
-
 def resolve(
     resolver: Resolver, requirements: List[Requirement], requires_python: PySpecSet
 ) -> Tuple[Dict[str, Candidate], Dict[str, Dict[str, Requirement]], Dict[str, str]]:
+    """Core function to perform the actual resolve process.
+    Return a tuple containing 3 items:
+
+        1. A map of pinned candidates
+        2. A map of resolved dependencies from each section of pyproject.toml
+        3. A map of package descriptions fetched from PyPI source.
+    """
     provider, reporter = resolver.provider, resolver.reporter
     result = resolver.resolve(requirements)
 
     reporter.extract_metadata()
-    all_metasets = _calculate_markers_and_pyspecs(
-        result, provider.requires_python_collection
-    )
+    all_metasets = extract_metadata(result)
 
     mapping = result.mapping
 
@@ -159,12 +144,16 @@ def resolve(
             continue
         # Root requires_python doesn't participate in the metaset resolving,
         # now check it!
-        python = requires_python & metaset[1]
+        python = (
+            requires_python
+            & metaset.requires_python
+            & provider.requires_python_collection[strip_extras(key)[0]]
+        )
         if python.is_impossible:
             # Candidate doesn't match requires_python constraint
             del mapping[key]
         else:
             candidate = mapping[key]
-            candidate.marker = join_metaset(metaset)
+            candidate.marker = metaset.as_marker()
             candidate.hashes = provider.get_hashes(candidate)
     return mapping, provider.fetched_dependencies, provider.summary_collection
