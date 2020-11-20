@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-import halo
 from resolvelib import BaseReporter
 
 from pdm.iostream import stream
@@ -10,6 +9,7 @@ from pdm.iostream import stream
 if TYPE_CHECKING:
     from resolvelib.resolvers import State
 
+    from pdm._vendor import halo
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
 
@@ -48,8 +48,10 @@ class SpinnerReporter(BaseReporter):
 
         log_title("Resolution Result")
         stream.logger.info("Stable pins:")
-        for k, can in state.mapping.items():
-            stream.logger.info(f"\t{can.name}\t{can.version}")
+        if state.mapping:
+            column_width = max(map(len, state.mapping.keys()))
+            for k, can in state.mapping.items():
+                stream.logger.info(f"  {k.rjust(column_width)} {can.version}")
 
     def extract_metadata(self):
         self.spinner.start("Extracting package metadata")
@@ -63,15 +65,15 @@ class SpinnerReporter(BaseReporter):
             dependency, or None if ``requirement`` is one of the root
             requirements passed in from ``Resolver.resolve()``.
         """
-        parent_line = f"(from {parent.name}-{parent.version})" if parent else ""
+        parent_line = f"(from {parent.name} {parent.version})" if parent else ""
         stream.logger.info(f"\tAdding requirement {requirement.as_line()}{parent_line}")
 
     def backtracking(self, candidate: Candidate) -> None:
         """Called when rejecting a candidate during backtracking."""
-        stream.logger.info(f"Candidate rejected: {candidate.name}-{candidate.version}")
+        stream.logger.info(f"Candidate rejected: {candidate.name} {candidate.version}")
         stream.logger.info("Backtracking...")
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
         self.spinner.text = "Resolving: " + candidate.format()
-        stream.logger.info(f"\tNew pin: {candidate.name}-{candidate.version}")
+        stream.logger.info(f"\tNew pin: {candidate.name} {candidate.version}")

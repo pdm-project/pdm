@@ -1,14 +1,18 @@
 import contextlib
 import functools
+import io
 import logging
 import os
 import re
+import sys
 from itertools import zip_longest
 from tempfile import mktemp
 from typing import List, Optional
 
 import click
-import halo
+
+from pdm._vendor import halo
+from pdm.utils import cached_property
 
 COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
 
@@ -51,7 +55,6 @@ class IOStream:
 
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
-        self._disable_colors = disable_colors
         self._indent = ""
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
@@ -61,11 +64,20 @@ class IOStream:
         for color in COLORS:
             setattr(self, color, functools.partial(self._style, fg=color))
 
-    def disable_colors(self) -> None:
-        self._disable_colors = True
-
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
+
+    @cached_property
+    def supports_ansi(self) -> bool:
+        if os.getenv("CI"):
+            return False
+        stream = sys.stdout
+        if not hasattr(stream, "fileno"):
+            return False
+        try:
+            return os.isatty(stream.fileno())
+        except io.UnsupportedOperation:
+            return False
 
     def echo(
         self, message: str = "", err: bool = False, verbosity: int = NORMAL, **kwargs
@@ -74,10 +86,12 @@ class IOStream:
             click.echo(self._indent + str(message), err=err, **kwargs)
 
     def _style(self, text: str, *args, **kwargs) -> str:
-        if self._disable_colors:
+        if not self.supports_ansi:
             return text
-        else:
-            return click.style(text, *args, **kwargs)
+        return click.style(text, *args, **kwargs)
+
+    def bold(self, text: str, **kwargs) -> str:
+        return self._style(text, bold=True, **kwargs)
 
     def display_columns(
         self, rows: List[List[str]], header: Optional[List[str]] = None
@@ -135,10 +149,10 @@ class IOStream:
 
     @contextlib.contextmanager
     def open_spinner(self, title: str, spinner: str = "dots"):
-        if self.verbosity >= self.DETAIL:
+        if self.verbosity >= self.DETAIL or not self.supports_ansi:
             bar = DummySpinner()
         else:
-            bar = halo.Halo(title, spinner=spinner)
+            bar = halo.Halo(title, spinner=spinner, indent=self._indent)
         with bar as bar:
             yield bar
 

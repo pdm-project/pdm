@@ -1,0 +1,5 @@
+halo==0.0.31
+log_symbols==0.0.14
+spinners==0.0.24
+termcolor==1.1.0
+colorama==0.4.4

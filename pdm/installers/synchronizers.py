@@ -1,12 +1,10 @@
 import contextlib
-import functools
-import os
+import multiprocessing
 import traceback
-from collections import defaultdict
 from concurrent.futures.thread import ThreadPoolExecutor
+from functools import partial
 from typing import Dict, List, Tuple
 
-from click import progressbar
 from pip._vendor.pkg_resources import Distribution, safe_name
 
 from pdm.exceptions import InstallationError
@@ -63,8 +61,6 @@ class DummyExecutor:
 class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
-    BAR_FILLED_CHAR = "=" if os.name == "nt" else "▉"
-    BAR_EMPTY_CHAR = " "
     RETRY_TIMES = 1
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
 
@@ -80,23 +76,16 @@ class Synchronizer:
         self.working_set = environment.get_working_set()
 
     @contextlib.contextmanager
-    def progressbar(self, label: str, total: int):
-        bar = progressbar(
-            length=total,
-            fill_char=stream.green(self.BAR_FILLED_CHAR),
-            empty_char=self.BAR_EMPTY_CHAR,
-            show_percent=False,
-            show_pos=True,
-            label=label,
-            bar_template="%(label)s %(bar)s %(info)s",
-        )
+    def create_executor(self):
         if self.parallel:
-            executor = ThreadPoolExecutor()
+            executor = ThreadPoolExecutor(
+                max_workers=min(multiprocessing.cpu_count(), 8)
+            )
         else:
             executor = DummyExecutor()
         with executor:
             try:
-                yield bar, executor
+                yield executor
             except KeyboardInterrupt:
                 pass
 
@@ -129,13 +118,21 @@ class Synchronizer:
                 and strip_extras(name)[0] not in working_set
             }
         )
-        return to_add, to_update, to_remove
+        return sorted(to_add), sorted(to_update), sorted(to_remove)
 
     def install_candidate(self, key: str) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
         installer = self.get_installer()
-        installer.install(can)
+        with stream.open_spinner(f"Installing {can.format()}...") as spinner:
+            try:
+                installer.install(can)
+            except Exception:
+                spinner.fail(f"Install {can.format()} failed")
+                raise
+            else:
+                spinner.succeed(f"Install {can.format()} successful")
+
         return can
 
     def update_candidate(self, key: str) -> Tuple[Distribution, Candidate]:
@@ -143,8 +140,24 @@ class Synchronizer:
         can = self.candidates[key]
         dist = self.working_set[safe_name(can.name).lower()]
         installer = self.get_installer()
-        installer.uninstall(dist)
-        installer.install(can)
+        with stream.open_spinner(
+            f"Updating {stream.green(key, bold=True)} {stream.yellow(dist.version)} "
+            f"-> {stream.yellow(can.version)}..."
+        ) as spinner:
+            try:
+                installer.uninstall(dist)
+                installer.install(can)
+            except Exception:
+                spinner.fail(
+                    f"Update {stream.green(key, bold=True)} "
+                    f"-> {stream.yellow(can.version)} failed"
+                )
+                raise
+            else:
+                spinner.succeed(
+                    f"Update {stream.green(key, bold=True)} "
+                    f"-> {stream.yellow(can.version)} successful"
+                )
         return dist, can
 
     def remove_distribution(self, key: str) -> Distribution:
@@ -154,40 +167,62 @@ class Synchronizer:
         """
         installer = self.get_installer()
         dist = self.working_set[key]
-        installer.uninstall(dist)
+        with stream.open_spinner(
+            f"Removing {stream.green(key, bold=True)} {stream.yellow(dist.version)}..."
+        ) as spinner:
+            try:
+                installer.uninstall(dist)
+            except Exception:
+                spinner.fail(
+                    f"Remove {stream.green(key, bold=True)} "
+                    f"{stream.yellow(dist.version)} failed"
+                )
+                raise
+            else:
+                spinner.succeed(
+                    f"Remove {stream.green(key, bold=True)} "
+                    f"{stream.yellow(dist.version)} successful"
+                )
         return dist
 
-    def _print_section_title(
-        self, action: str, number_of_packages: int, dry_run: bool
-    ) -> None:
-        plural = "s" if number_of_packages > 1 else ""
-        verb = "will be" if dry_run else "are" if plural else "is"
-        stream.echo(f"{number_of_packages} package{plural} {verb} {action}:")
+    def _show_headline(self, packages: Dict[str, List[str]]) -> None:
+        add, update, remove = packages["add"], packages["update"], packages["remove"]
+        results = [stream.bold("Synchronizing working set with lock file:")]
+        results.extend(
+            [
+                f"{stream.green(str(len(add)))} to add,",
+                f"{stream.yellow(str(len(update)))} to update,",
+                f"{stream.red(str(len(remove)))} to remove",
+            ]
+        )
+        stream.echo(" ".join(results) + "\n")
 
-    def summarize(self, result, dry_run=False):
-        added, updated, removed = result["add"], result["update"], result["remove"]
-        if added:
-            stream.echo("\n")
-            self._print_section_title("installed", len(added), dry_run)
-            for item in sorted(added, key=lambda x: x.name):
-                stream.echo(f"  - {item.format()}")
-        if updated:
-            stream.echo("\n")
-            self._print_section_title("updated", len(updated), dry_run)
-            for old, can in sorted(updated, key=lambda x: x[1].name):
-                stream.echo(
-                    f"  - {stream.green(can.name, bold=True)} "
-                    f"{stream.yellow(old.version)} "
-                    f"-> {stream.yellow(can.version)}"
+    def _show_summary(self, packages: Dict[str, List[str]]) -> None:
+        to_add = [self.candidates[key] for key in packages["add"]]
+        to_update = [
+            (self.working_set[key], self.candidates[key]) for key in packages["update"]
+        ]
+        to_remove = [self.working_set[key] for key in packages["remove"]]
+        lines = []
+        if to_add:
+            lines.append(stream.bold("Packages to add:"))
+            for can in to_add:
+                lines.append(f"  - {can.format()}")
+        if to_update:
+            lines.append(stream.bold("Packages to add:"))
+            for prev, cur in to_update:
+                lines.append(
+                    f"  - {stream.green(cur.name, bold=True)} "
+                    f"{stream.yellow(prev.version)} -> {stream.yellow(cur.version)}"
                 )
-        if removed:
-            stream.echo("\n")
-            self._print_section_title("removed", len(removed), dry_run)
-            for dist in sorted(removed, key=lambda x: x.key):
-                stream.echo(
+        if to_remove:
+            lines.append(stream.bold("Packages to add:"))
+            for dist in to_remove:
+                lines.append(
                     f"  - {stream.green(dist.key, bold=True)} "
                     f"{stream.yellow(dist.version)}"
                 )
+        stream.echo("\n".join(lines))
 
     def synchronize(self, clean: bool = True, dry_run: bool = False) -> None:
         """Synchronize the working set with pinned candidates.
@@ -198,22 +233,18 @@ class Synchronizer:
         to_add, to_update, to_remove = self.compare_with_working_set()
         if not clean:
             to_remove = []
-        lists_to_check = [to_add, to_update, to_remove]
-        if not any(lists_to_check):
+        if not any([to_add, to_update, to_remove]):
             if not dry_run:
                 self.environment.write_site_py()
-            stream.echo("All packages are synced to date, nothing to do.")
+            stream.echo(
+                stream.yellow("All packages are synced to date, nothing to do.")
+            )
             return
+        to_do = {"remove": to_remove, "update": to_update, "add": to_add}
+        self._show_headline(to_do)
 
         if dry_run:
-            result = dict(
-                add=[self.candidates[key] for key in to_add],
-                update=[
-                    (self.working_set[key], self.candidates[key]) for key in to_update
-                ],
-                remove=[self.working_set[key] for key in to_remove],
-            )
-            self.summarize(result, dry_run)
+            self._show_summary(to_do)
             return
 
         handlers = {
@@ -222,88 +253,58 @@ class Synchronizer:
             "remove": self.remove_distribution,
         }
 
-        result = defaultdict(list)
-        failed = defaultdict(list)
-        to_do = {"add": to_add, "update": to_update, "remove": to_remove}
-        # Keep track of exceptions
-        errors = []
+        sequential_jobs = []
+        parallel_jobs = []
+        # Self package will be installed after all other dependencies are installed.
+        install_self = None
+        for kind in to_do:
+            for key in to_do[kind]:
+                if key == self.environment.project.meta.project_name.lower():
+                    install_self = (kind, key)
+                elif key in self.SEQUENTIAL_PACKAGES:
+                    sequential_jobs.append((kind, key))
+                elif key in self.candidates and self.candidates[key].req.editable:
+                    # Editable packages are installed sequentially.
+                    sequential_jobs.append((kind, key))
+                else:
+                    parallel_jobs.append((kind, key))
 
-        def update_progress(future, section, key, bar):
+        errors: List[str] = []
+        with stream.indent("  "):
+            for job in sequential_jobs:
+                kind, key = job
+                try:
+                    handlers[kind](key)
+                except Exception as err:
+                    errors.append(f"{kind} {stream.green(key)} failed:\n")
+                    errors.extend(
+                        traceback.format_exception(type(err), err, err.__traceback__)
+                    )
+
+        def update_progress(future, kind, key):
             if future.exception():
-                failed[section].append(key)
-                errors.append(future.exception())
-            else:
-                result[section].append(future.result())
-            bar.update(1)
+                errors.append(f"{kind} {stream.green(key)} failed:\n")
+                error = future.exception()
+                errors.extend(
+                    traceback.format_exception(type(error), error, error.__traceback__)
+                )
 
         with stream.logging("install"):
-            with self.progressbar(
-                "Synchronizing:", sum(len(lst) for lst in to_do.values())
-            ) as (bar, pool):
-                # First update packages, then remove and add
-                for section in sorted(to_do, reverse=True):
-                    # setup toolkits are installed sequentially before other packages.
-                    for key in sorted(
-                        to_do[section], key=lambda x: x not in self.SEQUENTIAL_PACKAGES
-                    ):
-                        future = pool.submit(handlers[section], key)
-                        future.add_done_callback(
-                            functools.partial(
-                                update_progress, section=section, key=key, bar=bar
-                            )
-                        )
-                        if key in self.SEQUENTIAL_PACKAGES:
-                            future.result()
+            with stream.indent("  "), self.create_executor() as executor:
+                for job in parallel_jobs:
+                    kind, key = job
+                    future = executor.submit(handlers[kind], key)
+                    future.add_done_callback(
+                        partial(update_progress, kind=kind, key=key)
+                    )
 
-            # Retry for failed items
-            for i in range(self.RETRY_TIMES):
-                if not any(failed.values()):
-                    break
-                stream.echo(
-                    stream.yellow("\nSome packages failed to install, retrying...")
-                )
-                to_do = failed
-                failed = defaultdict(list)
-                errors.clear()
-                with self.progressbar(
-                    f"Retrying ({i + 1}/{self.RETRY_TIMES}):",
-                    sum(len(lst) for lst in to_do.values()),
-                ) as (bar, pool):
-
-                    for section in sorted(to_do, reverse=True):
-                        for key in sorted(
-                            to_do[section],
-                            key=lambda x: x not in self.SEQUENTIAL_PACKAGES,
-                        ):
-                            future = pool.submit(handlers[section], key)
-                            future.add_done_callback(
-                                functools.partial(
-                                    update_progress, section=section, key=key, bar=bar
-                                )
-                            )
-                            if key in self.SEQUENTIAL_PACKAGES:
-                                future.result()
-            # End installation
-            self.summarize(result)
+            if errors:
+                stream.echo(stream.red("\nERRORS:"))
+                stream.echo("".join(errors), err=True)
+                raise InstallationError("Some package operations are not complete yet")
             self.environment.write_site_py()
-            if not any(failed.values()):
-                return
-            stream.echo("\n")
-            error_msg = []
-            if failed["add"] + failed["update"]:
-                error_msg.append(
-                    "Installation failed: "
-                    f"{', '.join(failed['add'] + failed['update'])}"
-                )
-            if failed["remove"]:
-                error_msg.append(f"Removal failed: {', '.join(failed['remove'])}")
-            for error in errors:
-                stream.echo(
-                    "".join(
-                        traceback.format_exception(
-                            type(error), error, error.__traceback__
-                        )
-                    ),
-                    verbosity=stream.DEBUG,
-                )
-            raise InstallationError("\n" + "\n".join(error_msg))
+            if install_self:
+                stream.echo("Installing the project as an editable package...")
+                with stream.indent("  "):
+                    handlers[install_self[0]](install_self[1])
+            stream.echo("\nAll complete!")

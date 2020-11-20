@@ -32,7 +32,6 @@ pip = ">=20.1"
 pip_shims = "*"
 pythonfinder = "*"
 tomlkit = "*"
-halo = "<1.0.0,>=0.0.28"
 python-cfonts = "*"
 resolvelib = "<1.0.0,>=0.3.0"
 pdm-pep517 = "<1.0.0,>=0.1.0"
@@ -46,6 +45,7 @@ pytest-cov = "*"
 pytest-mock = "*"
 towncrier = "<20.0.0,>=19.2.0"
 pytest-xdist = "<2.0.0,>=1.31.0"
+vendoring = {version = "*", marker = "python_version ~= '3.8'"}
 
 [tool.pdm.doc-dependencies]
 mkdocs = "<2.0.0,>=1.1"
@@ -57,6 +57,21 @@ pdm = "pdm.core:main"
 
 [tool.black]
 line-length = 88
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | pdm/_vendor/*
+)/
+'''
 
 [tool.towncrier]
 package = "pdm"
@@ -104,7 +119,7 @@ build-backend = "pdm.pep517.api"
 [tool.isort]
 profile = "black"
 atomic = true
-skip_glob = ["*/setup.py"]
+skip_glob = ["*/setup.py", "pdm/_vendor/*"]
 filter_files = true
 known_first_party = ["pdm"]
 known_third_party = [
@@ -118,4 +133,39 @@ known_third_party = [
     "pip_shims",
     "cfonts",
     "packaging",
+]
+
+[tool.vendoring]
+destination = "pdm/_vendor/"
+requirements = "pdm/_vendor/vendors.txt"
+namespace = "pdm._vendor"
+
+protected-files = ["__init__.py", "README.md", "vendors.txt"]
+patches-dir = "vendors/patches"
+
+[tool.vendoring.transformations]
+substitute = [
+  {match = 'import halo\.', replace = 'import pdm._vendor.halo'}
+]
+drop = [
+    "bin/",
+    "*.so",
+    "typing.*",
+    "*/tests/"
+]
+
+[tool.vendoring.typing-stubs]
+halo = []
+log_symbols = []
+spinners = []
+termcolor = []
+colorama = []
+
+[tool.vendoring.license.directories]
+
+[tool.vendoring.license.fallback-urls]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  "ignore::DeprecationWarning"
 ]

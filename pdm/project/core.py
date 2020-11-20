@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
-import halo
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
 from pip_shims import shims
@@ -34,6 +33,7 @@ if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
     from tomlkit.container import Container
 
+    from pdm._vendor import halo
     from pdm.resolver.providers import BaseProvider
 
 
@@ -294,7 +294,7 @@ class Project:
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
         if show_message:
-            stream.echo("Changes are written to pdm.lock.")
+            stream.echo(f"Changes are written to {stream.green('pdm.lock')}.")
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
@@ -327,7 +327,7 @@ class Project:
             } or None
             result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:
-            result[safe_name(self.meta.name).lower()] = self.make_self_candidate(True)
+            result[self.meta.project_name.lower()] = self.make_self_candidate(True)
         return result
 
     def get_content_hash(self, algo: str = "md5") -> str:
