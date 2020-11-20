@@ -145,7 +145,7 @@ patches-dir = "vendors/patches"
 
 [tool.vendoring.transformations]
 substitute = [
-  {match = 'import halo\.', replace = 'import pdm._vendor.halo'}
+  {match = 'import halo\.', replace = 'import pdm._vendor.halo.'}
 ]
 drop = [
     "bin/",

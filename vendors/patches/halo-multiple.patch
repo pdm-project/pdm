@@ -4,7 +4,7 @@ index c42941b..32281ef 100644
 +++ b/pdm/_vendor/halo/halo.py
 @@ -12,7 +12,7 @@ import time
  
- import halo.cursor as cursor
+ import pdm._vendor.halo.cursor as cursor
  
 -from pdm._vendor.log_symbols.symbols import LogSymbols
 +from pdm._vendor.log_symbols.symbols import LogSymbols, is_supported
