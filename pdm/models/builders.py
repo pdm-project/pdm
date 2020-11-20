@@ -166,9 +166,15 @@ class EnvBuilder:
             src_dir,
             self._backend,
             backend_path=self._build_system.get("backend-path"),
-            runner=log_subprocessor,
+            runner=self.subprocess_runner,
             python_executable=self.executable,
         )
+
+    def subprocess_runner(self, cmd, cwd=None, extra_environ=None):
+        env = self._saved_env.copy() if self._saved_env else {}
+        if extra_environ:
+            env.update(extra_environ)
+        return log_subprocessor(cmd, cwd, extra_environ=env)
 
     def _get_pip_command(self) -> List[str]:
         """Get a pip command that has pip installed.
@@ -184,7 +190,7 @@ class EnvBuilder:
         if python_version[0] == 3:
             # Use the ensurepip to provision one.
             try:
-                log_subprocessor(
+                self.subprocess_runner(
                     [self.executable, "-Im", "ensurepip", "--upgrade", "--default-pip"]
                 )
             except BuildError:
@@ -202,29 +208,19 @@ class EnvBuilder:
         paths = get_sys_config_paths(
             self.executable, vars={"base": self._path, "platbase": self._path}
         )
-        self._saved_env = {
-            name: os.environ.get(name, None)
-            for name in ("PATH", "PYTHONNOUSERSITE", "PYTHONPATH")
-        }
         old_path = os.getenv("PATH")
-        os.environ.update(
-            {
-                "PYTHONPATH": paths["purelib"],
-                "PATH": paths["scripts"]
-                if not old_path
-                else os.pathsep.join([paths["scripts"], old_path]),
-                "PYTHONNOUSERSITE": "1",
-            }
-        )
+        self._saved_env = {
+            "PYTHONPATH": paths["purelib"],
+            "PATH": paths["scripts"]
+            if not old_path
+            else os.pathsep.join([paths["scripts"], old_path]),
+            "PYTHONNOUSERSITE": "1",
+        }
         stream.logger.debug("Preparing isolated env for PEP 517 build...")
         return self
 
     def __exit__(self, *args):
-        for key, value in self._saved_env.items():
-            if value is None:
-                del os.environ[key]
-            else:
-                os.environ[key] = value
+        self._saved_env = None
         shutil.rmtree(self._path, ignore_errors=True)
 
     def install(self, requirements: Iterable[str]) -> None:
@@ -243,7 +239,7 @@ class EnvBuilder:
                 "-r",
                 os.path.abspath(req_file.name),
             ]
-            log_subprocessor(cmd)
+            self.subprocess_runner(cmd)
             os.unlink(req_file.name)
 
     def build_wheel(self, out_dir: str) -> str:
@@ -269,6 +265,6 @@ class EnvBuilder:
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
         args.extend(["egg_info", "--egg-base", out_dir])
-        log_subprocessor(args, cwd=self.src_dir)
+        self.subprocess_runner(args, cwd=self.src_dir)
         filename = _find_egg_info(out_dir)
         return os.path.join(out_dir, filename)

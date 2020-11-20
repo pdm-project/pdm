@@ -361,6 +361,8 @@ class Environment:
                         if should_cache
                         else kwargs["build_dir"]
                     )
+                    if not os.path.exists(output_dir):
+                        os.makedirs(output_dir, exist_ok=True)
                     ret = builder.build_wheel(output_dir)
             return ret
 
