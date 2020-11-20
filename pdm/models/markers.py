@@ -172,14 +172,3 @@ def _build_pyspec_from_marker(markers):
             if marker == "or":
                 groups.append(PySpecSet())
     return reduce(operator.or_, groups)
-
-
-def join_metaset(metaset: Tuple[Optional[Marker], PySpecSet]) -> Optional[Marker]:
-    """Join marker and python specifier into a new marker."""
-    marker, pyspec = metaset
-    py_marker = pyspec.as_marker_string() or None
-    py_marker = Marker(py_marker) if py_marker else None
-    try:
-        return marker & py_marker
-    except TypeError:
-        return None
