@@ -1,1 +1,0 @@
-Fix a bug that package's marker fails to propagate to its grandchildren if they have already been resolved.

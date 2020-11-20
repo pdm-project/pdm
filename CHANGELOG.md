@@ -1,3 +1,21 @@
+Release v0.11.0 (2020-11-20)
+----------------------------
+
+### Features & Improvements
+
+- Support custom script shortcuts in `pyproject.toml`.
+  - Support custom script shortcuts defined in `[tool.pdm.scripts]` section.
+  - Add `pdm run --list/-l` to show the list of script shortcuts. [#168](https://github.com/frostming/pdm/issues/168)
+- Patch the halo library to support parallel spinners.
+- Change the looking of `pdm install`. [#169](https://github.com/frostming/pdm/issues/169)
+
+### Bug Fixes
+
+- Fix a bug that package's marker fails to propagate to its grandchildren if they have already been resolved. [#170](https://github.com/frostming/pdm/issues/170)
+- Fix a bug that bare version specifiers in Poetry project can't be converted correctly. [#172](https://github.com/frostming/pdm/issues/172)
+- Fix the build error that destination directory is not created automatically. [#173](https://github.com/frostming/pdm/issues/173)
+
+
 Release v0.10.2 (2020-11-05)
 ----------------------------
 
