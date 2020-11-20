@@ -5,7 +5,7 @@
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 
-[![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
+[![asciicast](hhttps://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](hhttps://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
 [📖 文档](https://pdm.fming.dev)
 

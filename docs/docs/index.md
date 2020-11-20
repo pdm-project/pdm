@@ -3,7 +3,7 @@
 PDM is a modern Python package manager with [PEP 582] support. It installs and manages packages
 in a similar way to `npm` that doesn't need to create a virtualenv at all!
 
-<script id="asciicast-OKzNEKz1Lj0wmCVtcIqefskim" src="https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.js" async></script>
+<script id="asciicast-jnifN30pjfXbO9We2KqOdXEhB" src="https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.js" async></script>
 
 [pep 582]: https://www.python.org/dev/peps/pep-0582/
 
