@@ -9,7 +9,7 @@ from pip._vendor.pkg_resources import Distribution, safe_name
 
 from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
-from pdm.iostream import stream
+from pdm.iostream import CELE, stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
@@ -307,4 +307,4 @@ class Synchronizer:
                 stream.echo("Installing the project as an editable package...")
                 with stream.indent("  "):
                     handlers[install_self[0]](install_self[1])
-            stream.echo("\nAll complete!")
+            stream.echo(f"\n{CELE} All complete!")

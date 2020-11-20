@@ -19,7 +19,7 @@ from pdm.cli.utils import (
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.installers.installers import format_dist
-from pdm.iostream import stream
+from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -62,7 +62,7 @@ def do_lock(
                 resolver, requirements, project.environment.python_requires
             )
             data = format_lockfile(mapping, dependencies, summaries)
-            spin.succeed("Resolution succeeds")
+            spin.succeed(f"{LOCK} Lock successful")
     project.write_lockfile(data)
 
     return mapping

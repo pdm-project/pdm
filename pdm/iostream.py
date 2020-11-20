@@ -12,6 +12,7 @@ from typing import List, Optional
 import click
 
 from pdm._vendor import halo
+from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
 from pdm.utils import cached_property
 
 COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
@@ -158,3 +159,9 @@ class IOStream:
 
 
 stream = IOStream()
+if supports_unicode():
+    CELE = "🎉"
+    LOCK = "🔒"
+else:
+    CELE = ""
+    LOCK = ""
