@@ -45,6 +45,7 @@ def test_convert_poetry(project):
     assert result["dependencies"]["cachecontrol"]["marker"] == (
         "python_version >= '3.4' and python_version < '4.0'"
     )
+    assert result["dependencies"]["babel"] == "==2.9.0"
     assert "psycopg2" not in result["dependencies"]
     assert "psycopg2" in result["pgsql-dependencies"]
     assert sorted(result["extras"]) == ["mysql", "pgsql"]

@@ -497,7 +497,7 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
         project.pyproject = {"tool": {"pdm": {}}}
     project.tool_settings.update(tool_settings)
     project.pyproject["build-system"] = {
-        "requires": ["pdm"],
+        "requires": ["pdm-pep517"],
         "build-backend": ["pdm.pep517.api"],
     }
     project.write_pyproject()

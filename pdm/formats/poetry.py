@@ -20,7 +20,7 @@ def check_fingerprint(project, filename):
     return "tool" in data and "poetry" in data["tool"]
 
 
-VERSION_RE = re.compile(r"(\S+?)\s*(\d.*?)\s*(?=,|$)")
+VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")
 
 
 def _convert_specifier(version):
@@ -33,6 +33,8 @@ def _convert_specifier(version):
             next_major = ".".join([str(int(major) + 1)] + ["0"] * len(vparts))
             parts.append(f">={version},<{next_major}")
             continue
+        elif not op:
+            op = "=="
         parts.append(f"{op}{version}")
     return ",".join(parts)
 

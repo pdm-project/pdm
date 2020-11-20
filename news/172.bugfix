@@ -1,0 +1,1 @@
+Fix a bug that bare version specifiers in Poetry project can't be converted correctly.
