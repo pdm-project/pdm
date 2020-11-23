@@ -9,7 +9,7 @@ from pip._vendor.pkg_resources import EggInfoDistribution
 from pip_shims import shims
 
 from pdm.iostream import stream
-from pdm.models.builders import log_subprocessor
+from pdm.models.builders import EnvBuilder
 from pdm.models.requirements import parse_requirement
 
 if TYPE_CHECKING:
@@ -84,9 +84,12 @@ class Installer:  # pragma: no cover
             paths["purelib"],
             paths["scripts"],
         ]
-        with self.environment.activate(True):
+        with EnvBuilder(ireq.unpacked_source_directory, self.environment) as builder:
+            builder.install(["setuptools"])
             extra_env = {"INJECT_SITE": "1"} if not self.environment.is_global else None
-            log_subprocessor(install_args, ireq.unpacked_source_directory, extra_env)
+            builder.subprocess_runner(
+                install_args, ireq.unpacked_source_directory, extra_env
+            )
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)
