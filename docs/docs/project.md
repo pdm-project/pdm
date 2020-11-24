@@ -251,6 +251,18 @@ start_server.env = {FOO = "bar", FLASK_ENV = "development"}
 
 Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a compound dictionary.
 
+A dotenv file is also supported via `env_file = "<file_path>"` setting.
+
+For environment variables and/or dotenv file shared by all scripts, you can define `env` and `env_file`
+settings under a special key named `_` of `tool.pdm.scripts` table:
+
+```toml
+[tool.pdm.scripts]
+_.env_file = ".env"
+start_server = "flask run -p 54321"
+migrate_db = "flask db upgrade"
+```
+
 ### Show the list of scripts shortcuts
 
 Use `pdm run --list/-l` to show the list of available script shortcuts:

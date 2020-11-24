@@ -5,7 +5,7 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import List, Union
+from typing import Dict, List, Optional, Union
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
@@ -17,7 +17,7 @@ from pdm.utils import find_project_root
 class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
-    OPTIONS = ["env", "help"]
+    OPTIONS = ["env", "env_file", "help"]
     TYPES = ["cmd", "shell", "call"]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -38,10 +38,18 @@ class Command(BaseCommand):
     def _run_command(
         project: Project,
         args: Union[List[str], str],
-        shell=False,
-        env=None,
+        shell: bool = False,
+        env: Optional[Dict[str, str]] = None,
+        env_file: Optional[str] = None,
     ) -> None:
         with project.environment.activate():
+            if env_file:
+                import dotenv
+
+                stream.echo(f"Loading .env file: {stream.green(env_file)}", err=True)
+                dotenv.load_dotenv(
+                    project.root.joinpath(env_file).as_posix(), override=True
+                )
             if env:
                 os.environ.update(env)
             if shell:
@@ -90,7 +98,13 @@ class Command(BaseCommand):
             )
         return kind, value, options
 
-    def _run_script(self, project: Project, script_name: str, args: List[str]) -> None:
+    def _run_script(
+        self,
+        project: Project,
+        script_name: str,
+        args: List[str],
+        global_env_options: Dict[str, Union[str, Dict[str, str]]],
+    ) -> None:
         script = project.scripts[script_name]
         kind, value, options = self._normalize_script(script)
         if kind == "cmd":
@@ -113,6 +127,11 @@ class Command(BaseCommand):
                 f"import sys, {module} as {short_name};"
                 f"sys.exit({short_name}.{func})",
             ] + args
+        if "env" in global_env_options:
+            options["env"] = {**global_env_options["env"], **options.get("env", {})}
+        options["env_file"] = options.get(
+            "env_file", global_env_options.get("env_file")
+        )
         stream.echo(f"Running {kind} script: {stream.green(str(args))}", err=True)
         return self._run_command(project, args, **options)
 
@@ -129,14 +148,21 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.list:
             return self._show_list(project)
+        global_env_options = project.scripts.get("_", {}) if project.scripts else {}
         if project.scripts and options.command in project.scripts:
-            self._run_script(project, options.command, options.args)
+            self._run_script(project, options.command, options.args, global_env_options)
         elif os.path.isfile(options.command) and options.command.endswith(".py"):
             # Allow executing py scripts like `pdm run my_script.py`.
             # In this case, the nearest `__pypackages__` will be loaded as
             # the library source.
             new_root = find_project_root(os.path.abspath(options.command))
             project = Project(new_root) if new_root else project
-            self._run_command(project, ["python", options.command] + options.args)
+            self._run_command(
+                project,
+                ["python", options.command] + options.args,
+                **global_env_options,
+            )
         else:
-            self._run_command(project, [options.command] + options.args)
+            self._run_command(
+                project, [options.command] + options.args, **global_env_options
+            )
