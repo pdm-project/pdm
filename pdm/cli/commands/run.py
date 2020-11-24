@@ -141,6 +141,8 @@ class Command(BaseCommand):
         columns = ["Name", "Type", "Script", "Description"]
         result = []
         for name, script in project.scripts.items():
+            if name == "_":
+                continue
             kind, value, options = self._normalize_script(script)
             result.append((stream.green(name), kind, value, options.get("help", "")))
         stream.display_columns(result, columns)
