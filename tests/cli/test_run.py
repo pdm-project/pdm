@@ -2,6 +2,8 @@ import json
 import os
 import textwrap
 
+import pytest
+
 from pdm.utils import cd, temp_environ
 
 
@@ -134,7 +136,6 @@ def test_run_show_list_of_scripts(project, invoke):
     }
     project.write_pyproject()
     result = invoke(["run", "--list"], obj=project)
-    print(result.output, result.stderr)
     result_lines = result.output.splitlines()[2:]
     assert result_lines[0].strip() == "test_cmd    cmd   flask db upgrade"
     assert (
@@ -142,3 +143,21 @@ def test_run_show_list_of_scripts(project, invoke):
         == "test_script call  test_script:main call a python function"
     )
     assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
+
+
+@pytest.mark.pypi
+def test_run_script_with_pep582(project, invoke, capfd):
+    project.tool_settings["python_requires"] = ">=3.7"
+    project.write_pyproject()
+    (project.root / "test_script.py").write_text(
+        "import requests\nprint(requests.__version__)\n"
+    )
+    result = invoke(["add", "requests==2.24.0"], obj=project)
+    assert result.exit_code == 0
+    capfd.readouterr()
+
+    with cd(os.path.expanduser("~")):
+        result = invoke(["run", str(project.root / "test_script.py")], obj=project)
+        assert result.exit_code == 0
+        out, _ = capfd.readouterr()
+        assert out.strip() == "2.24.0"

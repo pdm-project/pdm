@@ -239,12 +239,14 @@ def test_import_other_format_file(project, invoke, filename):
     assert result.exit_code == 0
 
 
+@pytest.mark.pypi
 def test_search_package(project, invoke):
     result = invoke(["search", "requests"], obj=project)
     assert result.exit_code == 0
     assert len(result.output.splitlines()) > 0
 
 
+@pytest.mark.pypi
 def test_show_package_on_pypi(invoke):
     result = invoke(["show", "ipython"])
     assert result.exit_code == 0
