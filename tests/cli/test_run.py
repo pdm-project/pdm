@@ -128,6 +128,35 @@ def test_run_script_with_env_defined(project, invoke, capfd):
         assert capfd.readouterr()[0].strip() == "bar"
 
 
+def test_run_script_with_dotenv_file(project, invoke, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
+    project.tool_settings["scripts"] = {
+        "test_script": {"cmd": "python test_script.py", "env_file": ".env"}
+    }
+    project.write_pyproject()
+    (project.root / ".env").write_text("FOO=bar")
+    capfd.readouterr()
+    with cd(project.root):
+        invoke(["run", "test_script"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar"
+
+
+def test_run_script_override_global_env(project, invoke, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
+    project.tool_settings["scripts"] = {
+        "_": {"env": {"FOO": "bar"}},
+        "test_env": {"cmd": "python test_script.py"},
+        "test_env_override": {"cmd": "python test_script.py", "env": {"FOO": "foobar"}},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    with cd(project.root):
+        invoke(["run", "test_env"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar"
+        invoke(["run", "test_env_override"], obj=project)
+        assert capfd.readouterr()[0].strip() == "foobar"
+
+
 def test_run_show_list_of_scripts(project, invoke):
     project.tool_settings["scripts"] = {
         "test_cmd": "flask db upgrade",

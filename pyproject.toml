@@ -38,6 +38,7 @@ pdm-pep517 = "<1.0.0,>=0.1.0"
 importlib-metadata = {version = "*", marker = "python_version<'3.8'"}
 pep517 = "*"
 pycomplete = "<1.0.0,>=0.2.0"
+python-dotenv = "<1.0.0,>=0.15.0"
 
 [tool.pdm.dev-dependencies]
 pytest = "*"
