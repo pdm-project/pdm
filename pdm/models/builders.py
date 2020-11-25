@@ -8,7 +8,6 @@ import subprocess
 import sys
 import tempfile
 import threading
-from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, List, Optional
 
@@ -18,7 +17,7 @@ from pep517.wrappers import Pep517HookCaller
 from pdm.exceptions import BuildError
 from pdm.iostream import stream
 from pdm.pep517.base import Builder
-from pdm.utils import get_python_version, get_sys_config_paths
+from pdm.utils import cached_property, get_python_version, get_sys_config_paths
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
