@@ -53,6 +53,8 @@ You may want to write a line in your `.bash_profile`(or similar profiles) to mak
 export PYTHONPEP582=1
 ```
 
+**This setup may become the default in the future.**
+
 ### Use the docker image
 
 PDM also provides a docker image to ease your deployment flow, to use it, write a Dockerfile with following content:

@@ -108,7 +108,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-Now you can run the app directly with your familiar **Python interpreter**:
+Set environment variable `export PYTHONPEP582=1`. Now you can run the app directly with your familiar **Python interpreter**:
 
 ```bash
 $ python /home/frostming/workspace/flask_app/app.py
