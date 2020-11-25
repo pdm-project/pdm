@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, List, Optional
 
@@ -136,10 +137,9 @@ class EnvBuilder:
     def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
         self._env = environment
         self._path = None  # type: Optional[str]
-        self.executable = self._env.python_executable
-        self.pip_command = self._get_pip_command()
-        self.src_dir = src_dir
         self._saved_env = None
+        self.executable = self._env.python_executable
+        self.src_dir = src_dir
 
         try:
             with open(os.path.join(src_dir, "pyproject.toml")) as f:
@@ -169,6 +169,10 @@ class EnvBuilder:
             runner=self.subprocess_runner,
             python_executable=self.executable,
         )
+
+    @cached_property
+    def pip_command(self):
+        return self._get_pip_command()
 
     def subprocess_runner(self, cmd, cwd=None, extra_environ=None):
         env = self._saved_env.copy() if self._saved_env else {}
@@ -215,6 +219,7 @@ class EnvBuilder:
             if not old_path
             else os.pathsep.join([paths["scripts"], old_path]),
             "PYTHONNOUSERSITE": "1",
+            "PYTHONPEP582": "0",
         }
         stream.logger.debug("Preparing isolated env for PEP 517 build...")
         return self

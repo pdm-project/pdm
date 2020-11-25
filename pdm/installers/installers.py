@@ -32,13 +32,6 @@ def format_dist(dist: Distribution) -> str:
     return formatter.format(version=stream.yellow(dist.version), path=path)
 
 
-EXE_INITIALIZE = """
-import sys
-with open({0!r}) as fp:
-    exec(compile(fp.read(), __file__, "exec"))
-""".strip()
-
-
 class Installer:  # pragma: no cover
     """The installer that performs the installation and uninstallation actions."""
 
@@ -59,14 +52,6 @@ class Installer:  # pragma: no cover
         paths = self.environment.get_paths()
         maker = distlib.scripts.ScriptMaker(None, None)
         maker.executable = self.environment.python_executable
-        if not self.environment.is_global:
-            site_custom_script = (
-                self.environment.packages_path / "site/sitecustomize.py"
-            ).as_posix()
-            maker.script_template = maker.script_template.replace(
-                "import sys",
-                EXE_INITIALIZE.format(site_custom_script),
-            )
         wheel.install(paths, maker)
 
     def install_editable(self, ireq: shims.InstallRequirement) -> None:
