@@ -69,9 +69,52 @@ $ pipx install pdm
 $ pip install --user pdm
 ```
 
-## 使用方法
+## 快速上手
 
-作者很懒，还没来得及写，先用 `python -m pdm --help` 查看帮助吧。
+**初始化一个新的 PDM 项目**
+
+```bash
+$ pdm init
+```
+
+按照指引回答提示的问题，一个 PDM 项目和对应的`pyproject.toml`文件就创建好了。
+
+**把依赖安装到 `__pypackages__` 文件夹中**
+
+```bash
+$ pdm add requests flask
+```
+
+你可以在同一条命令中添加多个依赖。稍等片刻完成之后，你可以查看`pdm.lock`文件看看有哪些依赖以及对应版本。
+
+**在 PEP 582 加持下运行你的脚本**
+
+假设你在`__pypackages__`同级的目录下有一个`app.py`脚本，内容如下（从 Flask 的官网例子复制而来）：
+
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+if __name__ == '__main__':
+    app.run()
+```
+
+现在你可以用你最熟悉的 **Python 解释器** 运行脚本：
+
+```bash
+$ python /home/frostming/workspace/flask_app/app.py
+ * Serving Flask app "app" (lazy loading)
+ ...
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+```
+
+当当当当！你已经把应用运行起来了，而它的依赖全被安装在一个项目独立的文件夹下，而我们完全没有创建虚拟环境。
+
+如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
 
 ## 常见问题
 
