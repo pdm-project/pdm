@@ -97,6 +97,7 @@ def do_sync(
         candidates.update(project.get_locked_candidates())
     handler = project.core.synchronizer_class(candidates, project.environment)
     handler.synchronize(clean=clean, dry_run=dry_run)
+    project.environment.install_pep582_launcher()
 
 
 def do_add(
@@ -387,7 +388,7 @@ def do_init(
         project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
         project._pyproject["build-system"] = data["build-system"]
     project.write_pyproject()
-    project.environment.write_site_py()
+    project.environment.install_pep582_launcher()
 
 
 def do_use(project: Project, python: str, first: bool = False) -> None:

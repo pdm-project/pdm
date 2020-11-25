@@ -3,14 +3,6 @@ import os
 import sys
 import tokenize
 
-from setuptools.command import easy_install
-
-EXE_INITIALIZE = """
-import sys
-with open({0!r}) as fp:
-    exec(compile(fp.read(), __file__, "exec"))
-""".strip()
-
 
 def install(setup_py, prefix, lib_dir, bin_dir):
     __file__ = setup_py
@@ -30,16 +22,6 @@ def install(setup_py, prefix, lib_dir, bin_dir):
         "--site-dirs={0}".format(lib_dir),
     ]
     sys.path.append(lib_dir)
-    if os.getenv("INJECT_SITE", "").lower() in ("1", "true", "yes"):
-        # Patches the script writer to inject library path
-        easy_install.ScriptWriter.template = easy_install.ScriptWriter.template.replace(
-            "import sys",
-            EXE_INITIALIZE.format(
-                os.path.abspath(
-                    os.path.join(lib_dir, os.path.pardir, "site/sitecustomize.py")
-                )
-            ),
-        )
     exec(compile(code, __file__, "exec"))
 
 

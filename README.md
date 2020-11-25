@@ -74,9 +74,52 @@ Or you can install it under a user site:
 $ pip install --user pdm
 ```
 
-## Usage
+## Quickstart
 
-`python -m pdm --help` provides helpful guidance.
+**Initialize a new PDM project**
+
+```bash
+$ pdm init
+```
+
+Answer the questions following the guide, and a PDM project with a `pyproject.toml` file will be ready to use.
+
+**Install dependencies into the `__pypackages__` directory**
+
+```bash
+$ pdm add requests flask
+```
+
+You can add multiple dependencies in the same command. After a while, check the `pdm.lock` file to see what is locked for each package.
+
+**Run your script with PEP 582 support**
+
+Suppose you have a script `app.py` placed next to the `__pypackages__` directory with the following content(taken from Flask's website):
+
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+if __name__ == '__main__':
+    app.run()
+```
+
+Set environment variable `export PYTHONPEP582=1`. Now you can run the app directly with your familiar **Python interpreter**:
+
+```bash
+$ python /home/frostming/workspace/flask_app/app.py
+ * Serving Flask app "app" (lazy loading)
+ ...
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+```
+
+Ta-da! You are running an app with its dependencies installed in an isolated place, while no virtualenv is involved.
+
+If you are curious about how this works, check [this doc section](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
 
 ## Docker image
 

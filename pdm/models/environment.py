@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import collections
 import os
+import pkgutil
 import re
 import shutil
 import sys
 import sysconfig
-import textwrap
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
@@ -154,7 +154,7 @@ class Environment:
         return paths
 
     @contextmanager
-    def activate(self, site_packages: bool = False):
+    def activate(self):
         """Activate the environment. Manipulate the ``PYTHONPATH`` and patches ``pip``
         to be aware of local packages. This method acts like a context manager.
 
@@ -162,21 +162,6 @@ class Environment:
         """
         paths = self.get_paths()
         with temp_environ():
-            python_root = os.path.dirname(self.python_executable)
-            os.environ.update(
-                {
-                    "PATH": os.pathsep.join(
-                        [python_root, paths["scripts"], os.environ["PATH"]]
-                    ),
-                    "PYTHONNOUSERSITE": "1",
-                }
-            )
-            if self.packages_path:
-                os.environ.update(
-                    {"PYTHONPATH": (self.packages_path / "site").as_posix()}
-                )
-            if site_packages:
-                os.environ["PDM_SITE_PACKAGES"] = "1"
             working_set = self.get_working_set()
             _old_ws = pkg_resources.working_set
             pkg_resources.working_set = working_set.pkg_ws
@@ -216,7 +201,7 @@ class Environment:
             / ".".join(map(str, get_python_version(self.python_executable)[:2]))
         )
         scripts = "Scripts" if os.name == "nt" else "bin"
-        for subdir in [scripts, "include", "lib", "site"]:
+        for subdir in [scripts, "include", "lib"]:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
@@ -387,7 +372,10 @@ class Environment:
             if not version or this_version.startswith(version):
                 return self.python_executable
         # Fallback to use shutil.which to find the executable
-        return shutil.which(command, path=os.getenv("PATH"))
+        this_path = self.get_paths()["scripts"]
+        python_root = os.path.dirname(self.python_executable)
+        new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
+        return shutil.which(command, path=new_path)
 
     def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""
@@ -402,45 +390,22 @@ class Environment:
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
 
-    def write_site_py(self) -> None:
-        """Write a custom site.py into the package library folder."""
-        lib_dir = self.get_paths()["purelib"]
-        dest_path = self.packages_path / "site/sitecustomize.py"
-
-        template = textwrap.dedent(
-            """
-            import os, site, sys
-            from distutils.sysconfig import get_python_lib
-
-            # First, drop system-sites related paths.
-            original_sys_path = sys.path[:]
-            known_paths = set()
-            system_sites = {{
-                os.path.normcase(site) for site in (
-                    get_python_lib(plat_specific=False),
-                    get_python_lib(plat_specific=True),
-                )
-            }}
-            for path in system_sites:
-                site.addsitedir(path, known_paths=known_paths)
-            system_paths = set(
-                os.path.normcase(path)
-                for path in sys.path[len(original_sys_path):]
-            )
-            if "PDM_SITE_PACKAGES" not in os.environ:
-                original_sys_path = [
-                    path for path in original_sys_path
-                    if os.path.normcase(path) not in system_paths
-                ]
-                sys.path = original_sys_path
-
-            # Second, add lib directories.
-            # ensuring .pth file are processed.
-            for path in {lib_dirs!r}:
-                site.addsitedir(path)
-            """
+    def install_pep582_launcher(self) -> None:
+        """Install a PEP 582 launcher to the site packages path
+        of given Python interperter.
+        """
+        lib_path = Path(get_sys_config_paths(self.python_executable)["purelib"])
+        if lib_path.joinpath("_pdm_pep582.pth").is_file():
+            stream.echo("PEP 582 launcher is ready.", verbosity=stream.DETAIL)
+            return
+        stream.echo("Installing PEP 582 launcher", verbosity=stream.DETAIL)
+        lib_path.joinpath("_pdm_pep582.py").write_bytes(
+            pkgutil.get_data(__name__, "../installers/_pep582.py")
         )
-        dest_path.write_text(template.format(lib_dirs=[lib_dir]))
+        lib_path.joinpath("_pdm_pep582.pth").write_text(
+            "import _pdm_pep582;_pdm_pep582.init()\n"
+        )
+        stream.echo("PEP 582 launcher is ready.", verbosity=stream.DETAIL)
 
 
 class GlobalEnvironment(Environment):
@@ -463,5 +428,5 @@ class GlobalEnvironment(Environment):
     def packages_path(self) -> Optional[Path]:
         return None
 
-    def write_site_py(self) -> None:
-        return None
+    def install_pep582_launcher(self):
+        pass

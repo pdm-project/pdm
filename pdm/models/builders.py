@@ -17,7 +17,7 @@ from pep517.wrappers import Pep517HookCaller
 from pdm.exceptions import BuildError
 from pdm.iostream import stream
 from pdm.pep517.base import Builder
-from pdm.utils import get_python_version, get_sys_config_paths
+from pdm.utils import cached_property, get_python_version, get_sys_config_paths
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -136,10 +136,9 @@ class EnvBuilder:
     def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
         self._env = environment
         self._path = None  # type: Optional[str]
-        self.executable = self._env.python_executable
-        self.pip_command = self._get_pip_command()
-        self.src_dir = src_dir
         self._saved_env = None
+        self.executable = self._env.python_executable
+        self.src_dir = src_dir
 
         try:
             with open(os.path.join(src_dir, "pyproject.toml")) as f:
@@ -169,6 +168,10 @@ class EnvBuilder:
             runner=self.subprocess_runner,
             python_executable=self.executable,
         )
+
+    @cached_property
+    def pip_command(self):
+        return self._get_pip_command()
 
     def subprocess_runner(self, cmd, cwd=None, extra_environ=None):
         env = self._saved_env.copy() if self._saved_env else {}
@@ -215,6 +218,7 @@ class EnvBuilder:
             if not old_path
             else os.pathsep.join([paths["scripts"], old_path]),
             "PYTHONNOUSERSITE": "1",
+            "PYTHONPEP582": "0",
         }
         stream.logger.debug("Preparing isolated env for PEP 517 build...")
         return self

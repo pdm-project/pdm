@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import textwrap
 
 import pytest
@@ -8,13 +9,32 @@ from pdm.utils import cd, temp_environ
 
 
 def test_pep582_not_loading_site_packages(project, invoke, capfd):
-    invoke(
-        ["run", "python", "-c", "import sys,json;print(json.dumps(sys.path))"],
-        obj=project,
-    )
+    with cd(project.root):
+        invoke(["install"], obj=project)
+        invoke(
+            ["run", "python", "-c", "import sys,json;print(json.dumps(sys.path))"],
+            obj=project,
+        )
     sys_path = json.loads(capfd.readouterr()[0])
     assert not any("site-packages" in p for p in sys_path)
     assert str(project.environment.packages_path / "lib") in sys_path
+
+
+@pytest.mark.pypi
+def test_pep582_launcher_for_python_interpreter(project, invoke):
+    project.tool_settings["python_requires"] = ">=3.6"
+    project.write_pyproject()
+    project.root.joinpath("main.py").write_text(
+        "import requests\nprint(requests.__version__)\n"
+    )
+    invoke(["add", "requests==2.24.0"], obj=project)
+    env = os.environ.copy()
+    env.update({"PYTHONPEP582": "1"})
+    output = subprocess.check_output(
+        [project.environment.python_executable, str(project.root.joinpath("main.py"))],
+        env=env,
+    )
+    assert output.decode().strip() == "2.24.0"
 
 
 def test_run_command_not_found(invoke):
@@ -172,21 +192,3 @@ def test_run_show_list_of_scripts(project, invoke):
         == "test_script call  test_script:main call a python function"
     )
     assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
-
-
-@pytest.mark.pypi
-def test_run_script_with_pep582(project, invoke, capfd):
-    project.tool_settings["python_requires"] = ">=3.7"
-    project.write_pyproject()
-    (project.root / "test_script.py").write_text(
-        "import requests\nprint(requests.__version__)\n"
-    )
-    result = invoke(["add", "requests==2.24.0"], obj=project)
-    assert result.exit_code == 0
-    capfd.readouterr()
-
-    with cd(os.path.expanduser("~")):
-        result = invoke(["run", str(project.root / "test_script.py")], obj=project)
-        assert result.exit_code == 0
-        out, _ = capfd.readouterr()
-        assert out.strip() == "2.24.0"

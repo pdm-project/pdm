@@ -121,8 +121,7 @@ If you want global project to track another project file other than `~/.pdm/glob
 project path following `-g/--global`.
 
 !!! danger "NOTE"
-    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may
-    remove packages installed in your system Python.
+    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv
 
@@ -238,7 +237,7 @@ The function can be supplied with literal arguments:
 foobar = {call = "foo_package.bar_module:main('dev')"}
 ```
 
-### Environment variables expansion
+### Environment variables support
 
 All environment variables set in the current shell can be seen by `pdm run` and will be expanded when executed.
 Besides, you can also define some fixed environment variables in your `pyproject.toml`:
@@ -277,3 +276,9 @@ test_shell  shell echo $FOO        shell command
 ```
 
 You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
+
+### How we make PEP 582 packages available to the Python interpreter
+
+Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`
+by placing a `_pdm_pep582.pth` together with a small script under the `site-packages` directory. The interpreter can search the directories
+for the neareset `__pypackage__` folder and append it to the `sys.path` variable. This is totally done by PDM and users shouldn't be aware.

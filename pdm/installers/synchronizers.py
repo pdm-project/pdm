@@ -234,8 +234,6 @@ class Synchronizer:
         if not clean:
             to_remove = []
         if not any([to_add, to_update, to_remove]):
-            if not dry_run:
-                self.environment.write_site_py()
             stream.echo(
                 stream.yellow("All packages are synced to date, nothing to do.")
             )
@@ -302,7 +300,7 @@ class Synchronizer:
                 stream.echo(stream.red("\nERRORS:"))
                 stream.echo("".join(errors), err=True)
                 raise InstallationError("Some package operations are not complete yet")
-            self.environment.write_site_py()
+
             if install_self:
                 stream.echo("Installing the project as an editable package...")
                 with stream.indent("  "):

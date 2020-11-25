@@ -11,7 +11,6 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
 from pdm.iostream import stream
 from pdm.project import Project
-from pdm.utils import find_project_root
 
 
 class Command(BaseCommand):
@@ -42,37 +41,35 @@ class Command(BaseCommand):
         env: Optional[Dict[str, str]] = None,
         env_file: Optional[str] = None,
     ) -> None:
-        with project.environment.activate():
-            if env_file:
-                import dotenv
+        os.environ.update({"PYTHONPEP582": "1"})
+        if env_file:
+            import dotenv
 
-                stream.echo(f"Loading .env file: {stream.green(env_file)}", err=True)
-                dotenv.load_dotenv(
-                    project.root.joinpath(env_file).as_posix(), override=True
-                )
-            if env:
-                os.environ.update(env)
-            if shell:
-                sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
+            stream.echo(f"Loading .env file: {stream.green(env_file)}", err=True)
+            dotenv.load_dotenv(
+                project.root.joinpath(env_file).as_posix(), override=True
+            )
+        if env:
+            os.environ.update(env)
+        if shell:
+            sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
 
-            command, *args = args
-            expanded_command = project.environment.which(command)
-            if not expanded_command:
-                raise PdmUsageError(
-                    "Command {} is not found on your PATH.".format(
-                        stream.green(f"'{command}'")
-                    )
+        command, *args = args
+        expanded_command = project.environment.which(command)
+        if not expanded_command:
+            raise PdmUsageError(
+                "Command {} is not found on your PATH.".format(
+                    stream.green(f"'{command}'")
                 )
-            expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
-            expanded_args = [
-                os.path.expandvars(arg) for arg in [expanded_command] + args
-            ]
-            if os.name == "nt" or "CI" in os.environ:
-                # In order to make sure pytest is playing well,
-                # don't hand over the process under a testing environment.
-                sys.exit(subprocess.call(expanded_args))
-            else:
-                os.execv(expanded_command, expanded_args)
+            )
+        expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
+        expanded_args = [os.path.expandvars(arg) for arg in [expanded_command] + args]
+        if os.name == "nt" or "CI" in os.environ:
+            # In order to make sure pytest is playing well,
+            # don't hand over the process under a testing environment.
+            sys.exit(subprocess.call(expanded_args))
+        else:
+            os.execv(expanded_command, expanded_args)
 
     def _normalize_script(self, script):
         if not getattr(script, "items", None):
@@ -153,17 +150,6 @@ class Command(BaseCommand):
         global_env_options = project.scripts.get("_", {}) if project.scripts else {}
         if project.scripts and options.command in project.scripts:
             self._run_script(project, options.command, options.args, global_env_options)
-        elif os.path.isfile(options.command) and options.command.endswith(".py"):
-            # Allow executing py scripts like `pdm run my_script.py`.
-            # In this case, the nearest `__pypackages__` will be loaded as
-            # the library source.
-            new_root = find_project_root(os.path.abspath(options.command))
-            project = Project(new_root) if new_root else project
-            self._run_command(
-                project,
-                ["python", options.command] + options.args,
-                **global_env_options,
-            )
         else:
             self._run_command(
                 project, [options.command] + options.args, **global_env_options
