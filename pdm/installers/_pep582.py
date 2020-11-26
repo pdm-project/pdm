@@ -1,6 +1,7 @@
 import os
 import site
 import sys
+import warnings
 from distutils.sysconfig import get_python_lib
 
 # Global state to avoid recursive execution
@@ -9,6 +10,8 @@ _initialized = False
 
 def get_pypackages_path(maxdepth=5):
     def find_pypackage(path):
+        if not os.path.exists(path):
+            return None
         packages_name = "__pypackages__/{}/lib".format(
             ".".join(map(str, sys.version_info[:2]))
         )
@@ -21,8 +24,16 @@ def get_pypackages_path(maxdepth=5):
             path = os.path.dirname(path)
         return None
 
-    script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    return find_pypackage(script_dir) or find_pypackage(os.getcwd())
+    find_paths = [os.getcwd()]
+
+    if getattr(sys, "argv", None):
+        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        find_paths.insert(0, script_dir)
+
+    for path in find_paths:
+        result = find_pypackage(path)
+        if result:
+            return result
 
 
 def init():
@@ -34,10 +45,23 @@ def init():
         # Do nothing if pep 582 is not enabled explicitly
         return
     _initialized = True
-    # First, drop system-sites related paths.
+
+    if sys.version_info[0] == 2 and getattr(sys, "argv", None) is None:
+        warnings.warn(
+            "PEP 582 can't be loaded based on the script path. "
+            "As Python 2.7 reached the end of life on 2020/01/01, "
+            "please upgrade to Python 3.",
+        )
+    else:
+        script_path = sys.argv[0]
+        if os.path.exists(script_path) and os.path.normcase(
+            os.path.abspath(script_path)
+        ).startswith(os.path.normcase(sys.prefix)):
+            return
     libpath = get_pypackages_path()
     if not libpath:
         return
+    # First, drop system-sites related paths.
     original_sys_path = sys.path[:]
     known_paths = set()
     system_sites = {
