@@ -404,7 +404,7 @@ class Project:
 [tool.pdm.dependencies]
 pip = "*"
 setuptools = "*"
-wheels = "*"
+wheel = "*"
 
 [tool.pdm.dev-dependencies]
 """
