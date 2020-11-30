@@ -18,8 +18,8 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 PDM requires Python 3.7+ to be installed. It works on multiple platforms including Windows, Linux and MacOS.
 
 !!! note
-    There is no restriction about what Python version that your project is using but installing
-    PDM itself needs Python 3.7+.
+There is no restriction about what Python version that your project is using but installing
+PDM itself needs Python 3.7+.
 
 ### Recommended installation method
 
@@ -46,11 +46,11 @@ $ pip install --user pdm
 
 ### Enable PEP 582 globally
 
-To make the Python interpreters aware of PEP 582 packages, set the environment variable `PYTHONPEP582` to `1`.
+To make the Python interpreters aware of PEP 582 packages, set the environment variable `PDM_PYTHON_PEP582` to `1`.
 You may want to write a line in your `.bash_profile`(or similar profiles) to make it effective when login:
 
 ```bash
-export PYTHONPEP582=1
+export PDM_PYTHON_PEP582=1
 ```
 
 **This setup may become the default in the future.**

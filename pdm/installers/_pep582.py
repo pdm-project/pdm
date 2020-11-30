@@ -39,12 +39,13 @@ def get_pypackages_path(maxdepth=5):
 def init():
     global _initialized
     if (
-        os.getenv("PYTHONPEP582", "").lower() not in ("true", "1", "yes")
+        os.getenv("PDM_PYTHON_PEP582", "").lower() not in ("true", "1", "yes")
         or _initialized
     ):
         # Do nothing if pep 582 is not enabled explicitly
         return
     _initialized = True
+    include_sitepackages = os.getenv("PDM_WITH_SITEPACKAGE")
 
     if sys.version_info[0] == 2 and getattr(sys, "argv", None) is None:
         warnings.warn(
@@ -57,29 +58,32 @@ def init():
         if os.path.exists(script_path) and os.path.normcase(
             os.path.abspath(script_path)
         ).startswith(os.path.normcase(sys.prefix)):
-            return
+            include_sitepackages = True
     libpath = get_pypackages_path()
     if not libpath:
         return
-    # First, drop system-sites related paths.
-    original_sys_path = sys.path[:]
-    known_paths = set()
-    system_sites = {
-        os.path.normcase(site)
-        for site in (
-            get_python_lib(plat_specific=False),
-            get_python_lib(plat_specific=True),
+    if not include_sitepackages:
+        # First, drop system-sites related paths.
+        original_sys_path = sys.path[:]
+        known_paths = set()
+        system_sites = {
+            os.path.normcase(site)
+            for site in (
+                get_python_lib(plat_specific=False),
+                get_python_lib(plat_specific=True),
+            )
+        }
+        for path in system_sites:
+            site.addsitedir(path, known_paths=known_paths)
+        system_paths = set(
+            os.path.normcase(path) for path in sys.path[len(original_sys_path) :]
         )
-    }
-    for path in system_sites:
-        site.addsitedir(path, known_paths=known_paths)
-    system_paths = set(
-        os.path.normcase(path) for path in sys.path[len(original_sys_path) :]
-    )
-    original_sys_path = [
-        path for path in original_sys_path if os.path.normcase(path) not in system_paths
-    ]
-    sys.path = original_sys_path
+        original_sys_path = [
+            path
+            for path in original_sys_path
+            if os.path.normcase(path) not in system_paths
+        ]
+        sys.path = original_sys_path
 
     # Second, add lib directories, ensuring .pth file are processed.
     site.addsitedir(libpath)

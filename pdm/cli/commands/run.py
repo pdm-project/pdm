@@ -41,7 +41,7 @@ class Command(BaseCommand):
         env: Optional[Dict[str, str]] = None,
         env_file: Optional[str] = None,
     ) -> None:
-        os.environ.update({"PYTHONPEP582": "1"})
+        os.environ.update({"PDM_PYTHON_PEP582": "1"})
         if env_file:
             import dotenv
 

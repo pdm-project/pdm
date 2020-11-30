@@ -29,7 +29,7 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
     )
     invoke(["add", "requests==2.24.0"], obj=project)
     env = os.environ.copy()
-    env.update({"PYTHONPEP582": "1"})
+    env.update({"PDM_PYTHON_PEP582": "1"})
     output = subprocess.check_output(
         [project.environment.python_executable, str(project.root.joinpath("main.py"))],
         env=env,

@@ -103,7 +103,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-设置环境变量`export PYTHONPEP582=1`，现在你可以用你最熟悉的 **Python 解释器** 运行脚本：
+设置环境变量`export PDM_PYTHON_PEP582=1`，现在你可以用你最熟悉的 **Python 解释器** 运行脚本：
 
 ```bash
 $ python /home/frostming/workspace/flask_app/app.py

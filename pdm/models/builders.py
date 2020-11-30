@@ -218,7 +218,7 @@ class EnvBuilder:
             if not old_path
             else os.pathsep.join([paths["scripts"], old_path]),
             "PYTHONNOUSERSITE": "1",
-            "PYTHONPEP582": "0",
+            "PDM_PYTHON_PEP582": "0",
         }
         stream.logger.debug("Preparing isolated env for PEP 517 build...")
         return self
