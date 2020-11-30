@@ -45,7 +45,7 @@ def init():
         # Do nothing if pep 582 is not enabled explicitly
         return
     _initialized = True
-    include_sitepackages = os.getenv("PDM_WITH_SITEPACKAGE")
+    with_site_packages = os.getenv("PDM_WITH_SITE_PACKAGES")
 
     if sys.version_info[0] == 2 and getattr(sys, "argv", None) is None:
         warnings.warn(
@@ -58,11 +58,11 @@ def init():
         if os.path.exists(script_path) and os.path.normcase(
             os.path.abspath(script_path)
         ).startswith(os.path.normcase(sys.prefix)):
-            include_sitepackages = True
+            with_site_packages = True
     libpath = get_pypackages_path()
     if not libpath:
         return
-    if not include_sitepackages:
+    if not with_site_packages:
         # First, drop system-sites related paths.
         original_sys_path = sys.path[:]
         known_paths = set()

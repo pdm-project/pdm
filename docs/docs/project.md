@@ -277,6 +277,13 @@ test_shell  shell echo $FOO        shell command
 
 You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
 
+### Include system site-packages in the isolated environment
+
+By default, system-level site-packages will be excluded from the `sys.path` when PEP 582 is enabled, unless:
+
+- Run `pdm run` with `-s/--site-packages` flag.
+- With environment variable `PDM_WITH_SITE_PACKAGES=1`.
+
 ## How we make PEP 582 packages available to the Python interpreter
 
 Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`

@@ -26,6 +26,12 @@ class Command(BaseCommand):
             action="store_true",
             help="Show all available scripts defined in pyproject.toml",
         )
+        parser.add_argument(
+            "-s",
+            "--site-packages",
+            action="store_true",
+            help="Load site-packages from system interpreter",
+        )
         parser.add_argument("command", nargs="?", help="The command to run")
         parser.add_argument(
             "args",
@@ -148,6 +154,8 @@ class Command(BaseCommand):
         if options.list:
             return self._show_list(project)
         global_env_options = project.scripts.get("_", {}) if project.scripts else {}
+        if options.site_packages:
+            os.environ.update({"PDM_WITH_SITE_PACKAGES": "1"})
         if project.scripts and options.command in project.scripts:
             self._run_script(project, options.command, options.args, global_env_options)
         else:

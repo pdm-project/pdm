@@ -37,6 +37,16 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
     assert output.decode().strip() == "2.24.0"
 
 
+def test_pep582_launcher_with_system_site_packages(project, invoke):
+    with cd(project.root):
+        invoke(["install"], obj=project)
+        result = invoke(["run", "python", "-c", "import resolvelib"], obj=project)
+        assert result.exit_code != 0
+
+        result = invoke(["run", "-s", "python", "-c", "import resolvelib"], obj=project)
+        assert result.exit_code == 0
+
+
 def test_run_command_not_found(invoke):
     result = invoke(["run", "foobar"])
     assert "Command 'foobar' is not found on your PATH." in result.stderr
