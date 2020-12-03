@@ -7,7 +7,7 @@ from pdm.project import Project
 
 
 class Command(BaseCommand):
-    """List packages installed in the current working set"""
+    """Build artifacts for distribution"""
 
     arguments = [verbose_option]
 
