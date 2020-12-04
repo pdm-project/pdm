@@ -268,7 +268,7 @@ zipp = {marker = "python_version < '3.8'", version = "*"}
 [[package]]
 name = "pip"
 sections = ["default"]
-version = "20.2.4"
+version = "20.3.1"
 summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
@@ -728,9 +728,9 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},
     {file = "pep517-0.9.1.tar.gz", hash = "sha256:aeb78601f2d1aa461960b43add204cc7955667687fbcf9cdb5170f00556f117f"},
 ]
-"pip 20.2.4" = [
-    {file = "pip-20.2.4-py2.py3-none-any.whl", hash = "sha256:51f1c7514530bd5c145d8f13ed936ad6b8bfcb8cf74e10403d0890bc986f0033"},
-    {file = "pip-20.2.4.tar.gz", hash = "sha256:85c99a857ea0fb0aedf23833d9be5c40cf253fe24443f0829c7b472e23c364a1"},
+"pip 20.3.1" = [
+    {file = "pip-20.3.1-py2.py3-none-any.whl", hash = "sha256:425e79b20939abbffa7633a91151a882aedc77564d9313e3584eb0416c28c558"},
+    {file = "pip-20.3.1.tar.gz", hash = "sha256:43f7d3811f05db95809d39515a5111dd05994965d870178a4fe10d5482f9d2e2"},
 ]
 "pip-shims 0.5.3" = [
     {file = "pip_shims-0.5.3-py2.py3-none-any.whl", hash = "sha256:16ca9f87485667b16b978b68a1aae4f9cc082c0fa018aed28567f9f34a590569"},
@@ -952,4 +952,3 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [root]
 meta_version = "0.0.1"
 content_hash = "md5:cf7dd9fb5ea311d0fb65a7e99ba86e71"
-
