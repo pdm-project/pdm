@@ -7,6 +7,7 @@ import subprocess
 import sys
 from typing import Dict, List, Optional, Union
 
+from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
 from pdm.iostream import stream
@@ -47,7 +48,11 @@ class Command(BaseCommand):
         env: Optional[Dict[str, str]] = None,
         env_file: Optional[str] = None,
     ) -> None:
-        os.environ.update({"PDM_PYTHON_PEP582": "1"})
+        if "PYTHONPATH" in os.environ:
+            new_path = os.sep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
+        else:
+            new_path = PEP582_PATH
+        os.environ.update({"PYTHONPATH": new_path})
         if env_file:
             import dotenv
 

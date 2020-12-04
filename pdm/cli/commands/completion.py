@@ -19,7 +19,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        import shellingham
         from pycomplete import Completer
 
         completer = Completer(project.core.parser)
-        stream.echo(completer.render(options.shell))
+        stream.echo(completer.render(options.shell or shellingham.detect_shell()[0]))

@@ -46,11 +46,15 @@ $ pip install --user pdm
 
 ### Enable PEP 582 globally
 
-To make the Python interpreters aware of PEP 582 packages, set the environment variable `PDM_PYTHON_PEP582` to `1`.
-You may want to write a line in your `.bash_profile`(or similar profiles) to make it effective when login:
+To make the Python interpreters aware of PEP 582 packages, one need to add the `pdm/pep582/sitecustomize.py`
+to the Python library search path. The command can be produced by `pdm --pep582 [<SHELL>]` and if `<SHELL>`
+isn't given, PDM will pick one based on some guesses.
+
+You may want to write a line in your `.bash_profile`(or similar profiles) to make it effective when login.
+For example, in bash you can do this:
 
 ```bash
-export PDM_PYTHON_PEP582=1
+$ pdm --pep582 >> ~/.bash_profile
 ```
 
 **This setup may become the default in the future.**

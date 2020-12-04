@@ -458,6 +458,12 @@ version = "50.3.2"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
 [[package]]
+name = "shellingham"
+sections = ["default"]
+version = "1.3.2"
+summary = "Tool to Detect Surrounding Shell"
+
+[[package]]
 name = "six"
 sections = ["default", "dev", "doc"]
 version = "1.15.0"
@@ -859,6 +865,10 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "setuptools-50.3.2-py3-none-any.whl", hash = "sha256:2c242a0856fbad7efbe560df4a7add9324f340cf48df43651e9604924466794a"},
     {file = "setuptools-50.3.2.zip", hash = "sha256:ed0519d27a243843b05d82a5e9d01b0b083d9934eaa3d02779a23da18077bd3c"},
 ]
+"shellingham 1.3.2" = [
+    {file = "shellingham-1.3.2-py2.py3-none-any.whl", hash = "sha256:7f6206ae169dc1a03af8a138681b3f962ae61cc93ade84d0585cca3aaf770044"},
+    {file = "shellingham-1.3.2.tar.gz", hash = "sha256:576c1982bea0ba82fb46c36feb951319d7f42214a82634233f58b40d858a751e"},
+]
 "six 1.15.0" = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
@@ -941,5 +951,5 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:320ab920bc7cee68a94fd078fda5541f"
+content_hash = "md5:cf7dd9fb5ea311d0fb65a7e99ba86e71"
 
