@@ -48,7 +48,7 @@ def main():
             "please upgrade to Python 3.",
         )
     else:
-        script_path = sys.argv[0]
+        script_path = os.path.realpath(sys.argv[0])
         needs_user_site = os.path.normcase(script_path).startswith(
             os.path.normcase(site.USER_BASE)
         )
