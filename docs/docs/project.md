@@ -287,5 +287,5 @@ By default, system-level site-packages will be excluded from the `sys.path` when
 ## How we make PEP 582 packages available to the Python interpreter
 
 Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`
-by placing a `_pdm_pep582.pth` together with a small script under the `site-packages` directory. The interpreter can search the directories
-for the neareset `__pypackage__` folder and append it to the `sys.path` variable. This is totally done by PDM and users shouldn't be aware.
+by executing the `sitecustomize.py` shipped with PDM. The interpreter can search the directories
+for the neareset `__pypackage__` folder and append it to the `sys.path` variable.

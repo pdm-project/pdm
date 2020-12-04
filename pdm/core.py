@@ -9,8 +9,9 @@ import click
 import pkg_resources
 from resolvelib import Resolver
 
+from pdm.cli.actions import print_pep582_command
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import verbose_option
+from pdm.cli.options import pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
 from pdm.installers import Synchronizer
 from pdm.iostream import stream
@@ -57,6 +58,7 @@ class Core:
             help="show the version and exit",
         )
         verbose_option.add_to_parser(self.parser)
+        pep582_option.add_to_parser(self.parser)
 
         self.subparsers = self.parser.add_subparsers()
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
@@ -85,6 +87,9 @@ class Core:
             options.project = obj
         if options.global_project:
             options.project = options.global_project
+        if options.pep582:
+            print_pep582_command(options.pep582)
+            sys.exit(0)
         if not getattr(options, "project", None):
             options.project = self.project_class()
 

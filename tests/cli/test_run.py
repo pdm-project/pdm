@@ -5,6 +5,7 @@ import textwrap
 
 import pytest
 
+from pdm.cli.actions import PEP582_PATH
 from pdm.utils import cd, temp_environ
 
 
@@ -29,7 +30,7 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
     )
     invoke(["add", "requests==2.24.0"], obj=project)
     env = os.environ.copy()
-    env.update({"PDM_PYTHON_PEP582": "1"})
+    env.update({"PYTHONPATH": PEP582_PATH})
     output = subprocess.check_output(
         [project.environment.python_executable, str(project.root.joinpath("main.py"))],
         env=env,

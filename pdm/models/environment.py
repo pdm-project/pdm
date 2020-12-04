@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import collections
 import os
-import pkgutil
 import re
 import shutil
 import sys
@@ -390,23 +389,6 @@ class Environment:
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
 
-    def install_pep582_launcher(self) -> None:
-        """Install a PEP 582 launcher to the site packages path
-        of given Python interperter.
-        """
-        lib_path = Path(get_sys_config_paths(self.python_executable)["purelib"])
-        if lib_path.joinpath("_pdm_pep582.pth").is_file():
-            stream.echo("PEP 582 launcher is ready.", verbosity=stream.DETAIL)
-            return
-        stream.echo("Installing PEP 582 launcher", verbosity=stream.DETAIL)
-        lib_path.joinpath("_pdm_pep582.py").write_bytes(
-            pkgutil.get_data(__name__, "../installers/_pep582.py")
-        )
-        lib_path.joinpath("_pdm_pep582.pth").write_text(
-            "import _pdm_pep582;_pdm_pep582.init()\n"
-        )
-        stream.echo("PEP 582 launcher is ready.", verbosity=stream.DETAIL)
-
 
 class GlobalEnvironment(Environment):
     """Global environment"""
@@ -427,6 +409,3 @@ class GlobalEnvironment(Environment):
     @property
     def packages_path(self) -> Optional[Path]:
         return None
-
-    def install_pep582_launcher(self):
-        pass

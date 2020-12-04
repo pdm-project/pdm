@@ -1,0 +1,2 @@
+Write a `sitecustomize.py` instead of a `.pth` file to enable PEP 582.
+Update `get_package_finder()` to be compatible with `pip 20.3`.

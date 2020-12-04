@@ -64,7 +64,16 @@ dry_run_option = Option(
     "--dry-run",
     action="store_true",
     default=False,
-    help="Only prints actions without actually running them.",
+    help="Only prints actions without actually running them",
+)
+
+
+pep582_option = Option(
+    "--pep582",
+    const="AUTO",
+    metavar="SHELL",
+    nargs="?",
+    help="Print the command line to be eval'd by the shell",
 )
 
 sections_group = ArgumentGroup()

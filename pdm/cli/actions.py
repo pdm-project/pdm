@@ -1,12 +1,11 @@
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
 import click
-import pythonfinder
-import tomlkit
 from pkg_resources import safe_name
 
 from pdm.cli.utils import (
@@ -27,6 +26,10 @@ from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
 from pdm.utils import get_python_version
+
+PEP582_PATH = os.path.join(
+    os.path.dirname(sys.modules[__name__.split(".")[0]].__file__), "pep582"
+)
 
 
 def do_lock(
@@ -97,7 +100,6 @@ def do_sync(
         candidates.update(project.get_locked_candidates())
     handler = project.core.synchronizer_class(candidates, project.environment)
     handler.synchronize(clean=clean, dry_run=dry_run)
-    project.environment.install_pep582_launcher()
 
 
 def do_add(
@@ -364,6 +366,8 @@ def do_init(
     python_requires: str = "",
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
+    import tomlkit
+
     data = {
         "tool": {
             "pdm": {
@@ -388,13 +392,14 @@ def do_init(
         project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
         project._pyproject["build-system"] = data["build-system"]
     project.write_pyproject()
-    project.environment.install_pep582_launcher()
 
 
 def do_use(project: Project, python: str, first: bool = False) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
+    import pythonfinder
+
     if python and not all(c.isdigit() for c in python.split(".")):
         if Path(python).exists():
             python_path = Path(python).absolute().as_posix()
@@ -529,3 +534,29 @@ def ask_for_import(project: Project) -> None:
         return
     key, filepath = importable_files[int(choice)]
     do_import(project, filepath, key)
+
+
+def print_pep582_command(shell: str = "AUTO"):
+    """Print the export PYTHONPATH line to be evaluated by the shell."""
+    import shellingham
+
+    if shell == "AUTO":
+        shell = shellingham.detect_shell()[0]
+    shell = shell.lower()
+    lib_path = PEP582_PATH.replace("'", "\\'")
+    if shell in ("zsh", "bash"):
+        result = f"export PYTHONPATH='{lib_path}':$PYTHONPATH"
+    elif shell == "fish":
+        result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
+    elif shell == "powershell":
+        result = f'$env:PYTHONPATH="{lib_path};$env:PYTHONPATH"'
+    elif shell == "cmd":
+        result = f"set PYTHONPATH={lib_path};%PYTHONPATH%"
+    elif shell in ("tcsh", "csh"):
+        result = f"setenv PYTHONPATH '{lib_path}':$PYTHONPATH"
+    else:
+        raise PdmUsageError(
+            f"Unsupported shell: {shell}, please specify another shell "
+            "via `--pep582 <SHELL>`"
+        )
+    stream.echo(result)
