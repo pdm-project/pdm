@@ -23,11 +23,10 @@ class Command(BaseCommand):
         import shellingham
         from pycomplete import Completer
 
-        if options.shell == "zsh":
+        shell = options.shell or shellingham.detect_shell()[0]
+        if shell == "zsh":
             zsh_completion = pathlib.Path(__file__).parent / "../completions/_pdm"
             stream.echo(zsh_completion.read_text())
         else:
             completer = Completer(project.core.parser)
-            stream.echo(
-                completer.render(options.shell or shellingham.detect_shell()[0])
-            )
+            stream.echo(completer.render(shell))
