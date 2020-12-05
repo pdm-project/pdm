@@ -27,7 +27,7 @@ class Command(BaseCommand):
             help="Only write pyproject.toml and do not uninstall packages",
         )
         parser.add_argument(
-            "packages", nargs="+", help="If packages are given, only update them"
+            "packages", nargs="+", help="Specify the packages to remove"
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
