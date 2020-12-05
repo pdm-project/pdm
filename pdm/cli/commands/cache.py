@@ -8,7 +8,7 @@ from pdm.project import Project
 
 
 class Command(BaseCommand):
-    """Display the current configuration"""
+    """Control the caches of PDM"""
 
     arguments = [verbose_option]
 
@@ -21,7 +21,7 @@ class Command(BaseCommand):
 
 
 class ClearCommand(BaseCommand):
-    """Show a configuration value"""
+    """Clean all the files under cache directory"""
 
     arguments = [verbose_option]
 
