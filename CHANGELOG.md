@@ -1,3 +1,23 @@
+Release v0.12.0 (2020-12-08)
+----------------------------
+
+### Features & Improvements
+
+- Improve the user experience of `pdm run`:
+  - Add a special key in tool.pdm.scripts that holds configurations shared by all scripts.
+  - Support loading env var from a dot-env file.
+  - Add a flag `-s/--site-packages` to include system site-packages when running. [#178](https://github.com/frostming/pdm/issues/178)
+- Now PEP 582 can be enabled in the Python interperter directly! [#181](https://github.com/frostming/pdm/issues/181)
+
+### Bug Fixes
+
+- Ensure `setuptools` is installed before invoking editable install script. [#174](https://github.com/frostming/pdm/issues/174)
+- Require `wheel` not `wheels` for global projects [#182](https://github.com/frostming/pdm/issues/182)
+- Write a `sitecustomize.py` instead of a `.pth` file to enable PEP 582. Thanks @Aloxaf.
+  Update `get_package_finder()` to be compatible with `pip 20.3`. [#185](https://github.com/frostming/pdm/issues/185)
+- Fix the help messages of commands "cache" and "remove" [#187](https://github.com/frostming/pdm/issues/187)
+
+
 Release v0.11.0 (2020-11-20)
 ----------------------------
 
