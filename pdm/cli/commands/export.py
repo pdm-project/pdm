@@ -32,18 +32,35 @@ class Command(BaseCommand):
             "--output",
             help="Write output to the given file, or print to stdout if not given",
         )
+        parser.add_argument(
+            "-p",
+            "--pyproject",
+            action="store_true",
+            help="Read the list of packages from pyproject.toml",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         candidates = []
+        if options.pyproject:
+            options.hashes = False
         if options.default:
             # Don't include self candidate
-            temp = project.get_locked_candidates()
-            temp.pop(project.meta.name, None)
+            if options.pyproject:
+                temp = project.dependencies
+            else:
+                temp = project.get_locked_candidates()
+                temp.pop(project.meta.name, None)
             candidates.extend(temp.values())
         if options.dev:
-            candidates.extend(project.get_locked_candidates("dev").values())
+            if options.pyproject:
+                candidates.extend(project.dev_dependencies.values())
+            else:
+                candidates.extend(project.get_locked_candidates("dev").values())
         for section in options.sections:
-            candidates.extend(project.get_locked_candidates(section).values())
+            if options.pyproject:
+                candidates.extend(project.get_dependencies(section).values())
+            else:
+                candidates.extend(project.get_locked_candidates(section).values())
         content = FORMATS[options.format].export(project, candidates, options)
         if options.output:
             Path(options.output).write_text(content)

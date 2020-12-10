@@ -100,7 +100,7 @@ def convert(project, filename):
 def export(project, candidates, options):
     lines = []
     for candidate in candidates:
-        req = candidate.req.as_line()
+        req = getattr(candidate, "req", candidate).as_line()
         lines.append(req)
         if options.hashes and candidate.hashes:
             for item in candidate.hashes.values():

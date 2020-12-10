@@ -261,6 +261,7 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     project = fixture_project("demo-package")
     requirements_txt = project.root / "requirements.txt"
     requirements_no_hashes = project.root / "requirements_simple.txt"
+    requirements_pyproject = project.root / "requirements.ini"
 
     result = invoke(["export"], obj=project)
     assert result.exit_code == 0
@@ -269,6 +270,10 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     result = invoke(["export", "--without-hashes"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == requirements_no_hashes.read_text().strip()
+
+    result = invoke(["export", "--pyproject"], obj=project)
+    assert result.exit_code == 0
+    assert result.output.strip() == requirements_pyproject.read_text().strip()
 
     result = invoke(
         ["export", "-o", str(project.root / "requirements_output.txt")], obj=project
