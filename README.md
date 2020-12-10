@@ -119,6 +119,8 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 Ta-da! You are running an app with its dependencies installed in an isolated place, while no virtualenv is involved.
 
+You can also preserve the setting by appending the output of `pdm --pep582` to the end of `.bash_profile`.
+
 If you are curious about how this works, check [this doc section](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
 
 ## Docker image
