@@ -49,7 +49,7 @@ class Command(BaseCommand):
         env_file: Optional[str] = None,
     ) -> None:
         if "PYTHONPATH" in os.environ:
-            new_path = os.sep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
+            new_path = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
         else:
             new_path = PEP582_PATH
         os.environ.update({"PYTHONPATH": new_path})
