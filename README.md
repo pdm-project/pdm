@@ -108,7 +108,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-Set environment variable `eval $(pdm --pep582)`. Now you can run the app directly with your familiar **Python interpreter**:
+If you are a Bash user, set the environment variable by `eval $(pdm --pep582)`. Now you can run the app directly with your familiar **Python interpreter**:
 
 ```bash
 $ python /home/frostming/workspace/flask_app/app.py
@@ -119,7 +119,7 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 Ta-da! You are running an app with its dependencies installed in an isolated place, while no virtualenv is involved.
 
-You can also preserve the setting by appending the output of `pdm --pep582` to the end of `.bash_profile`.
+For Windows users, please refer to [the doc](https://pdm.fming.dev/#enable-pep-582-globally) about how to make it work.
 
 If you are curious about how this works, check [this doc section](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
 

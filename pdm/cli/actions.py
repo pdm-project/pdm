@@ -14,6 +14,7 @@ from pdm.cli.utils import (
     format_lockfile,
     format_toml,
     save_version_specifiers,
+    set_env_in_reg,
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
@@ -540,18 +541,17 @@ def print_pep582_command(shell: str = "AUTO"):
     """Print the export PYTHONPATH line to be evaluated by the shell."""
     import shellingham
 
+    if os.name == "nt":
+        set_env_in_reg("PYTHONPATH", PEP582_PATH)
+        return
+    lib_path = PEP582_PATH.replace("'", "\\'")
     if shell == "AUTO":
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
-    lib_path = PEP582_PATH.replace("'", "\\'")
     if shell in ("zsh", "bash"):
         result = f"export PYTHONPATH='{lib_path}':$PYTHONPATH"
     elif shell == "fish":
         result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
-    elif shell == "powershell":
-        result = f'$env:PYTHONPATH="{lib_path};$env:PYTHONPATH"'
-    elif shell == "cmd":
-        result = f"set PYTHONPATH={lib_path};%PYTHONPATH%"
     elif shell in ("tcsh", "csh"):
         result = f"setenv PYTHONPATH '{lib_path}':$PYTHONPATH"
     else:

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 from collections import ChainMap
 from typing import TYPE_CHECKING, Optional
 
@@ -411,3 +413,36 @@ def find_importable_files(project: Project) -> Iterable[Tuple[str, Path]]:
         for key, module in FORMATS.items():
             if module.check_fingerprint(project, project_file.as_posix()):
                 yield key, project_file
+
+
+def set_env_in_reg(env_name: str, value: str) -> None:
+    """Manipulate the WinReg, and add value to the
+    environment variable if exists or create new.
+    """
+    import winreg
+
+    value = os.path.normcase(value)
+
+    with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
+        with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
+            try:
+                old_value, type_ = winreg.QueryValueEx(env_key, env_name)
+            except FileNotFoundError:
+                old_value, type_ = "", winreg.REG_EXPAND_SZ
+            new_value = ";".join(old_value, value) if old_value else value
+            try:
+                winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
+            except PermissionError:
+                stream.echo(
+                    stream.red(
+                        "Permission denied, please run the terminal as administrator."
+                    ),
+                    err=True,
+                )
+                sys.exit(1)
+    stream.echo(
+        stream.green(
+            "The environment variable has been saved, "
+            "please restart the session to take effect."
+        )
+    )
