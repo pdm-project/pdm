@@ -49,10 +49,14 @@ class Command(BaseCommand):
         env_file: Optional[str] = None,
     ) -> None:
         if "PYTHONPATH" in os.environ:
-            new_path = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
+            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
         else:
-            new_path = PEP582_PATH
-        os.environ.update({"PYTHONPATH": new_path})
+            pythonpath = PEP582_PATH
+        project_env = project.environment
+        this_path = project_env.get_paths()["scripts"]
+        python_root = os.path.dirname(project_env.python_executable)
+        new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
+        os.environ.update({"PYTHONPATH": pythonpath, "PATH": new_path})
         if env_file:
             import dotenv
 
@@ -66,7 +70,7 @@ class Command(BaseCommand):
             sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
 
         command, *args = args
-        expanded_command = project.environment.which(command)
+        expanded_command = project_env.which(command)
         if not expanded_command:
             raise PdmUsageError(
                 "Command {} is not found on your PATH.".format(

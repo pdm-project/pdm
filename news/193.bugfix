@@ -1,0 +1,1 @@
+Inject `__pypackages__` into `PATH` env var during `pdm run`.

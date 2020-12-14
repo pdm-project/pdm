@@ -11,6 +11,12 @@ version = "1.4.4"
 summary = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 
 [[package]]
+name = "arpeggio"
+sections = ["dev"]
+version = "1.10.1"
+summary = "Packrat parser interpreter"
+
+[[package]]
 name = "atomicwrites"
 sections = ["dev"]
 version = "1.4.0"
@@ -247,6 +253,17 @@ summary = "Core utilities for Python packages"
 [package.dependencies]
 pyparsing = ">=2.0.2"
 six = "*"
+
+[[package]]
+name = "parver"
+sections = ["dev"]
+version = "0.3.1"
+summary = "Parse and manipulate version numbers."
+
+[package.dependencies]
+arpeggio = "~=1.7"
+attrs = ">=19.2"
+six = "~=1.13"
 
 [[package]]
 name = "pdm-pep517"
@@ -549,6 +566,10 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
 ]
+"arpeggio 1.10.1" = [
+    {file = "Arpeggio-1.10.1-py2.py3-none-any.whl", hash = "sha256:f01a330148d972714458faf7bc142e9780fb443d33bb2474e5df2ad0a81635bc"},
+    {file = "Arpeggio-1.10.1.tar.gz", hash = "sha256:920d12cc762edb2eb56daae64a14c93e43dc181b481c88fc79314c0df6ee639e"},
+]
 "atomicwrites 1.4.0" = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
     {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
@@ -719,6 +740,10 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 "packaging 20.4" = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
+]
+"parver 0.3.1" = [
+    {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
+    {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
 "pdm-pep517 0.2.1" = [
     {file = "pdm_pep517-0.2.1-py3-none-any.whl", hash = "sha256:7a973a116ccf403b71c9dc758f0096e9c8cebb75be27e02d3929127cd85798c6"},
@@ -951,4 +976,5 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:cf7dd9fb5ea311d0fb65a7e99ba86e71"
+content_hash = "md5:56e8bafd62ab65699b53ad603d4f88dc"
+
