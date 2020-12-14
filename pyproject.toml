@@ -48,6 +48,7 @@ pytest-mock = "*"
 towncrier = "<20.0.0,>=19.2.0"
 pytest-xdist = "<2.0.0,>=1.31.0"
 vendoring = {version = "*", marker = "python_version ~= '3.8'"}
+parver = "<1.0.0,>=0.3.1"
 
 [tool.pdm.doc-dependencies]
 mkdocs = "<2.0.0,>=1.1"
@@ -56,6 +57,9 @@ markdown-include = "<1.0.0,>=0.5.1"
 
 [tool.pdm.cli]
 pdm = "pdm.core:main"
+
+[tool.pdm.scripts]
+release = "python tasks/release.py"
 
 [tool.black]
 line-length = 88
@@ -143,7 +147,7 @@ requirements = "pdm/_vendor/vendors.txt"
 namespace = "pdm._vendor"
 
 protected-files = ["__init__.py", "README.md", "vendors.txt"]
-patches-dir = "vendors/patches"
+patches-dir = "tasks/patches"
 
 [tool.vendoring.transformations]
 substitute = [
