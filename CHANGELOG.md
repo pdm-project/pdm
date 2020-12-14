@@ -1,3 +1,16 @@
+Release v0.12.1 (2020-12-14)
+----------------------------
+
+### Features & Improvements
+
+- Provide an option to export requirements from pyproject.toml [#190](https://github.com/frostming/pdm/issues/190)
+- For Windows users, `pdm --pep582` can enable PEP 582 globally by manipulating the WinReg. [#191](https://github.com/frostming/pdm/issues/191)
+
+### Bug Fixes
+
+- Inject `__pypackages__` into `PATH` env var during `pdm run`. [#193](https://github.com/frostming/pdm/issues/193)
+
+
 Release v0.12.0 (2020-12-08)
 ----------------------------
 
