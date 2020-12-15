@@ -257,7 +257,10 @@ class Synchronizer:
         install_self = None
         for kind in to_do:
             for key in to_do[kind]:
-                if key == self.environment.project.meta.project_name.lower():
+                if (
+                    key == self.environment.project.meta.name
+                    and self.environment.project.meta.project_name.lower()
+                ):
                     install_self = (kind, key)
                 elif key in self.SEQUENTIAL_PACKAGES:
                     sequential_jobs.append((kind, key))
