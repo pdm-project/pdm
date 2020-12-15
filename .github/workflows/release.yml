@@ -16,12 +16,10 @@ jobs:
         with:
           python-version: 3.8
           architecture: "x64"
-      - name: Cache packages
-        uses: actions/cache@v1
-        with:
-          path: __pypackages__
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: release-packages-${{ hashFiles('pdm.lock') }}
+      - name: Get Changelog
+        id: get-changelog
+        run: |
+          echo "::set-output name=CHANGELOG_CONTENT::$(awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md)"
       - name: Install Current PDM
         run: |
           pip install -U pip
@@ -39,3 +37,12 @@ jobs:
         run: |
           pip install twine
           twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: v${{ github.ref }}
+          body: ${{ steps.get-changelog.outputs.CHANGELOG_CONTENT }}
+          draft: false
+          prerelease: false
