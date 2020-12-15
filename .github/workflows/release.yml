@@ -38,6 +38,7 @@ jobs:
           pip install twine
           twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
       - name: Create Release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
