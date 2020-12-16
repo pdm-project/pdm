@@ -289,19 +289,6 @@ version = "20.3.1"
 summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
-name = "pip-shims"
-sections = ["default"]
-version = "0.5.3"
-summary = "Compatibility shims for pip versions 8 thru current."
-
-[package.dependencies]
-pip = "*"
-packaging = "*"
-setuptools = "*"
-six = "*"
-wheel = "*"
-
-[[package]]
 name = "pluggy"
 sections = ["dev"]
 version = "0.13.1"
@@ -470,8 +457,9 @@ summary = "Resolve abstract dependencies into concrete ones"
 
 [[package]]
 name = "setuptools"
-sections = ["default", "dev"]
+sections = ["dev"]
 version = "50.3.2"
+marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
 [[package]]
@@ -543,12 +531,6 @@ jsonschema = "*"
 toml = "*"
 requests = "*"
 packaging = "*"
-
-[[package]]
-name = "wheel"
-sections = ["default"]
-version = "0.35.1"
-summary = "A built-package format for Python"
 
 [[package]]
 name = "zipp"
@@ -757,10 +739,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "pip-20.3.1-py2.py3-none-any.whl", hash = "sha256:425e79b20939abbffa7633a91151a882aedc77564d9313e3584eb0416c28c558"},
     {file = "pip-20.3.1.tar.gz", hash = "sha256:43f7d3811f05db95809d39515a5111dd05994965d870178a4fe10d5482f9d2e2"},
 ]
-"pip-shims 0.5.3" = [
-    {file = "pip_shims-0.5.3-py2.py3-none-any.whl", hash = "sha256:16ca9f87485667b16b978b68a1aae4f9cc082c0fa018aed28567f9f34a590569"},
-    {file = "pip_shims-0.5.3.tar.gz", hash = "sha256:05b00ade9d1e686a98bb656dd9b0608a933897283dc21913fad6ea5409ff7e91"},
-]
 "pluggy 0.13.1" = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
@@ -965,10 +943,6 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "vendoring-0.3.3-py2.py3-none-any.whl", hash = "sha256:2b91c302116320f903fdb5e60c2b0805d807e2b87425ab0c86624028aa5ffa57"},
     {file = "vendoring-0.3.3.tar.gz", hash = "sha256:2bbfc0c8da2863f4638c854b91e80c5d0ca57db62fb979d4b0f52088eeab1162"},
 ]
-"wheel 0.35.1" = [
-    {file = "wheel-0.35.1-py2.py3-none-any.whl", hash = "sha256:497add53525d16c173c2c1c733b8f655510e909ea78cc0e29d374243544b77a2"},
-    {file = "wheel-0.35.1.tar.gz", hash = "sha256:99a22d87add3f634ff917310a3d87e499f19e663413a52eb9232c447aa646c9f"},
-]
 "zipp 3.4.0" = [
     {file = "zipp-3.4.0-py3-none-any.whl", hash = "sha256:102c24ef8f171fd729d46599845e95c7ab894a4cf45f5de11a44cc7444fb1108"},
     {file = "zipp-3.4.0.tar.gz", hash = "sha256:ed5eee1974372595f9e416cc7bbeeb12335201d8081ca8a0743c954d4446e5cb"},
@@ -976,5 +950,4 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:56e8bafd62ab65699b53ad603d4f88dc"
-
+content_hash = "md5:c537be438db6242aa8b509c2c5f01b14"

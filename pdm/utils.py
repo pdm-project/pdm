@@ -1,35 +1,30 @@
 """
-Compatibility code
+Utility functions
 """
 import atexit
 import functools
 import importlib
-import inspect
 import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
 from packaging.version import parse as parse_version
-from pip_shims.shims import (
+
+from pdm._types import Source
+from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
     PackageFinder,
-    TargetPython,
+    get_package_finder,
     url_to_path,
 )
-
-from pdm._types import Source
-
-if TYPE_CHECKING:
-    from pip_shims.compat import TCommand, TFinder, Values
 
 try:
     from functools import cached_property
@@ -47,91 +42,6 @@ except ImportError:
             if self.attr_name not in inst.__dict__:
                 inst.__dict__[self.attr_name] = self.func(inst)
             return inst.__dict__[self.attr_name]
-
-
-def get_abi_tag(python_version):
-    # type: (Tuple[int, int]) -> Optional[str]
-    """Return the ABI tag based on SOABI (if available) or emulate SOABI
-    (CPython 2, PyPy).
-    A replacement for pip._internal.models.pep425tags:get_abi_tag()
-    """
-    try:
-        from wheel.pep425tags import get_abbr_impl, get_config_var
-        from wheel.pep425tags import get_flag as _get_flag
-
-        def get_flag(var, fallback, expected=True, warn=True):
-            return _get_flag(
-                var, fallback=lambda: fallback, expected=expected, warn=warn
-            )
-
-    except ModuleNotFoundError:
-        from packaging.tags import interpreter_name as get_abbr_impl
-        from wheel.bdist_wheel import get_config_var, get_flag
-
-    soabi = get_config_var("SOABI")
-    impl = get_abbr_impl()
-    abi = None  # type: Optional[str]
-
-    if not soabi and impl in {"cp", "pp"} and hasattr(sys, "maxunicode"):
-        d = ""
-        m = ""
-        u = ""
-        is_cpython = impl == "cp"
-        if get_flag("Py_DEBUG", hasattr(sys, "gettotalrefcount"), warn=False):
-            d = "d"
-        if python_version < (3, 8) and get_flag(
-            "WITH_PYMALLOC", is_cpython, warn=False
-        ):
-            m = "m"
-        if python_version < (3, 3) and get_flag(
-            "Py_UNICODE_SIZE",
-            sys.maxunicode == 0x10FFFF,
-            expected=4,
-            warn=False,
-        ):
-            u = "u"
-        abi = "%s%s%s%s%s" % (impl, "".join(map(str, python_version)), d, m, u)
-    elif soabi and soabi.startswith("cpython-"):
-        abi = "cp" + soabi.split("-")[1]
-    elif soabi:
-        abi = soabi.replace(".", "_").replace("-", "_")
-
-    return abi
-
-
-def get_package_finder(
-    install_cmd,  # type: TCommand
-    options=None,  # type: Optional[Values]
-    python_version=None,  # type: Optional[Tuple[int, int]]
-    ignore_requires_python=None,  # type: Optional[bool]
-):
-    # type: (...) -> TFinder
-    """Shim for compatibility to generate package finders.
-
-    Build and return a :class:`~pip._internal.index.package_finder.PackageFinder`
-    instance using the :class:`~pip._internal.commands.install.InstallCommand` helper
-    method to construct the finder, shimmed with backports as needed for compatibility.
-    """
-    from pip_shims.compat import get_session
-
-    if options is None:
-        options, _ = install_cmd.parser.parse_args([])  # type: ignore
-    session = get_session(install_cmd=install_cmd, options=options)  # type: ignore
-    build_kwargs = {"options": options, "session": session}
-    if python_version:
-        target_python_builder = TargetPython
-        abi = get_abi_tag(python_version)
-        builder_args = inspect.signature(target_python_builder).parameters
-        target_python_params = {"py_version_info": python_version}
-        if "abi" in builder_args:
-            target_python_params["abi"] = abi
-        elif "abis" in builder_args:
-            target_python_params["abis"] = [abi]
-        target_python = target_python_builder(**target_python_params)
-        build_kwargs["target_python"] = target_python
-
-    build_kwargs["ignore_requires_python"] = ignore_requires_python
-    return install_cmd._build_package_finder(**build_kwargs)  # type: ignore
 
 
 def prepare_pip_source_args(
@@ -247,7 +157,7 @@ def allow_all_wheels(enable: bool = True):
     and set a new one, or else the results from the previous non-patched calls
     will interfere.
     """
-    from pip._internal.models.wheel import Wheel as PipWheel
+    from pdm.models.pip_shims import PipWheel
 
     if not enable:
         yield

@@ -14,12 +14,12 @@ from distlib.scripts import ScriptMaker
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
-from pip_shims import shims
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
 from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
+from pdm.models import pip_shims
 from pdm.models.builders import EnvBuilder
 from pdm.utils import (
     allow_all_wheels,
@@ -34,11 +34,6 @@ from pdm.utils import (
     populate_link,
     temp_environ,
 )
-
-try:
-    from pip._internal.utils.compatibility_tags import get_supported
-except ImportError:
-    from pip._internal.pep425tags import get_supported
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -204,7 +199,7 @@ class Environment:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
-    def _make_building_args(self, ireq: shims.InstallRequirement) -> Dict[str, Any]:
+    def _make_building_args(self, ireq: pip_shims.InstallRequirement) -> Dict[str, Any]:
         src_dir = ireq.source_dir or self._get_source_dir()
         if ireq.editable:
             build_dir = src_dir
@@ -237,7 +232,7 @@ class Environment:
         self,
         sources: Optional[List[Source]] = None,
         ignore_requires_python: bool = False,
-    ) -> shims.PackageFinder:
+    ) -> pip_shims.PackageFinder:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
@@ -258,7 +253,7 @@ class Environment:
 
     def build(
         self,
-        ireq: shims.InstallRequirement,
+        ireq: pip_shims.InstallRequirement,
         hashes: Optional[Dict[str, str]] = None,
         allow_all: bool = True,
     ) -> str:
@@ -280,7 +275,7 @@ class Environment:
                     cache_entry = wheel_cache.get_cache_entry(
                         ireq.link,
                         ireq.req.project_name,
-                        get_supported(
+                        pip_shims.get_supported(
                             version="".join(
                                 map(str, get_python_version(self.python_executable)[:2])
                             )
@@ -304,8 +299,8 @@ class Environment:
             if hashes:
                 ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
-                downloader = shims.Downloader(finder.session, "off")
-                downloaded = shims.unpack_url(
+                downloader = pip_shims.Downloader(finder.session, "off")
+                downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,
                     downloader,
@@ -329,7 +324,7 @@ class Environment:
                 else:
                     should_cache = False
                     if ireq.link.is_vcs:
-                        vcs = shims.VcsSupport()
+                        vcs = pip_shims.VcsSupport()
                         vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
                         if vcs_backend.is_immutable_rev_checkout(
                             ireq.link.url, ireq.source_dir

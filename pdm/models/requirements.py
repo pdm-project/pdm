@@ -5,15 +5,20 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-import pip_shims
 from pip._vendor.packaging.markers import InvalidMarker
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
-from pip_shims import path_to_url, url_to_path
 
 from pdm._types import RequirementDict
 from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_extras
+from pdm.models.pip_shims import (
+    InstallRequirement,
+    install_req_from_editable,
+    install_req_from_line,
+    path_to_url,
+    url_to_path,
+)
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
@@ -193,16 +198,16 @@ class Requirement:
     def as_line(self) -> str:
         raise NotImplementedError
 
-    def as_ireq(self, **kwargs) -> pip_shims.InstallRequirement:
+    def as_ireq(self, **kwargs) -> InstallRequirement:
         if self.is_file_or_url:
             line_for_req = self.as_line(True)
         else:
             line_for_req = self.as_line()
         if self.editable:
             line_for_req = line_for_req[3:].strip()
-            ireq = pip_shims.install_req_from_editable(line_for_req, **kwargs)
+            ireq = install_req_from_editable(line_for_req, **kwargs)
         else:
-            ireq = pip_shims.install_req_from_line(line_for_req, **kwargs)
+            ireq = install_req_from_line(line_for_req, **kwargs)
         ireq.req = self
         return ireq
 

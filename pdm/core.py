@@ -74,7 +74,7 @@ class Core:
 
     def main(self, args=None, prog_name=None, obj=None, **extra):
         """The main entry function"""
-        from pip._internal.utils.temp_dir import global_tempdir_manager
+        from pdm.models.pip_shims import global_tempdir_manager
 
         self.init_parser()
         self.load_plugins()

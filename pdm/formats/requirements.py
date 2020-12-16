@@ -1,9 +1,8 @@
 import hashlib
 import urllib.parse
 
-from pip._internal.req.req_file import parse_requirements
-
 from pdm.models.markers import Marker
+from pdm.models.pip_shims import parse_requirements
 from pdm.models.requirements import parse_requirement
 from pdm.utils import get_finder
 
@@ -55,7 +54,7 @@ def requirement_from_ireq(ireq):
 
 
 def parse_requirement_file(filename):
-    from pip._internal.req.constructors import install_req_from_parsed_requirement
+    from pdm.models.pip_shims import install_req_from_parsed_requirement
 
     finder = get_finder([])
     ireqs = [
