@@ -43,7 +43,7 @@ class Project:
     PYPROJECT_FILENAME = "pyproject.toml"
     PDM_NAMESPACE = "tool.pdm"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    PYPROJECT_VERSION = "0.0.1"
+    PYPROJECT_VERSION = "2"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     @classmethod
@@ -281,18 +281,25 @@ class Project:
         return SpinnerReporter(spinner, requirements)
 
     def get_project_metadata(self) -> Dict[str, Any]:
-        content_hash = self.get_content_hash("md5")
+        content_hash = self.get_content_hash("sha256")
         data = {
-            "meta_version": self.PYPROJECT_VERSION,
-            "content_hash": f"md5:{content_hash}",
+            "lock_version": self.PYPROJECT_VERSION,
+            "content_hash": f"sha256:{content_hash}",
         }
         return data
 
-    def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
-        toml_data.update({"root": self.get_project_metadata()})
+    def write_lockfile(
+        self, toml_data: Dict[str, Container], show_message: bool = True
+    ) -> None:
+        doc = tomlkit.document()
+        doc.add("package", toml_data["package"])
+        metadata = tomlkit.table()
+        metadata.update(self.get_project_metadata())
+        metadata.add("files", toml_data["files"])
+        doc.add("metadata", metadata)
 
         with atomic_open_for_write(self.lockfile_file) as fp:
-            fp.write(tomlkit.dumps(toml_data))
+            fp.write(tomlkit.dumps(doc))
         if show_message:
             stream.echo(f"Changes are written to {stream.green('pdm.lock')}.")
         self._lockfile = None
@@ -323,7 +330,9 @@ class Project:
             can.marker = req.marker
             can.hashes = {
                 item["file"]: item["hash"]
-                for item in self.lockfile["metadata"].get(f"{req.key} {version}", [])
+                for item in self.lockfile["metadata"]
+                .get("files", {})
+                .get(f"{req.key} {version}", [])
             } or None
             result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:
@@ -347,7 +356,11 @@ class Project:
     def is_lockfile_hash_match(self) -> bool:
         if not self.lockfile_file.exists():
             return False
-        hash_in_lockfile = str(self.lockfile["root"]["content_hash"])
+        hash_in_lockfile = str(
+            self.lockfile.get("metadata", {}).get("content_hash", "")
+        )
+        if not hash_in_lockfile:
+            return False
         algo, hash_value = hash_in_lockfile.split(":")
         content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
