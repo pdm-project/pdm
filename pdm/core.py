@@ -6,7 +6,7 @@ import sys
 from typing import Optional, Type
 
 import click
-import pkg_resources
+from pip._vendor import pkg_resources
 from resolvelib import Resolver
 
 from pdm.cli.actions import print_pep582_command

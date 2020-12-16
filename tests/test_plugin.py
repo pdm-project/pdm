@@ -1,6 +1,6 @@
 from unittest import mock
 
-import pkg_resources
+from pip._vendor import pkg_resources
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.project.config import ConfigItem

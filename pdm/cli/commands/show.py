@@ -1,6 +1,6 @@
 import argparse
 
-from pkg_resources import safe_name
+from pip._vendor.pkg_resources import safe_name
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.iostream import stream
