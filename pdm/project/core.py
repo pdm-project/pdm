@@ -391,7 +391,7 @@ class Project:
         ) as f:
             f.write(tomlkit.dumps(self.pyproject))
         if show_message:
-            stream.echo("Changes are written to pyproject.toml.")
+            stream.echo(f"Changes are written to {stream.green('pyproject.toml')}.")
         self._pyproject = None
 
     @property
