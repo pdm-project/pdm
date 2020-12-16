@@ -181,13 +181,13 @@ class MockWorkingSet(collections.abc.MutableMapping):
 
 @pytest.fixture()
 def working_set(mocker, repository):
-    from pip._internal.utils import logging
+    from pdm.models.pip_shims import pip_logging
 
     rv = MockWorkingSet()
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate):
-        logging._log_state.indentation = 0
+        pip_logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
         key = safe_name(candidate.name).lower()
         dist = Distribution(key, candidate.version)
@@ -214,7 +214,7 @@ def get_local_finder(*args, **kwargs):
 
 @pytest.fixture(autouse=True)
 def pip_global_tempdir_manager():
-    from pip._internal.utils.temp_dir import global_tempdir_manager
+    from pdm.models.pip_shims import global_tempdir_manager
 
     with global_tempdir_manager():
         yield

@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 from distlib.database import EggInfoDistribution
 from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
-from pip_shims import shims
 
 from pdm.exceptions import ExtrasError, RequirementError
 from pdm.iostream import stream
+from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from pdm.models.environment import Environment
 
-vcs = shims.VcsSupport()
+vcs = pip_shims.VcsSupport()
 
 
 def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
@@ -86,7 +86,7 @@ class Candidate:
         environment,  # type: Environment
         name=None,  # type: Optional[str]
         version=None,  # type: Optional[str]
-        link=None,  # type: shims.Link
+        link=None,  # type: pip_shims.Link
     ):
         # type: (...) -> None
         """
@@ -115,7 +115,7 @@ class Candidate:
         return hash((self.name, self.version))
 
     @cached_property
-    def ireq(self) -> shims.InstallRequirement:
+    def ireq(self) -> pip_shims.InstallRequirement:
         return self.req.as_ireq()
 
     def identify(self) -> str:
@@ -168,7 +168,7 @@ class Candidate:
     @classmethod
     def from_installation_candidate(
         cls,
-        candidate,  # type: shims.InstallationCandidate
+        candidate,  # type: pip_shims.InstallationCandidate
         req,  # type: Requirement
         environment,  # type: Environment
     ):

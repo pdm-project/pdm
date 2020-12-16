@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
 import click
-from pkg_resources import safe_name
+from pip._vendor.pkg_resources import safe_name
 
 from pdm.cli.utils import (
     check_project_file,

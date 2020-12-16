@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Uni
 
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
-from pip_shims import shims
 
 from pdm._types import Source
 from pdm.exceptions import ProjectError
 from pdm.iostream import stream
+from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
@@ -298,7 +298,7 @@ class Project:
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
-        req = parse_requirement(shims.path_to_url(self.root.as_posix()), editable)
+        req = parse_requirement(pip_shims.path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
         return Candidate(
             req, self.environment, name=self.meta.name, version=self.meta.version
@@ -420,9 +420,9 @@ wheel = "*"
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def make_wheel_cache(self) -> shims.WheelCache:
-        return shims.WheelCache(
-            self.cache_dir.as_posix(), shims.FormatControl(set(), set())
+    def make_wheel_cache(self) -> pip_shims.WheelCache:
+        return pip_shims.WheelCache(
+            self.cache_dir.as_posix(), pip_shims.FormatControl(set(), set())
         )
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:

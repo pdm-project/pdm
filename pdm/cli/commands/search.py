@@ -3,7 +3,7 @@ import sys
 import textwrap
 from shutil import get_terminal_size
 
-from pkg_resources import safe_name
+from pip._vendor.pkg_resources import safe_name
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.iostream import stream

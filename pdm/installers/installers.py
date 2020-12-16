@@ -4,11 +4,10 @@ import importlib
 from typing import TYPE_CHECKING
 
 import distlib.scripts
-from pip._internal.utils import logging as pip_logging
 from pip._vendor.pkg_resources import EggInfoDistribution
-from pip_shims import shims
 
 from pdm.iostream import stream
+from pdm.models import pip_shims
 from pdm.models.builders import EnvBuilder
 from pdm.models.requirements import parse_requirement
 
@@ -39,7 +38,7 @@ class Installer:  # pragma: no cover
         self.environment = environment
         self.auto_confirm = auto_confirm
         # XXX: Patch pip to make it work under multi-thread mode
-        pip_logging._log_state.indentation = 0
+        pip_shims.pip_logging._log_state.indentation = 0
 
     def install(self, candidate: Candidate) -> None:
         candidate.get_metadata(allow_all_wheels=False)
@@ -54,7 +53,7 @@ class Installer:  # pragma: no cover
         maker.executable = self.environment.python_executable
         wheel.install(paths, maker)
 
-    def install_editable(self, ireq: shims.InstallRequirement) -> None:
+    def install_editable(self, ireq: pip_shims.InstallRequirement) -> None:
         setup_path = ireq.setup_py_path
         paths = self.environment.get_paths()
         install_script = importlib.import_module(
@@ -79,9 +78,9 @@ class Installer:  # pragma: no cover
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)
         if is_dist_editable(dist):
-            ireq = shims.install_req_from_editable(dist.location)
+            ireq = pip_shims.install_req_from_editable(dist.location)
         else:
-            ireq = shims.install_req_from_line(dist.project_name)
+            ireq = pip_shims.install_req_from_line(dist.project_name)
         ireq.req = req
 
         with self.environment.activate():

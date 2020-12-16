@@ -6,7 +6,7 @@ import sys
 from typing import Optional, Type
 
 import click
-import pkg_resources
+from pip._vendor import pkg_resources
 from resolvelib import Resolver
 
 from pdm.cli.actions import print_pep582_command
@@ -74,7 +74,7 @@ class Core:
 
     def main(self, args=None, prog_name=None, obj=None, **extra):
         """The main entry function"""
-        from pip._internal.utils.temp_dir import global_tempdir_manager
+        from pdm.models.pip_shims import global_tempdir_manager
 
         self.init_parser()
         self.load_plugins()
