@@ -533,6 +533,12 @@ requests = "*"
 packaging = "*"
 
 [[package]]
+name = "wheel"
+sections = ["default"]
+version = "0.36.2"
+summary = "A built-package format for Python"
+
+[[package]]
 name = "zipp"
 sections = ["default", "dev", "doc"]
 version = "3.4.0"
@@ -943,6 +949,10 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "vendoring-0.3.3-py2.py3-none-any.whl", hash = "sha256:2b91c302116320f903fdb5e60c2b0805d807e2b87425ab0c86624028aa5ffa57"},
     {file = "vendoring-0.3.3.tar.gz", hash = "sha256:2bbfc0c8da2863f4638c854b91e80c5d0ca57db62fb979d4b0f52088eeab1162"},
 ]
+"wheel 0.36.2" = [
+    {file = "wheel-0.36.2-py2.py3-none-any.whl", hash = "sha256:78b5b185f0e5763c26ca1e324373aadd49182ca90e825f7853f4b2509215dc0e"},
+    {file = "wheel-0.36.2.tar.gz", hash = "sha256:e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e"},
+]
 "zipp 3.4.0" = [
     {file = "zipp-3.4.0-py3-none-any.whl", hash = "sha256:102c24ef8f171fd729d46599845e95c7ab894a4cf45f5de11a44cc7444fb1108"},
     {file = "zipp-3.4.0.tar.gz", hash = "sha256:ed5eee1974372595f9e416cc7bbeeb12335201d8081ca8a0743c954d4446e5cb"},
@@ -950,4 +960,5 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [root]
 meta_version = "0.0.1"
-content_hash = "md5:c537be438db6242aa8b509c2c5f01b14"
+content_hash = "md5:8e719a97515aca92ae14e3d509118834"
+
