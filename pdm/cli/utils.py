@@ -323,7 +323,7 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
     and a collection of package summaries.
     """
     packages = tomlkit.aot()
-    metadata = tomlkit.table()
+    file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry())
@@ -349,9 +349,12 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
                 inline.update({"file": filename, "hash": hash_value})
                 array.append(inline)
             if array:
-                metadata.add(key, array)
+                file_hashes.add(key, array)
     doc = tomlkit.document()
-    doc.update({"package": packages, "metadata": metadata})
+    doc.add("package", packages)
+    metadata = tomlkit.table()
+    metadata.add("files", file_hashes)
+    doc.add("metadata", metadata)
     return doc
 
 

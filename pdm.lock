@@ -546,6 +546,10 @@ marker = "python_version < '4.0'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
+lock_version = "2"
+content_hash = "md5:8e719a97515aca92ae14e3d509118834"
+
+[metadata.files]
 "apipkg 1.5" = [
     {file = "apipkg-1.5-py2.py3-none-any.whl", hash = "sha256:58587dd4dc3daefad0487f6d9ae32b4542b185e1c36db6993290e7c41ca2b47c"},
     {file = "apipkg-1.5.tar.gz", hash = "sha256:37228cda29411948b422fae072f57e31d3396d2ee1c9783775980ee9c9990af6"},
@@ -957,8 +961,4 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
     {file = "zipp-3.4.0-py3-none-any.whl", hash = "sha256:102c24ef8f171fd729d46599845e95c7ab894a4cf45f5de11a44cc7444fb1108"},
     {file = "zipp-3.4.0.tar.gz", hash = "sha256:ed5eee1974372595f9e416cc7bbeeb12335201d8081ca8a0743c954d4446e5cb"},
 ]
-
-[root]
-meta_version = "0.0.1"
-content_hash = "md5:8e719a97515aca92ae14e3d509118834"
 
