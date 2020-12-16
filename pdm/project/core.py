@@ -281,25 +281,16 @@ class Project:
         return SpinnerReporter(spinner, requirements)
 
     def get_project_metadata(self) -> Dict[str, Any]:
-        content_hash = self.get_content_hash("sha256")
-        data = {
-            "lock_version": self.PYPROJECT_VERSION,
-            "content_hash": f"sha256:{content_hash}",
-        }
+        content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
+        content_hash.trivia.trail = "\n\n"
+        data = {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
         return data
 
-    def write_lockfile(
-        self, toml_data: Dict[str, Container], show_message: bool = True
-    ) -> None:
-        doc = tomlkit.document()
-        doc.add("package", toml_data["package"])
-        metadata = tomlkit.table()
-        metadata.update(self.get_project_metadata())
-        metadata.add("files", toml_data["files"])
-        doc.add("metadata", metadata)
+    def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
+        toml_data["metadata"].update(self.get_project_metadata())
 
         with atomic_open_for_write(self.lockfile_file) as fp:
-            fp.write(tomlkit.dumps(doc))
+            fp.write(tomlkit.dumps(toml_data))
         if show_message:
             stream.echo(f"Changes are written to {stream.green('pdm.lock')}.")
         self._lockfile = None

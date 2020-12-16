@@ -350,8 +350,12 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
                 array.append(inline)
             if array:
                 file_hashes.add(key, array)
-    data = {"package": packages, "files": file_hashes}
-    return data
+    doc = tomlkit.document()
+    doc.add("package", packages)
+    metadata = tomlkit.table()
+    metadata.add("files", file_hashes)
+    doc.add("metadata", metadata)
+    return doc
 
 
 def save_version_specifiers(

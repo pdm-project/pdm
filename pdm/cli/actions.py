@@ -150,7 +150,6 @@ def do_add(
     save_version_specifiers(requirements, resolved, save)
     project.add_dependencies(requirements)
     lockfile = project.lockfile
-    lockfile["root"]["content_hash"] = "md5:" + project.get_content_hash("md5")
     project.write_lockfile(lockfile, False)
 
     if sync:
@@ -237,7 +236,6 @@ def do_update(
         save_version_specifiers(updated_deps, resolved, save)
         project.add_dependencies(updated_deps)
         lockfile = project.lockfile
-        lockfile["root"]["content_hash"] = "md5:" + project.get_content_hash("md5")
         project.write_lockfile(lockfile, False)
 
 
