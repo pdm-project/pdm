@@ -12,7 +12,6 @@ from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
     format_lockfile,
-    format_toml,
     save_version_specifiers,
     set_env_in_reg,
 )
@@ -495,12 +494,13 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
             )
     else:
         key = format
-    tool_settings = FORMATS[key].convert(project, filename)
-    format_toml(tool_settings)
+    project_data = FORMATS[key].convert(project, filename)
 
     if not project.pyproject_file.exists():
-        project.pyproject = {"tool": {"pdm": {}}}
-    project.tool_settings.update(tool_settings)
+        project.pyproject = {"project": project_data}
+    if not project.pyproject.get("project"):
+        project.pyproject["project"] = {}
+    project.pyproject["project"].update(project_data)
     project.pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
         "build-backend": ["pdm.pep517.api"],

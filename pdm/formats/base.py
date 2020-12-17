@@ -11,6 +11,10 @@ def convert_from(field=None, name=None):
     return wrapper
 
 
+class Unset(Exception):
+    pass
+
+
 class _MetaConverterMeta(abc.ABCMeta):
     def __init__(cls, name, bases, ns):
         super().__init__(name, bases, ns)
@@ -47,7 +51,12 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
                 value = source
             else:
                 value = source[func._convert_from]
-            self._data[key] = func(self, value)
+            try:
+                self._data[key] = func(self, value)
+                if key == "authors":
+                    print(self._data[key], type(self._data[key][0]))
+            except Unset:
+                pass
 
         # Delete all used fields
         for key, func in self._converters.items():

@@ -390,18 +390,6 @@ def check_project_file(project: Project) -> None:
         )
 
 
-def format_toml(pdm_settings):
-    """Ensure the dependencies are inline tables"""
-    for section in pdm_settings:
-        if not section.endswith("dependencies"):
-            continue
-        for name in pdm_settings[section]:
-            if getattr(pdm_settings[section][name], "items", None):
-                table = tomlkit.inline_table()
-                table.update(pdm_settings[section][name])
-                pdm_settings[section][name] = table
-
-
 def find_importable_files(project: Project) -> Iterable[Tuple[str, Path]]:
     """Find all possible files that can be imported"""
     for filename in (
