@@ -33,11 +33,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set PY
-        run: echo "PY=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_ENV
+        run: |
+          echo "PY=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_ENV
+          echo "PIP_CACHE=$(pip cache dir)" >> $GITHUB_ENV
       - name: Cache PIP
         uses: actions/cache@v1
         with:
-          path: ~/.cache/pip
+          path: ${{ env.PIP_CACHE }}
           key: ${{ runner.os }}-pip-${{ env.PY }}
       - name: Cache PEP 582 packages
         uses: actions/cache@v1
