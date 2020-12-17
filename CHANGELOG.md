@@ -1,3 +1,20 @@
+Release v0.12.2 (2020-12-17)
+----------------------------
+
+### Features & Improvements
+
+- Update the lock file schema, move the file hashes to `[metadata.files]` table. [#196](https://github.com/frostming/pdm/issues/196)
+- Retry failed jobs when syncing packages. [#197](https://github.com/frostming/pdm/issues/197)
+
+### Removals and Deprecations
+
+- Drop `pip-shims` package as a dependency. [#132](https://github.com/frostming/pdm/issues/132)
+
+### Miscellany
+
+- Fix the cache path for CI. [#199](https://github.com/frostming/pdm/issues/199)
+
+
 Release v0.12.1 (2020-12-14)
 ----------------------------
 
