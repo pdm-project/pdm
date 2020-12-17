@@ -32,21 +32,22 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set PY
+      - name: Set Variables
+        id: set_variables
         run: |
-          echo "PY=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_ENV
-          echo "PIP_CACHE=$(pip cache dir)" >> $GITHUB_ENV
+          echo "::set-output name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
+          echo "::set-output name=PIP_CACHE::$(pip cache dir)"
       - name: Cache PIP
         uses: actions/cache@v1
         with:
-          path: ${{ env.PIP_CACHE }}
-          key: ${{ runner.os }}-pip-${{ env.PY }}
+          path: ${{ steps.set_variables.outputs.PIP_CACHE }}
+          key: ${{ runner.os }}-pip-${{ steps.set_variables.outputs.PY }}
       - name: Cache PEP 582 packages
         uses: actions/cache@v1
         with:
           path: __pypackages__
           # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-packages-${{ env.PY }}-${{ hashFiles('pdm.lock') }}
+          key: ${{ runner.os }}-packages-${{ steps.set_variables.outputs.PY }}
       - name: Install Current PDM
         run: |
           pip install -U pip
