@@ -109,7 +109,9 @@ class Core:
                 etype, err, traceback = sys.exc_info()
                 if stream.verbosity > stream.NORMAL:
                     raise err.with_traceback(traceback)
-                stream.echo("[{}]: {}".format(etype.__name__, err), err=True)
+                stream.echo(
+                    f"{stream.red('[' + etype.__name__ + ']')}: {err}", err=True
+                )
                 sys.exit(1)
 
     def register_command(
