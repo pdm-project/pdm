@@ -5,8 +5,9 @@ import re
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, convert_from
+from pdm.formats.base import MetaConverter, Unset, convert_from, parse_name_email
 from pdm.models.markers import Marker
+from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 
 
@@ -46,9 +47,9 @@ def _convert_python(python):
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(req_dict):
+def _convert_req(name, req_dict):
     if not getattr(req_dict, "items", None):
-        return _convert_specifier(req_dict)
+        return Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
     req_dict = dict(req_dict)
     if "version" in req_dict:
         req_dict["version"] = _convert_specifier(req_dict["version"])
@@ -67,30 +68,32 @@ def _convert_req(req_dict):
         req_dict["ref"] = req_dict.pop(
             "rev", req_dict.pop("tag", req_dict.pop("branch", None))
         )
-    return req_dict
+    return Requirement.from_req_dict(name, req_dict).as_line()
 
 
 class PoetryMetaConverter(MetaConverter):
     @convert_from("authors")
-    def author(self, value):
-        return value[0]
+    def authors(self, value):
+        return parse_name_email(value)
 
     @convert_from("maintainers")
-    def maintainer(self, value):
-        return value[0]
+    def maintainers(self, value):
+        return parse_name_email(value)
 
-    @convert_from()
-    def python_requires(self, source):
+    @convert_from(name="requires-python")
+    def requires_python(self, source):
         python = source.get("dependencies", {}).pop("python", None)
         return str(_convert_python(python))
 
     @convert_from()
-    def project_urls(self, source):
+    def urls(self, source):
         rv = source.pop("urls", {})
+        if "homepage" in source:
+            rv["homepage"] = source.pop("homepage")
         if "repository" in source:
-            rv["Repository"] = source.pop("repository")
+            rv["repository"] = source.pop("repository")
         if "documentation" in source:
-            rv["Documentation"] = source.pop("documentation")
+            rv["documentation"] = source.pop("documentation")
         return rv
 
     @convert_from("scripts")
@@ -103,27 +106,27 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from()
     def dependencies(self, source):
-        rv = {}
+        rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
             optional = getattr(req_dict, "items", None) and req_dict.pop(
                 "optional", False
             )
-            req_dict = _convert_req(req_dict)
+            req = _convert_req(key, req_dict)
             if optional:
                 extra = next((k for k, v in extras.items() if key in v), None)
                 if extra:
-                    self._data.setdefault(f"{extra}-dependencies", {})[key] = req_dict
+                    self._data.setdefault("optional-dependencies", {}).setdefault(
+                        extra, []
+                    ).append(req)
             else:
-                rv[key] = req_dict
-        if extras:
-            self._data["extras"] = list(extras)
+                rv.append(req)
         del source["dependencies"]
         return rv
 
     @convert_from("dev-dependencies", name="dev-dependencies")
     def dev_dependencies(self, value):
-        return {key: _convert_req(req) for key, req in value.items()}
+        return [_convert_req(key, req) for key, req in value.items()]
 
     @convert_from()
     def includes(self, source):
@@ -140,10 +143,23 @@ class PoetryMetaConverter(MetaConverter):
     def excludes(self, value):
         return value
 
+    @convert_from("source")
+    def source(self, value):
+        self.settings["source"] = [
+            {
+                "name": item.get("name", ""),
+                "url": item.get("url", ""),
+                "verify_ssl": item.get("url", "").startswith("https"),
+            }
+            for item in value
+        ]
+        raise Unset()
+
 
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
-        return dict(PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"]))
+        converter = PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"])
+        return dict(converter), converter.settings
 
 
 def export(project, candidates, options):

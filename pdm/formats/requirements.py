@@ -3,7 +3,6 @@ import urllib.parse
 
 from pdm.models.markers import Marker
 from pdm.models.pip_shims import parse_requirements
-from pdm.models.requirements import parse_requirement
 from pdm.utils import get_finder
 
 
@@ -26,9 +25,9 @@ def _requirement_to_str_lowercase_name(requirement):
     return "".join(parts)
 
 
-def requirement_from_ireq(ireq):
+def ireq_as_line(ireq):
     """Formats an `InstallRequirement` instance as a
-    `pdm.models.requirement.Requirement`.
+    PEP 508 dependency string.
 
     Generic formatter for pretty printing InstallRequirements to the terminal
     in a less verbose way than using its `__str__` method.
@@ -38,7 +37,7 @@ def requirement_from_ireq(ireq):
     :rtype: str
     """
     if ireq.editable:
-        line = "{}".format(ireq.link)
+        line = "-e {}".format(ireq.link)
     else:
         line = _requirement_to_str_lowercase_name(ireq.req)
 
@@ -50,7 +49,7 @@ def requirement_from_ireq(ireq):
             markers = Marker(markers) & ireq.markers
             line = "{}; {}".format(name, markers)
 
-    return parse_requirement(line, ireq.editable)
+    return line
 
 
 def parse_requirement_file(filename):
@@ -85,15 +84,16 @@ def convert_url_to_source(url, name=None):
 
 def convert(project, filename):
     ireqs, finder = parse_requirement_file(str(filename))
-    reqs = [requirement_from_ireq(ireq) for ireq in ireqs]
+    reqs = [ireq_as_line(ireq) for ireq in ireqs]
 
-    data = {"dependencies": dict(req.as_req_dict() for req in reqs)}
+    data = {"dependencies": reqs}
+    settings = {}
     if finder.index_urls:
         sources = [convert_url_to_source(finder.index_urls[0], "pypi")]
         sources.extend(convert_url_to_source(url) for url in finder.index_urls[1:])
-        data["source"] = sources
+        settings["source"] = sources
 
-    return data
+    return data, settings
 
 
 def export(project, candidates, options):

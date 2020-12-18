@@ -1,5 +1,8 @@
 import abc
 import collections
+import re
+
+import tomlkit
 
 
 def convert_from(field=None, name=None):
@@ -32,6 +35,7 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
     def __init__(self, source, filename=None):
         self._data = {}
         self.filename = filename
+        self.settings = {}
         self._convert(dict(source))
 
     def __getitem__(self, k):
@@ -42,6 +46,9 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
 
     def __iter__(self):
         return iter(self._data)
+
+    def get_settings(self, source):
+        pass
 
     def _convert(self, source):
         for key, func in self._converters.items():
@@ -67,4 +74,24 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
             except KeyError:
                 pass
         # Add remaining items to the data
+        self.get_settings(source)
         self._data.update(source)
+
+
+NAME_EMAIL_RE = re.compile(r"(?P<name>[^\s,]+)\s*<(?P<email>.+)>\s*$")
+
+
+def array_of_inline_tables(value, multiline=True):
+    container = tomlkit.array()
+    container.multiline(multiline)
+    for item in value:
+        table = tomlkit.inline_table()
+        table.update(item)
+        container.append(table)
+    return container
+
+
+def parse_name_email(name_email):
+    return array_of_inline_tables(
+        [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
+    )

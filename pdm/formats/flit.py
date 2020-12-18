@@ -89,8 +89,9 @@ class FlitMetaConverter(MetaConverter):
 
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
-        return dict(
-            FlitMetaConverter(tomlkit.parse(fp.read())["tool"]["flit"], filename)
+        return (
+            dict(FlitMetaConverter(tomlkit.parse(fp.read())["tool"]["flit"], filename)),
+            {},
         )
 
 

@@ -1,23 +1,10 @@
 import functools
-import re
 
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, Unset, convert_from
+from pdm.formats.base import MetaConverter, Unset, convert_from, parse_name_email
 from pdm.models.requirements import Requirement
-
-NAME_EMAIL_RE = re.compile(r"(?P<name>[^\s,]+)\s*<(?P<email>.+)>\s*$")
-
-
-def array_of_inline_tables(value, multiline=True):
-    container = tomlkit.array()
-    container.multiline(multiline)
-    for item in value:
-        table = tomlkit.inline_table()
-        table.update(item)
-        container.append(table)
-    return container
 
 
 def check_fingerprint(project, filename):
@@ -33,11 +20,11 @@ def check_fingerprint(project, filename):
 class LegacyMetaConverter(MetaConverter):
     @convert_from("author")
     def authors(self, value):
-        return array_of_inline_tables([NAME_EMAIL_RE.match(value).groupdict()])
+        return parse_name_email([value])
 
     @convert_from("maintainer")
     def maintainers(self, value):
-        return array_of_inline_tables([NAME_EMAIL_RE.match(value).groupdict()])
+        return parse_name_email([value])
 
     @convert_from("version")
     def version(self, value):
@@ -110,12 +97,17 @@ class LegacyMetaConverter(MetaConverter):
     def scripts(self, value):
         return value
 
+    def get_settings(self, source):
+        self.source = dict(source)
+        source.clear()
+
 
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
-        return dict(
-            LegacyMetaConverter(tomlkit.parse(fp.read())["tool"]["pdm"], filename)
+        converter = LegacyMetaConverter(
+            tomlkit.parse(fp.read())["tool"]["pdm"], filename
         )
+        return dict(converter), converter.settings
 
 
 def export(project, candidates, options):

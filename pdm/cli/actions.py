@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
 import click
+import tomlkit
 from pip._vendor.pkg_resources import safe_name
 
 from pdm.cli.utils import (
@@ -494,17 +495,28 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
             )
     else:
         key = format
-    project_data = FORMATS[key].convert(project, filename)
+    project_data, settings = FORMATS[key].convert(project, filename)
+    pyproject = project.pyproject or tomlkit.document()
 
-    if not project.pyproject_file.exists():
-        project.pyproject = {"project": project_data}
-    if not project.pyproject.get("project"):
-        project.pyproject["project"] = {}
-    project.pyproject["project"].update(project_data)
-    project.pyproject["build-system"] = {
+    if "project" not in pyproject:
+        pyproject.add("project", tomlkit.table())
+        pyproject.add(tomlkit.comment("PEP 621 project metadata"))
+        pyproject.add(tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/"))
+
+    for key, value in project_data.items():
+        pyproject.add(key, value)
+
+    if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
+        pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
+
+    for key, value in settings.items():
+        pyproject.add(key, value)
+
+    pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
         "build-backend": ["pdm.pep517.api"],
     }
+    project.pyproject = pyproject
     project.write_pyproject()
 
 
