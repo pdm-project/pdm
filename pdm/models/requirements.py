@@ -3,7 +3,7 @@ import re
 import urllib.parse as urlparse
 import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from pip._vendor.packaging.markers import InvalidMarker
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
@@ -149,31 +149,6 @@ class Requirement:
             return FileRequirement(name=name, **req_dict)
         specifier = req_dict.pop("version", None)
         return NamedRequirement(name=name, specifier=specifier, **req_dict)
-
-    def as_req_dict(self) -> Tuple[str, RequirementDict]:
-        r = {}
-        if self.editable:
-            r["editable"] = True
-        if self.extras:
-            r["extras"] = sorted(self.extras)
-        if self.is_vcs:
-            r[self.vcs] = self.repo
-        elif self.path and self.is_local_dir:
-            r["path"] = self.str_path
-        elif self.url:
-            r["url"] = self.url
-        if self.marker:
-            r["marker"] = str(self.marker).replace('"', "'")
-        if self.specifier:
-            r["version"] = str(self.specifier)
-        elif self.is_named:
-            r["version"] = "*"
-        if len(r) == 1 and next(iter(r), None) == "version":
-            r = r["version"]
-        for attr in ["index", "allow_prereleases", "ref"]:
-            if getattr(self, attr) is not None:
-                r[attr] = getattr(self, attr)
-        return self.project_name, r
 
     def copy(self) -> "Requirement":
         kwargs = {

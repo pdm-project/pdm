@@ -500,17 +500,19 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
 
     if "project" not in pyproject:
         pyproject.add("project", tomlkit.table())
-        pyproject.add(tomlkit.comment("PEP 621 project metadata"))
-        pyproject.add(tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/"))
+        pyproject["project"].add(tomlkit.comment("PEP 621 project metadata"))
+        pyproject["project"].add(
+            tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
+        )
 
     for key, value in project_data.items():
-        pyproject.add(key, value)
+        pyproject["project"].add(key, value)
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
         pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
 
     for key, value in settings.items():
-        pyproject.add(key, value)
+        pyproject["tool"]["pdm"][key] = value
 
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],

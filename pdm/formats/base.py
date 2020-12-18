@@ -60,8 +60,6 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
                 value = source[func._convert_from]
             try:
                 self._data[key] = func(self, value)
-                if key == "authors":
-                    print(self._data[key], type(self._data[key][0]))
             except Unset:
                 pass
 

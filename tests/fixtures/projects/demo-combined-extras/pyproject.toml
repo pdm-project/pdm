@@ -1,25 +1,25 @@
-[build-system]
-build-backend = "pdm.pep517.api"
-requires = ["pdm-pep517"]
-
-[tool]
-[tool.pdm]
-author = "frostming <mianghong@gmail.com>"
-description = ""
-homepage = ""
-license = "MIT"
-name = "demo-package-extra"
-python_requires = ">=3.5"
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+authors = [
+    {name = "frostming", email = "mianghong@gmail.com"},
+]
 version = "0.1.0"
-extras = ["all=be|te"]
+requires-python = ">=3.5"
+license = {text = "MIT"}
+dependencies = ["urllib3"]
+dev-dependencies = []
+description = ""
+name = "demo-package-extra"
 
-[tool.pdm.dependencies]
-urllib3 = "*"
+[project.urls]
+homepage = ""
 
-[tool.pdm.dev-dependencies]
+[project.optional-dependencies]
+be = ["idna"]
+te = ["chardet"]
+all = ["idna", "chardet"]
 
-[tool.pdm.be-dependencies]
-idna = "*"
-
-[tool.pdm.te-dependencies]
-chardet = "*"
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = ["pdm.pep517.api"]

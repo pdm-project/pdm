@@ -97,6 +97,10 @@ class LegacyMetaConverter(MetaConverter):
     def scripts(self, value):
         return value
 
+    @convert_from("entry_points", name="entry-points")
+    def entry_points(self, value):
+        return value
+
     @convert_from("scripts")
     def run_scripts(self, value):
         self.settings["scripts"] = value

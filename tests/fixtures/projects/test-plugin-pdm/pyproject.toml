@@ -1,14 +1,16 @@
 [build-system]
 requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
+build-backend = ["pdm.pep517.api"]
 
-[tool.pdm]
-name = "test-plugin-pdm"
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
 version = "0.0.1"
+dependencies = []
+dev-dependencies = []
+name = "test-plugin-pdm"
 
-[tool.pdm.dependencies]
+[project.optional-dependencies]
 
-[tool.pdm.dev-dependencies]
-
-[tool.pdm.entry_points."pdm.plugin"]
+[project.entry-points."pdm.plugin"]
 hello = "hello:main"
