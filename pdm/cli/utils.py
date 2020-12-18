@@ -383,7 +383,7 @@ def save_version_specifiers(
 
 def check_project_file(project: Project) -> None:
     """Check the existence of the project file and throws an error on failure."""
-    if not project.tool_settings:
+    if not project.meta:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
             "by running {}.".format(stream.green("'pdm init'"))

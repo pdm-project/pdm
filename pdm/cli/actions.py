@@ -18,6 +18,7 @@ from pdm.cli.utils import (
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
+from pdm.formats.base import array_of_inline_tables
 from pdm.installers.installers import format_dist
 from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
@@ -259,31 +260,27 @@ def do_remove(
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
     section = "dev" if dev else section or "default"
-    toml_section = f"{section}-dependencies" if section != "default" else "dependencies"
-    if toml_section not in project.tool_settings:
-        raise ProjectError(
-            f"No such section {stream.yellow(toml_section)} in pyproject.toml."
-        )
-    deps = project.tool_settings[toml_section]
+    if section not in list(project.iter_sections()):
+        raise ProjectError(f"No {section} dependencies given in pyproject.toml.")
+
+    deps = project.get_pyproject_dependencies(section)
     stream.echo(
         f"Removing packages from {section} dependencies: "
         + ", ".join(str(stream.green(name, bold=True)) for name in packages)
     )
     for name in packages:
-        matched_name = next(
-            filter(
-                lambda k: safe_name(k).lower() == safe_name(name).lower(),
-                deps.keys(),
-            ),
+        req = parse_requirement(name)
+        matched_index = next(
+            (i for i, r in enumerate(deps) if req.matches(r)),
             None,
         )
-        if not matched_name:
+        if not matched_index:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
                     stream.green(name, bold=True), section
                 )
             )
-        del deps[matched_name]
+        del deps[matched_index]
 
     project.write_pyproject()
     do_lock(project, "reuse")
@@ -368,27 +365,25 @@ def do_init(
     import tomlkit
 
     data = {
-        "tool": {
-            "pdm": {
-                "name": name,
-                "version": version,
-                "description": "",
-                "author": f"{author} <{email}>",
-                "license": license,
-                "homepage": "",
-                "dependencies": tomlkit.table(),
-                "dev-dependencies": tomlkit.table(),
-            }
+        "project": {
+            "name": name,
+            "version": version,
+            "description": "",
+            "authors": array_of_inline_tables([{"name": author, "email": email}]),
+            "license": tomlkit.inline_table({"text": license}),
+            "urls": {"homepage": ""},
+            "dependencies": [],
+            "dev-dependencies": [],
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }
     if python_requires and python_requires != "*":
         get_specifier(python_requires)
-        data["tool"]["pdm"]["python_requires"] = python_requires
+        data["requires-python"] = python_requires
     if not project.pyproject:
         project._pyproject = data
     else:
-        project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
+        project._pyproject["project"] = data["project"]
         project._pyproject["build-system"] = data["build-system"]
     project.write_pyproject()
 

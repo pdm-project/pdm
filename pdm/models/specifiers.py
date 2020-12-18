@@ -79,6 +79,8 @@ class PySpecSet(SpecifierSet):
     MAX_VERSION = (99, 99, 99)
 
     def __init__(self, version_str: str = "", analyze: bool = True) -> None:
+        if version_str == "*":
+            version_str = ""
         super().__init__(version_str)
         self._lower_bound = self.MIN_VERSION  # type: Tuple[int, int, int]
         self._upper_bound = self.MAX_VERSION  # type: Tuple[int, int, int]

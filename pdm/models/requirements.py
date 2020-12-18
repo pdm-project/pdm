@@ -173,6 +173,16 @@ class Requirement:
     def as_line(self) -> str:
         raise NotImplementedError
 
+    def matches(self, line: str) -> bool:
+        """Return whether the passed in PEP 508 string
+        is the same requirement as this one.
+        """
+        if line.strip().startswith("-e "):
+            req = parse_requirement(line.split("-e", 1)[-1], True)
+        else:
+            req = parse_requirement(line, False)
+        return self.key == req.key
+
     def as_ireq(self, **kwargs) -> InstallRequirement:
         if self.is_file_or_url:
             line_for_req = self.as_line(True)

@@ -23,7 +23,7 @@ def test_pep582_not_loading_site_packages(project, invoke, capfd):
 
 @pytest.mark.pypi
 def test_pep582_launcher_for_python_interpreter(project, invoke):
-    project.tool_settings["python_requires"] = ">=3.6"
+    project.meta["requires-python"] = ">=3.6"
     project.write_pyproject()
     project.root.joinpath("main.py").write_text(
         "import requests\nprint(requests.__version__)\n"

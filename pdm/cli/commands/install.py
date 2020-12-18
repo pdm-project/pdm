@@ -24,7 +24,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        if not project.tool_settings and click._compat.isatty(sys.stdout):
+        if not project.meta and click._compat.isatty(sys.stdout):
             actions.ask_for_import(project)
 
         if options.lock:
