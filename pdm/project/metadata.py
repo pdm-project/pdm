@@ -11,7 +11,9 @@ class MutableMetadata(Metadata, MutableMapping):
 
     def __init__(self, filepath, data=None) -> None:
         self.filepath = filepath
-        self._metadata = data or self._read_pyproject(filepath)
+        if data is None:
+            data = self._read_pyproject(filepath)
+        self._metadata = data
 
     def __getitem__(self, k):
         return self._metadata[k]

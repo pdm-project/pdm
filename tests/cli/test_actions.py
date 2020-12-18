@@ -281,7 +281,7 @@ def test_remove_package_exist_in_multi_section(project, repository, working_set)
     actions.do_add(project, packages=["requests"])
     actions.do_add(project, dev=True, packages=["urllib3"])
     actions.do_remove(project, dev=True, packages=["urllib3"])
-    assert not any("urllib3" in line for line in project.meta.dev_dependencies)
+    assert not any("urllib3" in line for line in project.meta["dev-dependencies"])
     assert "urllib3" in working_set
     assert "requests" in working_set
 

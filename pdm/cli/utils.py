@@ -13,6 +13,7 @@ from resolvelib.structs import DirectedGraph
 
 from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
+from pdm.formats.base import make_inline_table
 from pdm.iostream import stream
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
@@ -332,9 +333,7 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
         for r in fetched_dependencies[k].values():
             name, req = r.as_req_dict()
             if getattr(req, "items", None) is not None:
-                inline = tomlkit.inline_table()
-                inline.update(req)
-                deps.add(name, inline)
+                deps.add(name, make_inline_table(req))
             else:
                 deps.add(name, req)
         if len(deps) > 0:
@@ -345,8 +344,7 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
             array = tomlkit.array()
             array.multiline(True)
             for filename, hash_value in v.hashes.items():
-                inline = tomlkit.inline_table()
-                inline.update({"file": filename, "hash": hash_value})
+                inline = make_inline_table({"file": filename, "hash": hash_value})
                 array.append(inline)
             if array:
                 file_hashes.add(key, array)

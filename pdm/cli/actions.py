@@ -18,7 +18,7 @@ from pdm.cli.utils import (
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
-from pdm.formats.base import array_of_inline_tables
+from pdm.formats.base import array_of_inline_tables, make_inline_table
 from pdm.installers.installers import format_dist
 from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
@@ -362,24 +362,22 @@ def do_init(
     python_requires: str = "",
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
-    import tomlkit
-
     data = {
         "project": {
             "name": name,
             "version": version,
             "description": "",
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
-            "license": tomlkit.inline_table({"text": license}),
+            "license": make_inline_table({"text": license}),
             "urls": {"homepage": ""},
             "dependencies": [],
             "dev-dependencies": [],
+            "requires-python": python_requires,
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }
     if python_requires and python_requires != "*":
         get_specifier(python_requires)
-        data["requires-python"] = python_requires
     if not project.pyproject:
         project._pyproject = data
     else:

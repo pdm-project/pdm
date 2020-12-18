@@ -4,7 +4,7 @@ from pathlib import Path
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, convert_from
+from pdm.formats.base import MetaConverter, convert_from, make_inline_table
 
 
 def check_fingerprint(project, filename):
@@ -46,7 +46,7 @@ class FlitMetaConverter(MetaConverter):
         if "maintainer" in metadata:
             self._data["maintainers"] = _get_author(metadata, "maintainer")
         if "license" in metadata:
-            self._data["license"] = {"text", metadata.pop("license")}
+            self._data["license"] = make_inline_table({"text", metadata.pop("license")})
         if "urls" in metadata:
             self._data["urls"] = metadata.pop("urls")
         if "home-page" in metadata:

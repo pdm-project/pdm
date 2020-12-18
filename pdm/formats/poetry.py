@@ -5,7 +5,13 @@ import re
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, Unset, convert_from, parse_name_email
+from pdm.formats.base import (
+    MetaConverter,
+    Unset,
+    convert_from,
+    make_inline_table,
+    parse_name_email,
+)
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
@@ -82,7 +88,7 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from("license")
     def license(self, value):
-        return {"text": value}
+        return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
     def requires_python(self, source):

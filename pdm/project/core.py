@@ -177,7 +177,7 @@ class Project:
     def iter_sections(self) -> Iterable[str]:
         if self.meta.dependencies:
             yield "default"
-        if self.meta.dev_dependencies:
+        if self.meta.get("dev-dependencies"):
             yield "dev"
         if self.meta.optional_dependencies:
             yield from self.meta.optional_dependencies.keys()

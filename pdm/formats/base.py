@@ -79,13 +79,18 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
 NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 
+def make_inline_table(data):
+    """Create an inline table from the given data."""
+    table = tomlkit.inline_table()
+    table.update(data)
+    return table
+
+
 def array_of_inline_tables(value, multiline=True):
     container = tomlkit.array()
     container.multiline(multiline)
     for item in value:
-        table = tomlkit.inline_table()
-        table.update(item)
-        container.append(table)
+        container.append(make_inline_table(item))
     return container
 
 

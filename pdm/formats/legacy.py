@@ -3,7 +3,13 @@ import functools
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, Unset, convert_from, parse_name_email
+from pdm.formats.base import (
+    MetaConverter,
+    Unset,
+    convert_from,
+    make_inline_table,
+    parse_name_email,
+)
 from pdm.models.requirements import Requirement
 
 
@@ -38,9 +44,7 @@ class LegacyMetaConverter(MetaConverter):
 
     @convert_from("license")
     def license(self, value):
-        table = tomlkit.inline_table()
-        table["text"] = value
-        return table
+        return make_inline_table({"text": value})
 
     @convert_from("source")
     def source(self, value):

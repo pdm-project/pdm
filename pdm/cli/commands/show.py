@@ -5,7 +5,7 @@ from pip._vendor.pkg_resources import safe_name
 from pdm.cli.commands.base import BaseCommand
 from pdm.iostream import stream
 from pdm.models.candidates import Candidate
-from pdm.models.metadata import Metadata
+from pdm.models.project_info import ProjectInfo
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
@@ -43,9 +43,9 @@ class Command(BaseCommand):
 
         metadata = latest.get_metadata()
         if metadata._legacy:
-            result = Metadata(dict(metadata._legacy.items()), True)
+            result = ProjectInfo(dict(metadata._legacy.items()), True)
         else:
-            result = Metadata(dict(metadata._data), False)
+            result = ProjectInfo(dict(metadata._data), False)
         if latest_stable:
             result.latest_stable_version = str(latest_stable.version)
         if installed:

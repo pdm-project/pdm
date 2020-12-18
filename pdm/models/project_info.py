@@ -3,7 +3,7 @@ from typing import Dict, Iterator, List, Tuple, Union
 from pdm.iostream import stream
 
 
-class Metadata:
+class ProjectInfo:
     def __init__(self, data: Dict[str, Union[str, List[str]]], legacy: bool) -> None:
         self._data = data
         self.legacy = legacy
