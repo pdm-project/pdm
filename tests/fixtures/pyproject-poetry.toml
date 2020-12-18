@@ -31,8 +31,8 @@ mysqlclient = { version = "^1.3", optional = true }
 babel = "2.9.0"
 
 [tool.poetry.dev-dependencies]
-my-dir = { path = "../my-package/" }
-my-file = { path = "../my-package/dist/my-package-0.1.0.tar.gz" }
+demo-dir = { path = "./projects/demo" }
+demo = { path = "./artifacts/demo-0.0.1-py2.py3-none-any.whl" }
 
 [tool.poetry.extras]
 mysql = ["mysqlclient"]

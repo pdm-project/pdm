@@ -80,6 +80,10 @@ class PoetryMetaConverter(MetaConverter):
     def maintainers(self, value):
         return parse_name_email(value)
 
+    @convert_from("license")
+    def license(self, value):
+        return {"text": value}
+
     @convert_from(name="requires-python")
     def requires_python(self, source):
         python = source.get("dependencies", {}).pop("python", None)
@@ -96,11 +100,7 @@ class PoetryMetaConverter(MetaConverter):
             rv["documentation"] = source.pop("documentation")
         return rv
 
-    @convert_from("scripts")
-    def cli(self, value):
-        return value
-
-    @convert_from("plugins")
+    @convert_from("plugins", name="entry-points")
     def entry_points(self, value):
         return value
 

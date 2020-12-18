@@ -78,7 +78,7 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
         self._data.update(source)
 
 
-NAME_EMAIL_RE = re.compile(r"(?P<name>[^\s,]+)\s*<(?P<email>.+)>\s*$")
+NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 
 def array_of_inline_tables(value, multiline=True):
