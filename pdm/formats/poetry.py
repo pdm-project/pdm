@@ -9,6 +9,7 @@ from pdm.formats.base import (
     MetaConverter,
     Unset,
     convert_from,
+    make_array,
     make_inline_table,
     parse_name_email,
 )
@@ -128,11 +129,11 @@ class PoetryMetaConverter(MetaConverter):
             else:
                 rv.append(req)
         del source["dependencies"]
-        return rv
+        return make_array(rv, True)
 
     @convert_from("dev-dependencies", name="dev-dependencies")
     def dev_dependencies(self, value):
-        return [_convert_req(key, req) for key, req in value.items()]
+        return make_array([_convert_req(key, req) for key, req in value.items()], True)
 
     @convert_from()
     def includes(self, source):

@@ -18,7 +18,7 @@ from pdm.cli.utils import (
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
-from pdm.formats.base import array_of_inline_tables, make_inline_table
+from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.installers.installers import format_dist
 from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
@@ -370,8 +370,8 @@ def do_init(
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
             "license": make_inline_table({"text": license}),
             "urls": {"homepage": ""},
-            "dependencies": [],
-            "dev-dependencies": [],
+            "dependencies": make_array([], True),
+            "dev-dependencies": make_array([], True),
             "requires-python": python_requires,
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
@@ -509,7 +509,7 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
 
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
-        "build-backend": ["pdm.pep517.api"],
+        "build-backend": "pdm.pep517.api",
     }
     project.pyproject = pyproject
     project.write_pyproject()

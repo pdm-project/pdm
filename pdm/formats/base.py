@@ -86,12 +86,18 @@ def make_inline_table(data):
     return table
 
 
+def make_array(data, multiline=False):
+    if not data:
+        return []
+    array = tomlkit.array()
+    array.multiline(multiline)
+    for item in data:
+        array.append(item)
+    return array
+
+
 def array_of_inline_tables(value, multiline=True):
-    container = tomlkit.array()
-    container.multiline(multiline)
-    for item in value:
-        container.append(make_inline_table(item))
-    return container
+    return make_array([make_inline_table(item) for item in value], multiline)
 
 
 def parse_name_email(name_email):

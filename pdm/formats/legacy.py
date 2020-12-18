@@ -7,6 +7,7 @@ from pdm.formats.base import (
     MetaConverter,
     Unset,
     convert_from,
+    make_array,
     make_inline_table,
     parse_name_email,
 )
@@ -63,17 +64,23 @@ class LegacyMetaConverter(MetaConverter):
 
     @convert_from("dependencies")
     def dependencies(self, value):
-        return [
-            Requirement.from_req_dict(name, req).as_line()
-            for name, req in value.items()
-        ]
+        return make_array(
+            [
+                Requirement.from_req_dict(name, req).as_line()
+                for name, req in value.items()
+            ],
+            True,
+        )
 
     @convert_from("dev-dependencies", name="dev-dependencies")
     def dev_dependencies(self, value):
-        return [
-            Requirement.from_req_dict(name, req).as_line()
-            for name, req in value.items()
-        ]
+        return make_array(
+            [
+                Requirement.from_req_dict(name, req).as_line()
+                for name, req in value.items()
+            ],
+            True,
+        )
 
     @convert_from(name="optional-dependencies")
     def optional_dependencies(self, source):

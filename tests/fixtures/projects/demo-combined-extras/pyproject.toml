@@ -22,4 +22,4 @@ all = ["idna", "chardet"]
 
 [build-system]
 requires = ["pdm-pep517"]
-build-backend = ["pdm.pep517.api"]
+build-backend = "pdm.pep517.api"

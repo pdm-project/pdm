@@ -4,7 +4,7 @@ from pathlib import Path
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, convert_from, make_inline_table
+from pdm.formats.base import MetaConverter, convert_from, make_array, make_inline_table
 
 
 def check_fingerprint(project, filename):
@@ -56,7 +56,7 @@ class FlitMetaConverter(MetaConverter):
         if "requires-python" in metadata:
             self._data["requires-python"] = metadata.pop("requires-python")
         # requirements
-        self._data["dependencies"] = metadata.pop("requires", [])
+        self._data["dependencies"] = make_array(metadata.pop("requires", []), True)
         self._data["optional-dependencies"] = metadata.pop("requires-extra", {})
         # Add remaining metadata as the same key
         self._data.update(metadata)

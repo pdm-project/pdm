@@ -1,15 +1,43 @@
-[tool.pdm]
-name = "pdm"
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+authors = [
+    {name = "frostming", email = "mianghong@gmail.com"},
+]
+dynamic = ["version"]
 version = {use_scm = true}
+requires-python = ">=3.7"
+license = {text = "MIT"}
+dependencies = [
+    "appdirs",
+    "click",
+    "distlib",
+    "importlib-metadata; python_version < \"3.8\"",
+    "pdm-pep517<1.0.0,>=0.1.0",
+    "pep517",
+    "pip<21,>=20.1",
+    "pycomplete<1.0.0,>=0.2.0",
+    "python-cfonts",
+    "python-dotenv<1.0.0,>=0.15.0",
+    "pythonfinder",
+    "resolvelib<1.0.0,>=0.3.0",
+    "shellingham<2.0.0,>=1.3.2",
+    "tomlkit",
+    "wheel<1.0.0,>=0.36.2",
+]
+dev-dependencies = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "towncrier<20.0.0,>=19.2.0",
+    "pytest-xdist<2.0.0,>=1.31.0",
+    "vendoring; python_version ~= \"3.8\"",
+    "parver<1.0.0,>=0.3.1",
+]
+name = "pdm"
 description = "Python Development Master"
-author = "frostming <mianghong@gmail.com>"
-license = "MIT"
-python_requires = ">=3.7"
 readme = "README.md"
-homepage = "https://pdm.fming.dev"
-
 keywords = ["packaging", "dependency", "workflow"]
-
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Topic :: Software Development :: Build Tools",
@@ -20,42 +48,15 @@ classifiers = [
     "Programming Language :: Python :: 3.9"
 ]
 
-[tool.pdm.project_urls]
+[project.urls]
+homepage = "https://pdm.fming.dev"
 Repository = "https://github.com/frostming/pdm"
 Documentation = "https://pdm.fming.dev"
 
-[tool.pdm.dependencies]
-appdirs = "*"
-click = "*"
-distlib = "*"
-importlib-metadata = {version = "*", marker = "python_version<'3.8'"}
-pdm-pep517 = "<1.0.0,>=0.1.0"
-pep517 = "*"
-pip = ">=20.1,<21"
-pycomplete = "<1.0.0,>=0.2.0"
-python-cfonts = "*"
-python-dotenv = "<1.0.0,>=0.15.0"
-pythonfinder = "*"
-resolvelib = "<1.0.0,>=0.3.0"
-shellingham = "<2.0.0,>=1.3.2"
-tomlkit = "*"
-wheel = "<1.0.0,>=0.36.2"
+[project.optional-dependencies]
+doc = ["mkdocs<2.0.0,>=1.1", "mkdocs-material<5.0.0,>=4.6.3", "markdown-include<1.0.0,>=0.5.1"]
 
-[tool.pdm.dev-dependencies]
-pytest = "*"
-pytest-cov = "*"
-pytest-mock = "*"
-towncrier = "<20.0.0,>=19.2.0"
-pytest-xdist = "<2.0.0,>=1.31.0"
-vendoring = {version = "*", marker = "python_version ~= '3.8'"}
-parver = "<1.0.0,>=0.3.1"
-
-[tool.pdm.doc-dependencies]
-mkdocs = "<2.0.0,>=1.1"
-mkdocs-material = "<5.0.0,>=4.6.3"
-markdown-include = "<1.0.0,>=0.5.1"
-
-[tool.pdm.cli]
+[project.scripts]
 pdm = "pdm.core:main"
 
 [tool.pdm.scripts]

@@ -5,6 +5,7 @@ import os
 import tomlkit
 from packaging.markers import default_environment
 
+from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 
@@ -46,14 +47,20 @@ def convert(project, filename):
         result["requires-python"] = f">={python_version}"
     if "source" in data:
         settings["source"] = data["source"]
-    result["dependencies"] = [
-        convert_pipfile_requirement(k, req)
-        for k, req in data.get("packages", {}).items()
-    ]
-    result["dev-dependencies"] = [
-        convert_pipfile_requirement(k, req)
-        for k, req in data.get("dev-packages", {}).items()
-    ]
+    result["dependencies"] = make_array(
+        [
+            convert_pipfile_requirement(k, req)
+            for k, req in data.get("packages", {}).items()
+        ],
+        True,
+    )
+    result["dev-dependencies"] = make_array(
+        [
+            convert_pipfile_requirement(k, req)
+            for k, req in data.get("dev-packages", {}).items()
+        ],
+        True,
+    )
     return result, settings
 
 

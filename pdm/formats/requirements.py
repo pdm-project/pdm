@@ -1,6 +1,7 @@
 import hashlib
 import urllib.parse
 
+from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.pip_shims import parse_requirements
 from pdm.utils import get_finder
@@ -86,7 +87,7 @@ def convert(project, filename):
     ireqs, finder = parse_requirement_file(str(filename))
     reqs = [ireq_as_line(ireq) for ireq in ireqs]
 
-    data = {"dependencies": reqs}
+    data = {"dependencies": make_array(reqs, True)}
     settings = {}
     if finder.index_urls:
         sources = [convert_url_to_source(finder.index_urls[0], "pypi")]
