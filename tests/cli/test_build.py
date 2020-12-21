@@ -130,3 +130,13 @@ def test_build_src_package_by_include(fixture_project):
     )
     assert "my_package/__init__.py" in zip_names
     assert "my_package/data.json" in zip_names
+
+
+def test_build_legacy_package(fixture_project, invoke):
+    project = fixture_project("demo-legacy")
+    result = invoke(["build"], obj=project)
+    assert project.meta.name == "demo-module"
+    assert result.exit_code == 0
+    assert "demo-module-0.1.0/foo_module.py" in get_tarball_names(
+        project.root / "dist/demo-module-0.1.0.tar.gz"
+    )

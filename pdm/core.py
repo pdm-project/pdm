@@ -9,7 +9,7 @@ import click
 from pip._vendor import pkg_resources
 from resolvelib import Resolver
 
-from pdm.cli.actions import print_pep582_command
+from pdm.cli.actions import migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
@@ -95,6 +95,7 @@ class Core:
 
         # Add reverse reference for core object
         options.project.core = self
+        migrate_pyproject(options.project)
 
         try:
             f = options.handler

@@ -282,3 +282,10 @@ def test_completion_command(invoke):
     result = invoke(["completion", "bash"])
     assert result.exit_code == 0
     assert "(completion)" in result.output
+
+
+def test_lock_legacy_project(invoke, fixture_project, repository):
+    project = fixture_project("demo-legacy")
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    assert "urllib3" in project.get_locked_candidates()
