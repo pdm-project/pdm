@@ -38,6 +38,7 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
 - A PEP 517 build backend.
 - A full-featured plug-in system.
+- PEP 621 project metadata format.
 
 ## Why not virtualenv?
 

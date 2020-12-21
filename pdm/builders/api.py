@@ -11,7 +11,7 @@ from pdm.pep517.api import (  # noqa
 
 warnings.warn(
     "`pdm.builders.api` is deprecated in favor of `pdm.pep517.api` and will be "
-    "removed in the future. Please update the [build-system] settings in your"
+    "removed in 1.0.0. Please update the [build-system] settings in your"
     "pyproject.toml.",
     DeprecationWarning,
     stacklevel=2,

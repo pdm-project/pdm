@@ -11,12 +11,6 @@ build-backend = "pdm.pep517.api"
 
 `pip` will read the backend settings to install or build a package.
 
-!!! note "About editable installation"
-    As described, [PEP 517](https://www.python.org/dev/peps/pep-0517/) doesn't provide a
-    way to specify how to install a package in editable mode. So you can't install a PEP 517
-    package by `pip install -e <path_or_url>`. But PDM can install a "PDM package" in editable
-    mode.
-
 ## Choose a Python interpreter
 
 If you have used `pdm init`, you must have already seen how PDM detects and selects the Python
@@ -121,7 +115,7 @@ If you want global project to track another project file other than `~/.pdm/glob
 project path following `-g/--global`.
 
 !!! danger "NOTE"
-    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
+Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv
 
