@@ -13,7 +13,7 @@ dependencies = [
     "click",
     "distlib",
     "importlib-metadata; python_version < \"3.8\"",
-    "pdm-pep517<1.0.0,>=0.1.0",
+    "pdm-pep517<1.0.0,>=0.3.0",
     "pep517",
     "pip<21,>=20.1",
     "pycomplete<1.0.0,>=0.2.0",
@@ -120,7 +120,7 @@ underlines = "-~^"
   showcontent = true
 
 [build-system]
-requires = ["pdm-pep517"]
+requires = ["pdm-pep517>=0.3.0"]
 build-backend = "pdm.pep517.api"
 
 [tool.isort]

@@ -1,3 +1,10 @@
+Release v0.12.3 (2020-12-21)
+----------------------------
+
+### Dependencies
+
+- Pin `pdm-pep517` to `<0.3.0`, this is the last version to support legacy project metadata format.
+
 Release v0.12.2 (2020-12-17)
 ----------------------------
 
