@@ -1,5 +1,8 @@
 import abc
 import collections
+import re
+
+import tomlkit
 
 
 def convert_from(field=None, name=None):
@@ -9,6 +12,10 @@ def convert_from(field=None, name=None):
         return func
 
     return wrapper
+
+
+class Unset(Exception):
+    pass
 
 
 class _MetaConverterMeta(abc.ABCMeta):
@@ -28,6 +35,7 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
     def __init__(self, source, filename=None):
         self._data = {}
         self.filename = filename
+        self.settings = {}
         self._convert(dict(source))
 
     def __getitem__(self, k):
@@ -39,6 +47,9 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
     def __iter__(self):
         return iter(self._data)
 
+    def get_settings(self, source):
+        pass
+
     def _convert(self, source):
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:
@@ -47,7 +58,10 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
                 value = source
             else:
                 value = source[func._convert_from]
-            self._data[key] = func(self, value)
+            try:
+                self._data[key] = func(self, value)
+            except Unset:
+                pass
 
         # Delete all used fields
         for key, func in self._converters.items():
@@ -58,4 +72,35 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
             except KeyError:
                 pass
         # Add remaining items to the data
+        self.get_settings(source)
         self._data.update(source)
+
+
+NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
+
+
+def make_inline_table(data):
+    """Create an inline table from the given data."""
+    table = tomlkit.inline_table()
+    table.update(data)
+    return table
+
+
+def make_array(data, multiline=False):
+    if not data:
+        return []
+    array = tomlkit.array()
+    array.multiline(multiline)
+    for item in data:
+        array.append(item)
+    return array
+
+
+def array_of_inline_tables(value, multiline=True):
+    return make_array([make_inline_table(item) for item in value], multiline)
+
+
+def parse_name_email(name_email):
+    return array_of_inline_tables(
+        [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
+    )

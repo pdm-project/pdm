@@ -38,6 +38,7 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
 - A PEP 517 build backend.
 - A full-featured plug-in system.
+- PEP 621 project metadata format.
 
 ## Why not virtualenv?
 
@@ -143,8 +144,7 @@ the outside, the PDM's installer has already injected the package path to the `s
 
 ### 3. What site-packages will be loaded when using PDM?
 
-Only packages in the local `__pypackages__` directory will be loaded. `site-packages` of Python interpreter isn't loaded.
-It is fully isolated.
+Packages in the local `__pypackages__` directory will be loaded before the system-level `site-packages` for islation.
 
 ### 4. Can I relocate or move the `__pypackages__` folder for deployment?
 

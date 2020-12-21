@@ -76,7 +76,7 @@ def test_add_package(project, repository, working_set, is_dev):
     actions.do_add(project, is_dev, packages=["requests"])
     section = "dev-dependencies" if is_dev else "dependencies"
 
-    assert project.tool_settings[section]["requests"] == "<3.0.0,>=2.19.1"
+    assert project.meta[section][0] == "requests<3.0.0,>=2.19.1"
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -86,7 +86,7 @@ def test_add_package(project, repository, working_set, is_dev):
 def test_add_package_to_custom_package(project, repository, working_set):
     actions.do_add(project, section="test", packages=["requests"])
 
-    assert "requests" in project.tool_settings["test-dependencies"]
+    assert "requests" in project.meta.optional_dependencies["test"][0]
     locked_candidates = project.get_locked_candidates("test")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -102,7 +102,7 @@ def test_add_editable_package(project, repository, working_set, is_dev, vcs):
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
     section = "dev-dependencies" if is_dev else "dependencies"
-    assert "demo" in project.tool_settings[section]
+    assert "demo" in project.meta[section][0]
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
@@ -116,12 +116,12 @@ def test_add_no_install(project, repository, working_set):
 
 def test_add_package_save_exact(project, repository):
     actions.do_add(project, sync=False, save="exact", packages=["requests"])
-    assert project.tool_settings["dependencies"]["requests"] == "==2.19.1"
+    assert project.meta.dependencies[0] == "requests==2.19.1"
 
 
 def test_add_package_save_wildcard(project, repository):
     actions.do_add(project, sync=False, save="wildcard", packages=["requests"])
-    assert project.tool_settings["dependencies"]["requests"] == "*"
+    assert project.meta.dependencies[0] == "requests"
 
 
 def test_add_package_update_reuse(project, repository):
@@ -281,7 +281,7 @@ def test_remove_package_exist_in_multi_section(project, repository, working_set)
     actions.do_add(project, packages=["requests"])
     actions.do_add(project, dev=True, packages=["urllib3"])
     actions.do_remove(project, dev=True, packages=["urllib3"])
-    assert "urllib3" not in project.tool_settings["dev-dependencies"]
+    assert not any("urllib3" in line for line in project.meta["dev-dependencies"])
     assert "urllib3" in working_set
     assert "requests" in working_set
 
@@ -400,15 +400,15 @@ def test_update_unconstrained_without_packages(project, repository, working_set)
 
 def test_update_ignore_constraints(project, repository, working_set):
     actions.do_add(project, packages=("pytz",))
-    assert project.tool_settings["dependencies"]["pytz"] == "<2020.0.0,>=2019.3"
+    assert project.meta.dependencies == ["pytz<2020.0.0,>=2019.3"]
     repository.add_candidate("pytz", "2020.2")
 
     actions.do_update(project, unconstrained=False, packages=("pytz",))
-    assert project.tool_settings["dependencies"]["pytz"] == "<2020.0.0,>=2019.3"
+    assert project.meta.dependencies == ["pytz<2020.0.0,>=2019.3"]
     assert project.get_locked_candidates()["pytz"].version == "2019.3"
 
     actions.do_update(project, unconstrained=True, packages=("pytz",))
-    assert project.tool_settings["dependencies"]["pytz"] == "<2021.0.0,>=2020.2"
+    assert project.meta.dependencies == ["pytz<2021.0.0,>=2020.2"]
     assert project.get_locked_candidates()["pytz"].version == "2020.2"
 
 

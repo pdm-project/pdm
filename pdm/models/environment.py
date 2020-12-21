@@ -313,10 +313,26 @@ class Environment:
                         shutil.copy(downloaded.path, download_dir)
                     except shutil.SameFileError:
                         pass
-            # Now all source is prepared, build it.
-            if ireq.link.is_wheel:
-                return (self.project.cache("wheels") / ireq.link.filename).as_posix()
 
+            if ireq.link.is_wheel:
+                # If the file is a wheel, should be already present under download dir.
+                return (self.project.cache("wheels") / ireq.link.filename).as_posix()
+            else:
+                # Check the built wheel cache again after hashes are resolved.
+                cache_entry = wheel_cache.get_cache_entry(
+                    ireq.link,
+                    ireq.req.project_name,
+                    pip_shims.get_supported(
+                        version="".join(
+                            map(str, get_python_version(self.python_executable)[:2])
+                        )
+                    ),
+                )
+                if cache_entry is not None:
+                    stream.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                    return cache_entry.link.file_path
+
+            # Otherwise, now all source is prepared, build it.
             with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
                 if ireq.editable:
                     ret = builder.build_egg_info(kwargs["build_dir"])

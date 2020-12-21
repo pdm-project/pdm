@@ -13,20 +13,22 @@ $ pdm init
 Answer several questions asked by PDM and a `pyproject.toml` will be created for you in the project root:
 
 ```toml
-[tool.pdm]
+[project]
 name = "pdm-test"
 version = "0.0.0"
 description = ""
-author = "Frost Ming <mianghong@gmail.com>"
-license = "MIT"
-python_requires = ">=3.7"
+authors = [
+    {name = "Frost Ming", email = "mianghong@gmail.com"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.7"
 
-[tool.pdm.dependencies]
-
-[tool.pdm.dev-dependencies]
+dependencies = []
+dev-dependencies = []
 ```
 
-If `pyproject.toml` is already present, it will be updated with `tool.pdm` contents.
+If `pyproject.toml` is already present, it will be updated with the metadata. The metadata format follows the
+[PEP 621 specification](https://www.python.org/dev/peps/pep-0621/)
 
 For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](pyproject.md).
 
@@ -39,11 +41,11 @@ $ pdm add -d pytest
 
 `pdm add` can be followed by one or several dependencies, and the dependency specification is described in
 [PEP 508](https://www.python.org/dev/peps/pep-0508/).
-There are two groups of dependencies: packages will be added to `[tool.pdm.dependencies]` by default or `[tool.pdm.dev-dependencies]`
+There are two groups of dependencies: packages will be added to `project.dependencies` by default or `project.dev-dependencies`
 if `-d/--dev` option is passed to the `pdm add` command.
 
-PDM also allows custom dependency groups by providing `-s/--section <name>` option, and the dependencies will apear in
-`[tool.pdm.<name>-dependencies]` in the project file, respectively.
+PDM also allows extra dependency groups by providing `-s/--section <name>` option, and the dependencies will apear in
+`project.optional-dependencies.<name>` in the project file, respectively.
 
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see
 the resolved result of all dependencies.
@@ -67,16 +69,19 @@ $ pdm update
 ```
 
 To update the specified package(s):
+
 ```console
 $ pdm update requests
 ```
+
 ### About update strategy
+
 Similary, PDM also provides 2 different behaviors of updating dependencies and sub-dependencies，
 which is given by `--update-<strategy>` option:
 
 - `reuse`: Keep all locked dependencies except for those given in the command line.
 - `eager`: Try to lock a newer version of the packages in command line and their recursive sub-dependencies
-and keep other dependencies as they are.
+  and keep other dependencies as they are.
 
 ## Remove existing dependencies
 
@@ -92,7 +97,7 @@ There are two similar commands to do this job with a slight difference:
 
 - `pdm install` will check the lock file and relock if it mismatch with project file, then install.
 - `pdm sync` install dependencies in the lock file and will error out if it doesn't exist.
-Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
+  Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
 
 ## Show what packages are installed
 
@@ -101,7 +106,9 @@ Similar to `pip list`, you can list all packages installed in the packages direc
 ```console
 $ pdm list
 ```
+
 Or show a dependency graph by:
+
 ```
 $ pdm list --graph
 tempenv 0.0.0
@@ -120,9 +127,11 @@ bump2version 1.0.0
 ## Set PyPI index URL
 
 You can specify a PyPI mirror URL by following commands:
+
 ```console
 $ pdm config set pypi.url https://testpypi.org/simple
 ```
+
 By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback
 to `https://pypi.org/simple` if none is found.
 
@@ -137,12 +146,15 @@ url = "http://example.com/private/index"
 verify_ssl = false  # Don't verify SSL, it is required when you are using `HTTP` or the certificate is trusted.
 name = "private"
 ```
-Use the name `name = "pypi"` if you want to override the configurated PyPI index.
 
+Use the name `name = "pypi"` if you want to override the configurated PyPI index. Note that PDM specific settings
+are stored under `tool.pdm` namespace in the `pyproject.toml`.
 
-## Specify the index for one single dependency
-You can specify which index should be consulted only for one single dependency:
+## Allow prerelease versions to be installed
+
+Include the following setting in `pyproject.toml` to enable:
 
 ```toml
-requests = {version = "*", index = "private"}
+[[tool.pdm]]
+allow_prereleases = true
 ```

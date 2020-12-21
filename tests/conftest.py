@@ -253,6 +253,7 @@ def fixture_project(project_no_init):
     def func(project_name):
         source = FIXTURES / "projects" / project_name
         copy_tree(source.as_posix(), project_no_init.root.as_posix())
+        project_no_init._pyproject = None
         return project_no_init
 
     return func

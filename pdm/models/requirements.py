@@ -150,6 +150,29 @@ class Requirement:
         specifier = req_dict.pop("version", None)
         return NamedRequirement(name=name, specifier=specifier, **req_dict)
 
+    def copy(self) -> "Requirement":
+        kwargs = {
+            k: getattr(self, k, None)
+            for k in self.attributes
+            if not is_readonly_property(self.__class__, k)
+        }
+        return self.__class__(**kwargs)
+
+    @property
+    def is_named(self) -> bool:
+        return isinstance(self, NamedRequirement)
+
+    @property
+    def is_vcs(self) -> bool:
+        return isinstance(self, VcsRequirement)
+
+    @property
+    def is_file_or_url(self) -> bool:
+        return type(self) is FileRequirement
+
+    def as_line(self) -> str:
+        raise NotImplementedError
+
     def as_req_dict(self) -> Tuple[str, RequirementDict]:
         r = {}
         if self.editable:
@@ -175,28 +198,15 @@ class Requirement:
                 r[attr] = getattr(self, attr)
         return self.project_name, r
 
-    def copy(self) -> "Requirement":
-        kwargs = {
-            k: getattr(self, k, None)
-            for k in self.attributes
-            if not is_readonly_property(self.__class__, k)
-        }
-        return self.__class__(**kwargs)
-
-    @property
-    def is_named(self) -> bool:
-        return isinstance(self, NamedRequirement)
-
-    @property
-    def is_vcs(self) -> bool:
-        return isinstance(self, VcsRequirement)
-
-    @property
-    def is_file_or_url(self) -> bool:
-        return type(self) is FileRequirement
-
-    def as_line(self) -> str:
-        raise NotImplementedError
+    def matches(self, line: str) -> bool:
+        """Return whether the passed in PEP 508 string
+        is the same requirement as this one.
+        """
+        if line.strip().startswith("-e "):
+            req = parse_requirement(line.split("-e", 1)[-1], True)
+        else:
+            req = parse_requirement(line, False)
+        return self.key == req.key
 
     def as_ireq(self, **kwargs) -> InstallRequirement:
         if self.is_file_or_url:

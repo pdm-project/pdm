@@ -2,12 +2,12 @@
 
 ## Project metadata
 
-There are several differences from the metadata of `setuptools`:
+PDM reads the project's metadata following the standardized format of [PEP 621](https://www.python.org/dev/peps/pep-0621/).
+View the PEP for the detailed specification.
 
-- `readme` is the file name of README file and PDM can derive the content type automatically.
-- `author` and `maintainer` is a combination of name and email address in the form of `Name <email>`.
+_In the following part of this document, metadata should be written under `[project]` table if not given explicitly._
 
-## Package version
+## Determine the package version dynamically
 
 You can specify a file source for `version` field like: `version = {from = "pdm/__init__.py"}`, in this form,
 the version will be read from the `__version__` variable in that file.
@@ -17,6 +17,12 @@ PDM can also read version from SCM tags. If you are using git or hg as the versi
 
 ```toml
 version = {use_scm = true}
+```
+
+In either case, you MUST also include `version` in `dynamic` field, or the backend will raise an error:
+
+```toml
+dynamic = ["version"]
 ```
 
 ## Include and exclude pacakge files
@@ -38,83 +44,84 @@ Packages can also lie in `src` directory that PDM can find it.
 
 ## Dependency specification
 
-### Named requirement
+The `project.dependencies` is an array of dependency specification strings following the [PEP 440](https://www.python.org/dev/peps/pep-0440/)
+and [PEP 508](https://www.python.org/dev/peps/pep-0508/).
+
+Examples:
 
 ```toml
-requests = ">=2.20.0"
-pytz = "*"
+dependencies = [
+    # Named requirement
+    "requests",
+    # Named requirement with version specifier
+    "flask >= 1.1.0",
+    # Requirement with environment marker
+    "pywin32; sys_platform == 'win32'",
+    # URL requirement
+    "pip @ https://github.com/pypa/pip.git@20.3.1"
+]
 ```
-
-`"*"` means there is no constraint of what version should be used.
-
-### Requirement given by file URL
-
-```toml
-pdm = {url="https://github.com/frostming/marko/archive/0.2.6.zip"}
-```
-
-### Requirement given by local path
-
-```toml
-requests = {path="/path/to/requests"}
-```
-
-In this case, the path should be a **directory** on local machine. If you want to install a local **file**,
-use `url = "file:///path/to/file` instead.
-
-### VCS requirement
-
-```toml
-requests = {git="https://github.com/frostming/marko.git", ref="master"}
-```
-
-PDM supports all VCS schemes that are supported by `pip`.
 
 ### Editable requirement
 
-Both VCS requirement and local directory requirement can have an `editable = true` flag, meaning it should be installed in editable mode.
+Beside of the normal dependency specifications, one can also have some packages installed in editable mode. The editable specification string format
+is the same as [Pip's editable install mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs).
 
-### Requirement with markers
+Examples:
 
-```toml
-requests = {version=">=2.20.0", marker="os_name!='nt'"}
+```
+dependencies = [
+    ...,
+    "-e path/to/SomeProject",
+    "-e git+http://repo/my_project.git#egg=SomeProject"
+]
 ```
 
-### Extras require
+!!! note "About editable installation"
+    One can have editable installation and normal installation for the same package. The one that comes at last wins.
+    However, editable dependencies WON'T be included in the metadata of the built artifacts since they are not valid
+    PEP 508 strings. They only exist for development purpose.
 
-You can have some requirements optional, by putting them under non-default dependency section, as follows:
+### Optional dependencies
 
-```toml
-[tool.pdm]
-extras = ["mysql"]
-
-[tool.pdm.mysql-dependencies]
-mysqlclient = "*"
-```
-
-Note that the `extras` definition is required, otherwise the requirments is not regarded as the package's requirements. The value is a list of dependency sections that you want to include as extras.
-
-You can also combine the requirements from several sections to an extra require:
+You can have some requirements optional, which is similar to `setuptools`' `extras_require` parameter.
 
 ```toml
-[tool.pdm]
-extras = ["mysql", "postgres", "sql=mysql|postgres"]
-
-[tool.pdm.mysql-dependencies]
-mysqlclient = "*"
-
-[tool.pdm.postgres-dependencies]
-psycopg2 = "*"
+[project.optional-dependencies]
+socks = [ 'PySocks >= 1.5.6, != 1.5.7, < 2' ]
+tests = [
+  'ddt >= 1.2.2, < 2',
+  'pytest < 6',
+  'mock >= 1.0.1, < 4; python_version < "3.4"',
+]
 ```
 
-This `pyproject.toml` produces the equivalent `extras_requires` as in `setup.py`:
+To install a group of optional dependencies:
 
-```py
-extras_require = {
-    "mysql": ["mysqlclient"],
-    "postgres": ["psycopg2"],
-    "sql": ["mysqlclient", "psycopg2"]
-}
+```bash
+$ pdm install -s socks
+```
+
+`-s` option can be given multiple times to include more than one groups.
+
+### Development dependencies
+
+You can have some development only dependencies, which is the same as `package.json`'s `dev-dependencies` field:
+
+```toml
+[project]
+
+dev-dependencies = [
+    "pytest",
+    "flake8",
+    "black"
+]
+```
+
+To install all of them:
+
+```bash
+$ pdm install -d
 ```
 
 ## Console scripts
@@ -122,11 +129,11 @@ extras_require = {
 The following content:
 
 ```toml
-[tool.pdm.cli]
+[project.scripts]
 mycli = "mycli.__main__:main"
 ```
 
-will be translated to setuptools style:
+will be translated to `setuptools` style:
 
 ```python
 entry_points = {
@@ -136,13 +143,15 @@ entry_points = {
 }
 ```
 
+Also, `[project.gui-scripts]` will be translated to `gui_scripts` entry points group in `setuptools` style.
+
 ## Entry points
 
-Other types of entry points are given by `[tool.pdm.entry_points.<type>]` section, with the same
-format of `[tool.pdm.cli]` format:
+Other types of entry points are given by `[project.entry-points.<type>]` section, with the same
+format of `[project.scripts]`:
 
 ```toml
-[tool.pdm.entry_points.pytest11]
+[project.entry-points.pytest11]
 myplugin = "mypackage.plugin:pytest_plugin"
 ```
 
@@ -168,6 +177,6 @@ Now, specify the build script path via `build` in the `pyproject.toml`:
 
 ```toml
 # pyproject.toml
-[tool.pdm]
+[project]
 build = "build.py"
 ```

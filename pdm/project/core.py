@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
 import tomlkit
-from pip._vendor.pkg_resources import safe_name
+from tomlkit.items import Comment, Whitespace
 
 from pdm._types import Source
 from pdm.exceptions import ProjectError
@@ -17,16 +17,17 @@ from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.repositories import BaseRepository, PyPIRepository
-from pdm.models.requirements import Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.pep517.metadata import Metadata
 from pdm.project.config import Config
+from pdm.project.metadata import MutableMetadata as Metadata
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
     find_project_root,
     get_python_version,
     get_venv_python,
+    setdefault,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +42,6 @@ class Project:
     """Core project class"""
 
     PYPROJECT_FILENAME = "pyproject.toml"
-    PDM_NAMESPACE = "tool.pdm"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
     PYPROJECT_VERSION = "2"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
@@ -99,12 +99,7 @@ class Project:
         data = self.pyproject
         if not data:
             return {}
-        for sec in self.PDM_NAMESPACE.split("."):
-            # setdefault has bug
-            if sec not in data:
-                data[sec] = {}
-            data = data[sec]
-        return data
+        return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
     def lockfile(self):
@@ -137,12 +132,6 @@ class Project:
         """Read-and-writable configuration dict for project settings"""
         return Config(self.root / ".pdm.toml")
 
-    @property
-    def is_pdm(self) -> bool:
-        if not self.pyproject_file.is_file():
-            return False
-        return bool(self.tool_settings)
-
     @cached_property
     def environment(self) -> Environment:
         if self.is_global:
@@ -162,19 +151,21 @@ class Project:
 
     @property
     def python_requires(self) -> PySpecSet:
-        return PySpecSet(self.tool_settings.get("python_requires", ""))
+        return PySpecSet(self.meta.requires_python)
 
     def get_dependencies(self, section: Optional[str] = None) -> Dict[str, Requirement]:
+        metadata = self.meta
         if section in (None, "default"):
-            deps = self.tool_settings.get("dependencies", [])
+            deps = metadata.get("dependencies", [])
         elif section == "dev":
-            deps = self.tool_settings.get("dev-dependencies", [])
+            deps = metadata.get("dev-dependencies", [])
         else:
-            deps = self.tool_settings[f"{section}-dependencies"]
+            deps = metadata.get("optional-dependencies", {}).get(section, [])
         result = {}
-        for name, dep in deps.items():
-            req = Requirement.from_req_dict(name, dep)
+        for line in deps:
+            req = parse_requirement(line)
             req.from_section = section or "default"
+            # make editable packages behind normal ones to override correctly.
             result[req.identify()] = req
         return result
 
@@ -187,12 +178,12 @@ class Project:
         return self.get_dependencies("dev")
 
     def iter_sections(self) -> Iterable[str]:
-        for key in self.tool_settings:
-            match = self.DEPENDENCIES_RE.match(key)
-            if not match:
-                continue
-            section = match.group(1) or "default"
-            yield section
+        if self.meta.dependencies:
+            yield "default"
+        if self.meta.get("dev-dependencies"):
+            yield "dev"
+        if self.meta.optional_dependencies:
+            yield from self.meta.optional_dependencies.keys()
 
     @property
     def all_dependencies(self) -> Dict[str, Dict[str, Requirement]]:
@@ -280,14 +271,14 @@ class Project:
 
         return SpinnerReporter(spinner, requirements)
 
-    def get_project_metadata(self) -> Dict[str, Any]:
+    def get_lock_metadata(self) -> Dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
         data = {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
         return data
 
     def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
-        toml_data["metadata"].update(self.get_project_metadata())
+        toml_data["metadata"].update(self.get_lock_metadata())
 
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
@@ -333,12 +324,12 @@ class Project:
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies sections. Otherwise lock file is
         # considered as unchanged.
-        dump_data = {"sources": self.tool_settings.get("source", [])}
-        for section in self.iter_sections():
-            toml_section = (
-                "dependencies" if section == "default" else f"{section}-dependencies"
-            )
-            dump_data[toml_section] = dict(self.tool_settings.get(toml_section, {}))
+        dump_data = {
+            "sources": self.tool_settings.get("source", []),
+            "dependencies": self.meta.get("dependencies", []),
+            "dev-dependencies": self.meta.get("dev-dependencies", []),
+            "optional-dependencies": self.meta.get("optional-dependencies", {}),
+        }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)
         hasher.update(pyproject_content.encode("utf-8"))
@@ -356,33 +347,39 @@ class Project:
         content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
 
+    def get_pyproject_dependencies(self, section: str) -> List[str]:
+        """Get the dependencies array in the pyproject.toml"""
+        if section == "default":
+            return setdefault(self.meta, "dependencies", [])
+        elif section == "dev":
+            return setdefault(self.meta, "dev-dependencies", [])
+        else:
+            return setdefault(
+                setdefault(self.meta, "optional-dependencies", {}), section, []
+            )
+
     def add_dependencies(
         self, requirements: Dict[str, Requirement], show_message: bool = True
     ) -> None:
-        for name, dep in requirements.items():
-            if dep.from_section == "default":
-                deps = self.tool_settings["dependencies"]
-            elif dep.from_section == "dev":
-                deps = self.tool_settings["dev-dependencies"]
-            else:
-                section = f"{dep.from_section}-dependencies"
-                if section not in self.tool_settings:
-                    self.tool_settings[section] = tomlkit.table()
-                deps = self.tool_settings[section]
-
-            matched_name = next(
-                filter(
-                    lambda k: strip_extras(name)[0] == safe_name(k).lower(), deps.keys()
-                ),
-                None,
+        for _, dep in requirements.items():
+            deps = self.get_pyproject_dependencies(dep.from_section)
+            matched_index = next(
+                (i for i, r in enumerate(deps) if dep.matches(r)), None
             )
-            name_to_save = dep.name if matched_name is None else matched_name
-            _, req_dict = dep.as_req_dict()
-            if isinstance(req_dict, dict):
-                req = tomlkit.inline_table()
-                req.update(req_dict)
-                req_dict = req
-            deps[name_to_save] = req_dict
+            if matched_index is None:
+                deps.append(dep.as_line())
+            else:
+                req = dep.as_line()
+                deps[matched_index] = req
+                # XXX: This dirty part is for tomlkit.Array.__setitem__()
+                j = 0
+                for i in range(len(deps._value)):
+                    if isinstance(deps._value[i], (Comment, Whitespace)):
+                        continue
+                    if j == matched_index:
+                        deps._value[i] = tomlkit.item(req)
+                        break
+                    j += 1
         self.write_pyproject(show_message)
 
     def write_pyproject(self, show_message: bool = True) -> None:
@@ -395,8 +392,10 @@ class Project:
         self._pyproject = None
 
     @property
-    def meta(self) -> Metadata:
-        return Metadata(self.pyproject_file)
+    def meta(self) -> Optional[Metadata]:
+        if not self.pyproject:
+            self.pyproject = {"project": tomlkit.table()}
+        return Metadata(self.pyproject_file, self.pyproject["project"])
 
     def init_global_project(self) -> None:
         if not self.is_global:
@@ -405,12 +404,8 @@ class Project:
             self.root.mkdir(parents=True, exist_ok=True)
             self.pyproject_file.write_text(
                 """\
-[tool.pdm.dependencies]
-pip = "*"
-setuptools = "*"
-wheel = "*"
-
-[tool.pdm.dev-dependencies]
+[project]
+dependencies = ["pip", "setuptools", "wheel"]
 """
             )
             self._pyproject = None

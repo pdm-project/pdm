@@ -1,4 +1,3 @@
-import json
 import os
 import subprocess
 import textwrap
@@ -9,21 +8,9 @@ from pdm.cli.actions import PEP582_PATH
 from pdm.utils import cd, temp_environ
 
 
-def test_pep582_not_loading_site_packages(project, invoke, capfd):
-    with cd(project.root):
-        invoke(["install"], obj=project)
-        invoke(
-            ["run", "python", "-c", "import sys,json;print(json.dumps(sys.path))"],
-            obj=project,
-        )
-    sys_path = json.loads(capfd.readouterr()[0])
-    assert not any("site-packages" in p for p in sys_path)
-    assert str(project.environment.packages_path / "lib") in sys_path
-
-
 @pytest.mark.pypi
 def test_pep582_launcher_for_python_interpreter(project, invoke):
-    project.tool_settings["python_requires"] = ">=3.6"
+    project.meta["requires-python"] = ">=3.6"
     project.write_pyproject()
     project.root.joinpath("main.py").write_text(
         "import requests\nprint(requests.__version__)\n"
@@ -36,16 +23,6 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
         env=env,
     )
     assert output.decode().strip() == "2.24.0"
-
-
-def test_pep582_launcher_with_system_site_packages(project, invoke):
-    with cd(project.root):
-        invoke(["install"], obj=project)
-        result = invoke(["run", "python", "-c", "import resolvelib"], obj=project)
-        assert result.exit_code != 0
-
-        result = invoke(["run", "-s", "python", "-c", "import resolvelib"], obj=project)
-        assert result.exit_code == 0
 
 
 def test_run_command_not_found(invoke):

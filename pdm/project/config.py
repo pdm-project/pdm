@@ -134,7 +134,9 @@ class Config(MutableMapping):
             *parts, last = key.split(".")
             temp = toml_data
             for part in parts:
-                temp = temp.setdefault(part, {})
+                if part not in temp:
+                    temp[part] = {}
+                temp = temp[part]
             temp[last] = value
 
         with self._config_file.open("w", encoding="utf-8") as fp:

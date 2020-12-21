@@ -110,7 +110,7 @@ def test_use_command(project, invoke):
     result = invoke(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
 
-    project.tool_settings["python_requires"] = ">=3.6"
+    project.meta["requires-python"] = ">=3.6"
     project.write_pyproject()
     result = invoke(["use", "2.7"], obj=project)
     assert result.exit_code == 1
@@ -236,6 +236,7 @@ def test_cache_clear_command(project, invoke, mocker):
 def test_import_other_format_file(project, invoke, filename):
     requirements_file = FIXTURES / filename
     result = invoke(["import", str(requirements_file)], obj=project)
+    print(result.stderr)
     assert result.exit_code == 0
 
 
@@ -281,3 +282,10 @@ def test_completion_command(invoke):
     result = invoke(["completion", "bash"])
     assert result.exit_code == 0
     assert "(completion)" in result.output
+
+
+def test_lock_legacy_project(invoke, fixture_project, repository):
+    project = fixture_project("demo-legacy")
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    assert "urllib3" in project.get_locked_candidates()

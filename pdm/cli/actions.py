@@ -6,18 +6,19 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
 import click
+import tomlkit
 from pip._vendor.pkg_resources import safe_name
 
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
     format_lockfile,
-    format_toml,
     save_version_specifiers,
     set_env_in_reg,
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
+from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.installers.installers import format_dist
 from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
@@ -26,7 +27,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import get_python_version
+from pdm.utils import get_python_version, setdefault
 
 PEP582_PATH = os.path.join(
     os.path.dirname(sys.modules[__name__.split(".")[0]].__file__), "pep582"
@@ -259,31 +260,27 @@ def do_remove(
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
     section = "dev" if dev else section or "default"
-    toml_section = f"{section}-dependencies" if section != "default" else "dependencies"
-    if toml_section not in project.tool_settings:
-        raise ProjectError(
-            f"No such section {stream.yellow(toml_section)} in pyproject.toml."
-        )
-    deps = project.tool_settings[toml_section]
+    if section not in list(project.iter_sections()):
+        raise ProjectError(f"No {section} dependencies given in pyproject.toml.")
+
+    deps = project.get_pyproject_dependencies(section)
     stream.echo(
         f"Removing packages from {section} dependencies: "
         + ", ".join(str(stream.green(name, bold=True)) for name in packages)
     )
     for name in packages:
-        matched_name = next(
-            filter(
-                lambda k: safe_name(k).lower() == safe_name(name).lower(),
-                deps.keys(),
-            ),
+        req = parse_requirement(name)
+        matched_index = next(
+            (i for i, r in enumerate(deps) if req.matches(r)),
             None,
         )
-        if not matched_name:
+        if matched_index is None:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
                     stream.green(name, bold=True), section
                 )
             )
-        del deps[matched_name]
+        del deps[matched_index]
 
     project.write_pyproject()
     do_lock(project, "reuse")
@@ -365,30 +362,26 @@ def do_init(
     python_requires: str = "",
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
-    import tomlkit
-
     data = {
-        "tool": {
-            "pdm": {
-                "name": name,
-                "version": version,
-                "description": "",
-                "author": f"{author} <{email}>",
-                "license": license,
-                "homepage": "",
-                "dependencies": tomlkit.table(),
-                "dev-dependencies": tomlkit.table(),
-            }
+        "project": {
+            "name": name,
+            "version": version,
+            "description": "",
+            "authors": array_of_inline_tables([{"name": author, "email": email}]),
+            "license": make_inline_table({"text": license}),
+            "urls": {"homepage": ""},
+            "dependencies": make_array([], True),
+            "dev-dependencies": make_array([], True),
+            "requires-python": python_requires,
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }
     if python_requires and python_requires != "*":
         get_specifier(python_requires)
-        data["tool"]["pdm"]["python_requires"] = python_requires
     if not project.pyproject:
         project._pyproject = data
     else:
-        project._pyproject.setdefault("tool", {})["pdm"] = data["tool"]["pdm"]
+        project._pyproject["project"] = data["project"]
         project._pyproject["build-system"] = data["build-system"]
     project.write_pyproject()
 
@@ -495,16 +488,28 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
             )
     else:
         key = format
-    tool_settings = FORMATS[key].convert(project, filename)
-    format_toml(tool_settings)
+    project_data, settings = FORMATS[key].convert(project, filename)
+    pyproject = project.pyproject or tomlkit.document()
 
-    if not project.pyproject_file.exists():
-        project.pyproject = {"tool": {"pdm": {}}}
-    project.tool_settings.update(tool_settings)
-    project.pyproject["build-system"] = {
+    if "project" not in pyproject:
+        pyproject.add("project", tomlkit.table())
+        pyproject["project"].add(tomlkit.comment("PEP 621 project metadata"))
+        pyproject["project"].add(
+            tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
+        )
+
+    pyproject["project"].update(project_data)
+
+    if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
+        setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
+
+    pyproject["tool"]["pdm"].update(settings)
+
+    pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
-        "build-backend": ["pdm.pep517.api"],
+        "build-backend": "pdm.pep517.api",
     }
+    project.pyproject = pyproject
     project.write_pyproject()
 
 
@@ -558,3 +563,28 @@ def print_pep582_command(shell: str = "AUTO"):
             "via `--pep582 <SHELL>`"
         )
     stream.echo(result)
+
+
+def migrate_pyproject(project: Project):
+    """Migrate the legacy pyproject format to PEP 621"""
+
+    if (
+        not project.pyproject_file.exists()
+        or not FORMATS["legacy"].check_fingerprint(project, project.pyproject_file)
+        or "project" in project.pyproject
+    ):
+        return
+
+    stream.echo(
+        stream.yellow("Legacy [tool.pdm] metadata detected, migrating to PEP 621..."),
+        err=True,
+    )
+    do_import(project, project.pyproject_file, "legacy")
+    stream.echo(
+        stream.green("pyproject.toml")
+        + stream.yellow(
+            " has been migrated to PEP 621 successfully. "
+            "Now you can safely delete the legacy metadata under [tool.pdm] table."
+        ),
+        err=True,
+    )
