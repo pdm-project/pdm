@@ -119,7 +119,7 @@ underlines = "-~^"
   showcontent = true
 
 [build-system]
-requires = ["pdm-pep517"]
+requires = ["pdm-pep517<0.3.0"]
 build-backend = "pdm.pep517.api"
 
 [tool.isort]
