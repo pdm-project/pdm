@@ -21,7 +21,11 @@ def check_fingerprint(project, filename):
         except tomlkit.exceptions.TOMLKitError:
             return False
 
-    return "tool" in data and "pdm" in data["tool"] and "name" in data["tool"]["pdm"]
+    return (
+        "tool" in data
+        and "pdm" in data["tool"]
+        and "dependencies" in data["tool"]["pdm"]
+    )
 
 
 class LegacyMetaConverter(MetaConverter):

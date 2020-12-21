@@ -27,7 +27,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import get_python_version
+from pdm.utils import get_python_version, setdefault
 
 PEP582_PATH = os.path.join(
     os.path.dirname(sys.modules[__name__.split(".")[0]].__file__), "pep582"
@@ -274,7 +274,7 @@ def do_remove(
             (i for i, r in enumerate(deps) if req.matches(r)),
             None,
         )
-        if not matched_index:
+        if matched_index is None:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
                     stream.green(name, bold=True), section
@@ -498,14 +498,12 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
             tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
         )
 
-    for key, value in project_data.items():
-        pyproject["project"].add(key, value)
+    pyproject["project"].update(project_data)
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
-        pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
+        setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
 
-    for key, value in settings.items():
-        pyproject["tool"]["pdm"][key] = value
+    pyproject["tool"]["pdm"].update(settings)
 
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],

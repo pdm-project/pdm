@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
 import tomlkit
+from tomlkit.items import Comment, Whitespace
 
 from pdm._types import Source
 from pdm.exceptions import ProjectError
@@ -26,6 +27,7 @@ from pdm.utils import (
     find_project_root,
     get_python_version,
     get_venv_python,
+    setdefault,
 )
 
 if TYPE_CHECKING:
@@ -97,7 +99,7 @@ class Project:
         data = self.pyproject
         if not data:
             return {}
-        return data.setdefault("tool", {}).setdefault("pdm", {})
+        return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
     def lockfile(self):
@@ -347,12 +349,12 @@ class Project:
     def get_pyproject_dependencies(self, section: str) -> List[str]:
         """Get the dependencies array in the pyproject.toml"""
         if section == "default":
-            return self.meta.setdefault("dependencies", [])
+            return setdefault(self.meta, "dependencies", [])
         elif section == "dev":
-            return self.meta.setdefault("dev-dependencies", [])
+            return setdefault(self.meta, "dev-dependencies", [])
         else:
-            return self.meta.setdefault("optional-dependencies", {}).setdefault(
-                section, []
+            return setdefault(
+                setdefault(self.meta, "optional-dependencies", {}), section, []
             )
 
     def add_dependencies(
@@ -366,7 +368,17 @@ class Project:
             if matched_index is None:
                 deps.append(dep.as_line())
             else:
-                deps[matched_index] = dep.as_line()
+                req = dep.as_line()
+                deps[matched_index] = req
+                # XXX: This dirty part is for tomlkit.Array.__setitem__()
+                j = 0
+                for i in range(len(deps._value)):
+                    if isinstance(deps._value[i], (Comment, Whitespace)):
+                        continue
+                    if j == matched_index:
+                        deps._value[i] = tomlkit.item(req)
+                        break
+                    j += 1
         self.write_pyproject(show_message)
 
     def write_pyproject(self, show_message: bool = True) -> None:

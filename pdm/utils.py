@@ -243,7 +243,7 @@ def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
             name, hash_value = hash_value.split(":")
         except ValueError:
             name = "sha256"
-        result.setdefault(name, []).append(hash_value)
+        setdefault(result, name, []).append(hash_value)
     return result
 
 
@@ -384,3 +384,10 @@ def populate_link(
             return
         link = getattr(link, "link", link)
         ireq.link = link
+
+
+def setdefault(document, key, value):
+    """A compatiable dict.setdefault() for tomlkit data structures."""
+    if key not in document:
+        document[key] = value
+    return document[key]

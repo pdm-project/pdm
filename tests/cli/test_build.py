@@ -47,7 +47,7 @@ def test_build_single_module(fixture_project):
 
 def test_build_single_module_with_readme(fixture_project):
     project = fixture_project("demo-module")
-    project.tool_settings["readme"] = "README.md"
+    project.meta["readme"] = "README.md"
     project.write_pyproject()
     actions.do_build(project)
     assert "demo-module-0.1.0/README.md" in get_tarball_names(
@@ -91,12 +91,12 @@ def test_build_src_package(fixture_project):
 
 def test_build_package_include(fixture_project):
     project = fixture_project("demo-package")
-    project.tool_settings["includes"] = [
+    project.meta["includes"] = [
         "my_package/",
         "single_module.py",
         "data_out.json",
     ]
-    project.tool_settings["excludes"] = ["my_package/*.json"]
+    project.meta["excludes"] = ["my_package/*.json"]
     project.write_pyproject()
     actions.do_build(project)
 

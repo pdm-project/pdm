@@ -236,6 +236,7 @@ def test_cache_clear_command(project, invoke, mocker):
 def test_import_other_format_file(project, invoke, filename):
     requirements_file = FIXTURES / filename
     result = invoke(["import", str(requirements_file)], obj=project)
+    print(result.stderr)
     assert result.exit_code == 0
 
 

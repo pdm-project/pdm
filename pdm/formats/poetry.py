@@ -1,5 +1,6 @@
 import functools
 import operator
+import os
 import re
 
 import tomlkit
@@ -16,6 +17,7 @@ from pdm.formats.base import (
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import cd
 
 
 def check_fingerprint(project, filename):
@@ -164,7 +166,7 @@ class PoetryMetaConverter(MetaConverter):
 
 
 def convert(project, filename):
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, encoding="utf-8") as fp, cd(os.path.dirname(filename)):
         converter = PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"])
         return dict(converter), converter.settings
 

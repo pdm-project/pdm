@@ -4,7 +4,13 @@ from pathlib import Path
 import tomlkit
 import tomlkit.exceptions
 
-from pdm.formats.base import MetaConverter, convert_from, make_array, make_inline_table
+from pdm.formats.base import (
+    MetaConverter,
+    array_of_inline_tables,
+    convert_from,
+    make_array,
+    make_inline_table,
+)
 
 
 def check_fingerprint(project, filename):
@@ -20,7 +26,7 @@ def check_fingerprint(project, filename):
 def _get_author(metadata, type_="author"):
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
-    return [{"name": name, "email": email}]
+    return array_of_inline_tables([{"name": name, "email": email}])
 
 
 class FlitMetaConverter(MetaConverter):

@@ -57,6 +57,7 @@ def main():
     libpath = get_pypackages_path()
     if not libpath:
         return
+    pypackages = os.path.dirname(os.path.dirname(libpath))
     # First, drop site related paths.
     original_sys_path = sys.path[:]
     paths_to_remove = set()
@@ -66,7 +67,7 @@ def main():
         with_site_packages
         or needs_site_packages
         or script_path
-        and not script_path.startswith(os.path.normcase(os.path.dirname(libpath)))
+        and not script_path.startswith(os.path.normcase(os.path.dirname(pypackages)))
     ):
         site.addsitepackages(paths_to_remove)
     paths_to_remove = set(os.path.normcase(path) for path in paths_to_remove)
