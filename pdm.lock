@@ -547,7 +547,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "md5:8e719a97515aca92ae14e3d509118834"
+content_hash = "sha256:211b15726247398cb5ed11b9ef9b11a9bb09fe00766fbac03530de75500974bb"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -961,4 +961,3 @@ content_hash = "md5:8e719a97515aca92ae14e3d509118834"
     {file = "zipp-3.4.0-py3-none-any.whl", hash = "sha256:102c24ef8f171fd729d46599845e95c7ab894a4cf45f5de11a44cc7444fb1108"},
     {file = "zipp-3.4.0.tar.gz", hash = "sha256:ed5eee1974372595f9e416cc7bbeeb12335201d8081ca8a0743c954d4446e5cb"},
 ]
-

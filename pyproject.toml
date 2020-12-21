@@ -29,7 +29,7 @@ appdirs = "*"
 click = "*"
 distlib = "*"
 importlib-metadata = {version = "*", marker = "python_version<'3.8'"}
-pdm-pep517 = "<1.0.0,>=0.1.0"
+pdm-pep517 = "<0.3.0,>=0.1.0"
 pep517 = "*"
 pip = ">=20.1,<21"
 pycomplete = "<1.0.0,>=0.2.0"
