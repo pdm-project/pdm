@@ -143,8 +143,7 @@ the outside, the PDM's installer has already injected the package path to the `s
 
 ### 3. What site-packages will be loaded when using PDM?
 
-Only packages in the local `__pypackages__` directory will be loaded. `site-packages` of Python interpreter isn't loaded.
-It is fully isolated.
+Packages in the local `__pypackages__` directory will be loaded before the system-level `site-packages` for islation.
 
 ### 4. Can I relocate or move the `__pypackages__` folder for deployment?
 

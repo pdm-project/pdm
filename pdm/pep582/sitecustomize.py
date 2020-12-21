@@ -1,7 +1,6 @@
 import os
 import site
 import sys
-import warnings
 
 
 def get_pypackages_path(maxdepth=5):
@@ -37,49 +36,27 @@ def main():
     self_path = os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
     sys.path[:] = [path for path in sys.path if os.path.normcase(path) != self_path]
 
-    with_site_packages = os.getenv("PDM_WITH_SITE_PACKAGES")
-    needs_user_site = False
-    needs_site_packages = False
-    script_path = None
-
-    if getattr(sys, "argv", None) is None:
-        warnings.warn(
-            "PEP 582 can't be loaded based on the script path. "
-            "As Python 2.7 reached the end of life on 2020/01/01, "
-            "please upgrade to Python 3.",
-        )
-    else:
-        script_path = os.path.normcase(os.path.realpath(sys.argv[0]))
-        needs_user_site = script_path.startswith(os.path.normcase(site.USER_BASE))
-        needs_site_packages = any(
-            script_path.startswith(os.path.normcase(p)) for p in site.PREFIXES
-        )
     libpath = get_pypackages_path()
     if not libpath:
         return
-    pypackages = os.path.dirname(os.path.dirname(libpath))
+
     # First, drop site related paths.
     original_sys_path = sys.path[:]
-    paths_to_remove = set()
-    if not (with_site_packages or needs_user_site):
-        site.addusersitepackages(paths_to_remove)
-    if not (
-        with_site_packages
-        or needs_site_packages
-        or script_path
-        and not script_path.startswith(os.path.normcase(os.path.dirname(pypackages)))
-    ):
-        site.addsitepackages(paths_to_remove)
-    paths_to_remove = set(os.path.normcase(path) for path in paths_to_remove)
+    known_paths = set()
+    site.addusersitepackages(known_paths)
+    site.addsitepackages(known_paths)
+    known_paths = set(os.path.normcase(path) for path in known_paths)
     original_sys_path = [
-        path
-        for path in original_sys_path
-        if os.path.normcase(path) not in paths_to_remove
+        path for path in original_sys_path if os.path.normcase(path) not in known_paths
     ]
     sys.path[:] = original_sys_path
 
     # Second, add lib directories, ensuring .pth file are processed.
     site.addsitedir(libpath)
+    # Then add the removed path to the tail of the paths
+    known_paths.clear()
+    site.addusersitepackages(known_paths)
+    site.addsitepackages(known_paths)
 
 
 main()
