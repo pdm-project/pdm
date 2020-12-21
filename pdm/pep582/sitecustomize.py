@@ -40,7 +40,6 @@ def main():
     with_site_packages = os.getenv("PDM_WITH_SITE_PACKAGES")
     needs_user_site = False
     needs_site_packages = False
-    script_path = None
 
     if getattr(sys, "argv", None) is None:
         warnings.warn(
@@ -49,11 +48,15 @@ def main():
             "please upgrade to Python 3.",
         )
     else:
-        script_path = os.path.normcase(os.path.realpath(sys.argv[0]))
-        needs_user_site = script_path.startswith(os.path.normcase(site.USER_BASE))
-        needs_site_packages = any(
-            script_path.startswith(os.path.normcase(p)) for p in site.PREFIXES
+        script_path = os.path.realpath(sys.argv[0])
+        needs_user_site = os.path.normcase(script_path).startswith(
+            os.path.normcase(site.USER_BASE)
         )
+        needs_site_packages = any(
+            os.path.normcase(script_path).startswith(os.path.normcase(p))
+            for p in site.PREFIXES
+        )
+
     libpath = get_pypackages_path()
     if not libpath:
         return
@@ -62,12 +65,7 @@ def main():
     paths_to_remove = set()
     if not (with_site_packages or needs_user_site):
         site.addusersitepackages(paths_to_remove)
-    if not (
-        with_site_packages
-        or needs_site_packages
-        or script_path
-        and not script_path.startswith(os.path.normcase(os.path.dirname(libpath)))
-    ):
+    if not (with_site_packages or needs_site_packages):
         site.addsitepackages(paths_to_remove)
     paths_to_remove = set(os.path.normcase(path) for path in paths_to_remove)
     original_sys_path = [
