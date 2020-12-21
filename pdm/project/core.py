@@ -165,6 +165,7 @@ class Project:
         for line in deps:
             req = parse_requirement(line)
             req.from_section = section or "default"
+            # make editable packages behind normal ones to override correctly.
             result[req.identify()] = req
         return result
 

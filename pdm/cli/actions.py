@@ -569,7 +569,8 @@ def migrate_pyproject(project: Project):
     """Migrate the legacy pyproject format to PEP 621"""
 
     if (
-        not FORMATS["legacy"].check_fingerprint(project, project.pyproject_file)
+        not project.pyproject_file.exists()
+        or not FORMATS["legacy"].check_fingerprint(project, project.pyproject_file)
         or "project" in project.pyproject
     ):
         return
