@@ -109,7 +109,6 @@ save_strategy_group.add_argument(
     dest="save_strategy",
     const="compatible",
     help="Save compatible version specifiers",
-    default="compatible",
 )
 save_strategy_group.add_argument(
     "--save-wildcard",
@@ -117,7 +116,6 @@ save_strategy_group.add_argument(
     dest="save_strategy",
     const="wildcard",
     help="Save wildcard version specifiers",
-    default="compatible",
 )
 save_strategy_group.add_argument(
     "--save-exact",
@@ -125,7 +123,6 @@ save_strategy_group.add_argument(
     dest="save_strategy",
     const="exact",
     help="Save exact version specifiers",
-    default="compatible",
 )
 
 update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)
@@ -134,7 +131,6 @@ update_strategy_group.add_argument(
     action="store_const",
     dest="update_strategy",
     const="reuse",
-    default="reuse",
     help="Reuse pinned versions already present in lock file if possible",
 )
 update_strategy_group.add_argument(

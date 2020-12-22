@@ -115,7 +115,7 @@ If you want global project to track another project file other than `~/.pdm/glob
 project path following `-g/--global`.
 
 !!! danger "NOTE"
-    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
+Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv
 
@@ -160,6 +160,8 @@ $ pdm export -o requirements.txt
 | `pypi.url`         | The URL of PyPI mirror                                                    | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes                  | `PDM_PYPI_URL`         |
 | `pypi.verify_ssl`  | Verify SSL certificate when query PyPI                                    | Read `trusted-hosts` in `pip.conf`, defaults to `True`                    | Yes                  |                        |
 | `pypi.json_api`    | Consult PyPI's JSON API for package metadata                              | `False`                                                                   | Yes                  | `PDM_PYPI_JSON_API`    |
+| `strategy.save`    | Specify how to save versions when a package is added                      | `compatible`(can be: `exact`, `wildcard`)                                 | Yes                  |                        |
+| `strategy.update`  | The default strategy for updating packages                                | `reuse`(can be : `eager`)                                                 | Yes                  |                        |
 
 _If the env var is set, the value will take precendence over what is saved in the config file._
 

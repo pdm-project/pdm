@@ -79,6 +79,12 @@ class Config(MutableMapping):
             True,
             "PDM_AUTO_GLOBAL",
         ),
+        "strategy.update": ConfigItem(
+            "The default strategy for updating packages", "reuse", False
+        ),
+        "strategy.save": ConfigItem(
+            "Specify how to save versions when a package is added", "compatible", False
+        ),
         "parallel_install": ConfigItem(
             "Whether to perform installation and uninstallation in parallel",
             True,

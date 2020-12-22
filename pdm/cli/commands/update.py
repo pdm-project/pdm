@@ -30,8 +30,8 @@ class Command(BaseCommand):
             dev=options.dev,
             sections=options.sections,
             default=options.default,
-            save=options.save_strategy,
-            strategy=options.update_strategy,
+            save=options.save_strategy or project.config["strategy.save"],
+            strategy=options.update_strategy or project.config["strategy.update"],
             unconstrained=options.unconstrained,
             packages=options.packages,
         )
