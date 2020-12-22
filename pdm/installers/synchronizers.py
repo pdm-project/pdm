@@ -285,7 +285,7 @@ class Synchronizer:
                     )
                 )
 
-        with stream.logging("install"):
+        with stream.logging("install"), self.environment.activate():
             with stream.indent("  "):
                 for job in sequential_jobs:
                     kind, key = job

@@ -83,7 +83,6 @@ class Installer:  # pragma: no cover
             ireq = pip_shims.install_req_from_line(dist.project_name)
         ireq.req = req
 
-        with self.environment.activate():
-            pathset = ireq.uninstall(auto_confirm=self.auto_confirm)
-            if pathset:
-                pathset.commit()
+        pathset = ireq.uninstall(auto_confirm=self.auto_confirm)
+        if pathset:
+            pathset.commit()
