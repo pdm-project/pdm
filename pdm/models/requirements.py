@@ -198,15 +198,17 @@ class Requirement:
                 r[attr] = getattr(self, attr)
         return self.project_name, r
 
-    def matches(self, line: str) -> bool:
+    def matches(self, line: str, editable_match: bool = True) -> bool:
         """Return whether the passed in PEP 508 string
         is the same requirement as this one.
         """
         if line.strip().startswith("-e "):
-            req = parse_requirement(line.split("-e", 1)[-1], True)
+            req = parse_requirement(line.split("-e ", 1)[-1], True)
         else:
             req = parse_requirement(line, False)
-        return self.key == req.key
+        return self.key == req.key and (
+            not editable_match or self.editable == req.editable
+        )
 
     def as_ireq(self, **kwargs) -> InstallRequirement:
         if self.is_file_or_url:

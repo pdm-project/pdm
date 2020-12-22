@@ -268,7 +268,7 @@ six = "~=1.13"
 [[package]]
 name = "pdm-pep517"
 sections = ["default"]
-version = "0.3.2"
+version = "0.3.3"
 summary = "PEP 517 support"
 
 [[package]]
@@ -759,9 +759,9 @@ content_hash = "sha256:98d2ef6f5c496aa0f5f4123aca00a2e8152297c39cbd98ecc1de774f3
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
     {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
-"pdm-pep517 0.3.2" = [
-    {file = "pdm_pep517-0.3.2-py3-none-any.whl", hash = "sha256:0031b758d8486b03bbd0c948260133e0d5d01c37fa84f82dfa73a2b529c8d220"},
-    {file = "pdm-pep517-0.3.2.tar.gz", hash = "sha256:58b3dab1e8f8f06567aba721716fbb883e6e9f3ea632d20a5a3794d979eb54f1"},
+"pdm-pep517 0.3.3" = [
+    {file = "pdm_pep517-0.3.3-py3-none-any.whl", hash = "sha256:a04003860e569122b25c5450ef4df1d8baa7dda1faee5f7e4bb419bace6575f9"},
+    {file = "pdm-pep517-0.3.3.tar.gz", hash = "sha256:1c5cbf46ef24c7c44c33990eafabbc3863ceff1f75b631049ab82eecfe79bb0b"},
 ]
 "pep517 0.9.1" = [
     {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},

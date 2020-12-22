@@ -380,6 +380,7 @@ class Project:
                         deps._value[i] = tomlkit.item(req)
                         break
                     j += 1
+            deps.multiline(True)
         self.write_pyproject(show_message)
 
     def write_pyproject(self, show_message: bool = True) -> None:
