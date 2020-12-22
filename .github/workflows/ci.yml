@@ -47,7 +47,10 @@ jobs:
         with:
           path: __pypackages__
           # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-packages-${{ steps.set_variables.outputs.PY }}
+          key: ${{ runner.os }}-packages-${{ steps.set_variables.outputs.PY }}-${{ hashFiles('pdm.lock') }}
+          restore-keys:
+            - ${{ runner.os }}-packages-${{ steps.set_variables.outputs.PY }}
+            - ${{ runner.os }}-packages
       - name: Install Current PDM
         run: |
           pip install -U pip
