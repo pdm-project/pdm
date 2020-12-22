@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import sys
-import xmlrpc.client as xmlrpc_client
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
-from pdm._types import CandidateInfo, SearchResult, Source
+from pip._vendor.html5lib import parse
+
+from pdm._types import CandidateInfo, Package, SearchResult, Source
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError, PackageIndexError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
@@ -14,8 +15,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.models.xmlrpc import PyPIXmlrpcTransport
-from pdm.utils import allow_all_wheels, highest_version
+from pdm.utils import allow_all_wheels
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -234,32 +234,36 @@ class PyPIRepository(BaseRepository):
             ]
 
     def search(self, query: str) -> SearchResult:
-        pypi_simple = self.sources[0]["url"]
-        if not pypi_simple.endswith("/simple"):
-            raise PackageIndexError(f"{pypi_simple} doesn't support '/pypi' endpoint.")
-        pypi_url = pypi_simple[:-6] + "pypi"
+        pypi_simple = self.sources[0]["url"].rstrip("/")
+        results = []
+
+        if pypi_simple.endswith("/simple"):
+            search_url = pypi_simple[:-6] + "search"
+        else:
+            search_url = pypi_simple + "/search"
+
         with self.environment.get_finder() as finder:
-            transport = PyPIXmlrpcTransport(pypi_url, finder.session)
-            pypi = xmlrpc_client.ServerProxy(pypi_url, transport)
-            hits = pypi.search({"name": query, "summary": query}, "or")
+            session = finder.session
+            resp = session.get(search_url, params={"q": query})
+            if resp.status_code == 404:
+                raise PackageIndexError(
+                    f"{pypi_simple!r} doesn't support '/search' endpoint."
+                )
+            resp.raise_for_status()
+            content = parse(resp.content, namespaceHTMLElements=False)
 
-        packages = {}
-        for hit in hits:
-            name = hit["name"]
-            summary = hit["summary"]
-            version = hit["version"]
+        for result in content.findall(".//*[@class='package-snippet']"):
+            name = result.find("h3/*[@class='package-snippet__name']").text
+            version = result.find("h3/*[@class='package-snippet__version']").text
 
-            if name not in packages.keys():
-                packages[name] = {
-                    "name": name,
-                    "summary": summary,
-                    "versions": [version],
-                }
-            else:
-                packages[name]["versions"].append(version)
+            if not name or not version:
+                continue
 
-                # if this is the highest version, replace summary and score
-                if version == highest_version(packages[name]["versions"]):
-                    packages[name]["summary"] = summary
+            description = result.find("p[@class='package-snippet__description']").text
+            if not description:
+                description = ""
 
-        return list(packages.values())
+            result = Package(name, version, description)
+            results.append(result)
+
+        return results

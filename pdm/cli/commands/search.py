@@ -2,32 +2,30 @@ import argparse
 import sys
 import textwrap
 from shutil import get_terminal_size
+from typing import Optional
 
 from pip._vendor.pkg_resources import safe_name
 
+from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
 from pdm.iostream import stream
+from pdm.models.environment import WorkingSet
 from pdm.project import Project
-from pdm.utils import highest_version
 
 
-def print_results(hits, working_set, terminal_width=None):
+def print_results(
+    hits: SearchResult, working_set: WorkingSet, terminal_width: Optional[int] = None
+):
     if not hits:
         return
     name_column_width = (
-        max(
-            [
-                len(hit["name"]) + len(highest_version(hit.get("versions", ["-"])))
-                for hit in hits
-            ]
-        )
-        + 4
+        max([len(hit.name) + len(hit.version or "") for hit in hits]) + 4
     )
 
     for hit in hits:
-        name = hit["name"]
-        summary = hit["summary"] or ""
-        latest = highest_version(hit.get("versions", ["-"]))
+        name = hit.name
+        summary = hit.summary or ""
+        latest = hit.version or ""
         if terminal_width is not None:
             target_width = terminal_width - name_column_width - 5
             if target_width > 10:

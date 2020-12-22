@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
-from packaging.version import parse as parse_version
 
 from pdm._types import Source
 from pdm.models.pip_shims import (
@@ -365,11 +364,6 @@ def open_file(url, session=None):
                     if conn is not None:
                         conn.close()
                 result.close()
-
-
-def highest_version(versions: List[str]) -> str:
-    """Return the highest version of a given list."""
-    return max(versions, key=parse_version)
 
 
 def populate_link(
