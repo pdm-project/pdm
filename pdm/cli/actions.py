@@ -270,17 +270,17 @@ def do_remove(
     )
     for name in packages:
         req = parse_requirement(name)
-        matched_index = next(
-            (i for i, r in enumerate(deps) if req.matches(r)),
-            None,
+        matched_indexes = sorted(
+            (i for i, r in enumerate(deps) if req.matches(r, False)), reverse=True
         )
-        if matched_index is None:
+        if not matched_indexes:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
                     stream.green(name, bold=True), section
                 )
             )
-        del deps[matched_index]
+        for i in matched_indexes:
+            del deps[i]
 
     project.write_pyproject()
     do_lock(project, "reuse")

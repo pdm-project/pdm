@@ -1,4 +1,3 @@
-import sys
 from collections import namedtuple
 
 import pytest
@@ -7,6 +6,7 @@ from distlib.wheel import Wheel
 from pdm.cli import actions
 from pdm.exceptions import PdmException, PdmUsageError
 from pdm.models.requirements import parse_requirement
+from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from tests.conftest import Distribution
 
@@ -95,7 +95,8 @@ def test_add_package_to_custom_package(project, repository, working_set):
 
 def test_add_editable_package(project, repository, working_set, is_dev, vcs):
     # Ensure that correct python version is used.
-    actions.do_use(project, sys.executable)
+    project.environment.python_requires = PySpecSet(">=3.6")
+    actions.do_add(project, is_dev, packages=["demo"])
     actions.do_add(
         project,
         is_dev,
@@ -103,9 +104,43 @@ def test_add_editable_package(project, repository, working_set, is_dev, vcs):
     )
     section = "dev-dependencies" if is_dev else "dependencies"
     assert "demo" in project.meta[section][0]
+    assert (
+        "-e git+https://github.com/test-root/demo.git#egg=demo"
+        in project.meta[section][1]
+    )
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
+    assert locked_candidates["demo"].revision == "1234567890abcdef"
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
+
+
+def test_add_remote_package_url(project, repository, working_set, is_dev):
+    actions.do_add(
+        project,
+        is_dev,
+        packages=["http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"],
+    )
+    section = "dev-dependencies" if is_dev else "dependencies"
+    assert (
+        project.meta[section][0]
+        == "demo @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
+    )
+
+
+def test_remove_both_normal_and_editable_packages(
+    project, repository, working_set, is_dev, vcs
+):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    actions.do_add(project, is_dev, packages=["demo"])
+    actions.do_add(
+        project,
+        is_dev,
+        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
+    )
+    section = "dev-dependencies" if is_dev else "dependencies"
+    actions.do_remove(project, is_dev, packages=["demo"])
+    assert not project.meta[section]
+    assert "demo" not in project.get_locked_candidates("dev" if is_dev else "default")
 
 
 def test_add_no_install(project, repository, working_set):
