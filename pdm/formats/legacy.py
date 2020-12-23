@@ -110,11 +110,11 @@ class LegacyMetaConverter(MetaConverter):
 
     @convert_from("cli")
     def scripts(self, value):
-        return value
+        return dict(value)
 
     @convert_from("entry_points", name="entry-points")
     def entry_points(self, value):
-        return value
+        return dict(value)
 
     @convert_from("scripts")
     def run_scripts(self, value):

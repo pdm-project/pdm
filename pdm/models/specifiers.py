@@ -416,7 +416,7 @@ class PySpecSet(SpecifierSet):
         return (
             lower <= self._lower_bound
             and upper >= self._upper_bound
-            and set(excludes) >= set(self._excludes)
+            and set(self._excludes) >= set(excludes)
         )
 
     def as_marker_string(self) -> str:

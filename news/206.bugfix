@@ -1,0 +1,1 @@
+Fix a bug that python specifier `is_subset()` returns incorrect result.

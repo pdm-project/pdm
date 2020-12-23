@@ -1,1 +1,1 @@
-Fix a bug that distributions are not removed in parallel mode.
+Fix a bug that distributions are not removed clearly in parallel mode.
