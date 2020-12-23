@@ -8,11 +8,13 @@ from typing import Dict, Iterable, List, Optional, Sequence
 import click
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
+from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
     format_lockfile,
+    format_resolution_impossible,
     save_version_specifiers,
     set_env_in_reg,
 )
@@ -63,11 +65,25 @@ def do_lock(
         ) as spin:
             reporter = project.get_reporter(requirements, tracked_names, spin)
             resolver = project.core.resolver_class(provider, reporter)
-            mapping, dependencies, summaries = resolve(
-                resolver, requirements, project.environment.python_requires
-            )
-            data = format_lockfile(mapping, dependencies, summaries)
-            spin.succeed(f"{LOCK} Lock successful")
+            try:
+                mapping, dependencies, summaries = resolve(
+                    resolver, requirements, project.environment.python_requires
+                )
+            except ResolutionTooDeep:
+                spin.fail(f"{LOCK} Lock failed")
+                stream.echo(
+                    "The dependency resolution exceeds the maximum loop depth of 100, "
+                    "there may be some circular dependencies in your project.",
+                    err=True,
+                )
+                raise
+            except ResolutionImpossible as err:
+                spin.fail(f"{LOCK} Lock failed")
+                stream.echo(format_resolution_impossible(err), err=True)
+                raise
+            else:
+                data = format_lockfile(mapping, dependencies, summaries)
+                spin.succeed(f"{LOCK} Lock successful")
     project.write_lockfile(data)
 
     return mapping

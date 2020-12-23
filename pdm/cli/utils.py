@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 from collections import ChainMap
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import cfonts
 import tomlkit
@@ -22,7 +22,9 @@ from pdm.project import Project
 
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Dict, Iterable, Tuple
+    from typing import Dict, Iterable, List, Optional, Tuple
+
+    from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.models.candidates import Candidate
 
@@ -439,3 +441,23 @@ def set_env_in_reg(env_name: str, value: str) -> None:
             "please restart the session to take effect."
         )
     )
+
+
+def format_resolution_impossible(err: ResolutionImpossible) -> str:
+    causes: List[RequirementInformation] = err.causes
+    result = []
+    result.append(
+        "Unable to find a resolution that satisfies the following requirements:"
+    )
+
+    for information in causes:
+        req, parent = information
+        result.append(
+            f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
+        )
+
+    result.append(
+        "You can either loosen the version constraints of these dependencies or "
+        "restrict the `requires-python` in the pyproject.toml."
+    )
+    return "\n".join(result)
