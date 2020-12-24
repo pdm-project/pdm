@@ -53,6 +53,7 @@ class FlitMetaConverter(MetaConverter):
             self._data["maintainers"] = _get_author(metadata, "maintainer")
         if "license" in metadata:
             self._data["license"] = make_inline_table({"text", metadata.pop("license")})
+            self._data["dynamic"] = ["classifiers"]
         if "urls" in metadata:
             self._data["urls"] = metadata.pop("urls")
         if "home-page" in metadata:
@@ -61,6 +62,7 @@ class FlitMetaConverter(MetaConverter):
             self._data["readme"] = metadata.pop("description-file")
         if "requires-python" in metadata:
             self._data["requires-python"] = metadata.pop("requires-python")
+            self._data["dynamic"] = ["classifiers"]
         # requirements
         self._data["dependencies"] = make_array(metadata.pop("requires", []), True)
         self._data["optional-dependencies"] = metadata.pop("requires-extra", {})

@@ -4,7 +4,7 @@
 authors = [
     {name = "frostming", email = "mianghong@gmail.com"},
 ]
-dynamic = ["version"]
+dynamic = ["version", "classifiers"]
 version = {use_scm = true}
 requires-python = ">=3.7"
 license = {text = "MIT"}
@@ -41,11 +41,6 @@ keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Topic :: Software Development :: Build Tools",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9"
 ]
 
 [project.urls]

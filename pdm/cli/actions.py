@@ -389,6 +389,7 @@ def do_init(
             "dependencies": make_array([], True),
             "dev-dependencies": make_array([], True),
             "requires-python": python_requires,
+            "dynamic": ["classifiers"],
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }

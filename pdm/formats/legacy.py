@@ -45,10 +45,14 @@ class LegacyMetaConverter(MetaConverter):
 
     @convert_from("python_requires", name="requires-python")
     def requires_python(self, value):
+        if "classifiers" not in self._data.setdefault("dynamic", []):
+            self._data["dynamic"].append("classifiers")
         return value
 
     @convert_from("license")
     def license(self, value):
+        if "classifiers" not in self._data.setdefault("dynamic", []):
+            self._data["dynamic"].append("classifiers")
         return make_inline_table({"text": value})
 
     @convert_from("source")
