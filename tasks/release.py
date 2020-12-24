@@ -17,24 +17,23 @@ def get_current_version():
 
 
 def bump_version(pre=None, major=False, minor=False, patch=True):
-    if not any([pre, major, minor, patch]):
+    if not any([major, minor, patch]):
         patch = True
-    if len([v for v in [pre, major, minor, patch] if v]) != 1:
+    if len([v for v in [major, minor, patch] if v]) != 1:
         click.secho(
-            "Only one option should be provided among "
-            "(--pre, --major, --minor, --patch)",
+            "Only one option should be provided among " "(--major, --minor, --patch)",
             fg="red",
             err=True,
         )
         sys.exit(1)
     current_version = parver.Version.parse(get_current_version())
-    if pre:
-        version = current_version.bump_pre(pre)
-    elif major or minor:
+    if major or minor:
         version_idx = [major, minor, patch].index(True)
         version = current_version.bump_release(index=version_idx)
     else:
         version = current_version
+    if pre:
+        version = version.bump_pre(pre)
     version = version.replace(local=None, dev=None)
     return str(version)
 

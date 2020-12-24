@@ -1,3 +1,24 @@
+Release v1.0.0b0 (2020-12-24)
+-----------------------------
+
+### Features & Improvements
+
+- Fully support of PEP 621 specification.
+  - Old format is deprecated at the same time.
+  - PDM will migrate the project file for you when old format is detected.
+  - Other metadata formats(`Poetry`, `Pipfile`, `flit`) can also be imported as PEP 621 metadata. [#175](https://github.com/frostming/pdm/issues/175)
+- Re-implement the `pdm search` to query the `/search` HTTP endpoint. [#195](https://github.com/frostming/pdm/issues/195)
+- Reuse the cached built wheels to accelerate the installation. [#200](https://github.com/frostming/pdm/issues/200)
+- Make update strategy and save strategy configurable in pdm config. [#202](https://github.com/frostming/pdm/issues/202)
+- Improve the error message to give more insight on what to do when resolution fails. [#207](https://github.com/frostming/pdm/issues/207)
+- Set `classifiers` dynamic in `pyproject.toml` template for autogeneration. [#209](https://github.com/frostming/pdm/issues/209)
+
+### Bug Fixes
+
+- Fix a bug that distributions are not removed clearly in parallel mode. [#204](https://github.com/frostming/pdm/issues/204)
+- Fix a bug that python specifier `is_subset()` returns incorrect result. [#206](https://github.com/frostming/pdm/issues/206)
+
+
 Release v0.12.3 (2020-12-21)
 ----------------------------
 
