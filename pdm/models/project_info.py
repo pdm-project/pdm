@@ -49,11 +49,12 @@ class ProjectInfo:
         yield stream.cyan("Author:"), self._data.get("Author", "")
         yield stream.cyan("Author email:"), self._data.get("Author-email", "")
         yield stream.cyan("License:"), self._data.get("License", "")
+        yield stream.cyan("Requires python:"), self._data.get("Requires-Python", "")
+        yield stream.cyan("Platform:"), ", ".join(self._data.get("Platform", []))
+        yield stream.cyan("Keywords:"), ", ".join(self._data.get("Keywords", []))
         yield stream.cyan("Homepage:"), self._data.get("Home-page", "")
         if self._data.get("Project-URL"):
             lines = [":".join(parts) for parts in self._data.get("Project-URL")]
             yield stream.cyan("Project URLs:"), lines[0]
             for line in lines[1:]:
                 yield "", line
-        yield stream.cyan("Platform:"), ", ".join(self._data.get("Platform", []))
-        yield stream.cyan("Keywords:"), ", ".join(self._data.get("Keywords", []))

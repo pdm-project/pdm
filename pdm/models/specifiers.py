@@ -19,7 +19,7 @@ def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
 def parse_version_tuple(version: str) -> Tuple[Union[int, str], ...]:
     version = re.sub(r"(?<!\.)\*", ".*", version)
     try:
-        return tuple(int(v) if v != "*" else v for v in version.split("."))
+        return tuple(int(v) if v != "*" else v for v in version.split("."))[:3]
     except ValueError:
         raise InvalidPyVersion(
             f"{version}: Prereleases or postreleases are not supported "

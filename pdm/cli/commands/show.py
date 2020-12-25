@@ -37,7 +37,12 @@ class Command(BaseCommand):
         matches = repository.find_candidates(
             req, project.environment.python_requires, True
         )
-        latest = next(iter(matches))
+        latest = next(iter(matches), None)
+        if not latest:
+            stream.echo(
+                stream.yellow(f"No match found for the package {package!r}"), err=True
+            )
+            return
         latest_stable = next(filter(filter_stable, matches), None)
         installed = project.environment.get_working_set().get(package)
 
