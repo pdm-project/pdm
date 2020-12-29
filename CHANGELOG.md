@@ -1,3 +1,15 @@
+Release v1.0.0b2 (2020-12-29)
+-----------------------------
+
+### Features & Improvements
+
+- Fallback to pypi.org when `/search` endpoint is not available on given index. [#211](https://github.com/frostming/pdm/issues/211)
+
+### Bug Fixes
+
+- Fix a bug that PDM fails to parse python version specifiers with more than 3 parts. [#210](https://github.com/frostming/pdm/issues/210)
+
+
 Release v1.0.0b0 (2020-12-24)
 -----------------------------
 
