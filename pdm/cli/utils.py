@@ -450,14 +450,14 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "Unable to find a resolution that satisfies the following requirements:"
     )
 
-    for information in causes:
-        req, parent = information
+    for req, parent in causes:
         result.append(
             f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
         )
 
     result.append(
-        "You can either loosen the version constraints of these dependencies or "
-        "restrict the `requires-python` in the pyproject.toml."
+        "Please make sure the package names are correct. If so, you can either "
+        "loosen the version constraints of these dependencies, or "
+        "set a narrower `requires-python` range in the pyproject.toml."
     )
     return "\n".join(result)
