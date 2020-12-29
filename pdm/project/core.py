@@ -178,10 +178,8 @@ class Project:
         return self.get_dependencies("dev")
 
     def iter_sections(self) -> Iterable[str]:
-        if self.meta.dependencies:
-            yield "default"
-        if self.meta.get("dev-dependencies"):
-            yield "dev"
+        yield "default"
+        yield "dev"
         if self.meta.optional_dependencies:
             yield from self.meta.optional_dependencies.keys()
 
@@ -329,6 +327,7 @@ class Project:
             "dependencies": self.meta.get("dependencies", []),
             "dev-dependencies": self.meta.get("dev-dependencies", []),
             "optional-dependencies": self.meta.get("optional-dependencies", {}),
+            "requires-python": self.meta.get("requires-python", ""),
         }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)
