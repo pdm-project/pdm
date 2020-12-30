@@ -151,10 +151,6 @@ class EnvBuilder:
 
         if "build-backend" not in self._build_system:
             self._build_system["build-backend"] = self.DEFAULT_BACKEND["build-backend"]
-            self._build_system["requires"] = (
-                self._build_system.get("requires", [])
-                + self.DEFAULT_BACKEND["requires"]
-            )
 
         if "requires" not in self._build_system:
             raise BuildError("Missing 'build-system.requires' in pyproject.toml")

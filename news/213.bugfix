@@ -1,0 +1,1 @@
+Correctly build wheels for dependencies with build-requirements but without a specified build-backend
