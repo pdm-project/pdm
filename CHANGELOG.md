@@ -1,3 +1,11 @@
+Release v1.0.0 (2021-01-05)
+---------------------------
+
+### Bug Fixes
+
+- Correctly build wheels for dependencies with build-requirements but without a specified build-backend [#213](https://github.com/frostming/pdm/issues/213)
+
+
 Release v1.0.0b2 (2020-12-29)
 -----------------------------
 

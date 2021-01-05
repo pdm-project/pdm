@@ -34,6 +34,8 @@ def bump_version(pre=None, major=False, minor=False, patch=True):
         version = current_version
     if pre:
         version = version.bump_pre(pre)
+    else:
+        version = version.replace(pre=None)
     version = version.replace(local=None, dev=None)
     return str(version)
 
