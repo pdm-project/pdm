@@ -1,0 +1,1 @@
+Fix a bug of `PYTHONPATH` manipulation under Windows platform.

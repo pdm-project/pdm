@@ -424,7 +424,7 @@ def set_env_in_reg(env_name: str, value: str) -> None:
                     return
             except FileNotFoundError:
                 old_value, type_ = "", winreg.REG_EXPAND_SZ
-            new_value = ";".join(old_value, value) if old_value else value
+            new_value = os.pathsep.join([old_value, value]) if old_value else value
             try:
                 winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
             except PermissionError:

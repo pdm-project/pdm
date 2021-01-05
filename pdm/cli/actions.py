@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
@@ -31,9 +30,7 @@ from pdm.project import Project
 from pdm.resolver import resolve
 from pdm.utils import get_python_version, setdefault
 
-PEP582_PATH = os.path.join(
-    os.path.dirname(sys.modules[__name__.split(".")[0]].__file__), "pep582"
-)
+PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
 
 def do_lock(
