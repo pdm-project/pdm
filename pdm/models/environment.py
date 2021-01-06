@@ -192,13 +192,18 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
+        version, is_64bit = get_python_version(self.python_executable, True, 2)
         pypackages = (
             self.project.root
             / "__pypackages__"
-            / get_python_version_string(
-                *get_python_version(self.python_executable, True, 2)
-            )
+            / get_python_version_string(version, is_64bit)
         )
+        if not pypackages.exists() and not is_64bit:
+            compatible_packages = pypackages.parent / get_python_version_string(
+                version, True
+            )
+            if compatible_packages.exists():
+                pypackages = compatible_packages
         scripts = "Scripts" if os.name == "nt" else "bin"
         for subdir in [scripts, "include", "lib"]:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
