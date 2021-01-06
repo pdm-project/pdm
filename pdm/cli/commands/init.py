@@ -5,8 +5,9 @@ import click
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.iostream import stream
+from pdm.models.in_process import get_python_version
 from pdm.project import Project
-from pdm.utils import get_python_version, get_user_email_from_git
+from pdm.utils import get_user_email_from_git
 
 
 class Command(BaseCommand):
@@ -37,8 +38,8 @@ class Command(BaseCommand):
         git_user, git_email = get_user_email_from_git()
         author = click.prompt("Author name", default=git_user)
         email = click.prompt("Author email", default=git_email)
-        python_version = ".".join(
-            map(str, get_python_version(project.environment.python_executable)[:2])
+        python_version, _ = get_python_version(
+            project.environment.python_executable, True, 2
         )
         python_requires = click.prompt(
             "Python requires('*' to allow any)", default=f">={python_version}"

@@ -16,6 +16,7 @@ from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
+from pdm.models.in_process import get_python_version
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -25,7 +26,6 @@ from pdm.utils import (
     atomic_open_for_write,
     cached_property,
     find_project_root,
-    get_python_version,
     get_venv_python,
     setdefault,
 )
@@ -139,7 +139,7 @@ class Project:
             # Rewrite global project's python requires to be
             # compatible with the exact version
             env.python_requires = PySpecSet(
-                "==" + get_python_version(env.python_executable, True)
+                "==" + get_python_version(env.python_executable, True)[0]
             )
             return env
         if self.config["use_venv"]:
