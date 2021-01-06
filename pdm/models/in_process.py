@@ -6,21 +6,7 @@ import importlib
 import json
 import os
 import subprocess
-from typing import Any, Dict, Literal, Tuple, overload
-
-
-@overload
-def get_python_version(
-    executable: str, as_string: Literal[False], digits: int
-) -> Tuple[Tuple[int, int, int], bool]:
-    ...
-
-
-@overload
-def get_python_version(
-    executable: str, as_string: Literal[True], digits: int
-) -> Tuple[str, bool]:
-    ...
+from typing import Any, Dict
 
 
 @functools.lru_cache()
