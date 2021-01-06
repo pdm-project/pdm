@@ -23,6 +23,11 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        arch: [x64]
+        include:
+          - python-version: 3.8
+            os: windows-latest
+            arch: x86
 
     steps:
       - uses: actions/checkout@v2
@@ -32,6 +37,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.arch }}
       - name: Set Variables
         id: set_variables
         run: |

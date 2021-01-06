@@ -2,9 +2,6 @@
 Utility functions
 """
 import atexit
-import functools
-import importlib
-import json
 import os
 import shutil
 import subprocess
@@ -15,6 +12,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
+from tomlkit.container import Container
+from tomlkit.items import Item
 
 from pdm._types import Source
 from pdm.models.pip_shims import (
@@ -189,47 +188,6 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
     return None
 
 
-@functools.lru_cache()
-def get_python_version(executable, as_string=False):
-    """Get the version of the Python interperter."""
-    args = [
-        executable,
-        "-c",
-        "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))",
-    ]
-    result = tuple(json.loads(subprocess.check_output(args)))
-    if not as_string:
-        return result
-    return ".".join(map(str, result))
-
-
-def get_sys_config_paths(executable: str, vars=None) -> Dict[str, str]:
-    """Return the sys_config.get_paths() result for the python interpreter"""
-    if not vars:
-        args = [
-            executable,
-            "-c",
-            "import sysconfig,json;print(json.dumps(sysconfig.get_paths()))",
-        ]
-        return json.loads(subprocess.check_output(args))
-    else:
-        env = os.environ.copy()
-        env.update(SYSCONFIG_VARS=json.dumps(vars))
-        args = [
-            executable,
-            "-c",
-            "import os,sysconfig,json;print(json.dumps(sysconfig."
-            "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
-        ]
-        return json.loads(subprocess.check_output(args, env=env))
-
-
-def get_pep508_environment(executable: str) -> Dict[str, Any]:
-    script = importlib.import_module("pdm.pep508").__file__.rstrip("co")
-    args = [executable, script]
-    return json.loads(subprocess.check_output(args))
-
-
 def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
     """Convert Pipfile.lock hash lines into InstallRequirement option format.
 
@@ -380,8 +338,14 @@ def populate_link(
         ireq.link = link
 
 
-def setdefault(document, key, value):
+def setdefault(document: Container, key: str, value: Any) -> Item:
     """A compatiable dict.setdefault() for tomlkit data structures."""
     if key not in document:
         document[key] = value
     return document[key]
+
+
+def get_python_version_string(version: str, is_64bit: bool) -> str:
+    if os.name == "nt" and not is_64bit:
+        return f"{version}-32"
+    return version

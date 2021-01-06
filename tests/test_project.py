@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 import distlib.wheel
@@ -85,3 +86,12 @@ def test_project_with_combined_extras(fixture_project):
     )
     for dep in ("urllib3", "chardet", "idna"):
         assert dep in all_requires
+
+
+def test_project_packages_path(project):
+    packages_path = project.environment.packages_path
+    version = ".".join(map(str, sys.version_info[:2]))
+    if os.name == "nt" and sys.maxsize <= 2 ** 32:
+        assert packages_path.name == version + "-32"
+    else:
+        assert packages_path.name == version

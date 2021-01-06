@@ -6,8 +6,9 @@ from pathlib import Path
 import pytest
 
 from pdm.cli import actions
+from pdm.models.in_process import get_python_version
 from pdm.models.requirements import parse_requirement
-from pdm.utils import get_python_version, temp_environ
+from pdm.utils import temp_environ
 from tests import FIXTURES
 
 
@@ -145,8 +146,8 @@ def test_init_command(project_no_init, invoke, mocker):
         ["init"], input="python\ntest-project\n\n\n\n\n\n", obj=project_no_init
     )
     assert result.exit_code == 0
-    python_version = ".".join(
-        map(str, get_python_version(project_no_init.environment.python_executable)[:2])
+    python_version, _ = get_python_version(
+        project_no_init.environment.python_executable, True, 2
     )
     do_init.assert_called_with(
         project_no_init,

@@ -16,8 +16,9 @@ from pep517.wrappers import Pep517HookCaller
 
 from pdm.exceptions import BuildError
 from pdm.iostream import stream
+from pdm.models.in_process import get_python_version, get_sys_config_paths
 from pdm.pep517.base import Builder
-from pdm.utils import cached_property, get_python_version, get_sys_config_paths
+from pdm.utils import cached_property
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -179,7 +180,7 @@ class EnvBuilder:
         """Get a pip command that has pip installed.
         E.g: ['python', '-m', 'pip']
         """
-        python_version = get_python_version(self.executable)
+        python_version, _ = get_python_version(self.executable)
         proc = subprocess.run(
             [self.executable, "-m", "pip", "--version"], capture_output=True
         )

@@ -21,15 +21,18 @@ from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.builders import EnvBuilder
+from pdm.models.in_process import (
+    get_pep508_environment,
+    get_python_version,
+    get_sys_config_paths,
+)
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
     convert_hashes,
     create_tracked_tempdir,
     get_finder,
-    get_pep508_environment,
-    get_python_version,
-    get_sys_config_paths,
+    get_python_version_string,
     get_venv_python,
     populate_link,
     temp_environ,
@@ -110,11 +113,11 @@ class Environment:
         path = shutil.which("python")
         version = None
         if path:
-            version = get_python_version(path, True)
+            version, _ = get_python_version(path, True)
         if not version or not self.python_requires.contains(version):
             finder = Finder()
             for python in finder.find_all_python_versions():
-                version = get_python_version(python.path.as_posix(), True)
+                version, _ = get_python_version(python.path.as_posix(), True)
                 if self.python_requires.contains(version):
                     path = python.path.as_posix()
                     break
@@ -189,11 +192,18 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
+        version, is_64bit = get_python_version(self.python_executable, True, 2)
         pypackages = (
             self.project.root
             / "__pypackages__"
-            / ".".join(map(str, get_python_version(self.python_executable)[:2]))
+            / get_python_version_string(version, is_64bit)
         )
+        if not pypackages.exists() and not is_64bit:
+            compatible_packages = pypackages.parent / get_python_version_string(
+                version, True
+            )
+            if compatible_packages.exists():
+                pypackages = compatible_packages
         scripts = "Scripts" if os.name == "nt" else "bin"
         for subdir in [scripts, "include", "lib"]:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
@@ -241,7 +251,7 @@ class Environment:
         if sources is None:
             sources = self.project.sources
         sources = sources or []
-        python_version = get_python_version(self.python_executable)[:2]
+        python_version, _ = get_python_version(self.python_executable, digits=2)
         finder = get_finder(
             sources,
             self.project.cache_dir.as_posix(),
@@ -277,7 +287,10 @@ class Environment:
                         ireq.req.project_name,
                         pip_shims.get_supported(
                             version="".join(
-                                map(str, get_python_version(self.python_executable)[:2])
+                                map(
+                                    str,
+                                    get_python_version(self.python_executable)[0][:2],
+                                )
                             )
                         ),
                     )
@@ -324,7 +337,7 @@ class Environment:
                     ireq.req.project_name,
                     pip_shims.get_supported(
                         version="".join(
-                            map(str, get_python_version(self.python_executable)[:2])
+                            map(str, get_python_version(self.python_executable)[0][:2])
                         )
                     ),
                 )
@@ -365,7 +378,7 @@ class Environment:
         """Get the working set based on local packages directory."""
         paths = self.get_paths()
         return WorkingSet(
-            [paths["platlib"]], python=get_python_version(self.python_executable)
+            [paths["platlib"]], python=get_python_version(self.python_executable)[0]
         )
 
     @cached_property
@@ -378,7 +391,7 @@ class Environment:
         if not os.path.isabs(command) and command.startswith("python"):
             python = os.path.splitext(command)[0]
             version = python[6:]
-            this_version = get_python_version(self.python_executable, True)
+            this_version, _ = get_python_version(self.python_executable, True)
             if not version or this_version.startswith(version):
                 return self.python_executable
         # Fallback to use shutil.which to find the executable

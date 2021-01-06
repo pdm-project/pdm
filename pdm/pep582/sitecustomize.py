@@ -4,12 +4,11 @@ import sys
 
 
 def get_pypackages_path(maxdepth=5):
-    def find_pypackage(path):
+    def find_pypackage(path, version):
         if not os.path.exists(path):
             return None
-        packages_name = "__pypackages__/{}/lib".format(
-            ".".join(map(str, sys.version_info[:2]))
-        )
+
+        packages_name = "__pypackages__/{}/lib".format(version)
         for _ in range(maxdepth):
             if os.path.exists(os.path.join(path, packages_name)):
                 return os.path.join(path, packages_name)
@@ -20,15 +19,24 @@ def get_pypackages_path(maxdepth=5):
         return None
 
     find_paths = [os.getcwd()]
+    version = bare_version = ".".join(map(str, sys.version_info[:2]))
+    if os.name == "nt" and sys.maxsize <= 2 ** 32:
+        version += "-32"
 
     if getattr(sys, "argv", None):
         script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         find_paths.insert(0, script_dir)
 
     for path in find_paths:
-        result = find_pypackage(path)
+        result = find_pypackage(path, version)
         if result:
             return result
+
+    if bare_version != version:
+        for path in find_paths:
+            result = find_pypackage(path, bare_version)
+            if result:
+                return result
 
 
 def main():

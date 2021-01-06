@@ -24,11 +24,12 @@ from pdm.installers.installers import format_dist
 from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
+from pdm.models.in_process import get_python_version
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import get_python_version, setdefault
+from pdm.utils import get_python_version_string, setdefault
 
 PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
@@ -413,20 +414,23 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
             python_path = shutil.which(python)
         if not python_path:
             raise NoPythonVersion(f"{python} is not a valid Python.")
-        python_version = get_python_version(python_path, True)
+        python_version, is_64bit = get_python_version(python_path, True)
     else:
         finder = pythonfinder.Finder()
         pythons = []
         args = [int(v) for v in python.split(".") if v != ""]
         for i, entry in enumerate(finder.find_all_python_versions(*args)):
-            python_version = get_python_version(entry.path.as_posix(), True)
-            pythons.append((entry.path.as_posix(), python_version))
+            python_version, is_64bit = get_python_version(entry.path.as_posix(), True)
+            pythons.append((entry.path.as_posix(), python_version, is_64bit))
         if not pythons:
             raise NoPythonVersion(f"Python {python} is not available on the system.")
 
         if not first and len(pythons) > 1:
-            for i, (path, python_version) in enumerate(pythons):
-                stream.echo(f"{i}. {stream.green(path)} ({python_version})")
+            for i, (path, python_version, is_64bit) in enumerate(pythons):
+                stream.echo(
+                    f"{i}. {stream.green(path)} "
+                    f"({get_python_version_string(python_version, is_64bit)})"
+                )
             selection = click.prompt(
                 "Please select:",
                 type=click.Choice([str(i) for i in range(len(pythons))]),
@@ -435,7 +439,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
             )
         else:
             selection = 0
-        python_path, python_version = pythons[int(selection)]
+        python_path, python_version, is_64bit = pythons[int(selection)]
 
     if not project.python_requires.contains(python_version):
         raise NoPythonVersion(
@@ -444,7 +448,8 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
         )
     stream.echo(
         "Using Python interpreter: {} ({})".format(
-            stream.green(python_path), python_version
+            stream.green(python_path),
+            get_python_version_string(python_version, is_64bit),
         )
     )
     old_path = project.config.get("python.path")
@@ -463,13 +468,14 @@ def do_info(
 ) -> None:
     """Show project information."""
     python_path = project.environment.python_executable
-    python_version = get_python_version(python_path, True)
+    python_version, is_64bit = get_python_version(python_path, True)
     if not python and not show_project and not env:
         rows = [
             (stream.cyan("PDM version:", bold=True), project.core.version),
             (
                 stream.cyan("Python Interpreter:", bold=True),
-                python_path + f" ({python_version})",
+                python_path
+                + f" ({get_python_version_string(python_version, is_64bit)})",
             ),
             (stream.cyan("Project Root:", bold=True), project.root.as_posix()),
         ]
