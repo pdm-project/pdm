@@ -42,6 +42,27 @@ excludes = [
 If neither `includes` or `excludes` is given, PDM is also smart enough to include top level packages and all data files in them.
 Packages can also lie in `src` directory that PDM can find it.
 
+## Select another package directory to look for packages
+
+Similar to `setuptools`' `package_dir` setting, one can specify another package directory, such as `src`, in `pyproject.toml` easily:
+
+```toml
+package-dir = "src"
+```
+
+If no package directory is given, PDM can also recognize `src` as the `package-dir` implicitly if:
+
+1. `src/__init__.py` doesn't exist, meaning it is not a valid Python package, and
+2. There exist some packages under `src/*`.
+
+## Implicit namespace packages
+
+As specified in [PEP 420](https://www.python.org/dev/peps/pep-0420), a directory will be recognized as a namespace package if:
+
+1. `<package>/__init__.py` doesn't exist, and
+2. There exist normal packages and/or other namespace packages under `<package>/*`, and
+2. `<package>` is not specified as `package-dir`
+
 ## Dependency specification
 
 The `project.dependencies` is an array of dependency specification strings following the [PEP 440](https://www.python.org/dev/peps/pep-0440/)
