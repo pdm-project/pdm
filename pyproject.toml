@@ -49,7 +49,11 @@ Repository = "https://github.com/frostming/pdm"
 Documentation = "https://pdm.fming.dev"
 
 [project.optional-dependencies]
-doc = ["mkdocs<2.0.0,>=1.1", "mkdocs-material<5.0.0,>=4.6.3", "markdown-include<1.0.0,>=0.5.1"]
+doc = [
+    "mkdocs<2.0.0,>=1.1",
+    "mkdocs-material<7.0.0,>=6.2.4",
+    "markdown-include<1.0.0,>=0.5.1",
+]
 
 [project.scripts]
 pdm = "pdm.core:main"

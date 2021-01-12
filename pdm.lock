@@ -98,7 +98,7 @@ summary = "Internationalized Domain Names in Applications (IDNA)"
 [[package]]
 name = "importlib-metadata"
 sections = ["default", "dev", "doc"]
-version = "3.3.0"
+version = "3.4.0"
 marker = "python_version < '4.0'"
 summary = "Read metadata from Python packages"
 
@@ -119,7 +119,7 @@ version = "1.1.1"
 summary = "iniconfig: brain-dead simple config-ini parsing"
 
 [[package]]
-name = "jinja2"
+name = "Jinja2"
 sections = ["dev", "doc"]
 version = "2.11.2"
 summary = "A very fast and expressive template engine."
@@ -223,14 +223,24 @@ tornado = ">=5.0"
 [[package]]
 name = "mkdocs-material"
 sections = ["doc"]
-version = "4.6.3"
+version = "6.2.4"
 summary = "A Material Design theme for MkDocs"
 
 [package.dependencies]
-mkdocs = ">=1.0"
+mkdocs = ">=1.1"
 Pygments = ">=2.4"
 markdown = ">=3.2"
-pymdown-extensions = ">=6.3"
+pymdown-extensions = ">=7.0"
+mkdocs-material-extensions = ">=1.0"
+
+[[package]]
+name = "mkdocs-material-extensions"
+sections = ["doc"]
+version = "1.0.1"
+summary = "Extension pack for Python Markdown."
+
+[package.dependencies]
+mkdocs-material = ">=5.0.0"
 
 [[package]]
 name = "nltk"
@@ -318,7 +328,7 @@ summary = "Pygments is a syntax highlighting package written in Python."
 [[package]]
 name = "pymdown-extensions"
 sections = ["doc"]
-version = "8.0.1"
+version = "8.1"
 summary = "Extension pack for Python Markdown."
 
 [package.dependencies]
@@ -507,7 +517,7 @@ toml = "*"
 [[package]]
 name = "tqdm"
 sections = ["doc"]
-version = "4.54.1"
+version = "4.56.0"
 marker = "python_version >= '2.8'"
 summary = "Fast, Extensible Progress Meter"
 
@@ -554,7 +564,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:a0a511a9de25ac400cbc3168f6eb906473cba39047106494165ddbe6993a1510"
+content_hash = "sha256:906fa3d9deebe1c5970b841e0156159e73d0400a04a535159908800ef3bb0c1b"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -663,9 +673,9 @@ content_hash = "sha256:a0a511a9de25ac400cbc3168f6eb906473cba39047106494165ddbe69
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
 ]
-"importlib-metadata 3.3.0" = [
-    {file = "importlib_metadata-3.3.0-py3-none-any.whl", hash = "sha256:bf792d480abbd5eda85794e4afb09dd538393f7d6e6ffef6e9f03d2014cf9450"},
-    {file = "importlib_metadata-3.3.0.tar.gz", hash = "sha256:5c5a2720817414a6c41f0a49993908068243ae02c1635a228126519b509c8aed"},
+"importlib-metadata 3.4.0" = [
+    {file = "importlib_metadata-3.4.0-py3-none-any.whl", hash = "sha256:ace61d5fc652dc280e7b6b4ff732a9c2d40db2c0f92bc6cb74e07b73d53a1771"},
+    {file = "importlib_metadata-3.4.0.tar.gz", hash = "sha256:fa5daa4477a7414ae34e95942e4dd07f62adf589143c875c133c1e53c4eff38d"},
 ]
 "incremental 17.5.0" = [
     {file = "incremental-17.5.0-py2.py3-none-any.whl", hash = "sha256:717e12246dddf231a349175f48d74d93e2897244939173b01974ab6661406b9f"},
@@ -744,9 +754,13 @@ content_hash = "sha256:a0a511a9de25ac400cbc3168f6eb906473cba39047106494165ddbe69
     {file = "mkdocs-1.1.2-py3-none-any.whl", hash = "sha256:096f52ff52c02c7e90332d2e53da862fde5c062086e1b5356a6e392d5d60f5e9"},
     {file = "mkdocs-1.1.2.tar.gz", hash = "sha256:f0b61e5402b99d7789efa032c7a74c90a20220a9c81749da06dbfbcbd52ffb39"},
 ]
-"mkdocs-material 4.6.3" = [
-    {file = "mkdocs_material-4.6.3-py2.py3-none-any.whl", hash = "sha256:7f3afa0a09c07d0b89a6a9755fdb00513aee8f0cec3538bb903325c80f66f444"},
-    {file = "mkdocs-material-4.6.3.tar.gz", hash = "sha256:1d486635b03f5a2ec87325842f7b10c7ae7daa0eef76b185572eece6a6ea212c"},
+"mkdocs-material 6.2.4" = [
+    {file = "mkdocs_material-6.2.4-py2.py3-none-any.whl", hash = "sha256:5bc6fb8c161818ec2507517e90c8df5827edc2c7cadfb8fe40716f8a7903f87a"},
+    {file = "mkdocs-material-6.2.4.tar.gz", hash = "sha256:ce602f7c712b217b18a5c1c413de38572856be13704d0b484c33c687ccbe6c3d"},
+]
+"mkdocs-material-extensions 1.0.1" = [
+    {file = "mkdocs_material_extensions-1.0.1-py3-none-any.whl", hash = "sha256:d90c807a88348aa6d1805657ec5c0b2d8d609c110e62b9dce4daf7fa981fa338"},
+    {file = "mkdocs-material-extensions-1.0.1.tar.gz", hash = "sha256:6947fb7f5e4291e3c61405bad3539d81e0b3cd62ae0d66ced018128af509c68f"},
 ]
 "nltk 3.5" = [
     {file = "nltk-3.5.zip", hash = "sha256:845365449cd8c5f9731f7cb9f8bd6fd0767553b9d53af9eb1b3abf7700936b35"},
@@ -787,9 +801,9 @@ content_hash = "sha256:a0a511a9de25ac400cbc3168f6eb906473cba39047106494165ddbe69
     {file = "Pygments-2.7.3-py3-none-any.whl", hash = "sha256:f275b6c0909e5dafd2d6269a656aa90fa58ebf4a74f8fcf9053195d226b24a08"},
     {file = "Pygments-2.7.3.tar.gz", hash = "sha256:ccf3acacf3782cbed4a989426012f1c535c9a90d3a7fc3f16d231b9372d2b716"},
 ]
-"pymdown-extensions 8.0.1" = [
-    {file = "pymdown_extensions-8.0.1-py2.py3-none-any.whl", hash = "sha256:a3689c04f4cbddacd9d569425c571ae07e2673cc4df63a26cdbf1abc15229137"},
-    {file = "pymdown-extensions-8.0.1.tar.gz", hash = "sha256:9ba704052d4bdc04a7cd63f7db4ef6add73bafcef22c0cf6b2e3386cf4ece51e"},
+"pymdown-extensions 8.1" = [
+    {file = "pymdown_extensions-8.1-py2.py3-none-any.whl", hash = "sha256:c0b285fdd6e8438895b0c4422847af012f32a487ae083ffafa4c21a151b4983b"},
+    {file = "pymdown-extensions-8.1.tar.gz", hash = "sha256:565583c5964ac8253896ef4a7f14023075503ca6514d7d470b343290b96fc6da"},
 ]
 "pyparsing 2.4.7" = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
@@ -963,9 +977,9 @@ content_hash = "sha256:a0a511a9de25ac400cbc3168f6eb906473cba39047106494165ddbe69
     {file = "towncrier-19.2.0-py2.py3-none-any.whl", hash = "sha256:de19da8b8cb44f18ea7ed3a3823087d2af8fcf497151bb9fd1e1b092ff56ed8d"},
     {file = "towncrier-19.2.0.tar.gz", hash = "sha256:48251a1ae66d2cf7e6fa5552016386831b3e12bb3b2d08eb70374508c17a8196"},
 ]
-"tqdm 4.54.1" = [
-    {file = "tqdm-4.54.1-py2.py3-none-any.whl", hash = "sha256:d4f413aecb61c9779888c64ddf0c62910ad56dcbe857d8922bb505d4dbff0df1"},
-    {file = "tqdm-4.54.1.tar.gz", hash = "sha256:38b658a3e4ecf9b4f6f8ff75ca16221ae3378b2e175d846b6b33ea3a20852cf5"},
+"tqdm 4.56.0" = [
+    {file = "tqdm-4.56.0-py2.py3-none-any.whl", hash = "sha256:4621f6823bab46a9cc33d48105753ccbea671b68bab2c50a9f0be23d4065cb5a"},
+    {file = "tqdm-4.56.0.tar.gz", hash = "sha256:fe3d08dd00a526850568d542ff9de9bbc2a09a791da3c334f3213d8d0bbbca65"},
 ]
 "typing-extensions 3.7.4.3" = [
     {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},

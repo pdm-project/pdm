@@ -17,7 +17,7 @@ of the core project it may have a chance to be absorbed into PDM.
 
 ## Write your own plugin
 
-In the following sections, I will show an example of adding a new command `hello` which reads `hello.name` config.
+In the following sections, I will show an example of adding a new command `hello` which reads the `hello.name` config.
 
 ### Write the command
 
@@ -42,18 +42,18 @@ class HelloCommand(BaseCommand):
         print(f"Hello, {name}")
 ```
 
-First create a new `HelloCommand` class inherting from `pdm.cli.commands.base.BaseCommand`, it has two major functions:
+First, let's create a new `HelloCommand` class inherting from `pdm.cli.commands.base.BaseCommand`. It has two major functions:
 
 - `add_arguments()` to manipulate the argument parser passed as the only argument,
   where you can add additional command line arguments to it
 - `handle()` to do something when the subcommand is matched, you can do nothing by writing a single `pass` statement.
   It accepts two arguments: an `pdm.project.Project` object as the first one and the parsed `argparse.Namespace` object as the second.
 
-The document string will serve as the command help text, which will be show in `pdm --help`.
+The document string will serve as the command help text, which will be shown in `pdm --help`.
 
 Besides, PDM's subcommand has two default options: `-v/--verbose` to change the verbosity level and `-g/--global` to enable global project.
-If you don't want these default options, override the `arguments` class attribute to a list of `pdm.cli.options.Option` objects.
-Assign it to an empty list to have no default options:
+If you don't want these default options, override the `arguments` class attribute to a list of `pdm.cli.options.Option` objects, or
+assign it to an empty list to have no default options:
 
 ```python hl_lines="3"
 class HelloCommand(BaseCommand):
@@ -66,20 +66,20 @@ class HelloCommand(BaseCommand):
 
 ### Register the command to the core object
 
-Write a function somewhere in your plugin project. There is no limit on what the name of the function is. The function
-should accept only one argument -- the PDM core object:
+Write a function somewhere in your plugin project. There is no limit on what the name of the function is but the function
+should take only one argument -- the PDM core object:
 
 ```python hl_lines="2"
 def hello_plugin(core):
     core.register_command(HelloCommand, "hello")
 ```
 
-Call `core.register_command()` to register the command, the second argument as the name of the subcommand is optional.
+Call `core.register_command()` to register the command. The second argument as the name of the subcommand is optional.
 PDM will look for the `HelloCommand`'s `name` attribute if the name is not passed.
 
 ### Add a new config item
 
-Remember in the first code snippet, `hello.name` config key is consulted for the name if not passed via the command line.
+Let's recall the first code snippet, `hello.name` config key is consulted for the name if not passed via the command line.
 
 ```python hl_lines="11"
 class HelloCommand(BaseCommand):
@@ -118,7 +118,7 @@ where `ConfigItem` class takes 4 parameters, in the following order:
 
 ### Other plugin points
 
-Besides commands and configurations, PDM provides some other plugin abilities
+Besides of commands and configurations, PDM provides some other plugin abilities
 which are not covered in the above example:
 
 - `core.project_class`: change the class of project object

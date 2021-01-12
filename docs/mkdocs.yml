@@ -15,7 +15,9 @@ nav:
   - changelog.md
 
 markdown_extensions:
-  - codehilite
+  - pymdownx.highlight:
+      linenums: true
+  - pymdownx.superfences
   - admonition
   - tables
   - toc:
