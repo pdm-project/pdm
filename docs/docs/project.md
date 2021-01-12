@@ -147,6 +147,35 @@ only `requirements.txt` format is supported:
 $ pdm export -o requirements.txt
 ```
 
+## Hide the crendentials from pyproject.toml
+
+There are many times when we need to use sensitive information, such as login credentials for the PyPI server
+and username passwords for VCS repositories. We do not want to expose this information in `pyproject.toml` and upload it to git.
+
+PDM provides several methods to achieve this:
+
+1. User can give the auth information with environment variables which are encoded in the URL directly:
+
+   ```toml
+   [[tool.pdm.source]]
+   url = "http://${INDEX_USER}:${INDEX_PASSWD}@test.pypi.org/simple"
+   name = "test"
+   verify_ssl = false
+
+   [project]
+   dependencies = [
+     "mypackage @ git+http://${VCS_USER}:${VCS_PASSWD}@test.git.com/test/mypackage.git@master"
+   ]
+   ```
+
+   Environment variables must be encoded in the form `${ENV_NAME}`, other forms are not supported. Besides, only auth part will be expanded.
+
+2. If the credentials are not provided in the URL and a 401 response is received from the server, PDM will prompt for username and password when `-v/--verbose`
+   is passed as command line argument, otherwise PDM will fail with an error telling users what happens. Users can then choose to store the credentials in the
+   keyring after a confirmation question.
+
+3. A VCS repository applies the first method only and an index server applies both methods.
+
 ## Available Configurations
 
 | Config Item        | Description                                                               | Default Value                                                             | Available in Project | Env var                |
