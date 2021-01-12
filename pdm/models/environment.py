@@ -32,6 +32,7 @@ from pdm.utils import (
     cached_property,
     convert_hashes,
     create_tracked_tempdir,
+    expand_env_vars_in_auth,
     get_finder,
     get_python_version_string,
     get_venv_python,
@@ -319,6 +320,8 @@ class Environment:
                 ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
+                if ireq.link.is_vcs:
+                    ireq.link = pip_shims.Link(expand_env_vars_in_auth(ireq.link.url))
                 downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,

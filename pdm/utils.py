@@ -352,7 +352,7 @@ def get_python_version_string(version: str, is_64bit: bool) -> str:
     return version
 
 
-def expand_env_vars(credential):
+def expand_env_vars(credential: str, quote: bool = False) -> str:
     """A safe implementation of env var substitution.
     It only supports the following forms:
 
@@ -362,6 +362,17 @@ def expand_env_vars(credential):
     """
 
     def replace_func(match):
-        return os.getenv(match.group(1), "")
+        rv = os.getenv(match.group(1), match.group(0))
+        return parse.quote(rv) if quote else rv
 
     return re.sub(r"\$\{(.+?)\}", replace_func, credential)
+
+
+def expand_env_vars_in_auth(url: str) -> str:
+    """In-place expand the auth in url"""
+    scheme, netloc, path, params, query, fragment = parse.urlparse(url)
+    if "@" in netloc:
+        auth, rest = netloc.split("@", 1)
+        auth = expand_env_vars(auth, True)
+        netloc = "@".join([auth, rest])
+    return parse.urlunparse((scheme, netloc, path, params, query, fragment))
