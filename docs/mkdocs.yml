@@ -23,4 +23,4 @@ markdown_extensions:
   - markdown_include.include:
       base_path: docs
 
-copyright: Copyright &copy; 2019 <a href="https://frostming.com">Frost Ming</a>
+copyright: Copyright &copy; 2019-2020 <a href="https://frostming.com">Frost Ming</a>
