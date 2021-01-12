@@ -3,6 +3,7 @@ Utility functions
 """
 import atexit
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -349,3 +350,18 @@ def get_python_version_string(version: str, is_64bit: bool) -> str:
     if os.name == "nt" and not is_64bit:
         return f"{version}-32"
     return version
+
+
+def expand_env_vars(credential):
+    """A safe implementation of env var substitution.
+    It only supports the following forms:
+
+        ${ENV_VAR}
+
+    Neither $ENV_VAR and %ENV_VAR is not supported.
+    """
+
+    def replace_func(match):
+        return os.getenv(match.group(1), "")
+
+    return re.sub(r"\$\{(.+?)\}", replace_func, credential)

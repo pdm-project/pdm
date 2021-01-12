@@ -18,6 +18,7 @@ from pip._internal.models.format_control import FormatControl
 from pip._internal.models.link import Link
 from pip._internal.models.target_python import TargetPython
 from pip._internal.models.wheel import Wheel as PipWheel
+from pip._internal.network.auth import MultiDomainBasicAuth
 from pip._internal.network.cache import SafeFileCache
 from pip._internal.network.download import Downloader
 from pip._internal.operations.prepare import unpack_url
