@@ -8,7 +8,7 @@ import sys
 import sysconfig
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional, Tuple
 
 from distlib.scripts import ScriptMaker
 from pip._internal.req import req_uninstall
@@ -20,6 +20,7 @@ from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
 from pdm.models import pip_shims
+from pdm.models.auth import make_basic_auth
 from pdm.models.builders import EnvBuilder
 from pdm.models.in_process import (
     get_pep508_environment,
@@ -31,6 +32,7 @@ from pdm.utils import (
     cached_property,
     convert_hashes,
     create_tracked_tempdir,
+    expand_env_vars_in_auth,
     get_finder,
     get_python_version_string,
     get_venv_python,
@@ -92,6 +94,9 @@ class Environment:
         self.python_requires = project.python_requires
         self.project = project
         self._essential_installed = False
+        self.auth = make_basic_auth(
+            self.project.sources, stream.verbosity >= stream.DETAIL
+        )
 
     @cached_property
     def python_executable(self) -> str:
@@ -242,7 +247,7 @@ class Environment:
         self,
         sources: Optional[List[Source]] = None,
         ignore_requires_python: bool = False,
-    ) -> pip_shims.PackageFinder:
+    ) -> Generator[pip_shims.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
@@ -258,6 +263,8 @@ class Environment:
             python_version,
             ignore_requires_python,
         )
+        # Reuse the auth across sessions to avoid prompting repeatly.
+        finder.session.auth = self.auth
         yield finder
         finder.session.close()
 
@@ -313,6 +320,8 @@ class Environment:
                 ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
+                if ireq.link.is_vcs:
+                    ireq.link = pip_shims.Link(expand_env_vars_in_auth(ireq.link.url))
                 downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,

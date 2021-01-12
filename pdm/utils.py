@@ -3,6 +3,7 @@ Utility functions
 """
 import atexit
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -349,3 +350,29 @@ def get_python_version_string(version: str, is_64bit: bool) -> str:
     if os.name == "nt" and not is_64bit:
         return f"{version}-32"
     return version
+
+
+def expand_env_vars(credential: str, quote: bool = False) -> str:
+    """A safe implementation of env var substitution.
+    It only supports the following forms:
+
+        ${ENV_VAR}
+
+    Neither $ENV_VAR and %ENV_VAR is not supported.
+    """
+
+    def replace_func(match):
+        rv = os.getenv(match.group(1), match.group(0))
+        return parse.quote(rv) if quote else rv
+
+    return re.sub(r"\$\{(.+?)\}", replace_func, credential)
+
+
+def expand_env_vars_in_auth(url: str) -> str:
+    """In-place expand the auth in url"""
+    scheme, netloc, path, params, query, fragment = parse.urlparse(url)
+    if "@" in netloc:
+        auth, rest = netloc.split("@", 1)
+        auth = expand_env_vars(auth, True)
+        netloc = "@".join([auth, rest])
+    return parse.urlunparse((scheme, netloc, path, params, query, fragment))

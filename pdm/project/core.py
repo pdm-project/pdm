@@ -195,7 +195,7 @@ class Project:
 
     @property
     def sources(self) -> List[Source]:
-        sources = self.tool_settings.get("source", [])
+        sources = list(self.tool_settings.get("source", []))
         if not any(source.get("name") == "pypi" for source in sources):
             sources.insert(
                 0,
