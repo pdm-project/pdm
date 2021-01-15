@@ -12,6 +12,7 @@ from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
+    find_python_in_path,
     format_lockfile,
     format_resolution_impossible,
     save_version_specifiers,
@@ -409,7 +410,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
 
     if python and not all(c.isdigit() for c in python.split(".")):
         if Path(python).exists():
-            python_path = Path(python).absolute().as_posix()
+            python_path = find_python_in_path(python)
         else:
             python_path = shutil.which(python)
         if not python_path:
