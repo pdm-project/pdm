@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from collections import ChainMap
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import cfonts
@@ -11,7 +13,7 @@ import tomlkit
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
 
-from pdm.exceptions import ProjectError
+from pdm.exceptions import NoPythonVersion, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_inline_table
 from pdm.iostream import stream
@@ -21,7 +23,6 @@ from pdm.models.specifiers import bump_version, get_specifier
 from pdm.project import Project
 
 if TYPE_CHECKING:
-    from pathlib import Path
     from typing import Dict, Iterable, List, Optional, Tuple
 
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
@@ -461,3 +462,27 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "set a narrower `requires-python` range in the pyproject.toml."
     )
     return "\n".join(result)
+
+
+def find_python_in_path(path: os.PathLike) -> str:
+    """Find a python interpreter from the given path, the input argument could be:
+
+    - A valid path to the interpreter
+    - A Python root diretory that contains the interpreter
+    """
+    pathlib_path = Path(path).absolute()
+    if pathlib_path.is_file():
+        return pathlib_path.as_posix()
+
+    if os.name == "nt":
+        for root_dir in (pathlib_path, pathlib_path / "Scripts"):
+            if root_dir.joinpath("python.exe").exists():
+                return root_dir.joinpath("python.exe").as_posix()
+    else:
+        executable_pattern = re.compile(r"python(?:\d(?:\.\d+m?)?)?$")
+
+        for python in pathlib_path.joinpath("bin").glob("python*"):
+            if executable_pattern.match(python.name):
+                return python.as_posix()
+
+    raise NoPythonVersion(f"No Python interpreter is found at {path!r}")
