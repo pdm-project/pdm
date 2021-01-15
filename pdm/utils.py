@@ -10,7 +10,7 @@ import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 from distlib.wheel import Wheel
 from tomlkit.container import Container
@@ -29,13 +29,15 @@ try:
     from functools import cached_property
 except ImportError:
 
-    class cached_property:
-        def __init__(self, func):
+    _T = TypeVar("_T")
+
+    class cached_property(Generic[_T]):
+        def __init__(self, func: Callable[[Any], _T]):
             self.func = func
             self.attr_name = func.__name__
             self.__doc__ = func.__doc__
 
-        def __get__(self, inst, cls=None):
+        def __get__(self, inst: Any, cls=None) -> _T:
             if inst is None:
                 return self
             if self.attr_name not in inst.__dict__:

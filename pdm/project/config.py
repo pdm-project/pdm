@@ -149,15 +149,16 @@ class Config(MutableMapping):
             fp.write(tomlkit.dumps(toml_data))
 
     def __getitem__(self, key: str) -> Any:
-        if key not in self._data:
-            raise NoConfigError(key)
         env_var = self._config_map[key].env_var
         if env_var is not None and env_var in os.environ:
             env_value = os.environ[env_var]
             if isinstance(self._config_map[key].default, bool):
                 env_value = ensure_boolean(env_value)
             return env_value
-        return self._data[key]
+        try:
+            return self._data[key]
+        except KeyError:
+            raise NoConfigError(key) from None
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key not in self._config_map:
@@ -176,7 +177,7 @@ class Config(MutableMapping):
             stream.echo(
                 stream.yellow(
                     "WARNING: the config is shadowed by env var '{}', "
-                    "set value won't take effect.".format(env_var)
+                    "the value set won't take effect.".format(env_var)
                 )
             )
         self._data[key] = value
