@@ -252,9 +252,16 @@ def get_venv_python(root: Path) -> Optional[str]:
     if "VIRTUAL_ENV" in os.environ:
         venv = os.environ["VIRTUAL_ENV"]
     else:
-        for possible_dir in ("venv", ".venv", "env"):
-            if (root / possible_dir / scripts / f"python{suffix}").exists():
-                venv = str(root / possible_dir)
+        for possible_name in ("venv", ".venv", "env"):
+            possibility = root / possible_name
+            if possibility.is_file():
+                env_path = Path(possibility.read_text().rstrip())
+                if not env_path.is_absolute():
+                    env_path = root / env_path
+                venv = str(env_path)
+                break
+            elif (possibility / scripts / f"python{suffix}").exists():
+                venv = str(root / possibility)
                 break
     if venv:
         return os.path.join(venv, scripts, f"python{suffix}")
