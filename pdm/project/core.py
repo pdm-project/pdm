@@ -142,11 +142,19 @@ class Project:
                 "==" + get_python_version(env.python_executable, True)[0]
             )
             return env
-        if self.config["use_venv"]:
+        if not self.project_config.get("python.path") and self.config["use_venv"]:
             venv_python = get_venv_python(self.root)
             if venv_python:
                 self.project_config["python.path"] = venv_python
-                return GlobalEnvironment(self)
+        if (
+            self.config["use_venv"]
+            and self.project_config.get("python.path")
+            and Path(self.project_config.get("python.path"))
+            .parent.parent.joinpath("pyvenv.cfg")
+            .exists()
+        ):
+            # Only recognize venv created by python -m venv and virtualenv>20
+            return GlobalEnvironment(self)
         return Environment(self)
 
     @property

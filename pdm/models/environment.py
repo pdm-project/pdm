@@ -102,10 +102,8 @@ class Environment:
     def python_executable(self) -> str:
         """Get the Python interpreter path."""
         config = self.project.config
-        if config.get("python.path"):
-            return config["python.path"]
-        if PYENV_INSTALLED and config.get("python.use_pyenv", True):
-            return os.path.join(PYENV_ROOT, "shims", "python")
+        if self.project.project_config.get("python.path"):
+            return self.project.project_config["python.path"]
         if "VIRTUAL_ENV" in os.environ:
             stream.echo(
                 "An activated virtualenv is detected, reuse the interpreter now.",
@@ -113,6 +111,8 @@ class Environment:
                 verbosity=stream.DETAIL,
             )
             return get_venv_python(self.project.root)
+        if PYENV_INSTALLED and config.get("python.use_pyenv", True):
+            return os.path.join(PYENV_ROOT, "shims", "python")
 
         # First try what `python` refers to.
         path = shutil.which("python")
@@ -131,6 +131,9 @@ class Environment:
                 if self.python_requires.contains(version):
                     path = sys.executable
         if path:
+            if os.path.normcase(path) == os.path.normcase(sys.executable):
+                # Refer to the base interpreter to allow for venvs
+                path = getattr(sys, "_base_executable", sys.executable)
             stream.echo(
                 "Using Python interpreter: {} ({})".format(stream.green(path), version)
             )
@@ -414,7 +417,7 @@ class Environment:
         scripts = self.get_paths()["scripts"]
         maker = ScriptMaker(None, None)
         maker.executable = new_path
-        shebang = maker._get_shebang("utf-8").rstrip()
+        shebang = maker._get_shebang("utf-8").rstrip().replace(b"\\", b"\\\\")
         for child in Path(scripts).iterdir():
             if not child.is_file() or child.suffix not in (".exe", ".py", ""):
                 continue

@@ -1,5 +1,6 @@
 import os
 import sys
+import venv
 from pathlib import Path
 
 import distlib.wheel
@@ -57,19 +58,17 @@ def test_global_project(tmp_path):
     assert project.environment.is_global
 
 
-def test_project_use_venv(project, mocker):
+def test_project_use_venv(project):
     del project.project_config["python.path"]
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
-
-    os.environ["VIRTUAL_ENV"] = "/path/to/env"
-    mocker.patch("pdm.models.environment.get_python_version", return_value="3.7.0")
+    venv.create(project.root / "venv")
 
     project.project_config["use_venv"] = True
     env = project.environment
     assert (
         Path(env.python_executable)
-        == Path("/path/to/env") / scripts / f"python{suffix}"
+        == project.root / "venv" / scripts / f"python{suffix}"
     )
     assert env.is_global
 
@@ -95,3 +94,18 @@ def test_project_packages_path(project):
         assert packages_path.name == version + "-32"
     else:
         assert packages_path.name == version
+
+
+def test_project_auto_detect_venv(project):
+
+    venv.create(project.root / "test_venv")
+
+    scripts = "Scripts" if os.name == "nt" else "bin"
+    suffix = ".exe" if os.name == "nt" else ""
+
+    project.project_config["use_venv"] = True
+    project.project_config["python.path"] = (
+        project.root / "test_venv" / scripts / f"python{suffix}"
+    ).as_posix()
+
+    assert project.environment.is_global

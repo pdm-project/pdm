@@ -1,9 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional
-
-from pip._vendor import requests
+from typing import TYPE_CHECKING, Dict, Optional
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
@@ -11,6 +9,8 @@ from pdm.models import pip_shims
 from pdm.utils import open_file
 
 if TYPE_CHECKING:
+    from pip._vendor import requests
+
     from pdm.models.candidates import Candidate
 
 
@@ -19,7 +19,7 @@ class CandidateInfoCache:
 
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
-        self._cache = {}  # type: Dict[str, Any]
+        self._cache = {}  # type: Dict[str, CandidateInfo]
         self._read_cache()
 
     def _read_cache(self) -> None:
@@ -80,7 +80,7 @@ class HashCache(pip_shims.SafeFileCache):
 
     Hashes are only cached when the URL appears to contain a hash in it and the
     cache key includes the hash value returned from the server). This ought to
-    avoid ssues where the location on the server changes.
+    avoid issues where the location on the server changes.
     """
 
     def __init__(self, *args, **kwargs):
