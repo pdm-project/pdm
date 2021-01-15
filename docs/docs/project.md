@@ -125,6 +125,8 @@ by the configuration item `use_venv`. When it is set to `True` PDM will use the 
 - an virtualenv is already activated.
 - any of `venv`, `.venv`, `env` is an valid virtualenv folder.
 
+Besides, when `use-venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
+
 ## Import project metadata from existing project files
 
 If you are already other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
