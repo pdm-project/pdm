@@ -1,3 +1,25 @@
+Release v1.1.0 (2021-01-18)
+---------------------------
+
+### Features & Improvements
+
+- Allow users to hide secrets from the `pyproject.toml`.
+  - Dynamically expand env variables in the URLs in dependencies and indexes.
+  - Ask whether to store the credentials provided by the user.
+  - A user-friendly error will show when credentials are not provided nor correct. [#198](https://github.com/frostming/pdm/issues/198)
+- Use a different package dir for 32-bit installation(Windows). [#212](https://github.com/frostming/pdm/issues/212)
+- Auto disable PEP 582 when a venv-like python is given as the interpreter path. [#219](https://github.com/frostming/pdm/issues/219)
+- Support specifying Python interpreter by `pdm use <path-to-python-root>`. [#221](https://github.com/frostming/pdm/issues/221)
+
+### Bug Fixes
+
+- Fix a bug of `PYTHONPATH` manipulation under Windows platform. [#215](https://github.com/frostming/pdm/issues/215)
+
+### Removals and Deprecations
+
+- Remove support of the old PEP 517 backend API path. [#217](https://github.com/frostming/pdm/issues/217)
+
+
 Release v1.0.0 (2021-01-05)
 ---------------------------
 

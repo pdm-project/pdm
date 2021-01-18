@@ -17,10 +17,6 @@ class InvalidPyVersion(PdmException, ValueError):
     pass
 
 
-class WheelBuildError(PdmException):
-    pass
-
-
 class CorruptedCacheError(PdmException):
     pass
 
@@ -65,5 +61,5 @@ class NoPythonVersion(PdmException):
     pass
 
 
-class BuildError(RuntimeError):
+class BuildError(PdmException, RuntimeError):
     pass
