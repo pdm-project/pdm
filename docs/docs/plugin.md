@@ -154,3 +154,34 @@ setup(
     ...
 )
 ```
+
+## Activate the plugin
+
+As plugins are loaded via entry points, they can be activated with no more steps than just installing the plugin.
+
+Assume your plugin is published as `pdm-hello`, and if you installed `pdm` via `pipx`:
+
+```bash
+$ pipx inject pdm pdm-hello
+```
+
+Or if you installed `pdm` via `homebrew`:
+
+```bash
+$ $(brew --prefix pdm)/libexec/bin/python -m pip install pdm-hello
+```
+
+Otherwise if you installed `pdm` with normal `pip install`:
+
+```bash
+$ pip install --user pdm-hello
+```
+
+The core idea is you must install the plugin in the same site-package directory as `pdm`.
+
+Now type in `pdm --help` in the terminal, you will see the new added `hello` command and use it:
+
+```bash
+$ pdm hello Jack
+Hello, Jack
+```
