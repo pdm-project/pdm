@@ -1,0 +1,1 @@
+Change the behavior of `--save-compatible` slightly. Now the version specifier saved is using the REAL compatible operator `~=` as described in PEP 440. Before: `requests<3.0.0,>=2.19.1`, After: `requests~=2.19`. The new specifier accepts `requests==2.19.0` as compatible version.
