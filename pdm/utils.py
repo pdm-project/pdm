@@ -2,6 +2,7 @@
 Utility functions
 """
 import atexit
+import functools
 import os
 import re
 import shutil
@@ -378,3 +379,21 @@ def expand_env_vars_in_auth(url: str) -> str:
         auth = expand_env_vars(auth, True)
         netloc = "@".join([auth, rest])
     return parse.urlunparse((scheme, netloc, path, params, query, fragment))
+
+
+@functools.lru_cache()
+def path_replace(pattern: str, replace_with: str, dest: str) -> str:
+    """Safely replace the pattern in a path with given string.
+
+    :param pattern: the pattern to match
+    :param replace_with: the string to replace with
+    :param dest: the path to replace
+    :return the replaced path
+    """
+    sub_flags = re.IGNORECASE if os.name == "nt" else 0
+    return re.sub(
+        pattern.replace("\\", "/"),
+        replace_with,
+        dest.replace("\\", "/"),
+        flags=sub_flags,
+    )

@@ -3,6 +3,7 @@ import pytest
 from pdm.exceptions import ExtrasError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
+from pdm.project.core import Project
 from tests import FIXTURES
 
 
@@ -93,3 +94,31 @@ def test_parse_abnormal_specifiers(project):
     )
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata()
+
+
+@pytest.mark.parametrize(
+    "req_str",
+    [
+        "demo @ file:///${PROJECT_ROOT}/tests/fixtures/artifacts"
+        "/demo-0.0.1-py2.py3-none-any.whl",
+        "demo @ file:///${PROJECT_ROOT}/tests/fixtures/artifacts/demo-0.0.1.tar.gz",
+        "demo @ file:///${PROJECT_ROOT}/tests/fixtures/projects/demo",
+        "-e ${PROJECT_ROOT}/tests/fixtures/projects/demo",
+    ],
+)
+def test_expand_project_root_in_url(req_str):
+    project = Project(FIXTURES.parent.parent)
+    if req_str.startswith("-e "):
+        req = parse_requirement(req_str[3:], True)
+    else:
+        req = parse_requirement(req_str)
+    candidate = Candidate(req, project.environment)
+    assert candidate.get_dependencies_from_metadata() == [
+        "idna",
+        'chardet; os_name == "nt"',
+    ]
+    lockfile_entry = candidate.as_lockfile_entry()
+    if "path" in lockfile_entry:
+        assert lockfile_entry["path"].startswith("./")
+    else:
+        assert "${PROJECT_ROOT}" in lockfile_entry["url"]

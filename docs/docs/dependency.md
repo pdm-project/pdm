@@ -158,3 +158,15 @@ Include the following setting in `pyproject.toml` to enable:
 [[tool.pdm]]
 allow_prereleases = true
 ```
+
+## Environment variables expansion
+
+For convenience, PDM supports environment variables expansion in the dependency specification under some circumstances:
+
+- Environment variables in the URL auth part will be expanded: `https://${USERNAME}:${PASSWORD}/artifacts.io/Flask-1.1.2.tar.gz`.
+  It is also okay to not give the auth part in the URL directly, PDM will ask for them when `-v/--verbose` is on.
+- `${PROJECT_ROOT}` will be expanded with the absolute path of the project root, in POSIX style(i.e. forward slash `/`, even on Windows).
+  For consistency, URLs that refer to a local path under `${PROJECT_ROOT}` must start with `file:///`(three slashes), e.g.
+  `file:///${PROJECT_ROOT}/artifacts/Flask-1.1.2.tar.gz`.
+
+Don't worry about credential leakage, the environment variables will be expanded when needed and kept untouched in the lock file.

@@ -243,7 +243,9 @@ class Requirement:
 class FileRequirement(Requirement):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.path = Path(self.path) if self.path else None
+        self.path = (
+            Path(str(self.path).replace("${PROJECT_ROOT}", ".")) if self.path else None
+        )
         self.version = None
         self._parse_url()
         if self.path and not self.path.exists():
@@ -276,10 +278,19 @@ class FileRequirement(Requirement):
     def _parse_url(self) -> None:
         if not self.url:
             if self.path:
-                self.url = path_to_url(self.path.as_posix())
+                self.url = path_to_url(
+                    self.path.as_posix().replace("${PROJECT_ROOT}", ".")
+                )
         else:
             try:
-                self.path = Path(url_to_path(self.url))
+                self.path = Path(
+                    url_to_path(
+                        self.url.replace(
+                            "${PROJECT_ROOT}",
+                            Path(".").absolute().as_posix().lstrip("/"),
+                        )
+                    )
+                )
             except AssertionError:
                 pass
         self._parse_name_from_url()
@@ -361,7 +372,6 @@ class VcsRequirement(FileRequirement):
     def __init__(self, **kwargs):
         self.repo = None
         super().__init__(**kwargs)
-        self._parse_url()
 
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "VcsRequirement":

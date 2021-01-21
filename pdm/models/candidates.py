@@ -13,7 +13,7 @@ from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.utils import cached_property
+from pdm.utils import cached_property, path_replace
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
@@ -230,13 +230,18 @@ class Candidate:
             "marker": str(self.marker).replace('"', "'") if self.marker else None,
             "editable": self.req.editable,
         }
+        project_root = self.environment.project.root.as_posix()
         if self.req.is_vcs:
             result.update({self.req.vcs: self.req.repo, "revision": self.revision})
         elif not self.req.is_named:
-            if self.req.path:
-                result.update(path=self.req.str_path)
+            if self.req.is_file_or_url and self.req.is_local_dir:
+                result.update(path=path_replace(project_root, ".", self.req.str_path))
             else:
-                result.update(url=self.req.url)
+                result.update(
+                    url=path_replace(
+                        project_root.lstrip("/"), "${PROJECT_ROOT}", self.req.url
+                    )
+                )
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
