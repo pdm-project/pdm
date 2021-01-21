@@ -127,6 +127,24 @@ which are not covered in the above example:
 - `core.synchronizer_class`: change the synchronizer_class, to control the installation process
 - `core.parser`: add arguments to the **root** argument parser
 
+### Tips about developing a PDM plugin.
+
+When developing a plugin, one hopes to activate and plugin in development and get updated when the code changes. This is usually done
+by `pip install -e .` or `python setup.py develop` in the **traditional** Python packaging world which leverages `setup.py` to do so. However,
+as there is no such `setup.py` in a PDM project, how can we do that?
+
+Fortunately, it becomes even easier with PDM and PEP 582. First, you should enable PEP 582 globally following the
+[corresponding part of this doc](index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
+
+```bash
+$ pdm install -d
+```
+
+After that, all the dependencies are available with a compatible Python interpreter, including the plugin itself, in editable mode. That means any change
+to the codebase will take effect immediately without re-installation. The `pdm` executable also uses a Python interpreter under the hood, 
+so if you run `pdm` from inside the plugin project, the plugin in development will be activated automatically and you can do some testing to see how it works.
+That is how PEP 582 benefits our development workflow.
+
 ## Publish your plugin
 
 Now you have defined your plugin already, let's distribute it to PyPI. PDM's plugins are discovered by entry point types.
