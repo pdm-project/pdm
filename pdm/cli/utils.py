@@ -19,7 +19,7 @@ from pdm.formats.base import make_inline_table
 from pdm.iostream import stream
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
-from pdm.models.specifiers import bump_version, get_specifier
+from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
 if TYPE_CHECKING:
@@ -376,10 +376,8 @@ def save_version_specifiers(
                 r.specifier = get_specifier(f"=={resolved[name].version}")
             elif save_strategy == "compatible":
                 version = str(resolved[name].version)
-                next_major_version = ".".join(
-                    map(str, bump_version(tuple(version.split(".")), 0))
-                )
-                r.specifier = get_specifier(f">={version},<{next_major_version}")
+                compatible_version = ".".join((version.split(".") + ["0"])[:2])
+                r.specifier = get_specifier(f"~={compatible_version}")
 
 
 def check_project_file(project: Project) -> None:

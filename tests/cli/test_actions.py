@@ -76,7 +76,7 @@ def test_add_package(project, repository, working_set, is_dev):
     actions.do_add(project, is_dev, packages=["requests"])
     section = "dev-dependencies" if is_dev else "dependencies"
 
-    assert project.meta[section][0] == "requests<3.0.0,>=2.19.1"
+    assert project.meta[section][0] == "requests~=2.19"
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -435,15 +435,15 @@ def test_update_unconstrained_without_packages(project, repository, working_set)
 
 def test_update_ignore_constraints(project, repository, working_set):
     actions.do_add(project, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz<2020.0.0,>=2019.3"]
+    assert project.meta.dependencies == ["pytz~=2019.3"]
     repository.add_candidate("pytz", "2020.2")
 
     actions.do_update(project, unconstrained=False, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz<2020.0.0,>=2019.3"]
+    assert project.meta.dependencies == ["pytz~=2019.3"]
     assert project.get_locked_candidates()["pytz"].version == "2019.3"
 
     actions.do_update(project, unconstrained=True, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz<2021.0.0,>=2020.2"]
+    assert project.meta.dependencies == ["pytz~=2020.2"]
     assert project.get_locked_candidates()["pytz"].version == "2020.2"
 
 
