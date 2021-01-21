@@ -230,7 +230,7 @@ class Candidate:
             "marker": str(self.marker).replace('"', "'") if self.marker else None,
             "editable": self.req.editable,
         }
-        project_root = self.environment.project.root.as_posix().lstrip("/")
+        project_root = self.environment.project.root.as_posix()
         if self.req.is_vcs:
             result.update({self.req.vcs: self.req.repo, "revision": self.revision})
         elif not self.req.is_named:
@@ -238,7 +238,9 @@ class Candidate:
                 result.update(path=path_replace(project_root, ".", self.req.str_path))
             else:
                 result.update(
-                    url=path_replace(project_root, "${PROJECT_ROOT}", self.req.url)
+                    url=path_replace(
+                        project_root.lstrip("/"), "${PROJECT_ROOT}", self.req.url
+                    )
                 )
         return {k: v for k, v in result.items() if v}
 
