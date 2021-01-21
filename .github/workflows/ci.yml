@@ -48,15 +48,6 @@ jobs:
         with:
           path: ${{ steps.set_variables.outputs.PIP_CACHE }}
           key: ${{ runner.os }}-pip-${{ steps.set_variables.outputs.PY }}
-      - name: Cache PEP 582 packages
-        uses: actions/cache@v2
-        with:
-          path: __pypackages__
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-${{ matrix.arch }}-packages-${{ steps.set_variables.outputs.PY }}-${{ hashFiles('pdm.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.arch }}-packages-${{ steps.set_variables.outputs.PY }}-
-            ${{ runner.os }}-${{ matrix.arch }}-packages-
       - name: Install Current PDM
         run: |
           pip install -U pip
