@@ -25,6 +25,7 @@ from pdm.project.metadata import MutableMetadata as Metadata
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
+    cd,
     find_project_root,
     get_venv_python,
     setdefault,
@@ -170,11 +171,15 @@ class Project:
         else:
             deps = metadata.get("optional-dependencies", {}).get(section, [])
         result = {}
-        for line in deps:
-            req = parse_requirement(line)
-            req.from_section = section or "default"
-            # make editable packages behind normal ones to override correctly.
-            result[req.identify()] = req
+        with cd(self.root):
+            for line in deps:
+                if line.startswith("-e "):
+                    req = parse_requirement(line[3:].strip(), True)
+                else:
+                    req = parse_requirement(line)
+                req.from_section = section or "default"
+                # make editable packages behind normal ones to override correctly.
+                result[req.identify()] = req
         return result
 
     @property

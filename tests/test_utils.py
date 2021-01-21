@@ -55,8 +55,10 @@ def test_find_python_in_path(tmp_path):
         cli_utils.find_python_in_path(sys.executable)
         == pathlib.Path(sys.executable).as_posix()
     )
-    assert cli_utils.find_python_in_path(sys.prefix).startswith(
-        pathlib.Path(sys.executable).as_posix()
+    assert (
+        cli_utils.find_python_in_path(sys.prefix)
+        .lower()
+        .startswith(pathlib.Path(sys.executable).as_posix().lower())
     )
     with pytest.raises(PdmException):
         cli_utils.find_python_in_path(tmp_path)

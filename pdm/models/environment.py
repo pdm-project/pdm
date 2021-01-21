@@ -258,7 +258,9 @@ class Environment:
         """
         if sources is None:
             sources = self.project.sources
-        sources = sources or []
+        for source in sources:
+            source["url"] = expand_env_vars_in_auth(source["url"])
+
         python_version, _ = get_python_version(self.python_executable, digits=2)
         finder = get_finder(
             sources,
@@ -321,10 +323,15 @@ class Environment:
                 only_download = True
             if hashes:
                 ireq.hash_options = convert_hashes(hashes)
+            ireq.link = pip_shims.Link(
+                expand_env_vars_in_auth(
+                    ireq.link.url.replace(
+                        "${PROJECT_ROOT}", self.project.root.as_posix().lstrip("/")
+                    )
+                )
+            )
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
-                if ireq.link.is_vcs:
-                    ireq.link = pip_shims.Link(expand_env_vars_in_auth(ireq.link.url))
                 downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,
