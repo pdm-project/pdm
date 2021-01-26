@@ -335,7 +335,7 @@ zipp = {marker = "python_version < '3.8'", version = "*"}
 [[package]]
 name = "pip"
 sections = ["default"]
-version = "20.3.3"
+version = "21.0"
 summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
@@ -629,7 +629,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:c5b3eac0ab945ea2a5ad3cec2777f6e8389d886fb6d548455b4181d2c104a359"
+content_hash = "sha256:850249b8456c4ef6150ed71e6a68fd11dfe403737dde41eac5e39533baf9cacc"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -908,9 +908,9 @@ content_hash = "sha256:c5b3eac0ab945ea2a5ad3cec2777f6e8389d886fb6d548455b4181d2c
     {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},
     {file = "pep517-0.9.1.tar.gz", hash = "sha256:aeb78601f2d1aa461960b43add204cc7955667687fbcf9cdb5170f00556f117f"},
 ]
-"pip 20.3.3" = [
-    {file = "pip-20.3.3-py2.py3-none-any.whl", hash = "sha256:fab098c8a1758295dd9f57413c199f23571e8fde6cc39c22c78c961b4ac6286d"},
-    {file = "pip-20.3.3.tar.gz", hash = "sha256:79c1ac8a9dccbec8752761cb5a2df833224263ca661477a2a9ed03ddf4e0e3ba"},
+"pip 21.0" = [
+    {file = "pip-21.0-py3-none-any.whl", hash = "sha256:cf2410eedf8735fd842e0fecd4117ca79025d7fe7c161e32f8640ed6ebe5ecb9"},
+    {file = "pip-21.0.tar.gz", hash = "sha256:b330cf6467afd5d15f4c1c56f5c95e56a2bfb941c869bed4c1aa517bcb16de25"},
 ]
 "pluggy 0.13.1" = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
