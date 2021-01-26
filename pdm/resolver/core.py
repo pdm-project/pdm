@@ -123,7 +123,7 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
 
 def resolve(
     resolver: Resolver, requirements: List[Requirement], requires_python: PySpecSet
-) -> Tuple[Dict[str, Candidate], Dict[str, Dict[str, Requirement]], Dict[str, str]]:
+) -> Tuple[Dict[str, Candidate], Dict[str, List[Requirement]], Dict[str, str]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 3 items:
 

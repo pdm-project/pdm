@@ -21,7 +21,7 @@ class BaseProvider(AbstractProvider):
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
         self.requires_python_collection = {}  # type: Dict[Optional[str], PySpecSet]
         self.summary_collection = {}  # type: Dict[str, str]
-        self.fetched_dependencies = {}  # type: Dict[str, Dict[str, List[Requirement]]]
+        self.fetched_dependencies = {}  # type: Dict[str, List[Requirement]]
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
         return req.identify()
@@ -75,7 +75,7 @@ class BaseProvider(AbstractProvider):
 
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
-        valid_deps = []
+        valid_deps: List[Requirement] = []
         for dep in deps:
             if (
                 dep.requires_python & requires_python & self.requires_python
@@ -85,9 +85,7 @@ class BaseProvider(AbstractProvider):
             valid_deps.append(dep)
 
         candidate_key = self.identify(candidate)
-        self.fetched_dependencies[candidate_key] = {
-            self.identify(r): r for r in valid_deps
-        }
+        self.fetched_dependencies[candidate_key] = valid_deps
         self.summary_collection[candidate.req.key] = summary
         self.requires_python_collection[candidate.req.key] = requires_python
         return valid_deps
