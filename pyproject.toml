@@ -15,7 +15,7 @@ dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
     "pdm-pep517<1.0.0,>=0.3.0",
     "pep517",
-    "pip<21,>=20.1",
+    "pip>=20.1",
     "pycomplete<1.0.0,>=0.2.0",
     "python-cfonts",
     "python-dotenv<1.0.0,>=0.15.0",
