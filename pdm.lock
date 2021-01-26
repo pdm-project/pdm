@@ -48,9 +48,9 @@ sections = ["default"]
 version = "1.14.4"
 marker = "sys_platform == 'linux'"
 summary = "Foreign Function Interface for Python calling C code."
-
-[package.dependencies]
-pycparser = "*"
+dependencies = [
+    "pycparser",
+]
 
 [[package]]
 name = "chardet"
@@ -83,10 +83,10 @@ sections = ["default"]
 version = "3.3.1"
 marker = "sys_platform == 'linux'"
 summary = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-
-[package.dependencies]
-six = ">=1.4.1"
-cffi = ">=1.12"
+dependencies = [
+    "six>=1.4.1",
+    "cffi>=1.12",
+]
 
 [[package]]
 name = "distlib"
@@ -99,9 +99,9 @@ name = "execnet"
 sections = ["dev"]
 version = "1.7.1"
 summary = "execnet: rapid multi-Python deployment"
-
-[package.dependencies]
-apipkg = ">=1.4"
+dependencies = [
+    "apipkg>=1.4",
+]
 
 [[package]]
 name = "future"
@@ -122,10 +122,10 @@ sections = ["default", "dev", "doc"]
 version = "3.4.0"
 marker = "python_version < '4.0'"
 summary = "Read metadata from Python packages"
-
-[package.dependencies]
-zipp = ">=0.5"
-typing-extensions = {marker = "python_version < '3.8'", version = ">=3.6.4"}
+dependencies = [
+    "zipp>=0.5",
+    "typing-extensions>=3.6.4; python_version < \"3.8\"",
+]
 
 [[package]]
 name = "incremental"
@@ -151,9 +151,9 @@ name = "Jinja2"
 sections = ["dev", "doc"]
 version = "2.11.2"
 summary = "A very fast and expressive template engine."
-
-[package.dependencies]
-MarkupSafe = ">=0.23"
+dependencies = [
+    "MarkupSafe>=0.23",
+]
 
 [[package]]
 name = "joblib"
@@ -168,45 +168,45 @@ sections = ["dev"]
 version = "3.1.1"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "An implementation of JSON Schema validation for Python"
-
-[package.dependencies]
-attrs = ">=17.4.0"
-importlib-metadata = "*"
-pyrsistent = ">=0.14.0"
-setuptools = "*"
-six = ">=1.11.0"
+dependencies = [
+    "attrs>=17.4.0",
+    "importlib-metadata",
+    "pyrsistent>=0.14.0",
+    "setuptools",
+    "six>=1.11.0",
+]
 
 [[package]]
 name = "keyring"
 sections = ["default"]
 version = "21.8.0"
 summary = "Store and access your passwords safely."
-
-[package.dependencies]
-importlib-metadata = {marker = "python_version < '3.8'", version = ">=1"}
-SecretStorage = {marker = "sys_platform == 'linux'", version = ">=3.2"}
-jeepney = {marker = "sys_platform == 'linux'", version = ">=0.4.2"}
-pywin32-ctypes = {marker = "sys_platform == 'win32'", version = "!=0.1.0,!=0.1.1"}
+dependencies = [
+    "importlib-metadata>=1; python_version < \"3.8\"",
+    "SecretStorage>=3.2; sys_platform == \"linux\"",
+    "jeepney>=0.4.2; sys_platform == \"linux\"",
+    "pywin32-ctypes!=0.1.0,!=0.1.1; sys_platform == \"win32\"",
+]
 
 [[package]]
 name = "livereload"
 sections = ["doc"]
 version = "2.6.3"
 summary = "Python LiveReload is an awesome tool for web developers"
-
-[package.dependencies]
-six = "*"
-tornado = {marker = "python_version > '2.7'", version = "*"}
+dependencies = [
+    "six",
+    "tornado; python_version > \"2.7\"",
+]
 
 [[package]]
 name = "lunr"
 sections = ["doc"]
 version = "0.5.8"
 summary = "A Python implementation of Lunr.js"
-
-[package.dependencies]
-future = ">=0.16.0"
-six = ">=1.11.0"
+dependencies = [
+    "future>=0.16.0",
+    "six>=1.11.0",
+]
 
 [[package]]
 name = "lunr"
@@ -214,30 +214,30 @@ sections = ["doc"]
 version = "0.5.8"
 extras = ["languages"]
 summary = "A Python implementation of Lunr.js"
-
-[package.dependencies]
-future = ">=0.16.0"
-six = ">=1.11.0"
-nltk = {marker = "python_version > '2.7'", version = ">=3.2.5"}
-lunr = "==0.5.8"
+dependencies = [
+    "future>=0.16.0",
+    "six>=1.11.0",
+    "nltk>=3.2.5; python_version > \"2.7\"",
+    "lunr==0.5.8",
+]
 
 [[package]]
 name = "markdown"
 sections = ["doc"]
 version = "3.3.3"
 summary = "Python implementation of Markdown."
-
-[package.dependencies]
-importlib-metadata = {marker = "python_version < '3.8'", version = "*"}
+dependencies = [
+    "importlib-metadata; python_version < \"3.8\"",
+]
 
 [[package]]
 name = "markdown-include"
 sections = ["doc"]
 version = "0.6.0"
 summary = "This is an extension to Python-Markdown which provides an \"include\" function, similar to that found in LaTeX (and also the C pre-processor and Fortran). I originally wrote it for my FORD Fortran auto-documentation generator."
-
-[package.dependencies]
-markdown = "*"
+dependencies = [
+    "markdown",
+]
 
 [[package]]
 name = "MarkupSafe"
@@ -250,37 +250,37 @@ name = "mkdocs"
 sections = ["doc"]
 version = "1.1.2"
 summary = "Project documentation with Markdown."
-
-[package.dependencies]
-click = ">=3.3"
-Jinja2 = ">=2.10.1"
-livereload = ">=2.5.1"
-lunr = {extras = ["languages"], version = "==0.5.8"}
-Markdown = ">=3.2.1"
-PyYAML = ">=3.10"
-tornado = ">=5.0"
+dependencies = [
+    "click>=3.3",
+    "Jinja2>=2.10.1",
+    "livereload>=2.5.1",
+    "lunr[languages]==0.5.8",
+    "Markdown>=3.2.1",
+    "PyYAML>=3.10",
+    "tornado>=5.0",
+]
 
 [[package]]
 name = "mkdocs-material"
 sections = ["doc"]
 version = "6.2.4"
 summary = "A Material Design theme for MkDocs"
-
-[package.dependencies]
-mkdocs = ">=1.1"
-Pygments = ">=2.4"
-markdown = ">=3.2"
-pymdown-extensions = ">=7.0"
-mkdocs-material-extensions = ">=1.0"
+dependencies = [
+    "mkdocs>=1.1",
+    "Pygments>=2.4",
+    "markdown>=3.2",
+    "pymdown-extensions>=7.0",
+    "mkdocs-material-extensions>=1.0",
+]
 
 [[package]]
 name = "mkdocs-material-extensions"
 sections = ["doc"]
 version = "1.0.1"
 summary = "Extension pack for Python Markdown."
-
-[package.dependencies]
-mkdocs-material = ">=5.0.0"
+dependencies = [
+    "mkdocs-material>=5.0.0",
+]
 
 [[package]]
 name = "nltk"
@@ -288,37 +288,37 @@ sections = ["doc"]
 version = "3.5"
 marker = "python_version >= '2.8'"
 summary = "Natural Language Toolkit"
-
-[package.dependencies]
-click = "*"
-joblib = "*"
-regex = "*"
-tqdm = "*"
+dependencies = [
+    "click",
+    "joblib",
+    "regex",
+    "tqdm",
+]
 
 [[package]]
 name = "packaging"
 sections = ["default", "dev"]
 version = "20.8"
 summary = "Core utilities for Python packages"
-
-[package.dependencies]
-pyparsing = ">=2.0.2"
+dependencies = [
+    "pyparsing>=2.0.2",
+]
 
 [[package]]
 name = "parver"
 sections = ["dev"]
 version = "0.3.1"
 summary = "Parse and manipulate version numbers."
-
-[package.dependencies]
-arpeggio = "~=1.7"
-attrs = ">=19.2"
-six = "~=1.13"
+dependencies = [
+    "arpeggio~=1.7",
+    "attrs>=19.2",
+    "six~=1.13",
+]
 
 [[package]]
 name = "pdm-pep517"
 sections = ["default"]
-version = "0.5.1"
+version = "0.5.4"
 summary = "PEP 517 support"
 
 [[package]]
@@ -326,11 +326,11 @@ name = "pep517"
 sections = ["default"]
 version = "0.9.1"
 summary = "Wrappers to build Python packages using PEP 517 hooks"
-
-[package.dependencies]
-toml = "*"
-importlib-metadata = {marker = "python_version < '3.8'", version = "*"}
-zipp = {marker = "python_version < '3.8'", version = "*"}
+dependencies = [
+    "toml",
+    "importlib-metadata; python_version < \"3.8\"",
+    "zipp; python_version < \"3.8\"",
+]
 
 [[package]]
 name = "pip"
@@ -343,9 +343,9 @@ name = "pluggy"
 sections = ["dev"]
 version = "0.13.1"
 summary = "plugin and hook calling mechanisms for python"
-
-[package.dependencies]
-importlib-metadata = {marker = "python_version < '3.8'", version = ">=0.12"}
+dependencies = [
+    "importlib-metadata>=0.12; python_version < \"3.8\"",
+]
 
 [[package]]
 name = "py"
@@ -377,9 +377,9 @@ name = "pymdown-extensions"
 sections = ["doc"]
 version = "8.1"
 summary = "Extension pack for Python Markdown."
-
-[package.dependencies]
-Markdown = ">=3.2"
+dependencies = [
+    "Markdown>=3.2",
+]
 
 [[package]]
 name = "pyparsing"
@@ -399,67 +399,67 @@ name = "pytest"
 sections = ["dev"]
 version = "6.2.1"
 summary = "pytest: simple powerful testing with Python"
-
-[package.dependencies]
-attrs = ">=19.2.0"
-iniconfig = "*"
-packaging = "*"
-pluggy = "<1.0.0a1,>=0.12"
-py = ">=1.8.2"
-toml = "*"
-importlib-metadata = {marker = "python_version < '3.8'", version = ">=0.12"}
-atomicwrites = {marker = "sys_platform == 'win32'", version = ">=1.0"}
-colorama = {marker = "sys_platform == 'win32'", version = "*"}
+dependencies = [
+    "attrs>=19.2.0",
+    "iniconfig",
+    "packaging",
+    "pluggy<1.0.0a1,>=0.12",
+    "py>=1.8.2",
+    "toml",
+    "importlib-metadata>=0.12; python_version < \"3.8\"",
+    "atomicwrites>=1.0; sys_platform == \"win32\"",
+    "colorama; sys_platform == \"win32\"",
+]
 
 [[package]]
 name = "pytest-cov"
 sections = ["dev"]
 version = "2.10.1"
 summary = "Pytest plugin for measuring coverage."
-
-[package.dependencies]
-pytest = ">=4.6"
-coverage = ">=4.4"
+dependencies = [
+    "pytest>=4.6",
+    "coverage>=4.4",
+]
 
 [[package]]
 name = "pytest-forked"
 sections = ["dev"]
 version = "1.3.0"
 summary = "run tests in isolated forked subprocesses"
-
-[package.dependencies]
-py = "*"
-pytest = ">=3.10"
+dependencies = [
+    "py",
+    "pytest>=3.10",
+]
 
 [[package]]
 name = "pytest-mock"
 sections = ["dev"]
 version = "3.4.0"
 summary = "Thin-wrapper around the mock package for easier use with pytest"
-
-[package.dependencies]
-pytest = ">=5.0"
+dependencies = [
+    "pytest>=5.0",
+]
 
 [[package]]
 name = "pytest-xdist"
 sections = ["dev"]
 version = "1.34.0"
 summary = "pytest xdist plugin for distributed testing and loop-on-failing modes"
-
-[package.dependencies]
-execnet = ">=1.1"
-pytest = ">=4.4.0"
-pytest-forked = "*"
-six = "*"
+dependencies = [
+    "execnet>=1.1",
+    "pytest>=4.4.0",
+    "pytest-forked",
+    "six",
+]
 
 [[package]]
 name = "python-cfonts"
 sections = ["default"]
 version = "1.4.0"
 summary = "Sexy fonts for the console"
-
-[package.dependencies]
-colorama = "*"
+dependencies = [
+    "colorama",
+]
 
 [[package]]
 name = "python-dotenv"
@@ -472,13 +472,13 @@ name = "pythonfinder"
 sections = ["default"]
 version = "1.2.5"
 summary = "A cross-platform python discovery tool to help locate python on any system."
-
-[package.dependencies]
-attrs = "*"
-cached-property = "*"
-click = "*"
-six = "*"
-packaging = "*"
+dependencies = [
+    "attrs",
+    "cached-property",
+    "click",
+    "six",
+    "packaging",
+]
 
 [[package]]
 name = "pywin32-ctypes"
@@ -506,12 +506,12 @@ sections = ["dev"]
 version = "2.25.1"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Python HTTP for Humans."
-
-[package.dependencies]
-chardet = "<5,>=3.0.2"
-idna = "<3,>=2.5"
-urllib3 = "<1.27,>=1.21.1"
-certifi = ">=2017.4.17"
+dependencies = [
+    "chardet<5,>=3.0.2",
+    "idna<3,>=2.5",
+    "urllib3<1.27,>=1.21.1",
+    "certifi>=2017.4.17",
+]
 
 [[package]]
 name = "resolvelib"
@@ -525,10 +525,10 @@ sections = ["default"]
 version = "3.3.0"
 marker = "sys_platform == 'linux'"
 summary = "Python bindings to FreeDesktop.org Secret Service API"
-
-[package.dependencies]
-cryptography = ">=2.0"
-jeepney = ">=0.6"
+dependencies = [
+    "cryptography>=2.0",
+    "jeepney>=0.6",
+]
 
 [[package]]
 name = "setuptools"
@@ -572,12 +572,12 @@ name = "towncrier"
 sections = ["dev"]
 version = "19.2.0"
 summary = "Building newsfiles for your project."
-
-[package.dependencies]
-Click = "*"
-incremental = "*"
-jinja2 = "*"
-toml = "*"
+dependencies = [
+    "Click",
+    "incremental",
+    "jinja2",
+    "toml",
+]
 
 [[package]]
 name = "tqdm"
@@ -606,13 +606,13 @@ sections = ["dev"]
 version = "0.3.3"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "A command line tool, to simplify vendoring pure Python dependencies."
-
-[package.dependencies]
-click = "*"
-jsonschema = "*"
-toml = "*"
-requests = "*"
-packaging = "*"
+dependencies = [
+    "click",
+    "jsonschema",
+    "toml",
+    "requests",
+    "packaging",
+]
 
 [[package]]
 name = "wheel"
@@ -900,9 +900,9 @@ content_hash = "sha256:850249b8456c4ef6150ed71e6a68fd11dfe403737dde41eac5e39533b
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
     {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
-"pdm-pep517 0.5.1" = [
-    {file = "pdm_pep517-0.5.1-py3-none-any.whl", hash = "sha256:d9bd779e410051518d06a3d2ad1120c3ae59deedb9b080f812979874f170ea73"},
-    {file = "pdm-pep517-0.5.1.tar.gz", hash = "sha256:397e1ffae3233f861cec6d11863bac61dc94c0962f98e2524616515b3757ff47"},
+"pdm-pep517 0.5.4" = [
+    {file = "pdm_pep517-0.5.4-py3-none-any.whl", hash = "sha256:484cbfb61f17bc92cdcaabaf8cc8c9416e4b8c19f094002a30aa25988e6209e9"},
+    {file = "pdm-pep517-0.5.4.tar.gz", hash = "sha256:4933f06b9664f7540c9518fcca30ac4c530b507af49e4a5e9ce0d8c0d0bee6f1"},
 ]
 "pep517 0.9.1" = [
     {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},
