@@ -15,7 +15,7 @@ from resolvelib.structs import DirectedGraph
 
 from pdm.exceptions import NoPythonVersion, ProjectError
 from pdm.formats import FORMATS
-from pdm.formats.base import make_inline_table
+from pdm.formats.base import make_array, make_inline_table
 from pdm.iostream import stream
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from typing import Dict, Iterable, List, Optional, Tuple
 
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
+    from tomlkit.container import Container
 
     from pdm.models.candidates import Candidate
 
@@ -322,7 +323,11 @@ def format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> s
     return "".join(content).strip()
 
 
-def format_lockfile(mapping, fetched_dependencies, summary_collection):
+def format_lockfile(
+    mapping: Dict[str, Candidate],
+    fetched_dependencies: Dict[str, List[Requirement]],
+    summary_collection: Dict[str, str],
+) -> Container:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
@@ -332,13 +337,7 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry())
         base.add("summary", summary_collection[strip_extras(k)[0]])
-        deps = tomlkit.table()
-        for r in fetched_dependencies[k].values():
-            name, req = r.as_req_dict()
-            if getattr(req, "items", None) is not None:
-                deps.add(name, make_inline_table(req))
-            else:
-                deps.add(name, req)
+        deps = make_array([r.as_line() for r in fetched_dependencies[k]], True)
         if len(deps) > 0:
             base.add("dependencies", deps)
         packages.append(base)
