@@ -1,3 +1,26 @@
+Release v1.2.0 (2021-01-26)
+---------------------------
+
+### Features & Improvements
+
+- Change the behavior of `--save-compatible` slightly. Now the version specifier saved is using the REAL compatible operator `~=` as described in PEP 440. Before: `requests<3.0.0,>=2.19.1`, After: `requests~=2.19`. The new specifier accepts `requests==2.19.0` as compatible version. [#225](https://github.com/frostming/pdm/issues/225)
+- Environment variable `${PROJECT_ROOT}` in the dependency specificaton can be expanded to refer to the project root in pyproject.toml.
+  The environment variables will be kept as they are in the lock file. [#226](https://github.com/frostming/pdm/issues/226)
+- Change the dependencies of a package in the lock file to a list of PEP 508 strings [#236](https://github.com/frostming/pdm/issues/236)
+
+### Bug Fixes
+
+- Ignore user's site and `PYTHONPATH`(with `python -I` mode) when executing pip commands. [#231](https://github.com/frostming/pdm/issues/231)
+
+### Improved Documentation
+
+- Document about how to activate and use a plugin. [#227](https://github.com/frostming/pdm/issues/227)
+
+### Dependencies
+
+- Test project on `pip 21.0`. [#235](https://github.com/frostming/pdm/issues/235)
+
+
 Release v1.1.0 (2021-01-18)
 ---------------------------
 

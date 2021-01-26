@@ -1,1 +1,0 @@
-Ignore user's site and `PYTHONPATH`(with `python -I` mode) when executing pip commands.
