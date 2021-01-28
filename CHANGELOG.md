@@ -4,7 +4,7 @@ Release v1.2.0 (2021-01-26)
 ### Features & Improvements
 
 - Change the behavior of `--save-compatible` slightly. Now the version specifier saved is using the REAL compatible operator `~=` as described in PEP 440. Before: `requests<3.0.0,>=2.19.1`, After: `requests~=2.19`. The new specifier accepts `requests==2.19.0` as compatible version. [#225](https://github.com/frostming/pdm/issues/225)
-- Environment variable `${PROJECT_ROOT}` in the dependency specificaton can be expanded to refer to the project root in pyproject.toml.
+- Environment variable `${PROJECT_ROOT}` in the dependency specification can be expanded to refer to the project root in pyproject.toml.
   The environment variables will be kept as they are in the lock file. [#226](https://github.com/frostming/pdm/issues/226)
 - Change the dependencies of a package in the lock file to a list of PEP 508 strings [#236](https://github.com/frostming/pdm/issues/236)
 
@@ -130,7 +130,7 @@ Release v0.12.0 (2020-12-08)
   - Add a special key in tool.pdm.scripts that holds configurations shared by all scripts.
   - Support loading env var from a dot-env file.
   - Add a flag `-s/--site-packages` to include system site-packages when running. [#178](https://github.com/frostming/pdm/issues/178)
-- Now PEP 582 can be enabled in the Python interperter directly! [#181](https://github.com/frostming/pdm/issues/181)
+- Now PEP 582 can be enabled in the Python interpreter directly! [#181](https://github.com/frostming/pdm/issues/181)
 
 ### Bug Fixes
 
@@ -164,7 +164,7 @@ Release v0.10.2 (2020-11-05)
 
 ### Bug Fixes
 
-- Building editable distribution does not install `build-system.requires` any more. [#167](https://github.com/frostming/pdm/issues/167)
+- Building editable distribution does not install `build-system.requires` anymore. [#167](https://github.com/frostming/pdm/issues/167)
 
 
 Release v0.10.1 (2020-11-04)
@@ -187,7 +187,7 @@ Release v0.10.0 (2020-10-20)
 
 ### Bug Fixes
 
-- Fix a bug that `sitecustomize.py` incorrectly gets injected into the editabl console scripts. [#158](https://github.com/frostming/pdm/issues/158)
+- Fix a bug that `sitecustomize.py` incorrectly gets injected into the editable console scripts. [#158](https://github.com/frostming/pdm/issues/158)
 
 
 Release v0.9.2 (2020-10-13)
@@ -212,7 +212,7 @@ Release v0.9.1 (2020-10-13)
 
 ### Bug Fixes
 
-- Fix a bug that the result of `find_matched()` is exhaused when accessed twice. [#149](https://github.com/frostming/pdm/issues/149)
+- Fix a bug that the result of `find_matched()` is exhausted when accessed twice. [#149](https://github.com/frostming/pdm/issues/149)
 
 
 Release v0.9.0 (2020-10-08)
@@ -312,9 +312,9 @@ Release v0.8.0 (2020-04-20)
 
 ### Bug Fixes
 
-- Fix a bug that environment markers cannot be evaluated correctly if extra's are connected with "or". [#107](https://github.com/frostming/pdm/issues/107)
+- Fix a bug that environment markers cannot be evaluated correctly if extras are connected with "or". [#107](https://github.com/frostming/pdm/issues/107)
 - Don't consult PyPI JSON API by default for package metadata. [#112](https://github.com/frostming/pdm/issues/112)
-- Elimate backslashes in markers for TOML documents. [#115](https://github.com/frostming/pdm/issues/115)
+- Eliminate backslashes in markers for TOML documents. [#115](https://github.com/frostming/pdm/issues/115)
 
 
 Release v0.7.1 (2020-04-13)
@@ -350,8 +350,8 @@ Release v0.6.4 (2020-04-07)
 
 ### Features & Improvements
 
-- Update shebang lines in the exetuable scripts when doing `pdm use`. [#96](https://github.com/frostming/pdm/issues/96)
-- Auto detect commonly used venv directories. [#97](https://github.com/frostming/pdm/issues/97)
+- Update shebang lines in the executable scripts when doing `pdm use`. [#96](https://github.com/frostming/pdm/issues/96)
+- Auto-detect commonly used venv directories. [#97](https://github.com/frostming/pdm/issues/97)
 
 
 Release v0.6.3 (2020-03-30)
@@ -400,7 +400,7 @@ Release v0.6.0 (2020-03-20)
 - Support parallel installation.
 - Add new command `pmd import` to import project metadata from `Pipfile`, `poetry`, `flit`, `requirements.txt`.
   [#79](https://github.com/frostming/pdm/issues/79)
-- `pdm init` and `pdm install` will auto-detect possibile files that can be imported.
+- `pdm init` and `pdm install` will auto-detect possible files that can be imported.
 
 ### Bug Fixes
 
@@ -575,9 +575,9 @@ Release v0.2.0 (2020-02-14)
 
 - New option: `pdm list --graph` to show a dependency graph of the working set. [#10](https://github.com/frostming/pdm/issues/10)
 - New option: `pdm update --unconstrained` to ignore the version constraint of given packages. [#13](https://github.com/frostming/pdm/issues/13)
-- Improve the error message when project is not initialized before running comands. [#19](https://github.com/frostming/pdm/issues/19)
+- Improve the error message when project is not initialized before running commands. [#19](https://github.com/frostming/pdm/issues/19)
 - Pinned candidates in lock file are reused when relocking during `pdm install`. [#33](https://github.com/frostming/pdm/issues/33)
-- Use the pyenv interperter value if pyenv is installed. [#36](https://github.com/frostming/pdm/issues/36)
+- Use the pyenv interpreter value if pyenv is installed. [#36](https://github.com/frostming/pdm/issues/36)
 - Introduce a new command `pdm info` to show project environment information. [#9](https://github.com/frostming/pdm/issues/9)
 
 ### Bug Fixes
@@ -663,7 +663,7 @@ Release v0.0.2 (2020-01-22)
 
 ### Miscellany
 
-- Add a Chinese REAME
+- Add a Chinese README
 
 ### Features
 
@@ -680,7 +680,7 @@ Release v0.0.1 (2020-01-20)
 - PEP 508 environment markers.
 - Running scripts with PEP 582 local packages.
 - Console scripts are injected with local paths.
-- A neet CLI.
+- A neat CLI.
 - add, lock, list, update, remove commands.
 - PEP 517 build backends.
 - Continuous Integration.

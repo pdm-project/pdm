@@ -19,7 +19,7 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 PDM requires Python 3.7+ to be installed. It works on multiple platforms including Windows, Linux and MacOS.
 
 !!! note
-    There is no restriction about what Python version that your project is using but installing
+    There is no restriction about what Python version your project is using, but installing
     PDM itself needs Python 3.7+.
 
 ### Recommended installation method
@@ -30,7 +30,7 @@ If your are on MacOS and using `homebrew`, install it by:
 $ brew install pdm
 ```
 
-Otherwise, to avoid messing up with the system Python environemnt, the most recommended way to install PDM
+Otherwise, to avoid messing up with the system Python environment, the most recommended way to install PDM
 is via [pipx](https://pypi.org/project/pipx):
 
 ```console
@@ -120,8 +120,8 @@ PS > pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions
 ## Unicode and ANSI supports
 
 PDM provides a fancy terminal UI with the help of ANSI characters and unicode emojis.
-It can turn on/off automitically depending on whether it is supported on your terminal.
-Otherwise if you see any garbled characters, set env var `DISABLE_UNICODE_OUTPUT=1` to turn off it.
+It can turn on/off automatically depending on whether it is supported on your terminal.
+However, if you see any garbled characters, set env var `DISABLE_UNICODE_OUTPUT=1` to turn off it.
 
 ## Use with IDE
 

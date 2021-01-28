@@ -44,12 +44,12 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 
 The majority of Python packaging tools also act as virtualenv managers to gain the ability
 to isolate project environments. But things get tricky when it comes to nested venvs: One
-installs the virtualenv manager using a venv capsulated Python, and create more venvs using the tool
-which is based on a capsulated Python. One day a minor release of Python is released and one has to check
+installs the virtualenv manager using a venv encapsulated Python, and create more venvs using the tool
+which is based on an encapsulated Python. One day a minor release of Python is released and one has to check
 all those venvs and upgrade them if required.
 
 PEP 582, on the other hand, introduces a way to decouple the Python interpreter from project
-environments. It is a relative new proposal and there are not many tools supporting it (one that does is
+environments. It is a relative new proposal and there are not many tools supporting it (one that does
 is [pyflow]), but it is written with Rust and thus can't get much help from the big Python community.
 For the same reason it can't act as a PEP 517 backend.
 
@@ -57,13 +57,13 @@ For the same reason it can't act as a PEP 517 backend.
 
 PDM requires python version 3.7 or higher.
 
-If your are on MacOS and using `homebrew`, install it by:
+If you are on MacOS and using `homebrew`, install it by:
 
 ```bash
 $ brew install pdm
 ```
 
-Otherwise, it is recommended to install `pdm` in an isolated enviroment with `pipx`:
+Otherwise, it is recommended to install `pdm` in an isolated environment with `pipx`:
 
 ```bash
 $ pipx install pdm
@@ -140,11 +140,11 @@ CLI executables. PDM makes the decision to put `bin` and `include` together with
 ### 2. How do I run CLI scripts in the local package directory?
 
 The recommended way is to prefix your command with `pdm run`. It is also possible to run CLI scripts directly from
-the outside, the PDM's installer has already injected the package path to the `sys.path` in the entry script file.
+the outside. PDM's installer has already injected the package path to the `sys.path` in the entry script file.
 
 ### 3. What site-packages will be loaded when using PDM?
 
-Packages in the local `__pypackages__` directory will be loaded before the system-level `site-packages` for islation.
+Packages in the local `__pypackages__` directory will be loaded before the system-level `site-packages` for isolation.
 
 ### 4. Can I relocate or move the `__pypackages__` folder for deployment?
 
