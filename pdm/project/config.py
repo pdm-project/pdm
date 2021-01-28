@@ -2,7 +2,7 @@ import dataclasses
 import os
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
 
 import appdirs
 import tomlkit
@@ -10,6 +10,8 @@ import tomlkit
 from pdm.exceptions import NoConfigError
 from pdm.iostream import stream
 from pdm.utils import get_pypi_source
+
+T = TypeVar("T")
 
 
 def load_config(file_path: Path) -> Dict[str, Any]:
@@ -34,7 +36,7 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
 
-def ensure_boolean(val):
+def ensure_boolean(val: Any) -> bool:
     """Coerce a string value to a boolean value"""
     if not isinstance(val, str):
         return val
@@ -58,6 +60,7 @@ class ConfigItem:
     default: Any = _NOT_SET
     global_only: bool = False
     env_var: Optional[str] = None
+    coerce: Callable[[Any], Any] = str
 
     def should_show(self) -> bool:
         return self.default is not self._NOT_SET
@@ -78,6 +81,7 @@ class Config(MutableMapping):
             False,
             True,
             "PDM_AUTO_GLOBAL",
+            coerce=ensure_boolean,
         ),
         "strategy.update": ConfigItem(
             "The default strategy for updating packages", "reuse", False
@@ -85,30 +89,41 @@ class Config(MutableMapping):
         "strategy.save": ConfigItem(
             "Specify how to save versions when a package is added", "compatible", False
         ),
+        "strategy.resolve_max_rounds": ConfigItem(
+            "Specify the max rounds of resolution process",
+            1000,
+            env_var="PDM_RESOLVE_MAX_ROUDNS",
+            coerce=int,
+        ),
         "parallel_install": ConfigItem(
             "Whether to perform installation and uninstallation in parallel",
             True,
             env_var="PDM_PARALLEL_INSTALL",
+            coerce=ensure_boolean,
         ),
         "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
-        "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True),
+        "python.use_pyenv": ConfigItem(
+            "Use the pyenv interpreter", True, coerce=ensure_boolean
+        ),
         "pypi.url": ConfigItem(
             "The URL of PyPI mirror, defaults to https://pypi.org/simple",
             pypi_url,
             env_var="PDM_PYPI_URL",
         ),
         "pypi.verify_ssl": ConfigItem(
-            "Verify SSL certificate when query PyPI", verify_ssl
+            "Verify SSL certificate when query PyPI", verify_ssl, coerce=ensure_boolean
         ),
         "pypi.json_api": ConfigItem(
             "Consult PyPI's JSON API for package metadata",
             False,
             env_var="PDM_PYPI_JSON_API",
+            coerce=ensure_boolean,
         ),
         "use_venv": ConfigItem(
             "Install packages into the activated venv site packages instead of PEP 582",
             False,
             env_var="PDM_USE_VENV",
+            coerce=ensure_boolean,
         ),
     }  # type: Dict[str, ConfigItem]
     del pypi_url, verify_ssl
@@ -151,14 +166,13 @@ class Config(MutableMapping):
     def __getitem__(self, key: str) -> Any:
         env_var = self._config_map[key].env_var
         if env_var is not None and env_var in os.environ:
-            env_value = os.environ[env_var]
-            if isinstance(self._config_map[key].default, bool):
-                env_value = ensure_boolean(env_value)
-            return env_value
-        try:
-            return self._data[key]
-        except KeyError:
-            raise NoConfigError(key) from None
+            result = os.environ[env_var]
+        else:
+            try:
+                result = self._data[key]
+            except KeyError:
+                raise NoConfigError(key) from None
+        return self._config_map[key].coerce(result)
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key not in self._config_map:
@@ -167,11 +181,8 @@ class Config(MutableMapping):
             raise ValueError(
                 f"Config item '{key}' is not allowed to set in project config."
             )
-        if isinstance(value, str):
-            if value.lower() == "false":
-                value = False
-            elif value.lower() == "true":
-                value = True
+
+        value = self._config_map[key].coerce(value)
         env_var = self._config_map[key].env_var
         if env_var is not None and env_var in os.environ:
             stream.echo(

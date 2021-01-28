@@ -122,7 +122,10 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
 
 
 def resolve(
-    resolver: Resolver, requirements: List[Requirement], requires_python: PySpecSet
+    resolver: Resolver,
+    requirements: List[Requirement],
+    requires_python: PySpecSet,
+    max_rounds: int = 1000,
 ) -> Tuple[Dict[str, Candidate], Dict[str, List[Requirement]], Dict[str, str]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 3 items:
@@ -132,7 +135,7 @@ def resolve(
         3. A map of package descriptions fetched from PyPI source.
     """
     provider, reporter = resolver.provider, resolver.reporter
-    result = resolver.resolve(requirements)
+    result = resolver.resolve(requirements, max_rounds)
 
     reporter.extract_metadata()
     all_metasets = extract_metadata(result)
