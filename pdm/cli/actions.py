@@ -56,6 +56,7 @@ def do_lock(
         requirements = [
             r for deps in project.all_dependencies.values() for r in deps.values()
         ]
+    resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     with stream.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
@@ -66,13 +67,18 @@ def do_lock(
             resolver = project.core.resolver_class(provider, reporter)
             try:
                 mapping, dependencies, summaries = resolve(
-                    resolver, requirements, project.environment.python_requires
+                    resolver,
+                    requirements,
+                    project.environment.python_requires,
+                    resolve_max_rounds,
                 )
             except ResolutionTooDeep:
                 spin.fail(f"{LOCK} Lock failed")
                 stream.echo(
-                    "The dependency resolution exceeds the maximum loop depth of 100, "
-                    "there may be some circular dependencies in your project.",
+                    "The dependency resolution exceeds the maximum loop depth of "
+                    f"{resolve_max_rounds}, there may be some circular dependencies "
+                    "in your project. Try to solve them or increase the "
+                    f"{stream.green('`strategy.resolve_max_rounds`')} config.",
                     err=True,
                 )
                 raise
