@@ -62,7 +62,7 @@ $ pdm info --env
 }
 ```
 
-## Configrate the project
+## Configure the project
 
 PDM's `config` command works just like `git config`, except that `--list` isn't needed to
 show configurations.
@@ -115,15 +115,15 @@ If you want global project to track another project file other than `~/.pdm/glob
 project path following `-g/--global`.
 
 !!! danger "NOTE"
-    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
+    Be careful with `remove` and `sync --clean` commands when global project is used, because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv
 
 Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
 by the configuration item `use_venv`. When it is set to `True` PDM will use the virtualenv if:
 
-- an virtualenv is already activated.
-- any of `venv`, `.venv`, `env` is an valid virtualenv folder.
+- a virtualenv is already activated.
+- any of `venv`, `.venv`, `env` is a valid virtualenv folder.
 
 Besides, when `use-venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
 
@@ -140,7 +140,7 @@ PDM provides `import` command so that you don't have to initialize the project m
 Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import
 if your PDM project has not been initialized yet.
 
-## Export locked packeges to alternative formats
+## Export locked packages to alternative formats
 
 You can also export `pdm.lock` to other formats, to ease the CI flow or image building process. Currently,
 only `requirements.txt` format is supported:
@@ -149,7 +149,7 @@ only `requirements.txt` format is supported:
 $ pdm export -o requirements.txt
 ```
 
-## Hide the crendentials from pyproject.toml
+## Hide the credentials from pyproject.toml
 
 There are many times when we need to use sensitive information, such as login credentials for the PyPI server
 and username passwords for VCS repositories. We do not want to expose this information in `pyproject.toml` and upload it to git.
@@ -176,14 +176,14 @@ PDM provides several methods to achieve this:
    is passed as command line argument, otherwise PDM will fail with an error telling users what happens. Users can then choose to store the credentials in the
    keyring after a confirmation question.
 
-3. A VCS repository applies the first method only and an index server applies both methods.
+3. A VCS repository applies the first method only, and an index server applies both methods.
 
 ## Available Configurations
 
 | Config Item                   | Description                                                               | Default Value                                                             | Available in Project | Env var                  |
 | ----------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ------------------------ |
 | `cache_dir`                   | The root directory of cached files                                        | The default cache location on OS                                          | No                   |                          |
-| `auto_global`                 | Use global package implicity if no local project is found                 | `False`                                                                   | No                   | `PDM_AUTO_GLOBAL`        |
+| `auto_global`                 | Use global package implicitly if no local project is found                | `False`                                                                   | No                   | `PDM_AUTO_GLOBAL`        |
 | `use_venv`                    | Install packages into the activated venv site packages instead of PEP 582 | `False`                                                                   | Yes                  | `PDM_USE_VENV`           |
 | `parallel_install`            | Whether to perform installation and uninstallation in parallel            | `True`                                                                    | Yes                  | `PDM_PARALLEL_INSTALL`   |
 | `python.path`                 | The Python interpreter path                                               |                                                                           | Yes                  | `PDM_PYTHON_PATH`        |
@@ -195,7 +195,7 @@ PDM provides several methods to achieve this:
 | `strategy.update`             | The default strategy for updating packages                                | `reuse`(can be : `eager`)                                                 | Yes                  |                          |
 | `strategy.resolve_max_rounds` | Specify the max rounds of resolution process                              | 1000                                                                      | Yes                  | `PDM_RESOLVE_MAX_ROUNDS` |
 
-_If the env var is set, the value will take precendence over what is saved in the config file._
+_If the env var is set, the value will take precedence over what is saved in the config file._
 
 ## Run Scripts in Isolated Environment
 
@@ -232,7 +232,7 @@ PDM supports 3 types of scripts:
 
 ### Normal command
 
-Plain text scripts are regarded as normal command, or you can explictly specify it:
+Plain text scripts are regarded as normal command, or you can explicitly specify it:
 
 ```toml
 [tool.pdm.scripts]
@@ -309,4 +309,4 @@ You can add an `help` option with the description of the script, and it will be 
 
 Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`
 by executing the `sitecustomize.py` shipped with PDM. The interpreter can search the directories
-for the neareset `__pypackage__` folder and append it to the `sys.path` variable.
+for the nearest `__pypackage__` folder and append it to the `sys.path` variable.

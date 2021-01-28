@@ -44,7 +44,7 @@ $ pdm add -d pytest
 There are two groups of dependencies: packages will be added to `project.dependencies` by default or `project.dev-dependencies`
 if `-d/--dev` option is passed to the `pdm add` command.
 
-PDM also allows extra dependency groups by providing `-s/--section <name>` option, and the dependencies will apear in
+PDM also allows extra dependency groups by providing `-s/--section <name>` option, and the dependencies will appear in
 `project.optional-dependencies.<name>` in the project file, respectively.
 
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see
@@ -79,7 +79,7 @@ $ pdm update requests
 
 ### About update strategy
 
-Similary, PDM also provides 2 different behaviors of updating dependencies and sub-dependencies，
+Similarly, PDM also provides 2 different behaviors of updating dependencies and sub-dependencies，
 which is given by `--update-<strategy>` option:
 
 - `reuse`: Keep all locked dependencies except for those given in the command line.
@@ -98,7 +98,7 @@ $ pdm remove requests
 
 There are two similar commands to do this job with a slight difference:
 
-- `pdm install` will check the lock file and relock if it mismatch with project file, then install.
+- `pdm install` will check the lock file and relock if it mismatches with project file, then install.
 - `pdm sync` install dependencies in the lock file and will error out if it doesn't exist.
   Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
 
@@ -150,7 +150,7 @@ verify_ssl = false  # Don't verify SSL, it is required when you are using `HTTP`
 name = "private"
 ```
 
-Use the name `name = "pypi"` if you want to override the configurated PyPI index. Note that PDM specific settings
+Use the name `name = "pypi"` if you want to override the configured PyPI index. Note that PDM specific settings
 are stored under `tool.pdm` namespace in the `pyproject.toml`.
 
 ## Allow prerelease versions to be installed

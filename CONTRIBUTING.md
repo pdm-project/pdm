@@ -29,7 +29,7 @@ this section.
    where `fork` is the remote name of the fork repository.
 
 **ProTips:**
-1. Don't modify code on the master branch, the master branch should always keep in track with origin/master.
+1. Don't modify code on the master branch, the master branch should always keep track of origin/master.
 
    To update master branch to date:
    ```bash
@@ -76,4 +76,4 @@ $ pre-commit run --all-files
 ```
 
 PDM uses `black` coding style and `isort` for sorting import statements, if you are not following them,
-the CI will fail and your Pull Request will not be merged.
+the CI will fail, and your Pull Request will not be merged.

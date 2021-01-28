@@ -25,7 +25,7 @@ In either case, you MUST also include `version` in `dynamic` field, or the backe
 dynamic = ["version"]
 ```
 
-## Include and exclude pacakge files
+## Include and exclude package files
 
 The way of specifying include and exclude files are simple, they are given as a list of glob patterns:
 
@@ -178,7 +178,7 @@ myplugin = "mypackage.plugin:pytest_plugin"
 
 ## Build C extensions
 
-Currently building C extensions still relies on `setuptools`. You should write a python script which contains
+Currently, building C extensions still relies on `setuptools`. You should write a python script which contains
 a function named `build` and accepts the parameter dictionary of `setup()` as the only argument.
 Update the dictionary with your `ext_modules` settings in the function.
 

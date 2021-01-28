@@ -10,9 +10,9 @@ It is shipped with a full-featured plug-in system, with which you can:
 
 ## What should a plugin do
 
-The core PDM project focuses on dependency management and package publishment. Other
+The core PDM project focuses on dependency management and package publishing. Other
 functionalities you wish to integrate with PDM are preferred to lie in their own plugins
-and released as standalone PyPI projects. In case the plugin is considered a good suplement
+and released as standalone PyPI projects. In case the plugin is considered a good supplement
 of the core project it may have a chance to be absorbed into PDM.
 
 ## Write your own plugin
@@ -66,8 +66,8 @@ class HelloCommand(BaseCommand):
 
 ### Register the command to the core object
 
-Write a function somewhere in your plugin project. There is no limit on what the name of the function is but the function
-should take only one argument -- the PDM core object:
+Write a function somewhere in your plugin project. There is no limit on what the name of the function is,
+but the function  should take only one argument -- the PDM core object:
 
 ```python hl_lines="2"
 def hello_plugin(core):
@@ -142,13 +142,13 @@ $ pdm install -d
 
 After that, all the dependencies are available with a compatible Python interpreter, including the plugin itself, in editable mode. That means any change
 to the codebase will take effect immediately without re-installation. The `pdm` executable also uses a Python interpreter under the hood, 
-so if you run `pdm` from inside the plugin project, the plugin in development will be activated automatically and you can do some testing to see how it works.
+so if you run `pdm` from inside the plugin project, the plugin in development will be activated automatically, and you can do some testing to see how it works.
 That is how PEP 582 benefits our development workflow.
 
 ## Publish your plugin
 
 Now you have defined your plugin already, let's distribute it to PyPI. PDM's plugins are discovered by entry point types.
-Create an `pdm.plugin` entry point and point to your plugin callable(yeah, it don't need to be a function, any callable object can work):
+Create an `pdm.plugin` entry point and point to your plugin callable (yeah, it doesn't need to be a function, any callable object can work):
 
 **PEP 621**:
 
@@ -189,7 +189,7 @@ Or if you installed `pdm` via `homebrew`:
 $ $(brew --prefix pdm)/libexec/bin/python -m pip install pdm-hello
 ```
 
-Otherwise if you installed `pdm` with normal `pip install`:
+Otherwise, if you installed `pdm` with normal `pip install`:
 
 ```bash
 $ pip install --user pdm-hello
