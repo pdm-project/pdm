@@ -10,6 +10,7 @@ from pip._vendor.pkg_resources import Distribution, safe_name
 from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
 from pdm.iostream import CELE, stream
+from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
@@ -89,6 +90,16 @@ class Synchronizer:
                 yield executor
             except KeyboardInterrupt:
                 pass
+
+    def update_project_egg_info(self):
+        canonical_name = self.environment.project.meta.project_name.lower().replace(
+            "-", "_"
+        )
+        egg_info_dir = self.environment.project.root / f"{canonical_name}.egg-info"
+        if egg_info_dir.exists():
+            stream.echo("Updating the project's egg info...")
+            with EnvBuilder(self.environment.project.root, self.environment) as builder:
+                builder.build_egg_info(str(builder.src_dir))
 
     def get_installer(self) -> Installer:
         return Installer(self.environment)
@@ -238,6 +249,9 @@ class Synchronizer:
             stream.echo(
                 stream.yellow("All packages are synced to date, nothing to do.")
             )
+            if not dry_run:
+                with stream.logging("install"):
+                    self.update_project_egg_info()
             return
         to_do = {"remove": to_remove, "update": to_update, "add": to_add}
         self._show_headline(to_do)
@@ -313,4 +327,6 @@ class Synchronizer:
                 stream.echo("Installing the project as an editable package...")
                 with stream.indent("  "):
                     handlers[install_self[0]](install_self[1])
+            else:
+                self.update_project_egg_info()
             stream.echo(f"\n{CELE} All complete!")
