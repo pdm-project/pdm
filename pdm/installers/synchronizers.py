@@ -92,6 +92,8 @@ class Synchronizer:
                 pass
 
     def update_project_egg_info(self):
+        if not self.environment.project.meta.name:
+            return
         canonical_name = self.environment.project.meta.project_name.lower().replace(
             "-", "_"
         )
