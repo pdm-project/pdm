@@ -265,7 +265,7 @@ class EnvBuilder:
         setup_py_path = builder.ensure_setup_py().as_posix()
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
-        args.extend(["egg_info", "--egg-base", out_dir])
+        args.extend(["egg_info", "--egg-base", os.path.relpath(out_dir, self.src_dir)])
         self.subprocess_runner(args, cwd=self.src_dir)
         filename = _find_egg_info(out_dir)
         return os.path.join(out_dir, filename)
