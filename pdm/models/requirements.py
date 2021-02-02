@@ -389,8 +389,6 @@ class VcsRequirement(FileRequirement):
             self.url = add_ssh_scheme_to_git_uri(self.url)
         if not self.name:
             self._parse_name_from_url()
-        if not self.name:
-            raise RequirementError("VCS requirement must provide a 'egg=' fragment.")
         repo = url_without_fragments(self.url)
         ref = None
         parsed = urlparse.urlparse(repo)

@@ -33,6 +33,17 @@ def test_convert_requirements_file(project):
     )
 
 
+def test_convert_requirements_file_without_name(project, vcs):
+    req_file = project.root.joinpath("reqs.txt")
+    project.root.joinpath("reqs.txt").write_text(
+        "git+https://github.com/test-root/demo.git\n"
+    )
+    assert requirements.check_fingerprint(project, str(req_file))
+    result, _ = requirements.convert(project, str(req_file))
+
+    assert result["dependencies"] == ["demo@ git+https://github.com/test-root/demo.git"]
+
+
 def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject-poetry.toml"
     assert poetry.check_fingerprint(project, golden_file)
