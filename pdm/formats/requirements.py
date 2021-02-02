@@ -1,9 +1,13 @@
 import hashlib
 import urllib.parse
 
+from distlib.wheel import Wheel
+
 from pdm.formats.base import make_array
+from pdm.iostream import stream
 from pdm.models.markers import Marker
 from pdm.models.pip_shims import parse_requirements
+from pdm.models.requirements import parse_requirement
 from pdm.utils import get_finder
 
 
@@ -26,7 +30,7 @@ def _requirement_to_str_lowercase_name(requirement):
     return "".join(parts)
 
 
-def ireq_as_line(ireq):
+def ireq_as_line(ireq, environment):
     """Formats an `InstallRequirement` instance as a
     PEP 508 dependency string.
 
@@ -40,6 +44,11 @@ def ireq_as_line(ireq):
     if ireq.editable:
         line = "-e {}".format(ireq.link)
     else:
+        if not ireq.req:
+            ireq.req = parse_requirement("dummy @" + ireq.link.url)
+            wheel = Wheel(environment.build(ireq))
+            ireq.req.name = wheel.name
+
         line = _requirement_to_str_lowercase_name(ireq.req)
 
     if str(ireq.req.marker) != str(ireq.markers):
@@ -85,7 +94,8 @@ def convert_url_to_source(url, name=None):
 
 def convert(project, filename):
     ireqs, finder = parse_requirement_file(str(filename))
-    reqs = [ireq_as_line(ireq) for ireq in ireqs]
+    with stream.logging("build"):
+        reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
     data = {"dependencies": make_array(reqs, True)}
     settings = {}
