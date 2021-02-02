@@ -320,6 +320,7 @@ class Project:
             package_name = package.pop("name")
             req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(req, self.environment, name=package_name, version=version)
+            can.sections = package.get("sections", [])
             can.marker = req.marker
             can.hashes = {
                 item["file"]: item["hash"]
