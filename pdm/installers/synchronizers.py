@@ -164,12 +164,14 @@ class Synchronizer:
             except Exception:
                 spinner.fail(
                     f"Update {stream.green(key, bold=True)} "
-                    f"-> {stream.yellow(can.version)} failed"
+                    f"{stream.yellow(dist.version)} -> "
+                    f"{stream.yellow(can.version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
                     f"Update {stream.green(key, bold=True)} "
+                    f"{stream.yellow(dist.version)} -> "
                     f"-> {stream.yellow(can.version)} successful"
                 )
         return dist, can
