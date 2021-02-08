@@ -53,6 +53,7 @@ jobs:
           python -m pip install -U .
       - name: Install Dev Dependencies
         run: |
+          pdm config parallel_install true
           pdm install -dvv
       - name: Run Tests
         run: pdm run pytest -n auto tests
