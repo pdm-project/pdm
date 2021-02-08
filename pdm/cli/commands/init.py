@@ -31,8 +31,18 @@ class Command(BaseCommand):
             "Please enter the Python interpreter to use", default="", show_default=False
         )
         actions.do_use(project, python)
-        name = click.prompt("Project name", default=project.root.name)
-        version = click.prompt("Project version", default="0.0.0")
+        is_library = (
+            click.prompt(
+                "Is the project a library that will be upload to PyPI?(y/n)",
+                default="n",
+            ).lower()
+            == "y"
+        )
+        if is_library:
+            name = click.prompt("Project name", default=project.root.name)
+            version = click.prompt("Project version", default="0.1.0")
+        else:
+            name, version = "", ""
         license = click.prompt("License(SPDX name)", default="MIT")
 
         git_user, git_email = get_user_email_from_git()

@@ -142,8 +142,30 @@ def test_init_command(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
+    result = invoke(["init"], input="python\n\n\n\n\n\n", obj=project_no_init)
+    assert result.exit_code == 0
+    python_version, _ = get_python_version(
+        project_no_init.environment.python_executable, True, 2
+    )
+    do_init.assert_called_with(
+        project_no_init,
+        "",
+        "",
+        "MIT",
+        "Testing",
+        "me@example.org",
+        f">={python_version}",
+    )
+
+
+def test_init_command_library(project_no_init, invoke, mocker):
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    do_init = mocker.patch.object(actions, "do_init")
     result = invoke(
-        ["init"], input="python\ntest-project\n\n\n\n\n\n", obj=project_no_init
+        ["init"], input="python\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
     )
     assert result.exit_code == 0
     python_version, _ = get_python_version(
@@ -152,7 +174,7 @@ def test_init_command(project_no_init, invoke, mocker):
     do_init.assert_called_with(
         project_no_init,
         "test-project",
-        "0.0.0",
+        "0.1.0",
         "MIT",
         "Testing",
         "me@example.org",

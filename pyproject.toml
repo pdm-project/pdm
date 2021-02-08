@@ -40,7 +40,7 @@ description = "Python Development Master"
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Topic :: Software Development :: Build Tools",
 ]
 
