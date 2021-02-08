@@ -414,6 +414,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     """
     import pythonfinder
 
+    python = python.strip()
     if python and not all(c.isdigit() for c in python.split(".")):
         if Path(python).exists():
             python_path = find_python_in_path(python)
