@@ -103,6 +103,21 @@ class PySpecSet(SpecifierSet):
                 elif op == "!=":
                     excludes.add(version)
                     continue
+                elif op == ">":  # >X.Y.* => >=X.Y+1.0
+                    op = ">="
+                    version = bump_version(version, -2)
+                elif op in ("<", ">=", "<="):
+                    # <X.Y.* => <X.Y.0
+                    # >=X.Y.* => >=X.Y.0
+                    # <=X.Y.* => <X.Y.0
+                    version = version[:-1] + (0,)
+                    if op == "<=":
+                        op = "<"
+                else:
+                    raise InvalidPyVersion(
+                        f"Unsupported version specifier: {spec.op}{spec.version}"
+                    )
+
             if op != "~=":
                 version = _complete_version(version)
             if op in ("==", "==="):

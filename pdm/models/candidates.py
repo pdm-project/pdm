@@ -33,12 +33,17 @@ def _patch_version_parsing():
     list.
     """
     from distlib.version import VersionScheme
+    from packaging.requirements import InvalidRequirement
+    from packaging.requirements import Requirement as PRequirement
 
-    def is_valid_constraint_list(self, s):
-        s = ",".join(v for v in s.strip().split(",") if v)
-        return self.is_valid_matcher("dummy_name (%s)" % s)
+    def is_valid_matcher(self, s):
+        try:
+            PRequirement(s)
+        except InvalidRequirement:
+            return False
+        return True
 
-    VersionScheme.is_valid_constraint_list = is_valid_constraint_list
+    VersionScheme.is_valid_matcher = is_valid_matcher
 
 
 _patch_version_parsing()
