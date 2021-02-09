@@ -1,3 +1,21 @@
+Release v1.3.0 (2021-02-09)
+---------------------------
+
+### Features & Improvements
+
+- Increase the default value of the max rounds of resolution to 1000, make it configurable. [#238](https://github.com/frostming/pdm/issues/238)
+- Rewrite the project's `egg-info` directory when dependencies change. So that `pdm list --graph` won't show invalid entries. [#240](https://github.com/frostming/pdm/issues/240)
+- When importing requirments from a `requirments.txt` file, build the package to find the name if not given in the URL. [#245](https://github.com/frostming/pdm/issues/245)
+- When initializing the project, prompt user for whether the project is a library, and give empty `name` and `version` if not. [#253](https://github.com/frostming/pdm/issues/253)
+
+### Bug Fixes
+
+- Fix the version validator of wheel metadata to align with the implementation of `packaging`. [#130](https://github.com/frostming/pdm/issues/130)
+- Preserve the `sections` value of a pinned candidate to be reused. [#234](https://github.com/frostming/pdm/issues/234)
+- Strip spaces in user input when prompting for the python version to use. [#252](https://github.com/frostming/pdm/issues/252)
+- Fix the version parsing of Python requires to allow `>`, `>=`, `<`, `<=` to combine with star versions. [#254](https://github.com/frostming/pdm/issues/254)
+
+
 Release v1.2.0 (2021-01-26)
 ---------------------------
 
