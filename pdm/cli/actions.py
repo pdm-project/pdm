@@ -475,6 +475,7 @@ def do_info(
     env: bool = False,
 ) -> None:
     """Show project information."""
+    check_project_file(project)
     python_path = project.environment.python_executable
     python_version, is_64bit = get_python_version(python_path, True)
     if not python and not show_project and not env:

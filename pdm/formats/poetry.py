@@ -168,7 +168,9 @@ class PoetryMetaConverter(MetaConverter):
 
 
 def convert(project, filename):
-    with open(filename, encoding="utf-8") as fp, cd(os.path.dirname(filename)):
+    with open(filename, encoding="utf-8") as fp, cd(
+        os.path.dirname(os.path.abspath(filename))
+    ):
         converter = PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"])
         return dict(converter), converter.settings
 
