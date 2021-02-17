@@ -230,7 +230,7 @@ class PyPIRepository(BaseRepository):
     @lru_cache()
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
-        with self.environment.get_finder(sources) as finder, allow_all_wheels():
+        with self.environment.get_finder(sources, True) as finder, allow_all_wheels():
             return [
                 Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)
