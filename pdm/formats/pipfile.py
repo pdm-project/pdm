@@ -2,7 +2,7 @@ import functools
 import operator
 import os
 
-import tomlkit
+import toml
 from packaging.markers import default_environment
 
 from pdm.formats.base import make_array
@@ -35,7 +35,7 @@ def check_fingerprint(project, filename):
 
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
-        data = tomlkit.parse(fp.read())
+        data = toml.load(fp)
     result = {}
     settings = {}
     if "pipenv" in data:
