@@ -533,7 +533,6 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
         )
 
     pyproject["project"].update(project_data)
-
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
         "build-backend": "pdm.pep517.api",

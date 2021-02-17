@@ -3,8 +3,7 @@ import operator
 import os
 import re
 
-import tomlkit
-import tomlkit.exceptions
+import toml
 
 from pdm.formats.base import (
     MetaConverter,
@@ -23,8 +22,8 @@ from pdm.utils import cd
 def check_fingerprint(project, filename):
     with open(filename, encoding="utf-8") as fp:
         try:
-            data = tomlkit.parse(fp.read())
-        except tomlkit.exceptions.TOMLKitError:
+            data = toml.load(fp)
+        except toml.TomlDecodeError:
             return False
 
     return "tool" in data and "poetry" in data["tool"]
@@ -51,7 +50,7 @@ def _convert_specifier(version):
 
 def _convert_python(python):
     if not python:
-        return ""
+        return PySpecSet()
     parts = [PySpecSet(_convert_specifier(s)) for s in python.split("||")]
     return functools.reduce(operator.or_, parts)
 
@@ -171,7 +170,7 @@ def convert(project, filename):
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
-        converter = PoetryMetaConverter(tomlkit.parse(fp.read())["tool"]["poetry"])
+        converter = PoetryMetaConverter(toml.load(fp)["tool"]["poetry"])
         return dict(converter), converter.settings
 
 

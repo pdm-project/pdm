@@ -1,7 +1,6 @@
 import functools
 
-import tomlkit
-import tomlkit.exceptions
+import toml
 
 from pdm.formats.base import (
     MetaConverter,
@@ -17,8 +16,8 @@ from pdm.models.requirements import Requirement
 def check_fingerprint(project, filename):
     with open(filename, encoding="utf-8") as fp:
         try:
-            data = tomlkit.parse(fp.read())
-        except tomlkit.exceptions.TOMLKitError:
+            data = toml.load(fp)
+        except toml.TomlDecodeError:
             return False
 
     return (
@@ -133,9 +132,7 @@ class LegacyMetaConverter(MetaConverter):
 
 def convert(project, filename):
     with open(filename, encoding="utf-8") as fp:
-        converter = LegacyMetaConverter(
-            tomlkit.parse(fp.read())["tool"]["pdm"], filename
-        )
+        converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], filename)
         return dict(converter), converter.settings
 
 
