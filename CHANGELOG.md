@@ -1,3 +1,13 @@
+Release v1.3.1 (2021-02-19)
+---------------------------
+
+### Bug Fixes
+
+- Use the absolute path when importing from a Poetry pyproject.toml. [#262](https://github.com/frostming/pdm/issues/262)
+- Fix a bug that old toml table head is kept when converting to PEP 621 metadata format. [#263](https://github.com/frostming/pdm/issues/263)
+- Postpone the evaluation of `requires-python` attribute when fetching the candidates of a package. [#264](https://github.com/frostming/pdm/issues/264)
+
+
 Release v1.3.0 (2021-02-09)
 ---------------------------
 
