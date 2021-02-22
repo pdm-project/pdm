@@ -139,6 +139,10 @@ __pypackages__/
 
 Mark `__pypackages__/<major.minor>/lib` as Sources Root.
 
+Additionally, if you want to use tools from the environment (e.g. `pytest`), you have to add the 
+`__pypackages__/<major.minor>/bin` directory to the `PATH` variable in the corresponding
+run/debug configuration.
+
 ### VSCode
 
 Add following in the `settings.json`:
