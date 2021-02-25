@@ -211,10 +211,7 @@ class Requirement:
         )
 
     def as_ireq(self, **kwargs) -> InstallRequirement:
-        if self.is_file_or_url:
-            line_for_req = self.as_line(True)
-        else:
-            line_for_req = self.as_line()
+        line_for_req = self.as_line()
         if self.editable:
             line_for_req = line_for_req[3:].strip()
             ireq = install_req_from_editable(line_for_req, **kwargs)
@@ -311,20 +308,14 @@ class FileRequirement(Requirement):
     def key(self) -> Optional[str]:
         return self.project_name.lower() if self.project_name else None
 
-    def as_line(self, for_ireq: bool = False) -> str:
-        editable = "-e " if self.editable else ""
+    def as_line(self) -> str:
         project_name = f"{self.project_name}" if self.project_name else ""
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
-        if self.path and not for_ireq and self.editable and not project_name:
-            location = self.str_path
-        else:
-            location = self.url
         marker = self._format_marker()
-        if for_ireq and project_name:
-            return f"{editable}{location}#egg={project_name}{extras}{marker}"
-        else:
-            delimiter = " @ " if project_name else ""
-            return f"{editable}{project_name}{extras}{delimiter}{location}{marker}"
+        if self.editable:
+            return f"-e {self.url}#egg={project_name}{extras}{marker}"
+        delimiter = " @ " if project_name else ""
+        return f"{project_name}{extras}{delimiter}{self.url}{marker}"
 
     def _parse_name_from_url(self) -> None:
         parsed = urlparse.urlparse(self.url)
@@ -381,8 +372,15 @@ class VcsRequirement(FileRequirement):
         return r
 
     def as_line(self) -> str:
-        editable = "-e " if self.editable else ""
-        return f"{editable}{self.vcs}+{self.url}{self._format_marker()}"
+        if self.editable:
+            return f"-e {self.vcs}+{self.url}{self._format_marker()}"
+        else:
+            extras = f"[{','.join(self.extras)}]" if self.extras else ""
+            ref = f"@{self.ref}" if self.ref else ""
+            return (
+                f"{self.project_name}{extras} @ {self.vcs}+{self.repo}"
+                f"{ref}{self._format_marker()}"
+            )
 
     def _parse_url(self) -> None:
         if self.url.startswith("git@"):
