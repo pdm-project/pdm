@@ -112,10 +112,15 @@ def do_sync(
     :param clean: whether to remove unneeded packages.
     """
     if not project.lockfile_file.exists():
-        raise ProjectError("Lock file does not exist, nothing to sync.")
+        raise ProjectError("Lock file does not exist, nothing to sync")
     clean = default if clean is None else clean
     candidates = {}
     for section in sections:
+        if section not in list(project.iter_sections()):
+            raise PdmUsageError(
+                f"Section {stream.green(repr(section))} doesn't exist "
+                "in the pyproject.toml"
+            )
         candidates.update(project.get_locked_candidates(section))
     if dev:
         candidates.update(project.get_locked_candidates("dev"))

@@ -113,6 +113,7 @@ class Core:
                 stream.echo(
                     f"{stream.red('[' + etype.__name__ + ']')}: {err}", err=True
                 )
+                stream.echo(stream.yellow("Add '-v' to see the detailed traceback"))
                 sys.exit(1)
 
     def register_command(
