@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 from resolvelib.resolvers import Criterion, Resolution
 
@@ -62,12 +62,28 @@ def _build_metaset(
     return metaset or Metaset()
 
 
-def _get_sections(crit: Criterion) -> Iterable[str]:
-    for req, parent in crit.information:
-        if not parent:
-            yield req.from_section
-        else:
-            yield from parent.sections
+def populate_sections(result: Result) -> None:
+    """Determine where the candidates come from by traversing
+    the dependency tree back to the top.
+    """
+
+    resolved: Dict[str, Set[str]] = {}
+
+    def get_candidate_sections(key: str) -> Set[str]:
+        if key in resolved:
+            return resolved[key]
+        resolved[key] = res = set()
+        crit: Criterion = result.criteria[key]
+        for req, parent in crit.information:
+            if parent is None:
+                res.add(req.from_section)
+            else:
+                pkey = _identify_parent(parent)
+                res.update(get_candidate_sections(pkey))
+        return res
+
+    for k, can in result.mapping.items():
+        can.sections = sorted(get_candidate_sections(k))
 
 
 def extract_metadata(result: Result) -> Dict[str, Metaset]:
@@ -91,7 +107,6 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
             ):
                 continue
             new_metasets[k] = _build_metaset(crit, all_metasets, keep_unresolved)
-            result.mapping[k].sections = list(set(_get_sections(crit)))
 
         if new_metasets:
             all_metasets.update(new_metasets)
@@ -116,7 +131,6 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
     for key in circular:
         crit = result.criteria[key]
         all_metasets[key] = _build_metaset(crit, all_metasets, set())
-        result.mapping[key].sections = list(set(_get_sections(crit)))
 
     return all_metasets
 
@@ -159,4 +173,6 @@ def resolve(
             candidate = mapping[key]
             candidate.marker = metaset.as_marker()
             candidate.hashes = provider.get_hashes(candidate)
+
+    populate_sections(result)
     return mapping, provider.fetched_dependencies, provider.summary_collection
