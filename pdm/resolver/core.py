@@ -63,24 +63,23 @@ def _build_metaset(
 
 
 def populate_sections(result: Result) -> None:
-    _sections_cache: Dict[str, List[str]] = {}
-    _visited: Set[str] = set()  # a collection of visited names to avoid dead loop.
+    """Determine where the candidates come from by traversing
+    the dependency tree back to the top.
+    """
 
-    def get_candidate_sections(key: str) -> List[str]:
-        _visited.add(key)
-        if key in _sections_cache:
-            return _sections_cache[key]
-        res = set()
+    resolved: Dict[str, Set[str]] = {}
+
+    def get_candidate_sections(key: str) -> Set[str]:
+        if key in resolved:
+            return resolved[key]
+        resolved[key] = res = set()
         crit: Criterion = result.criteria[key]
         for req, parent in crit.information:
             if parent is None:
                 res.add(req.from_section)
             else:
                 pkey = _identify_parent(parent)
-                if pkey in _visited:
-                    continue
                 res.update(get_candidate_sections(pkey))
-        _sections_cache[key] = res = list(res)
         return res
 
     for k, can in result.mapping.items():
