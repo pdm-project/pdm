@@ -113,6 +113,7 @@ class Command(BaseCommand):
     ) -> None:
         script = project.scripts[script_name]
         kind, value, options = self._normalize_script(script)
+        options.pop("help", None)
         if kind == "cmd":
             args = shlex.split(value) + list(args)
         elif kind == "shell":

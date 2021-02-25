@@ -45,7 +45,10 @@ def test_run_cmd_script(project, invoke):
 
 def test_run_shell_script(project, invoke):
     project.tool_settings["scripts"] = {
-        "test_script": {"shell": "echo hello > output.txt"}
+        "test_script": {
+            "shell": "echo hello > output.txt",
+            "help": "test it won't fail",
+        }
     }
     project.write_pyproject()
     with cd(project.root):
