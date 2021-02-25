@@ -1,3 +1,16 @@
+Release v1.3.2 (2021-02-25)
+---------------------------
+
+### Features & Improvements
+
+- Abort and tell user the selected section following `pdm sync` or `pdm install` is not present in the error message. [#274](https://github.com/frostming/pdm/issues/274)
+
+### Bug Fixes
+
+- Fix a bug that candidates' sections cannot be retrieved rightly when circular dependencies exist. [#270](https://github.com/frostming/pdm/issues/270)
+- Don't pass the help argument into the run script method. [#272](https://github.com/frostming/pdm/issues/272)
+
+
 Release v1.3.1 (2021-02-19)
 ---------------------------
 
