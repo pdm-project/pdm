@@ -24,7 +24,7 @@ REQUIREMENTS = [
     ),
     (
         "git+http://git.example.com/MyProject.git@master#egg=MyProject",
-        None,
+        "MyProject @ git+http://git.example.com/MyProject.git@master",
     ),
     (
         "https://github.com/pypa/pip/archive/1.3.1.zip",
@@ -49,7 +49,7 @@ REQUIREMENTS = [
     ),
     (
         "git+git@github.com:pypa/pip.git#egg=pip",
-        "git+ssh://git@github.com/pypa/pip.git#egg=pip",
+        "pip @ git+ssh://git@github.com/pypa/pip.git",
     ),
 ]
 
