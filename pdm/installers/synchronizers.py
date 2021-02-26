@@ -117,8 +117,11 @@ class Synchronizer:
                 can = candidates.pop(key)
                 if can.marker and not can.marker.evaluate(environment):
                     to_remove.append(key)
-                elif not is_dist_editable(dist) and dist.version != can.version:
-                    # XXX: An editable distribution is always considered as consistent.
+                elif not is_dist_editable(dist) and (
+                    dist.version != can.version or can.req.editable
+                ):
+                    to_update.append(key)
+                elif is_dist_editable(dist) and not can.req.editable:
                     to_update.append(key)
             elif key not in self.all_candidates and key not in self.SEQUENTIAL_PACKAGES:
                 # Remove package only if it is not required by any section

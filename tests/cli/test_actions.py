@@ -450,3 +450,15 @@ def test_update_ignore_constraints(project, repository, working_set):
 def test_init_validate_python_requires(project_no_init):
     with pytest.raises(ValueError):
         actions.do_init(project_no_init, python_requires="3.7")
+
+
+def test_editable_package_override_non_editable(project, repository, working_set, vcs):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    actions.do_add(
+        project, packages=["git+https://github.com/test-root/demo.git#egg=demo"]
+    )
+    actions.do_add(
+        project,
+        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
+    )
+    assert working_set["demo"].editable

@@ -146,9 +146,10 @@ class TestProject(Project):
 
 
 class Distribution:
-    def __init__(self, key, version):
+    def __init__(self, key, version, editable=False):
         self.key = key
         self.version = version
+        self.editable = editable
         self.dependencies = []
 
     def requires(self, extras=()):
@@ -190,7 +191,7 @@ def working_set(mocker, repository):
         pip_logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
         key = safe_name(candidate.name).lower()
-        dist = Distribution(key, candidate.version)
+        dist = Distribution(key, candidate.version, candidate.req.editable)
         dist.dependencies = dependencies
         rv.add_distribution(dist)
 

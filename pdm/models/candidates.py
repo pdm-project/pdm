@@ -237,7 +237,12 @@ class Candidate:
         }
         project_root = self.environment.project.root.as_posix()
         if self.req.is_vcs:
-            result.update({self.req.vcs: self.req.repo, "revision": self.revision})
+            result.update(
+                {
+                    self.req.vcs: self.req.repo,
+                    "ref": self.req.ref if self.req.editable else self.revision,
+                }
+            )
         elif not self.req.is_named:
             if self.req.is_file_or_url and self.req.is_local_dir:
                 result.update(path=path_replace(project_root, ".", self.req.str_path))
