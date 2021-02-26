@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def is_dist_editable(dist: Distribution) -> bool:
-    return isinstance(dist, EggInfoDistribution)
+    return isinstance(dist, EggInfoDistribution) or getattr(dist, "editable", False)
 
 
 def format_dist(dist: Distribution) -> str:

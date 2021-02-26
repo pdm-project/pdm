@@ -1,0 +1,1 @@
+Fix a bug that editable package doesn't override the non-editable version in the working set.
