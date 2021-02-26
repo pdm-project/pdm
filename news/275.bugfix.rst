@@ -1,1 +1,0 @@
-Fix the requirement string of a VCS requirement to comply with PEP 508.

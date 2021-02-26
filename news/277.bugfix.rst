@@ -1,1 +1,0 @@
-Fix a bug that editable packages with `src` directory can't be uninstalled correctly.

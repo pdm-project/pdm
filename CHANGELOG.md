@@ -1,3 +1,13 @@
+Release v1.3.3 (2021-02-26)
+---------------------------
+
+### Bug Fixes
+
+- Fix the requirement string of a VCS requirement to comply with PEP 508. [#275](https://github.com/frostming/pdm/issues/275)
+- Fix a bug that editable packages with `src` directory can't be uninstalled correctly. [#277](https://github.com/frostming/pdm/issues/277)
+- Fix a bug that editable package doesn't override the non-editable version in the working set. [#278](https://github.com/frostming/pdm/issues/278)
+
+
 Release v1.3.2 (2021-02-25)
 ---------------------------
 
