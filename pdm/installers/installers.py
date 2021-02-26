@@ -77,10 +77,7 @@ class Installer:  # pragma: no cover
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)
-        if is_dist_editable(dist):
-            ireq = pip_shims.install_req_from_editable(dist.location)
-        else:
-            ireq = pip_shims.install_req_from_line(dist.project_name)
+        ireq = pip_shims.install_req_from_line(dist.project_name)
         ireq.req = req
 
         pathset = ireq.uninstall(auto_confirm=self.auto_confirm)
