@@ -153,3 +153,14 @@ Add following in the `settings.json`:
   "python.autoComplete.extraPaths": ["__pypackages__/<major.minor>/lib"]
 }
 ```
+
+#### Task Provider
+
+In addition, there is a [VSCode Task Provider extension][pdm task provider] available for download.
+
+This makes it possible for VSCode to automatically detect [pdm scripts][pdm scripts] so they
+can be run natively as [VSCode Tasks][vscode tasks].
+
+[vscode tasks]: https://code.visualstudio.com/docs/editor/tasks
+[pdm task provider]: https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider
+[pdm scripts]: https://pdm.fming.dev/project/#run-scripts-in-isolated-environment
