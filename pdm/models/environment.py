@@ -289,7 +289,7 @@ class Environment:
         """
         kwargs = self._make_building_args(ireq)
         wheel_cache = self.project.make_wheel_cache()
-        with self.get_finder() as finder:
+        with self.get_finder(ignore_requires_python=True) as finder:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
