@@ -5,10 +5,6 @@ Release v1.3.4 (2021-03-01)
 
 - added documentation on a [task provider for vscode](https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider) [#280](https://github.com/frostming/pdm/issues/280)
 
-
-Release v1.3.4 (2021-03-01)
----------------------------
-
 ### Bug Fixes
 
 - Ignore the python requires constraints when fetching the link from the PyPI index.
