@@ -171,3 +171,10 @@ packages_group.add_argument(
     default=[],
 )
 packages_group.add_argument("packages", nargs="*", help="Specify packages")
+
+ignore_python_option = Option(
+    "-I",
+    "--ignore-python",
+    action="store_true",
+    help="Ignore the Python path saved in the pdm.toml config",
+)

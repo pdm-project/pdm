@@ -2,15 +2,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import shutil
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
 import tomlkit
+from pythonfinder import Finder
+from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 from tomlkit.items import Comment, Whitespace
 
 from pdm._types import Source
-from pdm.exceptions import ProjectError
+from pdm.exceptions import NoPythonVersion, ProjectError
 from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
@@ -28,6 +33,7 @@ from pdm.utils import (
     cd,
     find_project_root,
     get_venv_python,
+    is_venv_python,
     setdefault,
 )
 
@@ -134,26 +140,69 @@ class Project:
         return Config(self.root / ".pdm.toml")
 
     @cached_property
+    def python_executable(self) -> str:
+        """Get the Python interpreter path."""
+        config = self.config
+        if self.project_config.get("python.path") and not os.getenv(
+            "PDM_IGNORE_SAVED_PYTHON"
+        ):
+            return self.project_config["python.path"]
+        path = None
+        if config["use_venv"]:
+            path = get_venv_python(self.root)
+            if path:
+                stream.echo(
+                    f"Virtualenv interpreter {stream.green(path)} is detected.",
+                    err=True,
+                    verbosity=stream.DETAIL,
+                )
+        if not path and PYENV_INSTALLED and config.get("python.use_pyenv", True):
+            path = Path(PYENV_ROOT, "shims", "python").as_posix()
+        if not path:
+            path = shutil.which("python")
+
+        version = None
+        if path:
+            version, _ = get_python_version(path, True)
+        if not version or not self.python_requires.contains(version):
+            finder = Finder()
+            for python in finder.find_all_python_versions():
+                version, _ = get_python_version(python.path.as_posix(), True)
+                if self.python_requires.contains(version):
+                    path = python.path.as_posix()
+                    break
+            else:
+                version = ".".join(map(str, sys.version_info[:3]))
+                if self.python_requires.contains(version):
+                    path = sys.executable
+        if path:
+            if os.path.normcase(path) == os.path.normcase(sys.executable):
+                # Refer to the base interpreter to allow for venvs
+                path = getattr(sys, "_base_executable", sys.executable)
+            stream.echo(
+                "Using Python interpreter: {} ({})".format(stream.green(path), version),
+                err=True,
+            )
+            if not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
+                self.project_config["python.path"] = Path(path).as_posix()
+            return path
+        raise NoPythonVersion(
+            "No Python that satisfies {} is found on the system.".format(
+                self.python_requires
+            )
+        )
+
+    @cached_property
     def environment(self) -> Environment:
         if self.is_global:
             env = GlobalEnvironment(self)
             # Rewrite global project's python requires to be
             # compatible with the exact version
             env.python_requires = PySpecSet(
-                "==" + get_python_version(env.python_executable, True)[0]
+                "==" + get_python_version(self.python_executable, True)[0]
             )
             return env
-        if not self.project_config.get("python.path") and self.config["use_venv"]:
-            venv_python = get_venv_python(self.root)
-            if venv_python:
-                self.project_config["python.path"] = venv_python
-        if (
-            self.config["use_venv"]
-            and self.project_config.get("python.path")
-            and Path(self.project_config.get("python.path"))
-            .parent.parent.joinpath("pyvenv.cfg")
-            .exists()
-        ):
+        if self.config["use_venv"] and is_venv_python(self.python_executable):
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
         return Environment(self)

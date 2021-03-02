@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 import pkgutil
 import sys
 from typing import Optional, Type
@@ -11,7 +12,7 @@ from resolvelib import Resolver
 
 from pdm.cli.actions import migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import pep582_option, verbose_option
+from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
 from pdm.installers import Synchronizer
 from pdm.iostream import stream
@@ -58,6 +59,7 @@ class Core:
             help="show the version and exit",
         )
         verbose_option.add_to_parser(self.parser)
+        ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
         self.subparsers = self.parser.add_subparsers()
@@ -82,6 +84,8 @@ class Core:
         self.parser.set_defaults(global_project=None)
         options = self.parser.parse_args(args or None)
         stream.set_verbosity(options.verbose)
+        if options.ignore_python:
+            os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
 
         if obj is not None:
             options.project = obj
