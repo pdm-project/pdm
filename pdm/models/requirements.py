@@ -312,10 +312,11 @@ class FileRequirement(Requirement):
         project_name = f"{self.project_name}" if self.project_name else ""
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
         marker = self._format_marker()
+        url = url_without_fragments(self.url)
         if self.editable:
-            return f"-e {self.url}#egg={project_name}{extras}{marker}"
+            return f"-e {url}#egg={project_name}{extras}{marker}"
         delimiter = " @ " if project_name else ""
-        return f"{project_name}{extras}{delimiter}{self.url}{marker}"
+        return f"{project_name}{extras}{delimiter}{url}{marker}"
 
     def _parse_name_from_url(self) -> None:
         parsed = urlparse.urlparse(self.url)
@@ -325,7 +326,6 @@ class FileRequirement(Requirement):
             name, extras = strip_extras(egg_info)
             self.name = name
             self.extras = extras
-            self.url = url_without_fragments(self.url)
         if not self.name:
             filename = os.path.basename(url_without_fragments(self.url))
             if filename.endswith(".whl"):
