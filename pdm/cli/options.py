@@ -156,7 +156,7 @@ def deprecate_global_option(value) -> Project:
         stream.echo(
             stream.red(
                 "DEPRECATION: -g/--global with argument is deprecated and will be "
-                "removed in the next release, please use '-gp <PROJECT_PATH>' instead."
+                "removed in v1.5.0, please use '-gp <PROJECT_PATH>' instead."
             ),
             err=True,
         )
