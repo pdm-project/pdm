@@ -9,23 +9,25 @@ import pytest
 from pdm.models.requirements import filter_requirements_with_extras
 from pdm.pep517.api import build_wheel
 from pdm.project import Project
-from pdm.utils import cd
+from pdm.utils import cd, temp_environ
 
 
 def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
 
     del project.project_config["python.path"]
-    pyenv_python = os.path.join(PYENV_ROOT, "shims", "python")
+    pyenv_python = Path(PYENV_ROOT, "shims", "python")
+    with temp_environ():
+        os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+        mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
+        mocker.patch("pdm.project.core.get_python_version", return_value=("3.8", True))
+        assert Path(project.python_executable) == pyenv_python
 
-    mocker.patch("pdm.models.environment.PYENV_INSTALLED", True)
-    assert project.environment.python_executable == pyenv_python
+        # Clean cache
+        del project.__dict__["python_executable"]
 
-    # Clean cache
-    del project.environment.__dict__["python_executable"]
-
-    project.project_config["python.use_pyenv"] = False
-    assert project.environment.python_executable != pyenv_python
+        project.project_config["python.use_pyenv"] = False
+        assert Path(project.python_executable) != pyenv_python
 
 
 def test_project_config_items(project):
@@ -109,3 +111,17 @@ def test_project_auto_detect_venv(project):
     ).as_posix()
 
     assert project.environment.is_global
+
+
+def test_ignore_saved_python(project):
+    project.project_config["use_venv"] = True
+    scripts = "Scripts" if os.name == "nt" else "bin"
+    suffix = ".exe" if os.name == "nt" else ""
+    venv.create(project.root / "venv")
+    with temp_environ():
+        os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+        assert Path(project.python_executable) != project.project_config["python.path"]
+        assert (
+            Path(project.python_executable)
+            == project.root / "venv" / scripts / f"python{suffix}"
+        )

@@ -397,3 +397,18 @@ def path_replace(pattern: str, replace_with: str, dest: str) -> str:
         dest.replace("\\", "/"),
         flags=sub_flags,
     )
+
+
+def is_venv_python(interpreter: os.PathLike) -> bool:
+    """Check if the given interpreter path is from a virtualenv"""
+    interpreter = Path(interpreter)
+    if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
+        return True
+    if os.getenv("VIRTUAL_ENV"):
+        try:
+            interpreter.relative_to(os.getenv("VIRTUAL_ENV"))
+        except ValueError:
+            pass
+        else:
+            return True
+    return False

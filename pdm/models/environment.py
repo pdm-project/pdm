@@ -14,10 +14,7 @@ from distlib.scripts import ScriptMaker
 from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
-from pythonfinder import Finder
-from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
-from pdm.exceptions import NoPythonVersion
 from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.auth import make_basic_auth
@@ -35,7 +32,6 @@ from pdm.utils import (
     expand_env_vars_in_auth,
     get_finder,
     get_python_version_string,
-    get_venv_python,
     populate_link,
     temp_environ,
 )
@@ -93,56 +89,10 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
+        self.python_executable = project.python_executable
         self._essential_installed = False
         self.auth = make_basic_auth(
             self.project.sources, stream.verbosity >= stream.DETAIL
-        )
-
-    @cached_property
-    def python_executable(self) -> str:
-        """Get the Python interpreter path."""
-        config = self.project.config
-        if self.project.project_config.get("python.path"):
-            return self.project.project_config["python.path"]
-        if "VIRTUAL_ENV" in os.environ:
-            stream.echo(
-                "An activated virtualenv is detected, reuse the interpreter now.",
-                err=True,
-                verbosity=stream.DETAIL,
-            )
-            return get_venv_python(self.project.root)
-        if PYENV_INSTALLED and config.get("python.use_pyenv", True):
-            return os.path.join(PYENV_ROOT, "shims", "python")
-
-        # First try what `python` refers to.
-        path = shutil.which("python")
-        version = None
-        if path:
-            version, _ = get_python_version(path, True)
-        if not version or not self.python_requires.contains(version):
-            finder = Finder()
-            for python in finder.find_all_python_versions():
-                version, _ = get_python_version(python.path.as_posix(), True)
-                if self.python_requires.contains(version):
-                    path = python.path.as_posix()
-                    break
-            else:
-                version = ".".join(map(str, sys.version_info[:3]))
-                if self.python_requires.contains(version):
-                    path = sys.executable
-        if path:
-            if os.path.normcase(path) == os.path.normcase(sys.executable):
-                # Refer to the base interpreter to allow for venvs
-                path = getattr(sys, "_base_executable", sys.executable)
-            stream.echo(
-                "Using Python interpreter: {} ({})".format(stream.green(path), version)
-            )
-            self.project.project_config["python.path"] = Path(path).as_posix()
-            return path
-        raise NoPythonVersion(
-            "No Python that satisfies {} is found on the system.".format(
-                self.python_requires
-            )
         )
 
     def get_paths(self) -> Dict[str, str]:
