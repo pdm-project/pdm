@@ -46,7 +46,7 @@ jobs:
       - name: Fix Ubuntu Env
         run: |
           echo "LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1" >> $GITHUB_ENV
-        if: runner.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
       - name: Cache PIP
         uses: actions/cache@v2
         with:
