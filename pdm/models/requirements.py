@@ -325,6 +325,7 @@ class FileRequirement(Requirement):
             name, extras = strip_extras(egg_info)
             self.name = name
             self.extras = extras
+            self.url = url_without_fragments(self.url)
         if not self.name:
             filename = os.path.basename(url_without_fragments(self.url))
             if filename.endswith(".whl"):
@@ -337,7 +338,6 @@ class FileRequirement(Requirement):
         ):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
         result = SetupReader.read_from_directory(self.path.absolute().as_posix())
-        # TODO: Assign a temp name for PEP 517 local package.
         self.name = result["name"]
 
 

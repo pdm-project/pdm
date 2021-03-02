@@ -17,7 +17,7 @@ class SetupReader(object):
         "python_requires": None,
     }
 
-    FILES = ["setup.py", "setup.cfg"]
+    FILES = ["setup.py", "setup.cfg", "pyproject.toml"]
 
     @classmethod
     def read_from_directory(
@@ -49,6 +49,21 @@ class SetupReader(object):
             and not result["extras_require"]
             and not result["python_requires"]
         )
+
+    def read_pyproject_toml(self, filepath):
+        from pdm.pep517.metadata import Metadata
+
+        try:
+            metadata = Metadata(filepath)
+        except ValueError:
+            return {}
+        return {
+            "name": metadata.name,
+            "version": metadata.version,
+            "install_requires": metadata.dependencies,
+            "extras_require": metadata.optional_dependencies,
+            "python_requires": metadata.requires_python,
+        }
 
     def read_setup_py(
         self, filepath
