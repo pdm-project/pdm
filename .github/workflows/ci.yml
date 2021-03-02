@@ -43,6 +43,10 @@ jobs:
         run: |
           echo "::set-output name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
           echo "::set-output name=PIP_CACHE::$(pip cache dir)"
+      - name: Fix Ubuntu Env
+        run: |
+          echo "LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1" >> $GITHUB_ENV
+        if: runner.os == 'Linux'
       - name: Cache PIP
         uses: actions/cache@v2
         with:
