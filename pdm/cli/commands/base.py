@@ -1,7 +1,7 @@
 import argparse
 from typing import List, Optional
 
-from pdm.cli.options import Option, global_option, verbose_option
+from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.cli.utils import PdmFormatter
 from pdm.project import Project
 
@@ -15,7 +15,7 @@ class BaseCommand(object):
     description = None  # type: Optional[str]
     # A list of pre-defined options which will be loaded on initailizing
     # Rewrite this if you don't want the default ones
-    arguments = [verbose_option, global_option]  # type: List[Option]
+    arguments = [verbose_option, global_option, project_option]  # type: List[Option]
     project_class = Project
 
     def __init__(self, parser: argparse.ArgumentParser) -> None:

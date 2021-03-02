@@ -33,7 +33,6 @@ class Command(BaseCommand):
             help="Write output to the given file, or print to stdout if not given",
         )
         parser.add_argument(
-            "-p",
             "--pyproject",
             action="store_true",
             help="Read the list of packages from pyproject.toml",

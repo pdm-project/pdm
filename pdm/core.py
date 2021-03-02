@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import importlib
 import os
 import pkgutil
@@ -74,6 +75,28 @@ class Core:
     def __call__(self, *args, **kwargs):
         return self.main(*args, **kwargs)
 
+    def ensure_project(
+        self, options: argparse.Namespace, obj: Optional[Project]
+    ) -> None:
+        if getattr(options, "project", None) is None:
+            project = None
+            if obj is not None:
+                project = obj
+            elif options.global_project is True:
+                project_factory = self.project_class.create_global
+            elif options.global_project:
+                project = options.global_project
+            else:
+                project_factory = self.project_class
+
+            if project is None:
+                project = project_factory(options.project_path)
+            options.project = project
+
+        # Add reverse reference for core object
+        options.project.core = self
+        migrate_pyproject(options.project)
+
     def main(self, args=None, prog_name=None, obj=None, **extra):
         """The main entry function"""
         from pdm.models.pip_shims import global_tempdir_manager
@@ -87,19 +110,11 @@ class Core:
         if options.ignore_python:
             os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
 
-        if obj is not None:
-            options.project = obj
-        if options.global_project:
-            options.project = options.global_project
         if options.pep582:
             print_pep582_command(options.pep582)
             sys.exit(0)
-        if not getattr(options, "project", None):
-            options.project = self.project_class()
 
-        # Add reverse reference for core object
-        options.project.core = self
-        migrate_pyproject(options.project)
+        self.ensure_project(options, obj)
 
         try:
             f = options.handler

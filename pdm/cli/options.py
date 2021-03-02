@@ -1,5 +1,6 @@
 import argparse
 
+from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -141,14 +142,36 @@ update_strategy_group.add_argument(
     help="Try to update the packages and their dependencies recursively",
 )
 
+project_option = Option(
+    "-p",
+    "--project",
+    dest="project_path",
+    help="Specify another path as the project root, "
+    "which changes the base of pyproject.toml and __pypackages__",
+)
+
+
+def deprecate_global_option(value) -> Project:
+    if value:
+        stream.echo(
+            stream.red(
+                "DEPRECATION: -g/--global with argument is deprecated and will be "
+                "removed in the next release, please use '-gp <PROJECT_PATH>' instead."
+            ),
+            err=True,
+        )
+    return Project.create_global(value)
+
+
 global_option = Option(
     "-g",
     "--global",
     dest="global_project",
     nargs="?",
-    type=Project.create_global,
-    const=Project.create_global(),
-    help="Use the global project, accepts an optional path to the project directory",
+    type=deprecate_global_option,
+    const=True,
+    help="Use the global project, the project root can be supplied with "
+    "'-p/--project' option",
 )
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
