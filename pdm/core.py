@@ -80,17 +80,18 @@ class Core:
     ) -> None:
         if getattr(options, "project", None) is None:
             project = None
+            global_project = getattr(options, "global_project", None)
             if obj is not None:
                 project = obj
-            elif options.global_project is True:
+            elif global_project is True:
                 project_factory = self.project_class.create_global
-            elif options.global_project:
-                project = options.global_project
+            elif global_project:
+                project = global_project
             else:
                 project_factory = self.project_class
 
             if project is None:
-                project = project_factory(options.project_path)
+                project = project_factory(getattr(options, "project_path", None))
             options.project = project
 
         # Add reverse reference for core object
@@ -104,7 +105,6 @@ class Core:
         self.init_parser()
         self.load_plugins()
 
-        self.parser.set_defaults(global_project=None)
         options = self.parser.parse_args(args or None)
         stream.set_verbosity(options.verbose)
         if options.ignore_python:
