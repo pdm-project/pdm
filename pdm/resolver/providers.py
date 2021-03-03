@@ -7,6 +7,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import url_without_fragments
 
 
 class BaseProvider(AbstractProvider):
@@ -52,7 +53,9 @@ class BaseProvider(AbstractProvider):
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if not requirement.is_named:
-            return not candidate.req.is_named and candidate.req.url == requirement.url
+            return not candidate.req.is_named and url_without_fragments(
+                candidate.req.url
+            ) == url_without_fragments(requirement.url)
         if not candidate.version:
             candidate.get_metadata()
         if getattr(candidate, "_preferred", False) and not candidate._requires_python:

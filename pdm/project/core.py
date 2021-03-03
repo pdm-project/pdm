@@ -5,6 +5,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
@@ -163,7 +164,10 @@ class Project:
 
         version = None
         if path:
-            version, _ = get_python_version(path, True)
+            try:
+                version, _ = get_python_version(path, True)
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                version = None
         if not version or not self.python_requires.contains(version):
             finder = Finder()
             for python in finder.find_all_python_versions():
