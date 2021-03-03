@@ -234,6 +234,7 @@ def project_no_init(tmp_path, mocker):
     with temp_environ():
         os.environ.pop("VIRTUAL_ENV", None)
         os.environ.pop("PYTHONPATH", None)
+        os.environ.pop("PEP582_PACKAGES", None)
         yield p
     # Restore the config items
     Config._config_map = old_config_map

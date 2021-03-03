@@ -1,6 +1,8 @@
 import os
 import subprocess
 import textwrap
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -183,3 +185,19 @@ def test_run_show_list_of_scripts(project, invoke):
         == "test_script call  test_script:main call a python function"
     )
     assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
+
+
+def test_run_with_another_project_root(project, invoke, capfd):
+    project.meta["requires-python"] = ">=3.6"
+    project.write_pyproject()
+    invoke(["add", "requests==2.24.0"], obj=project)
+    with TemporaryDirectory(prefix="pytest-run-") as tmp_dir:
+        Path(tmp_dir).joinpath("main.py").write_text(
+            "import requests\nprint(requests.__version__)\n"
+        )
+        capfd.readouterr()
+        with cd(tmp_dir):
+            ret = invoke(["run", "-p", str(project.root), "python", "main.py"])
+            assert ret.exit_code == 0
+            out, _ = capfd.readouterr()
+            assert out.strip() == "2.24.0"

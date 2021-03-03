@@ -51,6 +51,8 @@ class Command(BaseCommand):
         python_root = os.path.dirname(project.python_executable)
         new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
         os.environ.update({"PYTHONPATH": pythonpath, "PATH": new_path})
+        if project_env.packages_path:
+            os.environ.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env_file:
             import dotenv
 
