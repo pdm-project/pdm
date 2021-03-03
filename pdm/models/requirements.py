@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from pip._vendor.packaging.markers import InvalidMarker
+from pip._vendor.packaging.requirements import InvalidRequirement
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
 
@@ -443,7 +444,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
     else:
         try:
             r = NamedRequirement.parse(line)  # type: Requirement
-        except RequirementParseError as e:
+        except (RequirementParseError, InvalidRequirement) as e:
             m = FILE_REQ.match(line)
             if m is not None:
                 r = FileRequirement.parse(line, m.groupdict())
@@ -451,7 +452,9 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
                 raise RequirementError(str(e)) from None
         else:
             if r.url:
-                r = FileRequirement(name=r.name, url=r.url, extras=r.extras)
+                r = FileRequirement(
+                    name=r.name, url=r.url, extras=r.extras, marker=r.marker
+                )
 
     if editable:
         if r.is_vcs or r.is_file_or_url and r.is_local_dir:
