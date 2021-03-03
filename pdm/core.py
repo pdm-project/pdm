@@ -78,12 +78,12 @@ class Core:
     def ensure_project(
         self, options: argparse.Namespace, obj: Optional[Project]
     ) -> None:
+        if obj is not None:
+            options.project = obj
         if getattr(options, "project", None) is None:
             project = None
             global_project = getattr(options, "global_project", None)
-            if obj is not None:
-                project = obj
-            elif global_project is True:
+            if global_project is True:
                 project_factory = self.project_class.create_global
             elif global_project:
                 project = global_project

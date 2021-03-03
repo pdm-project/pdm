@@ -19,6 +19,7 @@ class Command(BaseCommand):
             help="Specify the file format explicitly",
         )
         parser.add_argument("filename", help="The file name")
+        parser.set_defaults(project=self.project_class("."))
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         do_import(project, options.filename, options.format)

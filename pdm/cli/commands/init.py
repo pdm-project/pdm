@@ -13,6 +13,9 @@ from pdm.utils import get_user_email_from_git
 class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.set_defaults(project=self.project_class("."))
+
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
             stream.echo(
