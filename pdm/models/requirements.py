@@ -256,7 +256,11 @@ class FileRequirement(Requirement):
         if not self.path:
             return None
         result = self.path.as_posix()
-        if not self.path.is_absolute():
+        if (
+            not self.path.is_absolute()
+            and not result.startswith("./")
+            and not result.startswith("../")
+        ):
             result = "./" + result
         return result
 
