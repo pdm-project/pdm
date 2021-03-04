@@ -17,7 +17,7 @@ class SetupReader(object):
         "python_requires": None,
     }
 
-    FILES = ["setup.py", "setup.cfg", "pyproject.toml"]
+    FILES = ["pyproject.toml", "setup.cfg", "setup.py"]
 
     @classmethod
     def read_from_directory(

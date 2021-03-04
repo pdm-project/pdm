@@ -166,7 +166,7 @@ def do_add(
         requirements[key] = r
     stream.echo(
         f"Adding packages to {section} dependencies: "
-        + ", ".join(str(stream.green(key, bold=True)) for key in requirements)
+        + ", ".join(stream.green(key or "", bold=True) for key in requirements)
     )
     all_dependencies = project.all_dependencies
     all_dependencies.setdefault(section, {}).update(requirements)
