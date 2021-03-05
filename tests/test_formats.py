@@ -132,4 +132,4 @@ def test_convert_legacy_format(project):
 def test_export_setup_py():
     project = Project(FIXTURES / "projects/demo-package")
     content = setup_py.export(project, [], None)
-    assert content == project.root.joinpath("setup.py").read_text()
+    assert content == project.root.joinpath("setup.txt").read_text()
