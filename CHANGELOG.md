@@ -1,3 +1,23 @@
+Release v1.4.0 (2021-03-05)
+---------------------------
+
+### Features & Improvements
+
+- When `-I/--ignore-python` passed or `PDM_IGNORE_SAVED_PYTHON=1`, ignore the interpreter set in `.pdm.toml` and don't save to it afterwards. [#283](https://github.com/frostming/pdm/issues/283)
+- A new option `-p/--project` is introduced to specify another path for the project base. It can also be combined with `-g/--global` option.
+  The latter is changed to a flag only option that does not accept values. [#286](https://github.com/frostming/pdm/issues/286)
+- Support `-f setuppy` for `pdm export` to export the metadata as setup.py [#289](https://github.com/frostming/pdm/issues/289)
+
+### Bug Fixes
+
+- Fix a bug that editable local package requirements cannot be parsed rightly. [#285](https://github.com/frostming/pdm/issues/285)
+- Change the priority of metadata files to parse so that PEP 621 metadata will be parsed first. [#288](https://github.com/frostming/pdm/issues/288)
+
+### Improved Documentation
+
+- Add examples of how to integrate with CI pipelines (and tox). [#281](https://github.com/frostming/pdm/issues/281)
+
+
 Release v1.3.4 (2021-03-01)
 ---------------------------
 
