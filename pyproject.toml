@@ -76,7 +76,8 @@ exclude = '''
   | buck-out
   | build
   | dist
-  | pdm/_vendor/*
+  | pdm/_vendor
+  | tests/fixtures
 )/
 '''
 
