@@ -1,4 +1,5 @@
-from pdm.formats import flit, legacy, pipfile, poetry, requirements
+from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
+from pdm.project import Project
 from pdm.utils import cd
 from tests import FIXTURES
 
@@ -126,3 +127,9 @@ def test_convert_legacy_format(project):
     assert not result["dev-dependencies"]
     assert result["optional-dependencies"]["test"] == ["pytest"]
     assert settings["source"][0]["url"] == "https://test.pypi.org/simple"
+
+
+def test_export_setup_py():
+    project = Project(FIXTURES / "projects/demo-package")
+    content = setup_py.export(project, [], None)
+    assert content == project.root.joinpath("setup.py").read_text()
