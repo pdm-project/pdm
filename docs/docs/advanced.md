@@ -1,4 +1,4 @@
-# Advanced usage of PDM
+# Advanced Usage
 
 ## Automatic Testing with Tox
 
@@ -63,6 +63,30 @@ commands =
 ```
 
 See the [project's README](https://github.com/pdm-project/tox-pdm) for a detailed guidance.
+
+## Automatic Testing with Nox
+
+[Nox](https://nox.thea.codes/) is another great tool for automated testing. Unlike tox, Nox uses a standard Python file for configuration.
+
+It is much easier to use PDM in Nox, here is an example of `noxfile.py`:
+
+```python hl_lines="3"
+import os
+
+os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
+
+@nox.session
+def tests(session):
+    session.run('pdm', 'install', '-s', 'test', external=True)
+    session.run('pytest')
+
+@nox.session
+def lint(session):
+    session.run('pdm', 'install', '-s', 'lint', external=True)
+    session.run('flake8', '--import-order-style', 'google')
+```
+
+Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Python in the virtualenv correctly. Also make sure `pdm` is available in the `PATH`.
 
 ## Use PDM in Continuous Integration
 
