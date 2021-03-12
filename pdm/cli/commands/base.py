@@ -6,7 +6,7 @@ from pdm.cli.utils import PdmFormatter
 from pdm.project import Project
 
 
-class BaseCommand(object):
+class BaseCommand:
     """A CLI subcommand"""
 
     # The subcommand's name

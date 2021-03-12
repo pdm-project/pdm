@@ -3,7 +3,7 @@ from . import win32
 
 
 # from wincon.h
-class WinColor(object):
+class WinColor:
     BLACK   = 0
     BLUE    = 1
     GREEN   = 2
@@ -14,12 +14,12 @@ class WinColor(object):
     GREY    = 7
 
 # from wincon.h
-class WinStyle(object):
+class WinStyle:
     NORMAL              = 0x00 # dim text, dim background
     BRIGHT              = 0x08 # bright text, dim background
     BRIGHT_BACKGROUND   = 0x80 # dim text, bright background
 
-class WinTerm(object):
+class WinTerm:
 
     def __init__(self):
         self._default = win32.GetConsoleScreenBufferInfo(win32.STDOUT).wAttributes

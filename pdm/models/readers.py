@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 
-class SetupReader(object):
+class SetupReader:
     """
     Class that reads a setup.py file without executing it.
     """
