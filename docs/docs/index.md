@@ -1,3 +1,7 @@
+<div align="center">
+<img src="assets/logo_big.png" alt="PDM logo">
+</div>
+
 # Introduction
 
 PDM is a modern Python package manager with [PEP 582] support. It installs and manages packages
@@ -139,7 +143,7 @@ __pypackages__/
 
 Mark `__pypackages__/<major.minor>/lib` as Sources Root.
 
-Additionally, if you want to use tools from the environment (e.g. `pytest`), you have to add the 
+Additionally, if you want to use tools from the environment (e.g. `pytest`), you have to add the
 `__pypackages__/<major.minor>/bin` directory to the `PATH` variable in the corresponding
 run/debug configuration.
 

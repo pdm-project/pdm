@@ -1,13 +1,20 @@
+<div align="center">
+
 # PDM - Python Development Master
 
 一个现代的 Python 包管理器，支持 PEP 582。[English version README](README.md)
 
-![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
+![PDM logo](https://github.com/frostming/pdm/blob/master/docs/docs/assets/logo_big.png)
+
+[📖 Documentation](https://pdm.fming.dev)
+
+![Github Actions](https://github.com/frostming/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
 
-[![asciicast](hhttps://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](hhttps://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
+[![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
-[📖 文档](https://pdm.fming.dev)
+</div>
 
 ## 这个项目是啥?
 
