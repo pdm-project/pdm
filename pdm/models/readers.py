@@ -206,9 +206,7 @@ class SetupReader(object):
 
         return None, None
 
-    def _find_install_requires(
-        self, call: ast.Call, body: Iterable[Any]
-    ) -> List[str]:
+    def _find_install_requires(self, call: ast.Call, body: Iterable[Any]) -> List[str]:
         install_requires = []
         value = self._find_in_call(call, "install_requires")
         if value is None:
