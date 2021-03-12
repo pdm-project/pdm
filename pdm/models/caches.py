@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Dict, Optional
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
 from pdm.models import pip_shims
+from pdm.models.candidates import Candidate
 from pdm.utils import open_file
 
 if TYPE_CHECKING:
     from pip._vendor import requests
-
-    from pdm.models.candidates import Candidate
 
 
 class CandidateInfoCache:
