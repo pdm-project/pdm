@@ -1,0 +1,20 @@
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+authors = [
+    {name = "frostming", email = "mianghong@gmail.com"},
+]
+version = "0.1.0"
+requires-python = ">=3.5"
+license = {text = "MIT"}
+dependencies = ["fido2==0.9.1"]
+dev-dependencies = []
+description = ""
+name = "demo-package-install-failure"
+
+[project.urls]
+homepage = ""
+
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"

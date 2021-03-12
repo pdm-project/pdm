@@ -319,6 +319,13 @@ def test_completion_command(invoke):
     assert "(completion)" in result.output
 
 
+def test_lock_install_failure_project(invoke, fixture_project, repository):
+    project = fixture_project("demo-install-failure")
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    assert "fido2" in project.get_locked_candidates()
+
+
 def test_lock_legacy_project(invoke, fixture_project, repository):
     project = fixture_project("demo-legacy")
     result = invoke(["lock"], obj=project)
