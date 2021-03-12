@@ -122,3 +122,14 @@ def test_expand_project_root_in_url(req_str):
         assert lockfile_entry["path"].startswith("./")
     else:
         assert "${PROJECT_ROOT}" in lockfile_entry["url"]
+
+
+def test_parse_project_file_on_build_error(project):
+    req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
+    candidate = Candidate(req, project.environment)
+    assert candidate.get_dependencies_from_metadata() == [
+        "chardet; os_name=='nt'",
+        "idna",
+    ]
+    assert candidate.name == "demo"
+    assert candidate.version == "0.0.1"

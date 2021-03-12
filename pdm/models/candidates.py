@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import functools
 import warnings
+from argparse import Namespace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from distlib.database import EggInfoDistribution
 from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
 
-from pdm.exceptions import ExtrasError, RequirementError
+from pdm.exceptions import BuildError, ExtrasError, RequirementError
 from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.markers import Marker
+from pdm.models.readers import SetupReader
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property, path_replace
 
@@ -74,7 +76,7 @@ def get_requirements_from_dist(
                     result.append(r.as_line())
     extras_not_found = [e for e in extras if e not in extras_in_metadata]
     if extras_not_found:
-        warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
+        warnings.warn(ExtrasError(extras_not_found))
     return result
 
 
@@ -146,19 +148,26 @@ class Candidate:
         ireq = self.ireq
         if self.link and not ireq.link:
             ireq.link = self.link
-        built = self.environment.build(ireq, self.hashes, allow_all_wheels)
-        if self.req.editable:
-            if not self.req.is_local_dir and not self.req.is_vcs:
-                raise RequirementError(
-                    "Editable installation is only supported for "
-                    "local directory and VCS location."
-                )
-            sdist = get_sdist(built)
-            self.metadata = sdist.metadata if sdist else None
+        try:
+            built = self.environment.build(ireq, self.hashes, allow_all_wheels)
+        except BuildError:
+            stream.logger.warn("Failed to build package, try parsing project files.")
+            meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory)
+            meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
+            self.metadata = Namespace(**meta_dict)
         else:
-            # It should be a wheel path.
-            self.wheel = Wheel(built)
-            self.metadata = self.wheel.metadata
+            if self.req.editable:
+                if not self.req.is_local_dir and not self.req.is_vcs:
+                    raise RequirementError(
+                        "Editable installation is only supported for "
+                        "local directory and VCS location."
+                    )
+                sdist = get_sdist(built)
+                self.metadata = sdist.metadata if sdist else None
+            else:
+                # It should be a wheel path.
+                self.wheel = Wheel(built)
+                self.metadata = self.wheel.metadata
         if not self.name:
             self.name = self.metadata.name
             self.req.name = self.name
@@ -196,6 +205,11 @@ class Candidate:
             if not metadata:
                 return []
             return get_requirements_from_dist(self.ireq.get_dist(), extras)
+        elif getattr(metadata, "install_requires", None):
+            requires = metadata.install_requires
+            for extra in extras:
+                requires.extend(metadata.extras_require.get(extra, []))
+            return sorted(set(requires))
         else:
             return filter_requirements_with_extras(metadata.run_requires, extras)
 
