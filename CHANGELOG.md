@@ -1,3 +1,20 @@
+Release v1.4.1 (2021-03-12)
+---------------------------
+
+### Features & Improvements
+
+- Support importing dependencies from requirements.txt to dev-dependencies or sections. [#291](https://github.com/frostming/pdm/issues/291)
+
+### Bug Fixes
+
+- Fallback to static parsing when building was failed to find the dependencies of a candidate. [#293](https://github.com/frostming/pdm/issues/293)
+- Fix a bug that `pdm init` fails when `pyproject.toml` exists but has no `[project]` section. [#295](https://github.com/frostming/pdm/issues/295)
+
+### Improved Documentation
+
+- Document about how to use PDM with Nox. [#281](https://github.com/frostming/pdm/issues/281)
+
+
 Release v1.4.0 (2021-03-05)
 ---------------------------
 
