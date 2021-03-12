@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from argparse import Namespace
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 
@@ -504,12 +505,18 @@ def do_info(
         stream.echo(json.dumps(project.environment.marker_environment, indent=2))
 
 
-def do_import(project: Project, filename: str, format: Optional[str] = None) -> None:
+def do_import(
+    project: Project,
+    filename: str,
+    format: Optional[str] = None,
+    options: Optional[Namespace] = None,
+) -> None:
     """Import project metadata from given file.
 
     :param project: the project instance
     :param filename: the file name
     :param format: the file format, or guess if not given.
+    :param options: other options parsed to the CLI.
     """
     if not format:
         for key in FORMATS:
@@ -522,7 +529,7 @@ def do_import(project: Project, filename: str, format: Optional[str] = None) -> 
             )
     else:
         key = format
-    project_data, settings = FORMATS[key].convert(project, filename)
+    project_data, settings = FORMATS[key].convert(project, filename, options)
     pyproject = project.pyproject or tomlkit.document()
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:

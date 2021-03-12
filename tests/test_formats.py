@@ -1,3 +1,5 @@
+from argparse import Namespace
+
 from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
 from pdm.project import Project
 from pdm.utils import cd
@@ -7,7 +9,7 @@ from tests import FIXTURES
 def test_convert_pipfile(project):
     golden_file = FIXTURES / "Pipfile"
     assert pipfile.check_fingerprint(project, golden_file)
-    result, settings = pipfile.convert(project, golden_file)
+    result, settings = pipfile.convert(project, golden_file, None)
 
     assert settings["allow_prereleases"]
     assert result["requires-python"] == ">=3.6"
@@ -20,18 +22,17 @@ def test_convert_pipfile(project):
     assert settings["source"][0]["url"] == "https://pypi.python.org/simple"
 
 
-def test_convert_requirements_file(project):
+def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    result, settings = requirements.convert(project, golden_file)
+    options = Namespace(dev=is_dev, section=None)
+    result, settings = requirements.convert(project, golden_file, options)
+    section = result["dev-dependencies" if is_dev else "dependencies"]
 
     assert len(settings["source"]) == 2
-    assert "webassets==2.0" in result["dependencies"]
-    assert 'whoosh==2.7.4; sys_platform == "win32"' in result["dependencies"]
-    assert (
-        "-e git+https://github.com/pypa/pip.git@master#egg=pip"
-        in result["dependencies"]
-    )
+    assert "webassets==2.0" in section
+    assert 'whoosh==2.7.4; sys_platform == "win32"' in section
+    assert "-e git+https://github.com/pypa/pip.git@master#egg=pip" in section
 
 
 def test_convert_requirements_file_without_name(project, vcs):
@@ -40,7 +41,9 @@ def test_convert_requirements_file_without_name(project, vcs):
         "git+https://github.com/test-root/demo.git\n"
     )
     assert requirements.check_fingerprint(project, str(req_file))
-    result, _ = requirements.convert(project, str(req_file))
+    result, _ = requirements.convert(
+        project, str(req_file), Namespace(dev=False, section=None)
+    )
 
     assert result["dependencies"] == ["demo@ git+https://github.com/test-root/demo.git"]
 
@@ -49,7 +52,9 @@ def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject-poetry.toml"
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
-        result, _ = poetry.convert(project, golden_file)
+        result, _ = poetry.convert(
+            project, golden_file, Namespace(dev=False, section=None)
+        )
 
     assert result["authors"][0] == {
         "name": "Sébastien Eustace",
@@ -82,7 +87,7 @@ def test_convert_poetry(project):
 def test_convert_flit(project):
     golden_file = FIXTURES / "projects/flit-demo/pyproject.toml"
     assert flit.check_fingerprint(project, golden_file)
-    result, _ = flit.convert(project, golden_file)
+    result, _ = flit.convert(project, golden_file, None)
 
     assert result["name"] == "pyflit"
     assert result["version"] == "0.1.0"
@@ -117,7 +122,7 @@ def test_convert_flit(project):
 def test_convert_legacy_format(project):
     golden_file = FIXTURES / "pyproject-legacy.toml"
     assert legacy.check_fingerprint(project, golden_file)
-    result, settings = legacy.convert(project, golden_file)
+    result, settings = legacy.convert(project, golden_file, None)
 
     assert result["name"] == "demo-package"
     assert result["authors"][0] == {"name": "frostming", "email": "mianghong@gmail.com"}
@@ -133,3 +138,18 @@ def test_export_setup_py():
     project = Project(FIXTURES / "projects/demo-package")
     content = setup_py.export(project, [], None)
     assert content == project.root.joinpath("setup.txt").read_text()
+
+
+def test_import_requirements_with_section(project):
+    golden_file = FIXTURES / "requirements.txt"
+    assert requirements.check_fingerprint(project, golden_file)
+    result, _ = requirements.convert(
+        project, golden_file, Namespace(dev=False, section="test")
+    )
+
+    section = result["optional-dependencies"]["test"]
+    assert "webassets==2.0" in section
+    assert 'whoosh==2.7.4; sys_platform == "win32"' in section
+    assert "-e git+https://github.com/pypa/pip.git@master#egg=pip" in section
+    assert not result["dependencies"]
+    assert not result["dev-dependencies"]

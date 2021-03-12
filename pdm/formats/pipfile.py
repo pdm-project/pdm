@@ -33,7 +33,7 @@ def check_fingerprint(project, filename):
     return os.path.basename(filename) == "Pipfile"
 
 
-def convert(project, filename):
+def convert(project, filename, options):
     with open(filename, encoding="utf-8") as fp:
         data = toml.load(fp)
     result = {}
