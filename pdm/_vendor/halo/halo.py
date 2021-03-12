@@ -25,7 +25,7 @@ from pdm._vendor.halo._utils import (
 )
 
 
-class Halo:
+class Halo(object):
     """Halo library.
     Attributes
     ----------

@@ -13,7 +13,7 @@ if windll is not None:
     winterm = WinTerm()
 
 
-class StreamWrapper:
+class StreamWrapper(object):
     '''
     Wraps a stream (such as stdout), acting as a transparent proxy for all
     attribute access apart from method 'write()', which is delegated to our
@@ -61,7 +61,7 @@ class StreamWrapper:
             return True
 
 
-class AnsiToWin32:
+class AnsiToWin32(object):
     '''
     Implements a 'write()' method which, on Windows, will strip ANSI character
     sequences from the text, and if outputting to a tty, will convert them into
