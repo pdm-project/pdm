@@ -72,6 +72,7 @@ It is much easier to use PDM in Nox, here is an example of `noxfile.py`:
 
 ```python hl_lines="3"
 import os
+import nox
 
 os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
 
@@ -107,7 +108,7 @@ Testing:
   steps:
     - uses: actions/checkout@v1
     - name: Set up PDM
-      uses: pdm-project/setup-pdm
+      uses: pdm-project/setup-pdm@v1.1
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -120,5 +121,6 @@ Testing:
 ```
 
 !!! danger "NOTE"
-    For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/virtual-environments/issues/2803) on Ubuntu virtual environment.
-    If PDM parallel install is failed on that machine  you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
+  For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/virtual-environments/issues/2803) on Ubuntu virtual environment.
+  If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
+  It is already handled by the `pdm-project/setup-pdm` action.
