@@ -44,12 +44,11 @@ Or,
 $ pdm add --dev tox-pdm
 ```
 
-And the `tox.ini` can be updated to the following:
+And you can make the `tox.ini` much tidier as following, :
 
 ```ini
 [tox]
 env_list = py{36,37,38},lint
-isolated_build = true
 
 [testenv]
 sections = dev
@@ -70,7 +69,7 @@ See the [project's README](https://github.com/pdm-project/tox-pdm) for a detaile
 
 It is much easier to use PDM in Nox, here is an example of `noxfile.py`:
 
-```python hl_lines="3"
+```python hl_lines="4"
 import os
 import nox
 
@@ -122,5 +121,5 @@ Testing:
 
 !!! danger "NOTE"
     For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/ virtual-environments/issues/2803) on Ubuntu virtual environment.
-    If PDM parallel install is failed on that machine you should either set `parallel_install` to `false`   or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
+    If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
     It is already handled by the `pdm-project/setup-pdm` action.
