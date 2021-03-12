@@ -190,8 +190,8 @@ class SetupReader(object):
         return self._find_sub_setup_call(funcdefs)
 
     def _find_sub_setup_call(
-        self, elements
-    ):  # type: (List[Any]) -> Tuple[Optional[ast.Call], Optional[List[Any]]]
+        self, elements: List[Any]
+    ) -> Tuple[Optional[ast.Call], Optional[List[Any]]]:
         for element in elements:
             if not isinstance(element, (ast.FunctionDef, ast.If)):
                 continue
@@ -207,8 +207,8 @@ class SetupReader(object):
         return None, None
 
     def _find_install_requires(
-        self, call, body
-    ):  # type: (ast.Call, Iterable[Any]) -> List[str]
+        self, call: ast.Call, body: Iterable[Any]
+    ) -> List[str]:
         install_requires = []
         value = self._find_in_call(call, "install_requires")
         if value is None:
@@ -301,8 +301,8 @@ class SetupReader(object):
         return extras_require
 
     def _find_single_string(
-        self, call, body, name
-    ):  # type: (ast.Call, List[Any], str) -> Optional[str]
+        self, call: ast.Call, body: List[Any], name: str
+    ) -> Optional[str]:
         value = self._find_in_call(call, name)
         if value is None:
             # Trying to find in kwargs
@@ -337,12 +337,12 @@ class SetupReader(object):
             if variable is not None and isinstance(variable, ast.Str):
                 return variable.s
 
-    def _find_in_call(self, call, name):  # type: (ast.Call, str) -> Optional[Any]
+    def _find_in_call(self, call: ast.Call, name: str) -> Optional[Any]:
         for keyword in call.keywords:
             if keyword.arg == name:
                 return keyword.value
 
-    def _find_call_kwargs(self, call):  # type: (ast.Call) -> Optional[Any]
+    def _find_call_kwargs(self, call: ast.Call) -> Optional[Any]:
         kwargs = None
         for keyword in call.keywords:
             if keyword.arg is None:
@@ -366,7 +366,7 @@ class SetupReader(object):
                 if target.id == name:
                     return elem.value
 
-    def _find_in_dict(self, dict_, name):  # type: (ast.Call, str) -> Optional[Any]
+    def _find_in_dict(self, dict_: ast.Call, name: str) -> Optional[Any]:
         for key, val in zip(dict_.keys, dict_.values):
             if isinstance(key, ast.Str) and key.s == name:
                 return val

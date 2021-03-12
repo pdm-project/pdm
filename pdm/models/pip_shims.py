@@ -49,8 +49,7 @@ class InstallCommand(_InstallCommand):
         super().__init__(name="InstallCommand", summary="Install packages.")
 
 
-def get_abi_tag(python_version):
-    # type: (Tuple[int, int]) -> Optional[str]
+def get_abi_tag(python_version: Tuple[int, int]) -> Optional[str]:
     """Return the ABI tag based on SOABI (if available) or emulate SOABI
     (CPython 2, PyPy).
     A replacement for pip._internal.models.pep425tags:get_abi_tag()
@@ -70,7 +69,7 @@ def get_abi_tag(python_version):
 
     soabi = get_config_var("SOABI")
     impl = get_abbr_impl()
-    abi = None  # type: Optional[str]
+    abi: Optional[str] = None
 
     if not soabi and impl in {"cp", "pp"} and hasattr(sys, "maxunicode"):
         d = ""

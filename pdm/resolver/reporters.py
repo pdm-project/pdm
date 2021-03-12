@@ -22,7 +22,7 @@ class SpinnerReporter(BaseReporter):
     def __init__(self, spinner: halo.Halo, requirements: List[Requirement]) -> None:
         self.spinner = spinner
         self.requirements = requirements
-        self._previous = None  # type: Optional[Dict[str, Candidate]]
+        self._previous: Optional[Dict[str, Candidate]] = None
 
     def starting_round(self, index: int) -> None:
         # self.spinner.hide_and_write(f"Resolving ROUND {index}")

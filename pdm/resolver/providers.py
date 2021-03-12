@@ -20,9 +20,9 @@ class BaseProvider(AbstractProvider):
         self.repository = repository
         self.requires_python = requires_python  # Root python_requires value
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.requires_python_collection = {}  # type: Dict[Optional[str], PySpecSet]
-        self.summary_collection = {}  # type: Dict[str, str]
-        self.fetched_dependencies = {}  # type: Dict[str, List[Requirement]]
+        self.requires_python_collection: Dict[Optional[str], PySpecSet] = {}
+        self.summary_collection: Dict[str, str] = {}
+        self.fetched_dependencies: Dict[str, List[Requirement]] = {}
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
         return req.identify()

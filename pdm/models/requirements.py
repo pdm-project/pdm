@@ -81,8 +81,8 @@ class Requirement:
     def __init__(self, **kwargs):
         self._marker = None
         self.from_section = "default"
-        self.marker_no_python = None  # type: Optional[Marker]
-        self.requires_python = PySpecSet()  # type: PySpecSet
+        self.marker_no_python: Optional[Marker] = None
+        self.requires_python = PySpecSet()
         for k, v in kwargs.items():
             if k == "specifier":
                 v = get_specifier(v)
@@ -447,7 +447,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         r = VcsRequirement.parse(line, m.groupdict())
     else:
         try:
-            r = NamedRequirement.parse(line)  # type: Requirement
+            r = NamedRequirement.parse(line)
         except (RequirementParseError, InvalidRequirement) as e:
             m = FILE_REQ.match(line)
             if m is not None:

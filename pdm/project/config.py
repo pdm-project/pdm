@@ -72,7 +72,7 @@ class Config(MutableMapping):
     HOME_CONFIG = Path.home() / ".pdm" / "config.toml"
 
     pypi_url, verify_ssl = get_pypi_source()
-    _config_map = {
+    _config_map: Dict[str, ConfigItem] = {
         "cache_dir": ConfigItem(
             "The root directory of cached files", appdirs.user_cache_dir("pdm"), True
         ),
@@ -125,7 +125,7 @@ class Config(MutableMapping):
             env_var="PDM_USE_VENV",
             coerce=ensure_boolean,
         ),
-    }  # type: Dict[str, ConfigItem]
+    }
     del pypi_url, verify_ssl
 
     @classmethod

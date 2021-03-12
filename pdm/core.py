@@ -67,7 +67,7 @@ class Core:
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:
-                klass = module.Command  # type: Type[BaseCommand]
+                klass = module.Command
             except AttributeError:
                 continue
             self.register_command(klass, klass.name or name)

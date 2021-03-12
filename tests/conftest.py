@@ -43,7 +43,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
     ):
         file_path = self.base_path / urlparse(request.url).path.lstrip(
             "/"
-        )  # type: Path
+        )
         response = requests.models.Response()
         response.request = request
         if not file_path.exists():

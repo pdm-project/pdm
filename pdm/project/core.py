@@ -65,8 +65,8 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         self.is_global = False
-        self._pyproject = None  # type: Optional[Container]
-        self._lockfile = None  # type: Optional[Container]
+        self._pyproject: Optional[Container] = None
+        self._lockfile: Optional[Container] = None
         self.core = None
 
         if root_path is None:
@@ -90,8 +90,7 @@ class Project:
         return self.root / "pdm.lock"
 
     @property
-    def pyproject(self):
-        # type: () -> Container
+    def pyproject(self) -> Container:
         if not self._pyproject and self.pyproject_file.exists():
             data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
@@ -102,16 +101,14 @@ class Project:
         self._pyproject = data
 
     @property
-    def tool_settings(self):
-        # type: () -> Union[Container, Dict]
+    def tool_settings(self) -> Union[Container, Dict]:
         data = self.pyproject
         if not data:
             return {}
         return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
-    def lockfile(self):
-        # type: () -> Container
+    def lockfile(self) -> Container:
         if not self.lockfile_file.is_file():
             raise ProjectError("Lock file does not exist.")
         if not self._lockfile:
