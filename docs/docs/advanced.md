@@ -93,6 +93,7 @@ Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Py
 Only one thing to keep in mind -- PDM can't be installed on Python < 3.7, so if your project is to be tested on those Python versions,
 you have to make sure PDM is installed on the correct Python version, which can be different from the target Python version the particular job/task is run on.
 
+Fortunately, if you are using GitHub Action, there is [pdm-project/setup-pdm](https://github.com/marketplace/actions/setup-pdm) to make this process easier.
 Here is an example worflow of GitHub Actions, while you can adapt it for other CI platforms.
 
 ```yaml
@@ -105,19 +106,13 @@ Testing:
 
   steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v1
+    - name: Set up PDM
+      uses: pdm-project/setup-pdm
       with:
-        python-version: 3.8 # <-- We explicitly request Python 3.8 for installing PDM.
-    - name: Install PDM
-      run: python -m pip install --upgrade --pre pdm
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }} # <-- Then change to whatever is required by this task.
+        python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
-        pdm use -f ${{ matrix.python-version }}
         pdm sync -d -s testing
     - name: Run Tests
       run: |
@@ -125,4 +120,5 @@ Testing:
 ```
 
 !!! danger "NOTE"
-    For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/virtual-environments/issues/2803) on Ubuntu virtual environment. If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
+    For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/virtual-environments/issues/2803) on Ubuntu virtual environment.
+    If PDM parallel install is failed on that machine  you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
