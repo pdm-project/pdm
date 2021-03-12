@@ -3,6 +3,7 @@ import urllib.parse
 
 from distlib.wheel import Wheel
 
+from pdm.exceptions import PdmUsageError
 from pdm.formats.base import make_array
 from pdm.iostream import stream
 from pdm.models.markers import Marker
@@ -92,12 +93,21 @@ def convert_url_to_source(url, name=None):
     return {"name": name, "url": url, "verify_ssl": url.startswith("https://")}
 
 
-def convert(project, filename):
+def convert(project, filename, options):
     ireqs, finder = parse_requirement_file(str(filename))
     with stream.logging("build"):
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
-    data = {"dependencies": make_array(reqs, True)}
+    deps = make_array(reqs, True)
+    data = {"dependencies": [], "dev-dependencies": []}
+    if options.dev and options.section:
+        raise PdmUsageError("Can't specify --dev and --section at the same time")
+    elif options.dev:
+        data["dev-dependencies"] = deps
+    elif options.section:
+        data["optional-dependencies"] = {options.section: deps}
+    else:
+        data["dependencies"] = deps
     settings = {}
     if finder.index_urls:
         sources = [convert_url_to_source(finder.index_urls[0], "pypi")]

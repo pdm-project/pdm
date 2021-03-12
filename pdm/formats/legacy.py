@@ -130,7 +130,7 @@ class LegacyMetaConverter(MetaConverter):
         raise Unset()
 
 
-def convert(project, filename):
+def convert(project, filename, options):
     with open(filename, encoding="utf-8") as fp:
         converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], filename)
         return dict(converter), converter.settings

@@ -166,7 +166,7 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
 
-def convert(project, filename):
+def convert(project, filename, options):
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):

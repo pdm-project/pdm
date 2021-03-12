@@ -80,7 +80,7 @@ class FlitMetaConverter(MetaConverter):
         return value.get("include")
 
 
-def convert(project, filename):
+def convert(project, filename, options):
     with open(filename, encoding="utf-8") as fp:
         return (
             dict(FlitMetaConverter(tomlkit.parse(fp.read())["tool"]["flit"], filename)),

@@ -5,7 +5,7 @@ def check_fingerprint(project, filename):
     return os.path.basename(filename) == "setup.py"
 
 
-def convert(project, filename):
+def convert(project, filename, options):
     raise NotImplementedError()
 
 
