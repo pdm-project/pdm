@@ -89,13 +89,12 @@ class Candidate:
 
     def __init__(
         self,
-        req,  # type: Requirement
-        environment,  # type: Environment
-        name=None,  # type: Optional[str]
-        version=None,  # type: Optional[str]
-        link=None,  # type: pip_shims.Link
+        req: Requirement,
+        environment: Environment,
+        name: Optional[str] = None,
+        version: Optional[str] = None,
+        link: Optional[pip_shims.Link] = None,
     ):
-        # type: (...) -> None
         """
         :param req: the requirement that produces this candidate.
         :param environment: the bound environment instance.
@@ -110,7 +109,7 @@ class Candidate:
         if link is None and self.req:
             link = self.ireq.link
         self.link = link
-        self.hashes = None  # type: Optional[Dict[str, str]]
+        self.hashes: Optional[Dict[str, str]] = None
         self.marker = None
         self.sections = []
         self._requires_python = None
@@ -182,11 +181,10 @@ class Candidate:
     @classmethod
     def from_installation_candidate(
         cls,
-        candidate,  # type: pip_shims.InstallationCandidate
-        req,  # type: Requirement
-        environment,  # type: Environment
-    ):
-        # type: (...) -> Candidate
+        candidate: pip_shims.InstallationCandidate,
+        req: Requirement,
+        environment: Environment,
+    ) -> Candidate:
         """Build a candidate from pip's InstallationCandidate."""
         inst = cls(
             req,

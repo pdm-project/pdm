@@ -21,8 +21,8 @@ class SetupReader(object):
 
     @classmethod
     def read_from_directory(
-        cls, directory
-    ):  # type: (Union[str, Path]) -> Dict[str, Union[List, Dict]]
+        cls, directory: Union[str, Path]
+    ) -> Dict[str, Union[List, Dict]]:
         if isinstance(directory, str):
             directory = Path(directory)
 
@@ -43,7 +43,7 @@ class SetupReader(object):
         return result
 
     @classmethod
-    def _is_empty_result(cls, result):  # type: (Dict[str, Any]) -> bool
+    def _is_empty_result(cls, result: Dict[str, Any]) -> bool:
         return (
             not result["install_requires"]
             and not result["extras_require"]
@@ -65,9 +65,7 @@ class SetupReader(object):
             "python_requires": metadata.requires_python,
         }
 
-    def read_setup_py(
-        self, filepath
-    ):  # type: (Union[str, Path]) -> Dict[str, Union[List, Dict]]
+    def read_setup_py(self, filepath: Union[str, Path]) -> Dict[str, Union[List, Dict]]:
 
         if isinstance(filepath, str):
             filepath = Path(filepath)
@@ -95,8 +93,8 @@ class SetupReader(object):
         return result
 
     def read_setup_cfg(
-        self, filepath
-    ):  # type: (Union[str, Path]) -> Dict[str, Union[List, Dict]]
+        self, filepath: Union[str, Path]
+    ) -> Dict[str, Union[List, Dict]]:
         parser = ConfigParser()
 
         parser.read(str(filepath))
@@ -144,8 +142,8 @@ class SetupReader(object):
         }
 
     def _find_setup_call(
-        self, elements
-    ):  # type: (List[Any]) -> Tuple[Optional[ast.Call], Optional[List[Any]]]
+        self, elements: List[Any]
+    ) -> Tuple[Optional[ast.Call], Optional[List[Any]]]:
         funcdefs = []
         for i, element in enumerate(elements):
             if isinstance(element, ast.If) and i == len(elements) - 1:
@@ -251,8 +249,8 @@ class SetupReader(object):
         return install_requires
 
     def _find_extras_require(
-        self, call, body
-    ):  # type: (ast.Call, Iterable[Any]) -> Dict[str, List]
+        self, call: ast.Call, body: Iterable[Any]
+    ) -> Dict[str, List]:
         extras_require = {}
         value = self._find_in_call(call, "extras_require")
         if value is None:
@@ -352,9 +350,7 @@ class SetupReader(object):
 
         return kwargs
 
-    def _find_variable_in_body(
-        self, body, name
-    ):  # type: (Iterable[Any], str) -> Optional[Any]
+    def _find_variable_in_body(self, body: Iterable[Any], name: str) -> Optional[Any]:
         found = None
         for elem in body:
             if found:

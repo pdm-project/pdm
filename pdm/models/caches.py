@@ -19,7 +19,7 @@ class CandidateInfoCache:
 
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
-        self._cache = {}  # type: Dict[str, CandidateInfo]
+        self._cache: Dict[str, CandidateInfo] = {}
         self._read_cache()
 
     def _read_cache(self) -> None:
@@ -37,8 +37,7 @@ class CandidateInfoCache:
             json.dump(self._cache, fp)
 
     @staticmethod
-    def _get_key(candidate):
-        # type: (Candidate) -> str
+    def _get_key(candidate: Candidate) -> str:
         # Name and version are set when dependencies are resolved,
         # so use them for cache key. Local directories won't be cached.
         if not candidate.name or not candidate.version:
@@ -50,19 +49,16 @@ class CandidateInfoCache:
         )
         return f"{candidate.name}{extras}-{candidate.version}"
 
-    def get(self, candidate):
-        # type: (Candidate) -> CandidateInfo
+    def get(self, candidate: Candidate) -> CandidateInfo:
         key = self._get_key(candidate)
         return self._cache[key]
 
-    def set(self, candidate, value):
-        # type: (Candidate, CandidateInfo) -> None
+    def set(self, candidate: Candidate, value: CandidateInfo):
         key = self._get_key(candidate)
         self._cache[key] = value
         self._write_cache()
 
-    def delete(self, candidate):
-        # type: (Candidate) -> None
+    def delete(self, candidate: Candidate):
         try:
             del self._cache[self._get_key(candidate)]
         except KeyError:
@@ -84,7 +80,7 @@ class HashCache(pip_shims.SafeFileCache):
     """
 
     def __init__(self, *args, **kwargs):
-        self.session = None  # type: Optional[requests.Session]
+        self.session: Optional[requests.Session] = None
         super(HashCache, self).__init__(*args, **kwargs)
 
     def get_hash(self, link: pip_shims.Link) -> str:

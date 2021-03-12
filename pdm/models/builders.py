@@ -136,7 +136,7 @@ class EnvBuilder:
 
     def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
         self._env = environment
-        self._path = None  # type: Optional[str]
+        self._path: Optional[str] = None
         self._saved_env = None
         self.executable = self._env.python_executable
         self.src_dir = src_dir
