@@ -7,17 +7,13 @@ import re
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import List, Optional
+from typing import ContextManager, Generator, List, Optional
 
 import click
 
 from pdm._vendor import halo
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
 from pdm.utils import cached_property
-
-COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
-
-COLORS += tuple(f"bright_{color}" for color in COLORS)
 
 
 @functools.lru_cache()
@@ -62,8 +58,10 @@ class IOStream:
         logger.addHandler(logging.NullHandler())
         self.logger = logger
 
-        for color in COLORS:
-            setattr(self, color, functools.partial(self._style, fg=color))
+        self.green = functools.partial(self._style, fg="green")
+        self.cyan = functools.partial(self._style, fg="cyan")
+        self.yellow = functools.partial(self._style, fg="yellow")
+        self.red = functools.partial(self._style, fg="red")
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
@@ -150,7 +148,10 @@ class IOStream:
                 pass
 
     @contextlib.contextmanager
-    def open_spinner(self, title: str, spinner: str = "dots"):
+    def open_spinner(
+        self, title: str, spinner: str = "dots"
+    ) -> Generator[ContextManager, None, None]:
+        bar: ContextManager
         if self.verbosity >= self.DETAIL or not self.supports_ansi:
             bar = DummySpinner()
         else:
