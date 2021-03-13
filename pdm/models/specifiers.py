@@ -82,9 +82,9 @@ class PySpecSet(SpecifierSet):
         if version_str == "*":
             version_str = ""
         super().__init__(version_str)
-        self._lower_bound = self.MIN_VERSION  # type: Tuple[int, int, int]
-        self._upper_bound = self.MAX_VERSION  # type: Tuple[int, int, int]
-        self._excludes = []  # type: List[Tuple[Union[int, str], ...]]
+        self._lower_bound = self.MIN_VERSION
+        self._upper_bound = self.MAX_VERSION
+        self._excludes: List[Tuple[Union[int, str], ...]] = []
         if version_str and analyze:
             self._analyze_specifiers()
 
@@ -92,7 +92,7 @@ class PySpecSet(SpecifierSet):
         # XXX: Prerelease or postrelease specifiers will fail here, but I guess we can
         # just ignore them for now.
         lower_bound, upper_bound = self.MIN_VERSION, self.MAX_VERSION
-        excludes = set()  # type: Set[Tuple[Union[int, str], ...]]
+        excludes: Set[Tuple[Union[int, str], ...]] = set()
         for spec in self:
             op, version = spec.operator, spec.version
             version = parse_version_tuple(version)

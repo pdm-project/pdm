@@ -41,9 +41,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
     def send(
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
-        file_path = self.base_path / urlparse(request.url).path.lstrip(
-            "/"
-        )  # type: Path
+        file_path = self.base_path / urlparse(request.url).path.lstrip("/")
         response = requests.models.Response()
         response.request = request
         if not file_path.exists():

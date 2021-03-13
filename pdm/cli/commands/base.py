@@ -10,12 +10,12 @@ class BaseCommand:
     """A CLI subcommand"""
 
     # The subcommand's name
-    name = None  # type: Optional[str]
+    name: Optional[str] = None
     # The subcommand's help string, if not given, __doc__ will be used.
-    description = None  # type: Optional[str]
+    description: Optional[str] = None
     # A list of pre-defined options which will be loaded on initailizing
     # Rewrite this if you don't want the default ones
-    arguments = [verbose_option, global_option, project_option]  # type: List[Option]
+    arguments: List[Option] = [verbose_option, global_option, project_option]
 
     def __init__(self, parser: argparse.ArgumentParser) -> None:
         for arg in self.arguments:

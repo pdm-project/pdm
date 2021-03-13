@@ -98,7 +98,7 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
     while unresolved:
         new_metasets = {}
         for k in unresolved:
-            crit = result.criteria[k]  # type: Criterion
+            crit = result.criteria[k]
             keep_unresolved = circular.get(k, set())
             # All parents must be resolved first
             if any(
