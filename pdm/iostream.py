@@ -7,7 +7,7 @@ import re
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import ContextManager, Generator, List, Optional
+from typing import ContextManager, List, Optional
 
 import click
 
@@ -147,17 +147,11 @@ class IOStream:
             except OSError:
                 pass
 
-    @contextlib.contextmanager
-    def open_spinner(
-        self, title: str, spinner: str = "dots"
-    ) -> Generator[ContextManager, None, None]:
-        bar: ContextManager
+    def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
         if self.verbosity >= self.DETAIL or not self.supports_ansi:
-            bar = DummySpinner()
+            return DummySpinner()
         else:
-            bar = halo.Halo(title, spinner=spinner, indent=self._indent)
-        with bar as bar:
-            yield bar
+            return halo.Halo(title, spinner=spinner, indent=self._indent)
 
 
 stream = IOStream()
