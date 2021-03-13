@@ -13,7 +13,6 @@ import click
 
 from pdm._vendor import halo
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
-from pdm.utils import cached_property
 
 
 @functools.lru_cache()
@@ -45,10 +44,40 @@ class DummySpinner:
         pass
 
 
+def _supports_ansi() -> bool:
+    if os.getenv("CI"):
+        return False
+    stream = sys.stdout
+    if not hasattr(stream, "fileno"):
+        return False
+    try:
+        return os.isatty(stream.fileno())
+    except io.UnsupportedOperation:
+        return False
+
+
 class IOStream:
     NORMAL = 0
     DETAIL = 1
     DEBUG = 2
+
+    supports_ansi = _supports_ansi()
+
+    @classmethod
+    def green(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, fg="green", **kwargs)
+
+    @classmethod
+    def cyan(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, fg="cyan", **kwargs)
+
+    @classmethod
+    def yellow(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, fg="yellow", **kwargs)
+
+    @classmethod
+    def red(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, fg="red", **kwargs)
 
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
@@ -58,25 +87,8 @@ class IOStream:
         logger.addHandler(logging.NullHandler())
         self.logger = logger
 
-        self.green = functools.partial(self._style, fg="green")
-        self.cyan = functools.partial(self._style, fg="cyan")
-        self.yellow = functools.partial(self._style, fg="yellow")
-        self.red = functools.partial(self._style, fg="red")
-
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
-
-    @cached_property
-    def supports_ansi(self) -> bool:
-        if os.getenv("CI"):
-            return False
-        stream = sys.stdout
-        if not hasattr(stream, "fileno"):
-            return False
-        try:
-            return os.isatty(stream.fileno())
-        except io.UnsupportedOperation:
-            return False
 
     def echo(
         self, message: str = "", err: bool = False, verbosity: int = NORMAL, **kwargs
@@ -84,13 +96,15 @@ class IOStream:
         if self.verbosity >= verbosity:
             click.echo(self._indent + str(message), err=err, **kwargs)
 
-    def _style(self, text: str, *args, **kwargs) -> str:
-        if not self.supports_ansi:
+    @classmethod
+    def _style(cls, text: str, *args, **kwargs) -> str:
+        if not cls.supports_ansi:
             return text
         return click.style(text, *args, **kwargs)
 
-    def bold(self, text: str, **kwargs) -> str:
-        return self._style(text, bold=True, **kwargs)
+    @classmethod
+    def bold(cls, text: str, **kwargs) -> str:
+        return cls._style(text, bold=True, **kwargs)
 
     def display_columns(
         self, rows: List[List[str]], header: Optional[List[str]] = None
