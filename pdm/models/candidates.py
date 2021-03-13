@@ -207,8 +207,14 @@ class Candidate:
             return get_requirements_from_dist(self.ireq.get_dist(), extras)
         elif hasattr(metadata, "install_requires"):
             requires = metadata.install_requires or []
+            extras_not_found = set()
             for extra in extras:
-                requires.extend(metadata.extras_require.get(extra, []))
+                try:
+                    requires.extend((metadata.extras_require or {})[extra])
+                except KeyError:
+                    extras_not_found.add(extra)
+            if extras_not_found:
+                warnings.warn(ExtrasError(sorted(extras_not_found)))
             return sorted(set(requires))
         else:
             return filter_requirements_with_extras(metadata.run_requires, extras)
