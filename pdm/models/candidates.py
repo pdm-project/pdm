@@ -205,8 +205,8 @@ class Candidate:
             if not metadata:
                 return []
             return get_requirements_from_dist(self.ireq.get_dist(), extras)
-        elif getattr(metadata, "install_requires", None):
-            requires = metadata.install_requires
+        elif hasattr(metadata, "install_requires"):
+            requires = metadata.install_requires or []
             for extra in extras:
                 requires.extend(metadata.extras_require.get(extra, []))
             return sorted(set(requires))
