@@ -16,8 +16,8 @@ def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
     return SpecifierSet(version_str)
 
 
-def _normalize_op_specifier(op: str, version: str) -> Tuple[str, Version]:
-    version = Version(version)
+def _normalize_op_specifier(op: str, version_str: str) -> Tuple[str, Version]:
+    version = Version(version_str)
     if version.is_wildcard:
         if op == "==":
             op = "~="
@@ -246,11 +246,11 @@ class PySpecSet(SpecifierSet):
             lower = lower[:-1]
         if upper[-1] == 0:
             upper = upper[:-1]
-        lower = "" if lower == Version.MIN else f">={lower}"
-        upper = "" if upper == Version.MAX else f"<{upper}"
-        excludes = ",".join(f"!={version}" for version in self._excludes)
+        lower_str = "" if lower == Version.MIN else f">={lower}"
+        upper_str = "" if upper == Version.MAX else f"<{upper}"
+        excludes_str = ",".join(f"!={version}" for version in self._excludes)
 
-        return ",".join(filter(None, [lower, upper, excludes]))
+        return ",".join(filter(None, [lower_str, upper_str, excludes_str]))
 
     def __repr__(self) -> str:
         return f"<PySpecSet {self}>"
