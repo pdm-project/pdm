@@ -133,3 +133,11 @@ def test_parse_project_file_on_build_error(project):
     ]
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
+
+
+def test_parse_project_file_on_build_error_no_dep(project):
+    req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure-no-dep').as_posix()}")
+    candidate = Candidate(req, project.environment)
+    assert candidate.get_dependencies_from_metadata() == []
+    assert candidate.name == "demo"
+    assert candidate.version == "0.0.1"
