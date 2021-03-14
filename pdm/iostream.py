@@ -64,6 +64,7 @@ class IOStream:
     DETAIL = 1
     DEBUG = 2
 
+    @staticmethod
     def _style(text: str, *args, **kwargs) -> str:
         if _SUPPORTS_ANSI:
             return click.style(text, *args, **kwargs)
