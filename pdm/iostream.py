@@ -59,16 +59,16 @@ def _supports_ansi() -> bool:
 _SUPPORTS_ANSI = _supports_ansi()
 
 
+def _style(text: str, *args, **kwargs) -> str:
+    if _SUPPORTS_ANSI:
+        return click.style(text, *args, **kwargs)
+    return text
+
+
 class IOStream:
     NORMAL = 0
     DETAIL = 1
     DEBUG = 2
-
-    @staticmethod
-    def _style(text: str, *args, **kwargs) -> str:
-        if _SUPPORTS_ANSI:
-            return click.style(text, *args, **kwargs)
-        return text
 
     green = functools.partial(_style, fg="green")
     cyan = functools.partial(_style, fg="cyan")
