@@ -56,28 +56,24 @@ def _supports_ansi() -> bool:
         return False
 
 
+_SUPPORTS_ANSI = _supports_ansi()
+
+
 class IOStream:
     NORMAL = 0
     DETAIL = 1
     DEBUG = 2
 
-    supports_ansi = _supports_ansi()
+    def _style(text: str, *args, **kwargs) -> str:
+        if _SUPPORTS_ANSI:
+            return click.style(text, *args, **kwargs)
+        return text
 
-    @classmethod
-    def green(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, fg="green", **kwargs)
-
-    @classmethod
-    def cyan(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, fg="cyan", **kwargs)
-
-    @classmethod
-    def yellow(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, fg="yellow", **kwargs)
-
-    @classmethod
-    def red(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, fg="red", **kwargs)
+    green = functools.partial(_style, fg="green")
+    cyan = functools.partial(_style, fg="cyan")
+    yellow = functools.partial(_style, fg="yellow")
+    red = functools.partial(_style, fg="red")
+    bold = functools.partial(_style, bold=True)
 
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
@@ -95,16 +91,6 @@ class IOStream:
     ) -> None:
         if self.verbosity >= verbosity:
             click.echo(self._indent + str(message), err=err, **kwargs)
-
-    @classmethod
-    def _style(cls, text: str, *args, **kwargs) -> str:
-        if not cls.supports_ansi:
-            return text
-        return click.style(text, *args, **kwargs)
-
-    @classmethod
-    def bold(cls, text: str, **kwargs) -> str:
-        return cls._style(text, bold=True, **kwargs)
 
     def display_columns(
         self, rows: List[List[str]], header: Optional[List[str]] = None
@@ -162,7 +148,7 @@ class IOStream:
                 pass
 
     def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
-        if self.verbosity >= self.DETAIL or not self.supports_ansi:
+        if self.verbosity >= self.DETAIL or not _SUPPORTS_ANSI:
             return DummySpinner()
         else:
             return halo.Halo(title, spinner=spinner, indent=self._indent)
