@@ -629,7 +629,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:850249b8456c4ef6150ed71e6a68fd11dfe403737dde41eac5e39533baf9cacc"
+content_hash = "sha256:122709e422ade1922d90cf51e920af714993cd9a9d5d2e8651bf9a6f5c45f4ca"
 
 [metadata.files]
 "apipkg 1.5" = [
