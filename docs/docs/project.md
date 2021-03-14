@@ -114,7 +114,7 @@ To change this behavior, simply change the config `auto_global` to `true`.
 If you want global project to track another project file other than `~/.pdm/global-project`, you can provide the
 project path following `-g/--global`.
 
-!!! danger "NOTE"
+!!! attention "CAUTION"
     Be careful with `remove` and `sync --clean` commands when global project is used, because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv

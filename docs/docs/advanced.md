@@ -119,7 +119,7 @@ Testing:
         pdm run -v pytest tests
 ```
 
-!!! danger "NOTE"
+!!! important "TIPS"
     For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/ virtual-environments/issues/2803) on Ubuntu virtual environment.
     If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
     It is already handled by the `pdm-project/setup-pdm` action.
