@@ -56,25 +56,38 @@ def _supports_ansi() -> bool:
         return False
 
 
-_SUPPORTS_ANSI = _supports_ansi()
-
-
-def _style(text: str, *args, **kwargs) -> str:
-    if _SUPPORTS_ANSI:
-        return click.style(text, *args, **kwargs)
-    return text
-
-
 class IOStream:
     NORMAL = 0
     DETAIL = 1
     DEBUG = 2
 
-    green = functools.partial(_style, fg="green")
-    cyan = functools.partial(_style, fg="cyan")
-    yellow = functools.partial(_style, fg="yellow")
-    red = functools.partial(_style, fg="red")
-    bold = functools.partial(_style, bold=True)
+    supports_ansi = _supports_ansi()
+
+    @classmethod
+    def _style(cls, text: str, *args, **kwargs) -> str:
+        if cls.supports_ansi:
+            return click.style(text, *args, **kwargs)
+        return text
+
+    @classmethod
+    def green(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, **kwargs, fg="green")
+
+    @classmethod
+    def cyan(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, **kwargs, fg="cyan")
+
+    @classmethod
+    def yellow(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, **kwargs, fg="yellow")
+
+    @classmethod
+    def red(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, **kwargs, fg="red")
+
+    @classmethod
+    def bold(cls, text: str, *args, **kwargs) -> str:
+        return cls._style(text, *args, **kwargs, bold=True)
 
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
@@ -149,7 +162,7 @@ class IOStream:
                 pass
 
     def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
-        if self.verbosity >= self.DETAIL or not _SUPPORTS_ANSI:
+        if self.verbosity >= self.DETAIL or not self.supports_ansi:
             return DummySpinner()
         else:
             return halo.Halo(title, spinner=spinner, indent=self._indent)
