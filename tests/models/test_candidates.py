@@ -7,14 +7,8 @@ from pdm.project.core import Project
 from tests import FIXTURES
 
 
-@pytest.mark.parametrize(
-    "requirement_line",
-    [
-        f"{(FIXTURES / 'projects/demo').as_posix()}",
-        "git+https://github.com/test-root/demo.git#egg=demo",
-    ],
-)
-def test_parse_vcs_directory_metadata(requirement_line, project, vcs, is_editable):
+def test_parse_local_directory_metadata(project, is_editable):
+    requirement_line = f"{(FIXTURES / 'projects/demo').as_posix()}"
     req = parse_requirement(requirement_line, is_editable)
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == [
@@ -23,6 +17,23 @@ def test_parse_vcs_directory_metadata(requirement_line, project, vcs, is_editabl
     ]
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
+
+
+def test_parse_vcs_metadata(project, is_editable, vcs):
+    requirement_line = "git+https://github.com/test-root/demo.git@master#egg=demo"
+    req = parse_requirement(requirement_line, is_editable)
+    candidate = Candidate(req, project.environment)
+    assert candidate.get_dependencies_from_metadata() == [
+        "idna",
+        'chardet; os_name == "nt"',
+    ]
+    assert candidate.name == "demo"
+    assert candidate.version == "0.0.1"
+    lockfile = candidate.as_lockfile_entry()
+    if is_editable:
+        assert lockfile["ref"] == "master"
+    else:
+        assert lockfile["ref"] == "1234567890abcdef"
 
 
 @pytest.mark.parametrize(
