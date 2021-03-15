@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from pdm.models.pip_shims import path_to_url
 from pdm.models.requirements import RequirementError, parse_requirement
 from tests import FIXTURES
 
@@ -32,16 +33,16 @@ REQUIREMENTS = [
     ),
     (
         (FIXTURES / "projects/demo").as_posix(),
-        f"demo @ {FILE_PREFIX}" + (FIXTURES / "projects/demo").as_posix(),
+        "demo @ " + path_to_url((FIXTURES / "projects/demo")),
     ),
     (
         (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
-        f"demo @ {FILE_PREFIX}"
-        + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
+        "demo @ "
+        + path_to_url((FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl")),
     ),
     (
         (FIXTURES / "projects/demo").as_posix() + "[security]",
-        f"demo[security] @ {FILE_PREFIX}" + (FIXTURES / "projects/demo").as_posix(),
+        "demo[security] @ " + path_to_url((FIXTURES / "projects/demo")),
     ),
     (
         'requests; python_version=="3.7.*"',

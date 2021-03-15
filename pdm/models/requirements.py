@@ -15,6 +15,7 @@ from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_extras
 from pdm.models.pip_shims import (
     InstallRequirement,
+    Link,
     install_req_from_editable,
     install_req_from_line,
     path_to_url,
@@ -31,7 +32,7 @@ from pdm.utils import (
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 VCS_REQ = re.compile(
-    rf"(?P<vcs>{'|'.join(VCS_SCHEMA)})\+" r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
+    rf"(?P<url>(?P<vcs>{'|'.join(VCS_SCHEMA)})\+[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
 )
 FILE_REQ = re.compile(
     r"(?:(?P<url>\S+://[^\s\[\];]+)|"
@@ -144,7 +145,11 @@ class Requirement:
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = req_dict[vcs]  # type: str
-                url = VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
+                url = (
+                    vcs
+                    + "+"
+                    + VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
+                )
                 return VcsRequirement(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
             return FileRequirement(name=name, **req_dict)
@@ -367,6 +372,8 @@ class NamedRequirement(Requirement, PackageRequirement):
 class VcsRequirement(FileRequirement):
     def __init__(self, **kwargs):
         self.repo = None
+        if not kwargs.get("vcs"):
+            kwargs["vcs"] = kwargs["url"].split("+", 1)[0]
         super().__init__(**kwargs)
 
     @classmethod
@@ -376,23 +383,14 @@ class VcsRequirement(FileRequirement):
         )
         return r
 
-    def as_line(self) -> str:
-        if self.editable:
-            return f"-e {self.vcs}+{self.url}{self._format_marker()}"
-        else:
-            extras = f"[{','.join(self.extras)}]" if self.extras else ""
-            ref = f"@{self.ref}" if self.ref else ""
-            return (
-                f"{self.project_name}{extras} @ {self.vcs}+{self.repo}"
-                f"{ref}{self._format_marker()}"
-            )
-
     def _parse_url(self) -> None:
-        if self.url.startswith("git@"):
-            self.url = add_ssh_scheme_to_git_uri(self.url)
+        vcs, url_no_vcs = self.url.split("+", 1)
+        if url_no_vcs.startswith("git@"):
+            url_no_vcs = add_ssh_scheme_to_git_uri(url_no_vcs)
+            self.url = f"{vcs}+{url_no_vcs}"
         if not self.name:
             self._parse_name_from_url()
-        repo = url_without_fragments(self.url)
+        repo = url_without_fragments(url_no_vcs)
         ref = None
         parsed = urlparse.urlparse(repo)
         if "@" in parsed.path:
@@ -456,9 +454,15 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
                 raise RequirementError(str(e)) from None
         else:
             if r.url:
-                r = FileRequirement(
-                    name=r.name, url=r.url, extras=r.extras, marker=r.marker
-                )
+                link = Link(r.url)
+                if link.is_vcs:
+                    r = VcsRequirement(
+                        name=r.name, url=r.url, extras=r.extras, marker=r.marker
+                    )
+                else:
+                    r = FileRequirement(
+                        name=r.name, url=r.url, extras=r.extras, marker=r.marker
+                    )
 
     if editable:
         if r.is_vcs or r.is_file_or_url and r.is_local_dir:
