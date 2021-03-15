@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Iterable, List, Set, Tuple, Union
+from typing import Iterable, List, Set, Tuple, Union, cast
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -45,26 +45,26 @@ class PySpecSet(SpecifierSet):
     """A custom SpecifierSet that supports merging with logic operators (&, |)."""
 
     # TODO: fetch from python.org and cache
-    MAX_PY_VERSIONS = {
-        (2,): 7,
-        (2, 0): 1,
-        (2, 1): 3,
-        (2, 2): 3,
-        (2, 3): 7,
-        (2, 4): 6,
-        (2, 5): 6,
-        (2, 6): 9,
-        (2, 7): 18,
-        (3, 0): 1,
-        (3, 1): 5,
-        (3, 2): 6,
-        (3, 3): 7,
-        (3, 4): 10,
-        (3, 5): 10,
-        (3, 6): 13,
-        (3, 7): 10,
-        (3, 8): 8,
-        (3, 9): 2,
+    PY_MAX_MINOR_VERSION = {
+        Version("2"): 7,
+        Version("2.0"): 1,
+        Version("2.1"): 3,
+        Version("2.2"): 3,
+        Version("2.3"): 7,
+        Version("2.4"): 6,
+        Version("2.5"): 6,
+        Version("2.6"): 9,
+        Version("2.7"): 18,
+        Version("3.0"): 1,
+        Version("3.1"): 5,
+        Version("3.2"): 6,
+        Version("3.3"): 7,
+        Version("3.4"): 10,
+        Version("3.5"): 10,
+        Version("3.6"): 13,
+        Version("3.7"): 10,
+        Version("3.8"): 8,
+        Version("3.9"): 2,
     }
     MAX_MAJOR_VERSION = Version("4")
 
@@ -323,7 +323,8 @@ class PySpecSet(SpecifierSet):
                     yield prev[:2].complete("*")  # Exclude X.Y.*
                     prev = (
                         prev.bump(0)
-                        if cur.is_py2 and cur[1] > self.MAX_PY_VERSIONS[(cur[0],)]
+                        if cur.is_py2
+                        and cast(int, cur[1]) > self.PY_MAX_MINOR_VERSION[cur[:1]]
                         else cur
                     )  # If prev is 2.7, next is 3.0, otherwise next is X.Y+1.0
                     continue
@@ -335,12 +336,13 @@ class PySpecSet(SpecifierSet):
             # Can't produce any wildcard versions
             cur = prev.bump(1)
             if cur <= upper:  # X.Y+1.0 is still within the range
-                current_max = self.MAX_PY_VERSIONS[(*prev[:2],)]
-                for z in range(prev[2], current_max + 1):
+                current_max = self.PY_MAX_MINOR_VERSION[prev[:2]]
+                for z in range(cast(int, prev[2]), current_max + 1):
                     yield prev[:2].complete(z)
                 prev = (
                     prev.bump(0)
-                    if cur.is_py2 and cur[1] > self.MAX_PY_VERSIONS[(cur[0],)]
+                    if cur.is_py2
+                    and cast(int, cur[1]) > self.PY_MAX_MINOR_VERSION[cur[:1]]
                     else cur
                 )
             else:  # Produce each version from X.Y.Z to X.Y.W

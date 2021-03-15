@@ -1,5 +1,5 @@
 import re
-from typing import Any, Tuple, Union, overload
+from typing import Any, Tuple, Union, cast, overload
 
 from pdm._types import Literal
 from pdm.exceptions import InvalidPyVersion
@@ -21,9 +21,12 @@ class Version:
         if isinstance(version, str):
             version_str = re.sub(r"(?<!\.)\*", ".*", version)
             try:
-                version = tuple(
-                    int(v) if v != "*" else v for v in version_str.split(".")
-                )[:3]
+                version = cast(
+                    Tuple[VersionBit, ...],
+                    tuple(int(v) if v != "*" else v for v in version_str.split("."))[
+                        :3
+                    ],
+                )
             except ValueError:
                 raise InvalidPyVersion(
                     f"{version_str}: Prereleases or postreleases are not supported "
