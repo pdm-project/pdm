@@ -140,6 +140,7 @@ class IOStream:
             yield logger
         except Exception:
             if self.verbosity < self.DETAIL:
+                logger.exception("Error occurs")
                 self.echo(self.yellow(f"See {file_name} for detailed debug log."))
             raise
         else:
