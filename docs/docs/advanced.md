@@ -87,6 +87,7 @@ def lint(session):
 ```
 
 Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Python in the virtualenv correctly. Also make sure `pdm` is available in the `PATH`.
+Before running nox, you should also `pdm config use_venv true` to enable venv reusing.
 
 ## Use PDM in Continuous Integration
 

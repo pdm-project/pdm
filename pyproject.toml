@@ -61,6 +61,9 @@ pdm = "pdm.core:main"
 
 [tool.pdm.scripts]
 release = "python tasks/release.py"
+test = "pytest tests/"
+doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
+lint = "pre-commit run --all-files"
 
 [tool.black]
 line-length = 88

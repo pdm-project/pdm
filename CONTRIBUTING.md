@@ -61,7 +61,7 @@ which is installed in editable mode, or you can use `python -m pdm` from inside 
 ### Run tests
 
 ```bash
-$ pdm run pytest tests
+$ pdm run test
 ```
 
 The test suite is still simple and requires to be supplied, please help write more test cases.
@@ -72,8 +72,17 @@ PDM uses `pre-commit` for linting, you need to install `pre-commit` first, then:
 
 ```bash
 $ pre-commit install
-$ pre-commit run --all-files
+$ pdm run lint
 ```
 
 PDM uses `black` coding style and `isort` for sorting import statements, if you are not following them,
 the CI will fail, and your Pull Request will not be merged.
+
+
+### Preview the documentation
+
+If you do some changes to the `docs/` and you may want to preview the build result, simply do:
+
+```bash
+$ pdm run doc
+```
