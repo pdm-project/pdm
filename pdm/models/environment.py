@@ -243,7 +243,7 @@ class Environment:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
-                if hashes is None:
+                if hashes is None and not ireq.editable:
                     cache_entry = wheel_cache.get_cache_entry(
                         ireq.link,
                         ireq.req.project_name,
