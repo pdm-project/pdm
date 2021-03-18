@@ -1,3 +1,21 @@
+Release v1.4.2 (2021-03-18)
+---------------------------
+
+### Features & Improvements
+
+- Refactor the code, extract the version related logic from `specifiers.py` to a separated module. [#303](https://github.com/frostming/pdm/issues/303)
+
+### Bug Fixes
+
+- Fix a bug that get_dependencies() returns error when the `setup.py` has no `intall_requires` key. [#299](https://github.com/frostming/pdm/issues/299)
+- Pin the VCS revision for non-editable VCS candidates in the lock file. [#305](https://github.com/frostming/pdm/issues/305)
+- Fix a bug that editable build hits the cached wheel unexpectedly. [#307](https://github.com/frostming/pdm/issues/307)
+
+### Miscellany
+
+- replace 'typing comments' with type annotations throughout [#298](https://github.com/frostming/pdm/issues/298)
+
+
 Release v1.4.1 (2021-03-12)
 ---------------------------
 
