@@ -84,9 +84,9 @@ class Command(BaseCommand):
 
     def _normalize_script(self, script):
         if not getattr(script, "items", None):
-            # Must be a string, regard as the same as {cmd = "..."}
+            # Regard as the same as {cmd = ... }
             kind = "cmd"
-            value = str(script)
+            value = script
             options = {}
         else:
             script = dict(script)  # to remove the effect of tomlkit's container type.
@@ -117,7 +117,9 @@ class Command(BaseCommand):
         kind, value, options = self._normalize_script(script)
         options.pop("help", None)
         if kind == "cmd":
-            args = shlex.split(value) + list(args)
+            if not isinstance(value, list):
+                value = shlex.split(str(value))
+            args = value + list(args)
         elif kind == "shell":
             args = " ".join([value] + list(args))
             options["shell"] = True

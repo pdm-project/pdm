@@ -1,0 +1,1 @@
+Field `cmd` in `tools.pdm.scripts` configuration items now allows specifying an argument array instead of a string

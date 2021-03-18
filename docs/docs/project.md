@@ -239,6 +239,19 @@ Plain text scripts are regarded as normal command, or you can explicitly specify
 start_server = {cmd = "flask run -p 54321"}
 ```
 
+In some cases, such as when wanting to add comments between parameters, it might be more convinient
+to specify the command as an array instead of a string:
+
+```toml
+[tool.pdm.scripts]
+start_server = {cmd = [
+	"flask",
+	"run",
+	# Important comment here about always using port 54321
+	"-p", "54321"
+]}
+```
+
 ### Shell script
 
 Shell scripts can be used to run more shell-specific tasks, such as pipeline and output redirecting.
