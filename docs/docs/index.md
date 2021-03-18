@@ -154,7 +154,8 @@ Add following in the `settings.json`:
 ```json
 {
   ...
-  "python.autoComplete.extraPaths": ["__pypackages__/<major.minor>/lib"]
+  "python.autoComplete.extraPaths": ["__pypackages__/<major.minor>/lib"],
+  "python.analysis.extraPaths": ["__pypackages__/<major.minor>/lib"]
 }
 ```
 
