@@ -30,10 +30,11 @@ def test_parse_vcs_metadata(project, is_editable, vcs):
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
     lockfile = candidate.as_lockfile_entry()
+    assert lockfile["ref"] == "master"
     if is_editable:
-        assert lockfile["ref"] == "master"
+        assert "revision" not in lockfile
     else:
-        assert lockfile["ref"] == "1234567890abcdef"
+        assert lockfile["revision"] == "1234567890abcdef"
 
 
 @pytest.mark.parametrize(

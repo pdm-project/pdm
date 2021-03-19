@@ -73,6 +73,7 @@ class Requirement:
         "url",
         "path",
         "ref",
+        "revision",
         "index",
         "version",
         "allow_prereleases",
@@ -382,6 +383,17 @@ class VcsRequirement(FileRequirement):
             url=parsed.get("url"), vcs=parsed.get("vcs"), marker=parsed.get("marker")
         )
         return r
+
+    def as_ireq(self, **kwargs) -> InstallRequirement:
+        ireq = super().as_ireq(**kwargs)
+        if not self.editable and self.revision:
+            # For non-editable VCS requirements, commit-hash should be used as the
+            # rev-options for InstallRequirement to consume.
+            parsed = urlparse.urlparse(ireq.link.url)
+            new_path = "@".join((parsed.path.split("@", 1)[0], self.revision))
+            new_url = urlparse.urlunparse(parsed._replace(path=new_path))
+            ireq.link = Link(new_url)
+        return ireq
 
     def _parse_url(self) -> None:
         vcs, url_no_vcs = self.url.split("+", 1)

@@ -136,6 +136,8 @@ class Candidate:
     def revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
+        if self.req.revision:
+            return self.req.revision
         return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
 
     def get_metadata(self, allow_all_wheels: bool = True) -> Optional[Metadata]:
@@ -258,9 +260,11 @@ class Candidate:
             result.update(
                 {
                     self.req.vcs: self.req.repo,
-                    "ref": self.req.ref if self.req.editable else self.revision,
+                    "ref": self.req.ref,
                 }
             )
+            if not self.req.editable:
+                result.update(revision=self.revision)
         elif not self.req.is_named:
             if self.req.is_file_or_url and self.req.is_local_dir:
                 result.update(path=path_replace(project_root, ".", self.req.str_path))
