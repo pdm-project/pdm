@@ -24,7 +24,7 @@ def test_project_python_with_pyenv_support(project, mocker):
         assert Path(project.python_executable) == pyenv_python
 
         # Clean cache
-        del project.__dict__["python_executable"]
+        project._python_executable = None
 
         project.project_config["python.use_pyenv"] = False
         assert Path(project.python_executable) != pyenv_python

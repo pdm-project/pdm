@@ -67,6 +67,8 @@ class Project:
         self.is_global = False
         self._pyproject: Optional[Container] = None
         self._lockfile: Optional[Container] = None
+        self._environment: Optional[Environment] = None
+        self._python_executable: Optional[str] = None
         self.core = None
 
         if root_path is None:
@@ -137,8 +139,13 @@ class Project:
         """Read-and-writable configuration dict for project settings"""
         return Config(self.root / ".pdm.toml")
 
-    @cached_property
+    @property
     def python_executable(self) -> str:
+        if not self._python_executable:
+            self._python_executable = self.resolve_interpreter()
+        return self._python_executable
+
+    def resolve_interpreter(self) -> str:
         """Get the Python interpreter path."""
         config = self.config
         if self.project_config.get("python.path") and not os.getenv(
@@ -193,8 +200,8 @@ class Project:
             )
         )
 
-    @cached_property
-    def environment(self) -> Environment:
+    def get_environment(self) -> Environment:
+        """Get the environment selected by this project"""
         if self.is_global:
             env = GlobalEnvironment(self)
             # Rewrite global project's python requires to be
@@ -207,6 +214,12 @@ class Project:
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
         return Environment(self)
+
+    @property
+    def environment(self) -> Environment:
+        if not self._environment:
+            self._environment = self.get_environment()
+        return self._environment
 
     @property
     def python_requires(self) -> PySpecSet:

@@ -242,7 +242,7 @@ def project_no_init(tmp_path, mocker):
 def project(project_no_init):
     do_init(project_no_init, "test_project", "0.0.0")
     # Clean the cached property
-    project_no_init.__dict__.pop("environment", None)
+    project_no_init._environment = None
     return project_no_init
 
 
