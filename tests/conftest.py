@@ -18,7 +18,7 @@ from pip._vendor.pkg_resources import safe_name
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
-from pdm.core import main
+from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
@@ -30,6 +30,7 @@ from pdm.utils import cached_property, get_finder, temp_environ
 from tests import FIXTURES
 
 os.environ["CI"] = "1"
+main = Core()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):

@@ -159,9 +159,5 @@ class Core:
             ...
 
         """
-        for plugin in pkg_resources.iter_entry_points("pdm.plugin"):
+        for plugin in pkg_resources.iter_entry_points("pdm"):
             plugin.load()(self)
-
-
-# the main object, which can also act as a callable
-main = Core()
