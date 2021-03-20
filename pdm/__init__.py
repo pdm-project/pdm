@@ -1,7 +1,6 @@
 from pkgutil import extend_path
-from typing import Iterable
 
-__path__: Iterable[str] = extend_path(__path__, __name__)
+__path__ = extend_path(__path__, __name__)
 # Export for plugin use
 from pdm.cli.commands.base import BaseCommand
 from pdm.core import Core
