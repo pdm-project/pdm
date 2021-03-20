@@ -61,33 +61,10 @@ class IOStream:
     DETAIL = 1
     DEBUG = 2
 
-    supports_ansi = _supports_ansi()
-
-    @classmethod
-    def _style(cls, text: str, *args, **kwargs) -> str:
-        if cls.supports_ansi:
+    def _style(self, text: str, *args, **kwargs) -> str:
+        if self.supports_ansi:
             return click.style(text, *args, **kwargs)
         return text
-
-    @classmethod
-    def green(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, **kwargs, fg="green")
-
-    @classmethod
-    def cyan(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, **kwargs, fg="cyan")
-
-    @classmethod
-    def yellow(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, **kwargs, fg="yellow")
-
-    @classmethod
-    def red(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, **kwargs, fg="red")
-
-    @classmethod
-    def bold(cls, text: str, *args, **kwargs) -> str:
-        return cls._style(text, *args, **kwargs, bold=True)
 
     def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
         self.verbosity = verbosity
@@ -96,6 +73,13 @@ class IOStream:
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.NullHandler())
         self.logger = logger
+        self.supports_ansi = _supports_ansi()
+
+        self.green = functools.partial(self._style, fg="green")
+        self.cyan = functools.partial(self._style, fg="cyan")
+        self.yellow = functools.partial(self._style, fg="yellow")
+        self.red = functools.partial(self._style, fg="red")
+        self.bold = functools.partial(self._style, bold=True)
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
