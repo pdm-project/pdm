@@ -161,3 +161,8 @@ class Core:
         """
         for plugin in pkg_resources.iter_entry_points("pdm"):
             plugin.load()(self)
+
+
+def main(args=None):
+    """The CLI entry function"""
+    return Core().main(args)

@@ -1,4 +1,4 @@
-from pdm.core import Core
+from pdm.core import main
 
 if __name__ == "__main__":
-    Core().main()
+    main()
