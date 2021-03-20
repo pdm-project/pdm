@@ -155,11 +155,9 @@ Create an `pdm.plugin` entry point and point to your plugin callable (yeah, it d
 ```toml
 # pyproject.toml
 
-[project.entry-points."pdm.plugin"]
+[project.entry-points.pdm]
 hello = "my_plugin:hello_plugin"
 ```
-
-Note that `pdm.plugin` is wrapped with double quotes to be regarded as a single key.
 
 **setuptools**:
 
@@ -168,7 +166,7 @@ Note that `pdm.plugin` is wrapped with double quotes to be regarded as a single 
 
 setup(
     ...
-    entry_points={"pdm.plugin": ["hello = my_plugin:hello_plugin"]}
+    entry_points={"pdm": ["hello = my_plugin:hello_plugin"]}
     ...
 )
 ```

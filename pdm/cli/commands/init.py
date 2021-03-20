@@ -31,12 +31,8 @@ class Command(BaseCommand):
             "Please enter the Python interpreter to use", default="", show_default=False
         )
         actions.do_use(project, python)
-        is_library = (
-            click.prompt(
-                "Is the project a library that will be upload to PyPI?(y/n)",
-                default="n",
-            ).lower()
-            == "y"
+        is_library = click.confirm(
+            "Is the project a library that will be upload to PyPI?",
         )
         if is_library:
             name = click.prompt("Project name", default=project.root.name)
