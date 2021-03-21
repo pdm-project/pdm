@@ -6,7 +6,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import List, Optional, ContextManager
+from typing import ContextManager, List, Optional
 
 import click
 from click._compat import strip_ansi
