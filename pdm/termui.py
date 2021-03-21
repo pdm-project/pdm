@@ -6,7 +6,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import List, Optional
+from typing import List, Optional, ContextManager
 
 import click
 from click._compat import strip_ansi
@@ -150,7 +150,7 @@ class UI:
             except OSError:
                 pass
 
-    def open_spinner(self, title: str, spinner: str = "dots"):
+    def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()
