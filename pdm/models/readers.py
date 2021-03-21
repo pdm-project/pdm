@@ -10,6 +10,7 @@ class Setup:
     """
     Abstraction of a Python project setup file.
     """
+
     name: Optional[str] = None
     version: Optional[str] = None
     install_requires: List[str] = field(default_factory=list)
