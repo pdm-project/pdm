@@ -4,9 +4,9 @@ import importlib
 from typing import TYPE_CHECKING
 
 import distlib.scripts
-from click import termui
 from pip._vendor.pkg_resources import EggInfoDistribution
 
+from pdm import termui
 from pdm.models import pip_shims
 from pdm.models.builders import EnvBuilder
 from pdm.models.requirements import parse_requirement
