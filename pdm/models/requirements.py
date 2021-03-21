@@ -425,7 +425,7 @@ def filter_requirements_with_extras(
 ) -> List[str]:
     result = []
     extras_in_meta = []
-    for req in requirment_lines:
+    for req in requirement_lines:
         if isinstance(req, dict):
             if req.get("extra"):
                 extras_in_meta.append(req["extra"])
