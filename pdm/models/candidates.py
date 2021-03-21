@@ -4,6 +4,7 @@ import functools
 import os
 import warnings
 from argparse import Namespace
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from distlib.database import EggInfoDistribution
@@ -14,7 +15,7 @@ from pdm import termui
 from pdm.exceptions import BuildError, ExtrasError, RequirementError
 from pdm.models import pip_shims
 from pdm.models.markers import Marker
-from pdm.models.readers import SetupReader
+from pdm.models.readers import Setup
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property, get_rev_from_url, path_replace
 
@@ -166,7 +167,9 @@ class Candidate:
             if raising:
                 raise
             termui.logger.warn("Failed to build package, try parsing project files.")
-            meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory).as_dict()
+            meta_dict = Setup.from_directory(
+                Path(ireq.unpacked_source_directory)
+            ).as_dict()
             meta_dict.update(summary="UNKNOWN")
             meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
             self.metadata = Namespace(**meta_dict)

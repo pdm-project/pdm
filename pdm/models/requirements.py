@@ -21,7 +21,7 @@ from pdm.models.pip_shims import (
     path_to_url,
     url_to_path,
 )
-from pdm.models.readers import SetupReader
+from pdm.models.readers import Setup
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
     add_ssh_scheme_to_git_uri,
@@ -319,7 +319,7 @@ class FileRequirement(Requirement):
             or self.path.joinpath("pyproject.toml").exists()
         ):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
-        result = SetupReader.read_from_directory(self.path.absolute().as_posix())
+        result = Setup.from_directory(self.path.absolute())
         self.name = result.name
 
 

@@ -2,7 +2,7 @@ import ast
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 @dataclass
@@ -14,33 +14,39 @@ class Setup:
     python_requires: Optional[str] = None
 
     def update(self, other: "Setup"):
-        result = asdict(self)
-        for key, value in asdict(other).items():
-            if value:
-                result[key] = value
-        self = self.__init__(**result)
+        if other.name:
+            self.name = other.name
+        if other.version:
+            self.version = other.version
+        if other.install_requires:
+            self.install_requires = other.install_requires
+        if other.extras_require:
+            self.extras_require = other.extras_require
+        if other.python_requires:
+            self.python_requires = other.python_requires
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+    @classmethod
+    def from_directory(cls, dir: Path) -> "Setup":
+        return _SetupReader.read_from_directory(dir)
 
-class SetupReader:
+
+class _SetupReader:
     """
     Class that reads a setup.py file without executing it.
     """
 
     @classmethod
-    def read_from_directory(cls, directory: Union[str, Path]) -> Setup:
-        if isinstance(directory, str):
-            directory = Path(directory)
+    def read_from_directory(cls, directory: Path) -> Setup:
 
-        reader = cls()
         result = Setup()
 
         for filename, file_reader in [
-            ("pyproject.toml", reader.read_pyproject_toml),
-            ("setup.cfg", reader.read_setup_cfg),
-            ("setup.py", reader.read_setup_py),
+            ("pyproject.toml", cls.read_pyproject_toml),
+            ("setup.cfg", cls.read_setup_cfg),
+            ("setup.py", cls.read_setup_py),
         ]:
             filepath = directory / filename
             if not filepath.exists():
@@ -51,54 +57,49 @@ class SetupReader:
 
         return result
 
-    def read_pyproject_toml(self, filepath):
+    @staticmethod
+    def read_pyproject_toml(file: Path) -> Setup:
         from pdm.project.metadata import MutableMetadata
 
         try:
-            metadata = MutableMetadata(filepath)
+            metadata = MutableMetadata(file)
         except ValueError:
-            return {}
+            return Setup()
         return Setup(
-            **{
-                "name": metadata.name,
-                "version": metadata.version,
-                "install_requires": metadata.dependencies,
-                "extras_require": metadata.optional_dependencies,
-                "python_requires": metadata.requires_python,
-            }
+            name=metadata.name,
+            version=metadata.version,
+            install_requires=metadata.dependencies,
+            extras_require=metadata.optional_dependencies,
+            python_requires=metadata.requires_python,
         )
 
-    def read_setup_py(self, filepath: Union[str, Path]) -> Setup:
+    @classmethod
+    def read_setup_py(cls, file: Path) -> Setup:
 
-        if isinstance(filepath, str):
-            filepath = Path(filepath)
-
-        with filepath.open(encoding="utf-8") as f:
+        with file.open(encoding="utf-8") as f:
             content = f.read()
-
-        result = {}
 
         body = ast.parse(content).body
 
-        setup_call, body = self._find_setup_call(body)
+        setup_call, body = cls._find_setup_call(body)
         if not setup_call:
-            return self.DEFAULT
+            return Setup()
 
-        # Inspecting keyword arguments
-        result["name"] = self._find_single_string(setup_call, body, "name")
-        result["version"] = self._find_single_string(setup_call, body, "version")
-        result["install_requires"] = self._find_install_requires(setup_call, body)
-        result["extras_require"] = self._find_extras_require(setup_call, body)
-        result["python_requires"] = self._find_single_string(
-            setup_call, body, "python_requires"
+        return Setup(
+            name=cls._find_single_string(setup_call, body, "name"),
+            version=cls._find_single_string(setup_call, body, "version"),
+            install_requires=cls._find_install_requires(setup_call, body),
+            extras_require=cls._find_extras_require(setup_call, body),
+            python_requires=cls._find_single_string(
+                setup_call, body, "python_requires"
+            ),
         )
 
-        return Setup(**result)
-
-    def read_setup_cfg(self, filepath: Union[str, Path]) -> Setup:
+    @staticmethod
+    def read_setup_cfg(file: Path) -> Setup:
         parser = ConfigParser()
 
-        parser.read(str(filepath))
+        parser.read(str(file))
 
         name = None
         version = None
@@ -109,7 +110,7 @@ class SetupReader:
             version = parser.get("metadata", "version")
 
         install_requires = []
-        extras_require = {}
+        extras_require: Dict[str, List[str]] = {}
         python_requires = None
         if parser.has_section("options"):
             if parser.has_option("options", "install_requires"):
@@ -135,17 +136,16 @@ class SetupReader:
                     extras_require[group].append(dep)
 
         return Setup(
-            **{
-                "name": name,
-                "version": version,
-                "install_requires": install_requires,
-                "extras_require": extras_require,
-                "python_requires": python_requires,
-            }
+            name=name,
+            version=version,
+            install_requires=install_requires,
+            extras_require=extras_require,
+            python_requires=python_requires,
         )
 
+    @classmethod
     def _find_setup_call(
-        self, elements: List[Any]
+        cls, elements: List[Any]
     ) -> Tuple[Optional[ast.Call], Optional[List[Any]]]:
         funcdefs = []
         for i, element in enumerate(elements):
@@ -164,7 +164,7 @@ class SetupReader:
                 if left.id != "__name__":
                     continue
 
-                setup_call, body = self._find_sub_setup_call([element])
+                setup_call, body = cls._find_sub_setup_call([element])
                 if not setup_call:
                     continue
 
@@ -191,16 +191,17 @@ class SetupReader:
             return value, elements
 
         # Nothing, we inspect the function definitions
-        return self._find_sub_setup_call(funcdefs)
+        return cls._find_sub_setup_call(funcdefs)
 
+    @classmethod
     def _find_sub_setup_call(
-        self, elements: List[Any]
+        cls, elements: List[Any]
     ) -> Tuple[Optional[ast.Call], Optional[List[Any]]]:
         for element in elements:
             if not isinstance(element, (ast.FunctionDef, ast.If)):
                 continue
 
-            setup_call = self._find_setup_call(element.body)
+            setup_call = cls._find_setup_call(element.body)
             if setup_call != (None, None):
                 setup_call, body = setup_call
 
@@ -210,17 +211,18 @@ class SetupReader:
 
         return None, None
 
-    def _find_install_requires(self, call: ast.Call, body: Iterable[Any]) -> List[str]:
+    @classmethod
+    def _find_install_requires(cls, call: ast.Call, body: Iterable[Any]) -> List[str]:
         install_requires = []
-        value = self._find_in_call(call, "install_requires")
+        value = cls._find_in_call(call, "install_requires")
         if value is None:
             # Trying to find in kwargs
-            kwargs = self._find_call_kwargs(call)
+            kwargs = cls._find_call_kwargs(call)
 
             if kwargs is None or not isinstance(kwargs, ast.Name):
                 return install_requires
 
-            variable = self._find_variable_in_body(body, kwargs.id)
+            variable = cls._find_variable_in_body(body, kwargs.id)
             if not isinstance(variable, (ast.Dict, ast.Call)):
                 return install_requires
 
@@ -231,9 +233,9 @@ class SetupReader:
                 if variable.func.id != "dict":
                     return install_requires
 
-                value = self._find_in_call(variable, "install_requires")
+                value = cls._find_in_call(variable, "install_requires")
             else:
-                value = self._find_in_dict(variable, "install_requires")
+                value = cls._find_in_dict(variable, "install_requires")
 
         if value is None:
             return install_requires
@@ -242,7 +244,7 @@ class SetupReader:
             for el in value.elts:
                 install_requires.append(el.s)
         elif isinstance(value, ast.Name):
-            variable = self._find_variable_in_body(body, value.id)
+            variable = cls._find_variable_in_body(body, value.id)
 
             if variable is not None and isinstance(variable, ast.List):
                 for el in variable.elts:
@@ -250,19 +252,20 @@ class SetupReader:
 
         return install_requires
 
+    @classmethod
     def _find_extras_require(
-        self, call: ast.Call, body: Iterable[Any]
+        cls, call: ast.Call, body: Iterable[Any]
     ) -> Dict[str, List]:
         extras_require = {}
-        value = self._find_in_call(call, "extras_require")
+        value = cls._find_in_call(call, "extras_require")
         if value is None:
             # Trying to find in kwargs
-            kwargs = self._find_call_kwargs(call)
+            kwargs = cls._find_call_kwargs(call)
 
             if kwargs is None or not isinstance(kwargs, ast.Name):
                 return extras_require
 
-            variable = self._find_variable_in_body(body, kwargs.id)
+            variable = cls._find_variable_in_body(body, kwargs.id)
             if not isinstance(variable, (ast.Dict, ast.Call)):
                 return extras_require
 
@@ -273,9 +276,9 @@ class SetupReader:
                 if variable.func.id != "dict":
                     return extras_require
 
-                value = self._find_in_call(variable, "extras_require")
+                value = cls._find_in_call(variable, "extras_require")
             else:
-                value = self._find_in_dict(variable, "extras_require")
+                value = cls._find_in_dict(variable, "extras_require")
 
         if value is None:
             return extras_require
@@ -283,68 +286,74 @@ class SetupReader:
         if isinstance(value, ast.Dict):
             for key, val in zip(value.keys, value.values):
                 if isinstance(val, ast.Name):
-                    val = self._find_variable_in_body(body, val.id)
+                    val = cls._find_variable_in_body(body, val.id)
 
                 if isinstance(val, ast.List):
                     extras_require[key.s] = [e.s for e in val.elts]
         elif isinstance(value, ast.Name):
-            variable = self._find_variable_in_body(body, value.id)
+            variable = cls._find_variable_in_body(body, value.id)
 
             if variable is None or not isinstance(variable, ast.Dict):
                 return extras_require
 
             for key, val in zip(variable.keys, variable.values):
                 if isinstance(val, ast.Name):
-                    val = self._find_variable_in_body(body, val.id)
+                    val = cls._find_variable_in_body(body, val.id)
 
                 if isinstance(val, ast.List):
                     extras_require[key.s] = [e.s for e in val.elts]
 
         return extras_require
 
+    @classmethod
     def _find_single_string(
-        self, call: ast.Call, body: List[Any], name: str
+        cls, call: ast.Call, body: List[Any], name: str
     ) -> Optional[str]:
-        value = self._find_in_call(call, name)
+        value = cls._find_in_call(call, name)
         if value is None:
             # Trying to find in kwargs
-            kwargs = self._find_call_kwargs(call)
+            kwargs = cls._find_call_kwargs(call)
 
             if kwargs is None or not isinstance(kwargs, ast.Name):
-                return
+                return None
 
-            variable = self._find_variable_in_body(body, kwargs.id)
+            variable = cls._find_variable_in_body(body, kwargs.id)
             if not isinstance(variable, (ast.Dict, ast.Call)):
-                return
+                return None
 
             if isinstance(variable, ast.Call):
                 if not isinstance(variable.func, ast.Name):
-                    return
+                    return None
 
                 if variable.func.id != "dict":
-                    return
+                    return None
 
-                value = self._find_in_call(variable, name)
+                value = cls._find_in_call(variable, name)
             else:
-                value = self._find_in_dict(variable, name)
+                value = cls._find_in_dict(variable, name)
 
         if value is None:
-            return
+            return None
 
         if isinstance(value, ast.Str):
             return value.s
         elif isinstance(value, ast.Name):
-            variable = self._find_variable_in_body(body, value.id)
+            variable = cls._find_variable_in_body(body, value.id)
 
             if variable is not None and isinstance(variable, ast.Str):
                 return variable.s
 
-    def _find_in_call(self, call: ast.Call, name: str) -> Optional[Any]:
+        return None
+
+    @staticmethod
+    def _find_in_call(call: ast.Call, name: str) -> Optional[Any]:
         for keyword in call.keywords:
             if keyword.arg == name:
                 return keyword.value
+        return None
 
-    def _find_call_kwargs(self, call: ast.Call) -> Optional[Any]:
+    @staticmethod
+    def _find_call_kwargs(call: ast.Call) -> Optional[Any]:
         kwargs = None
         for keyword in call.keywords:
             if keyword.arg is None:
@@ -352,11 +361,9 @@ class SetupReader:
 
         return kwargs
 
-    def _find_variable_in_body(self, body: Iterable[Any], name: str) -> Optional[Any]:
-        found = None
+    @staticmethod
+    def _find_variable_in_body(body: Iterable[Any], name: str) -> Optional[Any]:
         for elem in body:
-            if found:
-                break
 
             if not isinstance(elem, ast.Assign):
                 continue
@@ -367,8 +374,11 @@ class SetupReader:
 
                 if target.id == name:
                     return elem.value
+        return None
 
-    def _find_in_dict(self, dict_: ast.Call, name: str) -> Optional[Any]:
+    @staticmethod
+    def _find_in_dict(dict_: ast.Dict, name: str) -> Optional[Any]:
         for key, val in zip(dict_.keys, dict_.values):
             if isinstance(key, ast.Str) and key.s == name:
                 return val
+        return None
