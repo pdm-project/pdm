@@ -66,7 +66,7 @@ class IOStream:
             return click.style(text, *args, **kwargs)
         return text
 
-    def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
+    def __init__(self, verbosity: int = NORMAL) -> None:
         self.verbosity = verbosity
         self._indent = ""
         logger = logging.getLogger(__name__)
