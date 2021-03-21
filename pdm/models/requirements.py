@@ -21,7 +21,7 @@ from pdm.models.pip_shims import (
     path_to_url,
     url_to_path,
 )
-from pdm.models.readers import Setup
+from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
     add_ssh_scheme_to_git_uri,

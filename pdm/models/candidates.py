@@ -15,7 +15,7 @@ from pdm import termui
 from pdm.exceptions import BuildError, ExtrasError, RequirementError
 from pdm.models import pip_shims
 from pdm.models.markers import Marker
-from pdm.models.readers import Setup
+from pdm.models.setup import Setup
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.utils import cached_property, get_rev_from_url, path_replace
 
