@@ -45,7 +45,7 @@ def do_lock(
     """Performs the locking process and update lockfile.
 
     :param project: the project instance
-    :param strategy: update stratege: reuse/eager/all
+    :param strategy: update strategy: reuse/eager/all
     :param tracked_names: required when using eager strategy
     :param requirements: An optional dictionary of requirements, read from pyproject
         if not given.
@@ -106,7 +106,7 @@ def do_sync(
 
     :param project: The project instance.
     :param sections: A tuple of optional sections to be synced.
-    :param dev: whether to include dev-dependecies.
+    :param dev: whether to include dev-dependencies.
     :param default: whether to include default dependencies.
     :param dry_run: Print actions without actually running them.
     :param clean: whether to remove unneeded packages.
@@ -143,7 +143,7 @@ def do_add(
     """Add packages and install
 
     :param project: the project instance
-    :param dev: add to dev dependencies seciton
+    :param dev: add to dev dependencies section
     :param section: specify section to be add to
     :param sync: whether to install added packages
     :param save: save strategy
@@ -204,7 +204,7 @@ def do_update(
 
     :param project: The project instance
     :param dev: whether to update dev dependencies
-    :param sections: update speicified sections
+    :param sections: update specified sections
     :param default: update default
     :param strategy: update strategy (reuse/eager)
     :param save: save strategy (compatible/exact/wildcard)
@@ -215,7 +215,7 @@ def do_update(
     check_project_file(project)
     if len(packages) > 0 and (len(sections) > 1 or not default):
         raise PdmUsageError(
-            "packages argument can't be used together with multple -s or --no-default."
+            "packages argument can't be used together with multiple -s or --no-default."
         )
     if not packages:
         if unconstrained:
@@ -319,7 +319,7 @@ def do_list(project: Project, graph: bool = False, reverse: bool = False) -> Non
 
     :param project: the project instance.
     :param graph: whether to display a graph.
-    :param reverse: wheter to display reverse graph.
+    :param reverse: whether to display reverse graph.
     """
     from pdm.cli.utils import (
         build_dependency_graph,

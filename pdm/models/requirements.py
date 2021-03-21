@@ -420,7 +420,7 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirment_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
+    requirement_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
     extras: Sequence[str],
 ) -> List[str]:
     result = []
