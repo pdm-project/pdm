@@ -198,7 +198,7 @@ def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
     The option format uses a str-list mapping. Keys are hash algorithms, and
     the list contains all values of that algorithm.
     """
-    result = {}
+    result: Dict[str, List[str]] = {}
     for hash_value in hashes.values():
         try:
             name, hash_value = hash_value.split(":")

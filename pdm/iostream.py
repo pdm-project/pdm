@@ -7,17 +7,12 @@ import re
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import List, Optional
+from typing import ContextManager, List, Optional
 
 import click
 
 from pdm._vendor import halo
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
-from pdm.utils import cached_property
-
-COLORS = ("red", "green", "yellow", "blue", "black", "magenta", "cyan", "white")
-
-COLORS += tuple(f"bright_{color}" for color in COLORS)
 
 
 @functools.lru_cache()
@@ -49,50 +44,51 @@ class DummySpinner:
         pass
 
 
+def _supports_ansi() -> bool:
+    if os.getenv("CI"):
+        return False
+    stream = sys.stdout
+    if not hasattr(stream, "fileno"):
+        return False
+    try:
+        return os.isatty(stream.fileno())
+    except io.UnsupportedOperation:
+        return False
+
+
 class IOStream:
     NORMAL = 0
     DETAIL = 1
     DEBUG = 2
 
-    def __init__(self, verbosity: int = NORMAL, disable_colors: bool = False) -> None:
+    def _style(self, text: str, *args, **kwargs) -> str:
+        if self.supports_ansi:
+            return click.style(text, *args, **kwargs)
+        return text
+
+    def __init__(self, verbosity: int = NORMAL) -> None:
         self.verbosity = verbosity
         self._indent = ""
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.NullHandler())
         self.logger = logger
+        self.supports_ansi = _supports_ansi()
 
-        for color in COLORS:
-            setattr(self, color, functools.partial(self._style, fg=color))
+        self.green = functools.partial(self._style, fg="green")
+        self.cyan = functools.partial(self._style, fg="cyan")
+        self.yellow = functools.partial(self._style, fg="yellow")
+        self.red = functools.partial(self._style, fg="red")
+        self.bold = functools.partial(self._style, bold=True)
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
-
-    @cached_property
-    def supports_ansi(self) -> bool:
-        if os.getenv("CI"):
-            return False
-        stream = sys.stdout
-        if not hasattr(stream, "fileno"):
-            return False
-        try:
-            return os.isatty(stream.fileno())
-        except io.UnsupportedOperation:
-            return False
 
     def echo(
         self, message: str = "", err: bool = False, verbosity: int = NORMAL, **kwargs
     ) -> None:
         if self.verbosity >= verbosity:
             click.echo(self._indent + str(message), err=err, **kwargs)
-
-    def _style(self, text: str, *args, **kwargs) -> str:
-        if not self.supports_ansi:
-            return text
-        return click.style(text, *args, **kwargs)
-
-    def bold(self, text: str, **kwargs) -> str:
-        return self._style(text, bold=True, **kwargs)
 
     def display_columns(
         self, rows: List[List[str]], header: Optional[List[str]] = None
@@ -149,14 +145,11 @@ class IOStream:
             except OSError:
                 pass
 
-    @contextlib.contextmanager
-    def open_spinner(self, title: str, spinner: str = "dots"):
+    def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
         if self.verbosity >= self.DETAIL or not self.supports_ansi:
-            bar = DummySpinner()
+            return DummySpinner()
         else:
-            bar = halo.Halo(title, spinner=spinner, indent=self._indent)
-        with bar as bar:
-            yield bar
+            return halo.Halo(title, spinner=spinner, indent=self._indent)
 
 
 stream = IOStream()
