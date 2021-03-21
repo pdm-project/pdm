@@ -2,8 +2,8 @@ import argparse
 
 from pip._vendor.pkg_resources import safe_name
 
+from pdm import termui
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.project_info import ProjectInfo
 from pdm.models.requirements import parse_requirement
@@ -39,8 +39,8 @@ class Command(BaseCommand):
         )
         latest = next(iter(matches), None)
         if not latest:
-            stream.echo(
-                stream.yellow(f"No match found for the package {package!r}"), err=True
+            project.core.ui.echo(
+                termui.yellow(f"No match found for the package {package!r}"), err=True
             )
             return
         latest_stable = next(filter(filter_stable, matches), None)
@@ -56,4 +56,4 @@ class Command(BaseCommand):
         if installed:
             result.installed_version = str(installed.version)
 
-        stream.display_columns(list(result.generate_rows()))
+        project.core.ui.display_columns(list(result.generate_rows()))

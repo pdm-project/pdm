@@ -6,7 +6,6 @@ import click
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
-from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -29,10 +28,12 @@ class Command(BaseCommand):
 
         if options.lock:
             if not project.lockfile_file.exists():
-                stream.echo("Lock file does not exist, trying to generate one...")
+                project.core.ui.echo(
+                    "Lock file does not exist, trying to generate one..."
+                )
                 actions.do_lock(project, strategy="all")
             elif not project.is_lockfile_hash_match():
-                stream.echo(
+                project.core.ui.echo(
                     "Lock file hash doesn't match pyproject.toml, regenerating..."
                 )
                 actions.do_lock(project, strategy="reuse")

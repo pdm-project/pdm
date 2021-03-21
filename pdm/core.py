@@ -11,12 +11,12 @@ import click
 from pip._vendor import pkg_resources
 from resolvelib import Resolver
 
+from pdm import termui
 from pdm.cli.actions import migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
 from pdm.installers import Synchronizer
-from pdm.iostream import stream
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
@@ -40,6 +40,7 @@ class Core:
         self.resolver_class = Resolver
         self.synchronizer_class = Synchronizer
 
+        self.ui = termui.UI()
         self.parser = None
         self.subparsers = None
 
@@ -106,12 +107,12 @@ class Core:
         self.load_plugins()
 
         options = self.parser.parse_args(args or None)
-        stream.set_verbosity(options.verbose)
+        self.ui.set_verbosity(options.verbose)
         if options.ignore_python:
             os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
 
         if options.pep582:
-            print_pep582_command(options.pep582)
+            print_pep582_command(self.ui, options.pep582)
             sys.exit(0)
 
         self.ensure_project(options, obj)
@@ -127,12 +128,12 @@ class Core:
                     f(options.project, options)
             except Exception:
                 etype, err, traceback = sys.exc_info()
-                if stream.verbosity > stream.NORMAL:
+                if self.ui.verbosity > termui.NORMAL:
                     raise err.with_traceback(traceback)
-                stream.echo(
-                    f"{stream.red('[' + etype.__name__ + ']')}: {err}", err=True
+                self.ui.echo(
+                    f"{termui.red('[' + etype.__name__ + ']')}: {err}", err=True
                 )
-                stream.echo(stream.yellow("Add '-v' to see the detailed traceback"))
+                self.ui.echo(termui.yellow("Add '-v' to see the detailed traceback"))
                 sys.exit(1)
 
     def register_command(

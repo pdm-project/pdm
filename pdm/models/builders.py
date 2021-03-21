@@ -9,15 +9,15 @@ import sys
 import tempfile
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 import toml
 from pep517.wrappers import Pep517HookCaller
 
 from pdm.exceptions import BuildError
-from pdm.iostream import stream
 from pdm.models.in_process import get_python_version, get_sys_config_paths
 from pdm.pep517.base import Builder
+from pdm.termui import logger
 from pdm.utils import cached_property
 
 if TYPE_CHECKING:
@@ -76,11 +76,15 @@ class LoggerWrapper(threading.Thread):
         self.join()
 
 
-def log_subprocessor(cmd, cwd=None, extra_environ=None):
+def log_subprocessor(
+    cmd: List[str],
+    cwd: Optional[os.PathLike] = None,
+    extra_environ: Optional[Dict[str, str]] = None,
+):
     env = os.environ.copy()
     if extra_environ:
         env.update(extra_environ)
-    outstream = LoggerWrapper(stream.logger, logging.DEBUG)
+    outstream = LoggerWrapper(logger, logging.DEBUG)
     try:
         subprocess.check_call(
             cmd,
@@ -93,27 +97,6 @@ def log_subprocessor(cmd, cwd=None, extra_environ=None):
         raise BuildError(f"Call command {cmd} return non-zero status.")
     finally:
         outstream.stop()
-
-
-def _download_pip_wheel(path):
-    dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
-    try:
-        log_subprocessor(
-            [
-                sys.executable,
-                "-m",
-                "pip",
-                "download",
-                "--only-binary=:all:",
-                "-d",
-                dirname,
-                "pip",
-            ]
-        )
-        wheel_file = next(dirname.glob("pip-*.whl"))
-        shutil.move(str(wheel_file), path)
-    finally:
-        shutil.rmtree(dirname, ignore_errors=True)
 
 
 def _find_egg_info(directory: str) -> str:
@@ -176,6 +159,26 @@ class EnvBuilder:
             env.update(extra_environ)
         return log_subprocessor(cmd, cwd, extra_environ=env)
 
+    def _download_pip_wheel(self, path: os.PathLike):
+        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
+        try:
+            self.subprocess_runner(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "download",
+                    "--only-binary=:all:",
+                    "-d",
+                    dirname,
+                    "pip",
+                ]
+            )
+            wheel_file = next(dirname.glob("pip-*.whl"))
+            shutil.move(str(wheel_file), path)
+        finally:
+            shutil.rmtree(dirname, ignore_errors=True)
+
     def _get_pip_command(self) -> List[str]:
         """Get a pip command that has pip installed.
         E.g: ['python', '-m', 'pip']
@@ -200,7 +203,7 @@ class EnvBuilder:
         # Otherwise, download a pip wheel from the Internet.
         pip_wheel = self._env.project.cache_dir / "pip.whl"
         if not pip_wheel.is_file():
-            _download_pip_wheel(pip_wheel)
+            self._download_pip_wheel(pip_wheel)
         return [self.executable, str(pip_wheel / "pip")]
 
     def __enter__(self):
@@ -217,7 +220,7 @@ class EnvBuilder:
             "PYTHONNOUSERSITE": "1",
             "PDM_PYTHON_PEP582": "0",
         }
-        stream.logger.debug("Preparing isolated env for PEP 517 build...")
+        logger.debug("Preparing isolated env for PEP 517 build...")
         return self
 
     def __exit__(self, *args):

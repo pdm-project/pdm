@@ -1,7 +1,6 @@
 import argparse
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -23,4 +22,6 @@ class Command(BaseCommand):
         from pycomplete import Completer
 
         completer = Completer(project.core.parser)
-        stream.echo(completer.render(options.shell or shellingham.detect_shell()[0]))
+        project.core.ui.echo(
+            completer.render(options.shell or shellingham.detect_shell()[0])
+        )

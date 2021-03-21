@@ -9,8 +9,8 @@ from distlib.database import EggInfoDistribution
 from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
 
+from pdm import termui
 from pdm.exceptions import BuildError, ExtrasError, RequirementError
-from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.readers import SetupReader
@@ -152,7 +152,7 @@ class Candidate:
         try:
             built = self.environment.build(ireq, self.hashes, allow_all_wheels)
         except BuildError:
-            stream.logger.warn("Failed to build package, try parsing project files.")
+            termui.logger.warn("Failed to build package, try parsing project files.")
             meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory)
             meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
             self.metadata = Namespace(**meta_dict)
@@ -279,6 +279,6 @@ class Candidate:
     def format(self) -> str:
         """Format for output."""
         return (
-            f"{stream.green(self.name, bold=True)} "
-            f"{stream.yellow(str(self.version))}"
+            f"{termui.green(self.name, bold=True)} "
+            f"{termui.yellow(str(self.version))}"
         )
