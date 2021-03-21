@@ -7,9 +7,9 @@ from typing import Dict, List, Tuple
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
+from pdm import termui
 from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
-from pdm.iostream import CELE, stream
 from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
@@ -76,6 +76,7 @@ class Synchronizer:
         self.all_candidates = environment.project.get_locked_candidates("__all__")
         self.working_set = environment.get_working_set()
         self.retry_times = retry_times
+        self.ui = environment.project.core.ui
 
     @contextlib.contextmanager
     def create_executor(self):
@@ -99,7 +100,7 @@ class Synchronizer:
         )
         egg_info_dir = self.environment.project.root / f"{canonical_name}.egg-info"
         if egg_info_dir.exists():
-            stream.echo("Updating the project's egg info...")
+            self.ui.echo("Updating the project's egg info...")
             with EnvBuilder(self.environment.project.root, self.environment) as builder:
                 builder.build_egg_info(str(builder.src_dir))
 
@@ -141,7 +142,7 @@ class Synchronizer:
         """Install candidate"""
         can = self.candidates[key]
         installer = self.get_installer()
-        with stream.open_spinner(f"Installing {can.format()}...") as spinner:
+        with self.ui.open_spinner(f"Installing {can.format()}...") as spinner:
             try:
                 installer.install(can)
             except Exception:
@@ -157,25 +158,25 @@ class Synchronizer:
         can = self.candidates[key]
         dist = self.working_set[safe_name(can.name).lower()]
         installer = self.get_installer()
-        with stream.open_spinner(
-            f"Updating {stream.green(key, bold=True)} {stream.yellow(dist.version)} "
-            f"-> {stream.yellow(can.version)}..."
+        with self.ui.open_spinner(
+            f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
+            f"-> {termui.yellow(can.version)}..."
         ) as spinner:
             try:
                 installer.uninstall(dist)
                 installer.install(can)
             except Exception:
                 spinner.fail(
-                    f"Update {stream.green(key, bold=True)} "
-                    f"{stream.yellow(dist.version)} -> "
-                    f"{stream.yellow(can.version)} failed"
+                    f"Update {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(can.version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
-                    f"Update {stream.green(key, bold=True)} "
-                    f"{stream.yellow(dist.version)} -> "
-                    f"-> {stream.yellow(can.version)} successful"
+                    f"Update {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} -> "
+                    f"-> {termui.yellow(can.version)} successful"
                 )
         return dist, can
 
@@ -186,35 +187,35 @@ class Synchronizer:
         """
         installer = self.get_installer()
         dist = self.working_set[key]
-        with stream.open_spinner(
-            f"Removing {stream.green(key, bold=True)} {stream.yellow(dist.version)}..."
+        with self.ui.open_spinner(
+            f"Removing {termui.green(key, bold=True)} {termui.yellow(dist.version)}..."
         ) as spinner:
             try:
                 installer.uninstall(dist)
             except Exception:
                 spinner.fail(
-                    f"Remove {stream.green(key, bold=True)} "
-                    f"{stream.yellow(dist.version)} failed"
+                    f"Remove {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
-                    f"Remove {stream.green(key, bold=True)} "
-                    f"{stream.yellow(dist.version)} successful"
+                    f"Remove {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} successful"
                 )
         return dist
 
     def _show_headline(self, packages: Dict[str, List[str]]) -> None:
         add, update, remove = packages["add"], packages["update"], packages["remove"]
-        results = [stream.bold("Synchronizing working set with lock file:")]
+        results = [termui.bold("Synchronizing working set with lock file:")]
         results.extend(
             [
-                f"{stream.green(str(len(add)))} to add,",
-                f"{stream.yellow(str(len(update)))} to update,",
-                f"{stream.red(str(len(remove)))} to remove",
+                f"{termui.green(str(len(add)))} to add,",
+                f"{termui.yellow(str(len(update)))} to update,",
+                f"{termui.red(str(len(remove)))} to remove",
             ]
         )
-        stream.echo(" ".join(results) + "\n")
+        self.ui.echo(" ".join(results) + "\n")
 
     def _show_summary(self, packages: Dict[str, List[str]]) -> None:
         to_add = [self.candidates[key] for key in packages["add"]]
@@ -224,24 +225,24 @@ class Synchronizer:
         to_remove = [self.working_set[key] for key in packages["remove"]]
         lines = []
         if to_add:
-            lines.append(stream.bold("Packages to add:"))
+            lines.append(termui.bold("Packages to add:"))
             for can in to_add:
                 lines.append(f"  - {can.format()}")
         if to_update:
-            lines.append(stream.bold("Packages to add:"))
+            lines.append(termui.bold("Packages to add:"))
             for prev, cur in to_update:
                 lines.append(
-                    f"  - {stream.green(cur.name, bold=True)} "
-                    f"{stream.yellow(prev.version)} -> {stream.yellow(cur.version)}"
+                    f"  - {termui.green(cur.name, bold=True)} "
+                    f"{termui.yellow(prev.version)} -> {termui.yellow(cur.version)}"
                 )
         if to_remove:
-            lines.append(stream.bold("Packages to add:"))
+            lines.append(termui.bold("Packages to add:"))
             for dist in to_remove:
                 lines.append(
-                    f"  - {stream.green(dist.key, bold=True)} "
-                    f"{stream.yellow(dist.version)}"
+                    f"  - {termui.green(dist.key, bold=True)} "
+                    f"{termui.yellow(dist.version)}"
                 )
-        stream.echo("\n".join(lines))
+        self.ui.echo("\n".join(lines))
 
     def synchronize(self, clean: bool = True, dry_run: bool = False) -> None:
         """Synchronize the working set with pinned candidates.
@@ -253,11 +254,11 @@ class Synchronizer:
         if not clean:
             to_remove = []
         if not any([to_add, to_update, to_remove]):
-            stream.echo(
-                stream.yellow("All packages are synced to date, nothing to do.")
+            self.ui.echo(
+                termui.yellow("All packages are synced to date, nothing to do.")
             )
             if not dry_run:
-                with stream.logging("install"):
+                with self.ui.logging("install"):
                     self.update_project_egg_info()
             return
         to_do = {"remove": to_remove, "update": to_update, "add": to_add}
@@ -300,14 +301,14 @@ class Synchronizer:
                 failed_jobs.append((kind, key))
                 error = future.exception()
                 errors.extend(
-                    [f"{kind} {stream.green(key)} failed:\n"]
+                    [f"{kind} {termui.green(key)} failed:\n"]
                     + traceback.format_exception(
                         type(error), error, error.__traceback__
                     )
                 )
 
-        with stream.logging("install"), self.environment.activate():
-            with stream.indent("  "):
+        with self.ui.logging("install"), self.environment.activate():
+            with self.ui.indent("  "):
                 for job in sequential_jobs:
                     kind, key = job
                     handlers[kind](key)
@@ -323,17 +324,17 @@ class Synchronizer:
                         break
                     parallel_jobs, failed_jobs = failed_jobs, []
                     errors.clear()
-                    stream.echo("Retry failed jobs")
+                    self.ui.echo("Retry failed jobs")
 
             if errors:
-                stream.echo(stream.red("\nERRORS:"))
-                stream.echo("".join(errors), err=True)
+                self.ui.echo(termui.red("\nERRORS:"))
+                self.ui.echo("".join(errors), err=True)
                 raise InstallationError("Some package operations are not complete yet")
 
             if install_self:
-                stream.echo("Installing the project as an editable package...")
-                with stream.indent("  "):
+                self.ui.echo("Installing the project as an editable package...")
+                with self.ui.indent("  "):
                     handlers[install_self[0]](install_self[1])
             else:
                 self.update_project_egg_info()
-            stream.echo(f"\n{CELE} All complete!")
+            self.ui.echo(f"\n{termui.Emoji.SUCC} All complete!")

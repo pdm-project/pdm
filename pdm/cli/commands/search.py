@@ -6,15 +6,18 @@ from typing import Optional
 
 from pip._vendor.pkg_resources import safe_name
 
+from pdm import termui
 from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.models.environment import WorkingSet
 from pdm.project import Project
 
 
 def print_results(
-    hits: SearchResult, working_set: WorkingSet, terminal_width: Optional[int] = None
+    ui: termui.UI,
+    hits: SearchResult,
+    working_set: WorkingSet,
+    terminal_width: Optional[int] = None,
 ):
     if not hits:
         return
@@ -35,20 +38,20 @@ def print_results(
         current_width = len(name) + len(latest) + 4
         spaces = " " * (name_column_width - current_width)
         line = "{name} ({latest}){spaces} - {summary}".format(
-            name=stream.green(name, bold=True),
-            latest=stream.yellow(latest),
+            name=termui.green(name, bold=True),
+            latest=termui.yellow(latest),
             spaces=spaces,
             summary=summary,
         )
         try:
-            stream.echo(line)
+            ui.echo(line)
             if safe_name(name).lower() in working_set:
                 dist = working_set[safe_name(name).lower()]
                 if dist.version == latest:
-                    stream.echo("  INSTALLED: %s (latest)" % dist.version)
+                    ui.echo("  INSTALLED: %s (latest)" % dist.version)
                 else:
-                    stream.echo("  INSTALLED: %s" % dist.version)
-                    stream.echo("  LATEST:    %s" % latest)
+                    ui.echo("  INSTALLED: %s" % dist.version)
+                    ui.echo("  LATEST:    %s" % latest)
         except UnicodeEncodeError:
             pass
 
@@ -64,4 +67,9 @@ class Command(BaseCommand):
         terminal_width = None
         if sys.stdout.isatty():
             terminal_width = get_terminal_size()[0]
-        print_results(result, project.environment.get_working_set(), terminal_width)
+        print_results(
+            project.core.ui,
+            result,
+            project.environment.get_working_set(),
+            terminal_width,
+        )

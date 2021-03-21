@@ -3,26 +3,52 @@ import functools
 import io
 import logging
 import os
-import re
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import ContextManager, List, Optional
+from typing import List, Optional
 
 import click
+from click._compat import strip_ansi
 
 from pdm._vendor import halo
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
 
-
-@functools.lru_cache()
-def _strip_styles(text):
-    return re.sub(r"\x1b\[\d+?m", "", text)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.NullHandler())
 
 
 def ljust(text, length):
     """Like str.ljust() but ignore all ANSI controlling characters."""
-    return text + " " * (length - len(_strip_styles(text)))
+    return text + " " * (length - len(strip_ansi(text)))
+
+
+def supports_ansi() -> bool:
+    """Check if the current environment supports ANSI colors"""
+    if os.getenv("CI"):
+        return False
+    stream = sys.stdout
+    if not hasattr(stream, "fileno"):
+        return False
+    try:
+        return os.isatty(stream.fileno())
+    except io.UnsupportedOperation:
+        return False
+
+
+# Export some style shortcut helpers
+green = functools.partial(click.style, fg="green")
+red = functools.partial(click.style, fg="red")
+yellow = functools.partial(click.style, fg="yellow")
+cyan = functools.partial(click.style, fg="cyan")
+blue = functools.partial(click.style, fg="blue")
+bold = functools.partial(click.style, bold=True)
+
+# Verbosity levels
+NORMAL = 0
+DETAIL = 1
+DEBUG = 2
 
 
 class DummySpinner:
@@ -31,7 +57,7 @@ class DummySpinner:
     """
 
     def start(self, text: str):
-        stream.echo(text)
+        click.echo(text)
 
     succeed = fail = stop_and_persist = start
 
@@ -44,51 +70,28 @@ class DummySpinner:
         pass
 
 
-def _supports_ansi() -> bool:
-    if os.getenv("CI"):
-        return False
-    stream = sys.stdout
-    if not hasattr(stream, "fileno"):
-        return False
-    try:
-        return os.isatty(stream.fileno())
-    except io.UnsupportedOperation:
-        return False
+class UI:
+    """Terminal UI object"""
 
-
-class IOStream:
-    NORMAL = 0
-    DETAIL = 1
-    DEBUG = 2
-
-    def _style(self, text: str, *args, **kwargs) -> str:
-        if self.supports_ansi:
-            return click.style(text, *args, **kwargs)
-        return text
-
-    def __init__(self, verbosity: int = NORMAL) -> None:
+    def __init__(self, verbosity: int = NORMAL, no_ansi: Optional[bool] = None) -> None:
         self.verbosity = verbosity
         self._indent = ""
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(logging.NullHandler())
-        self.logger = logger
-        self.supports_ansi = _supports_ansi()
-
-        self.green = functools.partial(self._style, fg="green")
-        self.cyan = functools.partial(self._style, fg="cyan")
-        self.yellow = functools.partial(self._style, fg="yellow")
-        self.red = functools.partial(self._style, fg="red")
-        self.bold = functools.partial(self._style, bold=True)
+        self.supports_ansi = not no_ansi if no_ansi is not None else supports_ansi()
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
 
     def echo(
-        self, message: str = "", err: bool = False, verbosity: int = NORMAL, **kwargs
+        self,
+        message: str = "",
+        err: bool = False,
+        verbosity: int = NORMAL,
+        **kwargs,
     ) -> None:
         if self.verbosity >= verbosity:
-            click.echo(self._indent + str(message), err=err, **kwargs)
+            click.secho(
+                self._indent + str(message), err=err, color=self.supports_ansi, **kwargs
+            )
 
     def display_columns(
         self, rows: List[List[str]], header: Optional[List[str]] = None
@@ -100,7 +103,7 @@ class IOStream:
         """
         sizes = list(
             map(
-                lambda column: max(map(lambda x: len(_strip_styles(x)), column)),
+                lambda column: max(map(lambda x: len(strip_ansi(x)), column)),
                 zip_longest(header or [], *rows, fillvalue=""),
             )
         )
@@ -121,10 +124,12 @@ class IOStream:
 
     @contextlib.contextmanager
     def logging(self, type_: str = "install"):
+        """A context manager that opens a file for logging when verbosity is NORMAL or
+        print to the stdout otherwise.
+        """
         file_name = mktemp(".log", f"pdm-{type_}-")
 
-        logger = self.logger
-        if self.verbosity >= self.DETAIL:
+        if self.verbosity >= DETAIL:
             handler = logging.StreamHandler()
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
@@ -135,9 +140,9 @@ class IOStream:
         try:
             yield logger
         except Exception:
-            if self.verbosity < self.DETAIL:
+            if self.verbosity < DETAIL:
                 logger.exception("Error occurs")
-                self.echo(self.yellow(f"See {file_name} for detailed debug log."))
+                self.echo(yellow(f"See {file_name} for detailed debug log."))
             raise
         else:
             try:
@@ -145,17 +150,20 @@ class IOStream:
             except OSError:
                 pass
 
-    def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
-        if self.verbosity >= self.DETAIL or not self.supports_ansi:
+    def open_spinner(self, title: str, spinner: str = "dots"):
+        """Open a spinner as a context manager."""
+        if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()
         else:
             return halo.Halo(title, spinner=spinner, indent=self._indent)
 
 
-stream = IOStream()
-if supports_unicode():
-    CELE = "🎉"
-    LOCK = "🔒"
-else:
-    CELE = ""
-    LOCK = ""
+class Emoji:
+    """A collection of emoji characters used in terminal output"""
+
+    if supports_unicode():
+        SUCC = "🎉"
+        LOCK = "🔒"
+    else:
+        SUCC = ""
+        LOCK = ""

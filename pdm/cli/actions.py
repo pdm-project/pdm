@@ -10,6 +10,7 @@ import tomlkit
 from pip._vendor.pkg_resources import safe_name
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
+from pdm import termui
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
@@ -23,7 +24,6 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.installers.installers import format_dist
-from pdm.iostream import LOCK, stream
 from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.in_process import get_python_version
@@ -58,12 +58,11 @@ def do_lock(
             r for deps in project.all_dependencies.values() for r in deps.values()
         ]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
-    with stream.logging("lock"):
+    ui = project.core.ui
+    with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
-        with stream.open_spinner(
-            title="Resolving dependencies", spinner="dots"
-        ) as spin:
+        with ui.open_spinner(title="Resolving dependencies", spinner="dots") as spin:
             reporter = project.get_reporter(requirements, tracked_names, spin)
             resolver = project.core.resolver_class(provider, reporter)
             try:
@@ -74,22 +73,22 @@ def do_lock(
                     resolve_max_rounds,
                 )
             except ResolutionTooDeep:
-                spin.fail(f"{LOCK} Lock failed")
-                stream.echo(
+                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
+                ui.echo(
                     "The dependency resolution exceeds the maximum loop depth of "
                     f"{resolve_max_rounds}, there may be some circular dependencies "
                     "in your project. Try to solve them or increase the "
-                    f"{stream.green('`strategy.resolve_max_rounds`')} config.",
+                    f"{termui.green('`strategy.resolve_max_rounds`')} config.",
                     err=True,
                 )
                 raise
             except ResolutionImpossible as err:
-                spin.fail(f"{LOCK} Lock failed")
-                stream.echo(format_resolution_impossible(err), err=True)
+                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
+                ui.echo(format_resolution_impossible(err), err=True)
                 raise
             else:
                 data = format_lockfile(mapping, dependencies, summaries)
-                spin.succeed(f"{LOCK} Lock successful")
+                spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
     project.write_lockfile(data)
 
     return mapping
@@ -119,7 +118,7 @@ def do_sync(
     for section in sections:
         if section not in list(project.iter_sections()):
             raise PdmUsageError(
-                f"Section {stream.green(repr(section))} doesn't exist "
+                f"Section {termui.green(repr(section))} doesn't exist "
                 "in the pyproject.toml"
             )
         candidates.update(project.get_locked_candidates(section))
@@ -165,9 +164,9 @@ def do_add(
         r.from_section = section
         tracked_names.add(key)
         requirements[key] = r
-    stream.echo(
+    project.core.ui.echo(
         f"Adding packages to {section} dependencies: "
-        + ", ".join(stream.green(key or "", bold=True) for key in requirements)
+        + ", ".join(termui.green(key or "", bold=True) for key in requirements)
     )
     all_dependencies = project.all_dependencies
     all_dependencies.setdefault(section, {}).update(requirements)
@@ -244,16 +243,16 @@ def do_update(
         if not matched_name:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
-                    stream.green(name, bold=True), section
+                    termui.green(name, bold=True), section
                 )
             )
         if unconstrained:
             dependencies[matched_name].specifier = get_specifier("")
         tracked_names.add(matched_name)
         updated_deps[matched_name] = dependencies[matched_name]
-    stream.echo(
+    project.core.ui.echo(
         "Updating packages: {}.".format(
-            ", ".join(stream.green(v, bold=True) for v in tracked_names)
+            ", ".join(termui.green(v, bold=True) for v in tracked_names)
         )
     )
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
@@ -291,9 +290,9 @@ def do_remove(
         raise ProjectError(f"No {section} dependencies given in pyproject.toml.")
 
     deps = project.get_pyproject_dependencies(section)
-    stream.echo(
+    project.core.ui.echo(
         f"Removing packages from {section} dependencies: "
-        + ", ".join(str(stream.green(name, bold=True)) for name in packages)
+        + ", ".join(str(termui.green(name, bold=True)) for name in packages)
     )
     for name in packages:
         req = parse_requirement(name)
@@ -303,7 +302,7 @@ def do_remove(
         if not matched_indexes:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
-                    stream.green(name, bold=True), section
+                    termui.green(name, bold=True), section
                 )
             )
         for i in matched_indexes:
@@ -339,13 +338,13 @@ def do_list(project: Project, graph: bool = False, reverse: bool = False) -> Non
             graph = format_reverse_dependency_graph(project, dep_graph)
         else:
             graph = format_dependency_graph(project, dep_graph)
-        stream.echo(graph)
+        project.core.ui.echo(graph)
     else:
         rows = [
-            (stream.green(k, bold=True), format_dist(v))
+            (termui.green(k, bold=True), format_dist(v))
             for k, v in sorted(working_set.items())
         ]
-        stream.display_columns(rows, ["Package", "Version"])
+        project.core.ui.display_columns(rows, ["Package", "Version"])
 
 
 def do_build(
@@ -360,23 +359,23 @@ def do_build(
         raise ProjectError("Not allowed to build based on the global project.")
     check_project_file(project)
     if not wheel and not sdist:
-        stream.echo("All artifacts are disabled, nothing to do.", err=True)
+        project.core.ui.echo("All artifacts are disabled, nothing to do.", err=True)
         return
     if not os.path.isabs(dest):
         dest = project.root.joinpath(dest).as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
-    with stream.logging("build"), EnvBuilder(
+    with project.core.ui.logging("build"), EnvBuilder(
         project.root, project.environment
     ) as builder:
         if sdist:
-            stream.echo("Building sdist...")
+            project.core.ui.echo("Building sdist...")
             loc = builder.build_sdist(dest)
-            stream.echo(f"Built sdist at {loc}")
+            project.core.ui.echo(f"Built sdist at {loc}")
         if wheel:
-            stream.echo("Building wheel...")
+            project.core.ui.echo("Building wheel...")
             loc = builder.build_wheel(dest)
-            stream.echo(f"Built wheel at {loc}")
+            project.core.ui.echo(f"Built wheel at {loc}")
 
 
 def do_init(
@@ -441,8 +440,8 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
 
         if not first and len(pythons) > 1:
             for i, (path, python_version, is_64bit) in enumerate(pythons):
-                stream.echo(
-                    f"{i}. {stream.green(path)} "
+                project.core.ui.echo(
+                    f"{i}. {termui.green(path)} "
                     f"({get_python_version_string(python_version, is_64bit)})"
                 )
             selection = click.prompt(
@@ -460,9 +459,9 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
             "The target Python version {} doesn't satisfy "
             "the Python requirement: {}".format(python_version, project.python_requires)
         )
-    stream.echo(
+    project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(
-            stream.green(python_path),
+            termui.green(python_path),
             get_python_version_string(python_version, is_64bit),
         )
     )
@@ -470,7 +469,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     new_path = python_path
     project.project_config["python.path"] = Path(new_path).as_posix()
     if old_path and Path(old_path) != Path(new_path) and not project.is_global:
-        stream.echo(stream.cyan("Updating executable scripts..."))
+        project.core.ui.echo(termui.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)
 
 
@@ -486,23 +485,25 @@ def do_info(
     python_version, is_64bit = get_python_version(python_path, True)
     if not python and not show_project and not env:
         rows = [
-            (stream.cyan("PDM version:", bold=True), project.core.version),
+            (termui.cyan("PDM version:", bold=True), project.core.version),
             (
-                stream.cyan("Python Interpreter:", bold=True),
+                termui.cyan("Python Interpreter:", bold=True),
                 python_path
                 + f" ({get_python_version_string(python_version, is_64bit)})",
             ),
-            (stream.cyan("Project Root:", bold=True), project.root.as_posix()),
+            (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
         ]
-        stream.display_columns(rows)
+        project.core.ui.display_columns(rows)
         return
 
     if python:
-        stream.echo(python_path)
+        project.core.ui.echo(python_path)
     if show_project:
-        stream.echo(project.root.as_posix())
+        project.core.ui.echo(project.root.as_posix())
     if env:
-        stream.echo(json.dumps(project.environment.marker_environment, indent=2))
+        project.core.ui.echo(
+            json.dumps(project.environment.marker_environment, indent=2)
+        )
 
 
 def do_import(
@@ -558,15 +559,15 @@ def ask_for_import(project: Project) -> None:
     importable_files = list(find_importable_files(project))
     if not importable_files:
         return
-    stream.echo(
-        stream.cyan("Found following files from other formats that you may import:")
+    project.core.ui.echo(
+        termui.cyan("Found following files from other formats that you may import:")
     )
     for i, (key, filepath) in enumerate(importable_files):
-        stream.echo(f"{i}. {stream.green(filepath.as_posix())} ({key})")
-    stream.echo(
+        project.core.ui.echo(f"{i}. {termui.green(filepath.as_posix())} ({key})")
+    project.core.ui.echo(
         "{}. {}".format(
             len(importable_files),
-            stream.yellow("don't do anything, I will import later."),
+            termui.yellow("don't do anything, I will import later."),
         )
     )
     choice = click.prompt(
@@ -580,12 +581,26 @@ def ask_for_import(project: Project) -> None:
     do_import(project, filepath, key)
 
 
-def print_pep582_command(shell: str = "AUTO"):
+def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
     """Print the export PYTHONPATH line to be evaluated by the shell."""
     import shellingham
 
     if os.name == "nt":
-        set_env_in_reg("PYTHONPATH", PEP582_PATH)
+        try:
+            set_env_in_reg("PYTHONPATH", PEP582_PATH)
+        except PermissionError:
+            ui.echo(
+                termui.red(
+                    "Permission denied, please run the terminal as administrator."
+                ),
+                err=True,
+            )
+        ui.echo(
+            termui.green(
+                "The environment variable has been saved, "
+                "please restart the session to take effect."
+            )
+        )
         return
     lib_path = PEP582_PATH.replace("'", "\\'")
     if shell == "AUTO":
@@ -602,7 +617,7 @@ def print_pep582_command(shell: str = "AUTO"):
             f"Unsupported shell: {shell}, please specify another shell "
             "via `--pep582 <SHELL>`"
         )
-    stream.echo(result)
+    ui.echo(result)
 
 
 def migrate_pyproject(project: Project):
@@ -615,14 +630,14 @@ def migrate_pyproject(project: Project):
     ):
         return
 
-    stream.echo(
-        stream.yellow("Legacy [tool.pdm] metadata detected, migrating to PEP 621..."),
+    project.core.ui.echo(
+        termui.yellow("Legacy [tool.pdm] metadata detected, migrating to PEP 621..."),
         err=True,
     )
     do_import(project, project.pyproject_file, "legacy")
-    stream.echo(
-        stream.green("pyproject.toml")
-        + stream.yellow(
+    project.core.ui.echo(
+        termui.green("pyproject.toml")
+        + termui.yellow(
             " has been migrated to PEP 621 successfully. "
             "Now you can safely delete the legacy metadata under [tool.pdm] table."
         ),

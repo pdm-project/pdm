@@ -15,9 +15,9 @@ from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 from tomlkit.items import Comment, Whitespace
 
+from pdm import termui
 from pdm._types import Source
 from pdm.exceptions import NoPythonVersion, ProjectError
-from pdm.iostream import stream
 from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from tomlkit.container import Container
 
     from pdm._vendor import halo
+    from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
 
 
@@ -53,6 +54,8 @@ class Project:
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
     PYPROJECT_VERSION = "2"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
+
+    core: Core
 
     @classmethod
     def create_global(cls, root_path: Optional[str] = None) -> "Project":
@@ -69,7 +72,6 @@ class Project:
         self._lockfile: Optional[Container] = None
         self._environment: Optional[Environment] = None
         self._python_executable: Optional[str] = None
-        self.core = None
 
         if root_path is None:
             root_path = find_project_root()
@@ -156,10 +158,10 @@ class Project:
         if config["use_venv"]:
             path = get_venv_python(self.root)
             if path:
-                stream.echo(
-                    f"Virtualenv interpreter {stream.green(path)} is detected.",
+                self.core.ui.echo(
+                    f"Virtualenv interpreter {termui.green(path)} is detected.",
                     err=True,
-                    verbosity=stream.DETAIL,
+                    verbosity=termui.DETAIL,
                 )
         if not path and PYENV_INSTALLED and config.get("python.use_pyenv", True):
             path = Path(PYENV_ROOT, "shims", "python").as_posix()
@@ -187,8 +189,8 @@ class Project:
             if os.path.normcase(path) == os.path.normcase(sys.executable):
                 # Refer to the base interpreter to allow for venvs
                 path = getattr(sys, "_base_executable", sys.executable)
-            stream.echo(
-                "Using Python interpreter: {} ({})".format(stream.green(path), version),
+            self.core.ui.echo(
+                "Using Python interpreter: {} ({})".format(termui.green(path), version),
                 err=True,
             )
             if not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
@@ -357,7 +359,7 @@ class Project:
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
         if show_message:
-            stream.echo(f"Changes are written to {stream.green('pdm.lock')}.")
+            self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
@@ -465,7 +467,9 @@ class Project:
         ) as f:
             f.write(tomlkit.dumps(self.pyproject))
         if show_message:
-            stream.echo(f"Changes are written to {stream.green('pyproject.toml')}.")
+            self.core.ui.echo(
+                f"Changes are written to {termui.green('pyproject.toml')}."
+            )
         self._pyproject = None
 
     @property

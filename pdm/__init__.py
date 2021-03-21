@@ -5,7 +5,6 @@ __path__ = extend_path(__path__, __name__)
 from pdm.cli.commands.base import BaseCommand
 from pdm.core import Core
 from pdm.installers import Installer, Synchronizer
-from pdm.iostream import stream
 from pdm.project import Config, ConfigItem, Project
 
 __all__ = (
@@ -16,7 +15,6 @@ __all__ = (
     "Installer",
     "Synchronizer",
     "Core",
-    "stream",
 )
 
 

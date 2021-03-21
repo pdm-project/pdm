@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import sys
 from collections import ChainMap
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -13,10 +12,10 @@ import tomlkit
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
 
+from pdm import termui
 from pdm.exceptions import NoPythonVersion, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
-from pdm.iostream import stream
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
 from pdm.models.specifiers import get_specifier
@@ -57,7 +56,7 @@ class PdmFormatter(argparse.HelpFormatter):
             indent_first = help_position
 
         # collect the pieces of the action help
-        parts = [stream.cyan(action_header)]
+        parts = [termui.cyan(action_header)]
 
         # if there was help for the action, add lines of help text
         if action.help:
@@ -82,7 +81,7 @@ class PdmFormatter(argparse.HelpFormatter):
 class PdmParser(argparse.ArgumentParser):
     def format_help(self):
         formatter = self._get_formatter()
-        formatter.io = stream
+
         if getattr(self, "is_root", False):
             banner = (
                 cfonts.render(
@@ -104,13 +103,13 @@ class PdmParser(argparse.ArgumentParser):
             self.usage,
             self._actions,
             self._mutually_exclusive_groups,
-            prefix=stream.yellow("Usage", bold=True) + ": ",
+            prefix=termui.yellow("Usage", bold=True) + ": ",
         )
 
         # positionals, optionals and user-defined groups
         for action_group in self._action_groups:
             formatter.start_section(
-                stream.yellow(action_group.title, bold=True)
+                termui.yellow(action_group.title, bold=True)
                 if action_group.title
                 else None
             )
@@ -213,18 +212,18 @@ def format_package(
         visited = set()
     result = []
     version = (
-        stream.red("[ not installed ]")
+        termui.red("[ not installed ]")
         if not package.version
-        else stream.red(package.version)
+        else termui.red(package.version)
         if required
         and required not in ("Any", "This project")
         and not SpecifierSet(required).contains(package.version)
-        else stream.yellow(package.version)
+        else termui.yellow(package.version)
     )
     if package.name in visited:
-        version = stream.red("[circular]")
+        version = termui.red("[circular]")
     required = f"[ required: {required} ]" if required else "[ Not required ]"
-    result.append(f"{stream.green(package.name, bold=True)} {version} {required}\n")
+    result.append(f"{termui.green(package.name, bold=True)} {version} {required}\n")
     if package.name in visited:
         return "".join(result)
     visited.add(package.name)
@@ -257,14 +256,14 @@ def format_reverse_package(
         visited = set()
     result = []
     version = (
-        stream.red("[ not installed ]")
+        termui.red("[ not installed ]")
         if not package.version
-        else stream.yellow(package.version)
+        else termui.yellow(package.version)
     )
     if package.name in visited:
-        version = stream.red("[circular]")
+        version = termui.red("[circular]")
     requires = (
-        f"[ requires: {stream.red(requires)} ]"
+        f"[ requires: {termui.red(requires)} ]"
         if requires not in ("Any", "")
         and child
         and child.version
@@ -273,7 +272,7 @@ def format_reverse_package(
         if not requires
         else f"[ requires: {requires} ]"
     )
-    result.append(f"{stream.green(package.name, bold=True)} {version} {requires}\n")
+    result.append(f"{termui.green(package.name, bold=True)} {version} {requires}\n")
     if package.name in visited:
         return "".join(result)
     visited.add(package.name)
@@ -384,7 +383,7 @@ def check_project_file(project: Project) -> None:
     if not project.meta:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
-            "by running {}.".format(stream.green("'pdm init'"))
+            "by running {}.".format(termui.green("'pdm init'"))
         )
 
 
@@ -423,22 +422,7 @@ def set_env_in_reg(env_name: str, value: str) -> None:
             except FileNotFoundError:
                 old_value, type_ = "", winreg.REG_EXPAND_SZ
             new_value = os.pathsep.join([old_value, value]) if old_value else value
-            try:
-                winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
-            except PermissionError:
-                stream.echo(
-                    stream.red(
-                        "Permission denied, please run the terminal as administrator."
-                    ),
-                    err=True,
-                )
-                sys.exit(1)
-    stream.echo(
-        stream.green(
-            "The environment variable has been saved, "
-            "please restart the session to take effect."
-        )
-    )
+            winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
 
 
 def format_resolution_impossible(err: ResolutionImpossible) -> str:

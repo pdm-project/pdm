@@ -1,4 +1,4 @@
-from pdm.iostream import stream
+from pdm import termui
 
 
 class PdmException(Exception):
@@ -29,7 +29,7 @@ class CandidateInfoNotFound(PdmException):
     def __init__(self, candidate):
         message = (
             "No metadata information is available for "
-            f"{stream.green(str(candidate))}."
+            f"{termui.green(str(candidate))}."
         )
         self.candidate = candidate
         super().__init__(message)

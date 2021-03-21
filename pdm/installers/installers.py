@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import distlib.scripts
 from pip._vendor.pkg_resources import EggInfoDistribution
 
-from pdm.iostream import stream
+from pdm import termui
 from pdm.models import pip_shims
 from pdm.models.builders import EnvBuilder
 from pdm.models.requirements import parse_requirement
@@ -28,7 +28,7 @@ def format_dist(dist: Distribution) -> str:
     path = ""
     if is_dist_editable(dist):
         path = f" (-e {dist.location})"
-    return formatter.format(version=stream.yellow(dist.version), path=path)
+    return formatter.format(version=termui.yellow(dist.version), path=path)
 
 
 class Installer:  # pragma: no cover

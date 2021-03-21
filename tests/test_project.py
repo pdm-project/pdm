@@ -54,8 +54,9 @@ def test_project_sources_overriding(project):
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
-def test_global_project(tmp_path):
+def test_global_project(tmp_path, core):
     project = Project.create_global(tmp_path.as_posix())
+    project.core = core
     project.init_global_project()
     assert project.environment.is_global
 

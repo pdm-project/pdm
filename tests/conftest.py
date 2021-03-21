@@ -294,3 +294,8 @@ def is_dev(request):
 def invoke():
     runner = CliRunner(mix_stderr=False)
     return functools.partial(runner.invoke, main, prog_name="pdm")
+
+
+@pytest.fixture()
+def core():
+    return main

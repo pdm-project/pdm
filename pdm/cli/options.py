@@ -1,6 +1,8 @@
 import argparse
 
-from pdm.iostream import stream
+import click
+
+from pdm import termui
 from pdm.project import Project
 
 
@@ -153,8 +155,8 @@ project_option = Option(
 
 def deprecate_global_option(value) -> Project:
     if value:
-        stream.echo(
-            stream.red(
+        click.echo(
+            termui.red(
                 "DEPRECATION: -g/--global with argument is deprecated and will be "
                 "removed in v1.5.0, please use '-gp <PROJECT_PATH>' instead."
             ),

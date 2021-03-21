@@ -2,9 +2,9 @@ import argparse
 
 import click
 
+from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.models.in_process import get_python_version
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git
@@ -18,14 +18,14 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
-            stream.echo(
+            project.core.ui.echo(
                 "{}".format(
-                    stream.cyan("pyproject.toml already exists, update it now.")
+                    termui.cyan("pyproject.toml already exists, update it now.")
                 )
             )
         else:
-            stream.echo(
-                "{}".format(stream.cyan("Creating a pyproject.toml for PDM..."))
+            project.core.ui.echo(
+                "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
             )
         python = click.prompt(
             "Please enter the Python interpreter to use", default="", show_default=False

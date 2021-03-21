@@ -118,8 +118,9 @@ def test_parse_abnormal_specifiers(project):
         "-e ${PROJECT_ROOT}/tests/fixtures/projects/demo",
     ],
 )
-def test_expand_project_root_in_url(req_str):
+def test_expand_project_root_in_url(req_str, core):
     project = Project(FIXTURES.parent.parent)
+    project.core = core
     if req_str.startswith("-e "):
         req = parse_requirement(req_str[3:], True)
     else:

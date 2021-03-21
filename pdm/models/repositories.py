@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tupl
 
 from pip._vendor.html5lib import parse
 
+from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
 from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
-from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -249,8 +249,8 @@ class PyPIRepository(BaseRepository):
             session = finder.session
             resp = session.get(search_url, params={"q": query})
             if resp.status_code == 404:
-                stream.echo(
-                    stream.yellow(
+                self.environment.project.core.ui.echo(
+                    termui.yellow(
                         f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
                         f"to {self.DEFAULT_INDEX_URL!r} now.\n"
                         "This may take longer depending on your network condition."

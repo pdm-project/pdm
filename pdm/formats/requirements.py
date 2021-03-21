@@ -5,7 +5,6 @@ from distlib.wheel import Wheel
 
 from pdm.exceptions import PdmUsageError
 from pdm.formats.base import make_array
-from pdm.iostream import stream
 from pdm.models.markers import Marker
 from pdm.models.pip_shims import parse_requirements
 from pdm.models.requirements import parse_requirement
@@ -95,7 +94,7 @@ def convert_url_to_source(url, name=None):
 
 def convert(project, filename, options):
     ireqs, finder = parse_requirement_file(str(filename))
-    with stream.logging("build"):
+    with project.core.ui.logging("build"):
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
     deps = make_array(reqs, True)

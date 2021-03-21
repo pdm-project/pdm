@@ -5,10 +5,11 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
 
 import appdirs
+import click
 import tomlkit
 
+from pdm import termui
 from pdm.exceptions import NoConfigError
-from pdm.iostream import stream
 from pdm.utils import get_pypi_source
 
 T = TypeVar("T")
@@ -185,8 +186,8 @@ class Config(MutableMapping):
         value = self._config_map[key].coerce(value)
         env_var = self._config_map[key].env_var
         if env_var is not None and env_var in os.environ:
-            stream.echo(
-                stream.yellow(
+            click.echo(
+                termui.yellow(
                     "WARNING: the config is shadowed by env var '{}', "
                     "the value set won't take effect.".format(env_var)
                 )
@@ -210,8 +211,8 @@ class Config(MutableMapping):
         else:
             env_var = self._config_map[key].env_var
             if env_var is not None and env_var in os.environ:
-                stream.echo(
-                    stream.yellow(
+                click.echo(
+                    termui.yellow(
                         "WARNING: the config is shadowed by env var '{}', "
                         "set value won't take effect.".format(env_var)
                     )

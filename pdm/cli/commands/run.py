@@ -7,10 +7,10 @@ import subprocess
 import sys
 from typing import Dict, List, Optional, Union
 
+from pdm import termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
-from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -56,7 +56,9 @@ class Command(BaseCommand):
         if env_file:
             import dotenv
 
-            stream.echo(f"Loading .env file: {stream.green(env_file)}", err=True)
+            project.core.ui.echo(
+                f"Loading .env file: {termui.green(env_file)}", err=True
+            )
             dotenv.load_dotenv(
                 project.root.joinpath(env_file).as_posix(), override=True
             )
@@ -70,7 +72,7 @@ class Command(BaseCommand):
         if not expanded_command:
             raise PdmUsageError(
                 "Command {} is not found on your PATH.".format(
-                    stream.green(f"'{command}'")
+                    termui.green(f"'{command}'")
                 )
             )
         expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
@@ -143,7 +145,9 @@ class Command(BaseCommand):
         options["env_file"] = options.get(
             "env_file", global_env_options.get("env_file")
         )
-        stream.echo(f"Running {kind} script: {stream.green(str(args))}", err=True)
+        project.core.ui.echo(
+            f"Running {kind} script: {termui.green(str(args))}", err=True
+        )
         return self._run_command(project, args, **options)
 
     def _show_list(self, project: Project) -> None:
@@ -155,8 +159,8 @@ class Command(BaseCommand):
             if name == "_":
                 continue
             kind, value, options = self._normalize_script(script)
-            result.append((stream.green(name), kind, value, options.get("help", "")))
-        stream.display_columns(result, columns)
+            result.append((termui.green(name), kind, value, options.get("help", "")))
+        project.core.ui.display_columns(result, columns)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.list:

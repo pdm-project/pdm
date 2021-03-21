@@ -15,7 +15,7 @@ from pip._internal.req import req_uninstall
 from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
 
-from pdm.iostream import stream
+from pdm import termui
 from pdm.models import pip_shims
 from pdm.models.auth import make_basic_auth
 from pdm.models.builders import EnvBuilder
@@ -92,7 +92,7 @@ class Environment:
         self.python_executable = project.python_executable
         self._essential_installed = False
         self.auth = make_basic_auth(
-            self.project.sources, stream.verbosity >= stream.DETAIL
+            self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
 
     def get_paths(self) -> Dict[str, str]:
@@ -257,7 +257,7 @@ class Environment:
                         ),
                     )
                     if cache_entry is not None:
-                        stream.logger.debug(
+                        termui.logger.debug(
                             "Using cached wheel link: %s", cache_entry.link
                         )
                         ireq.link = cache_entry.link
@@ -311,7 +311,7 @@ class Environment:
                     ),
                 )
                 if cache_entry is not None:
-                    stream.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                    termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
                     return cache_entry.link.file_path
 
             # Otherwise, now all source is prepared, build it.
