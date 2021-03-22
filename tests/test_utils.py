@@ -50,5 +50,10 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
 def test_find_python_in_path(tmp_path):
 
     assert utils.find_python_in_path(sys.executable) == pathlib.Path(sys.executable)
-    assert utils.find_python_in_path(sys.prefix) == pathlib.Path(sys.executable)
+    assert (
+        utils.find_python_in_path(sys.prefix)
+        .as_posix()
+        .lower()
+        .startswith(pathlib.Path(sys.executable).as_posix().lower())
+    )
     assert not utils.find_python_in_path(tmp_path)
