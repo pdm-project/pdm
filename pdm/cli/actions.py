@@ -417,7 +417,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     The python can be a version string or interpreter path.
     """
     python = python.strip()
-    found_interpreters = list(project.find_interpreters(python))
+    found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
     if not found_interpreters:
         raise NoPythonVersion(
             f"Python interpreter {python} is not found on the system."

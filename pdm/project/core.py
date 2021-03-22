@@ -530,11 +530,13 @@ dependencies = ["pip", "setuptools", "wheel"]
             if Path(python_spec).exists():
                 python_path = find_python_in_path(python_spec)
                 if python_path:
+                    yield os.path.abspath(python_path)
+            else:
+                python_path = shutil.which(python_spec)
+                if python_path:
                     yield python_path
-                return
-            args = [python_spec]
-        else:
-            args = [int(v) for v in python_spec.split(".") if v != ""]
+            return
+        args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = pythonfinder.Finder()
         for entry in finder.find_all_python_versions(*args):
             yield entry.path.as_posix()
