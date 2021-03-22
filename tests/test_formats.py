@@ -100,8 +100,8 @@ def test_convert_flit(project):
     assert result["readme"] == "README.rst"
     assert result["urls"]["Documentation"] == "https://flit.readthedocs.io/en/latest/"
     assert result["dependencies"] == [
-        "requests >=2.6",
-        "configparser; python_version == '2.7'",
+        "requests>=2.6",
+        'configparser; python_version == "2.7"',
     ]
 
     assert result["optional-dependencies"]["test"] == [

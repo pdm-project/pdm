@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "poetry-demo"
+version = "0.1.0"
+authors = ["Thomas Kluyver <thomas@kluyver.me.uk>"]
+homepage = "https://github.com/takluyver/flit"
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.poetry.urls]
+Documentation = "https://flit.readthedocs.io/en/latest/"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests = "^2.6"
+pytest = {version = "^2.7.3", optional = true}
+pytest-cov = {version = "*", optional = true}
+sphinx = {version = "*", optional = true}
+
+[tool.poetry.extras]
+test = ["pytest", "pytest-cov"]
+doc = ["sphinx"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
