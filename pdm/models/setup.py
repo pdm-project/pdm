@@ -217,7 +217,7 @@ class _SetupReader:
 
     @classmethod
     def _find_install_requires(cls, call: ast.Call, body: Iterable[Any]) -> List[str]:
-        install_requires = []
+        install_requires: List[str] = []
         value = cls._find_in_call(call, "install_requires")
         if value is None:
             # Trying to find in kwargs
@@ -259,8 +259,8 @@ class _SetupReader:
     @classmethod
     def _find_extras_require(
         cls, call: ast.Call, body: Iterable[Any]
-    ) -> Dict[str, List]:
-        extras_require = {}
+    ) -> Dict[str, List[str]]:
+        extras_require: Dict[str, List[str]] = {}
         value = cls._find_in_call(call, "extras_require")
         if value is None:
             # Trying to find in kwargs
