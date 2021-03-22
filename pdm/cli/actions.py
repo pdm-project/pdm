@@ -14,7 +14,6 @@ from pdm import termui
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
-    find_python_in_path,
     format_lockfile,
     format_resolution_impossible,
     save_version_specifiers,
@@ -417,42 +416,27 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    import pythonfinder
-
     python = python.strip()
-    if python and not all(c.isdigit() for c in python.split(".")):
-        if Path(python).exists():
-            python_path = find_python_in_path(python)
-        else:
-            python_path = shutil.which(python)
-        if not python_path:
-            raise NoPythonVersion(f"{python} is not a valid Python.")
-        python_version, is_64bit = get_python_version(python_path, True)
+    found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
+    if not found_interpreters:
+        raise NoPythonVersion(
+            f"Python interpreter {python} is not found on the system."
+        )
+    if first or len(found_interpreters) == 1:
+        python_path = found_interpreters[0]
     else:
-        finder = pythonfinder.Finder()
-        pythons = []
-        args = [int(v) for v in python.split(".") if v != ""]
-        for i, entry in enumerate(finder.find_all_python_versions(*args)):
-            python_version, is_64bit = get_python_version(entry.path.as_posix(), True)
-            pythons.append((entry.path.as_posix(), python_version, is_64bit))
-        if not pythons:
-            raise NoPythonVersion(f"Python {python} is not available on the system.")
-
-        if not first and len(pythons) > 1:
-            for i, (path, python_version, is_64bit) in enumerate(pythons):
-                project.core.ui.echo(
-                    f"{i}. {termui.green(path)} "
-                    f"({get_python_version_string(python_version, is_64bit)})"
-                )
-            selection = click.prompt(
-                "Please select:",
-                type=click.Choice([str(i) for i in range(len(pythons))]),
-                default="0",
-                show_choices=False,
-            )
-        else:
-            selection = 0
-        python_path, python_version, is_64bit = pythons[int(selection)]
+        for i, path in enumerate(found_interpreters):
+            python_version, is_64bit = get_python_version(path, True)
+            version_string = get_python_version_string(python_version, is_64bit)
+            project.core.ui.echo(f"{i}. {termui.green(path)} ({version_string})")
+        selection = click.prompt(
+            "Please select:",
+            type=click.Choice([str(i) for i in range(len(found_interpreters))]),
+            default="0",
+            show_choices=False,
+        )
+        python_path = found_interpreters[int(selection)]
+    python_version, is_64bit = get_python_version(python_path, True)
 
     if not project.python_requires.contains(python_version):
         raise NoPythonVersion(

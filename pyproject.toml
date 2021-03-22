@@ -43,6 +43,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Topic :: Software Development :: Build Tools",
 ]
+includes = ["pdm/"]
 
 [project.urls]
 homepage = "https://pdm.fming.dev"

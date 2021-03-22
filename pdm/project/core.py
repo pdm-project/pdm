@@ -33,6 +33,7 @@ from pdm.utils import (
     cached_property,
     cd,
     find_project_root,
+    find_python_in_path,
     get_venv_python,
     is_venv_python,
     setdefault,
@@ -515,3 +516,27 @@ dependencies = ["pip", "setuptools", "wheel"]
 
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())
+
+    def find_interpreters(self, python_spec: str) -> Iterable[str]:
+        """Return an iterable of interpreter paths that matches the given specifier,
+        which can be:
+            1. a version specifier like 3.7
+            2. an absolute path
+            3. a short name like python3
+        """
+        import pythonfinder
+
+        if python_spec and not all(c.isdigit() for c in python_spec.split(".")):
+            if Path(python_spec).exists():
+                python_path = find_python_in_path(python_spec)
+                if python_path:
+                    yield os.path.abspath(python_path)
+            else:
+                python_path = shutil.which(python_spec)
+                if python_path:
+                    yield python_path
+            return
+        args = [int(v) for v in python_spec.split(".") if v != ""]
+        finder = pythonfinder.Finder()
+        for entry in finder.find_all_python_versions(*args):
+            yield entry.path.as_posix()

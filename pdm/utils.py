@@ -412,3 +412,27 @@ def is_venv_python(interpreter: os.PathLike) -> bool:
         else:
             return True
     return False
+
+
+def find_python_in_path(path: os.PathLike) -> Optional[Path]:
+    """Find a python interpreter from the given path, the input argument could be:
+
+    - A valid path to the interpreter
+    - A Python root directory that contains the interpreter
+    """
+    pathlib_path = Path(path).absolute()
+    if pathlib_path.is_file():
+        return pathlib_path
+
+    if os.name == "nt":
+        for root_dir in (pathlib_path, pathlib_path / "Scripts"):
+            if root_dir.joinpath("python.exe").exists():
+                return root_dir.joinpath("python.exe")
+    else:
+        executable_pattern = re.compile(r"python(?:\d(?:\.\d+m?)?)?$")
+
+        for python in pathlib_path.joinpath("bin").glob("python*"):
+            if executable_pattern.match(python.name):
+                return python
+
+    return None
