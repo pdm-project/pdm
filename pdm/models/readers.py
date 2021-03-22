@@ -51,10 +51,10 @@ class SetupReader:
         )
 
     def read_pyproject_toml(self, filepath):
-        from pdm.pep517.metadata import Metadata
+        from pdm.project.metadata import MutableMetadata
 
         try:
-            metadata = Metadata(filepath)
+            metadata = MutableMetadata(filepath)
         except ValueError:
             return {}
         return {

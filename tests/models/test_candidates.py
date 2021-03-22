@@ -154,3 +154,28 @@ def test_parse_project_file_on_build_error_no_dep(project):
     assert candidate.get_dependencies_from_metadata() == []
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
+
+
+def test_parse_poetry_project_metadata(project, is_editable):
+    req = parse_requirement(
+        f"{(FIXTURES / 'projects/poetry-demo').as_posix()}", is_editable
+    )
+    candidate = Candidate(req, project.environment)
+    assert candidate.get_dependencies_from_metadata() == ["requests<3.0,>=2.6"]
+    assert candidate.name == "poetry-demo"
+    assert candidate.version == "0.1.0"
+
+
+def test_parse_flit_project_metadata(project, is_editable):
+    req = parse_requirement(
+        f"{(FIXTURES / 'projects/flit-demo').as_posix()}", is_editable
+    )
+    candidate = Candidate(req, project.environment)
+    deps = candidate.get_dependencies_from_metadata()
+    for dep in [
+        "requests>=2.6",
+        'configparser; python_version == "2.7"',
+    ]:
+        assert dep in deps
+    assert candidate.name == "pyflit"
+    assert candidate.version == "0.1.0"
