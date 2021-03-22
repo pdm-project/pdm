@@ -420,12 +420,12 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirment_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
+    requirement_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
     extras: Sequence[str],
 ) -> List[str]:
     result = []
     extras_in_meta = []
-    for req in requirment_lines:
+    for req in requirement_lines:
         if isinstance(req, dict):
             if req.get("extra"):
                 extras_in_meta.append(req["extra"])
