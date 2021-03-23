@@ -112,6 +112,7 @@ def test_project_auto_detect_venv(project):
     suffix = ".exe" if os.name == "nt" else ""
 
     project.project_config["use_venv"] = True
+    project._python_executable = None
     project.project_config["python.path"] = (
         project.root / "test_venv" / scripts / f"python{suffix}"
     ).as_posix()
