@@ -126,7 +126,7 @@ class EnvBuilder:
         self.src_dir = src_dir
 
         try:
-            with open(os.path.join(src_dir, "pyproject.toml")) as f:
+            with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
                 spec = toml.load(f)
         except FileNotFoundError:
             spec = {}
