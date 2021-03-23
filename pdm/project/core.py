@@ -512,7 +512,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             str(self.environment.python_requires).encode()
         ).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
-        return CandidateInfoCache(self.cache_dir / file_name)
+        return CandidateInfoCache(self.cache("metadata") / file_name)
 
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())

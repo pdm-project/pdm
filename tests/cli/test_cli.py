@@ -246,13 +246,6 @@ def test_config_project_global_precedence(project, invoke):
     assert result.output.strip() == "/path/to/bar"
 
 
-def test_cache_clear_command(project, invoke, mocker):
-    m = mocker.patch("shutil.rmtree")
-    result = invoke(["cache", "clear"], obj=project)
-    assert result.exit_code == 0
-    m.assert_called_once()
-
-
 @pytest.mark.parametrize(
     "filename",
     [

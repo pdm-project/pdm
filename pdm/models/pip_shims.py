@@ -30,6 +30,7 @@ from pip._internal.req.constructors import (
 )
 from pip._internal.req.req_file import parse_requirements
 from pip._internal.utils import logging as pip_logging
+from pip._internal.utils.filesystem import directory_size, file_size, find_files
 from pip._internal.utils.hashes import FAVORITE_HASH, STRONG_HASHES
 from pip._internal.utils.temp_dir import global_tempdir_manager
 from pip._internal.utils.urls import path_to_url, url_to_path
