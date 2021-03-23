@@ -266,7 +266,6 @@ class Environment:
             else:
                 ireq.ensure_has_source_dir(kwargs["build_dir"])
 
-            download_dir = kwargs["download_dir"]
             if hashes:
                 ireq.hash_options = convert_hashes(hashes)
             ireq.link = pip_shims.Link(
@@ -278,19 +277,19 @@ class Environment:
             )
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
-                pip_shims.unpack_url(
+                downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,
                     downloader,
-                    download_dir,
-                    ireq.hashes(False),
+                    hashes=ireq.hashes(False),
                 )
 
-            if ireq.link.is_wheel:
-                # If the file is a wheel, should be already present under download dir.
-                return (self.project.cache("wheels") / ireq.link.filename).as_posix()
-            else:
-                # Check the built wheel cache again after hashes are resolved.
+                if ireq.link.is_wheel:
+                    # If the file is a wheel, return the downloaded file directly.
+                    return downloaded.path
+
+            # Check the built wheel cache again after hashes are resolved.
+            if not ireq.editable:
                 cache_entry = wheel_cache.get_cache_entry(
                     ireq.link,
                     ireq.req.project_name,
@@ -304,7 +303,7 @@ class Environment:
                     termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
                     return cache_entry.link.file_path
 
-            # Otherwise, now all source is prepared, build it.
+            # Otherwise, as all source is already prepared, build it.
             with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
                 if ireq.editable:
                     ret = builder.build_egg_info(kwargs["build_dir"])

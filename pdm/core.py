@@ -16,6 +16,7 @@ from pdm.cli.actions import migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
+from pdm.exceptions import PdmUsageError
 from pdm.installers import Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
@@ -127,12 +128,14 @@ class Core:
                     f(options.project, options)
             except Exception:
                 etype, err, traceback = sys.exc_info()
-                if self.ui.verbosity > termui.NORMAL:
+                should_show_tb = not isinstance(err, PdmUsageError)
+                if self.ui.verbosity > termui.NORMAL and should_show_tb:
                     raise err.with_traceback(traceback)
                 self.ui.echo(
                     f"{termui.red('[' + etype.__name__ + ']')}: {err}", err=True
                 )
-                self.ui.echo(termui.yellow("Add '-v' to see the detailed traceback"))
+                if should_show_tb:
+                    self.ui.echo("Add '-v' to see the detailed traceback", fg="yellow")
                 sys.exit(1)
 
     def register_command(

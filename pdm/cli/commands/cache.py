@@ -4,8 +4,8 @@ import os
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.cli.utils import find_files
 from pdm.exceptions import PdmUsageError
+from pdm.models.pip_shims import directory_size, file_size, find_files
 from pdm.project import Project
 
 
@@ -19,6 +19,7 @@ class Command(BaseCommand):
         ClearCommand.register_to(subparsers, "clear")
         RemoveCommand.register_to(subparsers, "remove")
         ListCommand.register_to(subparsers, "list")
+        InfoCommand.register_to(subparsers, "info")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         pass
@@ -39,17 +40,17 @@ def remove_cache_files(project: Project, pattern: str) -> None:
     if not pattern:
         raise PdmUsageError("Please provide a pattern")
 
-    files = list(find_files(project.cache("wheels"), pattern))
-
     if pattern == "*":
-        # Only include http files when no specific pattern given
-        files.extend(find_files(project.cache("http"), pattern))
+        files = list(find_files(project.cache_dir, pattern))
+    else:
+        # Only remove wheel files which specific pattern is given
+        files = list(find_files(project.cache("wheels"), pattern))
 
     if not files:
         raise PdmUsageError("No matching files found")
 
     for file in files:
-        file.unlink()
+        os.unlink(file)
         project.core.ui.echo(f"Removed {file}", verbosity=termui.DETAIL)
     project.core.ui.echo(f"{len(files)} file{'s' if len(files) > 1 else ''} removed")
 
@@ -88,5 +89,31 @@ class ListCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         rows = []
         for file in find_files(project.cache("wheels"), options.pattern):
-            rows.append((format_size(os.path.getsize(file)), file.name))
+            rows.append((format_size(file_size(file)), os.path.basename(file)))
         project.core.ui.display_columns(rows, [">Size", "Filename"])
+
+
+class InfoCommand(BaseCommand):
+    """Show the info and current size of caches"""
+
+    arguments = [verbose_option]
+
+    def handle(self, project: Project, options: argparse.Namespace) -> None:
+        output = []
+
+        output.append(
+            f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
+            f"Total size: {format_size(directory_size(project.cache_dir))}"
+        )
+        for name, description in [
+            ("hashes", "File Hashe Cache"),
+            ("http", "HTTP Cache"),
+            ("wheels", "Wheels Cache"),
+            ("metadata", "Metadata Cache"),
+        ]:
+            cache_location = project.cache(name)
+            files = list(find_files(cache_location, "*"))
+            size = directory_size(cache_location)
+            output.append(f"  {termui.cyan(description)}: {cache_location}")
+            output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
+        project.core.ui.echo("\n".join(output))
