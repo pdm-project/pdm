@@ -1,3 +1,4 @@
+import atexit
 import contextlib
 import functools
 import io
@@ -175,6 +176,13 @@ class UI:
         logger.handlers[1:] = [handler]
         pip_logger = logging.getLogger("pip.subprocessor")
         pip_logger.handlers[:] = [handler]
+
+        def cleanup():
+            try:
+                os.unlink(file_name)
+            except OSError:
+                pass
+
         try:
             yield logger
         except Exception:
@@ -183,10 +191,10 @@ class UI:
                 self.echo(yellow(f"See {file_name} for detailed debug log."))
             raise
         else:
-            try:
-                os.remove(file_name)
-            except OSError:
-                pass
+            atexit.register(cleanup)
+        finally:
+            logger.handlers.remove(handler)
+            pip_logger.handlers.remove(handler)
 
     def open_spinner(self, title: str, spinner: str = "dots"):
         """Open a spinner as a context manager."""
