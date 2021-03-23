@@ -176,7 +176,7 @@ class Synchronizer:
                 spinner.succeed(
                     f"Update {termui.green(key, bold=True)} "
                     f"{termui.yellow(dist.version)} -> "
-                    f"-> {termui.yellow(can.version)} successful"
+                    f"{termui.yellow(can.version)} successful"
                 )
         return dist, can
 
