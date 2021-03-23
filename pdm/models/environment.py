@@ -167,25 +167,16 @@ class Environment:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
-    def _make_building_args(self, ireq: pip_shims.InstallRequirement) -> Dict[str, Any]:
-        src_dir = ireq.source_dir or self._get_source_dir()
+    def _get_build_dir(self, ireq: pip_shims.InstallRequirement) -> str:
         if ireq.editable:
-            build_dir = src_dir
+            return ireq.source_dir or self._get_source_dir()
         else:
-            build_dir = create_tracked_tempdir(prefix="pdm-build")
-        download_dir = self.project.cache("pkgs")
-        wheel_download_dir = self.project.cache("wheels")
-        return {
-            "build_dir": build_dir,
-            "src_dir": src_dir,
-            "download_dir": download_dir.as_posix(),
-            "wheel_download_dir": wheel_download_dir.as_posix(),
-        }
+            return create_tracked_tempdir(prefix="pdm-build")
 
     def _get_source_dir(self) -> str:
-        build_dir = self.packages_path
-        if build_dir:
-            src_dir = build_dir / "src"
+        packages_dir = self.packages_path
+        if packages_dir:
+            src_dir = packages_dir / "src"
             src_dir.mkdir(exist_ok=True)
             return src_dir.as_posix()
         venv = os.environ.get("VIRTUAL_ENV", None)
@@ -237,37 +228,15 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        kwargs = self._make_building_args(ireq)
+        build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
+        supported_tags = pip_shims.get_supported(
+            "".join(map(str, get_python_version(self.python_executable, digits=2)[0]))
+        )
         with self.get_finder(ignore_requires_python=True) as finder:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
-                if hashes is None and not ireq.editable:
-                    cache_entry = wheel_cache.get_cache_entry(
-                        ireq.link,
-                        ireq.req.project_name,
-                        pip_shims.get_supported(
-                            version="".join(
-                                map(
-                                    str,
-                                    get_python_version(self.python_executable)[0][:2],
-                                )
-                            )
-                        ),
-                    )
-                    if cache_entry is not None:
-                        termui.logger.debug(
-                            "Using cached wheel link: %s", cache_entry.link
-                        )
-                        ireq.link = cache_entry.link
-            if not ireq.editable and not ireq.req.name:
-                ireq.source_dir = kwargs["build_dir"]
-            else:
-                ireq.ensure_has_source_dir(kwargs["build_dir"])
-
-            if hashes:
-                ireq.hash_options = convert_hashes(hashes)
             ireq.link = pip_shims.Link(
                 expand_env_vars_in_auth(
                     ireq.link.url.replace(
@@ -275,6 +244,24 @@ class Environment:
                     )
                 )
             )
+            if hashes is None and not ireq.editable:
+                # If hashes are not given and cache is hit, replace the link with the
+                # cached one. This can speed up by skipping the download and build.
+                cache_entry = wheel_cache.get_cache_entry(
+                    ireq.link,
+                    ireq.req.project_name,
+                    supported_tags,
+                )
+                if cache_entry is not None:
+                    termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                    ireq.link = cache_entry.link
+            if not ireq.editable and not ireq.req.name:
+                ireq.source_dir = build_dir
+            else:
+                ireq.ensure_has_source_dir(build_dir)
+
+            if hashes:
+                ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
                 downloaded = pip_shims.unpack_url(
@@ -288,49 +275,42 @@ class Environment:
                     # If the file is a wheel, return the downloaded file directly.
                     return downloaded.path
 
-            # Check the built wheel cache again after hashes are resolved.
-            if not ireq.editable:
-                cache_entry = wheel_cache.get_cache_entry(
-                    ireq.link,
-                    ireq.req.project_name,
-                    pip_shims.get_supported(
-                        version="".join(
-                            map(str, get_python_version(self.python_executable)[0][:2])
-                        )
-                    ),
-                )
-                if cache_entry is not None:
-                    termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
-                    return cache_entry.link.file_path
+        # Check the built wheel cache again after hashes are resolved.
+        if not ireq.editable:
+            cache_entry = wheel_cache.get_cache_entry(
+                ireq.link,
+                ireq.req.project_name,
+                supported_tags,
+            )
+            if cache_entry is not None:
+                termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                return cache_entry.link.file_path
 
-            # Otherwise, as all source is already prepared, build it.
-            with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
-                if ireq.editable:
-                    ret = builder.build_egg_info(kwargs["build_dir"])
-                    ireq.metadata_directory = ret
-                else:
-                    should_cache = False
-                    if ireq.link.is_vcs:
-                        vcs = pip_shims.VcsSupport()
-                        vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
-                        if vcs_backend.is_immutable_rev_checkout(
-                            ireq.link.url, ireq.source_dir
-                        ):
-                            should_cache = True
-                    else:
-                        base, _ = ireq.link.splitext()
-                        if _egg_info_re.search(base) is not None:
-                            # Determine whether the string looks like an egg_info.
-                            should_cache = True
-                    output_dir = (
-                        wheel_cache.get_path_for_link(ireq.link)
-                        if should_cache
-                        else kwargs["build_dir"]
-                    )
-                    if not os.path.exists(output_dir):
-                        os.makedirs(output_dir, exist_ok=True)
-                    ret = builder.build_wheel(output_dir)
-            return ret
+        # Otherwise, as all source is already prepared, build it.
+        with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
+            if ireq.editable:
+                ret = builder.build_egg_info(build_dir)
+                ireq.metadata_directory = ret
+                return ret
+            should_cache = False
+            if ireq.link.is_vcs:
+                vcs = pip_shims.VcsSupport()
+                vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
+                if vcs_backend.is_immutable_rev_checkout(
+                    ireq.link.url, ireq.source_dir
+                ):
+                    should_cache = True
+            else:
+                base, _ = ireq.link.splitext()
+                if _egg_info_re.search(base) is not None:
+                    # Determine whether the string looks like an egg_info.
+                    should_cache = True
+            output_dir = (
+                wheel_cache.get_path_for_link(ireq.link) if should_cache else build_dir
+            )
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+            return builder.build_wheel(output_dir)
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
