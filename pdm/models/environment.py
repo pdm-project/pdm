@@ -267,10 +267,6 @@ class Environment:
                 ireq.ensure_has_source_dir(kwargs["build_dir"])
 
             download_dir = kwargs["download_dir"]
-            only_download = False
-            if ireq.link.is_wheel:
-                download_dir = kwargs["wheel_download_dir"]
-                only_download = True
             if hashes:
                 ireq.hash_options = convert_hashes(hashes)
             ireq.link = pip_shims.Link(
@@ -282,19 +278,13 @@ class Environment:
             )
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
-                downloaded = pip_shims.unpack_url(
+                pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,
                     downloader,
                     download_dir,
                     ireq.hashes(False),
                 )
-                # Preserve the downloaded file so that it won't be cleared.
-                if downloaded and only_download:
-                    try:
-                        shutil.copy(downloaded.path, download_dir)
-                    except shutil.SameFileError:
-                        pass
 
             if ireq.link.is_wheel:
                 # If the file is a wheel, should be already present under download dir.

@@ -442,3 +442,14 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "set a narrower `requires-python` range in the pyproject.toml."
     )
     return "\n".join(result)
+
+
+def find_files(parent: Path, pattern: str) -> Iterable[Path]:
+    """Find files matching the pattern recursively under the path"""
+    parts = pattern.replace("\\", "/").split("/")
+    if len(parts) == 1 and parts[0] != "**":
+        # Add recursive pattern if not explicitly given
+        pattern = "**/" + pattern
+    if "*" not in parts[-1]:
+        pattern += "*"
+    return filter(lambda path: path.is_file(), parent.glob(pattern))
