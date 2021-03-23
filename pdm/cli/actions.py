@@ -562,7 +562,7 @@ def ask_for_import(project: Project) -> None:
     if int(choice) == len(importable_files):
         return
     key, filepath = importable_files[int(choice)]
-    do_import(project, filepath, key)
+    do_import(project, filepath, key, Namespace())
 
 
 def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
