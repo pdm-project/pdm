@@ -16,11 +16,15 @@ def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
 
     del project.project_config["python.path"]
+    project._python_executable = None
     pyenv_python = Path(PYENV_ROOT, "shims", "python")
     with temp_environ():
         os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
         mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
-        mocker.patch("pdm.project.core.get_python_version", return_value=("3.8", True))
+        mocker.patch(
+            "pythonfinder.models.python.get_python_version",
+            return_value="3.8.0",
+        )
         assert Path(project.python_executable) == pyenv_python
 
         # Clean cache
@@ -63,6 +67,7 @@ def test_global_project(tmp_path, core):
 
 def test_project_use_venv(project):
     del project.project_config["python.path"]
+    project._python_executable = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
@@ -116,6 +121,7 @@ def test_project_auto_detect_venv(project):
 
 def test_ignore_saved_python(project):
     project.project_config["use_venv"] = True
+    project._python_executable = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")

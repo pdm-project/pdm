@@ -5,7 +5,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
@@ -13,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Uni
 import tomlkit
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
+from pythonfinder.models.python import PythonVersion
 from tomlkit.items import Comment, Whitespace
 
 from pdm import termui
@@ -34,7 +34,7 @@ from pdm.utils import (
     cd,
     find_project_root,
     find_python_in_path,
-    get_venv_python,
+    get_in_project_venv_python,
     is_venv_python,
     setdefault,
 )
@@ -148,6 +148,11 @@ class Project:
             self._python_executable = self.resolve_interpreter()
         return self._python_executable
 
+    @python_executable.setter
+    def python_executable(self, value: str) -> None:
+        self._python_executable = value
+        self.project_config["python.path"] = value
+
     def resolve_interpreter(self) -> str:
         """Get the Python interpreter path."""
         config = self.config
@@ -159,48 +164,20 @@ class Project:
                 del self.project_config["python.path"]
             else:
                 return saved_path
-        path = None
-        if config["use_venv"]:
-            path = get_venv_python(self.root)
-            if path:
-                self.core.ui.echo(
-                    f"Virtualenv interpreter {termui.green(path)} is detected.",
-                    err=True,
-                    verbosity=termui.DETAIL,
-                )
-        if not path and PYENV_INSTALLED and config.get("python.use_pyenv", True):
-            path = Path(PYENV_ROOT, "shims", "python").as_posix()
-        if not path:
-            path = shutil.which("python")
+        if os.name == "nt":
+            suffix = ".exe"
+            scripts = "Scripts"
+        else:
+            suffix = ""
+            scripts = "bin"
+        if config["use_venv"] and os.getenv("VIRTUAL_ENV"):
+            return os.path.join(os.getenv("VIRTUAL_ENV"), scripts, f"python{suffix}")
 
-        version = None
-        if path:
-            try:
-                version, _ = get_python_version(path, True)
-            except (FileNotFoundError, subprocess.CalledProcessError):
-                version = None
-        if not version or not self.python_requires.contains(version):
-            finder = Finder()
-            for python in finder.find_all_python_versions():
-                version, _ = get_python_version(python.path.as_posix(), True)
-                if self.python_requires.contains(version):
-                    path = python.path.as_posix()
-                    break
-            else:
-                version = ".".join(map(str, sys.version_info[:3]))
-                if self.python_requires.contains(version):
-                    path = sys.executable
-        if path:
-            if os.path.normcase(path) == os.path.normcase(sys.executable):
-                # Refer to the base interpreter to allow for venvs
-                path = getattr(sys, "_base_executable", sys.executable)
-            self.core.ui.echo(
-                "Using Python interpreter: {} ({})".format(termui.green(path), version),
-                err=True,
-            )
-            if not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
-                self.project_config["python.path"] = Path(path).as_posix()
-            return path
+        for py_version in self.find_interpreters():
+            if self.python_requires.contains(str(py_version.version)):
+                self.python_executable = py_version.executable
+                return self.python_executable
+
         raise NoPythonVersion(
             "No Python that satisfies {} is found on the system.".format(
                 self.python_requires
@@ -521,26 +498,47 @@ dependencies = ["pip", "setuptools", "wheel"]
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())
 
-    def find_interpreters(self, python_spec: str) -> Iterable[str]:
+    def find_interpreters(
+        self, python_spec: Optional[str] = None
+    ) -> Iterable[PythonVersion]:
         """Return an iterable of interpreter paths that matches the given specifier,
         which can be:
             1. a version specifier like 3.7
             2. an absolute path
             3. a short name like python3
+            4. None that returns all possible interpreters
         """
-        import pythonfinder
+        config = self.config
+        PythonVersion.__hash__ = lambda self: hash(self.executable)
 
-        if python_spec and not all(c.isdigit() for c in python_spec.split(".")):
-            if Path(python_spec).exists():
-                python_path = find_python_in_path(python_spec)
-                if python_path:
-                    yield os.path.abspath(python_path)
-            else:
-                python_path = shutil.which(python_spec)
-                if python_path:
-                    yield python_path
-            return
-        args = [int(v) for v in python_spec.split(".") if v != ""]
-        finder = pythonfinder.Finder()
+        if not python_spec:
+            if config.get("python.use_pyenv", True) and PYENV_INSTALLED:
+                yield PythonVersion.from_path(
+                    os.path.join(PYENV_ROOT, "shims", "python")
+                )
+            if config.get("use_venv"):
+                python = get_in_project_venv_python(self.root)
+                if python:
+                    yield PythonVersion.from_path(python)
+            python = shutil.which("python")
+            if python:
+                yield PythonVersion.from_path(python)
+            args = ()
+        else:
+            if not all(c.isdigit() for c in python_spec.split(".")):
+                if Path(python_spec).exists():
+                    python = find_python_in_path(python_spec)
+                    if python:
+                        yield PythonVersion.from_path(str(python))
+                else:
+                    python = shutil.which(python_spec)
+                    if python:
+                        yield PythonVersion.from_path(python)
+                return
+            args = [int(v) for v in python_spec.split(".") if v != ""]
+        finder = Finder()
         for entry in finder.find_all_python_versions(*args):
-            yield entry.path.as_posix()
+            yield entry.py_version
+        if not python_spec:
+            this_python = getattr(sys, "_base_executable", sys.executable)
+            yield PythonVersion.from_path(this_python)

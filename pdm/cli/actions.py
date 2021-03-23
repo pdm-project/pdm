@@ -416,42 +416,48 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
+
+    def version_matcher(py_version):
+        return project.python_requires.contains(str(py_version.version))
+
     python = python.strip()
-    found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
+
+    found_interpreters = list(
+        dict.fromkeys(filter(version_matcher, project.find_interpreters(python)))
+    )
     if not found_interpreters:
         raise NoPythonVersion(
             f"Python interpreter {python} is not found on the system."
         )
     if first or len(found_interpreters) == 1:
-        python_path = found_interpreters[0]
+        selected_python = found_interpreters[0]
     else:
-        for i, path in enumerate(found_interpreters):
-            python_version, is_64bit = get_python_version(path, True)
+        for i, py_version in enumerate(found_interpreters):
+            python_version = str(py_version.version)
+            is_64bit = py_version.get_architecture() == "64bit"
             version_string = get_python_version_string(python_version, is_64bit)
-            project.core.ui.echo(f"{i}. {termui.green(path)} ({version_string})")
+            project.core.ui.echo(
+                f"{i}. {termui.green(py_version.executable)} ({version_string})"
+            )
         selection = click.prompt(
             "Please select:",
             type=click.Choice([str(i) for i in range(len(found_interpreters))]),
             default="0",
             show_choices=False,
         )
-        python_path = found_interpreters[int(selection)]
-    python_version, is_64bit = get_python_version(python_path, True)
+        selected_python = found_interpreters[int(selection)]
 
-    if not project.python_requires.contains(python_version):
-        raise NoPythonVersion(
-            "The target Python version {} doesn't satisfy "
-            "the Python requirement: {}".format(python_version, project.python_requires)
-        )
+    old_path = project.config.get("python.path")
+    new_path = selected_python.executable
+    python_version = str(selected_python.version)
+    is_64bit = selected_python.get_architecture() == "64bit"
     project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(
-            termui.green(python_path),
+            termui.green(str(new_path)),
             get_python_version_string(python_version, is_64bit),
         )
     )
-    old_path = project.config.get("python.path")
-    new_path = python_path
-    project.project_config["python.path"] = Path(new_path).as_posix()
+    project.python_executable = new_path
     if old_path and Path(old_path) != Path(new_path) and not project.is_global:
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)
