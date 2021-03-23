@@ -154,7 +154,11 @@ class Project:
         if self.project_config.get("python.path") and not os.getenv(
             "PDM_IGNORE_SAVED_PYTHON"
         ):
-            return self.project_config["python.path"]
+            saved_path = self.project_config["python.path"]
+            if not os.path.isfile(saved_path):
+                del self.project_config["python.path"]
+            else:
+                return saved_path
         path = None
         if config["use_venv"]:
             path = get_venv_python(self.root)
