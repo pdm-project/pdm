@@ -20,9 +20,10 @@ class Command(BaseCommand):
         RemoveCommand.register_to(subparsers, "remove")
         ListCommand.register_to(subparsers, "list")
         InfoCommand.register_to(subparsers, "info")
+        self.parser = parser
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        pass
+        self.parser.print_help()
 
 
 def format_size(size: int) -> int:
@@ -100,20 +101,20 @@ class InfoCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         output = []
-
-        output.append(
-            f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
-            f"Total size: {format_size(directory_size(project.cache_dir))}"
-        )
-        for name, description in [
-            ("hashes", "File Hashe Cache"),
-            ("http", "HTTP Cache"),
-            ("wheels", "Wheels Cache"),
-            ("metadata", "Metadata Cache"),
-        ]:
-            cache_location = project.cache(name)
-            files = list(find_files(cache_location, "*"))
-            size = directory_size(cache_location)
-            output.append(f"  {termui.cyan(description)}: {cache_location}")
-            output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
-        project.core.ui.echo("\n".join(output))
+        with project.core.ui.open_spinner("Calculating cache files") as spinner:
+            output.append(
+                f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
+                f"Total size: {format_size(directory_size(project.cache_dir))}"
+            )
+            for name, description in [
+                ("hashes", "File Hashe Cache"),
+                ("http", "HTTP Cache"),
+                ("wheels", "Wheels Cache"),
+                ("metadata", "Metadata Cache"),
+            ]:
+                cache_location = project.cache(name)
+                files = list(find_files(cache_location, "*"))
+                size = directory_size(cache_location)
+                output.append(f"  {termui.cyan(description)}: {cache_location}")
+                output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
+            spinner.stop_and_persist("\n".join(output))
