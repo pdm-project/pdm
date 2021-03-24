@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import threading
 from pathlib import Path
@@ -158,6 +159,8 @@ class EnvBuilder:
         env = self._saved_env.copy() if self._saved_env else {}
         if extra_environ:
             env.update(extra_environ)
+        lib = sysconfig.get_path("purelib")
+        logger.debug("Lib files: %s", os.listdir(lib))
         return log_subprocessor(cmd, cwd, extra_environ=env)
 
     def _download_pip_wheel(self, path: os.PathLike):
@@ -238,7 +241,6 @@ class EnvBuilder:
             req_file.close()
             cmd = self.pip_command + [
                 "install",
-                "-I",
                 "--prefix",
                 self._path,
                 "-r",
