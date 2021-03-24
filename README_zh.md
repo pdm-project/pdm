@@ -4,13 +4,13 @@
 
 一个现代的 Python 包管理器，支持 PEP 582。[English version README](README.md)
 
-![PDM logo](https://github.com/frostming/pdm/blob/master/docs/docs/assets/logo_big.png)
+![PDM logo](https://github.com/pdm-project/pdm/blob/master/docs/docs/assets/logo_big.png)
 
 [📖 Documentation](https://pdm.fming.dev)
 
-![Github Actions](https://github.com/frostming/pdm/workflows/Tests/badge.svg)
+![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/pdm-project/pdm)](https://hub.docker.com/r/pdm-project/pdm)
 
 [![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 

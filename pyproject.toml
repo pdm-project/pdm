@@ -47,7 +47,7 @@ includes = ["pdm/"]
 
 [project.urls]
 homepage = "https://pdm.fming.dev"
-Repository = "https://github.com/frostming/pdm"
+Repository = "https://github.com/pdm-project/pdm"
 Documentation = "https://pdm.fming.dev"
 
 [project.optional-dependencies]
@@ -88,7 +88,7 @@ exclude = '''
 [tool.towncrier]
 package = "pdm"
 filename = "CHANGELOG.md"
-issue_format = "[#{issue}](https://github.com/frostming/pdm/issues/{issue})"
+issue_format = "[#{issue}](https://github.com/pdm-project/pdm/issues/{issue})"
 directory = "news/"
 title_format = "Release v{version} ({project_date})"
 template = "news/towncrier_template.md"

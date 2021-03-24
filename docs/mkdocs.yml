@@ -1,6 +1,6 @@
 site_name: PDM - Python Development Master
 
-repo_url: https://github.com/frostming/pdm
+repo_url: https://github.com/pdm-project/pdm
 
 theme:
   name: material
