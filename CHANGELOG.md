@@ -1,3 +1,29 @@
+Release v1.4.3 (2021-03-24)
+---------------------------
+
+### Features & Improvements
+
+- Change the group name of entry points from `pdm.plugins` to `pdm`.
+  Export some useful objects and models for shorter import path. [#318](https://github.com/pdm-project/pdm/issues/318)
+- Refactor: Remove the reference of `stream` singleton, improve the UI related code. [#320](https://github.com/pdm-project/pdm/issues/320)
+- Support dependencies managed by poetry and flit being installed as editable packages. [#324](https://github.com/pdm-project/pdm/issues/324)
+- Refactor: Extract the logic of finding interpreters to method for the sake of subclass overriding. [#326](https://github.com/pdm-project/pdm/issues/326)
+- Complete the `cache` command, add `list`, `remove` and `info` subcommands. [#329](https://github.com/pdm-project/pdm/issues/329)
+- Refactor: Unify the code about selecting interpreter to reduce the duplication. [#331](https://github.com/pdm-project/pdm/issues/331)
+- Retrieve the version and description of a flit project by parsing the AST of the main file. [#333](https://github.com/pdm-project/pdm/issues/333)
+
+### Bug Fixes
+
+- Fix a parsing error when non-ascii characters exist in `pyproject.toml`. [#308](https://github.com/pdm-project/pdm/issues/308)
+- Fix a bug that non-editable VCS candidates can't satisfy their requirements once locked in the lock file. [#314](https://github.com/pdm-project/pdm/issues/314)
+- Fix a bug of import-on-init that fails when requirements.txt is detected. [#328](https://github.com/pdm-project/pdm/issues/328)
+
+### Miscellany
+
+- refactor `pdm.iostream` to improve 'typing' support [#301](https://github.com/pdm-project/pdm/issues/301)
+- fix some typos [#323](https://github.com/pdm-project/pdm/issues/323)
+
+
 Release v1.4.2 (2021-03-18)
 ---------------------------
 
