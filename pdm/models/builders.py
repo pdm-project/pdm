@@ -238,6 +238,7 @@ class EnvBuilder:
             req_file.close()
             cmd = self.pip_command + [
                 "install",
+                "-I",
                 "--prefix",
                 self._path,
                 "-r",
