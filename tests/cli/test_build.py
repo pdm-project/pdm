@@ -1,6 +1,7 @@
 import tarfile
 import zipfile
 
+import flaky
 from distlib.wheel import Wheel
 
 from pdm.cli import actions
@@ -45,6 +46,7 @@ def test_build_single_module(fixture_project):
     ).metadata
 
 
+@flaky.flaky(max_runs=3, min_passes=1)
 def test_build_single_module_with_readme(fixture_project):
     project = fixture_project("demo-module")
     project.meta["readme"] = "README.md"
