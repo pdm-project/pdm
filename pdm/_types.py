@@ -2,9 +2,9 @@ import sys
 from typing import Dict, List, NamedTuple, Tuple, Union
 
 if sys.version_info < (3, 8):
-    from typing_extensions import Literal
+    from typing_extensions import Literal  # noqa: F401
 else:
-    from typing import Literal
+    from typing import Literal  # noqa: F401
 
 Source = Dict[str, Union[str, bool]]
 RequirementDict = Union[str, Dict[str, Union[bool, str]]]
