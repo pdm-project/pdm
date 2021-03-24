@@ -231,7 +231,7 @@ class EnvBuilder:
     def install(self, requirements: Iterable[str]) -> None:
         if not requirements:
             return
-
+        logger.debug("Installing dependencies: %s", ", ".join(requirements))
         with tempfile.NamedTemporaryFile(
             "w+", prefix="pdm-build-reqs-", suffix=".txt", delete=False
         ) as req_file:
