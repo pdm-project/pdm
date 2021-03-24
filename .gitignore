@@ -133,3 +133,4 @@ caches/
 __pypackages__
 .pdm.toml
 temp.py
+.devcontainer/
