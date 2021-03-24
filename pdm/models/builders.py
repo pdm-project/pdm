@@ -165,14 +165,14 @@ class EnvBuilder:
         try:
             self.subprocess_runner(
                 [
-                    sys.executable,
+                    getattr(sys, "_original_executable", sys.executable),
                     "-m",
                     "pip",
                     "download",
                     "--only-binary=:all:",
                     "-d",
                     dirname,
-                    "pip",
+                    "pip<21",  # pip>=21 drops the support of py27
                 ]
             )
             wheel_file = next(dirname.glob("pip-*.whl"))

@@ -140,9 +140,13 @@ class Candidate:
             return self.req.revision
         return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
 
-    def get_metadata(self, allow_all_wheels: bool = True) -> Optional[Metadata]:
+    def get_metadata(
+        self, allow_all_wheels: bool = True, raising: bool = False
+    ) -> Optional[Metadata]:
         """Get the metadata of the candidate.
         For editable requirements, egg info are produced, otherwise a wheel is built.
+
+        If raising is True, error will pop when the package fails to build.
         """
         if self.metadata is not None:
             return self.metadata
@@ -152,6 +156,8 @@ class Candidate:
         try:
             built = self.environment.build(ireq, self.hashes, allow_all_wheels)
         except BuildError:
+            if raising:
+                raise
             termui.logger.warn("Failed to build package, try parsing project files.")
             meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory)
             meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
