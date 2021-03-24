@@ -5,6 +5,7 @@ Release v1.4.3 (2021-03-24)
 
 - Change the group name of entry points from `pdm.plugins` to `pdm`.
   Export some useful objects and models for shorter import path. [#318](https://github.com/pdm-project/pdm/issues/318)
+- Field `cmd` in `tools.pdm.scripts` configuration items now allows specifying an argument array instead of a string.
 - Refactor: Remove the reference of `stream` singleton, improve the UI related code. [#320](https://github.com/pdm-project/pdm/issues/320)
 - Support dependencies managed by poetry and flit being installed as editable packages. [#324](https://github.com/pdm-project/pdm/issues/324)
 - Refactor: Extract the logic of finding interpreters to method for the sake of subclass overriding. [#326](https://github.com/pdm-project/pdm/issues/326)

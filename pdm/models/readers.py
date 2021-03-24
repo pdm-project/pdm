@@ -179,6 +179,7 @@ class SetupReader:
             func = value.func
             if not (isinstance(func, ast.Name) and func.id == "setup") and not (
                 isinstance(func, ast.Attribute)
+                and isinstance(func.value, ast.Name)
                 and func.value.id == "setuptools"
                 and func.attr == "setup"
             ):
