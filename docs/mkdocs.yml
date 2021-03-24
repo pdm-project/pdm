@@ -14,14 +14,18 @@ theme:
   favicon: assets/logo.png
 
 nav:
-  - index.md
-  - dependency.md
-  - project.md
-  - pyproject.md
-  - advanced.md
-  - plugin.md
-  - contributing.md
-  - changelog.md
+  - Home: index.md
+  - Usage:
+      - Manage Dependencies: dependency.md
+      - Manage Project: project.md
+      - pyproject.toml file: pyproject.md
+      - Advanced Usage: advanced.md
+  - Configuration: configuration.md
+  - Plugins:
+    - plugin.md
+  - Development:
+    - contributing.md
+    - changelog.md
 
 markdown_extensions:
   - pymdownx.highlight:

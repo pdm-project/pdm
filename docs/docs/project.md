@@ -19,7 +19,7 @@ The argument can be either a version specifier of any length, or a relative or a
 python interpreter, but remember the Python interpreter must conform with the `python_requires`
 constraint in the project file.
 
-### How `python_requires` controls the project
+### How `requires-python` controls the project
 
 PDM respects the value of `requires-python` in the way that it tries to pick package candidates that can work
 on all python versions that `requires-python` contains. For example, if `requires-python` is `>=2.7`, PDM will try
@@ -101,6 +101,8 @@ The configuration files are searched in the following order:
 
 If `-g/--global` option is used, the first item will be replaced by `~/.pdm/global-project/.pdm.toml`.
 
+You can find all available configuration items in [Configuration Page](configuration.md).
+
 ## Manage global project
 
 Sometimes users may want to keep track of the dependencies of global Python interpreter.
@@ -181,25 +183,6 @@ PDM provides several methods to achieve this:
    keyring after a confirmation question.
 
 3. A VCS repository applies the first method only, and an index server applies both methods.
-
-## Available Configurations
-
-| Config Item                   | Description                                                               | Default Value                                                             | Available in Project | Env var                  |
-| ----------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ------------------------ |
-| `cache_dir`                   | The root directory of cached files                                        | The default cache location on OS                                          | No                   |                          |
-| `auto_global`                 | Use global package implicitly if no local project is found                | `False`                                                                   | No                   | `PDM_AUTO_GLOBAL`        |
-| `use_venv`                    | Install packages into the activated venv site packages instead of PEP 582 | `False`                                                                   | Yes                  | `PDM_USE_VENV`           |
-| `parallel_install`            | Whether to perform installation and uninstallation in parallel            | `True`                                                                    | Yes                  | `PDM_PARALLEL_INSTALL`   |
-| `python.path`                 | The Python interpreter path                                               |                                                                           | Yes                  | `PDM_PYTHON_PATH`        |
-| `python.use_pyenv`            | Use the pyenv interpreter                                                 | `True`                                                                    | Yes                  |                          |
-| `pypi.url`                    | The URL of PyPI mirror                                                    | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes                  | `PDM_PYPI_URL`           |
-| `pypi.verify_ssl`             | Verify SSL certificate when query PyPI                                    | Read `trusted-hosts` in `pip.conf`, defaults to `True`                    | Yes                  |                          |
-| `pypi.json_api`               | Consult PyPI's JSON API for package metadata                              | `False`                                                                   | Yes                  | `PDM_PYPI_JSON_API`      |
-| `strategy.save`               | Specify how to save versions when a package is added                      | `compatible`(can be: `exact`, `wildcard`)                                 | Yes                  |                          |
-| `strategy.update`             | The default strategy for updating packages                                | `reuse`(can be : `eager`)                                                 | Yes                  |                          |
-| `strategy.resolve_max_rounds` | Specify the max rounds of resolution process                              | 1000                                                                      | Yes                  | `PDM_RESOLVE_MAX_ROUNDS` |
-
-_If the env var is set, the value will take precedence over what is saved in the config file._
 
 ## Run Scripts in Isolated Environment
 
@@ -321,6 +304,18 @@ test_shell  shell echo $FOO        shell command
 ```
 
 You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
+
+## Manage caches
+
+PDM provides a convenient command group to manage the cache, there are four kinds of caches:
+
+1. `wheels/` stores the built results of non-wheel distributions and files.
+1. `http/` stores the HTTP response content.
+1. `metadata/` stores package metadata retreived by the resolver.
+1. `hashes/` stores the file hashes fetched from the package index or calculated locally.
+
+See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
+Find the usage by the `--help` option of each command.
 
 ## How we make PEP 582 packages available to the Python interpreter
 
