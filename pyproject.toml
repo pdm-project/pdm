@@ -34,7 +34,7 @@ dev-dependencies = [
     "pytest-xdist<2.0.0,>=1.31.0",
     "vendoring; python_version ~= \"3.8\"",
     "parver<1.0.0,>=0.3.1",
-    "flaky~=3.7",
+    
 ]
 name = "pdm"
 description = "Python Development Master"

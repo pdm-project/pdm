@@ -104,12 +104,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "flaky"
-sections = ["dev"]
-version = "3.7.0"
-summary = "Plugin for nose or pytest that automatically reruns flaky tests."
-
-[[package]]
 name = "future"
 sections = ["doc"]
 version = "0.18.2"
@@ -638,7 +632,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:2451f58ba79481d932073b72c51b615a9c5ff423d4edf8e712b49ca7f9ed641e"
+content_hash = "sha256:122709e422ade1922d90cf51e920af714993cd9a9d5d2e8651bf9a6f5c45f4ca"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -793,10 +787,6 @@ content_hash = "sha256:2451f58ba79481d932073b72c51b615a9c5ff423d4edf8e712b49ca7f
 "execnet 1.7.1" = [
     {file = "execnet-1.7.1-py2.py3-none-any.whl", hash = "sha256:d4efd397930c46415f62f8a31388d6be4f27a91d7550eb79bc64a756e0056547"},
     {file = "execnet-1.7.1.tar.gz", hash = "sha256:cacb9df31c9680ec5f95553976c4da484d407e85e41c83cb812aa014f0eddc50"},
-]
-"flaky 3.7.0" = [
-    {file = "flaky-3.7.0-py2.py3-none-any.whl", hash = "sha256:d6eda73cab5ae7364504b7c44670f70abed9e75f77dd116352f662817592ec9c"},
-    {file = "flaky-3.7.0.tar.gz", hash = "sha256:3ad100780721a1911f57a165809b7ea265a7863305acb66708220820caf8aa0d"},
 ]
 "future 0.18.2" = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},

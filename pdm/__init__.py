@@ -27,3 +27,24 @@ def _fix_pkg_resources():
 
 _fix_pkg_resources()
 del _fix_pkg_resources
+
+
+def set_importlib_readonly(mode):
+    import os
+    import sysconfig
+
+    target = os.path.join(sysconfig.get_path("purelib"), "importlib_metadata")
+    if not os.path.exists(target):
+        return
+
+    for root, dirs, files in os.walk(target, topdown=False):
+        for dir in [os.path.join(root, d) for d in dirs]:
+            os.chmod(dir, mode)
+        for file in [os.path.join(root, f) for f in files]:
+            os.chmod(file, mode)
+
+
+try:
+    set_importlib_readonly(0o555)
+except OSError:
+    pass
