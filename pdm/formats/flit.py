@@ -1,5 +1,4 @@
 import ast
-import re
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -60,8 +59,6 @@ def get_docstring_and_version_via_ast(
 
 
 class FlitMetaConverter(MetaConverter):
-    VERSION_RE = re.compile(r"__version__\s*=\s*['\"](.+?)['\"]")
-
     @convert_from("metadata")
     def name(self, metadata):
         # name
