@@ -29,11 +29,11 @@ _fix_pkg_resources()
 del _fix_pkg_resources
 
 
-def set_importlib_readonly(mode):
+def protect_library(file_name, mode):
     import os
     import sysconfig
 
-    target = os.path.join(sysconfig.get_path("purelib"), "importlib_metadata")
+    target = os.path.join(sysconfig.get_path("purelib"), file_name)
     if not os.path.exists(target):
         return
 
@@ -45,6 +45,7 @@ def set_importlib_readonly(mode):
 
 
 try:
-    set_importlib_readonly(0o555)
+    protect_library("importlib_metadata", 0o555)
+    protect_library("importlib_metadata-3.7.3.dist-info", 0o555)
 except OSError:
     pass
