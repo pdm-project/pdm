@@ -520,6 +520,8 @@ def do_import(
             )
     else:
         key = format
+    if options is None:
+        options = Namespace(dev=False, section=None)
     project_data, settings = FORMATS[key].convert(project, filename, options)
     pyproject = project.pyproject or tomlkit.document()
 
@@ -568,7 +570,7 @@ def ask_for_import(project: Project) -> None:
     if int(choice) == len(importable_files):
         return
     key, filepath = importable_files[int(choice)]
-    do_import(project, filepath, key, Namespace())
+    do_import(project, filepath, key)
 
 
 def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
