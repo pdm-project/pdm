@@ -16,16 +16,16 @@ build-backend = "pdm.pep517.api"
 If you have used `pdm init`, you must have already seen how PDM detects and selects the Python
 interpreter. After initialized, you can also change the settings by `pdm use <python_version_or_path>`.
 The argument can be either a version specifier of any length, or a relative or absolute path to the
-python interpreter, but remember the Python interpreter must be compatible with `python_requires`
+python interpreter, but remember the Python interpreter must conform with the `python_requires`
 constraint in the project file.
 
 ### How `python_requires` controls the project
 
-PDM respects the value of `python_requires` in the way that it tries to pick package candidates that can work
-on all python versions that `python_requires` contains. For example if `python_requires` is `>=2.7`, PDM will try
-to find the latest version of `foo`, whose `python_requires` version range is a **superset** of `>=2.7`.
+PDM respects the value of `requires-python` in the way that it tries to pick package candidates that can work
+on all python versions that `requires-python` contains. For example, if `requires-python` is `>=2.7`, PDM will try
+to find the latest version of `foo`, whose `requires-python` version range is a **superset** of `>=2.7`.
 
-So, make sure you write `python_requires` properly if you don't want any outdated packages to be locked.
+So, make sure you write `requires-python` properly if you don't want any outdated packages to be locked.
 
 ## Build distribution artifacts
 
@@ -37,7 +37,8 @@ $ pdm build
 - Built pdm_test-0.0.0-py3-none-any.whl
 ```
 
-The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine).
+The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine). Available options can be found by
+typing `pdm build --help`.
 
 ## Show the current Python environment
 
@@ -85,18 +86,20 @@ Change a configuration value and store in home configuration:
 $ pdm config pypi.url "https://testpypi.org/simple"
 ```
 
-Change a configuration value and store in `.pdm.toml`:
+By default, the configuration are changed globally, if you want to make the config seen by this project only, add a `--local` flag:
 
 ```console
 $ pdm config --local pypi.url "https://testpypi.org/simple"
 ```
+
+Any local configurations will be stored in `.pdm.toml` under the project root directory.
 
 The configuration files are searched in the following order:
 
 1. `<PROJECT_ROOT>/.pdm.toml` - The project configuration
 2. `~/.pdm/config.toml` - The home configuration
 
-If `-g/--global` option is used, `~/.pdm/global-project/.pdm.toml` will replace the first item.
+If `-g/--global` option is used, the first item will be replaced by `~/.pdm/global-project/.pdm.toml`.
 
 ## Manage global project
 
@@ -143,10 +146,11 @@ if your PDM project has not been initialized yet.
 ## Export locked packages to alternative formats
 
 You can also export `pdm.lock` to other formats, to ease the CI flow or image building process. Currently,
-only `requirements.txt` format is supported:
+only `requirements.txt` and `setup.py` format is supported:
 
 ```console
 $ pdm export -o requirements.txt
+$ pdm export -f setuppy -o setup.py
 ```
 
 ## Hide the credentials from pyproject.toml
