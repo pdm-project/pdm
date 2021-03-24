@@ -79,13 +79,6 @@ def get_abi_tag(python_version: Tuple[int, int]) -> Optional[str]:
             "WITH_PYMALLOC", is_cpython, warn=False
         ):
             m = "m"
-        if python_version < (3, 3) and get_flag(
-            "Py_UNICODE_SIZE",
-            sys.maxunicode == 0x10FFFF,
-            expected=4,
-            warn=False,
-        ):
-            u = "u"
         abi = "%s%s%s%s%s" % (impl, "".join(map(str, python_version)), d, m, u)
     elif soabi and soabi.startswith("cpython-"):
         abi = "cp" + soabi.split("-")[1]
