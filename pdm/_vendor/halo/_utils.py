@@ -4,10 +4,7 @@
 import codecs
 import platform
 import six
-try:
-    from shutil import get_terminal_size
-except ImportError:
-    from backports.shutil_get_terminal_size import get_terminal_size
+from shutil import get_terminal_size
 
 from pdm._vendor.colorama import init
 from pdm._vendor.termcolor import colored
