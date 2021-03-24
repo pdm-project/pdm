@@ -90,6 +90,7 @@ def test_convert_flit(project):
 
     assert result["name"] == "pyflit"
     assert result["version"] == "0.1.0"
+    assert result["description"] == "An awesome flit demo"
     assert "classifiers" in result["dynamic"]
     assert result["authors"][0] == {
         "name": "Thomas Kluyver",

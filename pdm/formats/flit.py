@@ -1,5 +1,7 @@
+import ast
 import re
 from pathlib import Path
+from typing import Optional, Tuple
 
 import tomlkit
 import tomlkit.exceptions
@@ -29,6 +31,34 @@ def _get_author(metadata, type_="author"):
     return array_of_inline_tables([{"name": name, "email": email}])
 
 
+def get_docstring_and_version_via_ast(
+    target: Path,
+) -> Tuple[Optional[str], Optional[str]]:
+    """
+    This function is borrowed from flit's implementation, but does not attempt to import
+    that file. If docstring or version can't be retrieved by this function,
+    they are just left empty.
+    """
+    # read as bytes to enable custom encodings
+    node = ast.parse(target.read_bytes())
+    for child in node.body:
+        # Only use the version from the given module if it's a simple
+        # string assignment to __version__
+        is_version_str = (
+            isinstance(child, ast.Assign)
+            and len(child.targets) == 1
+            and isinstance(child.targets[0], ast.Name)
+            and child.targets[0].id == "__version__"
+            and isinstance(child.value, ast.Str)
+        )
+        if is_version_str:
+            version = child.value.s
+            break
+    else:
+        version = None
+    return ast.get_docstring(node), version
+
+
 class FlitMetaConverter(MetaConverter):
     VERSION_RE = re.compile(r"__version__\s*=\s*['\"](.+?)['\"]")
 
@@ -37,15 +67,18 @@ class FlitMetaConverter(MetaConverter):
         # name
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
-        # version
+        # version and description
         parent_dir = Path(self.filename).parent
         if (parent_dir / module / "__init__.py").exists():
             source = parent_dir / module / "__init__.py"
         else:
             source = parent_dir / f"{module}.py"
-        self._data["version"] = self.VERSION_RE.findall(
-            source.read_text(encoding="utf-8")
-        )[0]
+
+        version = self._data.get("version")
+        description = self._data.get("description")
+        description_in_ast, version_in_ast = get_docstring_and_version_via_ast(source)
+        self._data["version"] = version or version_in_ast
+        self._data["description"] = description or description_in_ast
         # author and maintainer
         if "author" in metadata:
             self._data["authors"] = _get_author(metadata)
