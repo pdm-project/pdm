@@ -21,13 +21,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        python-version: [3.7]
+        os: [ubuntu-latest]
         arch: [x64]
-        include:
-          - python-version: 3.8
-            os: windows-latest
-            arch: x86
+        # include:
+        #   - python-version: 3.8
+        #     os: windows-latest
+        #     arch: x86
 
     steps:
       - uses: actions/checkout@v2

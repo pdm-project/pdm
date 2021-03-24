@@ -160,6 +160,8 @@ class EnvBuilder:
         if extra_environ:
             env.update(extra_environ)
         lib = sysconfig.get_path("purelib")
+        frame = sys._getframe()
+        logger.debug(frame.f_back.f_code.co_name)
         logger.debug("Lib files: %s", os.listdir(lib))
         return log_subprocessor(cmd, cwd, extra_environ=env)
 
