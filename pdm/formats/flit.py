@@ -1,9 +1,9 @@
 import ast
+import warnings
 from pathlib import Path
 from typing import Optional, Tuple
 
-import tomlkit
-import tomlkit.exceptions
+import toml
 
 from pdm.formats.base import (
     MetaConverter,
@@ -17,8 +17,8 @@ from pdm.formats.base import (
 def check_fingerprint(project, filename):
     with open(filename, encoding="utf-8") as fp:
         try:
-            data = tomlkit.parse(fp.read())
-        except tomlkit.exceptions.TOMLKitError:
+            data = toml.load(fp)
+        except toml.TomlDecodeError:
             return False
 
     return "tool" in data and "flit" in data["tool"]
@@ -59,6 +59,24 @@ def get_docstring_and_version_via_ast(
 
 
 class FlitMetaConverter(MetaConverter):
+    def warn_against_dynamic_version_or_docstring(
+        self, source: Path, version: str, description: str
+    ):
+        dynamic_fields = []
+        if not version:
+            dynamic_fields.append("version")
+        if not description:
+            dynamic_fields.append("description")
+        if not dynamic_fields:
+            return
+        fields = " and ".join(dynamic_fields)
+        message = (
+            f"Can't retrieve {fields} from pyproject.toml or parsing {source}. "
+            "They are probably imported from other files which is not supported by PDM."
+            " You may need to supply their values in pyproject.toml manually."
+        )
+        warnings.warn(message, UserWarning, stacklevel=2)
+
     @convert_from("metadata")
     def name(self, metadata):
         # name
@@ -74,8 +92,11 @@ class FlitMetaConverter(MetaConverter):
         version = self._data.get("version")
         description = self._data.get("description")
         description_in_ast, version_in_ast = get_docstring_and_version_via_ast(source)
-        self._data["version"] = version or version_in_ast
-        self._data["description"] = description or description_in_ast
+        self._data["version"] = version or version_in_ast or ""
+        self._data["description"] = description or description_in_ast or ""
+        self.warn_against_dynamic_version_or_docstring(
+            source, self._data["version"], self._data["description"]
+        )
         # author and maintainer
         if "author" in metadata:
             self._data["authors"] = _get_author(metadata)
@@ -112,10 +133,15 @@ class FlitMetaConverter(MetaConverter):
 
 def convert(project, filename, options):
     with open(filename, encoding="utf-8") as fp:
-        return (
-            dict(FlitMetaConverter(tomlkit.parse(fp.read())["tool"]["flit"], filename)),
-            {},
-        )
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter(action="always", category=UserWarning)
+            result = (
+                dict(FlitMetaConverter(toml.load(fp)["tool"]["flit"], filename)),
+                {},
+            )
+            for item in w:
+                project.core.ui.echo(f"WARN: {item.message}", fg="yellow", err=True)
+            return result
 
 
 def export(project, candidates, options):
