@@ -1,0 +1,1 @@
+ignore type checking in `models.project_info.ProjectInfo`, which indexes `distlib.metadata._data`
