@@ -49,6 +49,14 @@ Install PDM into user site with `pip`:
 $ pip install --user pdm
 ```
 
+Install the head version of GitHub repository:
+
+```console
+$ pipx install git+https://github.com/pdm-project/pdm.git@master#egg=pdm
+```
+
+Make sure you have installed [Git LFS](https://git-lfs.github.com/) on your system.
+
 ### Enable PEP 582 globally
 
 To make the Python interpreters aware of PEP 582 packages, one need to add the `pdm/pep582/sitecustomize.py`
