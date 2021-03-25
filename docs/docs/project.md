@@ -132,6 +132,9 @@ by the configuration item `use_venv`. When it is set to `True` PDM will use the 
 
 Besides, when `use-venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
 
+For enhanced virtualenv support such as virtualenv management and auto-creation, please go for [pdm-venv](https://github.com/pdm-project/pdm-venv),
+which can be installed as a plugin.
+
 ## Import project metadata from existing project files
 
 If you are already other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
