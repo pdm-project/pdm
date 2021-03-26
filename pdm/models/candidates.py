@@ -160,6 +160,7 @@ class Candidate:
                 raise
             termui.logger.warn("Failed to build package, try parsing project files.")
             meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory)
+            meta_dict.update(summary="UNKNOWN")
             meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
             self.metadata = Namespace(**meta_dict)
         else:
