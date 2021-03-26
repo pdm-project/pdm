@@ -60,9 +60,28 @@ class ClearCommand(BaseCommand):
     """Clean all the files under cache directory"""
 
     arguments = [verbose_option]
+    CACHE_TYPES = ("hashes", "http", "wheels", "metadata")
+
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("type", nargs="?", help="Clear the given type of caches")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        return remove_cache_files(project, "*")
+        if not options.type:
+            cache_parent = project.cache_dir
+        elif options.type not in self.CACHE_TYPES:
+            raise PdmUsageError(
+                f"Invalid cache type {options.type}, should one of {self.CACHE_TYPES}"
+            )
+        else:
+            cache_parent = project.cache(options.type)
+
+        with project.core.ui.open_spinner(
+            f"Clearing {options.type or 'all'} caches..."
+        ) as spinner:
+            files = list(find_files(cache_parent, "*"))
+            for file in files:
+                os.unlink(file)
+            spinner.succeed(f"{len(files)} file{'s' if len(files) > 1 else ''} removed")
 
 
 class RemoveCommand(BaseCommand):
