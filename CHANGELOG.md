@@ -1,3 +1,21 @@
+Release v1.4.4 (2021-03-27)
+---------------------------
+
+### Features & Improvements
+
+- Emit warning if version or description can't be retrieved when importing from flit metadata. [#342](https://github.com/pdm-project/pdm/issues/342)
+- Add `type` argument to `pdm cache clear` and improve its UI. [#343](https://github.com/pdm-project/pdm/issues/343)
+- Always re-install the editable packages when syncing the working set. This can help tracking the latest change of `entry-points`. [#344](https://github.com/pdm-project/pdm/issues/344)
+
+### Bug Fixes
+
+- Make installer quit early if a wheel isn't able to build. [#338](https://github.com/pdm-project/pdm/issues/338)
+
+### Miscellany
+
+- ignore type checking in `models.project_info.ProjectInfo`, which indexes `distlib.metadata._data` [#335](https://github.com/pdm-project/pdm/issues/335)
+
+
 Release v1.4.3 (2021-03-24)
 ---------------------------
 
