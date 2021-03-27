@@ -128,6 +128,8 @@ class Environment:
             misc.is_local = req_uninstall.is_local = self.is_local
             _evaluate_marker = pkg_resources.evaluate_marker
             pkg_resources.evaluate_marker = self.evaluate_marker
+            bin_py = req_uninstall.bin_py
+            req_uninstall.bin_py = paths["scripts"]
             sys._original_executable = sys.executable
             sys.executable = self.python_executable
             yield
@@ -135,6 +137,7 @@ class Environment:
             del sys._original_executable
             pkg_resources.evaluate_marker = _evaluate_marker
             misc.is_local = req_uninstall.is_local = _is_local
+            req_uninstall.bin_py = bin_py
             misc.site_packages = _old_sitepackages
             pkg_resources.working_set = _old_ws
 
