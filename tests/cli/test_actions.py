@@ -18,24 +18,26 @@ def make_distribution(name, version):
     return Distribution(req.key, version)
 
 
-def test_sync_only_different(project, repository, working_set, capsys):
+@pytest.mark.usefixtures("repository")
+def test_sync_only_different(project, working_set, capsys):
     working_set.add_distribution(make_distribution("foo", "0.1.0"))
     working_set.add_distribution(make_distribution("chardet", "3.0.1"))
     working_set.add_distribution(make_distribution("idna", "2.7"))
     actions.do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
-    assert "4 to add" in out
+    assert "3 to add" in out
     assert "1 to update" in out
     assert "foo" in working_set
     assert "test-project" in working_set
     assert working_set["chardet"].version == "3.0.4"
 
 
-def test_sync_in_sequential_mode(project, repository, working_set, capsys):
+@pytest.mark.usefixtures("repository")
+def test_sync_in_sequential_mode(project, working_set, capsys):
     project.project_config["parallel_install"] = False
     actions.do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
-    assert "6 to add" in out
+    assert "5 to add" in out
     assert "test-project" in working_set
     assert working_set["chardet"].version == "3.0.4"
 
@@ -58,7 +60,8 @@ def test_sync_clean_packages(project, repository, working_set):
     assert "foo" not in working_set
 
 
-def test_sync_dry_run(project, repository, working_set):
+@pytest.mark.usefixtures("repository")
+def test_sync_dry_run(project, working_set):
     for candidate in [
         make_distribution("foo", "0.1.0"),
         make_distribution("chardet", "3.0.1"),
@@ -72,7 +75,8 @@ def test_sync_dry_run(project, repository, working_set):
     assert working_set["chardet"].version == "3.0.1"
 
 
-def test_add_package(project, repository, working_set, is_dev):
+@pytest.mark.usefixtures("repository")
+def test_add_package(project, working_set, is_dev):
     actions.do_add(project, is_dev, packages=["requests"])
     section = "dev-dependencies" if is_dev else "dependencies"
 
@@ -83,7 +87,8 @@ def test_add_package(project, repository, working_set, is_dev):
         assert package in working_set
 
 
-def test_add_package_to_custom_package(project, repository, working_set):
+@pytest.mark.usefixtures("repository")
+def test_add_package_to_custom_package(project, working_set):
     actions.do_add(project, section="test", packages=["requests"])
 
     assert "requests" in project.meta.optional_dependencies["test"][0]
@@ -93,7 +98,8 @@ def test_add_package_to_custom_package(project, repository, working_set):
         assert package in working_set
 
 
-def test_add_editable_package(project, repository, working_set, is_dev, vcs):
+@pytest.mark.usefixtures("repository", "vcs")
+def test_add_editable_package(project, working_set, is_dev):
     # Ensure that correct python version is used.
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(project, is_dev, packages=["demo"])
@@ -114,7 +120,8 @@ def test_add_editable_package(project, repository, working_set, is_dev, vcs):
     assert "idna" in working_set
 
 
-def test_add_remote_package_url(project, repository, working_set, is_dev):
+@pytest.mark.usefixtures("repository", "working_set")
+def test_add_remote_package_url(project, is_dev):
     actions.do_add(
         project,
         is_dev,
@@ -127,9 +134,8 @@ def test_add_remote_package_url(project, repository, working_set, is_dev):
     )
 
 
-def test_remove_both_normal_and_editable_packages(
-    project, repository, working_set, is_dev, vcs
-):
+@pytest.mark.usefixtures("repository", "working_set", "vcs")
+def test_remove_both_normal_and_editable_packages(project, is_dev):
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(project, is_dev, packages=["demo"])
     actions.do_add(
@@ -143,18 +149,21 @@ def test_remove_both_normal_and_editable_packages(
     assert "demo" not in project.get_locked_candidates("dev" if is_dev else "default")
 
 
-def test_add_no_install(project, repository, working_set):
+@pytest.mark.usefixtures("repository")
+def test_add_no_install(project, working_set):
     actions.do_add(project, sync=False, packages=["requests"])
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package not in working_set
 
 
-def test_add_package_save_exact(project, repository):
+@pytest.mark.usefixtures("repository")
+def test_add_package_save_exact(project):
     actions.do_add(project, sync=False, save="exact", packages=["requests"])
     assert project.meta.dependencies[0] == "requests==2.19.1"
 
 
-def test_add_package_save_wildcard(project, repository):
+@pytest.mark.usefixtures("repository")
+def test_add_package_save_wildcard(project):
     actions.do_add(project, sync=False, save="wildcard", packages=["requests"])
     assert project.meta.dependencies[0] == "requests"
 
@@ -219,7 +228,8 @@ def test_add_package_update_eager(project, repository):
     assert locked_candidates["pytz"].version == "2019.3"
 
 
-def test_update_all_packages(project, repository, working_set, capsys):
+@pytest.mark.usefixtures("working_set")
+def test_update_all_packages(project, repository, capsys):
     actions.do_add(project, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -247,7 +257,8 @@ def test_update_all_packages(project, repository, working_set, capsys):
     assert "All packages are synced to date" in out
 
 
-def test_update_specified_packages(project, repository, working_set):
+@pytest.mark.usefixtures("working_set")
+def test_update_specified_packages(project, repository):
     actions.do_add(project, sync=False, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -268,7 +279,8 @@ def test_update_specified_packages(project, repository, working_set):
     assert locked_candidates["chardet"].version == "3.0.4"
 
 
-def test_update_specified_packages_eager_mode(project, repository, working_set):
+@pytest.mark.usefixtures("working_set")
+def test_update_specified_packages_eager_mode(project, repository):
     actions.do_add(project, sync=False, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -290,7 +302,8 @@ def test_update_specified_packages_eager_mode(project, repository, working_set):
     assert locked_candidates["pytz"].version == "2019.3"
 
 
-def test_remove_package(project, repository, working_set, is_dev):
+@pytest.mark.usefixtures("repository")
+def test_remove_package(project, working_set, is_dev):
     actions.do_add(project, dev=is_dev, packages=["requests", "pytz"])
     actions.do_remove(project, dev=is_dev, packages=["pytz"])
     locked_candidates = project.get_locked_candidates()
@@ -298,7 +311,8 @@ def test_remove_package(project, repository, working_set, is_dev):
     assert "pytz" not in working_set
 
 
-def test_remove_package_no_sync(project, repository, working_set):
+@pytest.mark.usefixtures("repository")
+def test_remove_package_no_sync(project, working_set):
     actions.do_add(project, packages=["requests", "pytz"])
     actions.do_remove(project, sync=False, packages=["pytz"])
     locked_candidates = project.get_locked_candidates()
@@ -306,13 +320,15 @@ def test_remove_package_no_sync(project, repository, working_set):
     assert "pytz" in working_set
 
 
-def test_remove_package_not_exist(project, repository, working_set):
+@pytest.mark.usefixtures("repository", "working_set")
+def test_remove_package_not_exist(project):
     actions.do_add(project, packages=["requests", "pytz"])
     with pytest.raises(PdmException):
         actions.do_remove(project, sync=False, packages=["django"])
 
 
-def test_remove_package_exist_in_multi_section(project, repository, working_set):
+@pytest.mark.usefixtures("repository")
+def test_remove_package_exist_in_multi_section(project, working_set):
     actions.do_add(project, packages=["requests"])
     actions.do_add(project, dev=True, packages=["urllib3"])
     actions.do_remove(project, dev=True, packages=["urllib3"])
@@ -321,7 +337,8 @@ def test_remove_package_exist_in_multi_section(project, repository, working_set)
     assert "requests" in working_set
 
 
-def test_add_remove_no_package(project, repository):
+@pytest.mark.usefixtures("repository")
+def test_add_remove_no_package(project):
     with pytest.raises(PdmUsageError):
         actions.do_add(project, packages=())
 
@@ -329,7 +346,8 @@ def test_add_remove_no_package(project, repository):
         actions.do_remove(project, packages=())
 
 
-def test_update_with_package_and_sections_argument(project, repository, working_set):
+@pytest.mark.usefixtures("repository", "working_set")
+def test_update_with_package_and_sections_argument(project):
     actions.do_add(project, packages=["requests", "pytz"])
     with pytest.raises(PdmUsageError):
         actions.do_update(project, sections=("default", "dev"), packages=("requests",))
@@ -338,7 +356,8 @@ def test_update_with_package_and_sections_argument(project, repository, working_
         actions.do_update(project, default=False, packages=("requests",))
 
 
-def test_add_package_with_mismatch_marker(project, repository, working_set, mocker):
+@pytest.mark.usefixtures("repository")
+def test_add_package_with_mismatch_marker(project, working_set, mocker):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
@@ -347,7 +366,8 @@ def test_add_package_with_mismatch_marker(project, repository, working_set, mock
     assert "pytz" not in working_set
 
 
-def test_add_dependency_from_multiple_parents(project, repository, working_set, mocker):
+@pytest.mark.usefixtures("repository")
+def test_add_dependency_from_multiple_parents(project, working_set, mocker):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
@@ -366,7 +386,8 @@ def test_list_packages(capsys, core):
     assert "pip" in out
 
 
-def test_lock_dependencies(project, repository):
+@pytest.mark.usefixtures("repository")
+def test_lock_dependencies(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
     actions.do_lock(project)
     assert project.lockfile_file.exists()
@@ -400,14 +421,16 @@ def test_project_no_init_error(project_no_init):
             handler(project_no_init)
 
 
-def test_list_dependency_graph(project, capsys, repository, working_set):
+@pytest.mark.usefixtures("repository", "working_set")
+def test_list_dependency_graph(project, capsys):
     actions.do_add(project, packages=["requests"])
     actions.do_list(project, True)
     content, _ = capsys.readouterr()
     assert "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in content
 
 
-def test_list_dependency_graph_with_circular(project, capsys, repository, working_set):
+@pytest.mark.usefixtures("working_set")
+def test_list_dependency_graph_with_circular(project, capsys, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo-bar", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
@@ -423,20 +446,23 @@ def test_list_reverse_without_graph_flag(project):
         actions.do_list(project, reverse=True)
 
 
-def test_list_reverse_dependency_graph(project, capsys, repository, working_set):
+@pytest.mark.usefixtures("repository", "working_set")
+def test_list_reverse_dependency_graph(project, capsys):
     actions.do_add(project, packages=["requests"])
     actions.do_list(project, True, True)
     content, _ = capsys.readouterr()
     assert "└── requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in content
 
 
-def test_update_unconstrained_without_packages(project, repository, working_set):
+@pytest.mark.usefixtures("repository", "working_set")
+def test_update_unconstrained_without_packages(project):
     actions.do_add(project, packages=("requests",))
     with pytest.raises(PdmUsageError):
         actions.do_update(project, unconstrained=True)
 
 
-def test_update_ignore_constraints(project, repository, working_set):
+@pytest.mark.usefixtures("working_set")
+def test_update_ignore_constraints(project, repository):
     actions.do_add(project, packages=("pytz",))
     assert project.meta.dependencies == ["pytz~=2019.3"]
     repository.add_candidate("pytz", "2020.2")
@@ -455,7 +481,8 @@ def test_init_validate_python_requires(project_no_init):
         actions.do_init(project_no_init, python_requires="3.7")
 
 
-def test_editable_package_override_non_editable(project, repository, working_set, vcs):
+@pytest.mark.usefixtures("repository", "vcs")
+def test_editable_package_override_non_editable(project, working_set):
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(
         project, packages=["git+https://github.com/test-root/demo.git#egg=demo"]

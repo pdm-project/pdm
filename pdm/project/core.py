@@ -455,7 +455,7 @@ class Project:
         self._pyproject = None
 
     @property
-    def meta(self) -> Optional[Metadata]:
+    def meta(self) -> Metadata:
         if not self.pyproject:
             self.pyproject = {"project": tomlkit.table()}
         return Metadata(self.pyproject_file, self.pyproject.get("project", {}))
