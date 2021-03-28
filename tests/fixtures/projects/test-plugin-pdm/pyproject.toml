@@ -7,7 +7,6 @@ build-backend = "pdm.pep517.api"
 # See https://www.python.org/dev/peps/pep-0621/
 version = "0.0.1"
 dependencies = []
-dev-dependencies = []
 name = "test-plugin-pdm"
 
 [project.optional-dependencies]

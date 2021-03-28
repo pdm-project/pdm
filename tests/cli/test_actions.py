@@ -78,9 +78,13 @@ def test_sync_dry_run(project, working_set):
 @pytest.mark.usefixtures("repository")
 def test_add_package(project, working_set, is_dev):
     actions.do_add(project, is_dev, packages=["requests"])
-    section = "dev-dependencies" if is_dev else "dependencies"
+    section = (
+        project.tool_settings["dev-dependencies"]["dev"]
+        if is_dev
+        else project.meta["dependencies"]
+    )
 
-    assert project.meta[section][0] == "requests~=2.19"
+    assert section[0] == "requests~=2.19"
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -88,10 +92,22 @@ def test_add_package(project, working_set, is_dev):
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_package_to_custom_package(project, working_set):
+def test_add_package_to_custom_section(project, working_set):
     actions.do_add(project, section="test", packages=["requests"])
 
     assert "requests" in project.meta.optional_dependencies["test"][0]
+    locked_candidates = project.get_locked_candidates("test")
+    assert locked_candidates["idna"].version == "2.7"
+    for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
+        assert package in working_set
+
+
+@pytest.mark.usefixtures("repository")
+def test_add_package_to_custom_dev_section(project, working_set):
+    actions.do_add(project, dev=True, section="test", packages=["requests"])
+
+    dependencies = project.tool_settings["dev-dependencies"]["test"]
+    assert "requests" in dependencies[0]
     locked_candidates = project.get_locked_candidates("test")
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -108,12 +124,13 @@ def test_add_editable_package(project, working_set, is_dev):
         is_dev,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    section = "dev-dependencies" if is_dev else "dependencies"
-    assert "demo" in project.meta[section][0]
-    assert (
-        "-e git+https://github.com/test-root/demo.git#egg=demo"
-        in project.meta[section][1]
+    section = (
+        project.tool_settings["dev-dependencies"]["dev"]
+        if is_dev
+        else project.meta["dependencies"]
     )
+    assert "demo" in section[0]
+    assert "-e git+https://github.com/test-root/demo.git#egg=demo" in section[1]
     locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
     assert locked_candidates["demo"].revision == "1234567890abcdef"
     assert locked_candidates["idna"].version == "2.7"
@@ -127,9 +144,13 @@ def test_add_remote_package_url(project, is_dev):
         is_dev,
         packages=["http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"],
     )
-    section = "dev-dependencies" if is_dev else "dependencies"
+    section = (
+        project.tool_settings["dev-dependencies"]["dev"]
+        if is_dev
+        else project.meta["dependencies"]
+    )
     assert (
-        project.meta[section][0]
+        section[0]
         == "demo @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
 
@@ -143,9 +164,13 @@ def test_remove_both_normal_and_editable_packages(project, is_dev):
         is_dev,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    section = "dev-dependencies" if is_dev else "dependencies"
+    section = (
+        project.tool_settings["dev-dependencies"]["dev"]
+        if is_dev
+        else project.meta["dependencies"]
+    )
     actions.do_remove(project, is_dev, packages=["demo"])
-    assert not project.meta[section]
+    assert not section
     assert "demo" not in project.get_locked_candidates("dev" if is_dev else "default")
 
 
@@ -332,7 +357,9 @@ def test_remove_package_exist_in_multi_section(project, working_set):
     actions.do_add(project, packages=["requests"])
     actions.do_add(project, dev=True, packages=["urllib3"])
     actions.do_remove(project, dev=True, packages=["urllib3"])
-    assert not any("urllib3" in line for line in project.meta["dev-dependencies"])
+    assert not any(
+        "urllib3" in line for line in project.tool_settings["dev-dependencies"]["dev"]
+    )
     assert "urllib3" in working_set
     assert "requests" in working_set
 

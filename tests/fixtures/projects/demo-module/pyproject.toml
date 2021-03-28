@@ -13,7 +13,6 @@ version = { from = "foo_module.py" }
 requires-python = ">=3.5"
 license = {text = "MIT"}
 dependencies = []
-dev-dependencies = []
 description = ""
 name = "demo-module"
 

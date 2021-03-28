@@ -13,7 +13,7 @@ def test_convert_pipfile(project):
     assert settings["allow_prereleases"]
     assert result["requires-python"] == ">=3.6"
 
-    assert not result["dev-dependencies"]
+    assert not settings.get("dev-dependencies", {}).get("dev")
 
     assert "requests" in result["dependencies"]
     assert 'pywinusb; sys_platform == "win32"' in result["dependencies"]
@@ -26,7 +26,7 @@ def test_convert_requirements_file(project, is_dev):
     assert requirements.check_fingerprint(project, golden_file)
     options = Namespace(dev=is_dev, section=None)
     result, settings = requirements.convert(project, golden_file, options)
-    section = result["dev-dependencies" if is_dev else "dependencies"]
+    section = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
 
     assert len(settings["source"]) == 2
     assert "webassets==2.0" in section
@@ -51,7 +51,7 @@ def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject-poetry.toml"
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
-        result, _ = poetry.convert(
+        result, settings = poetry.convert(
             project, golden_file, Namespace(dev=False, section=None)
         )
 
@@ -73,20 +73,20 @@ def test_convert_poetry(project):
     assert "babel==2.9.0" in result["dependencies"]
     assert "mysql" in result["optional-dependencies"]
     assert "psycopg2<3.0,>=2.7" in result["optional-dependencies"]["pgsql"]
-    assert len(result["dev-dependencies"]) == 2
+    assert len(settings["dev-dependencies"]["dev"]) == 2
 
     assert result["scripts"] == {"poetry": "poetry.console:run"}
     assert result["entry-points"]["blogtool.parsers"] == {
         ".rst": "some_module:SomeClass"
     }
-    assert result["includes"] == ["lib/my_package", "tests", "CHANGELOG.md"]
-    assert result["excludes"] == ["my_package/excluded.py"]
+    assert settings["includes"] == ["lib/my_package", "tests", "CHANGELOG.md"]
+    assert settings["excludes"] == ["my_package/excluded.py"]
 
 
 def test_convert_flit(project):
     golden_file = FIXTURES / "projects/flit-demo/pyproject.toml"
     assert flit.check_fingerprint(project, golden_file)
-    result, _ = flit.convert(project, golden_file, None)
+    result, settings = flit.convert(project, golden_file, None)
 
     assert result["name"] == "pyflit"
     assert result["version"] == "0.1.0"
@@ -115,8 +115,8 @@ def test_convert_flit(project):
         result["entry-points"]["pygments.lexers"]["dogelang"]
         == "dogelang.lexer:DogeLexer"
     )
-    assert result["includes"] == ["doc/"]
-    assert result["excludes"] == ["doc/*.html"]
+    assert settings["includes"] == ["doc/"]
+    assert settings["excludes"] == ["doc/*.html"]
 
 
 def test_convert_legacy_format(project):
@@ -129,7 +129,7 @@ def test_convert_legacy_format(project):
     assert result["license"] == {"text": "MIT"}
     assert sorted(result["dynamic"]) == ["classifiers", "version"]
     assert result["dependencies"] == ["flask"]
-    assert not result["dev-dependencies"]
+    assert not result.get("dev-dependencies", {}).get("dev")
     assert result["optional-dependencies"]["test"] == ["pytest"]
     assert settings["source"][0]["url"] == "https://test.pypi.org/simple"
 
@@ -152,4 +152,4 @@ def test_import_requirements_with_section(project):
     assert 'whoosh==2.7.4; sys_platform == "win32"' in section
     assert "-e git+https://github.com/pypa/pip.git@master#egg=pip" in section
     assert not result["dependencies"]
-    assert not result["dev-dependencies"]
+    assert not result.get("dev-dependencies", {}).get("dev")

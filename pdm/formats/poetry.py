@@ -146,9 +146,14 @@ class PoetryMetaConverter(MetaConverter):
         del source["dependencies"]
         return make_array(rv, True)
 
-    @convert_from("dev-dependencies", name="dev-dependencies")
-    def dev_dependencies(self, value: Dict[str, Any]) -> List[str]:
-        return make_array([_convert_req(key, req) for key, req in value.items()], True)
+    @convert_from("dev-dependencies")
+    def dev_dependencies(self, value: dict) -> None:
+        self.settings["dev-dependencies"] = {
+            "dev": make_array(
+                [_convert_req(key, req) for key, req in value.items()], True
+            ),
+        }
+        raise Unset()
 
     @convert_from()
     def includes(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
@@ -159,11 +164,18 @@ class PoetryMetaConverter(MetaConverter):
                 include = f"{item.get('from')}/{include}"
             result.append(include)
         result.extend(source.pop("include", []))
-        return result
+        self.settings["includes"] = result
+        raise Unset()
 
     @convert_from("exclude")
-    def excludes(self, value: List[str]) -> List[str]:
-        return value
+    def excludes(self, value: List[str]) -> None:
+        self.settings["excludes"] = value
+        raise Unset()
+
+    @convert_from("build")
+    def build(self, value: str) -> None:
+        self.settings["build"] = value
+        raise Unset()
 
     @convert_from("source")
     def source(self, value: List[Source]) -> None:

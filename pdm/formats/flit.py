@@ -9,6 +9,7 @@ import toml
 
 from pdm.formats.base import (
     MetaConverter,
+    Unset,
     array_of_inline_tables,
     convert_from,
     make_array,
@@ -133,9 +134,10 @@ class FlitMetaConverter(MetaConverter):
         return value
 
     @convert_from("sdist")
-    def includes(self, value: Dict[str, List[str]]) -> List[str]:
-        self._data["excludes"] = value.get("exclude")
-        return value.get("include")
+    def includes(self, value: Dict[str, List[str]]) -> None:
+        self.settings["excludes"] = value.get("exclude")
+        self.settings["includes"] = value.get("include")
+        raise Unset()
 
 
 def convert(

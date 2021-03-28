@@ -17,7 +17,7 @@ from tomlkit.items import Comment, Whitespace
 
 from pdm import termui
 from pdm._types import Source
-from pdm.exceptions import NoPythonVersion, ProjectError
+from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
@@ -211,12 +211,24 @@ class Project:
 
     def get_dependencies(self, section: Optional[str] = None) -> Dict[str, Requirement]:
         metadata = self.meta
+        optional_dependencies = metadata.get("optional-dependencies", {})
+        dev_dependencies = self.tool_settings.get("dev-dependencies", {})
         if section in (None, "default"):
             deps = metadata.get("dependencies", [])
-        elif section == "dev":
-            deps = metadata.get("dev-dependencies", [])
         else:
-            deps = metadata.get("optional-dependencies", {}).get(section, [])
+            if section in optional_dependencies and section in dev_dependencies:
+                self.core.ui.echo(
+                    f"The {section} section exists in both [optional-dependencies] "
+                    "and [dev-dependencies], the former is taken.",
+                    err=True,
+                    fg="yellow",
+                )
+            if section in optional_dependencies:
+                deps = optional_dependencies[section]
+            elif section in dev_dependencies:
+                deps = dev_dependencies[section]
+            else:
+                raise PdmUsageError(f"Non-exist section {section}")
         result = {}
         with cd(self.root):
             for line in deps:
@@ -235,13 +247,29 @@ class Project:
 
     @property
     def dev_dependencies(self) -> Dict[str, Requirement]:
-        return self.get_dependencies("dev")
+        """All development dependencies"""
+        dev_group = self.tool_settings.get("dev-dependencies", {})
+        if not dev_group:
+            return {}
+        result = {}
+        with cd(self.root):
+            for section, deps in dev_group.items():
+                for line in deps:
+                    if line.startswith("-e "):
+                        req = parse_requirement(line[3:].strip(), True)
+                    else:
+                        req = parse_requirement(line)
+                    req.from_section = section
+                    result[req.identify()] = req
+        return result
 
     def iter_sections(self) -> Iterable[str]:
-        yield "default"
-        yield "dev"
+        result = {"default"}
         if self.meta.optional_dependencies:
-            yield from self.meta.optional_dependencies.keys()
+            result.update(self.meta.optional_dependencies.keys())
+        if self.tool_settings.get("dev-dependencies"):
+            result.update(self.tool_settings["dev-dependencies"].keys())
+        return result
 
     @property
     def all_dependencies(self) -> Dict[str, Dict[str, Requirement]]:
@@ -386,7 +414,7 @@ class Project:
         dump_data = {
             "sources": self.tool_settings.get("source", []),
             "dependencies": self.meta.get("dependencies", []),
-            "dev-dependencies": self.meta.get("dev-dependencies", []),
+            "dev-dependencies": self.tool_settings.get("dev-dependencies", {}),
             "optional-dependencies": self.meta.get("optional-dependencies", {}),
             "requires-python": self.meta.get("requires-python", ""),
         }
@@ -407,22 +435,28 @@ class Project:
         content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
 
-    def get_pyproject_dependencies(self, section: str) -> List[str]:
+    def get_pyproject_dependencies(self, section: str, dev: bool = False) -> List[str]:
         """Get the dependencies array in the pyproject.toml"""
         if section == "default":
             return setdefault(self.meta, "dependencies", [])
-        elif section == "dev":
-            return setdefault(self.meta, "dev-dependencies", [])
+        elif dev:
+            return setdefault(
+                setdefault(self.tool_settings, "dev-dependencies", {}), section, []
+            )
         else:
             return setdefault(
                 setdefault(self.meta, "optional-dependencies", {}), section, []
             )
 
     def add_dependencies(
-        self, requirements: Dict[str, Requirement], show_message: bool = True
+        self,
+        requirements: Dict[str, Requirement],
+        to_section: str = "default",
+        dev: bool = False,
+        show_message: bool = True,
     ) -> None:
+        deps = self.get_pyproject_dependencies(to_section, dev)
         for _, dep in requirements.items():
-            deps = self.get_pyproject_dependencies(dep.from_section)
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)), None
             )

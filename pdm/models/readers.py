@@ -37,7 +37,7 @@ class SetupReader:
             )
 
             for key in result.keys():
-                if new_result[key]:
+                if new_result.get(key):
                     result[key] = new_result[key]
 
         return result
