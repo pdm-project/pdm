@@ -115,10 +115,11 @@ def do_sync(
         raise ProjectError("Lock file does not exist, nothing to sync")
     clean = default if clean is None else clean
     candidates = {}
+    sections = list(sections)
     if dev and project.tool_settings["dev-dependencies"] and not sections:
-        sections += tuple(project.tool_settings["dev-dependencies"])
+        sections.extend(project.tool_settings["dev-dependencies"])
     if default:
-        sections += ("default",)
+        sections.append("default")
     for section in sections:
         if section not in list(project.iter_sections()):
             raise PdmUsageError(

@@ -60,6 +60,11 @@ dependencies = [
 ]
 ```
 
+!!! note "About editable installation"
+    One can have editable installation and normal installation for the same package. The one that comes at last wins.
+    However, editable dependencies WON'T be included in the metadata of the built artifacts since they are not valid
+    PEP 508 strings. They only exist for development purpose.
+
 ### Optional dependencies
 
 You can have some requirements optional, which is similar to `setuptools`' `extras_require` parameter.
@@ -80,7 +85,7 @@ To install a group of optional dependencies:
 $ pdm install -s socks
 ```
 
-`-s` option can be given multiple times to include more than one groups.
+`-s` option can be given multiple times to include more than one group.
 
 ### Console scripts
 
@@ -177,11 +182,6 @@ As specified in [PEP 420](https://www.python.org/dev/peps/pep-0420), a directory
 1. `<package>/__init__.py` doesn't exist, and
 2. There exist normal packages and/or other namespace packages under `<package>/*`, and
 3. `<package>` is not specified as `package-dir`
-
-!!! note "About editable installation"
-    One can have editable installation and normal installation for the same package. The one that comes at last wins.
-    However, editable dependencies WON'T be included in the metadata of the built artifacts since they are not valid
-    PEP 508 strings. They only exist for development purpose.
 
 ### Build C extensions
 
