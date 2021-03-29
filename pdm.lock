@@ -318,7 +318,7 @@ dependencies = [
 [[package]]
 name = "pdm-pep517"
 sections = ["default"]
-version = "0.5.10"
+version = "0.6.0"
 summary = "A PEP 517 backend for PDM that supports PEP 621 metadata"
 
 [[package]]
@@ -629,7 +629,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:122709e422ade1922d90cf51e920af714993cd9a9d5d2e8651bf9a6f5c45f4ca"
+content_hash = "sha256:575339d5e840e92f8b0416f4ca938256669788854f9fdf40a25eae06aac8f2b8"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -919,9 +919,9 @@ content_hash = "sha256:122709e422ade1922d90cf51e920af714993cd9a9d5d2e8651bf9a6f5
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
     {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
-"pdm-pep517 0.5.10" = [
-    {file = "pdm_pep517-0.5.10-py3-none-any.whl", hash = "sha256:015ae0c3674ac1dccbf04df4f4fab963405a086224f07f5b80833f4bc56a3c45"},
-    {file = "pdm-pep517-0.5.10.tar.gz", hash = "sha256:f112ca99b34c944d8a4f8cb555657866efce7856baf8bac7f80b16f5a66f0e89"},
+"pdm-pep517 0.6.0" = [
+    {file = "pdm_pep517-0.6.0-py3-none-any.whl", hash = "sha256:ea00a38c2916e94e34f5d0f33d75d624b120e6244019bd6eee962eba27ac7f24"},
+    {file = "pdm-pep517-0.6.0.tar.gz", hash = "sha256:127693f6900e3e28516b1185f99fde2331333bda3fc27e4f85900b957739fb27"},
 ]
 "pep517 0.9.1" = [
     {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},

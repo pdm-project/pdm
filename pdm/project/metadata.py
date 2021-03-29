@@ -1,5 +1,4 @@
 from collections.abc import MutableMapping
-from pathlib import Path
 
 from pdm.formats import flit, poetry
 from pdm.pep517.metadata import Metadata
@@ -11,21 +10,16 @@ class MutableMetadata(Metadata, MutableMapping):
     to the underlying toml parsed dict.
     """
 
-    def __init__(self, filepath, data=None) -> None:
-        self.filepath = Path(filepath)
-        if data is None:
-            data = self._read_pyproject(self.filepath)
-        self._metadata = data
-
-    @staticmethod
-    def _read_pyproject(filepath):
+    def _read_pyproject(self):
         try:
-            return Metadata._read_pyproject(filepath)
+            return super()._read_pyproject()
         except ValueError:
             for converter in (poetry, flit):
-                if converter.check_fingerprint(None, filepath):
-                    data, _ = converter.convert(None, filepath, None)
-                    return data
+                if converter.check_fingerprint(None, self.filepath):
+                    data, settings = converter.convert(None, self.filepath, None)
+                    self._metadata = data
+                    self._tool_settings = settings
+                    return
             raise
 
     def __getitem__(self, k):
