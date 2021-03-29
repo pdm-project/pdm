@@ -152,7 +152,7 @@ def test_init_command(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
-    result = invoke(["init"], input="python\n\n\n\n\n\n", obj=project_no_init)
+    result = invoke(["init"], input="\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
     do_init.assert_called_with(
@@ -173,7 +173,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
     )
     do_init = mocker.patch.object(actions, "do_init")
     result = invoke(
-        ["init"], input="python\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
+        ["init"], input="\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
     )
     assert result.exit_code == 0
     python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
