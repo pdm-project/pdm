@@ -71,7 +71,7 @@ test = ["pytest"]
 For backward-compatibility, if `-s/--section` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
-    The group names in `[tool.pdm.dev-dependencies]` MUST NOT conflict with those in `[project.optional-dependencies]`.
+    The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
 
 ### Save version specifiers
 
