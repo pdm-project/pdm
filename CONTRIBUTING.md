@@ -45,6 +45,8 @@ this section.
 To make sure the tests suites can run rightly, you need to install [Git LFS](https://git-lfs.github.com/), then
 ```bash
 $ git lfs install
+# If you have already cloned the repository, execute the below command as well.
+$ git lfs pull
 ```
 
 Then, you need to install base dependencies in a venv. Although PDM uses local package directory to install
