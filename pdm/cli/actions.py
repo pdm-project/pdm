@@ -621,7 +621,7 @@ def migrate_pyproject(project: Project):
         pyproject = project.pyproject
         settings = {}
         updated_fields = []
-        for field in ("includes", "excludes", "build"):
+        for field in ("includes", "excludes", "build", "package-dir"):
             if field in pyproject["project"]:
                 updated_fields.append(field)
                 settings[field] = pyproject["project"][field]
@@ -634,6 +634,8 @@ def migrate_pyproject(project: Project):
             del pyproject["project"]["dev-dependencies"]
             updated_fields.append("dev-dependencies")
         if updated_fields:
+            if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
+                setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
             pyproject["tool"]["pdm"].update(settings)
             project.pyproject = pyproject
             project.write_pyproject()
