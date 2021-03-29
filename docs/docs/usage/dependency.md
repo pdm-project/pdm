@@ -111,12 +111,12 @@ $ pdm update -s security cryptography
 
 If the section is not given, PDM will search for the requirement in the default dependencies set and raises an error if none is found.
 
-To update package in development dependencies:
+To update packages in development dependencies:
 
 ```console
 # Update all dev-dependencies
 $ pdm update -d
-# Update the specified group of dev-dependencies
+# Update a package in the specified group of dev-dependencies
 $ pdm update -ds test pytest
 ```
 
@@ -138,7 +138,7 @@ To remove existing dependencies from project file and the library directory:
 $ pdm remove requests
 # Remove h11 from the 'web' optional group
 $ pdm remove -s web h11
-# Remove pytest-cov from the `test` dev dependencies group
+# Remove pytest-cov from the `test` dev-dependencies group
 $ pdm remove -ds test pytest-cov
 ```
 
@@ -147,13 +147,13 @@ $ pdm remove -ds test pytest-cov
 There are two similar commands to do this job with a slight difference:
 
 ```console
-# Install all default dependencies:
+# Install all default dependencies
 $ pdm install
-# Install default + web optional dependencies:
+# Install default + web optional dependencies
 $ pdm install -s web
-# Install default + all dev dependencies
+# Install default + all dev-dependencies
 $ pdm install -d
-# Install web dependencies ONLY(without default dependencies):
+# Install web dependencies ONLY (without default dependencies)
 $ pdm install --no-default -s web
 ```
 
