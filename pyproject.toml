@@ -13,7 +13,7 @@ dependencies = [
     "click",
     "distlib",
     "importlib-metadata; python_version < \"3.8\"",
-    "pdm-pep517<1.0.0,>=0.3.0",
+    "pdm-pep517<1.0.0,>=0.6.0",
     "pep517",
     "pip>=20.1",
     "pycomplete<1.0.0,>=0.2.0",
