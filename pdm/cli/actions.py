@@ -412,10 +412,13 @@ def do_init(
     project.write_pyproject()
 
 
-def do_use(project: Project, python: str, first: bool = False) -> None:
+def do_use(
+    project: Project, python: Optional[str] = "", first: Optional[bool] = False
+) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
+    project.core.ui.echo("Please enter the Python interpreter to use")
 
     def version_matcher(py_version):
         return project.python_requires.contains(str(py_version.version))
@@ -426,9 +429,7 @@ def do_use(project: Project, python: str, first: bool = False) -> None:
         dict.fromkeys(filter(version_matcher, project.find_interpreters(python)))
     )
     if not found_interpreters:
-        raise NoPythonVersion(
-            f"Python interpreter {python} is not found on the system."
-        )
+        raise NoPythonVersion("Python interpreter is not found on the system.")
     if first or len(found_interpreters) == 1:
         selected_python = found_interpreters[0]
     else:
