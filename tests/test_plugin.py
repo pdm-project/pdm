@@ -1,9 +1,13 @@
+from typing import Any, Callable
 from unittest import mock
 
 from pip._vendor import pkg_resources
+from pytest_mock.plugin import MockerFixture
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.core import Core
 from pdm.project.config import ConfigItem
+from tests.conftest import TestProject
 
 
 class HelloCommand(BaseCommand):
@@ -17,25 +21,27 @@ class HelloCommand(BaseCommand):
         print(greeting)
 
 
-def new_command(core):
+def new_command(core: Core) -> None:
     core.register_command(HelloCommand, "hello")
 
 
-def replace_command(core):
+def replace_command(core: Core) -> None:
     core.register_command(HelloCommand, "info")
 
 
-def add_new_config(core):
+def add_new_config(core: Core) -> None:
     core.add_config("foo", ConfigItem("Test config", "bar"))
 
 
-def make_entry_point(plugin):
+def make_entry_point(plugin: Callable) -> Any:
     ret = mock.Mock()
     ret.load.return_value = plugin
     return ret
 
 
-def test_plugin_new_command(invoke, mocker, project):
+def test_plugin_new_command(
+    invoke: Callable, mocker: MockerFixture, project: TestProject
+) -> None:
     mocker.patch.object(
         pkg_resources, "iter_entry_points", return_value=[make_entry_point(new_command)]
     )
@@ -49,7 +55,9 @@ def test_plugin_new_command(invoke, mocker, project):
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_plugin_replace_command(invoke, mocker, project):
+def test_plugin_replace_command(
+    invoke: Callable, mocker: MockerFixture, project: TestProject
+) -> None:
     mocker.patch.object(
         pkg_resources,
         "iter_entry_points",
@@ -63,7 +71,9 @@ def test_plugin_replace_command(invoke, mocker, project):
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_load_multiple_plugings(invoke, mocker, project):
+def test_load_multiple_plugings(
+    invoke: Callable, mocker: MockerFixture, project: TestProject
+) -> None:
     mocker.patch.object(
         pkg_resources,
         "iter_entry_points",
