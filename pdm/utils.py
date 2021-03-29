@@ -11,9 +11,22 @@ import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from re import Match
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from distlib.wheel import Wheel
+from pip._vendor.packaging.tags import Tag
 from tomlkit.container import Container
 from tomlkit.items import Item
 
@@ -127,7 +140,7 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def is_readonly_property(cls, name):
+def is_readonly_property(cls: Any, name: str) -> Optional[Any]:
     """Tell whether a attribute can't be setattr'ed."""
     attr = getattr(cls, name, None)
     return attr and isinstance(attr, property) and not attr.fset
@@ -140,7 +153,7 @@ def join_list_with(items: List[Any], sep: Any) -> List[Any]:
     return new_items[:-1]
 
 
-def _wheel_supported(self, tags=None):
+def _wheel_supported(self: Any, tags: List[Tag] = None) -> bool:
     # Ignore current platform. Support everything.
     return True
 
@@ -289,7 +302,7 @@ def cd(path: str):
 
 
 @contextmanager
-def temp_environ():
+def temp_environ() -> Iterator:
     environ = os.environ.copy()
     try:
         yield
@@ -358,7 +371,7 @@ def expand_env_vars(credential: str, quote: bool = False) -> str:
     Neither $ENV_VAR and %ENV_VAR is not supported.
     """
 
-    def replace_func(match):
+    def replace_func(match: Match) -> str:
         rv = os.getenv(match.group(1), match.group(0))
         return parse.quote(rv) if quote else rv
 

@@ -1,3 +1,5 @@
+from typing import List
+
 from pdm import termui
 
 
@@ -26,7 +28,7 @@ class PackageIndexError(PdmException):
 
 
 class CandidateInfoNotFound(PdmException):
-    def __init__(self, candidate):
+    def __init__(self, candidate) -> None:
         message = (
             "No metadata information is available for "
             f"{termui.green(str(candidate))}."
@@ -36,11 +38,11 @@ class CandidateInfoNotFound(PdmException):
 
 
 class ExtrasError(UserWarning):
-    def __init__(self, extras):
+    def __init__(self, extras: List[str]) -> None:
         super().__init__()
         self.extras = tuple(extras)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Extras not found: {self.extras}"
 
 
@@ -53,7 +55,7 @@ class InstallationError(PdmException):
 
 
 class NoConfigError(PdmException, KeyError):
-    def __init__(self, key):
+    def __init__(self, key: str) -> None:
         super().__init__("No such config item: {}".format(key))
 
 
