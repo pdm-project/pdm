@@ -1,0 +1,1 @@
+Skip the first prompt of `pdm init`
