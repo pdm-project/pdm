@@ -24,7 +24,6 @@ license = {text = "MIT"}
 requires-python = ">=3.7"
 
 dependencies = []
-dev-dependencies = []
 ```
 
 If `pyproject.toml` is already present, it will be updated with the metadata. The metadata format follows the
@@ -36,22 +35,43 @@ For details of the meaning of each field in `pyproject.toml`, please refer to [P
 
 ```console
 $ pdm add requests
-$ pdm add -d pytest
 ```
 
 `pdm add` can be followed by one or several dependencies, and the dependency specification is described in
 [PEP 508](https://www.python.org/dev/peps/pep-0508/).
-There are two groups of dependencies: packages will be added to `project.dependencies` by default or `project.dev-dependencies`
-if `-d/--dev` option is passed to the `pdm add` command.
 
-PDM also allows extra dependency groups by providing `-s/--section <name>` option, and the dependencies will appear in
-`project.optional-dependencies.<name>` in the project file, respectively.
+PDM also allows extra dependency groups by providing `-s/--section <name>` option, and those dependencies will go to
+`[project.optional-dependencies.<name>]` table in the project file, respectively.
 
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see
 the resolved result of all dependencies.
 
 Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 (just like `pip install -e <local project path>` would) using `pdm add -e/--editable <local project path>`.
+
+## Add development only dependencies
+
+_New in 1.5.0_
+
+PDM also supports defining groups of dependencies that are useful for development. They can be classified as different groups,
+e.g. some for testing and others for linting. We usually don't want these dependencies appear in the distribution's metadata
+so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
+
+```console
+$ pdm add -ds test pytest
+```
+
+This will result in a pyproject.toml as following:
+
+```toml
+[tool.pdm.dev-dependencies]
+test = ["pytest"]
+```
+
+For backward-compatibility, if `-s/--section` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
+
+!!! NOTE
+    The group names in `[tool.pdm.dev-dependencies]` MUST NOT conflict with those in `[project.optional-dependencies]`.
 
 ### Save version specifiers
 
@@ -77,6 +97,29 @@ To update the specified package(s):
 $ pdm update requests
 ```
 
+To update multiple sections of dependencies:
+
+```console
+$ pdm update -s security -s http
+```
+
+To update a given package in the specified section:
+
+```console
+$ pdm update -s security cryptography
+```
+
+If the section is not given, PDM will search for the requirement in the default dependencies set and raises an error if none is found.
+
+To update package in development dependencies:
+
+```console
+# Update all dev-dependencies
+$ pdm update -d
+# Update the specified group of dev-dependencies
+$ pdm update -ds test pytest
+```
+
 ### About update strategy
 
 Similarly, PDM also provides 2 different behaviors of updating dependencies and sub-dependencies，
@@ -91,15 +134,31 @@ which is given by `--update-<strategy>` option:
 To remove existing dependencies from project file and the library directory:
 
 ```console
+# Remove requests from the default dependencies
 $ pdm remove requests
+# Remove h11 from the 'web' optional group
+$ pdm remove -s web h11
+# Remove pytest-cov from the `test` dev dependencies group
+$ pdm remove -ds test pytest-cov
 ```
 
-## Synchronize the project packages with lock file
+## Install the packages pinned in lock file
 
 There are two similar commands to do this job with a slight difference:
 
+```console
+# Install all default dependencies:
+$ pdm install
+# Install default + web optional dependencies:
+$ pdm install -s web
+# Install default + all dev dependencies
+$ pdm install -d
+# Install web dependencies ONLY(without default dependencies):
+$ pdm install --no-default -s web
+```
+
 - `pdm install` will check the lock file and relock if it mismatches with project file, then install.
-- `pdm sync` install dependencies in the lock file and will error out if it doesn't exist.
+- `pdm sync` installs dependencies in the lock file and will error out if it doesn't exist.
   Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
 
 ## Show what packages are installed

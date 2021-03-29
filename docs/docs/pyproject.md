@@ -3,11 +3,11 @@
 ## Project metadata
 
 PDM reads the project's metadata following the standardized format of [PEP 621](https://www.python.org/dev/peps/pep-0621/).
-View the PEP for the detailed specification.
+View the PEP for the detailed specification. These metadata are stored in `[project]` table of `pyproject.toml`.
 
 _In the following part of this document, metadata should be written under `[project]` table if not given explicitly._
 
-## Determine the package version dynamically
+### Determine the package version dynamically
 
 You can specify a file source for `version` field like: `version = {from = "pdm/__init__.py"}`, in this form,
 the version will be read from the `__version__` variable in that file.
@@ -25,45 +25,7 @@ In either case, you MUST also include `version` in `dynamic` field, or the backe
 dynamic = ["version"]
 ```
 
-## Include and exclude package files
-
-The way of specifying include and exclude files are simple, they are given as a list of glob patterns:
-
-```toml
-includes = [
-    "**/*.json",
-    "mypackage/",
-]
-excludes = [
-    "mypackage/_temp/*"
-]
-```
-
-If neither `includes` or `excludes` is given, PDM is also smart enough to include top level packages and all data files in them.
-Packages can also lie in `src` directory that PDM can find it.
-
-## Select another package directory to look for packages
-
-Similar to `setuptools`' `package_dir` setting, one can specify another package directory, such as `src`, in `pyproject.toml` easily:
-
-```toml
-package-dir = "src"
-```
-
-If no package directory is given, PDM can also recognize `src` as the `package-dir` implicitly if:
-
-1. `src/__init__.py` doesn't exist, meaning it is not a valid Python package, and
-2. There exist some packages under `src/*`.
-
-## Implicit namespace packages
-
-As specified in [PEP 420](https://www.python.org/dev/peps/pep-0420), a directory will be recognized as a namespace package if:
-
-1. `<package>/__init__.py` doesn't exist, and
-2. There exist normal packages and/or other namespace packages under `<package>/*`, and
-2. `<package>` is not specified as `package-dir`
-
-## Dependency specification
+### Dependency specification
 
 The `project.dependencies` is an array of dependency specification strings following the [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and [PEP 508](https://www.python.org/dev/peps/pep-0508/).
@@ -98,11 +60,6 @@ dependencies = [
 ]
 ```
 
-!!! note "About editable installation"
-    One can have editable installation and normal installation for the same package. The one that comes at last wins.
-    However, editable dependencies WON'T be included in the metadata of the built artifacts since they are not valid
-    PEP 508 strings. They only exist for development purpose.
-
 ### Optional dependencies
 
 You can have some requirements optional, which is similar to `setuptools`' `extras_require` parameter.
@@ -125,27 +82,7 @@ $ pdm install -s socks
 
 `-s` option can be given multiple times to include more than one groups.
 
-### Development dependencies
-
-You can have some development only dependencies, which is the same as `package.json`'s `dev-dependencies` field:
-
-```toml
-[project]
-
-dev-dependencies = [
-    "pytest",
-    "flake8",
-    "black"
-]
-```
-
-To install all of them:
-
-```bash
-$ pdm install -d
-```
-
-## Console scripts
+### Console scripts
 
 The following content:
 
@@ -166,7 +103,7 @@ entry_points = {
 
 Also, `[project.gui-scripts]` will be translated to `gui_scripts` entry points group in `setuptools` style.
 
-## Entry points
+### Entry points
 
 Other types of entry points are given by `[project.entry-points.<type>]` section, with the same
 format of `[project.scripts]`:
@@ -176,7 +113,77 @@ format of `[project.scripts]`:
 myplugin = "mypackage.plugin:pytest_plugin"
 ```
 
-## Build C extensions
+## PDM specific settings
+
+There are also some useful settings that should be shipped with `pyproject.toml`. These settings are defined in `[tool.pdm]` table.
+
+### Development dependencies
+
+You can have several groups of development only dependencies. Unlike `optional-dependencies`, they won't appear in the package distribution metadata such as `PKG-INFO` or `METADATA`.
+And the package index won't be aware of these dependencies. The schema is similar to that of `optional-dependencies`, except that it is in `tool.pdm` table.
+
+```toml
+[tool.pdm.dev-dependencies]
+lint = [
+    "flake8",
+    "black"
+]
+test = ["pytest", "pytest-cov]
+doc = ["mkdocs"]
+```
+
+To install all of them:
+
+```bash
+$ pdm install -d
+```
+
+For more CLI usage, please refer to [Manage Dependencies](usage/dependency.md)
+
+### Include and exclude package files
+
+The way of specifying include and exclude files are simple, they are given as a list of glob patterns:
+
+```toml
+includes = [
+    "**/*.json",
+    "mypackage/",
+]
+excludes = [
+    "mypackage/_temp/*"
+]
+```
+
+If neither `includes` or `excludes` is given, PDM is also smart enough to include top level packages and all data files in them.
+Packages can also lie in `src` directory that PDM can find it.
+
+### Select another package directory to look for packages
+
+Similar to `setuptools`' `package_dir` setting, one can specify another package directory, such as `src`, in `pyproject.toml` easily:
+
+```toml
+package-dir = "src"
+```
+
+If no package directory is given, PDM can also recognize `src` as the `package-dir` implicitly if:
+
+1. `src/__init__.py` doesn't exist, meaning it is not a valid Python package, and
+2. There exist some packages under `src/*`.
+
+### Implicit namespace packages
+
+As specified in [PEP 420](https://www.python.org/dev/peps/pep-0420), a directory will be recognized as a namespace package if:
+
+1. `<package>/__init__.py` doesn't exist, and
+2. There exist normal packages and/or other namespace packages under `<package>/*`, and
+3. `<package>` is not specified as `package-dir`
+
+!!! note "About editable installation"
+    One can have editable installation and normal installation for the same package. The one that comes at last wins.
+    However, editable dependencies WON'T be included in the metadata of the built artifacts since they are not valid
+    PEP 508 strings. They only exist for development purpose.
+
+### Build C extensions
 
 Currently, building C extensions still relies on `setuptools`. You should write a python script which contains
 a function named `build` and accepts the parameter dictionary of `setup()` as the only argument.
@@ -198,6 +205,6 @@ Now, specify the build script path via `build` in the `pyproject.toml`:
 
 ```toml
 # pyproject.toml
-[project]
+[tool.pdm]
 build = "build.py"
 ```

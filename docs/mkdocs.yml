@@ -16,16 +16,16 @@ theme:
 nav:
   - Home: index.md
   - Usage:
-      - Manage Dependencies: dependency.md
-      - Manage Project: project.md
-      - pyproject.toml file: pyproject.md
-      - Advanced Usage: advanced.md
+      - Manage Dependencies: usage/dependency.md
+      - Manage Project: usage/project.md
+      - Advanced Usage: usage/advanced.md
+  - pyproject.toml file: pyproject.md
   - Configuration: configuration.md
   - Plugins:
-    - plugin.md
+      - plugin.md
   - Development:
-    - contributing.md
-    - changelog.md
+      - contributing.md
+      - changelog.md
 
 markdown_extensions:
   - pymdownx.highlight:
