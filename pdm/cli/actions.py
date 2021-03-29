@@ -418,7 +418,6 @@ def do_use(
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    project.core.ui.echo("Please enter the Python interpreter to use")
 
     def version_matcher(py_version):
         return project.python_requires.contains(str(py_version.version))
@@ -433,6 +432,7 @@ def do_use(
     if first or len(found_interpreters) == 1:
         selected_python = found_interpreters[0]
     else:
+        project.core.ui.echo("Please enter the Python interpreter to use")
         for i, py_version in enumerate(found_interpreters):
             python_version = str(py_version.version)
             is_64bit = py_version.get_architecture() == "64bit"
