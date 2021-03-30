@@ -67,7 +67,6 @@ release = "python tasks/release.py"
 test = "pytest tests/"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
-format = {shell = "black ./pdm ./tests && isort ./pdm ./tests && flake8 ./pdm ./tests"}
 typecheck = "mypy ./pdm ./tests"
 
 [tool.black]
