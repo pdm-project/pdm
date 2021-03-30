@@ -5,7 +5,9 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from tomlkit.items import Array, String, Table
 
 from pdm import termui
 from pdm.cli.actions import PEP582_PATH
@@ -84,7 +86,9 @@ class Command(BaseCommand):
         else:
             os.execv(expanded_command, expanded_args)
 
-    def _normalize_script(self, script):
+    def _normalize_script(
+        self, script: Any
+    ) -> Tuple[str, Union[Array, String], Union[Dict[str, String], Dict[str, Table]]]:
         if not getattr(script, "items", None):
             # Regard as the same as {cmd = ... }
             kind = "cmd"

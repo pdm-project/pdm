@@ -50,7 +50,7 @@ class SetupReader:
             and not result["python_requires"]
         )
 
-    def read_pyproject_toml(self, filepath):
+    def read_pyproject_toml(self, filepath: Path) -> Dict[str, Any]:
         from pdm.project.metadata import MutableMetadata
 
         try:

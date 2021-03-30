@@ -1,13 +1,18 @@
 import pytest
+from _pytest.recwarn import WarningsRecorder
 
+from pdm.core import Core
 from pdm.exceptions import ExtrasError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
 from pdm.project.core import Project
 from tests import FIXTURES
+from tests.conftest import MockVersionControl, TestProject
 
 
-def test_parse_local_directory_metadata(project, is_editable):
+def test_parse_local_directory_metadata(
+    project: TestProject, is_editable: bool
+) -> None:
     requirement_line = f"{(FIXTURES / 'projects/demo').as_posix()}"
     req = parse_requirement(requirement_line, is_editable)
     candidate = Candidate(req, project.environment)
@@ -19,7 +24,9 @@ def test_parse_local_directory_metadata(project, is_editable):
     assert candidate.version == "0.0.1"
 
 
-def test_parse_vcs_metadata(project, is_editable, vcs):
+def test_parse_vcs_metadata(
+    project: TestProject, is_editable: bool, vcs: MockVersionControl
+) -> None:
     requirement_line = "git+https://github.com/test-root/demo.git@master#egg=demo"
     req = parse_requirement(requirement_line, is_editable)
     candidate = Candidate(req, project.environment)
@@ -44,7 +51,7 @@ def test_parse_vcs_metadata(project, is_editable, vcs):
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}",
     ],
 )
-def test_parse_artifact_metadata(requirement_line, project):
+def test_parse_artifact_metadata(requirement_line: str, project: TestProject) -> None:
     req = parse_requirement(requirement_line)
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == [
@@ -55,7 +62,7 @@ def test_parse_artifact_metadata(requirement_line, project):
     assert candidate.version == "0.0.1"
 
 
-def test_parse_metadata_with_extras(project):
+def test_parse_metadata_with_extras(project: TestProject) -> None:
     req = parse_requirement(
         f"demo[tests,security] @ file://"
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
@@ -70,7 +77,7 @@ def test_parse_metadata_with_extras(project):
     ]
 
 
-def test_parse_remote_link_metadata(project):
+def test_parse_remote_link_metadata(project: TestProject) -> None:
     req = parse_requirement(
         "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
@@ -84,7 +91,7 @@ def test_parse_remote_link_metadata(project):
     assert candidate.version == "0.0.1"
 
 
-def test_extras_warning(project, recwarn):
+def test_extras_warning(project: TestProject, recwarn: WarningsRecorder) -> None:
     req = parse_requirement(
         "demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
@@ -100,7 +107,7 @@ def test_extras_warning(project, recwarn):
     assert candidate.version == "0.0.1"
 
 
-def test_parse_abnormal_specifiers(project):
+def test_parse_abnormal_specifiers(project: TestProject) -> None:
     req = parse_requirement(
         "http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"
     )
@@ -118,7 +125,7 @@ def test_parse_abnormal_specifiers(project):
         "-e ${PROJECT_ROOT}/tests/fixtures/projects/demo",
     ],
 )
-def test_expand_project_root_in_url(req_str, core):
+def test_expand_project_root_in_url(req_str: str, core: Core) -> None:
     project = Project(FIXTURES.parent.parent)
     project.core = core
     if req_str.startswith("-e "):
@@ -137,7 +144,7 @@ def test_expand_project_root_in_url(req_str, core):
         assert "${PROJECT_ROOT}" in lockfile_entry["url"]
 
 
-def test_parse_project_file_on_build_error(project):
+def test_parse_project_file_on_build_error(project: TestProject) -> None:
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == [
@@ -148,7 +155,7 @@ def test_parse_project_file_on_build_error(project):
     assert candidate.version == "0.0.1"
 
 
-def test_parse_project_file_on_build_error_no_dep(project):
+def test_parse_project_file_on_build_error_no_dep(project: TestProject) -> None:
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure-no-dep').as_posix()}")
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == []
@@ -156,7 +163,7 @@ def test_parse_project_file_on_build_error_no_dep(project):
     assert candidate.version == "0.0.1"
 
 
-def test_parse_poetry_project_metadata(project, is_editable):
+def test_parse_poetry_project_metadata(project: TestProject, is_editable: bool) -> None:
     req = parse_requirement(
         f"{(FIXTURES / 'projects/poetry-demo').as_posix()}", is_editable
     )
@@ -166,7 +173,7 @@ def test_parse_poetry_project_metadata(project, is_editable):
     assert candidate.version == "0.1.0"
 
 
-def test_parse_flit_project_metadata(project, is_editable):
+def test_parse_flit_project_metadata(project: TestProject, is_editable: bool) -> None:
     req = parse_requirement(
         f"{(FIXTURES / 'projects/flit-demo').as_posix()}", is_editable
     )

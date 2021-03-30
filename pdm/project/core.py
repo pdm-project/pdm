@@ -13,7 +13,8 @@ import tomlkit
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 from pythonfinder.models.python import PythonVersion
-from tomlkit.items import Comment, Whitespace
+from tomlkit.items import Comment, Table, Whitespace
+from tomlkit.toml_document import TOMLDocument
 
 from pdm import termui
 from pdm._types import Source
@@ -102,7 +103,7 @@ class Project:
         return self._pyproject
 
     @pyproject.setter
-    def pyproject(self, data):
+    def pyproject(self, data: Union[Dict[str, Table], TOMLDocument]) -> None:
         self._pyproject = data
 
     @property

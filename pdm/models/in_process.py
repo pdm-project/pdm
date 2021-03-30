@@ -6,11 +6,13 @@ import importlib
 import json
 import os
 import subprocess
-from typing import Any, Dict
+from typing import Any, Dict, Tuple, Union
 
 
 @functools.lru_cache()
-def get_python_version(executable, as_string=False, digits=3):
+def get_python_version(
+    executable: str, as_string: bool = False, digits: int = 3
+) -> Tuple[Union[Tuple[int, ...], str], bool]:
     """Get the version of the Python interperter.
 
     :param executable: The path of the python executable

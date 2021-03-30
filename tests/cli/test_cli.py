@@ -2,28 +2,35 @@ import os
 import shutil
 import sys
 from pathlib import Path
+from typing import Callable
 
 import pytest
+from pytest_mock.plugin import MockerFixture
 
 from pdm.cli import actions
 from pdm.models.in_process import get_python_version
 from pdm.models.requirements import parse_requirement
 from pdm.utils import temp_environ
 from tests import FIXTURES
+from tests.conftest import MockWorkingSet, TestProject, TestRepository
 
 
-def test_help_option(invoke):
+def test_help_option(invoke: Callable) -> None:
     result = invoke(["--help"])
     assert "PDM - Python Development Master" in result.output
 
 
-def test_lock_command(project, invoke, mocker):
+def test_lock_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     m = mocker.patch.object(actions, "do_lock")
     invoke(["lock"], obj=project)
     m.assert_called_with(project)
 
 
-def test_install_command(project, invoke, mocker):
+def test_install_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_lock = mocker.patch.object(actions, "do_lock")
     do_sync = mocker.patch.object(actions, "do_sync")
     invoke(["install"], obj=project)
@@ -31,48 +38,60 @@ def test_install_command(project, invoke, mocker):
     do_sync.assert_called_once()
 
 
-def test_sync_command(project, invoke, mocker):
+def test_sync_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_sync = mocker.patch.object(actions, "do_sync")
     invoke(["sync"], obj=project)
     do_sync.assert_called_once()
 
 
-def test_update_command(project, invoke, mocker):
+def test_update_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_update = mocker.patch.object(actions, "do_update")
     invoke(["update"], obj=project)
     do_update.assert_called_once()
 
 
-def test_remove_command(project, invoke, mocker):
+def test_remove_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_remove = mocker.patch.object(actions, "do_remove")
     invoke(["remove", "demo"], obj=project)
     do_remove.assert_called_once()
 
 
-def test_add_command(project, invoke, mocker):
+def test_add_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_add = mocker.patch.object(actions, "do_add")
     invoke(["add", "requests"], obj=project)
     do_add.assert_called_once()
 
 
-def test_build_command(project, invoke, mocker):
+def test_build_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_build = mocker.patch.object(actions, "do_build")
     invoke(["build"], obj=project)
     do_build.assert_called_once()
 
 
-def test_build_global_project_forbidden(invoke):
+def test_build_global_project_forbidden(invoke: Callable) -> None:
     result = invoke(["build", "-g"])
     assert result.exit_code != 0
 
 
-def test_list_command(project, invoke, mocker):
+def test_list_command(
+    project: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     do_list = mocker.patch.object(actions, "do_list")
     invoke(["list"], obj=project)
     do_list.assert_called_once()
 
 
-def test_info_command(project, invoke):
+def test_info_command(project: TestProject, invoke: Callable) -> None:
     result = invoke(["info"], obj=project)
     assert "Project Root:" in result.output
     assert project.root.as_posix() in result.output
@@ -87,22 +106,22 @@ def test_info_command(project, invoke):
     assert result.exit_code == 0
 
 
-def test_info_global_project(invoke):
+def test_info_global_project(invoke: Callable) -> None:
     result = invoke(["info", "-g", "--where"])
     assert "global-project" in result.output.strip()
 
 
-def test_deprecate_global_project(invoke, project):
+def test_deprecate_global_project(invoke: Callable, project: TestProject) -> None:
     result = invoke(["info", "-g", project.root.as_posix()])
     assert "DEPRECATION" in result.stderr
 
 
-def test_global_project_other_location(invoke, project):
+def test_global_project_other_location(invoke: Callable, project: TestProject) -> None:
     result = invoke(["info", "-g", "-p", project.root.as_posix(), "--where"])
     assert result.stdout.strip() == project.root.as_posix()
 
 
-def test_uncaught_error(invoke, mocker):
+def test_uncaught_error(invoke: Callable, mocker: MockerFixture) -> None:
     mocker.patch.object(actions, "do_list", side_effect=RuntimeError("test error"))
     result = invoke(["list"])
     assert "[RuntimeError]: test error" in result.stderr
@@ -111,7 +130,7 @@ def test_uncaught_error(invoke, mocker):
     assert isinstance(result.exception, RuntimeError)
 
 
-def test_use_command(project, invoke):
+def test_use_command(project: TestProject, invoke: Callable) -> None:
     python_path = Path(shutil.which("python")).as_posix()
     result = invoke(["use", "-f", "python"], obj=project)
     assert result.exit_code == 0
@@ -127,13 +146,18 @@ def test_use_command(project, invoke):
     assert result.exit_code == 1
 
 
-def test_use_python_by_version(project, invoke):
+def test_use_python_by_version(project: TestProject, invoke: Callable) -> None:
     python_version = ".".join(map(str, sys.version_info[:2]))
     result = invoke(["use", "-f", python_version], obj=project)
     assert result.exit_code == 0
 
 
-def test_install_with_lockfile(project, invoke, working_set, repository):
+def test_install_with_lockfile(
+    project: TestProject,
+    invoke: Callable,
+    working_set: MockWorkingSet,
+    repository: TestRepository,
+) -> None:
     result = invoke(["lock", "-v"], obj=project)
     assert result.exit_code == 0
     result = invoke(["install"], obj=project)
@@ -146,7 +170,9 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
     assert project.is_lockfile_hash_match()
 
 
-def test_init_command(project_no_init, invoke, mocker):
+def test_init_command(
+    project_no_init: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     mocker.patch(
         "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
@@ -166,7 +192,9 @@ def test_init_command(project_no_init, invoke, mocker):
     )
 
 
-def test_init_command_library(project_no_init, invoke, mocker):
+def test_init_command_library(
+    project_no_init: TestProject, invoke: Callable, mocker: MockerFixture
+) -> None:
     mocker.patch(
         "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
@@ -188,7 +216,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
     )
 
 
-def test_config_command(project, invoke):
+def test_config_command(project: TestProject, invoke: Callable) -> None:
     result = invoke(["config"], obj=project)
     assert result.exit_code == 0
     assert "python.use_pyenv = True" in result.output
@@ -198,7 +226,7 @@ def test_config_command(project, invoke):
     assert "Use the pyenv interpreter" in result.output
 
 
-def test_config_get_command(project, invoke):
+def test_config_get_command(project: TestProject, invoke: Callable) -> None:
     result = invoke(["config", "python.use_pyenv"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == "True"
@@ -207,7 +235,7 @@ def test_config_get_command(project, invoke):
     assert result.exit_code != 0
 
 
-def test_config_set_command(project, invoke):
+def test_config_set_command(project: TestProject, invoke: Callable) -> None:
     result = invoke(["config", "python.use_pyenv", "false"], obj=project)
     assert result.exit_code == 0
     result = invoke(["config", "python.use_pyenv"], obj=project)
@@ -220,7 +248,7 @@ def test_config_set_command(project, invoke):
     assert result.exit_code != 0
 
 
-def test_config_env_var_shadowing(project, invoke):
+def test_config_env_var_shadowing(project: TestProject, invoke: Callable) -> None:
     with temp_environ():
         os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
         result = invoke(["config", "pypi.url"], obj=project)
@@ -238,7 +266,9 @@ def test_config_env_var_shadowing(project, invoke):
         assert result.output.strip() == "https://testpypi.org/pypi"
 
 
-def test_config_project_global_precedence(project, invoke):
+def test_config_project_global_precedence(
+    project: TestProject, invoke: Callable
+) -> None:
     invoke(["config", "python.path", "/path/to/foo"], obj=project)
     invoke(["config", "-l", "python.path", "/path/to/bar"], obj=project)
 
@@ -255,21 +285,23 @@ def test_config_project_global_precedence(project, invoke):
         "projects/flit-demo/pyproject.toml",
     ],
 )
-def test_import_other_format_file(project, invoke, filename):
+def test_import_other_format_file(
+    project: TestProject, invoke: Callable, filename: str
+) -> None:
     requirements_file = FIXTURES / filename
     result = invoke(["import", str(requirements_file)], obj=project)
     assert result.exit_code == 0
 
 
 @pytest.mark.pypi
-def test_search_package(project, invoke):
+def test_search_package(project: TestProject, invoke: Callable) -> None:
     result = invoke(["search", "requests"], obj=project)
     assert result.exit_code == 0
     assert len(result.output.splitlines()) > 0
 
 
 @pytest.mark.pypi
-def test_show_package_on_pypi(invoke):
+def test_show_package_on_pypi(invoke: Callable) -> None:
     result = invoke(["show", "ipython"])
     assert result.exit_code == 0
     assert "ipython" in result.output.splitlines()[0]
@@ -279,7 +311,9 @@ def test_show_package_on_pypi(invoke):
     assert "requests" in result.output.splitlines()[0]
 
 
-def test_export_to_requirements_txt(invoke, fixture_project):
+def test_export_to_requirements_txt(
+    invoke: Callable, fixture_project: Callable
+) -> None:
     project = fixture_project("demo-package")
     requirements_txt = project.root / "requirements.txt"
     requirements_no_hashes = project.root / "requirements_simple.txt"
@@ -306,13 +340,15 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     ).read_text() == requirements_txt.read_text()
 
 
-def test_completion_command(invoke):
+def test_completion_command(invoke: Callable) -> None:
     result = invoke(["completion", "bash"])
     assert result.exit_code == 0
     assert "(completion)" in result.output
 
 
-def test_lock_legacy_project(invoke, fixture_project, repository):
+def test_lock_legacy_project(
+    invoke: Callable, fixture_project: Callable, repository: TestRepository
+) -> None:
     project = fixture_project("demo-legacy")
     result = invoke(["lock"], obj=project)
     assert result.exit_code == 0

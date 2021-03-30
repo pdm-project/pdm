@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import functools
 import operator
 import os
 import re
+from argparse import Namespace
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import toml
 
@@ -16,10 +21,14 @@ from pdm.formats.base import (
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+
+if TYPE_CHECKING:
+    from pdm.project.core import Project
+
 from pdm.utils import cd
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Optional[Project], filename: Union[Path, str]) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -32,7 +41,7 @@ def check_fingerprint(project, filename):
 VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")
 
 
-def _convert_specifier(version):
+def _convert_specifier(version: str) -> str:
     parts = []
     for op, version in VERSION_RE.findall(str(version)):
         if op == "~":
@@ -48,14 +57,14 @@ def _convert_specifier(version):
     return ",".join(parts)
 
 
-def _convert_python(python):
+def _convert_python(python: str) -> PySpecSet:
     if not python:
         return PySpecSet()
     parts = [PySpecSet(_convert_specifier(s)) for s in python.split("||")]
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(name, req_dict):
+def _convert_req(name: str, req_dict: Union[Dict[str, str], List[str], str]) -> str:
     if not getattr(req_dict, "items", None):
         return Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
     req_dict = dict(req_dict)
@@ -166,7 +175,11 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
 
-def convert(project, filename, options):
+def convert(
+    project: Optional[Project],
+    filename: Union[Path, str],
+    options: Optional[Namespace],
+) -> Tuple[Dict[str, Any], Dict]:
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):

@@ -2,11 +2,13 @@ import dataclasses
 import os
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
+from typing import Any, Callable, Dict, Iterable, Optional, TypeVar, Union
 
 import appdirs
 import click
 import tomlkit
+from tomlkit.container import Container
+from tomlkit.items import String
 
 from pdm import termui
 from pdm.exceptions import NoConfigError
@@ -21,7 +23,9 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     E.g. ["python"]["path"] will be loaded as "python.path" key.
     """
 
-    def get_item(sub_data):
+    def get_item(
+        sub_data: Union[Dict[str, bool], Dict[str, Container], Container]
+    ) -> Union[Dict[str, bool], Dict[str, String]]:
         result = {}
         for k, v in sub_data.items():
             if getattr(v, "items", None) is not None:
@@ -130,7 +134,7 @@ class Config(MutableMapping):
     del pypi_url, verify_ssl
 
     @classmethod
-    def get_defaults(cls):
+    def get_defaults(cls) -> Dict[str, Any]:
         return {k: v.default for k, v in cls._config_map.items() if v.should_show()}
 
     @classmethod

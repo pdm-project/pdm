@@ -1,4 +1,7 @@
 import os
+from typing import Any, List, Optional
+
+from pdm.project import Project
 
 
 def check_fingerprint(project, filename):
@@ -9,7 +12,7 @@ def convert(project, filename, options):
     raise NotImplementedError()
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> str:
     from pdm.pep517.base import Builder
 
     builder = Builder(project.root)

@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 import multiprocessing
 import traceback
+from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
@@ -18,11 +21,11 @@ from pdm.models.requirements import strip_extras
 class DummyFuture:
     _NOT_SET = object()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._result = self._NOT_SET
         self._exc = None
 
-    def set_result(self, result):
+    def set_result(self, result: Candidate) -> None:
         self._result = result
 
     def set_exception(self, exc):
@@ -31,10 +34,10 @@ class DummyFuture:
     def result(self):
         return self._result
 
-    def exception(self):
+    def exception(self) -> Optional[Any]:
         return self._exc
 
-    def add_done_callback(self, func):
+    def add_done_callback(self, func: Callable) -> None:
         func(self)
 
 
@@ -43,7 +46,7 @@ class DummyExecutor:
     functions are called and awaited for the result
     """
 
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func: Callable, *args: str, **kwargs: Any) -> DummyFuture:
         future = DummyFuture()
         try:
             future.set_result(func(*args, **kwargs))
@@ -51,10 +54,10 @@ class DummyExecutor:
             future.set_exception(exc)
         return future
 
-    def __enter__(self):
+    def __enter__(self) -> DummyExecutor:
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
         return
 
 
@@ -78,7 +81,11 @@ class Synchronizer:
         self.ui = environment.project.core.ui
 
     @contextlib.contextmanager
-    def create_executor(self):
+    def create_executor(
+        self,
+    ) -> Iterator[
+        Union[Iterator, Iterator[ThreadPoolExecutor], Iterator[DummyExecutor]]
+    ]:
         if self.parallel:
             executor = ThreadPoolExecutor(
                 max_workers=min(multiprocessing.cpu_count(), 8)
@@ -287,7 +294,9 @@ class Synchronizer:
         errors: List[str] = []
         failed_jobs: List[Tuple[str, str]] = []
 
-        def update_progress(future, kind, key):
+        def update_progress(
+            future: Union[Future, DummyFuture], kind: str, key: str
+        ) -> None:
             if future.exception():
                 failed_jobs.append((kind, key))
                 error = future.exception()

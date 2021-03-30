@@ -2,21 +2,24 @@ from __future__ import annotations
 
 import argparse
 import os
+from argparse import _SubParsersAction
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import cfonts
 import tomlkit
 from packaging.specifiers import SpecifierSet
+from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
+from tomlkit.items import String
 
 from pdm import termui
 from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.environment import WorkingSet
-from pdm.models.requirements import Requirement, strip_extras
+from pdm.models.requirements import NamedRequirement, Requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
@@ -30,7 +33,9 @@ if TYPE_CHECKING:
 
 
 class PdmFormatter(argparse.HelpFormatter):
-    def _format_action(self, action):
+    def _format_action(
+        self, action: Union[_SubParsersAction, _SubParsersAction._ChoicesPseudoAction]
+    ) -> str:
         # determine the required width and the entry label
         help_position = min(self._action_max_length + 2, self._max_help_position)
         help_width = max(self._width - help_position, 11)
@@ -78,7 +83,7 @@ class PdmFormatter(argparse.HelpFormatter):
 
 
 class PdmParser(argparse.ArgumentParser):
-    def format_help(self):
+    def format_help(self) -> str:
         formatter = self._get_formatter()
 
         if getattr(self, "is_root", False):
@@ -125,18 +130,20 @@ class PdmParser(argparse.ArgumentParser):
 class Package:
     """An internal class for the convenience of dependency graph building."""
 
-    def __init__(self, name, version, requirements):
+    def __init__(
+        self, name: str, version: String, requirements: Dict[str, NamedRequirement]
+    ) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
         self.requirements = requirements
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
     def __repr__(self):
         return f"<Package {self.name}=={self.version}>"
 
-    def __eq__(self, value):
+    def __eq__(self, value: Package) -> bool:
         return self.name == value.name
 
 
@@ -146,7 +153,7 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
     graph.add(None)  # sentinel parent of top nodes.
     node_with_extras = set()
 
-    def add_package(key, dist):
+    def add_package(key: str, dist: Distribution) -> Package:
         name, extras = strip_extras(key)
         extras = extras or ()
         reqs = {}

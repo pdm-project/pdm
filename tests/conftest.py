@@ -339,24 +339,3 @@ def invoke() -> Callable:
 @pytest.fixture()
 def core() -> Core:
     return main
-
-
-def pytest_collection_finish(session):
-    from pyannotate_runtime import collect_types
-
-    collect_types.init_types_collection()
-
-
-@pytest.fixture(autouse=True)
-def collect_types_fixture():
-    from pyannotate_runtime import collect_types
-
-    collect_types.start()
-    yield
-    collect_types.stop()
-
-
-def pytest_sessionfinish(session, exitstatus):
-    from pyannotate_runtime import collect_types
-
-    collect_types.dump_stats("type_info.json")

@@ -3,6 +3,7 @@ import argparse
 import click
 
 from pdm import termui
+from pdm.cli.utils import PdmParser
 from pdm.project import Project
 
 
@@ -40,7 +41,7 @@ class ArgumentGroup:
     def add_argument(self, *args, **kwargs):
         self.options.append(Option(*args, **kwargs))
 
-    def add_to_parser(self, parser):
+    def add_to_parser(self, parser: PdmParser) -> None:
         if self.is_mutually_exclusive:
             group = parser.add_mutually_exclusive_group(required=self.required)
         else:

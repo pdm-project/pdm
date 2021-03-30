@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import pytest
 
@@ -56,7 +57,7 @@ REQUIREMENTS = [
 
 
 @pytest.mark.parametrize("req, result", REQUIREMENTS)
-def test_convert_req_dict_to_req_line(req, result):
+def test_convert_req_dict_to_req_line(req: str, result: Optional[str]) -> None:
     r = parse_requirement(req)
     assert r.as_ireq()
     result = result or req
@@ -71,7 +72,7 @@ def test_convert_req_dict_to_req_line(req, result):
         ("./tests", r"The local path (.+)? is not installable"),
     ],
 )
-def test_illegal_requirement_line(line, expected):
+def test_illegal_requirement_line(line: str, expected: str) -> None:
     with pytest.raises(RequirementError, match=expected):
         parse_requirement(line)
 
@@ -79,7 +80,7 @@ def test_illegal_requirement_line(line, expected):
 @pytest.mark.parametrize(
     "line", ["requests >= 2.19.0", "https://github.com/pypa/pip/archive/1.3.1.zip"]
 )
-def test_not_supported_editable_requirement(line):
+def test_not_supported_editable_requirement(line: str) -> None:
     with pytest.raises(
         RequirementError, match="Editable requirement is only supported"
     ):

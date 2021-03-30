@@ -1,9 +1,11 @@
 import ast
 import warnings
+from argparse import Namespace
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import toml
+from tomlkit.items import Array
 
 from pdm.formats.base import (
     MetaConverter,
@@ -12,9 +14,10 @@ from pdm.formats.base import (
     make_array,
     make_inline_table,
 )
+from pdm.project import Project
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Optional[Project], filename: Union[Path, str]) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -24,7 +27,7 @@ def check_fingerprint(project, filename):
     return "tool" in data and "flit" in data["tool"]
 
 
-def _get_author(metadata, type_="author"):
+def _get_author(metadata: Dict[str, Any], type_: str = "author") -> Array:
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
     return array_of_inline_tables([{"name": name, "email": email}])
@@ -131,7 +134,11 @@ class FlitMetaConverter(MetaConverter):
         return value.get("include")
 
 
-def convert(project, filename, options):
+def convert(
+    project: Optional[Project],
+    filename: Union[Path, str],
+    options: Optional[Namespace],
+) -> Tuple[Dict[str, Any], Dict]:
     with open(filename, encoding="utf-8") as fp:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter(action="always", category=UserWarning)

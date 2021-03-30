@@ -1,8 +1,11 @@
 import abc
 import collections
 import re
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Union
 
 import tomlkit
+from tomlkit.items import Array, InlineTable
 
 
 def convert_from(field=None, name=None):
@@ -32,25 +35,27 @@ class _MetaConverterMeta(abc.ABCMeta):
 class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
-    def __init__(self, source, filename=None):
+    def __init__(
+        self, source: Dict[str, Any], filename: Union[None, Path, str] = None
+    ) -> None:
         self._data = {}
         self.filename = filename
         self.settings = {}
         self._convert(dict(source))
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: str) -> Any:
         return self._data[k]
 
     def __len__(self):
         return len(self._data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         return iter(self._data)
 
-    def get_settings(self, source):
+    def get_settings(self, source: Dict[str, Any]) -> None:
         pass
 
-    def _convert(self, source):
+    def _convert(self, source: Dict[str, Any]) -> None:
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:
                 continue
@@ -79,14 +84,16 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
 NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 
-def make_inline_table(data):
+def make_inline_table(data: Dict[str, str]) -> InlineTable:
     """Create an inline table from the given data."""
     table = tomlkit.inline_table()
     table.update(data)
     return table
 
 
-def make_array(data, multiline=False):
+def make_array(
+    data: Union[List[str], List[InlineTable]], multiline: bool = False
+) -> Union[List, Array]:
     if not data:
         return []
     array = tomlkit.array()
@@ -96,11 +103,13 @@ def make_array(data, multiline=False):
     return array
 
 
-def array_of_inline_tables(value, multiline=True):
+def array_of_inline_tables(
+    value: List[Dict[str, str]], multiline: bool = True
+) -> Array:
     return make_array([make_inline_table(item) for item in value], multiline)
 
 
-def parse_name_email(name_email):
+def parse_name_email(name_email: List[str]) -> Array:
     return array_of_inline_tables(
         [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
     )

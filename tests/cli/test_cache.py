@@ -1,8 +1,12 @@
+from typing import Callable
+
 import pytest
+
+from tests.conftest import TestProject
 
 
 @pytest.fixture
-def prepare_wheel_cache(project):
+def prepare_wheel_cache(project: TestProject) -> None:
     cache_dir = project.cache("wheels")
     (cache_dir / "arbitrary/path").mkdir(parents=True)
     for name in (
@@ -15,7 +19,7 @@ def prepare_wheel_cache(project):
 
 
 @pytest.fixture
-def prepare_http_cache(project):
+def prepare_http_cache(project: TestProject) -> None:
     cache_dir = project.cache("http")
     (cache_dir / "arbitrary/path").mkdir(parents=True)
     for name in (
@@ -28,7 +32,7 @@ def prepare_http_cache(project):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache")
-def test_cache_list(project, invoke):
+def test_cache_list(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "list"], obj=project)
     assert result.exit_code == 0
 
@@ -42,7 +46,7 @@ def test_cache_list(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache")
-def test_cache_list_pattern(project, invoke):
+def test_cache_list_pattern(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "list", "ba*"], obj=project)
     assert result.exit_code == 0
 
@@ -60,7 +64,7 @@ def test_cache_list_pattern(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_remove_pattern(project, invoke):
+def test_cache_remove_pattern(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "remove", "ba*"], obj=project)
     assert result.exit_code == 0
 
@@ -80,7 +84,7 @@ def test_cache_remove_pattern(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_remove_wildcard(project, invoke):
+def test_cache_remove_wildcard(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "remove", "*"], obj=project)
     assert result.exit_code == 0
 
@@ -96,7 +100,7 @@ def test_cache_remove_wildcard(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_clear(project, invoke):
+def test_cache_clear(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "clear"], obj=project)
     assert result.exit_code == 0
 
@@ -112,13 +116,13 @@ def test_cache_clear(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_remove_no_pattern(project, invoke):
+def test_cache_remove_no_pattern(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "remove"], obj=project)
     assert result.exit_code != 0
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_info(project, invoke):
+def test_cache_info(project: TestProject, invoke: Callable) -> None:
     result = invoke(["cache", "info"], obj=project)
     assert result.exit_code == 0
 

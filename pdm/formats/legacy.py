@@ -1,4 +1,7 @@
 import functools
+from argparse import Namespace
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
 
@@ -11,9 +14,10 @@ from pdm.formats.base import (
     parse_name_email,
 )
 from pdm.models.requirements import Requirement
+from pdm.project.core import Project
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Union[Project, Project], filename: Path) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -130,7 +134,9 @@ class LegacyMetaConverter(MetaConverter):
         raise Unset()
 
 
-def convert(project, filename, options):
+def convert(
+    project: Project, filename: Path, options: Optional[Namespace]
+) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
     with open(filename, encoding="utf-8") as fp:
         converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], filename)
         return dict(converter), converter.settings

@@ -109,7 +109,7 @@ class Environment:
         return paths
 
     @contextmanager
-    def activate(self):
+    def activate(self) -> Iterator:
         """Activate the environment. Manipulate the ``PYTHONPATH`` and patches ``pip``
         to be aware of local packages. This method acts like a context manager.
 

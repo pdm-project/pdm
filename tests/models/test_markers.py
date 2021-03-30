@@ -40,5 +40,5 @@ from pdm.models.markers import Marker
         ),
     ],
 )
-def test_marker_op(expression, expected):
+def test_marker_op(expression: Marker, expected: str) -> None:
     assert str(expression) == expected
