@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
+from os import PathLike
 from pathlib import Path
 from re import Match
 from typing import (
@@ -23,14 +24,11 @@ from typing import (
     TextIO,
     Tuple,
     TypeVar,
-    Union,
 )
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
 from pip._vendor.requests import Session
-from tomlkit.container import Container
-from tomlkit.items import Item
 
 from pdm._types import Source
 from pdm.models.pip_shims import (
@@ -274,7 +272,7 @@ def get_in_project_venv_python(root: Path) -> Optional[Path]:
 
 
 @contextmanager
-def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"):
+def atomic_open_for_write(filename: PathLike, *, encoding: str = "utf-8"):
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
     filename = str(filename)
     try:
@@ -351,7 +349,7 @@ def populate_link(
         ireq.link = link
 
 
-def setdefault(document: Container, key: str, value: Any) -> Item:
+def setdefault(document: Dict, key: str, value: Any) -> Dict:
     """A compatiable dict.setdefault() for tomlkit data structures."""
     if key not in document:
         document[key] = value

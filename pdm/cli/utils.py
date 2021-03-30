@@ -12,14 +12,13 @@ import tomlkit
 from packaging.specifiers import SpecifierSet
 from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
-from tomlkit.items import String
 
 from pdm import termui
 from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.environment import WorkingSet
-from pdm.models.requirements import NamedRequirement, Requirement, strip_extras
+from pdm.models.requirements import Requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
     from typing import Dict, Iterable, List, Optional, Tuple
 
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
-    from tomlkit.container import Container
 
     from pdm.models.candidates import Candidate
 
@@ -131,7 +129,7 @@ class Package:
     """An internal class for the convenience of dependency graph building."""
 
     def __init__(
-        self, name: str, version: String, requirements: Dict[str, NamedRequirement]
+        self, name: str, version: str, requirements: Dict[str, Requirement]
     ) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
@@ -332,7 +330,7 @@ def format_lockfile(
     mapping: Dict[str, Candidate],
     fetched_dependencies: Dict[str, List[Requirement]],
     summary_collection: Dict[str, str],
-) -> Container:
+) -> Dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """

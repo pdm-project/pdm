@@ -7,8 +7,6 @@ import subprocess
 import sys
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from tomlkit.items import Array, String, Table
-
 from pdm import termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
@@ -88,7 +86,7 @@ class Command(BaseCommand):
 
     def _normalize_script(
         self, script: Any
-    ) -> Tuple[str, Union[Array, String], Union[Dict[str, String], Dict[str, Table]]]:
+    ) -> Tuple[str, Union[List[str], str], Dict[str, Union[str, dict]]]:
         if not getattr(script, "items", None):
             # Regard as the same as {cmd = ... }
             kind = "cmd"

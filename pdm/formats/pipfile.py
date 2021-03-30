@@ -2,7 +2,7 @@ import functools
 import operator
 import os
 from argparse import Namespace
-from pathlib import Path
+from os import PathLike
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
@@ -35,12 +35,12 @@ def convert_pipfile_requirement(
     return Requirement.from_req_dict(name, req).as_line()
 
 
-def check_fingerprint(project: Project, filename: Union[Path, str]) -> bool:
+def check_fingerprint(project: Project, filename: PathLike) -> bool:
     return os.path.basename(filename) == "Pipfile"
 
 
 def convert(
-    project: Project, filename: Union[Path, str], options: Optional[Namespace]
+    project: Project, filename: PathLike, options: Optional[Namespace]
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
         data = toml.load(fp)

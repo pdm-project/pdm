@@ -1,7 +1,7 @@
 import hashlib
 import urllib.parse
 from argparse import Namespace
-from pathlib import Path
+from os import PathLike
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
@@ -86,7 +86,7 @@ def parse_requirement_file(
     return ireqs, finder
 
 
-def check_fingerprint(project: Project, filename: Union[Path, str]) -> bool:
+def check_fingerprint(project: Project, filename: PathLike) -> bool:
     import tomlkit
 
     with open(filename, encoding="utf-8") as fp:
@@ -106,7 +106,7 @@ def convert_url_to_source(url: str, name: Optional[str] = None) -> Dict[str, Any
 
 
 def convert(
-    project: Project, filename: Union[Path, str], options: Namespace
+    project: Project, filename: PathLike, options: Namespace
 ) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
     ireqs, finder = parse_requirement_file(str(filename))
     with project.core.ui.logging("build"):

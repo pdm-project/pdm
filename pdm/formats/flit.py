@@ -1,11 +1,11 @@
 import ast
 import warnings
 from argparse import Namespace
+from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
-from tomlkit.items import Array
 
 from pdm.formats.base import (
     MetaConverter,
@@ -17,7 +17,7 @@ from pdm.formats.base import (
 from pdm.project import Project
 
 
-def check_fingerprint(project: Optional[Project], filename: Union[Path, str]) -> bool:
+def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -27,7 +27,7 @@ def check_fingerprint(project: Optional[Project], filename: Union[Path, str]) ->
     return "tool" in data and "flit" in data["tool"]
 
 
-def _get_author(metadata: Dict[str, Any], type_: str = "author") -> Array:
+def _get_author(metadata: Dict[str, Any], type_: str = "author") -> List[str]:
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
     return array_of_inline_tables([{"name": name, "email": email}])
@@ -138,7 +138,7 @@ class FlitMetaConverter(MetaConverter):
 
 def convert(
     project: Optional[Project],
-    filename: Union[Path, str],
+    filename: PathLike,
     options: Optional[Namespace],
 ) -> Tuple[Dict[str, Any], Dict]:
     with open(filename, encoding="utf-8") as fp:

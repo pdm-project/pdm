@@ -5,12 +5,12 @@ import operator
 import os
 import re
 from argparse import Namespace
-from pathlib import Path
+from os import PathLike
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import toml
-from tomlkit.items import Array, InlineTable
 
+from pdm._types import Source
 from pdm.formats.base import (
     MetaConverter,
     Unset,
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 from pdm.utils import cd
 
 
-def check_fingerprint(project: Optional[Project], filename: Union[Path, str]) -> bool:
+def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -91,15 +91,15 @@ def _convert_req(name: str, req_dict: Union[Dict[str, str], List[str], str]) -> 
 
 class PoetryMetaConverter(MetaConverter):
     @convert_from("authors")
-    def authors(self, value: List[str]) -> Array:
+    def authors(self, value: List[str]) -> List[str]:
         return parse_name_email(value)
 
     @convert_from("maintainers")
-    def maintainers(self, value: List[str]) -> Array:
+    def maintainers(self, value: List[str]) -> List[str]:
         return parse_name_email(value)
 
     @convert_from("license")
-    def license(self, value: str) -> InlineTable:
+    def license(self, value: str) -> Dict[str, str]:
         self._data["dynamic"] = ["classifiers"]
         return make_inline_table({"text": value})
 
@@ -127,7 +127,7 @@ class PoetryMetaConverter(MetaConverter):
         return value
 
     @convert_from()
-    def dependencies(self, source: Dict[str, Union[List[str], str]]) -> Array:
+    def dependencies(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
@@ -156,7 +156,7 @@ class PoetryMetaConverter(MetaConverter):
                 Union[Dict[str, str], List[str], str],
             ],
         ],
-    ) -> Array:
+    ) -> List[str]:
         return make_array([_convert_req(key, req) for key, req in value.items()], True)
 
     @convert_from()
@@ -175,7 +175,7 @@ class PoetryMetaConverter(MetaConverter):
         return value
 
     @convert_from("source")
-    def source(self, value: List[Dict[str, str]]) -> None:
+    def source(self, value: List[Source]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
@@ -189,7 +189,7 @@ class PoetryMetaConverter(MetaConverter):
 
 def convert(
     project: Optional[Project],
-    filename: Union[Path, str],
+    filename: PathLike,
     options: Optional[Namespace],
 ) -> Tuple[Dict[str, Any], Dict]:
     with open(filename, encoding="utf-8") as fp, cd(

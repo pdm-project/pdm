@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Union
 
 import tomlkit
-from tomlkit.items import Array, InlineTable
 
 
 def convert_from(field: str = None, name: str = None):
@@ -86,7 +85,7 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
 NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 
-def make_inline_table(data: Dict[str, str]) -> InlineTable:
+def make_inline_table(data: Dict[str, str]) -> Dict[str, str]:
     """Create an inline table from the given data."""
     table = tomlkit.inline_table()
     table.update(data)
@@ -94,8 +93,8 @@ def make_inline_table(data: Dict[str, str]) -> InlineTable:
 
 
 def make_array(
-    data: Union[List[str], List[InlineTable]], multiline: bool = False
-) -> Union[List, Array]:
+    data: Union[List[str], List[Dict[str, str]]], multiline: bool = False
+) -> Union[List, List[str]]:
     if not data:
         return []
     array = tomlkit.array()
@@ -107,11 +106,11 @@ def make_array(
 
 def array_of_inline_tables(
     value: List[Dict[str, str]], multiline: bool = True
-) -> Array:
+) -> List[str]:
     return make_array([make_inline_table(item) for item in value], multiline)
 
 
-def parse_name_email(name_email: List[str]) -> Array:
+def parse_name_email(name_email: List[str]) -> List[str]:
     return array_of_inline_tables(
         [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
     )

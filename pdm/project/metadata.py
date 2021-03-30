@@ -1,8 +1,6 @@
 from collections.abc import MutableMapping
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from tomlkit.items import Array, Table
-
 from pdm.formats import flit, poetry
 from pdm.pep517.metadata import Metadata
 
@@ -25,7 +23,7 @@ class MutableMetadata(Metadata, MutableMapping):
                     return
             raise
 
-    def __getitem__(self, k: str) -> Union[Array, Table]:
+    def __getitem__(self, k: str) -> Union[Dict, List[str], str]:
         return self._metadata[k]
 
     def __setitem__(self, k: str, v: Union[Dict, List[str], str]) -> None:

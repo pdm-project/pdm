@@ -1,11 +1,12 @@
 import functools
 from argparse import Namespace
+from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
-from tomlkit.items import Array, InlineTable
 
+from pdm._types import Source
 from pdm.formats.base import (
     MetaConverter,
     Unset,
@@ -18,7 +19,7 @@ from pdm.models.requirements import Requirement
 from pdm.project.core import Project
 
 
-def check_fingerprint(project: Union[Project, Project], filename: Path) -> bool:
+def check_fingerprint(project: Project, filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -34,11 +35,11 @@ def check_fingerprint(project: Union[Project, Project], filename: Path) -> bool:
 
 class LegacyMetaConverter(MetaConverter):
     @convert_from("author")
-    def authors(self, value: str) -> Array:
+    def authors(self, value: str) -> List[str]:
         return parse_name_email([value])
 
     @convert_from("maintainer")
-    def maintainers(self, value: List[str]) -> Array:
+    def maintainers(self, value: List[str]) -> List[str]:
         return parse_name_email([value])
 
     @convert_from("version")
@@ -56,13 +57,13 @@ class LegacyMetaConverter(MetaConverter):
         return value
 
     @convert_from("license")
-    def license(self, value: str) -> InlineTable:
+    def license(self, value: str) -> Dict[str, str]:
         if "classifiers" not in self._data.setdefault("dynamic", []):
             self._data["dynamic"].append("classifiers")
         return make_inline_table({"text": value})
 
     @convert_from("source")
-    def source(self, value: List[Dict[str, Union[bool, str]]]) -> None:
+    def source(self, value: List[Source]) -> None:
         self.settings["source"] = value
         raise Unset()
 
@@ -77,7 +78,7 @@ class LegacyMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("dependencies")
-    def dependencies(self, value: Dict[str, str]) -> Array:
+    def dependencies(self, value: Dict[str, str]) -> List[str]:
         return make_array(
             [
                 Requirement.from_req_dict(name, req).as_line()
@@ -87,7 +88,7 @@ class LegacyMetaConverter(MetaConverter):
         )
 
     @convert_from("dev-dependencies", name="dev-dependencies")
-    def dev_dependencies(self, value: Dict) -> Array:
+    def dev_dependencies(self, value: Dict) -> List[str]:
         return make_array(
             [
                 Requirement.from_req_dict(name, req).as_line()

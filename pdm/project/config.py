@@ -7,8 +7,6 @@ from typing import Any, Callable, Dict, Iterable, Optional, TypeVar, Union
 import appdirs
 import click
 import tomlkit
-from tomlkit.container import Container
-from tomlkit.items import String
 
 from pdm import termui
 from pdm.exceptions import NoConfigError
@@ -24,8 +22,8 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     """
 
     def get_item(
-        sub_data: Union[Dict[str, bool], Dict[str, Container], Container]
-    ) -> Union[Dict[str, bool], Dict[str, String]]:
+        sub_data: Union[Dict[str, bool], Dict[str, Dict], Dict]
+    ) -> Union[Dict[str, bool], Dict[str, str]]:
         result = {}
         for k, v in sub_data.items():
             if getattr(v, "items", None) is not None:
