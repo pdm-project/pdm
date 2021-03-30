@@ -206,7 +206,7 @@ class MockWorkingSet(collections.abc.MutableMapping):
     def __iter__(self) -> Iterator:
         return iter(self._data)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: str) -> None:
         self._data[key] = value
 
     def __delitem__(self, key: str) -> None:

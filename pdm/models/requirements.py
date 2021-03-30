@@ -111,7 +111,7 @@ class Requirement:
         return self._marker
 
     @marker.setter
-    def marker(self, value) -> None:
+    def marker(self, value: Union[Marker, None]) -> None:
         try:
             m = self._marker = get_marker(value)
             if not m:
@@ -217,7 +217,7 @@ class Requirement:
             not editable_match or self.editable == req.editable
         )
 
-    def as_ireq(self, **kwargs) -> InstallRequirement:
+    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
         line_for_req = self.as_line()
         if self.editable:
             line_for_req = line_for_req[3:].strip()
@@ -384,7 +384,7 @@ class VcsRequirement(FileRequirement):
         )
         return r
 
-    def as_ireq(self, **kwargs) -> InstallRequirement:
+    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
         ireq = super().as_ireq(**kwargs)
         if not self.editable and self.revision:
             # For non-editable VCS requirements, commit-hash should be used as the

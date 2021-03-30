@@ -28,7 +28,7 @@ class DummyFuture:
     def set_result(self, result: Candidate) -> None:
         self._result = result
 
-    def set_exception(self, exc):
+    def set_exception(self, exc: Exception) -> None:
         self._exc = exc
 
     def result(self):

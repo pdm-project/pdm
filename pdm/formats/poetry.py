@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import toml
+from tomlkit.items import Array, InlineTable
 
 from pdm.formats.base import (
     MetaConverter,
@@ -90,26 +91,26 @@ def _convert_req(name: str, req_dict: Union[Dict[str, str], List[str], str]) -> 
 
 class PoetryMetaConverter(MetaConverter):
     @convert_from("authors")
-    def authors(self, value):
+    def authors(self, value: List[str]) -> Array:
         return parse_name_email(value)
 
     @convert_from("maintainers")
-    def maintainers(self, value):
+    def maintainers(self, value: List[str]) -> Array:
         return parse_name_email(value)
 
     @convert_from("license")
-    def license(self, value):
+    def license(self, value: str) -> InlineTable:
         self._data["dynamic"] = ["classifiers"]
         return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
-    def requires_python(self, source):
+    def requires_python(self, source: (Dict[str, Union[List[str], str]])) -> str:
         python = source.get("dependencies", {}).pop("python", None)
         self._data["dynamic"] = ["classifiers"]
         return str(_convert_python(python))
 
     @convert_from()
-    def urls(self, source):
+    def urls(self, source: (Dict[str, Union[List[str], str]])) -> Dict[str, str]:
         rv = source.pop("urls", {})
         if "homepage" in source:
             rv["homepage"] = source.pop("homepage")
@@ -120,11 +121,13 @@ class PoetryMetaConverter(MetaConverter):
         return rv
 
     @convert_from("plugins", name="entry-points")
-    def entry_points(self, value):
+    def entry_points(
+        self, value: Dict[str, Dict[str, str]]
+    ) -> Dict[str, Dict[str, str]]:
         return value
 
     @convert_from()
-    def dependencies(self, source):
+    def dependencies(self, source: Dict[str, Union[List[str], str]]) -> Array:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
@@ -144,11 +147,20 @@ class PoetryMetaConverter(MetaConverter):
         return make_array(rv, True)
 
     @convert_from("dev-dependencies", name="dev-dependencies")
-    def dev_dependencies(self, value):
+    def dev_dependencies(
+        self,
+        value: Dict[
+            str,
+            Union[
+                Union[Dict[str, str], List[str], str],
+                Union[Dict[str, str], List[str], str],
+            ],
+        ],
+    ) -> Array:
         return make_array([_convert_req(key, req) for key, req in value.items()], True)
 
     @convert_from()
-    def includes(self, source):
+    def includes(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
         result = []
         for item in source.pop("packages", []):
             include = item["include"]
@@ -159,11 +171,11 @@ class PoetryMetaConverter(MetaConverter):
         return result
 
     @convert_from("exclude")
-    def excludes(self, value):
+    def excludes(self, value: List[str]) -> List[str]:
         return value
 
     @convert_from("source")
-    def source(self, value):
+    def source(self, value: List[Dict[str, str]]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
@@ -187,5 +199,5 @@ def convert(
         return dict(converter), converter.settings
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()

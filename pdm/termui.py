@@ -101,7 +101,7 @@ class UI:
         message: str = "",
         err: bool = False,
         verbosity: int = NORMAL,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if self.verbosity >= verbosity:
             click.secho(

@@ -5,7 +5,7 @@ import os
 from argparse import _SubParsersAction
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Set, Union
 
 import cfonts
 import tomlkit
@@ -204,7 +204,7 @@ def format_package(
     package: Package,
     required: str = "",
     prefix: str = "",
-    visited=None,
+    visited: Optional[Set[str]] = None,
 ) -> str:
     """Format one package.
 
@@ -255,7 +255,7 @@ def format_reverse_package(
     child: Optional[Package] = None,
     requires: str = "",
     prefix: str = "",
-    visited=None,
+    visited: Optional[Set[str]] = None,
 ):
     """Format one package for output reverse dependency graph."""
     if visited is None:

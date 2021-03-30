@@ -1,4 +1,5 @@
 import argparse
+from typing import Any
 
 import click
 
@@ -12,7 +13,7 @@ class Option:
     to parser.add_argument().
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.args = args
         self.kwargs = kwargs
 
@@ -29,8 +30,12 @@ class ArgumentGroup:
     """
 
     def __init__(
-        self, name=None, parser=None, is_mutually_exclusive=False, required=None
-    ):
+        self,
+        name: str = None,
+        parser: argparse.ArgumentParser = None,
+        is_mutually_exclusive: bool = False,
+        required: bool = None,
+    ) -> None:
         self.name = name
         self.options = []
         self.parser = parser
@@ -38,7 +43,7 @@ class ArgumentGroup:
         self.is_mutually_exclusive = is_mutually_exclusive
         self.argument_group = None
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, *args: Any, **kwargs: Any) -> None:
         self.options.append(Option(*args, **kwargs))
 
     def add_to_parser(self, parser: PdmParser) -> None:
@@ -51,7 +56,7 @@ class ArgumentGroup:
         self.argument_group = group
         self.parser = parser
 
-    def add_to_group(self, group):
+    def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         self.add_to_parser(group)
 
 
@@ -154,7 +159,7 @@ project_option = Option(
 )
 
 
-def deprecate_global_option(value) -> Project:
+def deprecate_global_option(value: str) -> Project:
     if value:
         click.echo(
             termui.red(

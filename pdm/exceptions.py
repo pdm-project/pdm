@@ -1,6 +1,11 @@
-from typing import List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List
 
 from pdm import termui
+
+if TYPE_CHECKING:
+    from pdm.models.candidates import Candidate
 
 
 class PdmException(Exception):
@@ -28,7 +33,7 @@ class PackageIndexError(PdmException):
 
 
 class CandidateInfoNotFound(PdmException):
-    def __init__(self, candidate) -> None:
+    def __init__(self, candidate: Candidate) -> None:
         message = (
             "No metadata information is available for "
             f"{termui.green(str(candidate))}."

@@ -20,6 +20,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    TextIO,
     Tuple,
     TypeVar,
     Union,
@@ -27,6 +28,7 @@ from typing import (
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
+from pip._vendor.requests import Session
 from tomlkit.container import Container
 from tomlkit.items import Item
 
@@ -51,7 +53,7 @@ except ImportError:
             self.attr_name = func.__name__
             self.__doc__ = func.__doc__
 
-        def __get__(self, inst: Any, cls=None) -> _T:
+        def __get__(self, inst: Any, cls: _T = None) -> _T:
             if inst is None:
                 return self
             if self.attr_name not in inst.__dict__:
@@ -158,7 +160,7 @@ def _wheel_supported(self: Any, tags: List[Tag] = None) -> bool:
     return True
 
 
-def _wheel_support_index_min(self, tags=None):
+def _wheel_support_index_min(self: Any, tags: Optional[str] = None) -> int:
     # All wheels are equal priority for sorting.
     return 0
 
@@ -312,7 +314,7 @@ def temp_environ() -> Iterator:
 
 
 @contextmanager
-def open_file(url, session=None):
+def open_file(url: str, session: Optional[Session] = None) -> TextIO:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):

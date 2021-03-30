@@ -2,7 +2,7 @@ import ast
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
 from tomlkit.items import Array
@@ -64,7 +64,7 @@ def get_docstring_and_version_via_ast(
 class FlitMetaConverter(MetaConverter):
     def warn_against_dynamic_version_or_docstring(
         self, source: Path, version: str, description: str
-    ):
+    ) -> None:
         dynamic_fields = []
         if not version:
             dynamic_fields.append("version")
@@ -81,7 +81,7 @@ class FlitMetaConverter(MetaConverter):
         warnings.warn(message, UserWarning, stacklevel=2)
 
     @convert_from("metadata")
-    def name(self, metadata):
+    def name(self, metadata: Dict[str, Union[List[str], str]]) -> str:
         # name
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
@@ -125,11 +125,13 @@ class FlitMetaConverter(MetaConverter):
         return self._data["name"]
 
     @convert_from("entrypoints", name="entry-points")
-    def entry_points(self, value):
+    def entry_points(
+        self, value: Dict[str, Dict[str, str]]
+    ) -> Dict[str, Dict[str, str]]:
         return value
 
     @convert_from("sdist")
-    def includes(self, value):
+    def includes(self, value: Dict[str, List[str]]) -> List[str]:
         self._data["excludes"] = value.get("exclude")
         return value.get("include")
 
@@ -151,5 +153,5 @@ def convert(
             return result
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()

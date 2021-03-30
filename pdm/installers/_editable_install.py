@@ -2,9 +2,10 @@
 import os
 import sys
 import tokenize
+from pathlib import Path
 
 
-def install(setup_py, prefix, lib_dir, bin_dir):
+def install(setup_py: Path, prefix: Path, lib_dir: Path, bin_dir: Path) -> None:
     __file__ = setup_py
 
     with getattr(tokenize, "open", open)(setup_py) as f:

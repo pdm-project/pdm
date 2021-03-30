@@ -2,14 +2,14 @@ import abc
 import collections
 import re
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Union
+from typing import Any, Callable, Dict, Iterator, List, Union
 
 import tomlkit
 from tomlkit.items import Array, InlineTable
 
 
-def convert_from(field=None, name=None):
-    def wrapper(func):
+def convert_from(field: str = None, name: str = None):
+    def wrapper(func: Callable[..., Any]) -> Callable[..., Any]:
         func._convert_from = field
         func._convert_to = name
         return func
@@ -22,7 +22,9 @@ class Unset(Exception):
 
 
 class _MetaConverterMeta(abc.ABCMeta):
-    def __init__(cls, name, bases, ns):
+    def __init__(
+        cls, name: str, bases: Dict[str, Any], ns: Union[None, Path, str]
+    ) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}
         _default = object()

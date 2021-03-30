@@ -72,5 +72,5 @@ def convert(
     return result, settings
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()

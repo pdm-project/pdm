@@ -31,7 +31,7 @@ class MutableMetadata(Metadata, MutableMapping):
     def __setitem__(self, k: str, v: Union[Dict, List[str], str]) -> None:
         self._metadata[k] = v
 
-    def __delitem__(self, k) -> None:
+    def __delitem__(self, k: str) -> None:
         del self._metadata[k]
 
     def __iter__(self) -> Iterator:

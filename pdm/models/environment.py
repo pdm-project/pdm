@@ -141,13 +141,13 @@ class Environment:
             misc.site_packages = _old_sitepackages
             pkg_resources.working_set = _old_ws
 
-    def is_local(self, path) -> bool:
+    def is_local(self, path: Path) -> bool:
         """PEP 582 version of ``is_local()`` function."""
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.packages_path.as_posix())
         )
 
-    def evaluate_marker(self, text: str, extra=None) -> bool:
+    def evaluate_marker(self, text: str, extra: Any = None) -> bool:
         marker = packaging.markers.Marker(text)
         return marker.evaluate(self.marker_environment)
 
@@ -367,7 +367,7 @@ class GlobalEnvironment(Environment):
         paths["headers"] = paths["include"]
         return paths
 
-    def is_local(self, path) -> bool:
+    def is_local(self, path: Path) -> bool:
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.get_paths()["prefix"])
         )

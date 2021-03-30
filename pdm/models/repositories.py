@@ -26,7 +26,7 @@ def cache_result(
     func: Callable[["BaseRepository", Candidate], CandidateInfo]
 ) -> Callable[["BaseRepository", Candidate], CandidateInfo]:
     @wraps(func)
-    def wrapper(self, candidate: Candidate) -> CandidateInfo:
+    def wrapper(self: BaseRepository, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
         self._candidate_info_cache.set(candidate, result)
         return result

@@ -206,7 +206,7 @@ class Config(MutableMapping):
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
-    def __delitem__(self, key) -> None:
+    def __delitem__(self, key: str) -> None:
         self._data.pop(key, None)
         try:
             del self._file_data[key]

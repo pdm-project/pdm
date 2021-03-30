@@ -5,7 +5,7 @@ import importlib
 import os
 import pkgutil
 import sys
-from typing import Any, List, Optional, Type
+from typing import Any, Callable, List, Optional, Type
 
 import click
 from pip._vendor import pkg_resources
@@ -73,7 +73,7 @@ class Core:
                 continue
             self.register_command(klass, klass.name or name)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable[..., Any]:
         return self.main(*args, **kwargs)
 
     def ensure_project(
@@ -172,6 +172,6 @@ class Core:
             plugin.load()(self)
 
 
-def main(args=None):
+def main(args: Any = None) -> Callable[..., Any]:
     """The CLI entry function"""
     return Core().main(args)

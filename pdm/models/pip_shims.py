@@ -59,7 +59,7 @@ def get_abi_tag(python_version: Tuple[int, int]) -> Optional[str]:
         from wheel.pep425tags import get_abbr_impl, get_config_var
         from wheel.pep425tags import get_flag as _get_flag
 
-        def get_flag(var, fallback, expected=True, warn=True):
+        def get_flag(var, fallback, expected=True, warn=True):  # type: ignore
             return _get_flag(
                 var, fallback=lambda: fallback, expected=expected, warn=warn
             )

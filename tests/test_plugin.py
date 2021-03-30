@@ -1,4 +1,5 @@
-from typing import Any, Callable
+from argparse import ArgumentParser
+from typing import Any, Callable, Optional
 from unittest import mock
 
 from pip._vendor import pkg_resources
@@ -7,14 +8,15 @@ from pytest_mock.plugin import MockerFixture
 from pdm.cli.commands.base import BaseCommand
 from pdm.core import Core
 from pdm.project.config import ConfigItem
+from pdm.project.core import Project
 from tests.conftest import TestProject
 
 
 class HelloCommand(BaseCommand):
-    def add_arguments(self, parser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("-n", "--name", help="The person's name")
 
-    def handle(self, project, options) -> None:
+    def handle(self, project: Project, options: Optional[Any]) -> None:
         greeting = "Hello world"
         if options.name:
             greeting = f"Hello, {options.name}"
