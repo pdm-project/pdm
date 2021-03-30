@@ -71,7 +71,7 @@ test = ["pytest"]
 For backward-compatibility, if `-s/--section` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
-    The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
+The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
 
 ### Save version specifiers
 
@@ -151,8 +151,11 @@ There are two similar commands to do this job with a slight difference:
 $ pdm install
 # Install default + web optional dependencies
 $ pdm install -s web
+# Install default + all optional dependencies
+$ pdm install -s:all
 # Install default + all dev-dependencies
 $ pdm install -d
+$ pdm install -ds:all
 # Install web dependencies ONLY (without default dependencies)
 $ pdm install --no-default -s web
 ```
