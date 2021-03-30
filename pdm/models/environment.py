@@ -175,7 +175,7 @@ class Environment:
         if ireq.editable:
             return ireq.source_dir or self._get_source_dir()
         else:
-            return create_tracked_tempdir(prefix="pdm-build")
+            return create_tracked_tempdir(prefix="pdm-build-")
 
     def _get_source_dir(self) -> str:
         packages_dir = self.packages_path
