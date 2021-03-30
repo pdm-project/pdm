@@ -159,6 +159,7 @@ dependencies = [
 name = "joblib"
 sections = ["doc"]
 version = "1.0.0"
+marker = "python_version >= '2.8'"
 summary = "Lightweight pipelining with Python functions"
 
 [[package]]
@@ -496,6 +497,7 @@ summary = "YAML parser and emitter for Python"
 name = "regex"
 sections = ["doc"]
 version = "2020.11.13"
+marker = "python_version >= '2.8'"
 summary = "Alternative regular expression module, to replace re."
 
 [[package]]
@@ -581,6 +583,7 @@ dependencies = [
 name = "tqdm"
 sections = ["doc"]
 version = "4.56.0"
+marker = "python_version >= '2.8'"
 summary = "Fast, Extensible Progress Meter"
 
 [[package]]
@@ -626,7 +629,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:9cb8e37b03fb0e1d40a6a2b78d6884fe4729c7ad08d4ec45a95c0902b2d34224"
+content_hash = "sha256:aed2f510bd23ebe2f3b16f0e18cb3b7cfb75851cd34056d6ccbb67be401fcc0b"
 
 [metadata.files]
 "apipkg 1.5" = [
