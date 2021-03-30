@@ -25,7 +25,7 @@ from pdm.models.specifiers import PySpecSet
         ("<3.4.*", "<3.4"),
     ],
 )
-def test_normalize_pyspec(original: str, normalized: str) -> None:
+def test_normalize_pyspec(original, normalized):
     spec = PySpecSet(original)
     assert str(spec) == normalized
 
@@ -40,7 +40,7 @@ def test_normalize_pyspec(original: str, normalized: str) -> None:
         (">=2.7,!=3.0.*", "!=3.1.*", ">=2.7,!=3.0.*,!=3.1.*"),
     ],
 )
-def test_pyspec_and_op(left: str, right: str, result: str) -> None:
+def test_pyspec_and_op(left, right, result):
     left = PySpecSet(left)
     right = PySpecSet(right)
     assert str(left & right) == result
@@ -57,13 +57,13 @@ def test_pyspec_and_op(left: str, right: str, result: str) -> None:
         ("<2.7.15", ">=3.0", "!=2.7.15,!=2.7.16,!=2.7.17,!=2.7.18"),
     ],
 )
-def test_pyspec_or_op(left: str, right: str, result: str) -> None:
+def test_pyspec_or_op(left, right, result):
     left = PySpecSet(left)
     right = PySpecSet(right)
     assert str(left | right) == result
 
 
-def test_impossible_pyspec() -> None:
+def test_impossible_pyspec():
     spec = PySpecSet(">=3.6,<3.4")
     a = PySpecSet(">=2.7")
     assert spec.is_impossible
@@ -88,7 +88,7 @@ def test_impossible_pyspec() -> None:
         ),
     ],
 )
-def test_pyspec_is_subset_superset(left: str, right: str) -> None:
+def test_pyspec_is_subset_superset(left, right):
     left = PySpecSet(left)
     right = PySpecSet(right)
     assert left.is_subset(right), f"{left}, {right}"
@@ -104,7 +104,7 @@ def test_pyspec_is_subset_superset(left: str, right: str) -> None:
         (">=3.0,!=3.4.*", ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"),
     ],
 )
-def test_pyspec_isnot_subset_superset(left: str, right: str) -> None:
+def test_pyspec_isnot_subset_superset(left, right):
     left = PySpecSet(left)
     right = PySpecSet(right)
     assert not left.is_subset(right), f"{left}, {right}"

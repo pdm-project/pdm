@@ -1,28 +1,24 @@
-from typing import Any, Dict, List, Optional
-
 import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
 from pdm import termui
-from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve
 from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
 from pdm.resolver.reporters import SpinnerReporter
 from tests import FIXTURES
-from tests.conftest import MockVersionControl, TestProject, TestRepository
 
 
 def resolve_requirements(
-    repository: TestRepository,
-    lines: List[str],
-    requires_python: str = "",
-    allow_prereleases: Optional[bool] = None,
-    strategy: str = "all",
-    preferred_pins: Optional[Any] = None,
-    tracked_names: Optional[Any] = None,
-) -> Dict[str, Candidate]:
+    repository,
+    lines,
+    requires_python="",
+    allow_prereleases=None,
+    strategy="all",
+    preferred_pins=None,
+    tracked_names=None,
+):
     requirements = []
     for line in lines:
         if line.startswith("-e "):
@@ -51,9 +47,7 @@ def resolve_requirements(
         return mapping
 
 
-def test_resolve_named_requirement(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_named_requirement(project, repository):
     result = resolve_requirements(repository, ["requests"])
 
     assert result["requests"].version == "2.19.1"
@@ -63,9 +57,7 @@ def test_resolve_named_requirement(
     assert result["idna"].version == "2.7"
 
 
-def test_resolve_requires_python(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_requires_python(project, repository):
     result = resolve_requirements(repository, ["django"])
     assert result["django"].version == "1.11.8"
     assert "sqlparse" not in result
@@ -79,9 +71,7 @@ def test_resolve_requires_python(
     assert "sqlparse" in result
 
 
-def test_resolve_allow_prereleases(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_allow_prereleases(project, repository):
     repository.add_candidate("foo", "1.0.0")
     repository.add_candidate("foo", "1.1.0-alpha")
     repository.add_candidate("bar", "1.0.0-beta")
@@ -102,7 +92,7 @@ def test_resolve_allow_prereleases(
         resolve_requirements(repository, ["bar"], allow_prereleases=False)
 
 
-def test_resolve_with_extras(project: TestProject, repository: TestRepository) -> None:
+def test_resolve_with_extras(project, repository):
 
     result = resolve_requirements(repository, ["requests[socks]"])
     assert result["pysocks"].version == "1.5.6"
@@ -115,9 +105,7 @@ def test_resolve_with_extras(project: TestProject, repository: TestRepository) -
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}",
     ],
 )
-def test_resolve_local_artifacts(
-    project: TestProject, repository: TestRepository, requirement_line: str
-) -> None:
+def test_resolve_local_artifacts(project, repository, requirement_line):
     result = resolve_requirements(repository, [requirement_line])
     assert result["idna"].version == "2.7"
 
@@ -130,20 +118,14 @@ def test_resolve_local_artifacts(
     ],
 )
 def test_resolve_vcs_and_local_requirements(
-    project: TestProject,
-    repository: TestRepository,
-    line: str,
-    is_editable: bool,
-    vcs: MockVersionControl,
-) -> None:
+    project, repository, line, is_editable, vcs
+):
     editable = "-e " if is_editable else ""
     result = resolve_requirements(repository, [editable + line])
     assert result["idna"].version == "2.7"
 
 
-def test_resolve_local_and_named_requirement(
-    project: TestProject, repository: TestRepository, vcs: MockVersionControl
-) -> None:
+def test_resolve_local_and_named_requirement(project, repository, vcs):
     requirements = ["demo", "git+https://github.com/test-root/demo.git#egg=demo"]
     result = resolve_requirements(repository, requirements, ">=3.6")
     assert result["demo"].req.repo == "https://github.com/test-root/demo.git"
@@ -153,9 +135,7 @@ def test_resolve_local_and_named_requirement(
     assert result["demo"].req.repo == "https://github.com/test-root/demo.git"
 
 
-def test_resolving_auto_avoid_conflicts(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolving_auto_avoid_conflicts(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo", "0.2.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho<2.0"])
@@ -171,9 +151,7 @@ def test_resolving_auto_avoid_conflicts(
     assert result["hoho"].version == "1.5"
 
 
-def test_resolve_conflicting_dependencies(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_conflicting_dependencies(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
     repository.add_candidate("bar", "0.1.0")
@@ -184,26 +162,20 @@ def test_resolve_conflicting_dependencies(
         resolve_requirements(repository, ["foo", "bar"])
 
 
-def test_resolve_no_available_versions(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_no_available_versions(project, repository):
     repository.add_candidate("foo", "0.1.0")
     with pytest.raises(ResolutionImpossible):
         resolve_requirements(repository, ["foo>=0.2.0"])
 
 
-def test_exclude_incompatible_requirements(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_exclude_incompatible_requirements(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["bar; python_version < '3'"])
     result = resolve_requirements(repository, ["foo"], ">=3.6")
     assert "bar" not in result
 
 
-def test_union_markers_from_different_parents(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_union_markers_from_different_parents(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["bar; python_version < '3'"])
     repository.add_candidate("bar", "0.1.0")
@@ -211,9 +183,7 @@ def test_union_markers_from_different_parents(
     assert not result["bar"].requires_python
 
 
-def test_requirements_from_different_sections(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_requirements_from_different_sections(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo", "0.2.0")
     requirements = ["foo", "foo<0.2.0"]
@@ -221,9 +191,7 @@ def test_requirements_from_different_sections(
     assert result["foo"].version == "0.1.0"
 
 
-def test_resolve_two_extras_from_the_same_package(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_two_extras_from_the_same_package(project, repository):
     # Case borrowed from pypa/pip#7096
     line = (FIXTURES / "projects/demo_extras").as_posix() + "[extra1,extra2]"
     result = resolve_requirements(repository, [line])
@@ -231,17 +199,13 @@ def test_resolve_two_extras_from_the_same_package(
     assert "pyopenssl" in result
 
 
-def test_resolve_package_with_dummy_upbound(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_package_with_dummy_upbound(project, repository):
     repository.add_candidate("foo", "0.1.0", ">=3.5,<4.0")
     result = resolve_requirements(repository, ["foo"], ">=3.5")
     assert "foo" in result
 
 
-def test_resolve_dependency_with_extra_marker(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_dependency_with_extra_marker(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["pytz; extra=='tz' or extra=='all'"])
     result = resolve_requirements(repository, ["foo"])
@@ -251,9 +215,7 @@ def test_resolve_dependency_with_extra_marker(
     assert "pytz" in result
 
 
-def test_resolve_parent_from_multiple_sources(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_parent_from_multiple_sources(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["django"])
     repository.add_candidate("bar", "0.1.0")
@@ -264,9 +226,7 @@ def test_resolve_parent_from_multiple_sources(
     assert not result["pytz"].marker
 
 
-def test_resolve_circular_dependencies(
-    project: TestProject, repository: TestRepository
-) -> None:
+def test_resolve_circular_dependencies(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foobar"])
     repository.add_candidate("foobar", "0.2.0")

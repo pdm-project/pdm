@@ -1,13 +1,11 @@
 from argparse import Namespace
-from typing import Callable
 
 from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
 from pdm.utils import cd
 from tests import FIXTURES
-from tests.conftest import MockVersionControl, TestProject
 
 
-def test_convert_pipfile(project: TestProject) -> None:
+def test_convert_pipfile(project):
     golden_file = FIXTURES / "Pipfile"
     assert pipfile.check_fingerprint(project, golden_file)
     result, settings = pipfile.convert(project, golden_file, None)
@@ -23,7 +21,7 @@ def test_convert_pipfile(project: TestProject) -> None:
     assert settings["source"][0]["url"] == "https://pypi.python.org/simple"
 
 
-def test_convert_requirements_file(project: TestProject, is_dev: bool) -> None:
+def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
     options = Namespace(dev=is_dev, section=None)
@@ -36,9 +34,7 @@ def test_convert_requirements_file(project: TestProject, is_dev: bool) -> None:
     assert "-e git+https://github.com/pypa/pip.git@master#egg=pip" in section
 
 
-def test_convert_requirements_file_without_name(
-    project: TestProject, vcs: MockVersionControl
-) -> None:
+def test_convert_requirements_file_without_name(project, vcs):
     req_file = project.root.joinpath("reqs.txt")
     project.root.joinpath("reqs.txt").write_text(
         "git+https://github.com/test-root/demo.git\n"
@@ -51,7 +47,7 @@ def test_convert_requirements_file_without_name(
     assert result["dependencies"] == ["demo@ git+https://github.com/test-root/demo.git"]
 
 
-def test_convert_poetry(project: TestProject) -> None:
+def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject-poetry.toml"
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
@@ -87,7 +83,7 @@ def test_convert_poetry(project: TestProject) -> None:
     assert result["excludes"] == ["my_package/excluded.py"]
 
 
-def test_convert_flit(project: TestProject) -> None:
+def test_convert_flit(project):
     golden_file = FIXTURES / "projects/flit-demo/pyproject.toml"
     assert flit.check_fingerprint(project, golden_file)
     result, _ = flit.convert(project, golden_file, None)
@@ -123,7 +119,7 @@ def test_convert_flit(project: TestProject) -> None:
     assert result["excludes"] == ["doc/*.html"]
 
 
-def test_convert_legacy_format(project: TestProject) -> None:
+def test_convert_legacy_format(project):
     golden_file = FIXTURES / "pyproject-legacy.toml"
     assert legacy.check_fingerprint(project, golden_file)
     result, settings = legacy.convert(project, golden_file, None)
@@ -138,13 +134,13 @@ def test_convert_legacy_format(project: TestProject) -> None:
     assert settings["source"][0]["url"] == "https://test.pypi.org/simple"
 
 
-def test_export_setup_py(fixture_project: Callable[[str], TestProject]) -> None:
+def test_export_setup_py(fixture_project):
     project = fixture_project("demo-package")
     content = setup_py.export(project, [], None)
     assert content == project.root.joinpath("setup.txt").read_text()
 
 
-def test_import_requirements_with_section(project: TestProject) -> None:
+def test_import_requirements_with_section(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
     result, _ = requirements.convert(

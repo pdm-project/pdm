@@ -4,34 +4,17 @@ import json
 import os
 import shutil
 import sys
-from collections import OrderedDict
 from distutils.dir_util import copy_tree
 from io import BytesIO
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Callable, Iterable, List, Tuple
 from urllib.parse import urlparse
 
 import pytest
-from _pytest.fixtures import SubRequest
 from click.testing import CliRunner
-from pip._internal.index.package_finder import PackageFinder
-from pip._internal.utils.misc import HiddenText
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
 from pip._vendor.pkg_resources import safe_name
-from pip._vendor.requests.models import PreparedRequest, Response
-from pytest_mock.plugin import MockerFixture
-from tomlkit.items import Bool, String
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
@@ -40,11 +23,7 @@ from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
-from pdm.models.requirements import (
-    NamedRequirement,
-    Requirement,
-    filter_requirements_with_extras,
-)
+from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import cached_property, get_finder, temp_environ
@@ -55,20 +34,14 @@ main = Core()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
-    def __init__(self, base_path: Path) -> None:
+    def __init__(self, base_path):
         super().__init__()
         self.base_path = base_path
         self._opened_files = []
 
     def send(
-        self,
-        request: PreparedRequest,
-        stream: bool = False,
-        timeout: int = None,
-        verify: bool = True,
-        cert: Optional[Any] = None,
-        proxies: OrderedDict = None,
-    ) -> Response:
+        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
+    ):
         file_path = self.base_path / urlparse(request.url).path.lstrip("/")
         response = requests.models.Response()
         response.request = request
@@ -83,21 +56,21 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
         self._opened_files.append(response.raw)
         return response
 
-    def close(self) -> None:
+    def close(self):
         for fp in self._opened_files:
             fp.close()
         self._opened_files.clear()
 
 
 class MockVersionControl(versioncontrol.VersionControl):
-    def obtain(self, dest: str, url: HiddenText) -> None:
+    def obtain(self, dest, url):
         url, _ = self.get_url_rev_options(url)
         path = os.path.splitext(os.path.basename(urlparse(str(url)).path))[0]
         mocked_path = FIXTURES / "projects" / path
         shutil.copytree(mocked_path, dest)
 
     @classmethod
-    def get_revision(cls, location: Optional[str]) -> str:
+    def get_revision(cls, location):
         return "1234567890abcdef"
 
 
@@ -106,20 +79,18 @@ class _FakeLink:
 
 
 class TestRepository(BaseRepository):
-    def __init__(self, sources: List, environment: Environment) -> None:
+    def __init__(self, sources, environment):
         super().__init__(sources, environment)
         self._pypi_data = {}
         self.load_fixtures()
 
-    def add_candidate(self, name: str, version: str, requires_python: str = "") -> None:
+    def add_candidate(self, name, version, requires_python=""):
         pypi_data = self._pypi_data.setdefault(safe_name(name), {}).setdefault(
             version, {}
         )
         pypi_data["requires_python"] = requires_python
 
-    def add_dependencies(
-        self, name: str, version: str, requirements: List[str]
-    ) -> None:
+    def add_dependencies(self, name, version, requirements):
         pypi_data = self._pypi_data[safe_name(name)][version]
         pypi_data.setdefault("dependencies", []).extend(requirements)
 
@@ -158,71 +129,64 @@ class TestRepository(BaseRepository):
             c.link = _FakeLink()
             yield c
 
-    def load_fixtures(self) -> None:
+    def load_fixtures(self):
         json_file = FIXTURES / "pypi.json"
         self._pypi_data = json.loads(json_file.read_text())
 
 
 class TestProject(Project):
-    def __init__(self, root_path: str) -> None:
+    def __init__(self, root_path):
         self.GLOBAL_PROJECT = Path(root_path) / ".pdm-home" / "global-project"
         super().__init__(root_path)
 
     @cached_property
-    def global_config(self) -> Config:
+    def global_config(self):
         return Config(self.root / ".pdm-home" / "config.toml", is_global=True)
 
 
 class Distribution:
-    def __init__(
-        self,
-        key: str,
-        version: Union[str, String],
-        editable: Union[None, bool, Bool] = False,
-    ) -> None:
+    def __init__(self, key, version, editable=False):
         self.key = key
         self.version = version
         self.editable = editable
         self.dependencies = []
 
-    def requires(self, extras: Sequence[str] = ()) -> List[NamedRequirement]:
+    def requires(self, extras=()):
         return self.dependencies
 
 
 class MockWorkingSet(collections.abc.MutableMapping):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args, **kwargs):
         self.pkg_ws = None
         self._data = {}
 
-    def add_distribution(self, dist: Distribution) -> None:
+    def add_distribution(self, dist):
         self._data[dist.key] = dist
 
-    def __getitem__(self, key: str) -> Distribution:
+    def __getitem__(self, key):
         return self._data[key]
 
     def __len__(self):
         return len(self._data)
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self):
         return iter(self._data)
 
-    def __setitem__(self, key: str, value: str) -> None:
+    def __setitem__(self, key, value):
         self._data[key] = value
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key):
         del self._data[key]
 
 
 @pytest.fixture()
-def working_set(
-    mocker: MockerFixture, repository: TestRepository
-) -> Iterator[Union[Iterator, Iterator[MockWorkingSet]]]:
+def working_set(mocker, repository):
     from pdm.models.pip_shims import pip_logging
 
     rv = MockWorkingSet()
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
-    def install(candidate: Candidate) -> None:
+    def install(candidate):
         pip_logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
         key = safe_name(candidate.name).lower()
@@ -230,7 +194,7 @@ def working_set(
         dist.dependencies = dependencies
         rv.add_distribution(dist)
 
-    def uninstall(dist: Distribution) -> None:
+    def uninstall(dist):
         del rv[dist.key]
 
     installer = mocker.MagicMock()
@@ -242,14 +206,14 @@ def working_set(
     yield rv
 
 
-def get_local_finder(*args: Any, **kwargs: Any) -> PackageFinder:
+def get_local_finder(*args, **kwargs):
     finder = get_finder(*args, **kwargs)
     finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
     return finder
 
 
 @pytest.fixture(autouse=True)
-def pip_global_tempdir_manager() -> Iterator:
+def pip_global_tempdir_manager():
     from pdm.models.pip_shims import global_tempdir_manager
 
     with global_tempdir_manager():
@@ -257,9 +221,7 @@ def pip_global_tempdir_manager() -> Iterator:
 
 
 @pytest.fixture()
-def project_no_init(
-    tmp_path: Path, mocker: MockerFixture
-) -> Iterator[Union[Iterator, Iterator[TestProject]]]:
+def project_no_init(tmp_path, mocker):
     p = TestProject(tmp_path.as_posix())
     p.core = main
     mocker.patch("pdm.utils.get_finder", get_local_finder)
@@ -278,7 +240,7 @@ def project_no_init(
 
 
 @pytest.fixture()
-def project(project_no_init: TestProject) -> TestProject:
+def project(project_no_init):
     do_init(project_no_init, "test_project", "0.0.0")
     # Clean the cached property
     project_no_init._environment = None
@@ -286,10 +248,10 @@ def project(project_no_init: TestProject) -> TestProject:
 
 
 @pytest.fixture()
-def fixture_project(project_no_init: TestProject) -> Callable:
+def fixture_project(project_no_init):
     """Initailize a project from a fixture project"""
 
-    def func(project_name: str) -> TestProject:
+    def func(project_name):
         source = FIXTURES / "projects" / project_name
         copy_tree(source.as_posix(), project_no_init.root.as_posix())
         project_no_init._pyproject = None
@@ -299,16 +261,14 @@ def fixture_project(project_no_init: TestProject) -> Callable:
 
 
 @pytest.fixture()
-def repository(project: TestProject, mocker: MockerFixture) -> TestRepository:
+def repository(project, mocker):
     rv = TestRepository([], project.environment)
     mocker.patch.object(project, "get_repository", return_value=rv)
     return rv
 
 
 @pytest.fixture()
-def vcs(
-    mocker: MockerFixture,
-) -> Iterator[Union[Iterator, Iterator[MockVersionControl]]]:
+def vcs(mocker):
     ret = MockVersionControl()
     mocker.patch(
         "pip._internal.vcs.versioncontrol.VcsSupport.get_backend", return_value=ret
@@ -321,21 +281,21 @@ def vcs(
 
 
 @pytest.fixture(params=[False, True])
-def is_editable(request: SubRequest) -> bool:
+def is_editable(request):
     return request.param
 
 
 @pytest.fixture(params=[False, True])
-def is_dev(request: SubRequest) -> bool:
+def is_dev(request):
     return request.param
 
 
 @pytest.fixture()
-def invoke() -> Callable:
+def invoke():
     runner = CliRunner(mix_stderr=False)
     return functools.partial(runner.invoke, main, prog_name="pdm")
 
 
 @pytest.fixture()
-def core() -> Core:
+def core():
     return main

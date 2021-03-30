@@ -3,20 +3,15 @@ import subprocess
 import textwrap
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable
 
 import pytest
-from _pytest.capture import CaptureFixture
 
 from pdm.cli.actions import PEP582_PATH
 from pdm.utils import cd, temp_environ
-from tests.conftest import TestProject
 
 
 @pytest.mark.pypi
-def test_pep582_launcher_for_python_interpreter(
-    project: TestProject, invoke: Callable
-) -> None:
+def test_pep582_launcher_for_python_interpreter(project, invoke):
     project.meta["requires-python"] = ">=3.6"
     project.write_pyproject()
     project.root.joinpath("main.py").write_text(
@@ -32,25 +27,25 @@ def test_pep582_launcher_for_python_interpreter(
     assert output.decode().strip() == "2.24.0"
 
 
-def test_run_command_not_found(invoke: Callable) -> None:
+def test_run_command_not_found(invoke):
     result = invoke(["run", "foobar"])
     assert "Command 'foobar' is not found on your PATH." in result.stderr
     assert result.exit_code == 1
 
 
-def test_run_pass_exit_code(invoke: Callable) -> None:
+def test_run_pass_exit_code(invoke):
     result = invoke(["run", "python", "-c", "1/0"])
     assert result.exit_code == 1
 
 
-def test_run_cmd_script(project: TestProject, invoke: Callable) -> None:
+def test_run_cmd_script(project, invoke):
     project.tool_settings["scripts"] = {"test_script": "python -V"}
     project.write_pyproject()
     result = invoke(["run", "test_script"], obj=project)
     assert result.exit_code == 0
 
 
-def test_run_cmd_script_with_array(project: TestProject, invoke: Callable) -> None:
+def test_run_cmd_script_with_array(project, invoke):
     project.tool_settings["scripts"] = {
         "test_script": ["python", "-c", "import sys; sys.exit(22)"]
     }
@@ -59,7 +54,7 @@ def test_run_cmd_script_with_array(project: TestProject, invoke: Callable) -> No
     assert result.exit_code == 22
 
 
-def test_run_shell_script(project: TestProject, invoke: Callable) -> None:
+def test_run_shell_script(project, invoke):
     project.tool_settings["scripts"] = {
         "test_script": {
             "shell": "echo hello > output.txt",
@@ -73,7 +68,7 @@ def test_run_shell_script(project: TestProject, invoke: Callable) -> None:
     assert (project.root / "output.txt").read_text().strip() == "hello"
 
 
-def test_run_call_script(project: TestProject, invoke: Callable) -> None:
+def test_run_call_script(project, invoke):
     (project.root / "test_script.py").write_text(
         textwrap.dedent(
             """
@@ -101,9 +96,7 @@ def test_run_call_script(project: TestProject, invoke: Callable) -> None:
         assert result.exit_code == 9
 
 
-def test_run_script_with_extra_args(
-    project: TestProject, invoke: Callable, capfd: CaptureFixture
-) -> None:
+def test_run_script_with_extra_args(project, invoke, capfd):
     (project.root / "test_script.py").write_text(
         textwrap.dedent(
             """
@@ -120,9 +113,7 @@ def test_run_script_with_extra_args(
     assert out.splitlines()[-3:] == ["-a", "-b", "-c"]
 
 
-def test_run_expand_env_vars(
-    project: TestProject, invoke: Callable, capfd: CaptureFixture
-) -> None:
+def test_run_expand_env_vars(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.tool_settings["scripts"] = {
         "test_cmd": 'python -c "foo, bar = 0, 1;print($FOO)"',
@@ -151,9 +142,7 @@ def test_run_expand_env_vars(
         assert capfd.readouterr()[0].strip() == "bar"
 
 
-def test_run_script_with_env_defined(
-    project: TestProject, invoke: Callable, capfd: CaptureFixture
-) -> None:
+def test_run_script_with_env_defined(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.tool_settings["scripts"] = {
         "test_script": {"cmd": "python test_script.py", "env": {"FOO": "bar"}}
@@ -165,9 +154,7 @@ def test_run_script_with_env_defined(
         assert capfd.readouterr()[0].strip() == "bar"
 
 
-def test_run_script_with_dotenv_file(
-    project: TestProject, invoke: Callable, capfd: CaptureFixture
-) -> None:
+def test_run_script_with_dotenv_file(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.tool_settings["scripts"] = {
         "test_script": {"cmd": "python test_script.py", "env_file": ".env"}
@@ -180,9 +167,7 @@ def test_run_script_with_dotenv_file(
         assert capfd.readouterr()[0].strip() == "bar"
 
 
-def test_run_script_override_global_env(
-    project: TestProject, invoke: Callable, capfd: CaptureFixture
-) -> None:
+def test_run_script_override_global_env(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.tool_settings["scripts"] = {
         "_": {"env": {"FOO": "bar"}},
@@ -198,7 +183,7 @@ def test_run_script_override_global_env(
         assert capfd.readouterr()[0].strip() == "foobar"
 
 
-def test_run_show_list_of_scripts(project: TestProject, invoke: Callable) -> None:
+def test_run_show_list_of_scripts(project, invoke):
     project.tool_settings["scripts"] = {
         "test_cmd": "flask db upgrade",
         "test_script": {"call": "test_script:main", "help": "call a python function"},
@@ -215,9 +200,7 @@ def test_run_show_list_of_scripts(project: TestProject, invoke: Callable) -> Non
     assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
 
 
-def test_run_with_another_project_root(
-    project: TestProject, invoke: Callable, capfd: CaptureFixture
-) -> None:
+def test_run_with_another_project_root(project, invoke, capfd):
     project.meta["requires-python"] = ">=3.6"
     project.write_pyproject()
     invoke(["add", "requests==2.24.0"], obj=project)

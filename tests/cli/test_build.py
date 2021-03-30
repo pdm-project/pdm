@@ -1,24 +1,22 @@
 import tarfile
 import zipfile
-from pathlib import Path
-from typing import Callable, List
 
 from distlib.wheel import Wheel
 
 from pdm.cli import actions
 
 
-def get_tarball_names(path: Path) -> List[str]:
+def get_tarball_names(path):
     with tarfile.open(path, "r:gz") as tar:
         return tar.getnames()
 
 
-def get_wheel_names(path: Path) -> List[str]:
+def get_wheel_names(path):
     with zipfile.ZipFile(path) as zf:
         return zf.namelist()
 
 
-def test_build_single_module(fixture_project: Callable) -> None:
+def test_build_single_module(fixture_project):
     project = fixture_project("demo-module")
     assert project.meta.version == "0.1.0"
 
@@ -47,7 +45,7 @@ def test_build_single_module(fixture_project: Callable) -> None:
     ).metadata
 
 
-def test_build_single_module_with_readme(fixture_project: Callable) -> None:
+def test_build_single_module_with_readme(fixture_project):
     project = fixture_project("demo-module")
     project.meta["readme"] = "README.md"
     project.write_pyproject()
@@ -57,7 +55,7 @@ def test_build_single_module_with_readme(fixture_project: Callable) -> None:
     )
 
 
-def test_build_package(fixture_project: Callable) -> None:
+def test_build_package(fixture_project):
     project = fixture_project("demo-package")
     actions.do_build(project)
 
@@ -76,7 +74,7 @@ def test_build_package(fixture_project: Callable) -> None:
     assert "data_out.json" not in zip_names
 
 
-def test_build_src_package(fixture_project: Callable) -> None:
+def test_build_src_package(fixture_project):
     project = fixture_project("demo-src-package")
     actions.do_build(project)
 
@@ -91,7 +89,7 @@ def test_build_src_package(fixture_project: Callable) -> None:
     assert "my_package/data.json" in zip_names
 
 
-def test_build_package_include(fixture_project: Callable) -> None:
+def test_build_package_include(fixture_project):
     project = fixture_project("demo-package")
     project.meta["includes"] = [
         "my_package/",
@@ -117,7 +115,7 @@ def test_build_package_include(fixture_project: Callable) -> None:
     assert "data_out.json" in zip_names
 
 
-def test_build_src_package_by_include(fixture_project: Callable) -> None:
+def test_build_src_package_by_include(fixture_project):
     project = fixture_project("demo-src-package")
     project.includes = ["src/my_package"]
     project.write_pyproject()
@@ -134,7 +132,7 @@ def test_build_src_package_by_include(fixture_project: Callable) -> None:
     assert "my_package/data.json" in zip_names
 
 
-def test_build_legacy_package(fixture_project: Callable, invoke: Callable) -> None:
+def test_build_legacy_package(fixture_project, invoke):
     project = fixture_project("demo-legacy")
     result = invoke(["build"], obj=project)
     assert project.meta.name == "demo-module"

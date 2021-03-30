@@ -2,23 +2,17 @@ import os
 import sys
 import venv
 from pathlib import Path
-from typing import Callable
 
 import distlib.wheel
 import pytest
-from pytest_mock.plugin import MockerFixture
 
-from pdm.core import Core
 from pdm.models.requirements import filter_requirements_with_extras
 from pdm.pep517.api import build_wheel
 from pdm.project import Project
 from pdm.utils import cd, temp_environ
-from tests.conftest import TestProject
 
 
-def test_project_python_with_pyenv_support(
-    project: TestProject, mocker: MockerFixture
-) -> None:
+def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
 
     del project.project_config["python.path"]
@@ -40,21 +34,21 @@ def test_project_python_with_pyenv_support(
         assert Path(project.python_executable) != pyenv_python
 
 
-def test_project_config_items(project: TestProject) -> None:
+def test_project_config_items(project):
     config = project.config
 
     for item in ("python.use_pyenv", "pypi.url", "cache_dir"):
         assert item in config
 
 
-def test_project_config_set_invalid_key(project: TestProject) -> None:
+def test_project_config_set_invalid_key(project):
     config = project.project_config
 
     with pytest.raises(KeyError):
         config["foo"] = "bar"
 
 
-def test_project_sources_overriding(project: TestProject) -> None:
+def test_project_sources_overriding(project):
     project.project_config["pypi.url"] = "https://testpypi.org/simple"
     assert project.sources[0]["url"] == "https://testpypi.org/simple"
 
@@ -64,14 +58,14 @@ def test_project_sources_overriding(project: TestProject) -> None:
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
-def test_global_project(tmp_path: Path, core: Core) -> None:
+def test_global_project(tmp_path, core):
     project = Project.create_global(tmp_path.as_posix())
     project.core = core
     project.init_global_project()
     assert project.environment.is_global
 
 
-def test_project_use_venv(project: TestProject) -> None:
+def test_project_use_venv(project):
     del project.project_config["python.path"]
     project._python_executable = None
     scripts = "Scripts" if os.name == "nt" else "bin"
@@ -87,9 +81,7 @@ def test_project_use_venv(project: TestProject) -> None:
     assert env.is_global
 
 
-def test_project_with_combined_extras(
-    fixture_project: Callable[[str], TestProject]
-) -> None:
+def test_project_with_combined_extras(fixture_project):
     project = fixture_project("demo-combined-extras")
     (project.root / "build").mkdir(exist_ok=True)
     with cd(project.root.as_posix()):
@@ -103,7 +95,7 @@ def test_project_with_combined_extras(
         assert dep in all_requires
 
 
-def test_project_packages_path(project: TestProject) -> None:
+def test_project_packages_path(project):
     packages_path = project.environment.packages_path
     version = ".".join(map(str, sys.version_info[:2]))
     if os.name == "nt" and sys.maxsize <= 2 ** 32:
@@ -112,7 +104,7 @@ def test_project_packages_path(project: TestProject) -> None:
         assert packages_path.name == version
 
 
-def test_project_auto_detect_venv(project: TestProject) -> None:
+def test_project_auto_detect_venv(project):
 
     venv.create(project.root / "test_venv")
 
@@ -128,7 +120,7 @@ def test_project_auto_detect_venv(project: TestProject) -> None:
     assert project.environment.is_global
 
 
-def test_ignore_saved_python(project: TestProject) -> None:
+def test_ignore_saved_python(project):
     project.project_config["use_venv"] = True
     project._python_executable = None
     scripts = "Scripts" if os.name == "nt" else "bin"

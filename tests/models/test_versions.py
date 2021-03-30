@@ -1,33 +1,31 @@
-from typing import Tuple, Union
-
 import pytest
 
 from pdm.models.versions import InvalidPyVersion, Version
 
 
-def test_unsupported_prerelease_version() -> None:
+def test_unsupported_prerelease_version():
     with pytest.raises(InvalidPyVersion):
         Version("3.9.0a4")
 
 
-def test_normalize_non_standard_version() -> None:
+def test_normalize_non_standard_version():
     version = Version("3.9*")
     assert str(version) == "3.9.*"
 
 
-def test_version_comparison() -> None:
+def test_version_comparison():
     assert Version("3.9.0") < Version("3.9.1")
     assert Version("3.4") < Version("3.9.1")
     assert Version("3.7.*") < Version("3.7.5")
     assert Version("3.7") == Version((3, 7))
 
 
-def test_version_is_wildcard() -> None:
+def test_version_is_wildcard():
     assert not Version("3").is_wildcard
     assert Version("3.*").is_wildcard
 
 
-def test_version_is_py2() -> None:
+def test_version_is_py2():
     assert not Version("3.8").is_py2
     assert Version("2.7").is_py2
 
@@ -36,9 +34,7 @@ def test_version_is_py2() -> None:
     "version,args,result",
     [("3.9", (), "3.9.0"), ("3.9", ("*",), "3.9.*"), ("3", (0, 2), "3.0")],
 )
-def test_version_complete(
-    version: str, args: Union[Tuple[int, ...], Tuple[str]], result: str
-) -> None:
+def test_version_complete(version, args, result):
     assert str(Version(version).complete(*args)) == result
 
 
@@ -51,7 +47,7 @@ def test_version_complete(
         ("3.8.1", 1, "3.9.0"),
     ],
 )
-def test_version_bump(version: str, idx: int, result: str) -> None:
+def test_version_bump(version, idx, result):
     assert str(Version(version).bump(idx)) == result
 
 
@@ -64,11 +60,11 @@ def test_version_bump(version: str, idx: int, result: str) -> None:
         ("3.8", "3.8.2", False),
     ],
 )
-def test_version_startswith(version: str, other: str, result: bool) -> None:
+def test_version_startswith(version, other, result):
     assert Version(version).startswith(Version(other)) is result
 
 
-def test_version_getitem() -> None:
+def test_version_getitem():
     version = Version("3.8.6")
     assert version[0] == 3
     assert version[1] == 8
@@ -77,7 +73,7 @@ def test_version_getitem() -> None:
     assert version[:-1] == Version("3.8")
 
 
-def test_version_setitem() -> None:
+def test_version_setitem():
     version = Version("3.8.*")
     version1 = version.complete()
     version1[-1] = 0

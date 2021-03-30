@@ -1,10 +1,8 @@
 import pathlib
 import re
 import sys
-from pathlib import Path
 
 import pytest
-from pytest import MonkeyPatch
 
 from pdm import utils
 
@@ -21,7 +19,7 @@ from pdm import utils
         ("${FOO}_${FOO}", "hello_hello"),
     ],
 )
-def test_expand_env_vars(given: str, expected: str, monkeypatch: MonkeyPatch) -> None:
+def test_expand_env_vars(given, expected, monkeypatch):
     monkeypatch.setenv("FOO", "hello")
     assert utils.expand_env_vars(given) == expected
 
@@ -44,15 +42,13 @@ def test_expand_env_vars(given: str, expected: str, monkeypatch: MonkeyPatch) ->
         ),
     ],
 )
-def test_expend_env_vars_in_auth(
-    given: str, expected: str, monkeypatch: MonkeyPatch
-) -> None:
+def test_expend_env_vars_in_auth(given, expected, monkeypatch):
     monkeypatch.setenv("FOO", "hello")
     monkeypatch.setenv("BAR", "wo:rld")
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
-def test_find_python_in_path(tmp_path: Path) -> None:
+def test_find_python_in_path(tmp_path):
 
     assert utils.find_python_in_path(sys.executable) == pathlib.Path(sys.executable)
 
