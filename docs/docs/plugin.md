@@ -67,7 +67,7 @@ class HelloCommand(BaseCommand):
 ### Register the command to the core object
 
 Write a function somewhere in your plugin project. There is no limit on what the name of the function is,
-but the function  should take only one argument -- the PDM core object:
+but the function should take only one argument -- the PDM core object:
 
 ```python hl_lines="2"
 def hello_plugin(core):
@@ -141,14 +141,14 @@ $ pdm install -d
 ```
 
 After that, all the dependencies are available with a compatible Python interpreter, including the plugin itself, in editable mode. That means any change
-to the codebase will take effect immediately without re-installation. The `pdm` executable also uses a Python interpreter under the hood, 
+to the codebase will take effect immediately without re-installation. The `pdm` executable also uses a Python interpreter under the hood,
 so if you run `pdm` from inside the plugin project, the plugin in development will be activated automatically, and you can do some testing to see how it works.
 That is how PEP 582 benefits our development workflow.
 
 ## Publish your plugin
 
 Now you have defined your plugin already, let's distribute it to PyPI. PDM's plugins are discovered by entry point types.
-Create an `pdm.plugin` entry point and point to your plugin callable (yeah, it doesn't need to be a function, any callable object can work):
+Create an `pdm` entry point and point to your plugin callable (yeah, it doesn't need to be a function, any callable object can work):
 
 **PEP 621**:
 
@@ -193,7 +193,7 @@ Otherwise, if you installed `pdm` with normal `pip install`:
 $ pip install --user pdm-hello
 ```
 
-The core idea is you must install the plugin in the same site-package directory as `pdm`.
+The main principle is you must install the plugin in the same site-package directory as `pdm`.
 
 Now type in `pdm --help` in the terminal, you will see the new added `hello` command and use it:
 
