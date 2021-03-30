@@ -430,3 +430,12 @@ def find_python_in_path(path: os.PathLike) -> Optional[Path]:
                 return python
 
     return None
+
+
+def get_rev_from_url(url: str) -> str:
+    """Get the rev part from the VCS URL."""
+    path = parse.urlparse(url).path
+    if "@" in path:
+        _, rev = path.rsplit("@", 1)
+        return rev
+    return ""
