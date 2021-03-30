@@ -116,8 +116,13 @@ def do_sync(
     clean = default if clean is None else clean
     candidates = {}
     sections = list(sections)
-    if dev and project.tool_settings["dev-dependencies"] and not sections:
-        sections.extend(project.tool_settings["dev-dependencies"])
+    if dev and not sections:
+        sections.append(":all")
+    if ":all" in sections:
+        if dev:
+            sections = list(project.tool_settings.get("dev-dependencies", []))
+        else:
+            sections = list(project.meta.optional_dependencies or [])
     if default:
         sections.append("default")
     for section in sections:

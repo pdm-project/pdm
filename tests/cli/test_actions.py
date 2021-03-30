@@ -384,6 +384,43 @@ def test_update_with_package_and_sections_argument(project):
 
 
 @pytest.mark.usefixtures("repository")
+def test_sync_packages_with_sections(project, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "date")
+    actions.do_lock(project)
+    actions.do_sync(project, ["date"])
+    assert "pytz" in working_set
+    assert "requests" in working_set
+    assert "idna" in working_set
+
+
+@pytest.mark.usefixtures("repository")
+def test_sync_packages_with_section_all(project, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "date")
+    project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
+    actions.do_lock(project)
+    actions.do_sync(project, [":all"])
+    assert "pytz" in working_set
+    assert "requests" in working_set
+    assert "idna" in working_set
+    assert "pyopenssl" in working_set
+
+
+@pytest.mark.usefixtures("repository")
+def test_sync_packages_with_all_dev(project, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "date", True)
+    project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl", True)
+    actions.do_lock(project)
+    actions.do_sync(project, dev=True, default=False)
+    assert "requests" not in working_set
+    assert "idna" not in working_set
+    assert "pytz" in working_set
+    assert "pyopenssl" in working_set
+
+
+@pytest.mark.usefixtures("repository")
 def test_add_package_with_mismatch_marker(project, working_set, mocker):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
