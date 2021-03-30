@@ -371,16 +371,6 @@ version = "1.10.0"
 summary = "library with cross-python path, ini-parsing, io, code, log facilities"
 
 [[package]]
-name = "pyannotate"
-sections = ["dev"]
-version = "1.2.0"
-summary = "PyAnnotate: Auto-generate PEP-484 annotations"
-dependencies = [
-    "six",
-    "mypy-extensions",
-]
-
-[[package]]
 name = "pycomplete"
 sections = ["default"]
 version = "0.3.1"
@@ -661,7 +651,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:aed2f510bd23ebe2f3b16f0e18cb3b7cfb75851cd34056d6ccbb67be401fcc0b"
+content_hash = "sha256:358cef315e7d21380af76ad8481af9e73eabe0484f259744293538d2a325639a"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -998,10 +988,6 @@ content_hash = "sha256:aed2f510bd23ebe2f3b16f0e18cb3b7cfb75851cd34056d6ccbb67be4
 "py 1.10.0" = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
-]
-"pyannotate 1.2.0" = [
-    {file = "pyannotate-1.2.0-py2.py3-none-any.whl", hash = "sha256:bc2b5b4ea57aa90f99da9d71b547262eed19ea4b6ba355bf57439eeab9b90e93"},
-    {file = "pyannotate-1.2.0.tar.gz", hash = "sha256:04ed5804bab38153d5981fc92d83dcf6a22883453768561f057e777e5c057599"},
 ]
 "pycomplete 0.3.1" = [
     {file = "pycomplete-0.3.1-py3-none-any.whl", hash = "sha256:1221dad380f3930455726847df6d5743c3c0c7e35c06436e1b1d16569a4792fb"},
