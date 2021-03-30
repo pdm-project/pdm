@@ -1,7 +1,7 @@
 import pathlib
 import re
 import sys
-from pathlib import PosixPath
+from pathlib import Path
 
 import pytest
 
@@ -49,7 +49,7 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
-def test_find_python_in_path(tmp_path: PosixPath) -> None:
+def test_find_python_in_path(tmp_path: Path) -> None:
 
     assert utils.find_python_in_path(sys.executable) == pathlib.Path(sys.executable)
 

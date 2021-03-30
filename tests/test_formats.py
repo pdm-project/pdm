@@ -138,7 +138,7 @@ def test_convert_legacy_format(project: TestProject) -> None:
     assert settings["source"][0]["url"] == "https://test.pypi.org/simple"
 
 
-def test_export_setup_py(fixture_project: Callable) -> None:
+def test_export_setup_py(fixture_project: Callable[[str], TestProject]) -> None:
     project = fixture_project("demo-package")
     content = setup_py.export(project, [], None)
     assert content == project.root.joinpath("setup.txt").read_text()

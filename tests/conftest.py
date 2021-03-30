@@ -7,8 +7,18 @@ import sys
 from collections import OrderedDict
 from distutils.dir_util import copy_tree
 from io import BytesIO
-from pathlib import Path, PosixPath
-from typing import Any, Callable, Iterable, Iterator, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 from urllib.parse import urlparse
 
 import pytest
@@ -45,7 +55,7 @@ main = Core()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
-    def __init__(self, base_path: PosixPath) -> None:
+    def __init__(self, base_path: Path) -> None:
         super().__init__()
         self.base_path = base_path
         self._opened_files = []
@@ -175,7 +185,7 @@ class Distribution:
         self.editable = editable
         self.dependencies = []
 
-    def requires(self, extras: Tuple[()] = ()) -> List[NamedRequirement]:
+    def requires(self, extras: Sequence[str] = ()) -> List[NamedRequirement]:
         return self.dependencies
 
 
@@ -248,7 +258,7 @@ def pip_global_tempdir_manager() -> Iterator:
 
 @pytest.fixture()
 def project_no_init(
-    tmp_path: PosixPath, mocker: MockerFixture
+    tmp_path: Path, mocker: MockerFixture
 ) -> Iterator[Union[Iterator, Iterator[TestProject]]]:
     p = TestProject(tmp_path.as_posix())
     p.core = main
@@ -329,3 +339,24 @@ def invoke() -> Callable:
 @pytest.fixture()
 def core() -> Core:
     return main
+
+
+def pytest_collection_finish(session):
+    from pyannotate_runtime import collect_types
+
+    collect_types.init_types_collection()
+
+
+@pytest.fixture(autouse=True)
+def collect_types_fixture():
+    from pyannotate_runtime import collect_types
+
+    collect_types.start()
+    yield
+    collect_types.stop()
+
+
+def pytest_sessionfinish(session, exitstatus):
+    from pyannotate_runtime import collect_types
+
+    collect_types.dump_stats("type_info.json")

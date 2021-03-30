@@ -1,7 +1,7 @@
 import os
 import sys
 import venv
-from pathlib import Path, PosixPath
+from pathlib import Path
 from typing import Callable
 
 import distlib.wheel
@@ -64,7 +64,7 @@ def test_project_sources_overriding(project: TestProject) -> None:
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
-def test_global_project(tmp_path: PosixPath, core: Core) -> None:
+def test_global_project(tmp_path: Path, core: Core) -> None:
     project = Project.create_global(tmp_path.as_posix())
     project.core = core
     project.init_global_project()
@@ -87,7 +87,9 @@ def test_project_use_venv(project: TestProject) -> None:
     assert env.is_global
 
 
-def test_project_with_combined_extras(fixture_project: Callable) -> None:
+def test_project_with_combined_extras(
+    fixture_project: Callable[[str], TestProject]
+) -> None:
     project = fixture_project("demo-combined-extras")
     (project.root / "build").mkdir(exist_ok=True)
     with cd(project.root.as_posix()):

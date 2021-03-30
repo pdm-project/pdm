@@ -103,7 +103,7 @@ class Core:
         self,
         args: List[str] = None,
         prog_name: str = None,
-        obj: Optional[object] = None,
+        obj: Optional[Project] = None,
         **extra: Any,
     ) -> None:
         """The main entry function"""

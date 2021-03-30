@@ -33,7 +33,7 @@ def add_new_config(core: Core) -> None:
     core.add_config("foo", ConfigItem("Test config", "bar"))
 
 
-def make_entry_point(plugin: Callable) -> Any:
+def make_entry_point(plugin: Callable[[Core], Any]) -> Any:
     ret = mock.Mock()
     ret.load.return_value = plugin
     return ret
