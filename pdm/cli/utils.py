@@ -5,7 +5,7 @@ import os
 from argparse import Action
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING, Sequence, Set
 
 import cfonts
 import tomlkit
@@ -445,3 +445,20 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "set a narrower `requires-python` range in the pyproject.toml."
     )
     return "\n".join(result)
+
+
+def translate_sections(
+    project: Project, default: bool, dev: bool, sections: Sequence[str]
+) -> Sequence[str]:
+    """Translate default, dev and sections containing ":all" into a list of sections"""
+    sections = set(sections)
+    if dev and not sections:
+        sections.add(":all")
+    if ":all" in sections:
+        if dev:
+            sections = set(project.tool_settings.get("dev-dependencies", []))
+        else:
+            sections = set(project.meta.optional_dependencies or [])
+    if default:
+        sections.add("default")
+    return sections

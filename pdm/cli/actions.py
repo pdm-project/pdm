@@ -19,6 +19,7 @@ from pdm.cli.utils import (
     format_resolution_impossible,
     save_version_specifiers,
     set_env_in_reg,
+    translate_sections,
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
@@ -41,15 +42,9 @@ def do_lock(
     strategy: str = "all",
     tracked_names: Optional[Iterable[str]] = None,
     requirements: Optional[List[Requirement]] = None,
+    dry_run: bool = False,
 ) -> Dict[str, Candidate]:
-    """Performs the locking process and update lockfile.
-
-    :param project: the project instance
-    :param strategy: update strategy: reuse/eager/all
-    :param tracked_names: required when using eager strategy
-    :param requirements: An optional dictionary of requirements, read from pyproject
-        if not given.
-    """
+    """Performs the locking process and update lockfile."""
     check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
@@ -89,7 +84,10 @@ def do_lock(
             else:
                 data = format_lockfile(mapping, dependencies, summaries)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
-    project.write_lockfile(data)
+    if not dry_run:
+        project.write_lockfile(data)
+    else:
+        project.lockfile = data
 
     return mapping
 
@@ -101,39 +99,33 @@ def do_sync(
     default: bool = True,
     dry_run: bool = False,
     clean: Optional[bool] = None,
+    tracked_names: Optional[Sequence[str]] = None,
 ) -> None:
-    """Synchronize project
-
-    :param project: The project instance.
-    :param sections: A tuple of optional sections to be synced.
-    :param dev: whether to include dev-dependencies.
-    :param default: whether to include default dependencies.
-    :param dry_run: Print actions without actually running them.
-    :param clean: whether to remove unneeded packages.
-    """
+    """Synchronize project"""
     if not project.lockfile_file.exists():
         raise ProjectError("Lock file does not exist, nothing to sync")
     clean = default if clean is None else clean
-    candidates = {}
-    sections = list(sections)
-    if dev and not sections:
-        sections.append(":all")
-    if ":all" in sections:
-        if dev:
-            sections = list(project.tool_settings.get("dev-dependencies", []))
-        else:
-            sections = list(project.meta.optional_dependencies or [])
-    if default:
-        sections.append("default")
-    for section in sections:
-        if section not in list(project.iter_sections()):
-            raise PdmUsageError(
-                f"Section {termui.green(repr(section))} doesn't exist "
-                "in the pyproject.toml"
-            )
-        candidates.update(project.get_locked_candidates(section))
-    handler = project.core.synchronizer_class(candidates, project.environment)
-    handler.synchronize(clean=clean, dry_run=dry_run)
+    if tracked_names and dry_run:
+        candidates = {
+            name: c
+            for name, c in project.get_locked_candidates("__all__").items()
+            if name in tracked_names
+        }
+    else:
+        candidates = {}
+        sections = translate_sections(project, default, dev, sections or ())
+        valid_sections = list(project.iter_sections())
+        for section in sections:
+            if section not in valid_sections:
+                raise PdmUsageError(
+                    f"Section {termui.green(repr(section))} doesn't exist "
+                    "in the pyproject.toml"
+                )
+            candidates.update(project.get_locked_candidates(section))
+    handler = project.core.synchronizer_class(
+        candidates, project.environment, clean, dry_run
+    )
+    handler.synchronize()
 
 
 def do_add(
@@ -205,67 +197,68 @@ def do_update(
     strategy: str = "reuse",
     save: str = "compatible",
     unconstrained: bool = False,
+    top: bool = False,
+    dry_run: bool = False,
     packages: Sequence[str] = (),
 ) -> None:
-    """Update specified packages or all packages
-
-    :param project: The project instance
-    :param dev: whether to update dev dependencies
-    :param sections: update specified sections
-    :param default: update default
-    :param strategy: update strategy (reuse/eager)
-    :param save: save strategy (compatible/exact/wildcard)
-    :param unconstrained: ignore version constraint
-    :param packages: specified packages to update
-    :return: None
-    """
+    """Update specified packages or all packages"""
     check_project_file(project)
-    if len(packages) > 0 and (len(sections) > 1 or not default):
+    if len(packages) > 0 and (top or len(sections) > 1 or not default):
         raise PdmUsageError(
-            "packages argument can't be used together with multiple -s or --no-default."
+            "packages argument can't be used together with multiple -s or "
+            "--no-default and --top."
         )
-    if not packages:
-        if unconstrained:
-            raise PdmUsageError(
-                "--unconstrained must be used with package names given."
-            )
-        # pdm update with no packages given, same as 'lock' + 'sync'
-        do_lock(project)
-        do_sync(project, sections, dev, default, clean=False)
-        return
-    section = sections[0] if sections else ("dev" if dev else "default")
     all_dependencies = project.all_dependencies
-    dependencies = all_dependencies[section]
     updated_deps = {}
-    tracked_names = set()
-    for name in packages:
-        matched_name = next(
-            filter(
-                lambda k: safe_name(strip_extras(k)[0]).lower()
-                == safe_name(name).lower(),
-                dependencies.keys(),
-            ),
-            None,
-        )
-        if not matched_name:
-            raise ProjectError(
-                "{} does not exist in {} {}dependencies.".format(
-                    termui.green(name, bold=True), section, "dev-" if dev else ""
-                )
+    if not packages:
+        sections = translate_sections(project, default, dev, sections or ())
+        for section in sections:
+            updated_deps.update(all_dependencies[section])
+    else:
+        section = sections[0] if sections else ("dev" if dev else "default")
+        dependencies = all_dependencies[section]
+        for name in packages:
+            matched_name = next(
+                filter(
+                    lambda k: safe_name(strip_extras(k)[0]).lower()
+                    == safe_name(name).lower(),
+                    dependencies.keys(),
+                ),
+                None,
             )
-        if unconstrained:
-            dependencies[matched_name].specifier = get_specifier("")
-        tracked_names.add(matched_name)
-        updated_deps[matched_name] = dependencies[matched_name]
-    project.core.ui.echo(
-        "Updating packages: {}.".format(
-            ", ".join(termui.green(v, bold=True) for v in tracked_names)
+            if not matched_name:
+                raise ProjectError(
+                    "{} does not exist in {} {}dependencies.".format(
+                        termui.green(name, bold=True), section, "dev-" if dev else ""
+                    )
+                )
+            updated_deps[matched_name] = dependencies[matched_name]
+        project.core.ui.echo(
+            "Updating packages: {}.".format(
+                ", ".join(termui.green(v, bold=True) for v in updated_deps)
+            )
         )
-    )
-    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
-    resolved = do_lock(project, strategy, tracked_names, reqs)
-    do_sync(project, sections=sections, dev=dev, default=False, clean=False)
     if unconstrained:
+        for _, dep in updated_deps.items():
+            dep.specifier = get_specifier("")
+    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+    resolved = do_lock(
+        project,
+        strategy if top or packages else "all",
+        updated_deps.keys(),
+        reqs,
+        dry_run=dry_run,
+    )
+    do_sync(
+        project,
+        sections=sections,
+        dev=dev,
+        default=default,
+        clean=False,
+        dry_run=dry_run,
+        tracked_names=updated_deps.keys() if top else None,
+    )
+    if unconstrained and not dry_run:
         # Need to update version constraints
         save_version_specifiers(updated_deps, resolved, save)
         project.add_dependencies(updated_deps, section, dev)

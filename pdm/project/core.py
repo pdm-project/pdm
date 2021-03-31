@@ -113,12 +113,16 @@ class Project:
 
     @property
     def lockfile(self) -> dict:
-        if not self.lockfile_file.is_file():
-            raise ProjectError("Lock file does not exist.")
         if not self._lockfile:
+            if not self.lockfile_file.is_file():
+                raise ProjectError("Lock file does not exist.")
             data = tomlkit.parse(self.lockfile_file.read_text("utf-8"))
             self._lockfile = data
         return self._lockfile
+
+    @lockfile.setter
+    def lockfile(self, data: Dict[str, Any]) -> None:
+        self._lockfile = data
 
     @property
     def config(self) -> Dict[str, Any]:

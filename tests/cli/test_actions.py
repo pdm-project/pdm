@@ -283,6 +283,54 @@ def test_update_all_packages(project, repository, capsys):
 
 
 @pytest.mark.usefixtures("working_set")
+def test_update_dry_run(project, repository, capsys):
+    actions.do_add(project, packages=["requests", "pytz"])
+    repository.add_candidate("pytz", "2019.6")
+    repository.add_candidate("chardet", "3.0.5")
+    repository.add_candidate("requests", "2.20.0")
+    repository.add_dependencies(
+        "requests",
+        "2.20.0",
+        [
+            "certifi>=2017.4.17",
+            "chardet<3.1.0,>=3.0.2",
+            "idna<2.8,>=2.5",
+            "urllib3<1.24,>=1.21.1",
+        ],
+    )
+    actions.do_update(project, dry_run=True)
+    project.lockfile = None
+    locked_candidates = project.get_locked_candidates()
+    assert locked_candidates["requests"].version == "2.19.1"
+    assert locked_candidates["chardet"].version == "3.0.4"
+    assert locked_candidates["pytz"].version == "2019.3"
+    out, _ = capsys.readouterr()
+    assert "requests 2.19.1 -> 2.20.0" in out
+
+
+@pytest.mark.usefixtures("working_set")
+def test_update_top_packages_dry_run(project, repository, capsys):
+    actions.do_add(project, packages=["requests", "pytz"])
+    repository.add_candidate("pytz", "2019.6")
+    repository.add_candidate("chardet", "3.0.5")
+    repository.add_candidate("requests", "2.20.0")
+    repository.add_dependencies(
+        "requests",
+        "2.20.0",
+        [
+            "certifi>=2017.4.17",
+            "chardet<3.1.0,>=3.0.2",
+            "idna<2.8,>=2.5",
+            "urllib3<1.24,>=1.21.1",
+        ],
+    )
+    actions.do_update(project, top=True, dry_run=True)
+    out, _ = capsys.readouterr()
+    assert "requests 2.19.1 -> 2.20.0" in out
+    assert "- chardet 3.0.4 -> 3.0.5" not in out
+
+
+@pytest.mark.usefixtures("working_set")
 def test_update_specified_packages(project, repository):
     actions.do_add(project, sync=False, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
@@ -519,10 +567,10 @@ def test_list_reverse_dependency_graph(project, capsys):
 
 
 @pytest.mark.usefixtures("repository", "working_set")
-def test_update_unconstrained_without_packages(project):
+def test_update_packages_with_top(project):
     actions.do_add(project, packages=("requests",))
     with pytest.raises(PdmUsageError):
-        actions.do_update(project, unconstrained=True)
+        actions.do_update(project, packages=("requests",), top=True)
 
 
 @pytest.mark.usefixtures("working_set")

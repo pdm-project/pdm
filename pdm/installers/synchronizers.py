@@ -70,6 +70,8 @@ class Synchronizer:
         self,
         candidates: Dict[str, Candidate],
         environment: Environment,
+        clean: bool = False,
+        dry_run: bool = False,
         retry_times: int = 1,
     ) -> None:
         self.candidates = candidates
@@ -77,6 +79,8 @@ class Synchronizer:
         self.parallel = environment.project.config["parallel_install"]
         self.all_candidates = environment.project.get_locked_candidates("__all__")
         self.working_set = environment.get_working_set()
+        self.clean = clean
+        self.dry_run = dry_run
         self.retry_times = retry_times
         self.ui = environment.project.core.ui
 
@@ -138,7 +142,11 @@ class Synchronizer:
                 and not (can.marker and not can.marker.evaluate(environment))
             }
         )
-        return sorted(to_add), sorted(to_update), sorted(to_remove)
+        return (
+            sorted(to_add),
+            sorted(to_update),
+            sorted(to_remove) if self.clean else [],
+        )
 
     def install_candidate(self, key: str) -> Candidate:
         """Install candidate"""
@@ -234,14 +242,14 @@ class Synchronizer:
             for can in to_add:
                 lines.append(f"  - {can.format()}")
         if to_update:
-            lines.append(termui.bold("Packages to add:"))
+            lines.append(termui.bold("Packages to update:"))
             for prev, cur in to_update:
                 lines.append(
                     f"  - {termui.green(cur.name, bold=True)} "
                     f"{termui.yellow(prev.version)} -> {termui.yellow(cur.version)}"
                 )
         if to_remove:
-            lines.append(termui.bold("Packages to add:"))
+            lines.append(termui.bold("Packages to remove:"))
             for dist in to_remove:
                 lines.append(
                     f"  - {termui.green(dist.key, bold=True)} "
@@ -250,23 +258,16 @@ class Synchronizer:
         if lines:
             self.ui.echo("\n".join(lines))
 
-    def synchronize(self, clean: bool = True, dry_run: bool = False) -> None:
-        """Synchronize the working set with pinned candidates.
-
-        :param clean: Whether to remove unneeded packages, defaults to True.
-        :param dry_run: If set to True, only prints actions without actually do them.
-        """
+    def synchronize(self) -> None:
+        """Synchronize the working set with pinned candidates."""
         to_add, to_update, to_remove = self.compare_with_working_set()
-        if not clean:
-            to_remove = []
-
         to_do = {"remove": to_remove, "update": to_update, "add": to_add}
-        self._show_headline(to_do)
 
-        if dry_run:
+        if self.dry_run:
             self._show_summary(to_do)
             return
 
+        self._show_headline(to_do)
         handlers = {
             "add": self.install_candidate,
             "update": self.update_candidate,
