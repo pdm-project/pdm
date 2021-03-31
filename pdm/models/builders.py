@@ -17,7 +17,6 @@ from pep517.wrappers import Pep517HookCaller
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_python_version, get_sys_config_paths
 from pdm.pep517.base import Builder
-from pdm.project.metadata import MutableMetadata
 from pdm.termui import logger
 from pdm.utils import cached_property
 
@@ -265,6 +264,8 @@ class EnvBuilder:
 
     def build_egg_info(self, out_dir: str) -> str:
         # Ignore destination since editable builds should be build locally
+        from pdm.project.metadata import MutableMetadata
+
         builder = Builder(self.src_dir)
         if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
             builder._meta = MutableMetadata(

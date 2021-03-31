@@ -14,7 +14,7 @@ class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.set_defaults(project=self.project_class("."))
+        parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
