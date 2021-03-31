@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import argparse
 import os
-from argparse import _SubParsersAction
+from argparse import Action
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING, Set, Union
+from typing import TYPE_CHECKING, Set
 
 import cfonts
 import tomlkit
@@ -31,9 +31,7 @@ if TYPE_CHECKING:
 
 
 class PdmFormatter(argparse.HelpFormatter):
-    def _format_action(
-        self, action: Union[_SubParsersAction, _SubParsersAction._ChoicesPseudoAction]
-    ) -> str:
+    def _format_action(self, action: Action) -> str:
         # determine the required width and the entry label
         help_position = min(self._action_max_length + 2, self._max_help_position)
         help_width = max(self._width - help_position, 11)

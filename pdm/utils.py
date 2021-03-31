@@ -24,6 +24,7 @@ from typing import (
     TextIO,
     Tuple,
     TypeVar,
+    overload,
 )
 
 from distlib.wheel import Wheel
@@ -44,6 +45,7 @@ try:
 except ImportError:
 
     _T = TypeVar("_T")
+    _C = TypeVar("_C")
 
     class cached_property(Generic[_T]):
         def __init__(self, func: Callable[[Any], _T]):
@@ -51,7 +53,15 @@ except ImportError:
             self.attr_name = func.__name__
             self.__doc__ = func.__doc__
 
-        def __get__(self, inst: Any, cls: _T = None) -> _T:
+        @overload
+        def __get__(self: _C, inst: None, cls: Any = ...) -> _C:
+            ...
+
+        @overload
+        def __get__(self, inst: object, cls: Any = ...) -> _T:
+            ...
+
+        def __get__(self, inst, cls=None):
             if inst is None:
                 return self
             if self.attr_name not in inst.__dict__:
@@ -84,7 +94,7 @@ def prepare_pip_source_args(
     return pip_args
 
 
-def get_pypi_source():
+def get_pypi_source() -> Tuple[str, bool]:
     """Get what is defined in pip.conf as the index-url."""
     install_cmd = InstallCommand()
     options, _ = install_cmd.parser.parse_args([])
@@ -124,7 +134,7 @@ def create_tracked_tempdir(
     name = tempfile.mkdtemp(suffix, prefix, dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
 
-    def clean_up():
+    def clean_up() -> None:
         shutil.rmtree(name, ignore_errors=True)
 
     atexit.register(clean_up)
