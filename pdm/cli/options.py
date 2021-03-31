@@ -1,4 +1,5 @@
 import argparse
+from typing import Any
 
 
 class Option:
@@ -6,7 +7,7 @@ class Option:
     to parser.add_argument().
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.args = args
         self.kwargs = kwargs
 
@@ -23,8 +24,12 @@ class ArgumentGroup:
     """
 
     def __init__(
-        self, name=None, parser=None, is_mutually_exclusive=False, required=None
-    ):
+        self,
+        name: str = None,
+        parser: argparse.ArgumentParser = None,
+        is_mutually_exclusive: bool = False,
+        required: bool = None,
+    ) -> None:
         self.name = name
         self.options = []
         self.parser = parser
@@ -32,10 +37,10 @@ class ArgumentGroup:
         self.is_mutually_exclusive = is_mutually_exclusive
         self.argument_group = None
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, *args: Any, **kwargs: Any) -> None:
         self.options.append(Option(*args, **kwargs))
 
-    def add_to_parser(self, parser):
+    def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
         if self.is_mutually_exclusive:
             group = parser.add_mutually_exclusive_group(required=self.required)
         else:
@@ -45,7 +50,7 @@ class ArgumentGroup:
         self.argument_group = group
         self.parser = parser
 
-    def add_to_group(self, group):
+    def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         self.add_to_parser(group)
 
 

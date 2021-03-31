@@ -1,7 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
@@ -78,7 +78,7 @@ class HashCache(pip_shims.SafeFileCache):
     avoid issues where the location on the server changes.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.session: Optional[requests.Session] = None
         super(HashCache, self).__init__(*args, **kwargs)
 

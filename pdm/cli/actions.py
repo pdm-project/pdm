@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Optional, Sequence
 import click
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
+from pythonfinder.models.python import PythonVersion
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
@@ -419,7 +420,7 @@ def do_use(
     The python can be a version string or interpreter path.
     """
 
-    def version_matcher(py_version):
+    def version_matcher(py_version: PythonVersion) -> bool:
         return project.python_requires.contains(str(py_version.version))
 
     python = python.strip()

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 vcs = pip_shims.VcsSupport()
 
 
-def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
+def get_sdist(egg_info: str) -> Optional[EggInfoDistribution]:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
 
@@ -39,7 +39,7 @@ def _patch_version_parsing():
     from packaging.requirements import InvalidRequirement
     from packaging.requirements import Requirement as PRequirement
 
-    def is_valid_matcher(self, s):
+    def is_valid_matcher(self: Any, s: str) -> bool:
         try:
             PRequirement(s)
         except InvalidRequirement:

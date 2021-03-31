@@ -1,17 +1,24 @@
 import hashlib
 import urllib.parse
+from argparse import Namespace
+from os import PathLike
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
+from pip._vendor.packaging.requirements import Requirement as PRequirement
 
 from pdm.exceptions import PdmUsageError
 from pdm.formats.base import make_array
+from pdm.models.candidates import Candidate
+from pdm.models.environment import Environment
 from pdm.models.markers import Marker
-from pdm.models.pip_shims import parse_requirements
-from pdm.models.requirements import parse_requirement
+from pdm.models.pip_shims import InstallRequirement, PackageFinder, parse_requirements
+from pdm.models.requirements import Requirement, parse_requirement
+from pdm.project import Project
 from pdm.utils import get_finder
 
 
-def _requirement_to_str_lowercase_name(requirement):
+def _requirement_to_str_lowercase_name(requirement: PRequirement) -> str:
     """Formats a packaging.requirements.Requirement with a lowercase name."""
     parts = [requirement.name.lower()]
 
@@ -30,7 +37,7 @@ def _requirement_to_str_lowercase_name(requirement):
     return "".join(parts)
 
 
-def ireq_as_line(ireq, environment):
+def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
     """Formats an `InstallRequirement` instance as a
     PEP 508 dependency string.
 
@@ -62,7 +69,9 @@ def ireq_as_line(ireq, environment):
     return line
 
 
-def parse_requirement_file(filename):
+def parse_requirement_file(
+    filename: str,
+) -> Tuple[List[InstallRequirement], PackageFinder]:
     from pdm.models.pip_shims import install_req_from_parsed_requirement
 
     finder = get_finder([])
@@ -73,7 +82,7 @@ def parse_requirement_file(filename):
     return ireqs, finder
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Project, filename: PathLike) -> bool:
     import tomlkit
 
     with open(filename, encoding="utf-8") as fp:
@@ -86,13 +95,15 @@ def check_fingerprint(project, filename):
             return False
 
 
-def convert_url_to_source(url, name=None):
+def convert_url_to_source(url: str, name: Optional[str] = None) -> Dict[str, Any]:
     if not name:
         name = hashlib.sha1(url.encode("utf-8")).hexdigest()[:6]
     return {"name": name, "url": url, "verify_ssl": url.startswith("https://")}
 
 
-def convert(project, filename, options):
+def convert(
+    project: Project, filename: PathLike, options: Namespace
+) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
     ireqs, finder = parse_requirement_file(str(filename))
     with project.core.ui.logging("build"):
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
@@ -116,7 +127,11 @@ def convert(project, filename, options):
     return data, settings
 
 
-def export(project, candidates, options):
+def export(
+    project: Project,
+    candidates: Union[List[Candidate], List[Requirement]],
+    options: Namespace,
+) -> str:
     lines = []
     for candidate in candidates:
         req = getattr(candidate, "req", candidate).as_line()

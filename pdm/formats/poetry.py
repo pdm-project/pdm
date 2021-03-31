@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import functools
 import operator
 import os
 import re
+from argparse import Namespace
+from os import PathLike
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import toml
 
+from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
     MetaConverter,
     Unset,
@@ -16,10 +22,14 @@ from pdm.formats.base import (
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+
+if TYPE_CHECKING:
+    from pdm.project.core import Project
+
 from pdm.utils import cd
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -32,7 +42,7 @@ def check_fingerprint(project, filename):
 VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")
 
 
-def _convert_specifier(version):
+def _convert_specifier(version: str) -> str:
     parts = []
     for op, version in VERSION_RE.findall(str(version)):
         if op == "~":
@@ -48,14 +58,14 @@ def _convert_specifier(version):
     return ",".join(parts)
 
 
-def _convert_python(python):
+def _convert_python(python: str) -> PySpecSet:
     if not python:
         return PySpecSet()
     parts = [PySpecSet(_convert_specifier(s)) for s in python.split("||")]
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(name, req_dict):
+def _convert_req(name: str, req_dict: RequirementDict) -> str:
     if not getattr(req_dict, "items", None):
         return Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
     req_dict = dict(req_dict)
@@ -81,26 +91,26 @@ def _convert_req(name, req_dict):
 
 class PoetryMetaConverter(MetaConverter):
     @convert_from("authors")
-    def authors(self, value):
+    def authors(self, value: List[str]) -> List[str]:
         return parse_name_email(value)
 
     @convert_from("maintainers")
-    def maintainers(self, value):
+    def maintainers(self, value: List[str]) -> List[str]:
         return parse_name_email(value)
 
     @convert_from("license")
-    def license(self, value):
+    def license(self, value: str) -> Dict[str, str]:
         self._data["dynamic"] = ["classifiers"]
         return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
-    def requires_python(self, source):
+    def requires_python(self, source: Dict[str, Any]) -> str:
         python = source.get("dependencies", {}).pop("python", None)
         self._data["dynamic"] = ["classifiers"]
         return str(_convert_python(python))
 
     @convert_from()
-    def urls(self, source):
+    def urls(self, source: Dict[str, Any]) -> Dict[str, str]:
         rv = source.pop("urls", {})
         if "homepage" in source:
             rv["homepage"] = source.pop("homepage")
@@ -111,11 +121,13 @@ class PoetryMetaConverter(MetaConverter):
         return rv
 
     @convert_from("plugins", name="entry-points")
-    def entry_points(self, value):
+    def entry_points(
+        self, value: Dict[str, Dict[str, str]]
+    ) -> Dict[str, Dict[str, str]]:
         return value
 
     @convert_from()
-    def dependencies(self, source):
+    def dependencies(self, source: Source) -> List[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
@@ -135,11 +147,11 @@ class PoetryMetaConverter(MetaConverter):
         return make_array(rv, True)
 
     @convert_from("dev-dependencies", name="dev-dependencies")
-    def dev_dependencies(self, value):
+    def dev_dependencies(self, value: Dict[str, Any]) -> List[str]:
         return make_array([_convert_req(key, req) for key, req in value.items()], True)
 
     @convert_from()
-    def includes(self, source):
+    def includes(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
         result = []
         for item in source.pop("packages", []):
             include = item["include"]
@@ -150,11 +162,11 @@ class PoetryMetaConverter(MetaConverter):
         return result
 
     @convert_from("exclude")
-    def excludes(self, value):
+    def excludes(self, value: List[str]) -> List[str]:
         return value
 
     @convert_from("source")
-    def source(self, value):
+    def source(self, value: List[Source]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
@@ -166,7 +178,11 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
 
-def convert(project, filename, options):
+def convert(
+    project: Optional[Project],
+    filename: PathLike,
+    options: Optional[Namespace],
+) -> Tuple[Dict[str, Any], Dict]:
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
@@ -176,5 +192,5 @@ def convert(project, filename, options):
         return converter.convert()
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()

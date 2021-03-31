@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 import tomlkit
 from tomlkit.items import Array, InlineTable
@@ -29,7 +29,7 @@ class Unset(Exception):
 
 
 class _MetaConverterMeta(type):
-    def __init__(cls, name, bases, ns):
+    def __init__(cls, name: str, bases: Tuple[type], ns: Dict[str, Any]) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}
         _default = object()

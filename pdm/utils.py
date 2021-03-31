@@ -10,12 +10,26 @@ import subprocess
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
+from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from re import Match
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+    TypeVar,
+    overload,
+)
 
 from distlib.wheel import Wheel
-from tomlkit.container import Container
-from tomlkit.items import Item
+from pip._vendor.packaging.tags import Tag
+from pip._vendor.requests import Session
 
 from pdm._types import Source
 from pdm.models.pip_shims import (
@@ -31,6 +45,7 @@ try:
 except ImportError:
 
     _T = TypeVar("_T")
+    _C = TypeVar("_C")
 
     class cached_property(Generic[_T]):
         def __init__(self, func: Callable[[Any], _T]):
@@ -38,7 +53,15 @@ except ImportError:
             self.attr_name = func.__name__
             self.__doc__ = func.__doc__
 
-        def __get__(self, inst: Any, cls=None) -> _T:
+        @overload
+        def __get__(self: _C, inst: None, cls: Any = ...) -> _C:
+            ...
+
+        @overload
+        def __get__(self, inst: object, cls: Any = ...) -> _T:
+            ...
+
+        def __get__(self, inst, cls=None):
             if inst is None:
                 return self
             if self.attr_name not in inst.__dict__:
@@ -71,7 +94,7 @@ def prepare_pip_source_args(
     return pip_args
 
 
-def get_pypi_source():
+def get_pypi_source() -> Tuple[str, bool]:
     """Get what is defined in pip.conf as the index-url."""
     install_cmd = InstallCommand()
     options, _ = install_cmd.parser.parse_args([])
@@ -111,7 +134,7 @@ def create_tracked_tempdir(
     name = tempfile.mkdtemp(suffix, prefix, dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
 
-    def clean_up():
+    def clean_up() -> None:
         shutil.rmtree(name, ignore_errors=True)
 
     atexit.register(clean_up)
@@ -127,7 +150,7 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def is_readonly_property(cls, name):
+def is_readonly_property(cls: Any, name: str) -> Optional[Any]:
     """Tell whether a attribute can't be setattr'ed."""
     attr = getattr(cls, name, None)
     return attr and isinstance(attr, property) and not attr.fset
@@ -140,12 +163,12 @@ def join_list_with(items: List[Any], sep: Any) -> List[Any]:
     return new_items[:-1]
 
 
-def _wheel_supported(self, tags=None):
+def _wheel_supported(self: Any, tags: List[Tag] = None) -> bool:
     # Ignore current platform. Support everything.
     return True
 
 
-def _wheel_support_index_min(self, tags=None):
+def _wheel_support_index_min(self: Any, tags: Optional[str] = None) -> int:
     # All wheels are equal priority for sorting.
     return 0
 
@@ -259,7 +282,7 @@ def get_in_project_venv_python(root: Path) -> Optional[Path]:
 
 
 @contextmanager
-def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"):
+def atomic_open_for_write(filename: PathLike, *, encoding: str = "utf-8"):
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
     filename = str(filename)
     try:
@@ -289,7 +312,7 @@ def cd(path: str):
 
 
 @contextmanager
-def temp_environ():
+def temp_environ() -> Iterator:
     environ = os.environ.copy()
     try:
         yield
@@ -299,7 +322,7 @@ def temp_environ():
 
 
 @contextmanager
-def open_file(url, session=None):
+def open_file(url: str, session: Optional[Session] = None) -> TextIO:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
@@ -336,7 +359,7 @@ def populate_link(
         ireq.link = link
 
 
-def setdefault(document: Container, key: str, value: Any) -> Item:
+def setdefault(document: Dict, key: str, value: Any) -> Dict:
     """A compatiable dict.setdefault() for tomlkit data structures."""
     if key not in document:
         document[key] = value
@@ -358,7 +381,7 @@ def expand_env_vars(credential: str, quote: bool = False) -> str:
     Neither $ENV_VAR and %ENV_VAR is not supported.
     """
 
-    def replace_func(match):
+    def replace_func(match: Match) -> str:
         rv = os.getenv(match.group(1), match.group(0))
         return parse.quote(rv) if quote else rv
 

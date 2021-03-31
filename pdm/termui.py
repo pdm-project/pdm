@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import atexit
 import contextlib
 import functools
@@ -7,7 +9,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import List, Optional
+from typing import Any, Callable, ContextManager, Iterator, List, Optional, Union
 
 import click
 from click._compat import strip_ansi
@@ -76,10 +78,10 @@ class DummySpinner:
 
     text = property(lambda self: "", start)
 
-    def __enter__(self):
+    def __enter__(self) -> DummySpinner:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         pass
 
 
@@ -99,7 +101,7 @@ class UI:
         message: str = "",
         err: bool = False,
         verbosity: int = NORMAL,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if self.verbosity >= verbosity:
             click.secho(
@@ -115,7 +117,7 @@ class UI:
         :param header: a list of header strings.
         """
 
-        def get_aligner(align):
+        def get_aligner(align: str) -> Callable:
             if align == ">":
                 return rjust
             if align == "^":
@@ -154,7 +156,7 @@ class UI:
             )
 
     @contextlib.contextmanager
-    def indent(self, prefix):
+    def indent(self, prefix: str) -> Iterator[None]:
         """Indent the following lines with a prefix."""
         _indent = self._indent
         self._indent += prefix
@@ -162,7 +164,7 @@ class UI:
         self._indent = _indent
 
     @contextlib.contextmanager
-    def logging(self, type_: str = "install"):
+    def logging(self, type_: str = "install") -> Iterator[logging.Logger]:
         """A context manager that opens a file for logging when verbosity is NORMAL or
         print to the stdout otherwise.
         """
@@ -196,7 +198,9 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(self, title: str, spinner: str = "dots"):
+    def open_spinner(
+        self, title: str, spinner: str = "dots"
+    ) -> ContextManager[Union[DummySpinner, halo.Halo]]:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()

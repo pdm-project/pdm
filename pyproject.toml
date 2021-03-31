@@ -34,6 +34,7 @@ dev-dependencies = [
     "pytest-xdist<2.0.0,>=1.31.0",
     "vendoring; python_version ~= \"3.8\"",
     "parver<1.0.0,>=0.3.1",
+    "mypy~=0.812",
 ]
 name = "pdm"
 description = "Python Development Master"
@@ -65,6 +66,7 @@ release = "python tasks/release.py"
 test = "pytest tests/"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
+typecheck = "mypy ./pdm"
 
 [tool.black]
 line-length = 88

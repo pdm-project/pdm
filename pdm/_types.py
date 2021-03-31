@@ -1,9 +1,10 @@
+import sys
 from typing import Dict, List, NamedTuple, Tuple, Union
 
-try:
+if sys.version_info >= (3, 8):
     from typing import Literal
-except ImportError:
-    from typing_extensions import Literal  # noqa
+else:
+    from typing_extensions import Literal
 
 Source = Dict[str, Union[str, bool]]
 RequirementDict = Union[str, Dict[str, Union[bool, str]]]
@@ -17,3 +18,12 @@ class Package(NamedTuple):
 
 
 SearchResult = List[Package]
+
+__all__ = (
+    "Literal",
+    "Source",
+    "RequirementDict",
+    "CandidateInfo",
+    "Package",
+    "SearchResult",
+)

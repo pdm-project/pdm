@@ -21,7 +21,7 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     E.g. ["python"]["path"] will be loaded as "python.path" key.
     """
 
-    def get_item(sub_data):
+    def get_item(sub_data: Dict[str, Any]) -> Dict[str, Any]:
         result = {}
         for k, v in sub_data.items():
             if getattr(v, "items", None) is not None:
@@ -130,7 +130,7 @@ class Config(MutableMapping):
     del pypi_url, verify_ssl
 
     @classmethod
-    def get_defaults(cls):
+    def get_defaults(cls) -> Dict[str, Any]:
         return {k: v.default for k, v in cls._config_map.items() if v.should_show()}
 
     @classmethod
@@ -202,7 +202,7 @@ class Config(MutableMapping):
     def __iter__(self) -> Iterable[str]:
         return iter(self._data)
 
-    def __delitem__(self, key) -> None:
+    def __delitem__(self, key: str) -> None:
         self._data.pop(key, None)
         try:
             del self._file_data[key]

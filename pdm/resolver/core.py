@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 # Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
-def _merge_into_criterion(self, requirement, parent):
+def _merge_into_criterion(self, requirement, parent):  # type: ignore
     self._r.adding_requirement(requirement, parent)
     name = self._p.identify(requirement)
     try:

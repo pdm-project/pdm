@@ -41,7 +41,6 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
-    from tomlkit.container import Container
 
     from pdm._vendor import halo
     from pdm.core import Core
@@ -69,8 +68,8 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         self.is_global = False
-        self._pyproject: Optional[Container] = None
-        self._lockfile: Optional[Container] = None
+        self._pyproject: Optional[Dict] = None
+        self._lockfile: Optional[Dict] = None
         self._environment: Optional[Environment] = None
         self._python_executable: Optional[str] = None
 
@@ -95,25 +94,25 @@ class Project:
         return self.root / "pdm.lock"
 
     @property
-    def pyproject(self) -> Container:
+    def pyproject(self) -> Optional[dict]:
         if not self._pyproject and self.pyproject_file.exists():
             data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
         return self._pyproject
 
     @pyproject.setter
-    def pyproject(self, data):
+    def pyproject(self, data: Dict[str, Any]) -> None:
         self._pyproject = data
 
     @property
-    def tool_settings(self) -> Union[Container, Dict]:
+    def tool_settings(self) -> dict:
         data = self.pyproject
         if not data:
             return {}
         return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
-    def lockfile(self) -> Container:
+    def lockfile(self) -> dict:
         if not self.lockfile_file.is_file():
             raise ProjectError("Lock file does not exist.")
         if not self._lockfile:
@@ -170,8 +169,9 @@ class Project:
         else:
             suffix = ""
             scripts = "bin"
-        if config["use_venv"] and os.getenv("VIRTUAL_ENV"):
-            return os.path.join(os.getenv("VIRTUAL_ENV"), scripts, f"python{suffix}")
+        virtual_env = os.getenv("VIRTUAL_ENV")
+        if config["use_venv"] and virtual_env:
+            return os.path.join(virtual_env, scripts, f"python{suffix}")
 
         for py_version in self.find_interpreters():
             if self.python_requires.contains(str(py_version.version)):
@@ -335,7 +335,7 @@ class Project:
         data = {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
         return data
 
-    def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
+    def write_lockfile(self, toml_data: Dict, show_message: bool = True) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
 
         with atomic_open_for_write(self.lockfile_file) as fp:

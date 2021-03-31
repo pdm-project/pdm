@@ -10,7 +10,7 @@ from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
 
-def normalize_package(name):
+def normalize_package(name: str) -> str:
     return safe_name(name).lower()
 
 
@@ -47,6 +47,7 @@ class Command(BaseCommand):
         installed = project.environment.get_working_set().get(package)
 
         metadata = latest.get_metadata()
+        assert metadata
         if metadata._legacy:
             result = ProjectInfo(dict(metadata._legacy.items()), True)
         else:

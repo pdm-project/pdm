@@ -43,7 +43,7 @@ FILE_REQ = re.compile(
 )
 
 
-def strip_extras(line):
+def strip_extras(line: str) -> Tuple[str, Optional[Tuple]]:
     match = re.match(r"^(.+?)(?:\[([^\]]+)\])?$", line)
     assert match is not None
     name, extras = match.groups()
@@ -80,7 +80,7 @@ class Requirement:
         "from_section",
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self._marker = None
         self.from_section = "default"
         self.marker_no_python: Optional[Marker] = None
@@ -93,7 +93,7 @@ class Requirement:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         hashCmp = (
             self.key,
             self.url,
@@ -111,7 +111,7 @@ class Requirement:
         return self._marker
 
     @marker.setter
-    def marker(self, value) -> None:
+    def marker(self, value: Optional[Marker]) -> None:
         try:
             m = self._marker = get_marker(value)
             if not m:
@@ -217,7 +217,7 @@ class Requirement:
             not editable_match or self.editable == req.editable
         )
 
-    def as_ireq(self, **kwargs) -> InstallRequirement:
+    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
         line_for_req = self.as_line()
         if self.editable:
             line_for_req = line_for_req[3:].strip()
@@ -245,7 +245,7 @@ class Requirement:
 
 
 class FileRequirement(Requirement):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.path = (
             Path(str(self.path).replace("${PROJECT_ROOT}", ".")) if self.path else None
@@ -371,7 +371,7 @@ class NamedRequirement(Requirement, PackageRequirement):
 
 
 class VcsRequirement(FileRequirement):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.repo = None
         if not kwargs.get("vcs"):
             kwargs["vcs"] = kwargs["url"].split("+", 1)[0]
@@ -384,7 +384,7 @@ class VcsRequirement(FileRequirement):
         )
         return r
 
-    def as_ireq(self, **kwargs) -> InstallRequirement:
+    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
         ireq = super().as_ireq(**kwargs)
         if not self.editable and self.revision:
             # For non-editable VCS requirements, commit-hash should be used as the
