@@ -172,7 +172,7 @@ def do_add(
         tracked_names.add(key)
         requirements[key] = r
     project.core.ui.echo(
-        f"Adding packages to {section} dependencies: "
+        f"Adding packages to {section} {'dev-' if dev else ''}dependencies: "
         + ", ".join(termui.green(key or "", bold=True) for key in requirements)
     )
     all_dependencies = project.all_dependencies
@@ -249,8 +249,8 @@ def do_update(
         )
         if not matched_name:
             raise ProjectError(
-                "{} does not exist in {} dependencies.".format(
-                    termui.green(name, bold=True), section
+                "{} does not exist in {} {}dependencies.".format(
+                    termui.green(name, bold=True), section, "dev-" if dev else ""
                 )
             )
         if unconstrained:
@@ -299,7 +299,7 @@ def do_remove(
 
     deps = project.get_pyproject_dependencies(section, dev)
     project.core.ui.echo(
-        f"Removing packages from {section} dependencies: "
+        f"Removing packages from {section} {'dev-' if dev else ''}dependencies: "
         + ", ".join(str(termui.green(name, bold=True)) for name in packages)
     )
     for name in packages:

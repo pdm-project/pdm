@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
 
-from pdm._types import Source, RequirementDict
+from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
     MetaConverter,
     Unset,
