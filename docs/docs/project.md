@@ -105,8 +105,8 @@ You can find all available configuration items in [Configuration Page](configura
 
 ## Manage global project
 
-Sometimes users may want to keep track of the dependencies of global Python interpreter.
-It is easy to do it with PDM, via `-g/--global` option which is supported by most subcommands.
+Sometimes users may want to keep track of the dependencies of global Python interpreter as well.
+It is easy to do so with PDM, via `-g/--global` option which is supported by most subcommands.
 
 If the option is passed, `~/.pdm/global-project` will be used as the project directory, which is
 almost the same as normal project except that `pyproject.toml` will be created automatically for you
@@ -114,10 +114,10 @@ and it doesn't support build features. The idea is taken from Haskell's [stack](
 
 However, unlike `stack`, by default, PDM won't use global project automatically if a local project is not found.
 Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
-To change this behavior, simply change the config `auto_global` to `true`.
+But PDM also leave the decision to users, just set the config `auto_global` to `true`.
 
 If you want global project to track another project file other than `~/.pdm/global-project`, you can provide the
-project path following `-g/--global`.
+project path via `-p/--project <path>` option.
 
 !!! attention "CAUTION"
     Be careful with `remove` and `sync --clean` commands when global project is used, because it may remove packages installed in your system Python.
