@@ -9,7 +9,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import Any, Callable, Iterator, List, Optional
+from typing import Any, Callable, ContextManager, List, Optional
 
 import click
 from click._compat import strip_ansi
@@ -198,7 +198,7 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(self, title: str, spinner: str = "dots"):
+    def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()
