@@ -30,7 +30,7 @@ class Unset(Exception):
 
 class _MetaConverterMeta(type):
     def __init__(
-        cls, name: str, bases: Dict[str, Any], ns: Union[None, Path, str]
+        cls, name: str, bases: Tuple[type], ns: Dict[str, Any]
     ) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}

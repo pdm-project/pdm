@@ -129,7 +129,7 @@ def convert(
 
 def export(
     project: Project,
-    candidates: Union[List[Candidate], List[NamedRequirement]],
+    candidates: Union[List[Candidate], List[Requirement]],
     options: Namespace,
 ) -> str:
     lines = []
