@@ -89,6 +89,17 @@ def lint(session):
 Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Python in the virtualenv correctly. Also make sure `pdm` is available in the `PATH`.
 Before running nox, you should also `pdm config use_venv true` to enable venv reusing.
 
+## About PEP 582 `__pypackages__` directory
+
+By default, if you run tools by `pdm run`, `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
+For `nox`, you can avoid this by adding a line in `noxfile.py`:
+
+```python
+os.environ.pop("PYTHONPATH", None)
+```
+
+For `tox`, `PYTHONPATH` will not be passed to the test sessions so this isn't going to be a problem. Moreover, it is recommended to make `nox` and `tox` live in their own pipx environments so you don't need to install for every project. In this case, PEP 582 packages will not be a problem either.
+
 ## Use PDM in Continuous Integration
 
 Only one thing to keep in mind -- PDM can't be installed on Python < 3.7, so if your project is to be tested on those Python versions,
