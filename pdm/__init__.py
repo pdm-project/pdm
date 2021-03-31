@@ -1,6 +1,6 @@
 from pkgutil import extend_path
 
-__path__ = extend_path(__path__, __name__)
+__path__ = extend_path(__path__, __name__)  # type: ignore
 # Export for plugin use
 from pdm.cli.commands.base import BaseCommand
 from pdm.core import Core
@@ -18,7 +18,7 @@ __all__ = (
 )
 
 
-def _fix_pkg_resources():
+def _fix_pkg_resources() -> None:
     import importlib
     import sys
 

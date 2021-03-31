@@ -94,25 +94,25 @@ class Project:
         return self.root / "pdm.lock"
 
     @property
-    def pyproject(self) -> Dict:
+    def pyproject(self) -> Optional[dict]:
         if not self._pyproject and self.pyproject_file.exists():
             data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
         return self._pyproject
 
     @pyproject.setter
-    def pyproject(self, data: Dict) -> None:
+    def pyproject(self, data: Dict[str, Any]) -> None:
         self._pyproject = data
 
     @property
-    def tool_settings(self) -> Union[Dict]:
+    def tool_settings(self) -> dict:
         data = self.pyproject
         if not data:
             return {}
         return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
-    def lockfile(self) -> Dict:
+    def lockfile(self) -> dict:
         if not self.lockfile_file.is_file():
             raise ProjectError("Lock file does not exist.")
         if not self._lockfile:
@@ -169,8 +169,9 @@ class Project:
         else:
             suffix = ""
             scripts = "bin"
-        if config["use_venv"] and os.getenv("VIRTUAL_ENV"):
-            return os.path.join(os.getenv("VIRTUAL_ENV"), scripts, f"python{suffix}")
+        virtual_env = os.getenv("VIRTUAL_ENV")
+        if config["use_venv"] and virtual_env:
+            return os.path.join(virtual_env, scripts, f"python{suffix}")
 
         for py_version in self.find_interpreters():
             if self.python_requires.contains(str(py_version.version)):

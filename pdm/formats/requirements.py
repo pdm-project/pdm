@@ -5,7 +5,7 @@ from os import PathLike
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
-from pip._vendor.packaging.requirements import Requirement
+from pip._vendor.packaging.requirements import Requirement as PRequirement
 
 from pdm.exceptions import PdmUsageError
 from pdm.formats.base import make_array
@@ -13,12 +13,12 @@ from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.markers import Marker
 from pdm.models.pip_shims import InstallRequirement, PackageFinder, parse_requirements
-from pdm.models.requirements import NamedRequirement, parse_requirement
+from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
 from pdm.utils import get_finder
 
 
-def _requirement_to_str_lowercase_name(requirement: Union[Requirement]) -> str:
+def _requirement_to_str_lowercase_name(requirement: PRequirement) -> str:
     """Formats a packaging.requirements.Requirement with a lowercase name."""
     parts = [requirement.name.lower()]
 

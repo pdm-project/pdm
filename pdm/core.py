@@ -5,7 +5,7 @@ import importlib
 import os
 import pkgutil
 import sys
-from typing import Any, Callable, List, Optional, Type
+from typing import Any, List, Optional, Type
 
 import click
 from pip._vendor import pkg_resources
@@ -28,7 +28,7 @@ COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 class Core:
     """A high level object that manages all classes and configurations"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         try:
             import importlib.metadata as importlib_metadata
         except ModuleNotFoundError:
@@ -41,7 +41,7 @@ class Core:
         self.synchronizer_class = Synchronizer
 
         self.ui = termui.UI()
-        self.parser = None
+        self.parser: PdmParser = None
         self.subparsers = None
 
     def init_parser(self) -> None:
@@ -50,7 +50,7 @@ class Core:
             description="PDM - Python Development Master",
             formatter_class=PdmFormatter,
         )
-        self.parser.is_root = True
+        self.parser.is_root = True  # type: ignore
         self.parser.add_argument(
             "-V",
             "--version",
@@ -73,7 +73,7 @@ class Core:
                 continue
             self.register_command(klass, klass.name or name)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Callable[..., Any]:
+    def __call__(self, *args: Any, **kwargs: Any) -> None:
         return self.main(*args, **kwargs)
 
     def ensure_project(
@@ -172,6 +172,6 @@ class Core:
             plugin.load()(self)
 
 
-def main(args: Any = None) -> Callable[..., Any]:
+def main(args: Optional[List[str]] = None) -> None:
     """The CLI entry function"""
     return Core().main(args)

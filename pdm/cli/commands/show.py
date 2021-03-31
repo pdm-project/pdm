@@ -47,6 +47,7 @@ class Command(BaseCommand):
         installed = project.environment.get_working_set().get(package)
 
         metadata = latest.get_metadata()
+        assert metadata
         if metadata._legacy:
             result = ProjectInfo(dict(metadata._legacy.items()), True)
         else:

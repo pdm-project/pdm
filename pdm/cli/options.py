@@ -1,8 +1,6 @@
 import argparse
 from typing import Any
 
-from pdm.cli.utils import PdmParser
-
 
 class Option:
     """A reusable option object which delegates all arguments
@@ -42,7 +40,7 @@ class ArgumentGroup:
     def add_argument(self, *args: Any, **kwargs: Any) -> None:
         self.options.append(Option(*args, **kwargs))
 
-    def add_to_parser(self, parser: PdmParser) -> None:
+    def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
         if self.is_mutually_exclusive:
             group = parser.add_mutually_exclusive_group(required=self.required)
         else:

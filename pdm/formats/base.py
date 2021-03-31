@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 import tomlkit
+from tomlkit.items import Array, InlineTable
 
 from pdm import termui
 
@@ -29,9 +29,7 @@ class Unset(Exception):
 
 
 class _MetaConverterMeta(type):
-    def __init__(
-        cls, name: str, bases: Tuple[type], ns: Dict[str, Any]
-    ) -> None:
+    def __init__(cls, name: str, bases: Tuple[type], ns: Dict[str, Any]) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}
         _default = object()
@@ -80,14 +78,14 @@ class MetaConverter(metaclass=_MetaConverterMeta):
 NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 
-def make_inline_table(data: Mapping) -> Dict[str, str]:
+def make_inline_table(data: Mapping) -> InlineTable:
     """Create an inline table from the given data."""
     table = tomlkit.inline_table()
     table.update(data)
     return table
 
 
-def make_array(data: List[Any], multiline: bool = False) -> List[Any]:
+def make_array(data: list, multiline: bool = False) -> Array:
     if not data:
         return []
     array = tomlkit.array()
@@ -97,11 +95,11 @@ def make_array(data: List[Any], multiline: bool = False) -> List[Any]:
     return array
 
 
-def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> List[str]:
+def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> Array:
     return make_array([make_inline_table(item) for item in value], multiline)
 
 
-def parse_name_email(name_email: List[str]) -> List[str]:
+def parse_name_email(name_email: List[str]) -> Array:
     return array_of_inline_tables(
         [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
     )

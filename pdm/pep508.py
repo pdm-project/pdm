@@ -5,7 +5,7 @@ import sys
 from typing import Dict
 
 
-def format_full_version(info: str) -> str:
+def format_full_version(info: sys._version_info) -> str:
     version = "{0.major}.{0.minor}.{0.micro}".format(info)
     kind = info.releaselevel
     if kind != "final":

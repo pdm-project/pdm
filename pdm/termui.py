@@ -9,7 +9,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import Any, Callable, ContextManager, List, Optional
+from typing import Any, Callable, ContextManager, Iterator, List, Optional, Union
 
 import click
 from click._compat import strip_ansi
@@ -156,7 +156,7 @@ class UI:
             )
 
     @contextlib.contextmanager
-    def indent(self, prefix: str) -> Iterator:
+    def indent(self, prefix: str) -> Iterator[None]:
         """Indent the following lines with a prefix."""
         _indent = self._indent
         self._indent += prefix
@@ -164,7 +164,7 @@ class UI:
         self._indent = _indent
 
     @contextlib.contextmanager
-    def logging(self, type_: str = "install"):
+    def logging(self, type_: str = "install") -> Iterator[logging.Logger]:
         """A context manager that opens a file for logging when verbosity is NORMAL or
         print to the stdout otherwise.
         """
@@ -198,7 +198,9 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
+    def open_spinner(
+        self, title: str, spinner: str = "dots"
+    ) -> ContextManager[Union[DummySpinner, halo.Halo]]:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()

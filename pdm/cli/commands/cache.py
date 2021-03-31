@@ -26,7 +26,7 @@ class Command(BaseCommand):
         self.parser.print_help()
 
 
-def format_size(size: int) -> int:
+def format_size(size: int) -> str:
     if size > 1000 * 1000:
         return "{:.1f} MB".format(size / 1000.0 / 1000)
     elif size > 10 * 1000:
