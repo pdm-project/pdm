@@ -1,10 +1,5 @@
 import argparse
 
-import click
-
-from pdm import termui
-from pdm.project import Project
-
 
 class Option:
     """A reusable option object which delegates all arguments
@@ -153,27 +148,12 @@ project_option = Option(
 )
 
 
-def deprecate_global_option(value) -> Project:
-    if value:
-        click.echo(
-            termui.red(
-                "DEPRECATION: -g/--global with argument is deprecated and will be "
-                "removed in v1.5.0, please use '-gp <PROJECT_PATH>' instead."
-            ),
-            err=True,
-        )
-    return Project.create_global(value)
-
-
 global_option = Option(
     "-g",
     "--global",
     dest="global_project",
-    nargs="?",
-    type=deprecate_global_option,
-    const=True,
-    help="Use the global project, the project root can be supplied with "
-    "'-p/--project' option",
+    action="store_true",
+    help="Use the global project, supply the project root with `-p` option.",
 )
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
