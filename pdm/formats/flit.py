@@ -1,5 +1,5 @@
 import ast
-import warnings
+import os
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -12,6 +12,7 @@ from pdm.formats.base import (
     make_array,
     make_inline_table,
 )
+from pdm.utils import cd
 
 
 def check_fingerprint(project, filename):
@@ -75,7 +76,7 @@ class FlitMetaConverter(MetaConverter):
             "They are probably imported from other files which is not supported by PDM."
             " You may need to supply their values in pyproject.toml manually."
         )
-        warnings.warn(message, UserWarning, stacklevel=2)
+        self._ui.echo(message, err=True, fg="yellow")
 
     @convert_from("metadata")
     def name(self, metadata):
@@ -83,11 +84,10 @@ class FlitMetaConverter(MetaConverter):
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
         # version and description
-        parent_dir = Path(self.filename).parent
-        if (parent_dir / module / "__init__.py").exists():
-            source = parent_dir / module / "__init__.py"
+        if (Path(module) / "__init__.py").exists():
+            source = Path(module) / "__init__.py"
         else:
-            source = parent_dir / f"{module}.py"
+            source = Path(f"{module}.py")
 
         version = self._data.get("version")
         description = self._data.get("description")
@@ -132,16 +132,11 @@ class FlitMetaConverter(MetaConverter):
 
 
 def convert(project, filename, options):
-    with open(filename, encoding="utf-8") as fp:
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=UserWarning)
-            result = (
-                dict(FlitMetaConverter(toml.load(fp)["tool"]["flit"], filename)),
-                {},
-            )
-            for item in w:
-                project.core.ui.echo(f"WARN: {item.message}", fg="yellow", err=True)
-            return result
+    with open(filename, encoding="utf-8") as fp, cd(
+        os.path.dirname(os.path.abspath(filename))
+    ):
+        converter = FlitMetaConverter(toml.load(fp)["tool"]["flit"], project.core.ui)
+        return converter.convert()
 
 
 def export(project, candidates, options):
