@@ -320,7 +320,8 @@ class Environment:
         """Get the working set based on local packages directory."""
         paths = self.get_paths()
         return WorkingSet(
-            [paths["platlib"]], python=get_python_version(self.python_executable)[0]
+            [paths["platlib"], paths["purelib"]],
+            python=get_python_version(self.python_executable)[0],
         )
 
     @cached_property
