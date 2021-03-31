@@ -25,7 +25,7 @@ class DummyFuture:
         self._result = self._NOT_SET
         self._exc = None
 
-    def set_result(self, result: Candidate) -> None:
+    def set_result(self, result: Any) -> None:
         self._result = result
 
     def set_exception(self, exc: Exception) -> None:
@@ -34,7 +34,7 @@ class DummyFuture:
     def result(self):
         return self._result
 
-    def exception(self) -> Optional[Any]:
+    def exception(self) -> Optional[Exception]:
         return self._exc
 
     def add_done_callback(self, func: Callable) -> None:
@@ -83,9 +83,7 @@ class Synchronizer:
     @contextlib.contextmanager
     def create_executor(
         self,
-    ) -> Iterator[
-        Union[Iterator, Iterator[ThreadPoolExecutor], Iterator[DummyExecutor]]
-    ]:
+    ) -> Union[Iterator[ThreadPoolExecutor], Iterator[DummyExecutor]]:
         if self.parallel:
             executor = ThreadPoolExecutor(
                 max_workers=min(multiprocessing.cpu_count(), 8)

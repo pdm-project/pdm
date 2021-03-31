@@ -2,7 +2,7 @@ import dataclasses
 import os
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
 
 import appdirs
 import click
@@ -21,9 +21,7 @@ def load_config(file_path: Path) -> Dict[str, Any]:
     E.g. ["python"]["path"] will be loaded as "python.path" key.
     """
 
-    def get_item(
-        sub_data: Union[Dict[str, bool], Dict[str, Dict], Dict]
-    ) -> Union[Dict[str, bool], Dict[str, str]]:
+    def get_item(sub_data: Dict[str, Any]) -> Dict[str, Any]:
         result = {}
         for k, v in sub_data.items():
             if getattr(v, "items", None) is not None:

@@ -3,7 +3,7 @@ import warnings
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import toml
 
@@ -81,7 +81,7 @@ class FlitMetaConverter(MetaConverter):
         warnings.warn(message, UserWarning, stacklevel=2)
 
     @convert_from("metadata")
-    def name(self, metadata: Dict[str, Union[List[str], str]]) -> str:
+    def name(self, metadata: Dict[str, List[str]]) -> str:
         # name
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)

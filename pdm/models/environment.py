@@ -7,12 +7,11 @@ import shutil
 import sys
 import sysconfig
 from contextlib import contextmanager
+from os import PathLike
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional, Tuple
 
 from distlib.scripts import ScriptMaker
-from pip._internal.req import req_uninstall
-from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
 
 from pdm import termui
@@ -24,6 +23,7 @@ from pdm.models.in_process import (
     get_python_version,
     get_sys_config_paths,
 )
+from pdm.models.pip_shims import misc, req_uninstall
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
@@ -141,7 +141,7 @@ class Environment:
             misc.site_packages = _old_sitepackages
             pkg_resources.working_set = _old_ws
 
-    def is_local(self, path: Path) -> bool:
+    def is_local(self, path: PathLike) -> bool:
         """PEP 582 version of ``is_local()`` function."""
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.packages_path.as_posix())
@@ -367,7 +367,7 @@ class GlobalEnvironment(Environment):
         paths["headers"] = paths["include"]
         return paths
 
-    def is_local(self, path: Path) -> bool:
+    def is_local(self, path: PathLike) -> bool:
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.get_paths()["prefix"])
         )

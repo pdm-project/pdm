@@ -3,11 +3,12 @@ import operator
 import os
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import toml
 from packaging.markers import default_environment
 
+from pdm._types import RequirementDict
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
@@ -16,9 +17,7 @@ from pdm.project import Project
 MARKER_KEYS = list(default_environment().keys())
 
 
-def convert_pipfile_requirement(
-    name: str, req: Union[Dict[str, str], List[str], str]
-) -> str:
+def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
     markers = []
 
     if "markers" in req:

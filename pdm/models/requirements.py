@@ -43,7 +43,7 @@ FILE_REQ = re.compile(
 )
 
 
-def strip_extras(line: str) -> Tuple[str, Optional[Tuple[str, ...]]]:
+def strip_extras(line: str) -> Tuple[str, Optional[Tuple]]:
     match = re.match(r"^(.+?)(?:\[([^\]]+)\])?$", line)
     assert match is not None
     name, extras = match.groups()
@@ -111,7 +111,7 @@ class Requirement:
         return self._marker
 
     @marker.setter
-    def marker(self, value: Union[Marker, None]) -> None:
+    def marker(self, value: Optional[Marker]) -> None:
         try:
             m = self._marker = get_marker(value)
             if not m:

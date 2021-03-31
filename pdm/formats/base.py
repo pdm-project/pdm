@@ -92,9 +92,7 @@ def make_inline_table(data: Dict[str, str]) -> Dict[str, str]:
     return table
 
 
-def make_array(
-    data: Union[List[str], List[Dict[str, str]]], multiline: bool = False
-) -> Union[List, List[str]]:
+def make_array(data: List[Any], multiline: bool = False) -> List[Any]:
     if not data:
         return []
     array = tomlkit.array()

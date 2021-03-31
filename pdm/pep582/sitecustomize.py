@@ -1,12 +1,10 @@
 import os
 import site
 import sys
-from pathlib import Path
-from typing import Union
 
 
-def get_pypackages_path(maxdepth: int = 5) -> Path:
-    def find_pypackage(path: Path, version: str) -> Union[None, Path]:
+def get_pypackages_path(maxdepth=5):
+    def find_pypackage(path, version):
         if not os.path.exists(path):
             return None
 

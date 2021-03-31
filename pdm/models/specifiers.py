@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Iterable, List, Set, Tuple, Union, cast
+from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -211,7 +211,7 @@ class PySpecSet(SpecifierSet):
     def __hash__(self) -> int:
         return hash(self._comp_key())
 
-    def __eq__(self, other: PySpecSet) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, PySpecSet):
             return False
         return self._comp_key() == other._comp_key()

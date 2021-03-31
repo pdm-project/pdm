@@ -22,7 +22,7 @@ from pip._internal.network.auth import MultiDomainBasicAuth
 from pip._internal.network.cache import SafeFileCache
 from pip._internal.network.download import Downloader
 from pip._internal.operations.prepare import unpack_url
-from pip._internal.req import InstallRequirement
+from pip._internal.req import InstallRequirement, req_uninstall
 from pip._internal.req.constructors import (
     install_req_from_editable,
     install_req_from_line,
@@ -30,6 +30,7 @@ from pip._internal.req.constructors import (
 )
 from pip._internal.req.req_file import parse_requirements
 from pip._internal.utils import logging as pip_logging
+from pip._internal.utils import misc
 from pip._internal.utils.filesystem import directory_size, file_size, find_files
 from pip._internal.utils.hashes import FAVORITE_HASH, STRONG_HASHES
 from pip._internal.utils.temp_dir import global_tempdir_manager

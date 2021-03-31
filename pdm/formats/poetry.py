@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import toml
 
-from pdm._types import Source
+from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
     MetaConverter,
     Unset,
@@ -65,7 +65,7 @@ def _convert_python(python: str) -> PySpecSet:
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(name: str, req_dict: Union[Dict[str, str], List[str], str]) -> str:
+def _convert_req(name: str, req_dict: RequirementDict) -> str:
     if not getattr(req_dict, "items", None):
         return Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
     req_dict = dict(req_dict)
@@ -104,13 +104,13 @@ class PoetryMetaConverter(MetaConverter):
         return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
-    def requires_python(self, source: (Dict[str, Union[List[str], str]])) -> str:
+    def requires_python(self, source: Dict[str, Any]) -> str:
         python = source.get("dependencies", {}).pop("python", None)
         self._data["dynamic"] = ["classifiers"]
         return str(_convert_python(python))
 
     @convert_from()
-    def urls(self, source: (Dict[str, Union[List[str], str]])) -> Dict[str, str]:
+    def urls(self, source: Dict[str, Any]) -> Dict[str, str]:
         rv = source.pop("urls", {})
         if "homepage" in source:
             rv["homepage"] = source.pop("homepage")
@@ -127,7 +127,7 @@ class PoetryMetaConverter(MetaConverter):
         return value
 
     @convert_from()
-    def dependencies(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
+    def dependencies(self, source: Source) -> List[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
@@ -147,16 +147,7 @@ class PoetryMetaConverter(MetaConverter):
         return make_array(rv, True)
 
     @convert_from("dev-dependencies", name="dev-dependencies")
-    def dev_dependencies(
-        self,
-        value: Dict[
-            str,
-            Union[
-                Union[Dict[str, str], List[str], str],
-                Union[Dict[str, str], List[str], str],
-            ],
-        ],
-    ) -> List[str]:
+    def dev_dependencies(self, value: Dict[str, Any]) -> List[str]:
         return make_array([_convert_req(key, req) for key, req in value.items()], True)
 
     @convert_from()
