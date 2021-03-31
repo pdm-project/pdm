@@ -50,6 +50,7 @@ class Installer:  # pragma: no cover
     def install_wheel(self, wheel: Wheel) -> None:
         paths = self.environment.get_paths()
         maker = distlib.scripts.ScriptMaker(None, None)
+        maker.variants = set(("",))
         maker.executable = self.environment.python_executable
         wheel.install(paths, maker)
 
