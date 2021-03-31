@@ -247,7 +247,8 @@ class Synchronizer:
                     f"  - {termui.green(dist.key, bold=True)} "
                     f"{termui.yellow(dist.version)}"
                 )
-        self.ui.echo("\n".join(lines))
+        if lines:
+            self.ui.echo("\n".join(lines))
 
     def synchronize(self, clean: bool = True, dry_run: bool = False) -> None:
         """Synchronize the working set with pinned candidates.

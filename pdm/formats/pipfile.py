@@ -61,13 +61,15 @@ def convert(
         ],
         True,
     )
-    result["dev-dependencies"] = make_array(
-        [
-            convert_pipfile_requirement(k, req)
-            for k, req in data.get("dev-packages", {}).items()
-        ],
-        True,
-    )
+    settings["dev-dependencies"] = {
+        "dev": make_array(
+            [
+                convert_pipfile_requirement(k, req)
+                for k, req in data.get("dev-packages", {}).items()
+            ],
+            True,
+        )
+    }
     return result, settings
 
 

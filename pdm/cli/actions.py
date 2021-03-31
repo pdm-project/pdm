@@ -115,6 +115,16 @@ def do_sync(
         raise ProjectError("Lock file does not exist, nothing to sync")
     clean = default if clean is None else clean
     candidates = {}
+    sections = list(sections)
+    if dev and not sections:
+        sections.append(":all")
+    if ":all" in sections:
+        if dev:
+            sections = list(project.tool_settings.get("dev-dependencies", []))
+        else:
+            sections = list(project.meta.optional_dependencies or [])
+    if default:
+        sections.append("default")
     for section in sections:
         if section not in list(project.iter_sections()):
             raise PdmUsageError(
@@ -122,10 +132,6 @@ def do_sync(
                 "in the pyproject.toml"
             )
         candidates.update(project.get_locked_candidates(section))
-    if dev:
-        candidates.update(project.get_locked_candidates("dev"))
-    if default:
-        candidates.update(project.get_locked_candidates())
     handler = project.core.synchronizer_class(candidates, project.environment)
     handler.synchronize(clean=clean, dry_run=dry_run)
 
@@ -154,7 +160,8 @@ def do_add(
     check_project_file(project)
     if not editables and not packages:
         raise PdmUsageError("Must specify at least one package or editable package.")
-    section = "dev" if dev else section or "default"
+    if not section:
+        section = "dev" if dev else "default"
     tracked_names = set()
     requirements = {}
     for r in [parse_requirement(line, True) for line in editables] + [
@@ -165,7 +172,7 @@ def do_add(
         tracked_names.add(key)
         requirements[key] = r
     project.core.ui.echo(
-        f"Adding packages to {section} dependencies: "
+        f"Adding packages to {section} {'dev-' if dev else ''}dependencies: "
         + ", ".join(termui.green(key or "", bold=True) for key in requirements)
     )
     all_dependencies = project.all_dependencies
@@ -175,7 +182,7 @@ def do_add(
 
     # Update dependency specifiers and lockfile hash.
     save_version_specifiers(requirements, resolved, save)
-    project.add_dependencies(requirements)
+    project.add_dependencies(requirements, section, dev)
     lockfile = project.lockfile
     project.write_lockfile(lockfile, False)
 
@@ -242,8 +249,8 @@ def do_update(
         )
         if not matched_name:
             raise ProjectError(
-                "{} does not exist in {} dependencies.".format(
-                    termui.green(name, bold=True), section
+                "{} does not exist in {} {}dependencies.".format(
+                    termui.green(name, bold=True), section, "dev-" if dev else ""
                 )
             )
         if unconstrained:
@@ -257,11 +264,11 @@ def do_update(
     )
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     resolved = do_lock(project, strategy, tracked_names, reqs)
-    do_sync(project, sections=(section,), default=False, clean=False)
+    do_sync(project, sections=sections, dev=dev, default=False, clean=False)
     if unconstrained:
         # Need to update version constraints
         save_version_specifiers(updated_deps, resolved, save)
-        project.add_dependencies(updated_deps)
+        project.add_dependencies(updated_deps, section, dev)
         lockfile = project.lockfile
         project.write_lockfile(lockfile, False)
 
@@ -285,13 +292,14 @@ def do_remove(
     check_project_file(project)
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
-    section = "dev" if dev else section or "default"
+    if not section:
+        section = "dev" if dev else "default"
     if section not in list(project.iter_sections()):
-        raise ProjectError(f"No {section} dependencies given in pyproject.toml.")
+        raise ProjectError(f"No-exist section {section}")
 
-    deps = project.get_pyproject_dependencies(section)
+    deps = project.get_pyproject_dependencies(section, dev)
     project.core.ui.echo(
-        f"Removing packages from {section} dependencies: "
+        f"Removing packages from {section} {'dev-' if dev else ''}dependencies: "
         + ", ".join(str(termui.green(name, bold=True)) for name in packages)
     )
     for name in packages:
@@ -397,7 +405,6 @@ def do_init(
             "license": make_inline_table({"text": license}),
             "urls": {"homepage": ""},
             "dependencies": make_array([], True),
-            "dev-dependencies": make_array([], True),
             "requires-python": python_requires,
             "dynamic": ["classifiers"],
         },
@@ -530,8 +537,6 @@ def do_import(
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
         setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
 
-    pyproject["tool"]["pdm"].update(settings)
-
     if "project" not in pyproject:
         pyproject.add("project", tomlkit.table())
         pyproject["project"].add(tomlkit.comment("PEP 621 project metadata"))
@@ -540,6 +545,7 @@ def do_import(
         )
 
     pyproject["project"].update(project_data)
+    pyproject["tool"]["pdm"].update(settings)
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
         "build-backend": "pdm.pep517.api",
@@ -617,15 +623,41 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
 def migrate_pyproject(project: Project):
     """Migrate the legacy pyproject format to PEP 621"""
 
-    if (
-        not project.pyproject_file.exists()
-        or not FORMATS["legacy"].check_fingerprint(project, project.pyproject_file)
-        or "project" in project.pyproject
+    if project.pyproject and "project" in project.pyproject:
+        pyproject = project.pyproject
+        settings = {}
+        updated_fields = []
+        for field in ("includes", "excludes", "build", "package-dir"):
+            if field in pyproject["project"]:
+                updated_fields.append(field)
+                settings[field] = pyproject["project"][field]
+                del pyproject["project"][field]
+        if "dev-dependencies" in pyproject["project"]:
+            if pyproject["project"]["dev-dependencies"]:
+                settings["dev-dependencies"] = {
+                    "dev": pyproject["project"]["dev-dependencies"]
+                }
+            del pyproject["project"]["dev-dependencies"]
+            updated_fields.append("dev-dependencies")
+        if updated_fields:
+            if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
+                setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
+            pyproject["tool"]["pdm"].update(settings)
+            project.pyproject = pyproject
+            project.write_pyproject()
+            project.core.ui.echo(
+                f"Moved fields: {updated_fields}", fg="yellow", err=True
+            )
+        return
+
+    if not project.pyproject_file.exists() or not FORMATS["legacy"].check_fingerprint(
+        project, project.pyproject_file
     ):
         return
 
     project.core.ui.echo(
-        termui.yellow("Legacy [tool.pdm] metadata detected, migrating to PEP 621..."),
+        "Legacy [tool.pdm] metadata detected, migrating to PEP 621...",
+        fg="yellow",
         err=True,
     )
     do_import(project, project.pyproject_file, "legacy")

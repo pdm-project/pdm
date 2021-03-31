@@ -86,7 +86,8 @@ sections_group.add_argument(
     dest="sections",
     metavar="SECTION",
     action="append",
-    help="Specify section(s) to include",
+    help="(MULTIPLE) Specify section(s) of optional-dependencies "
+    "or dev-dependencies(with -d)",
     default=[],
 )
 sections_group.add_argument(
@@ -94,7 +95,7 @@ sections_group.add_argument(
     "--dev",
     default=False,
     action="store_true",
-    help="Include dev dependencies",
+    help="Select dev dependencies",
 )
 sections_group.add_argument(
     "--no-default",

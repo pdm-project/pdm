@@ -1,6 +1,6 @@
 [[package]]
 name = "apipkg"
-sections = ["dev"]
+sections = ["test"]
 version = "1.5"
 summary = "apipkg: namespace control and lazy-import mechanism"
 
@@ -12,20 +12,20 @@ summary = "A small Python module for determining appropriate platform-specific d
 
 [[package]]
 name = "arpeggio"
-sections = ["dev"]
+sections = ["workflow"]
 version = "1.10.1"
 summary = "Packrat parser interpreter"
 
 [[package]]
 name = "atomicwrites"
-sections = ["dev"]
+sections = ["test"]
 version = "1.4.0"
 marker = "sys_platform == 'win32'"
 summary = "Atomic file writes."
 
 [[package]]
 name = "attrs"
-sections = ["default", "dev"]
+sections = ["default", "test", "workflow"]
 version = "20.3.0"
 summary = "Classes Without Boilerplate"
 
@@ -37,7 +37,7 @@ summary = "A decorator for caching properties in classes."
 
 [[package]]
 name = "certifi"
-sections = ["dev"]
+sections = ["workflow"]
 version = "2020.12.5"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Python package for providing Mozilla's CA Bundle."
@@ -54,26 +54,26 @@ dependencies = [
 
 [[package]]
 name = "chardet"
-sections = ["dev"]
+sections = ["workflow"]
 version = "4.0.0"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Universal encoding detector for Python 2 and 3"
 
 [[package]]
 name = "click"
-sections = ["default", "dev", "doc"]
+sections = ["default", "doc", "workflow"]
 version = "7.1.2"
 summary = "Composable command line interface toolkit"
 
 [[package]]
 name = "colorama"
-sections = ["default", "dev"]
+sections = ["default", "test"]
 version = "0.4.4"
 summary = "Cross-platform colored terminal text."
 
 [[package]]
 name = "coverage"
-sections = ["dev"]
+sections = ["test"]
 version = "5.3.1"
 summary = "Code coverage measurement for Python"
 
@@ -96,7 +96,7 @@ summary = "Distribution utilities"
 
 [[package]]
 name = "execnet"
-sections = ["dev"]
+sections = ["test"]
 version = "1.7.1"
 summary = "execnet: rapid multi-Python deployment"
 dependencies = [
@@ -111,14 +111,14 @@ summary = "Clean single-source support for Python 3 and 2"
 
 [[package]]
 name = "idna"
-sections = ["dev"]
+sections = ["workflow"]
 version = "2.10"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Internationalized Domain Names in Applications (IDNA)"
 
 [[package]]
 name = "importlib-metadata"
-sections = ["default", "dev", "doc"]
+sections = ["default", "doc", "test", "workflow"]
 version = "3.4.0"
 marker = "python_version < '4.0'"
 summary = "Read metadata from Python packages"
@@ -129,13 +129,13 @@ dependencies = [
 
 [[package]]
 name = "incremental"
-sections = ["dev"]
+sections = ["workflow"]
 version = "17.5.0"
 summary = "UNKNOWN"
 
 [[package]]
 name = "iniconfig"
-sections = ["dev"]
+sections = ["test"]
 version = "1.1.1"
 summary = "iniconfig: brain-dead simple config-ini parsing"
 
@@ -148,7 +148,7 @@ summary = "Low-level, pure Python DBus protocol wrapper."
 
 [[package]]
 name = "jinja2"
-sections = ["dev", "doc"]
+sections = ["doc", "workflow"]
 version = "2.11.3"
 summary = "A very fast and expressive template engine."
 dependencies = [
@@ -164,7 +164,7 @@ summary = "Lightweight pipelining with Python functions"
 
 [[package]]
 name = "jsonschema"
-sections = ["dev"]
+sections = ["workflow"]
 version = "3.1.1"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "An implementation of JSON Schema validation for Python"
@@ -241,7 +241,7 @@ dependencies = [
 
 [[package]]
 name = "MarkupSafe"
-sections = ["dev", "doc"]
+sections = ["doc", "workflow"]
 version = "1.1.1"
 summary = "Safely add untrusted strings to HTML/XML markup."
 
@@ -284,7 +284,7 @@ dependencies = [
 
 [[package]]
 name = "mypy"
-sections = ["dev"]
+sections = ["workflow"]
 version = "0.812"
 summary = "Optional static typing for Python"
 dependencies = [
@@ -295,7 +295,7 @@ dependencies = [
 
 [[package]]
 name = "mypy-extensions"
-sections = ["dev"]
+sections = ["workflow"]
 version = "0.4.3"
 summary = "Experimental type system extensions for programs checked with the mypy typechecker."
 
@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "packaging"
-sections = ["default", "dev"]
+sections = ["default", "test", "workflow"]
 version = "20.8"
 summary = "Core utilities for Python packages"
 dependencies = [
@@ -323,7 +323,7 @@ dependencies = [
 
 [[package]]
 name = "parver"
-sections = ["dev"]
+sections = ["workflow"]
 version = "0.3.1"
 summary = "Parse and manipulate version numbers."
 dependencies = [
@@ -357,7 +357,7 @@ summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
 name = "pluggy"
-sections = ["dev"]
+sections = ["test"]
 version = "0.13.1"
 summary = "plugin and hook calling mechanisms for python"
 dependencies = [
@@ -366,7 +366,7 @@ dependencies = [
 
 [[package]]
 name = "py"
-sections = ["dev"]
+sections = ["test"]
 version = "1.10.0"
 summary = "library with cross-python path, ini-parsing, io, code, log facilities"
 
@@ -400,20 +400,20 @@ dependencies = [
 
 [[package]]
 name = "pyparsing"
-sections = ["default", "dev"]
+sections = ["default", "test", "workflow"]
 version = "2.4.7"
 summary = "Python parsing module"
 
 [[package]]
 name = "pyrsistent"
-sections = ["dev"]
+sections = ["workflow"]
 version = "0.17.3"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Persistent/Functional/Immutable data structures"
 
 [[package]]
 name = "pytest"
-sections = ["dev"]
+sections = ["test"]
 version = "6.2.1"
 summary = "pytest: simple powerful testing with Python"
 dependencies = [
@@ -430,7 +430,7 @@ dependencies = [
 
 [[package]]
 name = "pytest-cov"
-sections = ["dev"]
+sections = ["test"]
 version = "2.10.1"
 summary = "Pytest plugin for measuring coverage."
 dependencies = [
@@ -440,7 +440,7 @@ dependencies = [
 
 [[package]]
 name = "pytest-forked"
-sections = ["dev"]
+sections = ["test"]
 version = "1.3.0"
 summary = "run tests in isolated forked subprocesses"
 dependencies = [
@@ -450,7 +450,7 @@ dependencies = [
 
 [[package]]
 name = "pytest-mock"
-sections = ["dev"]
+sections = ["test"]
 version = "3.4.0"
 summary = "Thin-wrapper around the mock package for easier use with pytest"
 dependencies = [
@@ -459,7 +459,7 @@ dependencies = [
 
 [[package]]
 name = "pytest-xdist"
-sections = ["dev"]
+sections = ["test"]
 version = "1.34.0"
 summary = "pytest xdist plugin for distributed testing and loop-on-failing modes"
 dependencies = [
@@ -519,7 +519,7 @@ summary = "Alternative regular expression module, to replace re."
 
 [[package]]
 name = "requests"
-sections = ["dev"]
+sections = ["workflow"]
 version = "2.25.1"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Python HTTP for Humans."
@@ -549,7 +549,7 @@ dependencies = [
 
 [[package]]
 name = "setuptools"
-sections = ["dev"]
+sections = ["workflow"]
 version = "51.1.0.post20201221"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -562,13 +562,13 @@ summary = "Tool to Detect Surrounding Shell"
 
 [[package]]
 name = "six"
-sections = ["default", "dev", "doc"]
+sections = ["default", "doc", "test", "workflow"]
 version = "1.15.0"
 summary = "Python 2 and 3 compatibility utilities"
 
 [[package]]
 name = "toml"
-sections = ["default", "dev"]
+sections = ["default", "test", "workflow"]
 version = "0.10.2"
 summary = "Python Library for Tom's Obvious, Minimal Language"
 
@@ -586,7 +586,7 @@ summary = "Tornado is a Python web framework and asynchronous networking library
 
 [[package]]
 name = "towncrier"
-sections = ["dev"]
+sections = ["workflow"]
 version = "19.2.0"
 summary = "Building newsfiles for your project."
 dependencies = [
@@ -605,26 +605,26 @@ summary = "Fast, Extensible Progress Meter"
 
 [[package]]
 name = "typed-ast"
-sections = ["dev"]
+sections = ["workflow"]
 version = "1.4.2"
 summary = "a fork of Python 2 and 3 ast modules with type comment support"
 
 [[package]]
 name = "typing-extensions"
-sections = ["default", "dev", "doc"]
+sections = ["default", "doc", "test", "workflow"]
 version = "3.7.4.3"
 summary = "Backported and Experimental Type Hints for Python 3.5+"
 
 [[package]]
 name = "urllib3"
-sections = ["dev"]
+sections = ["workflow"]
 version = "1.26.2"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
 
 [[package]]
 name = "vendoring"
-sections = ["dev"]
+sections = ["workflow"]
 version = "0.3.3"
 marker = "python_version >= '3.8' and python_version < '4.0'"
 summary = "A command line tool, to simplify vendoring pure Python dependencies."
@@ -644,14 +644,14 @@ summary = "A built-package format for Python"
 
 [[package]]
 name = "zipp"
-sections = ["default", "dev", "doc"]
+sections = ["default", "doc", "test", "workflow"]
 version = "3.4.0"
 marker = "python_version < '4.0'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:358cef315e7d21380af76ad8481af9e73eabe0484f259744293538d2a325639a"
+content_hash = "sha256:fbe7d1276b7e0b9dc837a7bc67039bb678655a2a250bf816a60f3cdfb0c6c184"
 
 [metadata.files]
 "apipkg 1.5" = [

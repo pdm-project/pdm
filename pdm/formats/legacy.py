@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import toml
 
-from pdm._types import Source
+from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
     MetaConverter,
     Unset,
@@ -87,15 +87,18 @@ class LegacyMetaConverter(MetaConverter):
             True,
         )
 
-    @convert_from("dev-dependencies", name="dev-dependencies")
-    def dev_dependencies(self, value: Dict) -> List[str]:
-        return make_array(
-            [
-                Requirement.from_req_dict(name, req).as_line()
-                for name, req in value.items()
-            ],
-            True,
-        )
+    @convert_from("dev-dependencies")
+    def dev_dependencies(self, value: Dict[str, RequirementDict]) -> None:
+        self.settings["dev-dependencies"] = {
+            "dev": make_array(
+                [
+                    Requirement.from_req_dict(name, req).as_line()
+                    for name, req in value.items()
+                ],
+                True,
+            )
+        }
+        raise Unset()
 
     @convert_from(name="optional-dependencies")
     def optional_dependencies(self, source: Dict[str, str]) -> Dict[str, str]:
@@ -122,6 +125,21 @@ class LegacyMetaConverter(MetaConverter):
     @convert_from("cli")
     def scripts(self, value: str) -> Dict[str, str]:
         return dict(value)
+
+    @convert_from("includes")
+    def includes(self, value):
+        self.settings["includes"] = value
+        raise Unset()
+
+    @convert_from("excludes")
+    def excludes(self, value):
+        self.settings["excludes"] = value
+        raise Unset()
+
+    @convert_from("build")
+    def build(self, value):
+        self.settings["build"] = value
+        raise Unset()
 
     @convert_from("entry_points", name="entry-points")
     def entry_points(self, value: str) -> Dict[str, str]:

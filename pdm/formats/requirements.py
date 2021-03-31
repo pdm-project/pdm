@@ -109,16 +109,16 @@ def convert(
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
     deps = make_array(reqs, True)
-    data = {"dependencies": [], "dev-dependencies": []}
+    data = {"dependencies": []}
+    settings = {}
     if options.dev and options.section:
         raise PdmUsageError("Can't specify --dev and --section at the same time")
     elif options.dev:
-        data["dev-dependencies"] = deps
+        settings["dev-dependencies"] = {"dev": deps}
     elif options.section:
         data["optional-dependencies"] = {options.section: deps}
     else:
         data["dependencies"] = deps
-    settings = {}
     if finder.index_urls:
         sources = [convert_url_to_source(finder.index_urls[0], "pypi")]
         sources.extend(convert_url_to_source(url) for url in finder.index_urls[1:])
@@ -136,7 +136,7 @@ def export(
     for candidate in candidates:
         req = getattr(candidate, "req", candidate).as_line()
         lines.append(req)
-        if options.hashes and candidate.hashes:
+        if options.hashes and getattr(candidate, "hashes", None):
             for item in candidate.hashes.values():
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")

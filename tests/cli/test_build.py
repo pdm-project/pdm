@@ -91,12 +91,12 @@ def test_build_src_package(fixture_project):
 
 def test_build_package_include(fixture_project):
     project = fixture_project("demo-package")
-    project.meta["includes"] = [
+    project.tool_settings["includes"] = [
         "my_package/",
         "single_module.py",
         "data_out.json",
     ]
-    project.meta["excludes"] = ["my_package/*.json"]
+    project.tool_settings["excludes"] = ["my_package/*.json"]
     project.write_pyproject()
     actions.do_build(project)
 

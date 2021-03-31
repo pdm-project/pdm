@@ -133,3 +133,26 @@ def test_ignore_saved_python(project):
             Path(project.python_executable)
             == project.root / "venv" / scripts / f"python{suffix}"
         )
+
+
+def test_select_dependencies(project):
+    project.meta["dependencies"] = ["requests"]
+    project.meta["optional-dependencies"] = {
+        "security": ["cryptography"],
+        "venv": ["virtualenv"],
+    }
+    project.tool_settings["dev-dependencies"] = {"test": ["pytest"], "doc": ["mkdocs"]}
+    assert sorted(project.get_dependencies()) == ["requests"]
+    assert sorted(project.dependencies) == ["requests"]
+
+    assert sorted(project.get_dependencies("security")) == ["cryptography"]
+    assert sorted(project.get_dependencies("test")) == ["pytest"]
+    assert sorted(project.dev_dependencies) == ["mkdocs", "pytest"]
+
+    assert sorted(project.iter_sections()) == [
+        "default",
+        "doc",
+        "security",
+        "test",
+        "venv",
+    ]

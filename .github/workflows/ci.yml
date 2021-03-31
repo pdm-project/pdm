@@ -58,6 +58,6 @@ jobs:
       - name: Install Dev Dependencies
         run: |
           pdm config parallel_install true
-          pdm install -dvv
+          pdm install -v -dstest
       - name: Run Tests
         run: pdm run pytest -n auto tests

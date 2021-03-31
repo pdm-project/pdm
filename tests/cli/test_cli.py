@@ -134,7 +134,7 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
     result = invoke(["install"], obj=project)
     assert "Lock file" not in result.output
 
-    project.add_dependencies({"pytz": parse_requirement("pytz")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
     result = invoke(["install"], obj=project)
     assert "Lock file hash doesn't match" in result.output
     assert "pytz" in project.get_locked_candidates()
@@ -281,6 +281,7 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     requirements_pyproject = project.root / "requirements.ini"
 
     result = invoke(["export"], obj=project)
+    print("==========OUTPUT=============", result.output.strip(), result.stderr.strip())
     assert result.exit_code == 0
     assert result.output.strip() == requirements_txt.read_text().strip()
 

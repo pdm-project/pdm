@@ -38,28 +38,27 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        candidates = []
+        candidates = {}
+        sections = list(options.sections)
         if options.pyproject:
             options.hashes = False
+        if not sections and options.dev:
+            sections.append(":all")
+        if ":all" in sections:
+            if options.dev:
+                sections = list(project.tool_settings.get("dev-dependencies", []))
+            else:
+                sections = list(project.meta.optional_dependencies or [])
         if options.default:
-            # Don't include self candidate
+            sections.append("default")
+        for section in sections:
             if options.pyproject:
-                temp = project.dependencies
+                candidates.update(project.get_dependencies(section))
             else:
-                temp = project.get_locked_candidates()
-                temp.pop(project.meta.name, None)
-            candidates.extend(temp.values())
-        if options.dev:
-            if options.pyproject:
-                candidates.extend(project.dev_dependencies.values())
-            else:
-                candidates.extend(project.get_locked_candidates("dev").values())
-        for section in options.sections:
-            if options.pyproject:
-                candidates.extend(project.get_dependencies(section).values())
-            else:
-                candidates.extend(project.get_locked_candidates(section).values())
-        content = FORMATS[options.format].export(project, candidates, options)
+                candidates.update(project.get_locked_candidates(section))
+        candidates.pop(project.meta.name and project.meta.project_name, None)
+
+        content = FORMATS[options.format].export(project, candidates.values(), options)
         if options.output:
             Path(options.output).write_text(content)
         else:
