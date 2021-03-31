@@ -63,6 +63,8 @@ class FlitMetaConverter(MetaConverter):
     def warn_against_dynamic_version_or_docstring(
         self, source: Path, version: str, description: str
     ):
+        if not self._ui:
+            return
         dynamic_fields = []
         if not version:
             dynamic_fields.append("version")
@@ -135,7 +137,9 @@ def convert(project, filename, options):
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
-        converter = FlitMetaConverter(toml.load(fp)["tool"]["flit"], project.core.ui)
+        converter = FlitMetaConverter(
+            toml.load(fp)["tool"]["flit"], project.core.ui if project else None
+        )
         return converter.convert()
 
 

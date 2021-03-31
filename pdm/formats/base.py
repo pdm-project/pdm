@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, List, Mapping, Tuple
+from typing import Any, Callable, List, Mapping, Optional, Tuple
 
 import tomlkit
 from tomlkit.items import Array, InlineTable
@@ -42,7 +42,7 @@ class _MetaConverterMeta(type):
 class MetaConverter(metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
-    def __init__(self, source: dict, ui: termui.UI) -> None:
+    def __init__(self, source: dict, ui: Optional[termui.UI] = None) -> None:
         self.source = source
         self.settings = {}
         self._data = {}

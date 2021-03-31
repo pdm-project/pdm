@@ -171,7 +171,7 @@ def convert(project, filename, options):
         os.path.dirname(os.path.abspath(filename))
     ):
         converter = PoetryMetaConverter(
-            toml.load(fp)["tool"]["poetry"], project.core.ui
+            toml.load(fp)["tool"]["poetry"], project.core.ui if project else None
         )
         return converter.convert()
 
