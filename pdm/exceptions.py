@@ -28,7 +28,7 @@ class CorruptedCacheError(PdmException):
     pass
 
 
-class PackageIndexError(PdmException):
+class CandidateNotFound(PdmException):
     pass
 
 

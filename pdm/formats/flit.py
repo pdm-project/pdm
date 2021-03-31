@@ -1,9 +1,9 @@
 import ast
-import warnings
+import os
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import toml
 
@@ -15,6 +15,7 @@ from pdm.formats.base import (
     make_inline_table,
 )
 from pdm.project import Project
+from pdm.utils import cd
 
 
 def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
@@ -65,6 +66,8 @@ class FlitMetaConverter(MetaConverter):
     def warn_against_dynamic_version_or_docstring(
         self, source: Path, version: str, description: str
     ) -> None:
+        if not self._ui:
+            return
         dynamic_fields = []
         if not version:
             dynamic_fields.append("version")
@@ -78,7 +81,7 @@ class FlitMetaConverter(MetaConverter):
             "They are probably imported from other files which is not supported by PDM."
             " You may need to supply their values in pyproject.toml manually."
         )
-        warnings.warn(message, UserWarning, stacklevel=2)
+        self._ui.echo(message, err=True, fg="yellow")
 
     @convert_from("metadata")
     def name(self, metadata: Dict[str, List[str]]) -> str:
@@ -86,11 +89,10 @@ class FlitMetaConverter(MetaConverter):
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
         # version and description
-        parent_dir = Path(self.filename).parent
-        if (parent_dir / module / "__init__.py").exists():
-            source = parent_dir / module / "__init__.py"
+        if (Path(module) / "__init__.py").exists():
+            source = Path(module) / "__init__.py"
         else:
-            source = parent_dir / f"{module}.py"
+            source = Path(f"{module}.py")
 
         version = self._data.get("version")
         description = self._data.get("description")
@@ -137,20 +139,15 @@ class FlitMetaConverter(MetaConverter):
 
 
 def convert(
-    project: Optional[Project],
-    filename: PathLike,
-    options: Optional[Namespace],
-) -> Tuple[Dict[str, Any], Dict]:
-    with open(filename, encoding="utf-8") as fp:
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter(action="always", category=UserWarning)
-            result = (
-                dict(FlitMetaConverter(toml.load(fp)["tool"]["flit"], filename)),
-                {},
-            )
-            for item in w:
-                project.core.ui.echo(f"WARN: {item.message}", fg="yellow", err=True)
-            return result
+    project: Optional[Project], filename: PathLike, options: Optional[Namespace]
+) -> Tuple[Mapping, Mapping]:
+    with open(filename, encoding="utf-8") as fp, cd(
+        os.path.dirname(os.path.abspath(filename))
+    ):
+        converter = FlitMetaConverter(
+            toml.load(fp)["tool"]["flit"], project.core.ui if project else None
+        )
+        return converter.convert()
 
 
 def export(project: Project, candidates: List, options: Optional[Any]) -> None:

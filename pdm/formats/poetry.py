@@ -186,8 +186,10 @@ def convert(
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
-        converter = PoetryMetaConverter(toml.load(fp)["tool"]["poetry"])
-        return dict(converter), converter.settings
+        converter = PoetryMetaConverter(
+            toml.load(fp)["tool"]["poetry"], project.core.ui if project else None
+        )
+        return converter.convert()
 
 
 def export(project: Project, candidates: List, options: Optional[Any]) -> None:

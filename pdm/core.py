@@ -82,17 +82,18 @@ class Core:
         if obj is not None:
             options.project = obj
         if getattr(options, "project", None) is None:
-            project = None
             global_project = getattr(options, "global_project", None)
-            if global_project is True:
+            if global_project:
                 project_factory = self.project_class.create_global
-            elif global_project:
-                project = global_project
             else:
                 project_factory = self.project_class
 
-            if project is None:
-                project = project_factory(getattr(options, "project_path", None))
+            default_root = (
+                None
+                if global_project or getattr(options, "search_parent", True)
+                else "."
+            )
+            project = project_factory(getattr(options, "project_path", default_root))
             options.project = project
 
         # Add reverse reference for core object
@@ -150,7 +151,6 @@ class Core:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """
-        command.project_class = self.project_class
         command.register_to(self.subparsers, name)
 
     @staticmethod

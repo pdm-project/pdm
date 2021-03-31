@@ -1,14 +1,22 @@
-import abc
-import collections
+from __future__ import annotations
+
 import re
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Union
 
 import tomlkit
 
+from pdm import termui
 
-def convert_from(field: str = None, name: str = None):
-    def wrapper(func: Callable[..., Any]) -> Callable[..., Any]:
+
+def convert_from(
+    field: str = None, name: str = None
+) -> Callable[
+    [Callable[[MetaConverter, Any], Any]], Callable[[MetaConverter, Any], Any]
+]:
+    def wrapper(
+        func: Callable[[MetaConverter, Any], Any]
+    ) -> Callable[[MetaConverter, Any], Any]:
         func._convert_from = field
         func._convert_to = name
         return func
@@ -20,7 +28,7 @@ class Unset(Exception):
     pass
 
 
-class _MetaConverterMeta(abc.ABCMeta):
+class _MetaConverterMeta(type):
     def __init__(
         cls, name: str, bases: Dict[str, Any], ns: Union[None, Path, str]
     ) -> None:
@@ -33,30 +41,17 @@ class _MetaConverterMeta(abc.ABCMeta):
                 cls._converters[name] = value
 
 
-class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
+class MetaConverter(metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
-    def __init__(
-        self, source: Dict[str, Any], filename: Union[None, Path, str] = None
-    ) -> None:
-        self._data = {}
-        self.filename = filename
+    def __init__(self, source: dict, ui: Optional[termui.UI] = None) -> None:
+        self.source = source
         self.settings = {}
-        self._convert(dict(source))
+        self._data = {}
+        self._ui = ui
 
-    def __getitem__(self, k: str) -> Any:
-        return self._data[k]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self) -> Iterator:
-        return iter(self._data)
-
-    def get_settings(self, source: Dict[str, Any]) -> None:
-        pass
-
-    def _convert(self, source: Dict[str, Any]) -> None:
+    def convert(self) -> Tuple[Mapping, Mapping]:
+        source = self.source
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:
                 continue
@@ -78,14 +73,14 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
             except KeyError:
                 pass
         # Add remaining items to the data
-        self.get_settings(source)
         self._data.update(source)
+        return self._data, self.settings
 
 
 NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 
-def make_inline_table(data: Dict[str, str]) -> Dict[str, str]:
+def make_inline_table(data: Mapping) -> Dict[str, str]:
     """Create an inline table from the given data."""
     table = tomlkit.inline_table()
     table.update(data)
@@ -102,9 +97,7 @@ def make_array(data: List[Any], multiline: bool = False) -> List[Any]:
     return array
 
 
-def array_of_inline_tables(
-    value: List[Dict[str, str]], multiline: bool = True
-) -> List[str]:
+def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> List[str]:
     return make_array([make_inline_table(item) for item in value], multiline)
 
 

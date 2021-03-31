@@ -1,3 +1,20 @@
+Release v1.4.5 (2021-03-30)
+---------------------------
+
+### Features & Improvements
+
+- Skip the first prompt of `pdm init` [#352](https://github.com/pdm-project/pdm/issues/352)
+
+### Bug Fixes
+
+- Fix a test failure when using homebrew installed python. [#348](https://github.com/pdm-project/pdm/issues/348)
+- Get revision from the VCS URL if source code isn't downloaded to local. [#349](https://github.com/pdm-project/pdm/issues/349)
+
+### Dependencies
+
+- Update dependency `pdm-pep517` to `0.6.1`. [#353](https://github.com/pdm-project/pdm/issues/353)
+
+
 Release v1.4.4 (2021-03-27)
 ---------------------------
 

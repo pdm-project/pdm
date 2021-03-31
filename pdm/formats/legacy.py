@@ -142,8 +142,8 @@ def convert(
     project: Project, filename: Path, options: Optional[Namespace]
 ) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
     with open(filename, encoding="utf-8") as fp:
-        converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], filename)
-        return dict(converter), converter.settings
+        converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], project.core.ui)
+        return converter.convert()
 
 
 def export(project: Project, candidates: List, options: Optional[Any]) -> None:

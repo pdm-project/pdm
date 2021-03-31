@@ -92,11 +92,6 @@ def test_info_global_project(invoke):
     assert "global-project" in result.output.strip()
 
 
-def test_deprecate_global_project(invoke, project):
-    result = invoke(["info", "-g", project.root.as_posix()])
-    assert "DEPRECATION" in result.stderr
-
-
 def test_global_project_other_location(invoke, project):
     result = invoke(["info", "-g", "-p", project.root.as_posix(), "--where"])
     assert result.stdout.strip() == project.root.as_posix()
