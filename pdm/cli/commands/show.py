@@ -10,7 +10,7 @@ from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
 
-def normalize_package(name):
+def normalize_package(name: str) -> str:
     return safe_name(name).lower()
 
 

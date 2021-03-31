@@ -18,7 +18,7 @@ def print_results(
     hits: SearchResult,
     working_set: WorkingSet,
     terminal_width: Optional[int] = None,
-):
+) -> None:
     if not hits:
         return
     name_column_width = (

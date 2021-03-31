@@ -6,11 +6,13 @@ import importlib
 import json
 import os
 import subprocess
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Tuple, Union
 
 
 @functools.lru_cache()
-def get_python_version(executable, as_string=False, digits=3):
+def get_python_version(
+    executable: str, as_string: bool = False, digits: int = 3
+) -> Tuple[Union[Tuple[int, ...], str], bool]:
     """Get the version of the Python interperter.
 
     :param executable: The path of the python executable
@@ -31,7 +33,9 @@ def get_python_version(executable, as_string=False, digits=3):
     return ".".join(map(str, result)), is_64bit
 
 
-def get_sys_config_paths(executable: str, vars=None) -> Dict[str, str]:
+def get_sys_config_paths(
+    executable: str, vars: Optional[Dict[str, str]] = None
+) -> Dict[str, str]:
     """Return the sys_config.get_paths() result for the python interpreter"""
     if not vars:
         args = [

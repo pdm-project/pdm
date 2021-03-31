@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from resolvelib import AbstractProvider
 from resolvelib.resolvers import RequirementInformation
@@ -93,7 +93,7 @@ class BaseProvider(AbstractProvider):
         self.requires_python_collection[candidate.req.key] = requires_python
         return valid_deps
 
-    def get_hashes(self, candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
         return self.repository.get_hashes(candidate)
 
 
@@ -105,8 +105,11 @@ class ReusePinProvider(BaseProvider):
     """
 
     def __init__(
-        self, preferred_pins: Dict[str, Candidate], tracked_names: Iterable[str], *args
-    ):
+        self,
+        preferred_pins: Dict[str, Candidate],
+        tracked_names: Iterable[str],
+        *args: Any
+    ) -> None:
         super().__init__(*args)
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)

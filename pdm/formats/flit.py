@@ -1,7 +1,9 @@
 import ast
 import os
+from argparse import Namespace
+from os import PathLike
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 import toml
 
@@ -12,10 +14,11 @@ from pdm.formats.base import (
     make_array,
     make_inline_table,
 )
+from pdm.project import Project
 from pdm.utils import cd
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -25,7 +28,7 @@ def check_fingerprint(project, filename):
     return "tool" in data and "flit" in data["tool"]
 
 
-def _get_author(metadata, type_="author"):
+def _get_author(metadata: Dict[str, Any], type_: str = "author") -> List[str]:
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
     return array_of_inline_tables([{"name": name, "email": email}])
@@ -62,7 +65,7 @@ def get_docstring_and_version_via_ast(
 class FlitMetaConverter(MetaConverter):
     def warn_against_dynamic_version_or_docstring(
         self, source: Path, version: str, description: str
-    ):
+    ) -> None:
         if not self._ui:
             return
         dynamic_fields = []
@@ -81,7 +84,7 @@ class FlitMetaConverter(MetaConverter):
         self._ui.echo(message, err=True, fg="yellow")
 
     @convert_from("metadata")
-    def name(self, metadata):
+    def name(self, metadata: Dict[str, List[str]]) -> str:
         # name
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
@@ -124,16 +127,20 @@ class FlitMetaConverter(MetaConverter):
         return self._data["name"]
 
     @convert_from("entrypoints", name="entry-points")
-    def entry_points(self, value):
+    def entry_points(
+        self, value: Dict[str, Dict[str, str]]
+    ) -> Dict[str, Dict[str, str]]:
         return value
 
     @convert_from("sdist")
-    def includes(self, value):
+    def includes(self, value: Dict[str, List[str]]) -> List[str]:
         self._data["excludes"] = value.get("exclude")
         return value.get("include")
 
 
-def convert(project, filename, options):
+def convert(
+    project: Optional[Project], filename: PathLike, options: Optional[Namespace]
+) -> Tuple[Mapping, Mapping]:
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
@@ -143,5 +150,5 @@ def convert(project, filename, options):
         return converter.convert()
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()

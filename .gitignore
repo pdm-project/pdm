@@ -133,3 +133,6 @@ caches/
 __pypackages__
 .pdm.toml
 temp.py
+
+# Pyannotate generated stubs
+type_info.json

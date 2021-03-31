@@ -5,7 +5,7 @@ import importlib
 import os
 import pkgutil
 import sys
-from typing import Optional, Type
+from typing import Any, Callable, List, Optional, Type
 
 import click
 from pip._vendor import pkg_resources
@@ -44,7 +44,7 @@ class Core:
         self.parser = None
         self.subparsers = None
 
-    def init_parser(self):
+    def init_parser(self) -> None:
         self.parser = PdmParser(
             prog="pdm",
             description="PDM - Python Development Master",
@@ -73,7 +73,7 @@ class Core:
                 continue
             self.register_command(klass, klass.name or name)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable[..., Any]:
         return self.main(*args, **kwargs)
 
     def ensure_project(
@@ -100,7 +100,13 @@ class Core:
         options.project.core = self
         migrate_pyproject(options.project)
 
-    def main(self, args=None, prog_name=None, obj=None, **extra):
+    def main(
+        self,
+        args: List[str] = None,
+        prog_name: str = None,
+        obj: Optional[Project] = None,
+        **extra: Any,
+    ) -> None:
         """The main entry function"""
         from pdm.models.pip_shims import global_tempdir_manager
 
@@ -152,7 +158,7 @@ class Core:
         """Add a config item to the configuration class"""
         Config.add_config(name, config_item)
 
-    def load_plugins(self):
+    def load_plugins(self) -> None:
         """Import and load plugins under `pdm.plugin` namespace
         A plugin is a callable that accepts the core object as the only argument.
 
@@ -166,6 +172,6 @@ class Core:
             plugin.load()(self)
 
 
-def main(args=None):
+def main(args: Any = None) -> Callable[..., Any]:
     """The CLI entry function"""
     return Core().main(args)

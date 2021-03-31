@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Iterable, List, Set, Tuple, Union, cast
+from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -203,13 +205,13 @@ class PySpecSet(SpecifierSet):
         if not self.is_impossible:
             super().__init__(str(self))
 
-    def _comp_key(self):
+    def _comp_key(self) -> Tuple[Version, Version, Tuple[Version, ...]]:
         return (self._lower_bound, self._upper_bound, tuple(self._excludes))
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._comp_key())
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, PySpecSet):
             return False
         return self._comp_key() == other._comp_key()
@@ -443,12 +445,12 @@ class ImpossiblePySpecSet(PySpecSet):
     A special subclass of PySpecSet that references to an impossible specifier set.
     """
 
-    def __init__(self, version_str="", analyze=True):
+    def __init__(self, version_str: str = "", analyze: bool = True) -> None:
         super().__init__(version_str=version_str, analyze=False)
         # Make sure the spec set is impossible
         self._lower_bound = Version.MAX
         self._upper_bound = Version.MIN
 
     @property
-    def is_impossible(self):
+    def is_impossible(self) -> bool:
         return True
