@@ -67,7 +67,7 @@ dry_run_option = Option(
     "--dry-run",
     action="store_true",
     default=False,
-    help="Only prints actions without actually running them",
+    help="Show the difference only and don't perform any action",
 )
 
 

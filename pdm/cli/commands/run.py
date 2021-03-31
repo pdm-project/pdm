@@ -168,6 +168,8 @@ class Command(BaseCommand):
         if options.list:
             return self._show_list(project)
         global_env_options = project.scripts.get("_", {}) if project.scripts else {}
+        if not options.command:
+            raise PdmUsageError("No command given")
         if project.scripts and options.command in project.scripts:
             self._run_script(project, options.command, options.args, global_env_options)
         else:
