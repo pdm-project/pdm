@@ -79,7 +79,7 @@ pep582_option = Option(
     help="Print the command line to be eval'd by the shell",
 )
 
-sections_group = ArgumentGroup()
+sections_group = ArgumentGroup("Dependencies selection")
 sections_group.add_argument(
     "-s",
     "--section",
@@ -159,7 +159,7 @@ global_option = Option(
     "--global",
     dest="global_project",
     action="store_true",
-    help="Use the global project, supply the project root with `-p` option.",
+    help="Use the global project, supply the project root with `-p` option",
 )
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
@@ -172,7 +172,7 @@ sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
 sync_group.add_argument("--sync", action="store_true", help="sync packages")
 sync_group.add_argument("--no-sync", action="store_false", help="don't sync packages")
 
-packages_group = ArgumentGroup("packages")
+packages_group = ArgumentGroup("Packages")
 packages_group.add_argument(
     "-e",
     "--editable",
