@@ -8,7 +8,7 @@ from pip._vendor.html5lib import parse
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
-from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -26,7 +26,7 @@ def cache_result(
     func: Callable[["BaseRepository", Candidate], CandidateInfo]
 ) -> Callable[["BaseRepository", Candidate], CandidateInfo]:
     @wraps(func)
-    def wrapper(self, candidate: Candidate) -> CandidateInfo:
+    def wrapper(self: BaseRepository, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
         self._candidate_info_cache.set(candidate, result)
         return result
@@ -231,10 +231,16 @@ class PyPIRepository(BaseRepository):
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
         with self.environment.get_finder(sources, True) as finder, allow_all_wheels():
-            return [
+            cans = [
                 Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)
             ]
+        if not cans:
+            raise CandidateNotFound(
+                f"Unable to find candidates for {requirement.project_name}. There may "
+                "exist some issues with the package index or network condition."
+            )
+        return cans
 
     def search(self, query: str) -> SearchResult:
         pypi_simple = self.sources[0]["url"].rstrip("/")

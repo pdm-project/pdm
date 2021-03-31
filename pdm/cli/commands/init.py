@@ -14,7 +14,7 @@ class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.set_defaults(project=self.project_class("."))
+        parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
@@ -27,10 +27,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
             )
-        python = click.prompt(
-            "Please enter the Python interpreter to use", default="", show_default=False
-        )
-        actions.do_use(project, python)
+        actions.do_use(project)
         is_library = click.confirm(
             "Is the project a library that will be upload to PyPI?",
         )

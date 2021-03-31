@@ -8,13 +8,13 @@ from typing import Dict, Iterable, List, Optional, Sequence
 import click
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
+from pythonfinder.models.python import PythonVersion
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
-    find_python_in_path,
     format_lockfile,
     format_resolution_impossible,
     save_version_specifiers,
@@ -45,7 +45,7 @@ def do_lock(
     """Performs the locking process and update lockfile.
 
     :param project: the project instance
-    :param strategy: update stratege: reuse/eager/all
+    :param strategy: update strategy: reuse/eager/all
     :param tracked_names: required when using eager strategy
     :param requirements: An optional dictionary of requirements, read from pyproject
         if not given.
@@ -106,7 +106,7 @@ def do_sync(
 
     :param project: The project instance.
     :param sections: A tuple of optional sections to be synced.
-    :param dev: whether to include dev-dependecies.
+    :param dev: whether to include dev-dependencies.
     :param default: whether to include default dependencies.
     :param dry_run: Print actions without actually running them.
     :param clean: whether to remove unneeded packages.
@@ -143,7 +143,7 @@ def do_add(
     """Add packages and install
 
     :param project: the project instance
-    :param dev: add to dev dependencies seciton
+    :param dev: add to dev dependencies section
     :param section: specify section to be add to
     :param sync: whether to install added packages
     :param save: save strategy
@@ -204,7 +204,7 @@ def do_update(
 
     :param project: The project instance
     :param dev: whether to update dev dependencies
-    :param sections: update speicified sections
+    :param sections: update specified sections
     :param default: update default
     :param strategy: update strategy (reuse/eager)
     :param save: save strategy (compatible/exact/wildcard)
@@ -215,7 +215,7 @@ def do_update(
     check_project_file(project)
     if len(packages) > 0 and (len(sections) > 1 or not default):
         raise PdmUsageError(
-            "packages argument can't be used together with multple -s or --no-default."
+            "packages argument can't be used together with multiple -s or --no-default."
         )
     if not packages:
         if unconstrained:
@@ -319,7 +319,7 @@ def do_list(project: Project, graph: bool = False, reverse: bool = False) -> Non
 
     :param project: the project instance.
     :param graph: whether to display a graph.
-    :param reverse: wheter to display reverse graph.
+    :param reverse: whether to display reverse graph.
     """
     from pdm.cli.utils import (
         build_dependency_graph,
@@ -413,61 +413,53 @@ def do_init(
     project.write_pyproject()
 
 
-def do_use(project: Project, python: str, first: bool = False) -> None:
+def do_use(
+    project: Project, python: Optional[str] = "", first: Optional[bool] = False
+) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    import pythonfinder
+
+    def version_matcher(py_version: PythonVersion) -> bool:
+        return project.python_requires.contains(str(py_version.version))
 
     python = python.strip()
-    if python and not all(c.isdigit() for c in python.split(".")):
-        if Path(python).exists():
-            python_path = find_python_in_path(python)
-        else:
-            python_path = shutil.which(python)
-        if not python_path:
-            raise NoPythonVersion(f"{python} is not a valid Python.")
-        python_version, is_64bit = get_python_version(python_path, True)
+
+    found_interpreters = list(
+        dict.fromkeys(filter(version_matcher, project.find_interpreters(python)))
+    )
+    if not found_interpreters:
+        raise NoPythonVersion("Python interpreter is not found on the system.")
+    if first or len(found_interpreters) == 1:
+        selected_python = found_interpreters[0]
     else:
-        finder = pythonfinder.Finder()
-        pythons = []
-        args = [int(v) for v in python.split(".") if v != ""]
-        for i, entry in enumerate(finder.find_all_python_versions(*args)):
-            python_version, is_64bit = get_python_version(entry.path.as_posix(), True)
-            pythons.append((entry.path.as_posix(), python_version, is_64bit))
-        if not pythons:
-            raise NoPythonVersion(f"Python {python} is not available on the system.")
-
-        if not first and len(pythons) > 1:
-            for i, (path, python_version, is_64bit) in enumerate(pythons):
-                project.core.ui.echo(
-                    f"{i}. {termui.green(path)} "
-                    f"({get_python_version_string(python_version, is_64bit)})"
-                )
-            selection = click.prompt(
-                "Please select:",
-                type=click.Choice([str(i) for i in range(len(pythons))]),
-                default="0",
-                show_choices=False,
+        project.core.ui.echo("Please enter the Python interpreter to use")
+        for i, py_version in enumerate(found_interpreters):
+            python_version = str(py_version.version)
+            is_64bit = py_version.get_architecture() == "64bit"
+            version_string = get_python_version_string(python_version, is_64bit)
+            project.core.ui.echo(
+                f"{i}. {termui.green(py_version.executable)} ({version_string})"
             )
-        else:
-            selection = 0
-        python_path, python_version, is_64bit = pythons[int(selection)]
-
-    if not project.python_requires.contains(python_version):
-        raise NoPythonVersion(
-            "The target Python version {} doesn't satisfy "
-            "the Python requirement: {}".format(python_version, project.python_requires)
+        selection = click.prompt(
+            "Please select:",
+            type=click.Choice([str(i) for i in range(len(found_interpreters))]),
+            default="0",
+            show_choices=False,
         )
+        selected_python = found_interpreters[int(selection)]
+
+    old_path = project.config.get("python.path")
+    new_path = selected_python.executable
+    python_version = str(selected_python.version)
+    is_64bit = selected_python.get_architecture() == "64bit"
     project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(
-            termui.green(python_path),
+            termui.green(str(new_path)),
             get_python_version_string(python_version, is_64bit),
         )
     )
-    old_path = project.config.get("python.path")
-    new_path = python_path
-    project.project_config["python.path"] = Path(new_path).as_posix()
+    project.python_executable = new_path
     if old_path and Path(old_path) != Path(new_path) and not project.is_global:
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)
@@ -530,6 +522,8 @@ def do_import(
             )
     else:
         key = format
+    if options is None:
+        options = Namespace(dev=False, section=None)
     project_data, settings = FORMATS[key].convert(project, filename, options)
     pyproject = project.pyproject or tomlkit.document()
 

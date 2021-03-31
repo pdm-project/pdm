@@ -1,16 +1,18 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 import multiprocessing
 import traceback
+from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Dict, List, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
 from pdm import termui
 from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
-from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
@@ -19,23 +21,23 @@ from pdm.models.requirements import strip_extras
 class DummyFuture:
     _NOT_SET = object()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._result = self._NOT_SET
         self._exc = None
 
-    def set_result(self, result):
+    def set_result(self, result: Any) -> None:
         self._result = result
 
-    def set_exception(self, exc):
+    def set_exception(self, exc: Exception) -> None:
         self._exc = exc
 
     def result(self):
         return self._result
 
-    def exception(self):
+    def exception(self) -> Optional[Exception]:
         return self._exc
 
-    def add_done_callback(self, func):
+    def add_done_callback(self, func: Callable) -> None:
         func(self)
 
 
@@ -44,7 +46,7 @@ class DummyExecutor:
     functions are called and awaited for the result
     """
 
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func: Callable, *args: str, **kwargs: Any) -> DummyFuture:
         future = DummyFuture()
         try:
             future.set_result(func(*args, **kwargs))
@@ -52,10 +54,10 @@ class DummyExecutor:
             future.set_exception(exc)
         return future
 
-    def __enter__(self):
+    def __enter__(self) -> DummyExecutor:
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
         return
 
 
@@ -79,7 +81,9 @@ class Synchronizer:
         self.ui = environment.project.core.ui
 
     @contextlib.contextmanager
-    def create_executor(self):
+    def create_executor(
+        self,
+    ) -> Union[Iterator[ThreadPoolExecutor], Iterator[DummyExecutor]]:
         if self.parallel:
             executor = ThreadPoolExecutor(
                 max_workers=min(multiprocessing.cpu_count(), 8)
@@ -92,20 +96,15 @@ class Synchronizer:
             except KeyboardInterrupt:
                 pass
 
-    def update_project_egg_info(self):
-        if not self.environment.project.meta.name:
-            return
-        canonical_name = self.environment.project.meta.project_name.lower().replace(
-            "-", "_"
-        )
-        egg_info_dir = self.environment.project.root / f"{canonical_name}.egg-info"
-        if egg_info_dir.exists():
-            self.ui.echo("Updating the project's egg info...")
-            with EnvBuilder(self.environment.project.root, self.environment) as builder:
-                builder.build_egg_info(str(builder.src_dir))
-
     def get_installer(self) -> Installer:
         return Installer(self.environment)
+
+    @property
+    def self_key(self) -> Optional[str]:
+        meta = self.environment.project.meta
+        if meta.name:
+            return meta.project_name.lower()
+        return None
 
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
@@ -114,15 +113,17 @@ class Synchronizer:
         candidates = self.candidates.copy()
         environment = self.environment.marker_environment
         for key, dist in working_set.items():
+            if key == self.self_key:
+                continue
             if key in candidates:
                 can = candidates.pop(key)
                 if can.marker and not can.marker.evaluate(environment):
                     to_remove.append(key)
-                elif not is_dist_editable(dist) and (
-                    dist.version != can.version or can.req.editable
+                elif (
+                    can.req.editable
+                    or is_dist_editable(dist)
+                    or (dist.version != can.version)
                 ):
-                    to_update.append(key)
-                elif is_dist_editable(dist) and not can.req.editable:
                     to_update.append(key)
             elif key not in self.all_candidates and key not in self.SEQUENTIAL_PACKAGES:
                 # Remove package only if it is not required by any section
@@ -132,8 +133,9 @@ class Synchronizer:
             {
                 strip_extras(name)[0]
                 for name, can in candidates.items()
-                if not (can.marker and not can.marker.evaluate(environment))
+                if name != self.self_key
                 and strip_extras(name)[0] not in working_set
+                and not (can.marker and not can.marker.evaluate(environment))
             }
         )
         return sorted(to_add), sorted(to_update), sorted(to_remove)
@@ -176,7 +178,7 @@ class Synchronizer:
                 spinner.succeed(
                     f"Update {termui.green(key, bold=True)} "
                     f"{termui.yellow(dist.version)} -> "
-                    f"-> {termui.yellow(can.version)} successful"
+                    f"{termui.yellow(can.version)} successful"
                 )
         return dist, can
 
@@ -207,6 +209,9 @@ class Synchronizer:
 
     def _show_headline(self, packages: Dict[str, List[str]]) -> None:
         add, update, remove = packages["add"], packages["update"], packages["remove"]
+        if not any((add, update, remove)):
+            self.ui.echo("All packages are synced to date, nothing to do.\n")
+            return
         results = [termui.bold("Synchronizing working set with lock file:")]
         results.extend(
             [
@@ -253,14 +258,7 @@ class Synchronizer:
         to_add, to_update, to_remove = self.compare_with_working_set()
         if not clean:
             to_remove = []
-        if not any([to_add, to_update, to_remove]):
-            self.ui.echo(
-                termui.yellow("All packages are synced to date, nothing to do.")
-            )
-            if not dry_run:
-                with self.ui.logging("install"):
-                    self.update_project_egg_info()
-            return
+
         to_do = {"remove": to_remove, "update": to_update, "add": to_add}
         self._show_headline(to_do)
 
@@ -273,19 +271,17 @@ class Synchronizer:
             "update": self.update_candidate,
             "remove": self.remove_distribution,
         }
-
         sequential_jobs = []
         parallel_jobs = []
         # Self package will be installed after all other dependencies are installed.
-        install_self = None
+        self_action = None
+        self_key = self.self_key
+        if self_key in self.candidates:
+            self_action = "update" if self_key in self.working_set else "add"
+
         for kind in to_do:
             for key in to_do[kind]:
-                if (
-                    key == self.environment.project.meta.name
-                    and self.environment.project.meta.project_name.lower()
-                ):
-                    install_self = (kind, key)
-                elif key in self.SEQUENTIAL_PACKAGES:
+                if key in self.SEQUENTIAL_PACKAGES:
                     sequential_jobs.append((kind, key))
                 elif key in self.candidates and self.candidates[key].req.editable:
                     # Editable packages are installed sequentially.
@@ -296,7 +292,9 @@ class Synchronizer:
         errors: List[str] = []
         failed_jobs: List[Tuple[str, str]] = []
 
-        def update_progress(future, kind, key):
+        def update_progress(
+            future: Union[Future, DummyFuture], kind: str, key: str
+        ) -> None:
             if future.exception():
                 failed_jobs.append((kind, key))
                 error = future.exception()
@@ -331,10 +329,9 @@ class Synchronizer:
                 self.ui.echo("".join(errors), err=True)
                 raise InstallationError("Some package operations are not complete yet")
 
-            if install_self:
+            if self_action:
                 self.ui.echo("Installing the project as an editable package...")
                 with self.ui.indent("  "):
-                    handlers[install_self[0]](install_self[1])
-            else:
-                self.update_project_egg_info()
+                    handlers[self_action](self_key)
+
             self.ui.echo(f"\n{termui.Emoji.SUCC} All complete!")

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("pdm.termui")
 
 
-def log_title(title):
+def log_title(title: str) -> None:
     logger.info("=" * 8 + " " + title + " " + "=" * 8)
 
 
@@ -55,7 +55,7 @@ class SpinnerReporter(BaseReporter):
             for k, can in state.mapping.items():
                 logger.info(f"  {k.rjust(column_width)} {can.version}")
 
-    def extract_metadata(self):
+    def extract_metadata(self) -> None:
         self.spinner.start("Extracting package metadata")
 
     def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:

@@ -5,7 +5,7 @@ import importlib
 import os
 import pkgutil
 import sys
-from typing import Optional, Type
+from typing import Any, Callable, List, Optional, Type
 
 import click
 from pip._vendor import pkg_resources
@@ -16,15 +16,11 @@ from pdm.cli.actions import migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter, PdmParser
+from pdm.exceptions import PdmUsageError
 from pdm.installers import Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
-
-try:
-    import importlib.metadata as importlib_metadata
-except ModuleNotFoundError:
-    import importlib_metadata
 
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
@@ -33,6 +29,10 @@ class Core:
     """A high level object that manages all classes and configurations"""
 
     def __init__(self):
+        try:
+            import importlib.metadata as importlib_metadata
+        except ModuleNotFoundError:
+            import importlib_metadata
         self.version = importlib_metadata.version(__name__.split(".")[0])
 
         self.project_class = Project
@@ -44,7 +44,7 @@ class Core:
         self.parser = None
         self.subparsers = None
 
-    def init_parser(self):
+    def init_parser(self) -> None:
         self.parser = PdmParser(
             prog="pdm",
             description="PDM - Python Development Master",
@@ -73,7 +73,7 @@ class Core:
                 continue
             self.register_command(klass, klass.name or name)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable[..., Any]:
         return self.main(*args, **kwargs)
 
     def ensure_project(
@@ -82,24 +82,31 @@ class Core:
         if obj is not None:
             options.project = obj
         if getattr(options, "project", None) is None:
-            project = None
             global_project = getattr(options, "global_project", None)
-            if global_project is True:
+            if global_project:
                 project_factory = self.project_class.create_global
-            elif global_project:
-                project = global_project
             else:
                 project_factory = self.project_class
 
-            if project is None:
-                project = project_factory(getattr(options, "project_path", None))
+            default_root = (
+                None
+                if global_project or getattr(options, "search_parent", True)
+                else "."
+            )
+            project = project_factory(getattr(options, "project_path", default_root))
             options.project = project
 
         # Add reverse reference for core object
         options.project.core = self
         migrate_pyproject(options.project)
 
-    def main(self, args=None, prog_name=None, obj=None, **extra):
+    def main(
+        self,
+        args: List[str] = None,
+        prog_name: str = None,
+        obj: Optional[Project] = None,
+        **extra: Any,
+    ) -> None:
         """The main entry function"""
         from pdm.models.pip_shims import global_tempdir_manager
 
@@ -128,12 +135,14 @@ class Core:
                     f(options.project, options)
             except Exception:
                 etype, err, traceback = sys.exc_info()
-                if self.ui.verbosity > termui.NORMAL:
+                should_show_tb = not isinstance(err, PdmUsageError)
+                if self.ui.verbosity > termui.NORMAL and should_show_tb:
                     raise err.with_traceback(traceback)
                 self.ui.echo(
                     f"{termui.red('[' + etype.__name__ + ']')}: {err}", err=True
                 )
-                self.ui.echo(termui.yellow("Add '-v' to see the detailed traceback"))
+                if should_show_tb:
+                    self.ui.echo("Add '-v' to see the detailed traceback", fg="yellow")
                 sys.exit(1)
 
     def register_command(
@@ -142,7 +151,6 @@ class Core:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """
-        command.project_class = self.project_class
         command.register_to(self.subparsers, name)
 
     @staticmethod
@@ -150,7 +158,7 @@ class Core:
         """Add a config item to the configuration class"""
         Config.add_config(name, config_item)
 
-    def load_plugins(self):
+    def load_plugins(self) -> None:
         """Import and load plugins under `pdm.plugin` namespace
         A plugin is a callable that accepts the core object as the only argument.
 
@@ -164,6 +172,6 @@ class Core:
             plugin.load()(self)
 
 
-def main(args=None):
+def main(args: Any = None) -> Callable[..., Any]:
     """The CLI entry function"""
     return Core().main(args)

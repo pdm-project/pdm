@@ -10,12 +10,25 @@ import subprocess
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
+from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from re import Match
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+    TypeVar,
+)
 
 from distlib.wheel import Wheel
-from tomlkit.container import Container
-from tomlkit.items import Item
+from pip._vendor.packaging.tags import Tag
+from pip._vendor.requests import Session
 
 from pdm._types import Source
 from pdm.models.pip_shims import (
@@ -38,7 +51,7 @@ except ImportError:
             self.attr_name = func.__name__
             self.__doc__ = func.__doc__
 
-        def __get__(self, inst: Any, cls=None) -> _T:
+        def __get__(self, inst: Any, cls: _T = None) -> _T:
             if inst is None:
                 return self
             if self.attr_name not in inst.__dict__:
@@ -127,7 +140,7 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def is_readonly_property(cls, name):
+def is_readonly_property(cls: Any, name: str) -> Optional[Any]:
     """Tell whether a attribute can't be setattr'ed."""
     attr = getattr(cls, name, None)
     return attr and isinstance(attr, property) and not attr.fset
@@ -140,12 +153,12 @@ def join_list_with(items: List[Any], sep: Any) -> List[Any]:
     return new_items[:-1]
 
 
-def _wheel_supported(self, tags=None):
+def _wheel_supported(self: Any, tags: List[Tag] = None) -> bool:
     # Ignore current platform. Support everything.
     return True
 
 
-def _wheel_support_index_min(self, tags=None):
+def _wheel_support_index_min(self: Any, tags: Optional[str] = None) -> int:
     # All wheels are equal priority for sorting.
     return 0
 
@@ -243,29 +256,23 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
-def get_venv_python(root: Path) -> Optional[str]:
-    """Get the python interpreter path of venv"""
+def get_in_project_venv_python(root: Path) -> Optional[Path]:
+    """Get the python interpreter path of venv-in-project"""
     if os.name == "nt":
         suffix = ".exe"
         scripts = "Scripts"
     else:
         suffix = ""
         scripts = "bin"
-    venv = None
-    if "VIRTUAL_ENV" in os.environ:
-        venv = os.environ["VIRTUAL_ENV"]
-    else:
-        for possible_dir in ("venv", ".venv", "env"):
-            if (root / possible_dir / scripts / f"python{suffix}").exists():
-                venv = str(root / possible_dir)
-                break
-    if venv:
-        return os.path.join(venv, scripts, f"python{suffix}")
+    for possible_dir in ("venv", ".venv", "env"):
+        if (root / possible_dir / scripts / f"python{suffix}").exists():
+            venv = root / possible_dir
+            return venv / scripts / f"python{suffix}"
     return None
 
 
 @contextmanager
-def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"):
+def atomic_open_for_write(filename: PathLike, *, encoding: str = "utf-8"):
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
     filename = str(filename)
     try:
@@ -295,7 +302,7 @@ def cd(path: str):
 
 
 @contextmanager
-def temp_environ():
+def temp_environ() -> Iterator:
     environ = os.environ.copy()
     try:
         yield
@@ -305,7 +312,7 @@ def temp_environ():
 
 
 @contextmanager
-def open_file(url, session=None):
+def open_file(url: str, session: Optional[Session] = None) -> TextIO:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
@@ -342,7 +349,7 @@ def populate_link(
         ireq.link = link
 
 
-def setdefault(document: Container, key: str, value: Any) -> Item:
+def setdefault(document: Dict, key: str, value: Any) -> Dict:
     """A compatiable dict.setdefault() for tomlkit data structures."""
     if key not in document:
         document[key] = value
@@ -364,7 +371,7 @@ def expand_env_vars(credential: str, quote: bool = False) -> str:
     Neither $ENV_VAR and %ENV_VAR is not supported.
     """
 
-    def replace_func(match):
+    def replace_func(match: Match) -> str:
         rv = os.getenv(match.group(1), match.group(0))
         return parse.quote(rv) if quote else rv
 
@@ -412,3 +419,36 @@ def is_venv_python(interpreter: os.PathLike) -> bool:
         else:
             return True
     return False
+
+
+def find_python_in_path(path: os.PathLike) -> Optional[Path]:
+    """Find a python interpreter from the given path, the input argument could be:
+
+    - A valid path to the interpreter
+    - A Python root directory that contains the interpreter
+    """
+    pathlib_path = Path(path).absolute()
+    if pathlib_path.is_file():
+        return pathlib_path
+
+    if os.name == "nt":
+        for root_dir in (pathlib_path, pathlib_path / "Scripts"):
+            if root_dir.joinpath("python.exe").exists():
+                return root_dir.joinpath("python.exe")
+    else:
+        executable_pattern = re.compile(r"python(?:\d(?:\.\d+m?)?)?$")
+
+        for python in pathlib_path.joinpath("bin").glob("python*"):
+            if executable_pattern.match(python.name):
+                return python
+
+    return None
+
+
+def get_rev_from_url(url: str) -> str:
+    """Get the rev part from the VCS URL."""
+    path = parse.urlparse(url).path
+    if "@" in path:
+        _, rev = path.rsplit("@", 1)
+        return rev
+    return ""

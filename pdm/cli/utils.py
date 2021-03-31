@@ -2,18 +2,19 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
+from argparse import _SubParsersAction
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set, Union
 
 import cfonts
 import tomlkit
 from packaging.specifiers import SpecifierSet
+from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
 
 from pdm import termui
-from pdm.exceptions import NoPythonVersion, ProjectError
+from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.environment import WorkingSet
@@ -25,13 +26,14 @@ if TYPE_CHECKING:
     from typing import Dict, Iterable, List, Optional, Tuple
 
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
-    from tomlkit.container import Container
 
     from pdm.models.candidates import Candidate
 
 
 class PdmFormatter(argparse.HelpFormatter):
-    def _format_action(self, action):
+    def _format_action(
+        self, action: Union[_SubParsersAction, _SubParsersAction._ChoicesPseudoAction]
+    ) -> str:
         # determine the required width and the entry label
         help_position = min(self._action_max_length + 2, self._max_help_position)
         help_width = max(self._width - help_position, 11)
@@ -79,7 +81,7 @@ class PdmFormatter(argparse.HelpFormatter):
 
 
 class PdmParser(argparse.ArgumentParser):
-    def format_help(self):
+    def format_help(self) -> str:
         formatter = self._get_formatter()
 
         if getattr(self, "is_root", False):
@@ -126,18 +128,20 @@ class PdmParser(argparse.ArgumentParser):
 class Package:
     """An internal class for the convenience of dependency graph building."""
 
-    def __init__(self, name, version, requirements):
+    def __init__(
+        self, name: str, version: str, requirements: Dict[str, Requirement]
+    ) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
         self.requirements = requirements
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
     def __repr__(self):
         return f"<Package {self.name}=={self.version}>"
 
-    def __eq__(self, value):
+    def __eq__(self, value: Package) -> bool:
         return self.name == value.name
 
 
@@ -147,7 +151,7 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
     graph.add(None)  # sentinel parent of top nodes.
     node_with_extras = set()
 
-    def add_package(key, dist):
+    def add_package(key: str, dist: Distribution) -> Package:
         name, extras = strip_extras(key)
         extras = extras or ()
         reqs = {}
@@ -198,7 +202,7 @@ def format_package(
     package: Package,
     required: str = "",
     prefix: str = "",
-    visited=None,
+    visited: Optional[Set[str]] = None,
 ) -> str:
     """Format one package.
 
@@ -249,7 +253,7 @@ def format_reverse_package(
     child: Optional[Package] = None,
     requires: str = "",
     prefix: str = "",
-    visited=None,
+    visited: Optional[Set[str]] = None,
 ):
     """Format one package for output reverse dependency graph."""
     if visited is None:
@@ -326,7 +330,7 @@ def format_lockfile(
     mapping: Dict[str, Candidate],
     fetched_dependencies: Dict[str, List[Requirement]],
     summary_collection: Dict[str, str],
-) -> Container:
+) -> Dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
@@ -443,27 +447,3 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "set a narrower `requires-python` range in the pyproject.toml."
     )
     return "\n".join(result)
-
-
-def find_python_in_path(path: os.PathLike) -> str:
-    """Find a python interpreter from the given path, the input argument could be:
-
-    - A valid path to the interpreter
-    - A Python root diretory that contains the interpreter
-    """
-    pathlib_path = Path(path).absolute()
-    if pathlib_path.is_file():
-        return pathlib_path.as_posix()
-
-    if os.name == "nt":
-        for root_dir in (pathlib_path, pathlib_path / "Scripts"):
-            if root_dir.joinpath("python.exe").exists():
-                return root_dir.joinpath("python.exe").as_posix()
-    else:
-        executable_pattern = re.compile(r"python(?:\d(?:\.\d+m?)?)?$")
-
-        for python in pathlib_path.joinpath("bin").glob("python*"):
-            if executable_pattern.match(python.name):
-                return python.as_posix()
-
-    raise NoPythonVersion(f"No Python interpreter is found at {path!r}")

@@ -1,19 +1,81 @@
+Release v1.4.5 (2021-03-30)
+---------------------------
+
+### Features & Improvements
+
+- Skip the first prompt of `pdm init` [#352](https://github.com/pdm-project/pdm/issues/352)
+
+### Bug Fixes
+
+- Fix a test failure when using homebrew installed python. [#348](https://github.com/pdm-project/pdm/issues/348)
+- Get revision from the VCS URL if source code isn't downloaded to local. [#349](https://github.com/pdm-project/pdm/issues/349)
+
+### Dependencies
+
+- Update dependency `pdm-pep517` to `0.6.1`. [#353](https://github.com/pdm-project/pdm/issues/353)
+
+
+Release v1.4.4 (2021-03-27)
+---------------------------
+
+### Features & Improvements
+
+- Emit warning if version or description can't be retrieved when importing from flit metadata. [#342](https://github.com/pdm-project/pdm/issues/342)
+- Add `type` argument to `pdm cache clear` and improve its UI. [#343](https://github.com/pdm-project/pdm/issues/343)
+- Always re-install the editable packages when syncing the working set. This can help tracking the latest change of `entry-points`. [#344](https://github.com/pdm-project/pdm/issues/344)
+
+### Bug Fixes
+
+- Make installer quit early if a wheel isn't able to build. [#338](https://github.com/pdm-project/pdm/issues/338)
+
+### Miscellany
+
+- ignore type checking in `models.project_info.ProjectInfo`, which indexes `distlib.metadata._data` [#335](https://github.com/pdm-project/pdm/issues/335)
+
+
+Release v1.4.3 (2021-03-24)
+---------------------------
+
+### Features & Improvements
+
+- Change the group name of entry points from `pdm.plugins` to `pdm`.
+  Export some useful objects and models for shorter import path. [#318](https://github.com/pdm-project/pdm/issues/318)
+- Field `cmd` in `tools.pdm.scripts` configuration items now allows specifying an argument array instead of a string.
+- Refactor: Remove the reference of `stream` singleton, improve the UI related code. [#320](https://github.com/pdm-project/pdm/issues/320)
+- Support dependencies managed by poetry and flit being installed as editable packages. [#324](https://github.com/pdm-project/pdm/issues/324)
+- Refactor: Extract the logic of finding interpreters to method for the sake of subclass overriding. [#326](https://github.com/pdm-project/pdm/issues/326)
+- Complete the `cache` command, add `list`, `remove` and `info` subcommands. [#329](https://github.com/pdm-project/pdm/issues/329)
+- Refactor: Unify the code about selecting interpreter to reduce the duplication. [#331](https://github.com/pdm-project/pdm/issues/331)
+- Retrieve the version and description of a flit project by parsing the AST of the main file. [#333](https://github.com/pdm-project/pdm/issues/333)
+
+### Bug Fixes
+
+- Fix a parsing error when non-ascii characters exist in `pyproject.toml`. [#308](https://github.com/pdm-project/pdm/issues/308)
+- Fix a bug that non-editable VCS candidates can't satisfy their requirements once locked in the lock file. [#314](https://github.com/pdm-project/pdm/issues/314)
+- Fix a bug of import-on-init that fails when requirements.txt is detected. [#328](https://github.com/pdm-project/pdm/issues/328)
+
+### Miscellany
+
+- refactor `pdm.iostream` to improve 'typing' support [#301](https://github.com/pdm-project/pdm/issues/301)
+- fix some typos [#323](https://github.com/pdm-project/pdm/issues/323)
+
+
 Release v1.4.2 (2021-03-18)
 ---------------------------
 
 ### Features & Improvements
 
-- Refactor the code, extract the version related logic from `specifiers.py` to a separated module. [#303](https://github.com/frostming/pdm/issues/303)
+- Refactor the code, extract the version related logic from `specifiers.py` to a separated module. [#303](https://github.com/pdm-project/pdm/issues/303)
 
 ### Bug Fixes
 
-- Fix a bug that get_dependencies() returns error when the `setup.py` has no `intall_requires` key. [#299](https://github.com/frostming/pdm/issues/299)
-- Pin the VCS revision for non-editable VCS candidates in the lock file. [#305](https://github.com/frostming/pdm/issues/305)
-- Fix a bug that editable build hits the cached wheel unexpectedly. [#307](https://github.com/frostming/pdm/issues/307)
+- Fix a bug that get_dependencies() returns error when the `setup.py` has no `intall_requires` key. [#299](https://github.com/pdm-project/pdm/issues/299)
+- Pin the VCS revision for non-editable VCS candidates in the lock file. [#305](https://github.com/pdm-project/pdm/issues/305)
+- Fix a bug that editable build hits the cached wheel unexpectedly. [#307](https://github.com/pdm-project/pdm/issues/307)
 
 ### Miscellany
 
-- replace 'typing comments' with type annotations throughout [#298](https://github.com/frostming/pdm/issues/298)
+- replace 'typing comments' with type annotations throughout [#298](https://github.com/pdm-project/pdm/issues/298)
 
 
 Release v1.4.1 (2021-03-12)
@@ -21,16 +83,16 @@ Release v1.4.1 (2021-03-12)
 
 ### Features & Improvements
 
-- Support importing dependencies from requirements.txt to dev-dependencies or sections. [#291](https://github.com/frostming/pdm/issues/291)
+- Support importing dependencies from requirements.txt to dev-dependencies or sections. [#291](https://github.com/pdm-project/pdm/issues/291)
 
 ### Bug Fixes
 
-- Fallback to static parsing when building was failed to find the dependencies of a candidate. [#293](https://github.com/frostming/pdm/issues/293)
-- Fix a bug that `pdm init` fails when `pyproject.toml` exists but has no `[project]` section. [#295](https://github.com/frostming/pdm/issues/295)
+- Fallback to static parsing when building was failed to find the dependencies of a candidate. [#293](https://github.com/pdm-project/pdm/issues/293)
+- Fix a bug that `pdm init` fails when `pyproject.toml` exists but has no `[project]` section. [#295](https://github.com/pdm-project/pdm/issues/295)
 
 ### Improved Documentation
 
-- Document about how to use PDM with Nox. [#281](https://github.com/frostming/pdm/issues/281)
+- Document about how to use PDM with Nox. [#281](https://github.com/pdm-project/pdm/issues/281)
 
 
 Release v1.4.0 (2021-03-05)
@@ -38,19 +100,19 @@ Release v1.4.0 (2021-03-05)
 
 ### Features & Improvements
 
-- When `-I/--ignore-python` passed or `PDM_IGNORE_SAVED_PYTHON=1`, ignore the interpreter set in `.pdm.toml` and don't save to it afterwards. [#283](https://github.com/frostming/pdm/issues/283)
+- When `-I/--ignore-python` passed or `PDM_IGNORE_SAVED_PYTHON=1`, ignore the interpreter set in `.pdm.toml` and don't save to it afterwards. [#283](https://github.com/pdm-project/pdm/issues/283)
 - A new option `-p/--project` is introduced to specify another path for the project base. It can also be combined with `-g/--global` option.
-  The latter is changed to a flag only option that does not accept values. [#286](https://github.com/frostming/pdm/issues/286)
-- Support `-f setuppy` for `pdm export` to export the metadata as setup.py [#289](https://github.com/frostming/pdm/issues/289)
+  The latter is changed to a flag only option that does not accept values. [#286](https://github.com/pdm-project/pdm/issues/286)
+- Support `-f setuppy` for `pdm export` to export the metadata as setup.py [#289](https://github.com/pdm-project/pdm/issues/289)
 
 ### Bug Fixes
 
-- Fix a bug that editable local package requirements cannot be parsed rightly. [#285](https://github.com/frostming/pdm/issues/285)
-- Change the priority of metadata files to parse so that PEP 621 metadata will be parsed first. [#288](https://github.com/frostming/pdm/issues/288)
+- Fix a bug that editable local package requirements cannot be parsed rightly. [#285](https://github.com/pdm-project/pdm/issues/285)
+- Change the priority of metadata files to parse so that PEP 621 metadata will be parsed first. [#288](https://github.com/pdm-project/pdm/issues/288)
 
 ### Improved Documentation
 
-- Add examples of how to integrate with CI pipelines (and tox). [#281](https://github.com/frostming/pdm/issues/281)
+- Add examples of how to integrate with CI pipelines (and tox). [#281](https://github.com/pdm-project/pdm/issues/281)
 
 
 Release v1.3.4 (2021-03-01)
@@ -58,7 +120,7 @@ Release v1.3.4 (2021-03-01)
 
 ### Improved Documentation
 
-- added documentation on a [task provider for vscode](https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider) [#280](https://github.com/frostming/pdm/issues/280)
+- added documentation on a [task provider for vscode](https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider) [#280](https://github.com/pdm-project/pdm/issues/280)
 
 ### Bug Fixes
 
@@ -69,9 +131,9 @@ Release v1.3.3 (2021-02-26)
 
 ### Bug Fixes
 
-- Fix the requirement string of a VCS requirement to comply with PEP 508. [#275](https://github.com/frostming/pdm/issues/275)
-- Fix a bug that editable packages with `src` directory can't be uninstalled correctly. [#277](https://github.com/frostming/pdm/issues/277)
-- Fix a bug that editable package doesn't override the non-editable version in the working set. [#278](https://github.com/frostming/pdm/issues/278)
+- Fix the requirement string of a VCS requirement to comply with PEP 508. [#275](https://github.com/pdm-project/pdm/issues/275)
+- Fix a bug that editable packages with `src` directory can't be uninstalled correctly. [#277](https://github.com/pdm-project/pdm/issues/277)
+- Fix a bug that editable package doesn't override the non-editable version in the working set. [#278](https://github.com/pdm-project/pdm/issues/278)
 
 
 Release v1.3.2 (2021-02-25)
@@ -79,12 +141,12 @@ Release v1.3.2 (2021-02-25)
 
 ### Features & Improvements
 
-- Abort and tell user the selected section following `pdm sync` or `pdm install` is not present in the error message. [#274](https://github.com/frostming/pdm/issues/274)
+- Abort and tell user the selected section following `pdm sync` or `pdm install` is not present in the error message. [#274](https://github.com/pdm-project/pdm/issues/274)
 
 ### Bug Fixes
 
-- Fix a bug that candidates' sections cannot be retrieved rightly when circular dependencies exist. [#270](https://github.com/frostming/pdm/issues/270)
-- Don't pass the help argument into the run script method. [#272](https://github.com/frostming/pdm/issues/272)
+- Fix a bug that candidates' sections cannot be retrieved rightly when circular dependencies exist. [#270](https://github.com/pdm-project/pdm/issues/270)
+- Don't pass the help argument into the run script method. [#272](https://github.com/pdm-project/pdm/issues/272)
 
 
 Release v1.3.1 (2021-02-19)
@@ -92,9 +154,9 @@ Release v1.3.1 (2021-02-19)
 
 ### Bug Fixes
 
-- Use the absolute path when importing from a Poetry pyproject.toml. [#262](https://github.com/frostming/pdm/issues/262)
-- Fix a bug that old toml table head is kept when converting to PEP 621 metadata format. [#263](https://github.com/frostming/pdm/issues/263)
-- Postpone the evaluation of `requires-python` attribute when fetching the candidates of a package. [#264](https://github.com/frostming/pdm/issues/264)
+- Use the absolute path when importing from a Poetry pyproject.toml. [#262](https://github.com/pdm-project/pdm/issues/262)
+- Fix a bug that old toml table head is kept when converting to PEP 621 metadata format. [#263](https://github.com/pdm-project/pdm/issues/263)
+- Postpone the evaluation of `requires-python` attribute when fetching the candidates of a package. [#264](https://github.com/pdm-project/pdm/issues/264)
 
 
 Release v1.3.0 (2021-02-09)
@@ -102,17 +164,17 @@ Release v1.3.0 (2021-02-09)
 
 ### Features & Improvements
 
-- Increase the default value of the max rounds of resolution to 1000, make it configurable. [#238](https://github.com/frostming/pdm/issues/238)
-- Rewrite the project's `egg-info` directory when dependencies change. So that `pdm list --graph` won't show invalid entries. [#240](https://github.com/frostming/pdm/issues/240)
-- When importing requirments from a `requirments.txt` file, build the package to find the name if not given in the URL. [#245](https://github.com/frostming/pdm/issues/245)
-- When initializing the project, prompt user for whether the project is a library, and give empty `name` and `version` if not. [#253](https://github.com/frostming/pdm/issues/253)
+- Increase the default value of the max rounds of resolution to 1000, make it configurable. [#238](https://github.com/pdm-project/pdm/issues/238)
+- Rewrite the project's `egg-info` directory when dependencies change. So that `pdm list --graph` won't show invalid entries. [#240](https://github.com/pdm-project/pdm/issues/240)
+- When importing requirments from a `requirments.txt` file, build the package to find the name if not given in the URL. [#245](https://github.com/pdm-project/pdm/issues/245)
+- When initializing the project, prompt user for whether the project is a library, and give empty `name` and `version` if not. [#253](https://github.com/pdm-project/pdm/issues/253)
 
 ### Bug Fixes
 
-- Fix the version validator of wheel metadata to align with the implementation of `packaging`. [#130](https://github.com/frostming/pdm/issues/130)
-- Preserve the `sections` value of a pinned candidate to be reused. [#234](https://github.com/frostming/pdm/issues/234)
-- Strip spaces in user input when prompting for the python version to use. [#252](https://github.com/frostming/pdm/issues/252)
-- Fix the version parsing of Python requires to allow `>`, `>=`, `<`, `<=` to combine with star versions. [#254](https://github.com/frostming/pdm/issues/254)
+- Fix the version validator of wheel metadata to align with the implementation of `packaging`. [#130](https://github.com/pdm-project/pdm/issues/130)
+- Preserve the `sections` value of a pinned candidate to be reused. [#234](https://github.com/pdm-project/pdm/issues/234)
+- Strip spaces in user input when prompting for the python version to use. [#252](https://github.com/pdm-project/pdm/issues/252)
+- Fix the version parsing of Python requires to allow `>`, `>=`, `<`, `<=` to combine with star versions. [#254](https://github.com/pdm-project/pdm/issues/254)
 
 
 Release v1.2.0 (2021-01-26)
@@ -120,22 +182,22 @@ Release v1.2.0 (2021-01-26)
 
 ### Features & Improvements
 
-- Change the behavior of `--save-compatible` slightly. Now the version specifier saved is using the REAL compatible operator `~=` as described in PEP 440. Before: `requests<3.0.0,>=2.19.1`, After: `requests~=2.19`. The new specifier accepts `requests==2.19.0` as compatible version. [#225](https://github.com/frostming/pdm/issues/225)
+- Change the behavior of `--save-compatible` slightly. Now the version specifier saved is using the REAL compatible operator `~=` as described in PEP 440. Before: `requests<3.0.0,>=2.19.1`, After: `requests~=2.19`. The new specifier accepts `requests==2.19.0` as compatible version. [#225](https://github.com/pdm-project/pdm/issues/225)
 - Environment variable `${PROJECT_ROOT}` in the dependency specification can be expanded to refer to the project root in pyproject.toml.
-  The environment variables will be kept as they are in the lock file. [#226](https://github.com/frostming/pdm/issues/226)
-- Change the dependencies of a package in the lock file to a list of PEP 508 strings [#236](https://github.com/frostming/pdm/issues/236)
+  The environment variables will be kept as they are in the lock file. [#226](https://github.com/pdm-project/pdm/issues/226)
+- Change the dependencies of a package in the lock file to a list of PEP 508 strings [#236](https://github.com/pdm-project/pdm/issues/236)
 
 ### Bug Fixes
 
-- Ignore user's site and `PYTHONPATH`(with `python -I` mode) when executing pip commands. [#231](https://github.com/frostming/pdm/issues/231)
+- Ignore user's site and `PYTHONPATH`(with `python -I` mode) when executing pip commands. [#231](https://github.com/pdm-project/pdm/issues/231)
 
 ### Improved Documentation
 
-- Document about how to activate and use a plugin. [#227](https://github.com/frostming/pdm/issues/227)
+- Document about how to activate and use a plugin. [#227](https://github.com/pdm-project/pdm/issues/227)
 
 ### Dependencies
 
-- Test project on `pip 21.0`. [#235](https://github.com/frostming/pdm/issues/235)
+- Test project on `pip 21.0`. [#235](https://github.com/pdm-project/pdm/issues/235)
 
 
 Release v1.1.0 (2021-01-18)
@@ -146,18 +208,18 @@ Release v1.1.0 (2021-01-18)
 - Allow users to hide secrets from the `pyproject.toml`.
   - Dynamically expand env variables in the URLs in dependencies and indexes.
   - Ask whether to store the credentials provided by the user.
-  - A user-friendly error will show when credentials are not provided nor correct. [#198](https://github.com/frostming/pdm/issues/198)
-- Use a different package dir for 32-bit installation(Windows). [#212](https://github.com/frostming/pdm/issues/212)
-- Auto disable PEP 582 when a venv-like python is given as the interpreter path. [#219](https://github.com/frostming/pdm/issues/219)
-- Support specifying Python interpreter by `pdm use <path-to-python-root>`. [#221](https://github.com/frostming/pdm/issues/221)
+  - A user-friendly error will show when credentials are not provided nor correct. [#198](https://github.com/pdm-project/pdm/issues/198)
+- Use a different package dir for 32-bit installation(Windows). [#212](https://github.com/pdm-project/pdm/issues/212)
+- Auto disable PEP 582 when a venv-like python is given as the interpreter path. [#219](https://github.com/pdm-project/pdm/issues/219)
+- Support specifying Python interpreter by `pdm use <path-to-python-root>`. [#221](https://github.com/pdm-project/pdm/issues/221)
 
 ### Bug Fixes
 
-- Fix a bug of `PYTHONPATH` manipulation under Windows platform. [#215](https://github.com/frostming/pdm/issues/215)
+- Fix a bug of `PYTHONPATH` manipulation under Windows platform. [#215](https://github.com/pdm-project/pdm/issues/215)
 
 ### Removals and Deprecations
 
-- Remove support of the old PEP 517 backend API path. [#217](https://github.com/frostming/pdm/issues/217)
+- Remove support of the old PEP 517 backend API path. [#217](https://github.com/pdm-project/pdm/issues/217)
 
 
 Release v1.0.0 (2021-01-05)
@@ -165,7 +227,7 @@ Release v1.0.0 (2021-01-05)
 
 ### Bug Fixes
 
-- Correctly build wheels for dependencies with build-requirements but without a specified build-backend [#213](https://github.com/frostming/pdm/issues/213)
+- Correctly build wheels for dependencies with build-requirements but without a specified build-backend [#213](https://github.com/pdm-project/pdm/issues/213)
 
 
 Release v1.0.0b2 (2020-12-29)
@@ -173,11 +235,11 @@ Release v1.0.0b2 (2020-12-29)
 
 ### Features & Improvements
 
-- Fallback to pypi.org when `/search` endpoint is not available on given index. [#211](https://github.com/frostming/pdm/issues/211)
+- Fallback to pypi.org when `/search` endpoint is not available on given index. [#211](https://github.com/pdm-project/pdm/issues/211)
 
 ### Bug Fixes
 
-- Fix a bug that PDM fails to parse python version specifiers with more than 3 parts. [#210](https://github.com/frostming/pdm/issues/210)
+- Fix a bug that PDM fails to parse python version specifiers with more than 3 parts. [#210](https://github.com/pdm-project/pdm/issues/210)
 
 
 Release v1.0.0b0 (2020-12-24)
@@ -188,17 +250,17 @@ Release v1.0.0b0 (2020-12-24)
 - Fully support of PEP 621 specification.
   - Old format is deprecated at the same time.
   - PDM will migrate the project file for you when old format is detected.
-  - Other metadata formats(`Poetry`, `Pipfile`, `flit`) can also be imported as PEP 621 metadata. [#175](https://github.com/frostming/pdm/issues/175)
-- Re-implement the `pdm search` to query the `/search` HTTP endpoint. [#195](https://github.com/frostming/pdm/issues/195)
-- Reuse the cached built wheels to accelerate the installation. [#200](https://github.com/frostming/pdm/issues/200)
-- Make update strategy and save strategy configurable in pdm config. [#202](https://github.com/frostming/pdm/issues/202)
-- Improve the error message to give more insight on what to do when resolution fails. [#207](https://github.com/frostming/pdm/issues/207)
-- Set `classifiers` dynamic in `pyproject.toml` template for autogeneration. [#209](https://github.com/frostming/pdm/issues/209)
+  - Other metadata formats(`Poetry`, `Pipfile`, `flit`) can also be imported as PEP 621 metadata. [#175](https://github.com/pdm-project/pdm/issues/175)
+- Re-implement the `pdm search` to query the `/search` HTTP endpoint. [#195](https://github.com/pdm-project/pdm/issues/195)
+- Reuse the cached built wheels to accelerate the installation. [#200](https://github.com/pdm-project/pdm/issues/200)
+- Make update strategy and save strategy configurable in pdm config. [#202](https://github.com/pdm-project/pdm/issues/202)
+- Improve the error message to give more insight on what to do when resolution fails. [#207](https://github.com/pdm-project/pdm/issues/207)
+- Set `classifiers` dynamic in `pyproject.toml` template for autogeneration. [#209](https://github.com/pdm-project/pdm/issues/209)
 
 ### Bug Fixes
 
-- Fix a bug that distributions are not removed clearly in parallel mode. [#204](https://github.com/frostming/pdm/issues/204)
-- Fix a bug that python specifier `is_subset()` returns incorrect result. [#206](https://github.com/frostming/pdm/issues/206)
+- Fix a bug that distributions are not removed clearly in parallel mode. [#204](https://github.com/pdm-project/pdm/issues/204)
+- Fix a bug that python specifier `is_subset()` returns incorrect result. [#206](https://github.com/pdm-project/pdm/issues/206)
 
 
 Release v0.12.3 (2020-12-21)
@@ -213,16 +275,16 @@ Release v0.12.2 (2020-12-17)
 
 ### Features & Improvements
 
-- Update the lock file schema, move the file hashes to `[metadata.files]` table. [#196](https://github.com/frostming/pdm/issues/196)
-- Retry failed jobs when syncing packages. [#197](https://github.com/frostming/pdm/issues/197)
+- Update the lock file schema, move the file hashes to `[metadata.files]` table. [#196](https://github.com/pdm-project/pdm/issues/196)
+- Retry failed jobs when syncing packages. [#197](https://github.com/pdm-project/pdm/issues/197)
 
 ### Removals and Deprecations
 
-- Drop `pip-shims` package as a dependency. [#132](https://github.com/frostming/pdm/issues/132)
+- Drop `pip-shims` package as a dependency. [#132](https://github.com/pdm-project/pdm/issues/132)
 
 ### Miscellany
 
-- Fix the cache path for CI. [#199](https://github.com/frostming/pdm/issues/199)
+- Fix the cache path for CI. [#199](https://github.com/pdm-project/pdm/issues/199)
 
 
 Release v0.12.1 (2020-12-14)
@@ -230,12 +292,12 @@ Release v0.12.1 (2020-12-14)
 
 ### Features & Improvements
 
-- Provide an option to export requirements from pyproject.toml [#190](https://github.com/frostming/pdm/issues/190)
-- For Windows users, `pdm --pep582` can enable PEP 582 globally by manipulating the WinReg. [#191](https://github.com/frostming/pdm/issues/191)
+- Provide an option to export requirements from pyproject.toml [#190](https://github.com/pdm-project/pdm/issues/190)
+- For Windows users, `pdm --pep582` can enable PEP 582 globally by manipulating the WinReg. [#191](https://github.com/pdm-project/pdm/issues/191)
 
 ### Bug Fixes
 
-- Inject `__pypackages__` into `PATH` env var during `pdm run`. [#193](https://github.com/frostming/pdm/issues/193)
+- Inject `__pypackages__` into `PATH` env var during `pdm run`. [#193](https://github.com/pdm-project/pdm/issues/193)
 
 
 Release v0.12.0 (2020-12-08)
@@ -246,16 +308,16 @@ Release v0.12.0 (2020-12-08)
 - Improve the user experience of `pdm run`:
   - Add a special key in tool.pdm.scripts that holds configurations shared by all scripts.
   - Support loading env var from a dot-env file.
-  - Add a flag `-s/--site-packages` to include system site-packages when running. [#178](https://github.com/frostming/pdm/issues/178)
-- Now PEP 582 can be enabled in the Python interpreter directly! [#181](https://github.com/frostming/pdm/issues/181)
+  - Add a flag `-s/--site-packages` to include system site-packages when running. [#178](https://github.com/pdm-project/pdm/issues/178)
+- Now PEP 582 can be enabled in the Python interpreter directly! [#181](https://github.com/pdm-project/pdm/issues/181)
 
 ### Bug Fixes
 
-- Ensure `setuptools` is installed before invoking editable install script. [#174](https://github.com/frostming/pdm/issues/174)
-- Require `wheel` not `wheels` for global projects [#182](https://github.com/frostming/pdm/issues/182)
+- Ensure `setuptools` is installed before invoking editable install script. [#174](https://github.com/pdm-project/pdm/issues/174)
+- Require `wheel` not `wheels` for global projects [#182](https://github.com/pdm-project/pdm/issues/182)
 - Write a `sitecustomize.py` instead of a `.pth` file to enable PEP 582. Thanks @Aloxaf.
-  Update `get_package_finder()` to be compatible with `pip 20.3`. [#185](https://github.com/frostming/pdm/issues/185)
-- Fix the help messages of commands "cache" and "remove" [#187](https://github.com/frostming/pdm/issues/187)
+  Update `get_package_finder()` to be compatible with `pip 20.3`. [#185](https://github.com/pdm-project/pdm/issues/185)
+- Fix the help messages of commands "cache" and "remove" [#187](https://github.com/pdm-project/pdm/issues/187)
 
 
 Release v0.11.0 (2020-11-20)
@@ -265,15 +327,15 @@ Release v0.11.0 (2020-11-20)
 
 - Support custom script shortcuts in `pyproject.toml`.
   - Support custom script shortcuts defined in `[tool.pdm.scripts]` section.
-  - Add `pdm run --list/-l` to show the list of script shortcuts. [#168](https://github.com/frostming/pdm/issues/168)
+  - Add `pdm run --list/-l` to show the list of script shortcuts. [#168](https://github.com/pdm-project/pdm/issues/168)
 - Patch the halo library to support parallel spinners.
-- Change the looking of `pdm install`. [#169](https://github.com/frostming/pdm/issues/169)
+- Change the looking of `pdm install`. [#169](https://github.com/pdm-project/pdm/issues/169)
 
 ### Bug Fixes
 
-- Fix a bug that package's marker fails to propagate to its grandchildren if they have already been resolved. [#170](https://github.com/frostming/pdm/issues/170)
-- Fix a bug that bare version specifiers in Poetry project can't be converted correctly. [#172](https://github.com/frostming/pdm/issues/172)
-- Fix the build error that destination directory is not created automatically. [#173](https://github.com/frostming/pdm/issues/173)
+- Fix a bug that package's marker fails to propagate to its grandchildren if they have already been resolved. [#170](https://github.com/pdm-project/pdm/issues/170)
+- Fix a bug that bare version specifiers in Poetry project can't be converted correctly. [#172](https://github.com/pdm-project/pdm/issues/172)
+- Fix the build error that destination directory is not created automatically. [#173](https://github.com/pdm-project/pdm/issues/173)
 
 
 Release v0.10.2 (2020-11-05)
@@ -281,7 +343,7 @@ Release v0.10.2 (2020-11-05)
 
 ### Bug Fixes
 
-- Building editable distribution does not install `build-system.requires` anymore. [#167](https://github.com/frostming/pdm/issues/167)
+- Building editable distribution does not install `build-system.requires` anymore. [#167](https://github.com/pdm-project/pdm/issues/167)
 
 
 Release v0.10.1 (2020-11-04)
@@ -289,9 +351,9 @@ Release v0.10.1 (2020-11-04)
 
 ### Bug Fixes
 
-- Switch the PEP 517 build frontend from `build` to a home-grown version. [#162](https://github.com/frostming/pdm/issues/162)
-- Synchronize the output of `LogWrapper`. [#164](https://github.com/frostming/pdm/issues/164)
-- Fix a bug that `is_subset` and `is_superset` may return wrong result when wildcard excludes overlaps with the upper bound. [#165](https://github.com/frostming/pdm/issues/165)
+- Switch the PEP 517 build frontend from `build` to a home-grown version. [#162](https://github.com/pdm-project/pdm/issues/162)
+- Synchronize the output of `LogWrapper`. [#164](https://github.com/pdm-project/pdm/issues/164)
+- Fix a bug that `is_subset` and `is_superset` may return wrong result when wildcard excludes overlaps with the upper bound. [#165](https://github.com/pdm-project/pdm/issues/165)
 
 
 Release v0.10.0 (2020-10-20)
@@ -299,12 +361,12 @@ Release v0.10.0 (2020-10-20)
 
 ### Features & Improvements
 
-- Change to Git style config command. [#157](https://github.com/frostming/pdm/issues/157)
-- Add a command to generate scripts for autocompletion, which is backed by `pycomplete`. [#159](https://github.com/frostming/pdm/issues/159)
+- Change to Git style config command. [#157](https://github.com/pdm-project/pdm/issues/157)
+- Add a command to generate scripts for autocompletion, which is backed by `pycomplete`. [#159](https://github.com/pdm-project/pdm/issues/159)
 
 ### Bug Fixes
 
-- Fix a bug that `sitecustomize.py` incorrectly gets injected into the editable console scripts. [#158](https://github.com/frostming/pdm/issues/158)
+- Fix a bug that `sitecustomize.py` incorrectly gets injected into the editable console scripts. [#158](https://github.com/pdm-project/pdm/issues/158)
 
 
 Release v0.9.2 (2020-10-13)
@@ -312,12 +374,12 @@ Release v0.9.2 (2020-10-13)
 
 ### Features & Improvements
 
-- Cache the built wheels to accelerate resolution and installation process. [#153](https://github.com/frostming/pdm/issues/153)
+- Cache the built wheels to accelerate resolution and installation process. [#153](https://github.com/pdm-project/pdm/issues/153)
 
 ### Bug Fixes
 
-- Fix a bug that no wheel is matched when finding candidates to install. [#155](https://github.com/frostming/pdm/issues/155)
-- Fix a bug that installation in parallel will cause encoding initialization error on Ubuntu. [#156](https://github.com/frostming/pdm/issues/156)
+- Fix a bug that no wheel is matched when finding candidates to install. [#155](https://github.com/pdm-project/pdm/issues/155)
+- Fix a bug that installation in parallel will cause encoding initialization error on Ubuntu. [#156](https://github.com/pdm-project/pdm/issues/156)
 
 
 Release v0.9.1 (2020-10-13)
@@ -325,11 +387,11 @@ Release v0.9.1 (2020-10-13)
 
 ### Features & Improvements
 
-- Display plain text instead of spinner bar under verbose mode. [#150](https://github.com/frostming/pdm/issues/150)
+- Display plain text instead of spinner bar under verbose mode. [#150](https://github.com/pdm-project/pdm/issues/150)
 
 ### Bug Fixes
 
-- Fix a bug that the result of `find_matched()` is exhausted when accessed twice. [#149](https://github.com/frostming/pdm/issues/149)
+- Fix a bug that the result of `find_matched()` is exhausted when accessed twice. [#149](https://github.com/pdm-project/pdm/issues/149)
 
 
 Release v0.9.0 (2020-10-08)
@@ -337,22 +399,22 @@ Release v0.9.0 (2020-10-08)
 
 ### Features & Improvements
 
-- Allow users to combine several dependency sections to form an extra require. [#131](https://github.com/frostming/pdm/issues/131)
-- Split the PEP 517 backend to its own(battery included) package. [#134](https://github.com/frostming/pdm/issues/134)
-- Add a new option to list command to show reverse dependency graph. [#137](https://github.com/frostming/pdm/issues/137)
+- Allow users to combine several dependency sections to form an extra require. [#131](https://github.com/pdm-project/pdm/issues/131)
+- Split the PEP 517 backend to its own(battery included) package. [#134](https://github.com/pdm-project/pdm/issues/134)
+- Add a new option to list command to show reverse dependency graph. [#137](https://github.com/pdm-project/pdm/issues/137)
 
 ### Bug Fixes
 
-- Fix a bug that spaces in path causes requirement parsing error. [#138](https://github.com/frostming/pdm/issues/138)
-- Fix a bug that requirement's python constraint is not respected when resolving. [#141](https://github.com/frostming/pdm/issues/141)
+- Fix a bug that spaces in path causes requirement parsing error. [#138](https://github.com/pdm-project/pdm/issues/138)
+- Fix a bug that requirement's python constraint is not respected when resolving. [#141](https://github.com/pdm-project/pdm/issues/141)
 
 ### Dependencies
 
-- Update `pdm-pep517` to `0.2.0` that supports reading version from SCM. [#146](https://github.com/frostming/pdm/issues/146)
+- Update `pdm-pep517` to `0.2.0` that supports reading version from SCM. [#146](https://github.com/pdm-project/pdm/issues/146)
 
 ### Miscellany
 
-- Add Python 3.9 to the CI version matrix to verify. [#144](https://github.com/frostming/pdm/issues/144)
+- Add Python 3.9 to the CI version matrix to verify. [#144](https://github.com/pdm-project/pdm/issues/144)
 
 
 Release v0.8.7 (2020-09-04)
@@ -360,7 +422,7 @@ Release v0.8.7 (2020-09-04)
 
 ### Bug Fixes
 
-- Fix a compatibility issue with `wheel==0.35`. [#135](https://github.com/frostming/pdm/issues/135)
+- Fix a compatibility issue with `wheel==0.35`. [#135](https://github.com/pdm-project/pdm/issues/135)
 
 
 Release v0.8.6 (2020-07-09)
@@ -368,7 +430,7 @@ Release v0.8.6 (2020-07-09)
 
 ### Bug Fixes
 
-- Fix a bug that extra sources are not respected when fetching distributions. [#127](https://github.com/frostming/pdm/issues/127)
+- Fix a bug that extra sources are not respected when fetching distributions. [#127](https://github.com/pdm-project/pdm/issues/127)
 
 
 Release v0.8.5 (2020-06-24)
@@ -376,11 +438,11 @@ Release v0.8.5 (2020-06-24)
 
 ### Bug Fixes
 
-- Fix a bug that `pdm export` fails when the project doesn't have `name` property. [#126](https://github.com/frostming/pdm/issues/126)
+- Fix a bug that `pdm export` fails when the project doesn't have `name` property. [#126](https://github.com/pdm-project/pdm/issues/126)
 
 ### Dependencies
 
-- Upgrade dependency `pip` to `20.1`. [#125](https://github.com/frostming/pdm/issues/125)
+- Upgrade dependency `pip` to `20.1`. [#125](https://github.com/pdm-project/pdm/issues/125)
 
 
 Release v0.8.4 (2020-05-21)
@@ -388,11 +450,11 @@ Release v0.8.4 (2020-05-21)
 
 ### Features & Improvements
 
-- Add a new command `export` to export to alternative formats. [#117](https://github.com/frostming/pdm/issues/117)
+- Add a new command `export` to export to alternative formats. [#117](https://github.com/pdm-project/pdm/issues/117)
 
 ### Miscellany
 
-- Add Dockerfile and pushed to Docker Hub. [#122](https://github.com/frostming/pdm/issues/122)
+- Add Dockerfile and pushed to Docker Hub. [#122](https://github.com/pdm-project/pdm/issues/122)
 
 
 Release v0.8.3 (2020-05-15)
@@ -400,7 +462,7 @@ Release v0.8.3 (2020-05-15)
 
 ### Bug Fixes
 
-- Fix the version constraint parsing of wheel metadata. [#120](https://github.com/frostming/pdm/issues/120)
+- Fix the version constraint parsing of wheel metadata. [#120](https://github.com/pdm-project/pdm/issues/120)
 
 
 Release v0.8.2 (2020-05-03)
@@ -408,7 +470,7 @@ Release v0.8.2 (2020-05-03)
 
 ### Bug Fixes
 
-- Update resolvers to `resolvelib` 0.4.0. [#118](https://github.com/frostming/pdm/issues/118)
+- Update resolvers to `resolvelib` 0.4.0. [#118](https://github.com/pdm-project/pdm/issues/118)
 
 
 Release v0.8.1 (2020-04-22)
@@ -416,7 +478,7 @@ Release v0.8.1 (2020-04-22)
 
 ### Dependencies
 
-- Switch to upstream `resolvelib 0.3.0`. [#116](https://github.com/frostming/pdm/issues/116)
+- Switch to upstream `resolvelib 0.3.0`. [#116](https://github.com/pdm-project/pdm/issues/116)
 
 
 Release v0.8.0 (2020-04-20)
@@ -424,14 +486,14 @@ Release v0.8.0 (2020-04-20)
 
 ### Features & Improvements
 
-- Add a new command to search for packages [#111](https://github.com/frostming/pdm/issues/111)
-- Add `show` command to show package metadata. [#114](https://github.com/frostming/pdm/issues/114)
+- Add a new command to search for packages [#111](https://github.com/pdm-project/pdm/issues/111)
+- Add `show` command to show package metadata. [#114](https://github.com/pdm-project/pdm/issues/114)
 
 ### Bug Fixes
 
-- Fix a bug that environment markers cannot be evaluated correctly if extras are connected with "or". [#107](https://github.com/frostming/pdm/issues/107)
-- Don't consult PyPI JSON API by default for package metadata. [#112](https://github.com/frostming/pdm/issues/112)
-- Eliminate backslashes in markers for TOML documents. [#115](https://github.com/frostming/pdm/issues/115)
+- Fix a bug that environment markers cannot be evaluated correctly if extras are connected with "or". [#107](https://github.com/pdm-project/pdm/issues/107)
+- Don't consult PyPI JSON API by default for package metadata. [#112](https://github.com/pdm-project/pdm/issues/112)
+- Eliminate backslashes in markers for TOML documents. [#115](https://github.com/pdm-project/pdm/issues/115)
 
 
 Release v0.7.1 (2020-04-13)
@@ -446,12 +508,12 @@ Release v0.7.0 (2020-04-12)
 
 ### Features & Improvements
 
-- Disable loading of site-packages under PEP 582 mode. [#100](https://github.com/frostming/pdm/issues/100)
+- Disable loading of site-packages under PEP 582 mode. [#100](https://github.com/pdm-project/pdm/issues/100)
 
 ### Bug Fixes
 
-- Fix a bug that TOML parsing error is not correctly captured. [#101](https://github.com/frostming/pdm/issues/101)
-- Fix a bug of building wheels with C extensions that the platform in file name is incorrect. [#99](https://github.com/frostming/pdm/issues/99)
+- Fix a bug that TOML parsing error is not correctly captured. [#101](https://github.com/pdm-project/pdm/issues/101)
+- Fix a bug of building wheels with C extensions that the platform in file name is incorrect. [#99](https://github.com/pdm-project/pdm/issues/99)
 
 
 Release v0.6.5 (2020-04-07)
@@ -467,8 +529,8 @@ Release v0.6.4 (2020-04-07)
 
 ### Features & Improvements
 
-- Update shebang lines in the executable scripts when doing `pdm use`. [#96](https://github.com/frostming/pdm/issues/96)
-- Auto-detect commonly used venv directories. [#97](https://github.com/frostming/pdm/issues/97)
+- Update shebang lines in the executable scripts when doing `pdm use`. [#96](https://github.com/pdm-project/pdm/issues/96)
+- Auto-detect commonly used venv directories. [#97](https://github.com/pdm-project/pdm/issues/97)
 
 
 Release v0.6.3 (2020-03-30)
@@ -476,7 +538,7 @@ Release v0.6.3 (2020-03-30)
 
 ### Bug Fixes
 
-- Fix a bug of moving files across different file system. [#95](https://github.com/frostming/pdm/issues/95)
+- Fix a bug of moving files across different file system. [#95](https://github.com/pdm-project/pdm/issues/95)
 
 
 Release v0.6.2 (2020-03-29)
@@ -484,14 +546,14 @@ Release v0.6.2 (2020-03-29)
 
 ### Bug Fixes
 
-- Validate user input for `python_requires` when initializing project. [#89](https://github.com/frostming/pdm/issues/89)
-- Ensure `wheel` package is available before building packages. [#90](https://github.com/frostming/pdm/issues/90)
-- Fix an issue of remove command that will unexpectedly uninstall packages in default section. [#92](https://github.com/frostming/pdm/issues/92)
+- Validate user input for `python_requires` when initializing project. [#89](https://github.com/pdm-project/pdm/issues/89)
+- Ensure `wheel` package is available before building packages. [#90](https://github.com/pdm-project/pdm/issues/90)
+- Fix an issue of remove command that will unexpectedly uninstall packages in default section. [#92](https://github.com/pdm-project/pdm/issues/92)
 
 ### Dependencies
 
 - Update dependencies `pythonfinder`, `python-cfonts`, `pip-shims` and many others.
-  Drop dependency `vistir`. [#89](https://github.com/frostming/pdm/issues/89)
+  Drop dependency `vistir`. [#89](https://github.com/pdm-project/pdm/issues/89)
 
 
 Release v0.6.1 (2020-03-25)
@@ -499,11 +561,11 @@ Release v0.6.1 (2020-03-25)
 
 ### Features & Improvements
 
-- Redirect output messages to log file for installation and locking. [#84](https://github.com/frostming/pdm/issues/84)
+- Redirect output messages to log file for installation and locking. [#84](https://github.com/pdm-project/pdm/issues/84)
 
 ### Bug Fixes
 
-- Fix a bug that parallel installation fails due to setuptools reinstalling. [#83](https://github.com/frostming/pdm/issues/83)
+- Fix a bug that parallel installation fails due to setuptools reinstalling. [#83](https://github.com/pdm-project/pdm/issues/83)
 
 
 Release v0.6.0 (2020-03-20)
@@ -511,17 +573,17 @@ Release v0.6.0 (2020-03-20)
 
 ### Features & Improvements
 
-- Support specifying build script for C extensions. [#23](https://github.com/frostming/pdm/issues/23)
-- Add test cases for `pdm build`. [#81](https://github.com/frostming/pdm/issues/81)
+- Support specifying build script for C extensions. [#23](https://github.com/pdm-project/pdm/issues/23)
+- Add test cases for `pdm build`. [#81](https://github.com/pdm-project/pdm/issues/81)
 - Make it configurable whether to consult PyPI JSON API since it may be not trustable.
 - Support parallel installation.
 - Add new command `pmd import` to import project metadata from `Pipfile`, `poetry`, `flit`, `requirements.txt`.
-  [#79](https://github.com/frostming/pdm/issues/79)
+  [#79](https://github.com/pdm-project/pdm/issues/79)
 - `pdm init` and `pdm install` will auto-detect possible files that can be imported.
 
 ### Bug Fixes
 
-- Fix wheel builds when `package_dir` is mapped. [#81](https://github.com/frostming/pdm/issues/81)
+- Fix wheel builds when `package_dir` is mapped. [#81](https://github.com/pdm-project/pdm/issues/81)
 - `pdm init` will use the current directory rather than finding the parents when
 global project is not activated.
 
@@ -531,11 +593,11 @@ Release v0.5.0 (2020-03-14)
 
 ### Features & Improvements
 
-- Introduce a super easy-to-extend plug-in system to PDM. [#75](https://github.com/frostming/pdm/issues/75)
+- Introduce a super easy-to-extend plug-in system to PDM. [#75](https://github.com/pdm-project/pdm/issues/75)
 
 ### Improved Documentation
 
-- Documentation on how to write a plugin. [#75](https://github.com/frostming/pdm/issues/75)
+- Documentation on how to write a plugin. [#75](https://github.com/pdm-project/pdm/issues/75)
 
 ### Bug Fixes
 
@@ -547,8 +609,8 @@ Release v0.4.2 (2020-03-13)
 
 ### Features & Improvements
 
-- Refactor the CLI part, switch from `click` to `argparse`, for better extensibility. [#73](https://github.com/frostming/pdm/issues/73)
-- Allow users to configure to install packages into venv when it is activated. [#74](https://github.com/frostming/pdm/issues/74)
+- Refactor the CLI part, switch from `click` to `argparse`, for better extensibility. [#73](https://github.com/pdm-project/pdm/issues/73)
+- Allow users to configure to install packages into venv when it is activated. [#74](https://github.com/pdm-project/pdm/issues/74)
 
 
 Release v0.4.1 (2020-03-11)
@@ -556,7 +618,7 @@ Release v0.4.1 (2020-03-11)
 
 ### Features & Improvements
 
-- Add a minimal dependency set for global project. [#72](https://github.com/frostming/pdm/issues/72)
+- Add a minimal dependency set for global project. [#72](https://github.com/pdm-project/pdm/issues/72)
 
 
 Release v0.4.0 (2020-03-10)
@@ -567,16 +629,16 @@ Release v0.4.0 (2020-03-10)
 - Global project support
   - Add a new option `-g/--global` to manage global project. The default location is at `~/.pdm/global-project`.
   - Use the virtualenv interpreter when detected inside an activated venv.
-  - Add a new option `-p/--project` to select project root other than the default one. [#30](https://github.com/frostming/pdm/issues/30)
-- Add a new command `pdm config del` to delete an existing config item. [#71](https://github.com/frostming/pdm/issues/71)
+  - Add a new option `-p/--project` to select project root other than the default one. [#30](https://github.com/pdm-project/pdm/issues/30)
+- Add a new command `pdm config del` to delete an existing config item. [#71](https://github.com/pdm-project/pdm/issues/71)
 
 ### Bug Fixes
 
-- Fix a URL parsing issue that username will be dropped in the SSH URL. [#68](https://github.com/frostming/pdm/issues/68)
+- Fix a URL parsing issue that username will be dropped in the SSH URL. [#68](https://github.com/pdm-project/pdm/issues/68)
 
 ### Improved Documentation
 
-- Add docs for global project and selecting project path. [#30](https://github.com/frostming/pdm/issues/30)
+- Add docs for global project and selecting project path. [#30](https://github.com/pdm-project/pdm/issues/30)
 
 
 Release v0.3.2 (2020-03-08)
@@ -584,11 +646,11 @@ Release v0.3.2 (2020-03-08)
 
 ### Features & Improvements
 
-- Display all available Python interpreters if users don't give one in `pdm init`. [#67](https://github.com/frostming/pdm/issues/67)
+- Display all available Python interpreters if users don't give one in `pdm init`. [#67](https://github.com/pdm-project/pdm/issues/67)
 
 ### Bug Fixes
 
-- Regard `4.0` as infinite upper bound when checking subsetting. [#66](https://github.com/frostming/pdm/issues/66)
+- Regard `4.0` as infinite upper bound when checking subsetting. [#66](https://github.com/pdm-project/pdm/issues/66)
 
 
 Release v0.3.1 (2020-03-07)
@@ -604,16 +666,16 @@ Release v0.3.0 (2020-02-28)
 
 ### Features & Improvements
 
-- Add a new command `pdm config` to inspect configurations. [#26](https://github.com/frostming/pdm/issues/26)
-- Add a new command `pdm cache clear` to clean caches. [#63](https://github.com/frostming/pdm/issues/63)
+- Add a new command `pdm config` to inspect configurations. [#26](https://github.com/pdm-project/pdm/issues/26)
+- Add a new command `pdm cache clear` to clean caches. [#63](https://github.com/pdm-project/pdm/issues/63)
 
 ### Bug Fixes
 
-- Correctly show dependency graph when circular dependencies exist. [#62](https://github.com/frostming/pdm/issues/62)
+- Correctly show dependency graph when circular dependencies exist. [#62](https://github.com/pdm-project/pdm/issues/62)
 
 ### Improved Documentation
 
-- Write the initial documentation for PDM. [#14](https://github.com/frostming/pdm/issues/14)
+- Write the initial documentation for PDM. [#14](https://github.com/pdm-project/pdm/issues/14)
 
 
 Release v0.2.6 (2020-02-25)
@@ -621,12 +683,12 @@ Release v0.2.6 (2020-02-25)
 
 ### Features & Improvements
 
-- Improve the user interface of selecting Python interpreter. [#54](https://github.com/frostming/pdm/issues/54)
+- Improve the user interface of selecting Python interpreter. [#54](https://github.com/pdm-project/pdm/issues/54)
 
 ### Bug Fixes
 
-- Fix the wheel installer to correctly unparse the flags of console scripts. [#56](https://github.com/frostming/pdm/issues/56)
-- Fix a bug that OS-dependent hashes are not saved. [#57](https://github.com/frostming/pdm/issues/57)
+- Fix the wheel installer to correctly unparse the flags of console scripts. [#56](https://github.com/pdm-project/pdm/issues/56)
+- Fix a bug that OS-dependent hashes are not saved. [#57](https://github.com/pdm-project/pdm/issues/57)
 
 
 Release v0.2.5 (2020-02-22)
@@ -634,13 +696,13 @@ Release v0.2.5 (2020-02-22)
 
 ### Features & Improvements
 
-- Allow specifying Python interpreter via `--python` option in `pdm init`. [#49](https://github.com/frostming/pdm/issues/49)
-- Set `python_requires` when initializing and defaults to `>={current_version}`. [#50](https://github.com/frostming/pdm/issues/50)
+- Allow specifying Python interpreter via `--python` option in `pdm init`. [#49](https://github.com/pdm-project/pdm/issues/49)
+- Set `python_requires` when initializing and defaults to `>={current_version}`. [#50](https://github.com/pdm-project/pdm/issues/50)
 
 ### Bug Fixes
 
-- Always consider wheels before tarballs; correctly merge markers from different parents. [#47](https://github.com/frostming/pdm/issues/47)
-- Filter out incompatible wheels when installing. [#48](https://github.com/frostming/pdm/issues/48)
+- Always consider wheels before tarballs; correctly merge markers from different parents. [#47](https://github.com/pdm-project/pdm/issues/47)
+- Filter out incompatible wheels when installing. [#48](https://github.com/pdm-project/pdm/issues/48)
 
 
 Release v0.2.4 (2020-02-21)
@@ -648,8 +710,8 @@ Release v0.2.4 (2020-02-21)
 
 ### Bug Fixes
 
-- Use the project local interpreter to build wheels. [#43](https://github.com/frostming/pdm/issues/43)
-- Correctly merge Python specifiers when possible. [#4](https://github.com/frostming/pdm/issues/4)
+- Use the project local interpreter to build wheels. [#43](https://github.com/pdm-project/pdm/issues/43)
+- Correctly merge Python specifiers when possible. [#4](https://github.com/pdm-project/pdm/issues/4)
 
 
 Release v0.2.3 (2020-02-21)
@@ -665,15 +727,15 @@ Release v0.2.2 (2020-02-20)
 
 ### Features & Improvements
 
-- Add a fancy greeting banner when user types `pdm --help`. [#42](https://github.com/frostming/pdm/issues/42)
+- Add a fancy greeting banner when user types `pdm --help`. [#42](https://github.com/pdm-project/pdm/issues/42)
 
 ### Bug Fixes
 
-- Fix the RECORD file in built wheel. [#41](https://github.com/frostming/pdm/issues/41)
+- Fix the RECORD file in built wheel. [#41](https://github.com/pdm-project/pdm/issues/41)
 
 ### Dependencies
 
-- Add dependency `python-cfonts` to display banner. [#42](https://github.com/frostming/pdm/issues/42)
+- Add dependency `python-cfonts` to display banner. [#42](https://github.com/pdm-project/pdm/issues/42)
 
 
 Release v0.2.1 (2020-02-18)
@@ -681,7 +743,7 @@ Release v0.2.1 (2020-02-18)
 
 ### Bug Fixes
 
-- Fix a bug that short python_version markers can't be parsed correctly. [#38](https://github.com/frostming/pdm/issues/38)
+- Fix a bug that short python_version markers can't be parsed correctly. [#38](https://github.com/pdm-project/pdm/issues/38)
 - Make `_editable_intall.py` compatible with Py2.
 
 
@@ -690,24 +752,24 @@ Release v0.2.0 (2020-02-14)
 
 ### Features & Improvements
 
-- New option: `pdm list --graph` to show a dependency graph of the working set. [#10](https://github.com/frostming/pdm/issues/10)
-- New option: `pdm update --unconstrained` to ignore the version constraint of given packages. [#13](https://github.com/frostming/pdm/issues/13)
-- Improve the error message when project is not initialized before running commands. [#19](https://github.com/frostming/pdm/issues/19)
-- Pinned candidates in lock file are reused when relocking during `pdm install`. [#33](https://github.com/frostming/pdm/issues/33)
-- Use the pyenv interpreter value if pyenv is installed. [#36](https://github.com/frostming/pdm/issues/36)
-- Introduce a new command `pdm info` to show project environment information. [#9](https://github.com/frostming/pdm/issues/9)
+- New option: `pdm list --graph` to show a dependency graph of the working set. [#10](https://github.com/pdm-project/pdm/issues/10)
+- New option: `pdm update --unconstrained` to ignore the version constraint of given packages. [#13](https://github.com/pdm-project/pdm/issues/13)
+- Improve the error message when project is not initialized before running commands. [#19](https://github.com/pdm-project/pdm/issues/19)
+- Pinned candidates in lock file are reused when relocking during `pdm install`. [#33](https://github.com/pdm-project/pdm/issues/33)
+- Use the pyenv interpreter value if pyenv is installed. [#36](https://github.com/pdm-project/pdm/issues/36)
+- Introduce a new command `pdm info` to show project environment information. [#9](https://github.com/pdm-project/pdm/issues/9)
 
 ### Bug Fixes
 
-- Fix a bug that candidate hashes will be lost when reused. [#11](https://github.com/frostming/pdm/issues/11)
+- Fix a bug that candidate hashes will be lost when reused. [#11](https://github.com/pdm-project/pdm/issues/11)
 
 ### Dependencies
 
-- Update `pip` to `20.0`, update `pip_shims` to `0.5.0`. [#28](https://github.com/frostming/pdm/issues/28)
+- Update `pip` to `20.0`, update `pip_shims` to `0.5.0`. [#28](https://github.com/pdm-project/pdm/issues/28)
 
 ### Miscellany
 
-- Add a script named `setup_dev.py` for the convenience to setup pdm for development. [#29](https://github.com/frostming/pdm/issues/29)
+- Add a script named `setup_dev.py` for the convenience to setup pdm for development. [#29](https://github.com/pdm-project/pdm/issues/29)
 
 
 Release v0.1.2 (2020-02-09)
@@ -715,8 +777,8 @@ Release v0.1.2 (2020-02-09)
 
 ### Features
 
-- New command pdm use to switch python versions. [#8](https://github.com/frostming/pdm/issues/8)
-- New option pdm list --graph to show a dependency graph. [#10](https://github.com/frostming/pdm/issues/10)
+- New command pdm use to switch python versions. [#8](https://github.com/pdm-project/pdm/issues/8)
+- New option pdm list --graph to show a dependency graph. [#10](https://github.com/pdm-project/pdm/issues/10)
 - Read metadata from lockfile when pinned candidate is reused.
 
 Release v0.1.1 (2020-02-07)
@@ -724,7 +786,7 @@ Release v0.1.1 (2020-02-07)
 
 ### Features
 
-- Get version from the specified file. [#6](https://github.com/frostming/pdm/issues/6)
+- Get version from the specified file. [#6](https://github.com/pdm-project/pdm/issues/6)
 - Add column header to pdm list output.
 
 Release v0.1.0 (2020-02-07)
@@ -733,7 +795,7 @@ Release v0.1.0 (2020-02-07)
 ### Bugfixes
 
 - Pass exit code to parent process in pdm run.
-- Fix error handling for CLI. [#19](https://github.com/frostming/pdm/issues/19)
+- Fix error handling for CLI. [#19](https://github.com/pdm-project/pdm/issues/19)
 
 ### Miscellany
 
@@ -744,11 +806,11 @@ Release v0.0.5 (2020-01-22)
 
 ### Improvements
 
-- Ensure pypi index url is fetched in addition to the source settings. [#3](https://github.com/frostming/pdm/issues/3)
+- Ensure pypi index url is fetched in addition to the source settings. [#3](https://github.com/pdm-project/pdm/issues/3)
 
 ### Bugfixes
 
-- Fix an issue that leading "c"s are mistakenly stripped. [#5](https://github.com/frostming/pdm/issues/5)
+- Fix an issue that leading "c"s are mistakenly stripped. [#5](https://github.com/pdm-project/pdm/issues/5)
 - Fix an error with PEP 517 building.
 
 Release v0.0.4 (2020-01-22)

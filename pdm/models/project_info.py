@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, List, Tuple, Union
+from typing import Dict, Iterator, List, Tuple, Union, no_type_check
 
 from pdm import termui
 
@@ -10,6 +10,7 @@ class ProjectInfo:
         self.latest_stable_version = ""
         self.installed_version = ""
 
+    @no_type_check
     def generate_rows(self) -> Iterator[Tuple[str, str]]:
         if self.legacy:
             yield from self._legacy_generate_rows()
@@ -38,6 +39,7 @@ class ProjectInfo:
         yield termui.cyan("Platform:"), self._data.get("platform", "")
         yield termui.cyan("Keywords:"), ", ".join(self._data.get("keywords", []))
 
+    @no_type_check
     def _legacy_generate_rows(self) -> Iterator[Tuple[str, str]]:
         yield termui.cyan("Name:"), self._data["Name"]
         yield termui.cyan("Latest version:"), self._data["Version"]

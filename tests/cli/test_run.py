@@ -118,8 +118,8 @@ def test_run_expand_env_vars(project, invoke, capfd):
     project.tool_settings["scripts"] = {
         "test_cmd": 'python -c "foo, bar = 0, 1;print($FOO)"',
         "test_cmd_no_expand": "python -c 'print($FOO)'",
-        "test_cmd_array": ["echo", "$FOO"],
         "test_script": "python test_script.py",
+        "test_cmd_array": ["python", "test_script.py"],
         "test_shell": {"shell": "echo $FOO"},
     }
     project.write_pyproject()
@@ -132,10 +132,10 @@ def test_run_expand_env_vars(project, invoke, capfd):
         result = invoke(["run", "test_cmd_no_expand"], obj=project)
         assert result.exit_code == 1
 
-        invoke(["run", "test_cmd_array"], obj=project)
+        invoke(["run", "test_script"], obj=project)
         assert capfd.readouterr()[0].strip() == "bar"
 
-        invoke(["run", "test_script"], obj=project)
+        invoke(["run", "test_cmd_array"], obj=project)
         assert capfd.readouterr()[0].strip() == "bar"
 
         invoke(["run", "test_shell"], obj=project)

@@ -1,4 +1,6 @@
-from typing import List
+from typing import Any, List
+
+from pip._vendor.requests.models import Response
 
 from pdm._types import Source
 from pdm.exceptions import PdmException
@@ -12,7 +14,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         - It shows an error message when credentials are not provided or correect.
     """
 
-    def handle_401(self, resp, **kwargs):
+    def handle_401(self, resp: Response, **kwargs: Any) -> Response:
         if resp.status_code == 401 and not self.prompting:
             raise PdmException(
                 f"The credentials for {resp.request.url} are not provided or correct. "

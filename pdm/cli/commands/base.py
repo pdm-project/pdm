@@ -1,4 +1,5 @@
 import argparse
+from argparse import _SubParsersAction
 from typing import List, Optional
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
@@ -23,7 +24,7 @@ class BaseCommand:
         self.add_arguments(parser)
 
     @classmethod
-    def register_to(cls, subparsers, name=None):
+    def register_to(cls, subparsers: _SubParsersAction, name: str = None) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """

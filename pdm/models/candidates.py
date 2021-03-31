@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import os
 import warnings
 from argparse import Namespace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
@@ -15,7 +16,7 @@ from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.readers import SetupReader
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.utils import cached_property, path_replace
+from pdm.utils import cached_property, get_rev_from_url, path_replace
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 vcs = pip_shims.VcsSupport()
 
 
-def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
+def get_sdist(egg_info: str) -> Optional[EggInfoDistribution]:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
 
@@ -38,7 +39,7 @@ def _patch_version_parsing():
     from packaging.requirements import InvalidRequirement
     from packaging.requirements import Requirement as PRequirement
 
-    def is_valid_matcher(self, s):
+    def is_valid_matcher(self: Any, s: str) -> bool:
         try:
             PRequirement(s)
         except InvalidRequirement:
@@ -138,11 +139,21 @@ class Candidate:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
         if self.req.revision:
             return self.req.revision
+        if self.ireq.source_dir and not os.path.exists(self.ireq.source_dir):
+            # It happens because the cached wheel is hit and the source code isn't
+            # pulled to local. In this case the link url must contain the full commit
+            # hash which can be taken as the revision safely.
+            # See more info at https://github.com/pdm-project/pdm/issues/349
+            return get_rev_from_url(self.ireq.original_link.url)
         return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
 
-    def get_metadata(self, allow_all_wheels: bool = True) -> Optional[Metadata]:
+    def get_metadata(
+        self, allow_all_wheels: bool = True, raising: bool = False
+    ) -> Optional[Metadata]:
         """Get the metadata of the candidate.
         For editable requirements, egg info are produced, otherwise a wheel is built.
+
+        If raising is True, error will pop when the package fails to build.
         """
         if self.metadata is not None:
             return self.metadata
@@ -152,8 +163,11 @@ class Candidate:
         try:
             built = self.environment.build(ireq, self.hashes, allow_all_wheels)
         except BuildError:
+            if raising:
+                raise
             termui.logger.warn("Failed to build package, try parsing project files.")
             meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory)
+            meta_dict.update(summary="UNKNOWN")
             meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
             self.metadata = Namespace(**meta_dict)
         else:

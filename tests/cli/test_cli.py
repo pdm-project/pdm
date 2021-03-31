@@ -92,11 +92,6 @@ def test_info_global_project(invoke):
     assert "global-project" in result.output.strip()
 
 
-def test_deprecate_global_project(invoke, project):
-    result = invoke(["info", "-g", project.root.as_posix()])
-    assert "DEPRECATION" in result.stderr
-
-
 def test_global_project_other_location(invoke, project):
     result = invoke(["info", "-g", "-p", project.root.as_posix(), "--where"])
     assert result.stdout.strip() == project.root.as_posix()
@@ -152,7 +147,7 @@ def test_init_command(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
-    result = invoke(["init"], input="python\n\n\n\n\n\n", obj=project_no_init)
+    result = invoke(["init"], input="\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
     do_init.assert_called_with(
@@ -173,7 +168,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
     )
     do_init = mocker.patch.object(actions, "do_init")
     result = invoke(
-        ["init"], input="python\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
+        ["init"], input="\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
     )
     assert result.exit_code == 0
     python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
@@ -244,13 +239,6 @@ def test_config_project_global_precedence(project, invoke):
 
     result = invoke(["config", "python.path"], obj=project)
     assert result.output.strip() == "/path/to/bar"
-
-
-def test_cache_clear_command(project, invoke, mocker):
-    m = mocker.patch("shutil.rmtree")
-    result = invoke(["cache", "clear"], obj=project)
-    assert result.exit_code == 0
-    m.assert_called_once()
 
 
 @pytest.mark.parametrize(

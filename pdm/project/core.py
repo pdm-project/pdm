@@ -5,7 +5,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
@@ -13,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Uni
 import tomlkit
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
+from pythonfinder.models.python import PythonVersion
 from tomlkit.items import Comment, Whitespace
 
 from pdm import termui
@@ -33,14 +33,14 @@ from pdm.utils import (
     cached_property,
     cd,
     find_project_root,
-    get_venv_python,
+    find_python_in_path,
+    get_in_project_venv_python,
     is_venv_python,
     setdefault,
 )
 
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
-    from tomlkit.container import Container
 
     from pdm._vendor import halo
     from pdm.core import Core
@@ -68,8 +68,8 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         self.is_global = False
-        self._pyproject: Optional[Container] = None
-        self._lockfile: Optional[Container] = None
+        self._pyproject: Optional[Dict] = None
+        self._lockfile: Optional[Dict] = None
         self._environment: Optional[Environment] = None
         self._python_executable: Optional[str] = None
 
@@ -94,25 +94,25 @@ class Project:
         return self.root / "pdm.lock"
 
     @property
-    def pyproject(self) -> Container:
+    def pyproject(self) -> Dict:
         if not self._pyproject and self.pyproject_file.exists():
             data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
         return self._pyproject
 
     @pyproject.setter
-    def pyproject(self, data):
+    def pyproject(self, data: Dict) -> None:
         self._pyproject = data
 
     @property
-    def tool_settings(self) -> Union[Container, Dict]:
+    def tool_settings(self) -> Union[Dict]:
         data = self.pyproject
         if not data:
             return {}
         return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
-    def lockfile(self) -> Container:
+    def lockfile(self) -> Dict:
         if not self.lockfile_file.is_file():
             raise ProjectError("Lock file does not exist.")
         if not self._lockfile:
@@ -147,55 +147,36 @@ class Project:
             self._python_executable = self.resolve_interpreter()
         return self._python_executable
 
+    @python_executable.setter
+    def python_executable(self, value: str) -> None:
+        self._python_executable = value
+        self.project_config["python.path"] = value
+
     def resolve_interpreter(self) -> str:
         """Get the Python interpreter path."""
         config = self.config
         if self.project_config.get("python.path") and not os.getenv(
             "PDM_IGNORE_SAVED_PYTHON"
         ):
-            return self.project_config["python.path"]
-        path = None
-        if config["use_venv"]:
-            path = get_venv_python(self.root)
-            if path:
-                self.core.ui.echo(
-                    f"Virtualenv interpreter {termui.green(path)} is detected.",
-                    err=True,
-                    verbosity=termui.DETAIL,
-                )
-        if not path and PYENV_INSTALLED and config.get("python.use_pyenv", True):
-            path = Path(PYENV_ROOT, "shims", "python").as_posix()
-        if not path:
-            path = shutil.which("python")
-
-        version = None
-        if path:
-            try:
-                version, _ = get_python_version(path, True)
-            except (FileNotFoundError, subprocess.CalledProcessError):
-                version = None
-        if not version or not self.python_requires.contains(version):
-            finder = Finder()
-            for python in finder.find_all_python_versions():
-                version, _ = get_python_version(python.path.as_posix(), True)
-                if self.python_requires.contains(version):
-                    path = python.path.as_posix()
-                    break
+            saved_path = self.project_config["python.path"]
+            if not os.path.isfile(saved_path):
+                del self.project_config["python.path"]
             else:
-                version = ".".join(map(str, sys.version_info[:3]))
-                if self.python_requires.contains(version):
-                    path = sys.executable
-        if path:
-            if os.path.normcase(path) == os.path.normcase(sys.executable):
-                # Refer to the base interpreter to allow for venvs
-                path = getattr(sys, "_base_executable", sys.executable)
-            self.core.ui.echo(
-                "Using Python interpreter: {} ({})".format(termui.green(path), version),
-                err=True,
-            )
-            if not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
-                self.project_config["python.path"] = Path(path).as_posix()
-            return path
+                return saved_path
+        if os.name == "nt":
+            suffix = ".exe"
+            scripts = "Scripts"
+        else:
+            suffix = ""
+            scripts = "bin"
+        if config["use_venv"] and os.getenv("VIRTUAL_ENV"):
+            return os.path.join(os.getenv("VIRTUAL_ENV"), scripts, f"python{suffix}")
+
+        for py_version in self.find_interpreters():
+            if self.python_requires.contains(str(py_version.version)):
+                self.python_executable = py_version.executable
+                return self.python_executable
+
         raise NoPythonVersion(
             "No Python that satisfies {} is found on the system.".format(
                 self.python_requires
@@ -353,7 +334,7 @@ class Project:
         data = {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
         return data
 
-    def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
+    def write_lockfile(self, toml_data: Dict, show_message: bool = True) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
 
         with atomic_open_for_write(self.lockfile_file) as fp:
@@ -473,7 +454,7 @@ class Project:
         self._pyproject = None
 
     @property
-    def meta(self) -> Optional[Metadata]:
+    def meta(self) -> Metadata:
         if not self.pyproject:
             self.pyproject = {"project": tomlkit.table()}
         return Metadata(self.pyproject_file, self.pyproject.get("project", {}))
@@ -511,7 +492,52 @@ dependencies = ["pip", "setuptools", "wheel"]
             str(self.environment.python_requires).encode()
         ).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
-        return CandidateInfoCache(self.cache_dir / file_name)
+        return CandidateInfoCache(self.cache("metadata") / file_name)
 
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())
+
+    def find_interpreters(
+        self, python_spec: Optional[str] = None
+    ) -> Iterable[PythonVersion]:
+        """Return an iterable of interpreter paths that matches the given specifier,
+        which can be:
+            1. a version specifier like 3.7
+            2. an absolute path
+            3. a short name like python3
+            4. None that returns all possible interpreters
+        """
+        config = self.config
+        PythonVersion.__hash__ = lambda self: hash(self.executable)
+
+        if not python_spec:
+            if config.get("python.use_pyenv", True) and PYENV_INSTALLED:
+                yield PythonVersion.from_path(
+                    os.path.join(PYENV_ROOT, "shims", "python")
+                )
+            if config.get("use_venv"):
+                python = get_in_project_venv_python(self.root)
+                if python:
+                    yield PythonVersion.from_path(python)
+            python = shutil.which("python")
+            if python:
+                yield PythonVersion.from_path(python)
+            args = ()
+        else:
+            if not all(c.isdigit() for c in python_spec.split(".")):
+                if Path(python_spec).exists():
+                    python = find_python_in_path(python_spec)
+                    if python:
+                        yield PythonVersion.from_path(str(python))
+                else:
+                    python = shutil.which(python_spec)
+                    if python:
+                        yield PythonVersion.from_path(python)
+                return
+            args = [int(v) for v in python_spec.split(".") if v != ""]
+        finder = Finder()
+        for entry in finder.find_all_python_versions(*args):
+            yield entry.py_version
+        if not python_spec:
+            this_python = getattr(sys, "_base_executable", sys.executable)
+            yield PythonVersion.from_path(this_python)

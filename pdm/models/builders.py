@@ -8,8 +8,9 @@ import subprocess
 import sys
 import tempfile
 import threading
+from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
 import toml
 from pep517.wrappers import Pep517HookCaller
@@ -38,7 +39,7 @@ class LoggerWrapper(threading.Thread):
     to a logger (see python's logging module).
     """
 
-    def __init__(self, logger, level):
+    def __init__(self, logger: Logger, level: int) -> None:
         super().__init__()
         self.daemon = True
 
@@ -53,24 +54,24 @@ class LoggerWrapper(threading.Thread):
 
         self.start()
 
-    def fileno(self):
+    def fileno(self) -> int:
         return self.fd_write
 
     @staticmethod
-    def remove_newline(msg):
+    def remove_newline(msg: str) -> str:
         return msg[:-1] if msg.endswith("\n") else msg
 
-    def run(self):
+    def run(self) -> None:
         for line in self.reader:
             if line == self._stop_bit:
                 os.close(self.fd_read)
                 break
             self._write(self.remove_newline(line))
 
-    def _write(self, message):
+    def _write(self, message: str) -> None:
         self.logger.log(self.level, message)
 
-    def stop(self):
+    def stop(self) -> None:
         with os.fdopen(self.fd_write, "w") as f:
             f.write(self._stop_bit)
         self.join()
@@ -125,7 +126,7 @@ class EnvBuilder:
         self.src_dir = src_dir
 
         try:
-            with open(os.path.join(src_dir, "pyproject.toml")) as f:
+            with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
                 spec = toml.load(f)
         except FileNotFoundError:
             spec = {}
@@ -150,10 +151,15 @@ class EnvBuilder:
         )
 
     @cached_property
-    def pip_command(self):
+    def pip_command(self) -> List[str]:
         return self._get_pip_command()
 
-    def subprocess_runner(self, cmd, cwd=None, extra_environ=None):
+    def subprocess_runner(
+        self,
+        cmd: List[str],
+        cwd: Optional[str] = None,
+        extra_environ: Optional[Dict[str, str]] = None,
+    ) -> Optional[Any]:
         env = self._saved_env.copy() if self._saved_env else {}
         if extra_environ:
             env.update(extra_environ)
@@ -164,14 +170,14 @@ class EnvBuilder:
         try:
             self.subprocess_runner(
                 [
-                    sys.executable,
+                    getattr(sys, "_original_executable", sys.executable),
                     "-m",
                     "pip",
                     "download",
                     "--only-binary=:all:",
                     "-d",
                     dirname,
-                    "pip",
+                    "pip<21",  # pip>=21 drops the support of py27
                 ]
             )
             wheel_file = next(dirname.glob("pip-*.whl"))
@@ -206,7 +212,7 @@ class EnvBuilder:
             self._download_pip_wheel(pip_wheel)
         return [self.executable, str(pip_wheel / "pip")]
 
-    def __enter__(self):
+    def __enter__(self) -> EnvBuilder:
         self._path = tempfile.mkdtemp(prefix="pdm-build-env-")
         paths = get_sys_config_paths(
             self.executable, vars={"base": self._path, "platbase": self._path}
@@ -223,7 +229,7 @@ class EnvBuilder:
         logger.debug("Preparing isolated env for PEP 517 build...")
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self._saved_env = None
         shutil.rmtree(self._path, ignore_errors=True)
 
@@ -264,7 +270,13 @@ class EnvBuilder:
 
     def build_egg_info(self, out_dir: str) -> str:
         # Ignore destination since editable builds should be build locally
+        from pdm.project.metadata import MutableMetadata
+
         builder = Builder(self.src_dir)
+        if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
+            builder._meta = MutableMetadata(
+                os.path.join(self.src_dir, "pyproject.toml")
+            )
         setup_py_path = builder.ensure_setup_py().as_posix()
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]

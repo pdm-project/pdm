@@ -50,11 +50,11 @@ class SetupReader:
             and not result["python_requires"]
         )
 
-    def read_pyproject_toml(self, filepath):
-        from pdm.pep517.metadata import Metadata
+    def read_pyproject_toml(self, filepath: Path) -> Dict[str, Any]:
+        from pdm.project.metadata import MutableMetadata
 
         try:
-            metadata = Metadata(filepath)
+            metadata = MutableMetadata(filepath)
         except ValueError:
             return {}
         return {
@@ -179,6 +179,7 @@ class SetupReader:
             func = value.func
             if not (isinstance(func, ast.Name) and func.id == "setup") and not (
                 isinstance(func, ast.Attribute)
+                and isinstance(func.value, ast.Name)
                 and func.value.id == "setuptools"
                 and func.attr == "setup"
             ):

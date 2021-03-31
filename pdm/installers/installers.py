@@ -41,7 +41,7 @@ class Installer:  # pragma: no cover
         pip_shims.pip_logging._log_state.indentation = 0
 
     def install(self, candidate: Candidate) -> None:
-        candidate.get_metadata(allow_all_wheels=False)
+        candidate.get_metadata(allow_all_wheels=False, raising=True)
         if candidate.req.editable:
             self.install_editable(candidate.ireq)
         else:

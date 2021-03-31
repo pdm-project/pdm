@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import atexit
 import contextlib
 import functools
 import io
@@ -6,7 +9,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import ContextManager, List, Optional
+from typing import Any, Callable, ContextManager, List, Optional
 
 import click
 from click._compat import strip_ansi
@@ -19,9 +22,21 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
 
 
-def ljust(text, length):
+def ljust(text: str, length: int) -> str:
     """Like str.ljust() but ignore all ANSI controlling characters."""
     return text + " " * (length - len(strip_ansi(text)))
+
+
+def rjust(text: str, length: int) -> str:
+    """Like str.rjust() but ignore all ANSI controlling characters."""
+    return " " * (length - len(strip_ansi(text))) + text
+
+
+def centerize(text: str, length: int) -> str:
+    """Centerize the text while ignoring ANSI controlling characters."""
+    space_num = length - len(strip_ansi(text))
+    left_space = space_num // 2
+    return " " * left_space + text + " " * (space_num - left_space)
 
 
 def supports_ansi() -> bool:
@@ -63,10 +78,10 @@ class DummySpinner:
 
     text = property(lambda self: "", start)
 
-    def __enter__(self):
+    def __enter__(self) -> DummySpinner:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         pass
 
 
@@ -86,7 +101,7 @@ class UI:
         message: str = "",
         err: bool = False,
         verbosity: int = NORMAL,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         if self.verbosity >= verbosity:
             click.secho(
@@ -101,21 +116,47 @@ class UI:
         :param rows: a rows of data to be displayed.
         :param header: a list of header strings.
         """
+
+        def get_aligner(align: str) -> Callable:
+            if align == ">":
+                return rjust
+            if align == "^":
+                return centerize
+            else:
+                return ljust
+
         sizes = list(
             map(
                 lambda column: max(map(lambda x: len(strip_ansi(x)), column)),
                 zip_longest(header or [], *rows, fillvalue=""),
             )
         )
+
+        aligners = [ljust] * len(sizes)
         if header:
-            self.echo(" ".join(head.ljust(size) for head, size in zip(header, sizes)))
+            aligners = []
+            for i, head in enumerate(header):
+                aligners.append(get_aligner(head[0]))
+                if head[0] in (">", "^", "<"):
+                    header[i] = head[1:]
+            self.echo(
+                " ".join(
+                    aligner(head, size)
+                    for aligner, head, size in zip(aligners, header, sizes)
+                )
+            )
             # Print a separator
             self.echo(" ".join("-" * size for size in sizes))
         for row in rows:
-            self.echo(" ".join(ljust(item, size) for item, size in zip(row, sizes)))
+            self.echo(
+                " ".join(
+                    aligner(item, size)
+                    for aligner, item, size in zip(aligners, row, sizes)
+                )
+            )
 
     @contextlib.contextmanager
-    def indent(self, prefix):
+    def indent(self, prefix: str) -> Iterator:
         """Indent the following lines with a prefix."""
         _indent = self._indent
         self._indent += prefix
@@ -137,6 +178,13 @@ class UI:
         logger.handlers[1:] = [handler]
         pip_logger = logging.getLogger("pip.subprocessor")
         pip_logger.handlers[:] = [handler]
+
+        def cleanup():
+            try:
+                os.unlink(file_name)
+            except OSError:
+                pass
+
         try:
             yield logger
         except Exception:
@@ -145,10 +193,10 @@ class UI:
                 self.echo(yellow(f"See {file_name} for detailed debug log."))
             raise
         else:
-            try:
-                os.remove(file_name)
-            except OSError:
-                pass
+            atexit.register(cleanup)
+        finally:
+            logger.handlers.remove(handler)
+            pip_logger.handlers.remove(handler)
 
     def open_spinner(self, title: str, spinner: str = "dots") -> ContextManager:
         """Open a spinner as a context manager."""

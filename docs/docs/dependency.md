@@ -158,7 +158,7 @@ are stored under `tool.pdm` namespace in the `pyproject.toml`.
 Include the following setting in `pyproject.toml` to enable:
 
 ```toml
-[[tool.pdm]]
+[tool.pdm]
 allow_prereleases = true
 ```
 

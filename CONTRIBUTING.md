@@ -17,9 +17,9 @@ this section.
 1. First, fork this project to your own namespace using the fork button at the top right of the repository page.
 2. Clone the **upstream** repository to local:
    ```bash
-   $ git clone https://github.com/frostming/pdm.git
+   $ git clone https://github.com/pdm-project/pdm.git
    # Or if you prefer SSH clone:
-   $ git clone git@github.com:frostming/pdm.git
+   $ git clone git@github.com:pdm-project/pdm.git
    ```
 3. Add the fork as a new remote:
    ```bash
@@ -45,6 +45,8 @@ this section.
 To make sure the tests suites can run rightly, you need to install [Git LFS](https://git-lfs.github.com/), then
 ```bash
 $ git lfs install
+# If you have already cloned the repository, execute the below command as well.
+$ git lfs pull
 ```
 
 Then, you need to install base dependencies in a venv. Although PDM uses local package directory to install

@@ -1,18 +1,23 @@
 import functools
 import operator
 import os
+from argparse import Namespace
+from os import PathLike
+from typing import Any, Dict, List, Optional, Tuple
 
 import toml
 from packaging.markers import default_environment
 
+from pdm._types import RequirementDict
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
+from pdm.project import Project
 
 MARKER_KEYS = list(default_environment().keys())
 
 
-def convert_pipfile_requirement(name, req):
+def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
     markers = []
 
     if "markers" in req:
@@ -29,11 +34,13 @@ def convert_pipfile_requirement(name, req):
     return Requirement.from_req_dict(name, req).as_line()
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Project, filename: PathLike) -> bool:
     return os.path.basename(filename) == "Pipfile"
 
 
-def convert(project, filename, options):
+def convert(
+    project: Project, filename: PathLike, options: Optional[Namespace]
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
         data = toml.load(fp)
     result = {}
@@ -64,5 +71,5 @@ def convert(project, filename, options):
     return result, settings
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()
