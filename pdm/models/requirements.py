@@ -180,31 +180,6 @@ class Requirement:
     def as_line(self) -> str:
         raise NotImplementedError
 
-    def as_req_dict(self) -> Tuple[str, RequirementDict]:
-        r = {}
-        if self.editable:
-            r["editable"] = True
-        if self.extras:
-            r["extras"] = sorted(self.extras)
-        if self.is_vcs:
-            r[self.vcs] = self.repo
-        elif self.path and self.is_local_dir:
-            r["path"] = self.str_path
-        elif self.url:
-            r["url"] = self.url
-        if self.marker:
-            r["marker"] = str(self.marker).replace('"', "'")
-        if self.specifier:
-            r["version"] = str(self.specifier)
-        elif self.is_named:
-            r["version"] = "*"
-        if len(r) == 1 and next(iter(r), None) == "version":
-            r = r["version"]
-        for attr in ["index", "allow_prereleases", "ref"]:
-            if getattr(self, attr) is not None:
-                r[attr] = getattr(self, attr)
-        return self.project_name, r
-
     def matches(self, line: str, editable_match: bool = True) -> bool:
         """Return whether the passed in PEP 508 string
         is the same requirement as this one.
@@ -460,10 +435,9 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             r = NamedRequirement.parse(line)
         except (RequirementParseError, InvalidRequirement) as e:
             m = FILE_REQ.match(line)
-            if m is not None:
-                r = FileRequirement.parse(line, m.groupdict())
-            else:
+            if m is None:
                 raise RequirementError(str(e)) from None
+            r = FileRequirement.parse(line, m.groupdict())
         else:
             if r.url:
                 link = Link(r.url)
