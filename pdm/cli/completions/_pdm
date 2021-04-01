@@ -77,13 +77,32 @@ _pdm() {
       )
       ;;
     cache)
-      local -a actions=(
-        "clear:Clean all the files under cache directory"
-        "remove:Remove files matching the given pattern"
-        "list:List the built wheels stored in the cache"
-        "info:Show the info and current size of caches"
-      )
-      _describe -t command 'pdm cache actions' actions && return 0
+      _arguments -C \
+        $arguments \
+        ': :->command' \
+        '*:: :->args' && ret=0
+      case $state in
+        command)
+          local -a actions=(
+            "clear:Clean all the files under cache directory"
+            "remove:Remove files matching the given pattern"
+            "list:List the built wheels stored in the cache"
+            "info:Show the info and current size of caches"
+          )
+          _describe -t command 'pdm cache actions' actions && ret=0
+          ;;
+        args)
+          case $words[1] in
+            clear)
+              compadd -X type 'hashes' 'http' 'wheels' 'metadata' && ret=0
+              ;;
+            *)
+              _message "pattern" && ret=0
+              ;;
+          esac
+          ;;
+      esac
+      return $ret
       ;;
     config)
       _arguments -s  \
