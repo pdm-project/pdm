@@ -93,7 +93,9 @@ class Core:
                 if global_project or getattr(options, "search_parent", True)
                 else "."
             )
-            project = project_factory(getattr(options, "project_path", default_root))
+            project = project_factory(
+                getattr(options, "project_path", None) or default_root
+            )
             options.project = project
 
         # Add reverse reference for core object
