@@ -12,8 +12,6 @@ _pdm() {
   local -a arguments=(
     {-h,--help}'[Show help message and exit]'
     {-v,--verbose}'[Show detailed output]'
-    {-p,--project}'=[Specify another path as the project root]:directory:_files -/'
-    '-vv[Show more detailed output]'
   )
   local sub_commands=(
     'add:Add package(s) to pyproject.toml and install them'
@@ -55,7 +53,7 @@ _pdm() {
   case $words[1] in
     add)
       arguments+=(
-        {-g+,--global+}'[Use the global project, accepts an optional path to the project directory]:project:_files'
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-d,--dev}'[Add packages into dev dependencies]'
         {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
         '--no-sync[Only write pyproject.toml and do not sync the working set]'
@@ -64,7 +62,7 @@ _pdm() {
         '--save-exact[Save exact version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
-        {-e+,--editables}'[Specify editable packages]:packages'
+        {-e+,--editable+}'[Specify editable packages]:packages'
         '*:packages:_pdm_pip_packages'
       )
       ;;
@@ -106,7 +104,7 @@ _pdm() {
       ;;
     config)
       _arguments -s  \
-         {-g+,--global+}'[Use the global project, accepts an optional path to the project directory]:directory:_files -/' \
+         {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
          {-l,--local}"[Set config in the project's local configuration filie]" \
          {-d,--delete}'[Unset a configuration key]' \
          '1:key:->keys' \
@@ -123,25 +121,25 @@ _pdm() {
       ;;
     export)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements)"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements setuppy)"
         "--without-hashes[Don't include artifact hashes]"
         {-o+,--output+}"[Write output to the given file, or print to stdout if not given]:output file:_files"
-        {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
-        {-d,--dev}"[Include dev dependencies]"
+        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-d,--dev}"[Select dev dependencies]"
         "--no-default[Don't include dependencies from default seciton]"
       )
       ;;
     import)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements)"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-f+,--format+}"[Specify the file format explicitly]:format:(pipfile poetry flit requirements)"
         '1:filename:_files'
       )
       ;;
     info)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         '--python[Show the interpreter path]'
         '--where[Show the project root path]'
         '--env[Show PEP 508 environment markers]'
@@ -149,37 +147,38 @@ _pdm() {
       ;;
     init|lock)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-n,--non-interactive}"Don't ask questions but use default values"
       )
       ;;
     install)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
-        {-d,--dev}"[Include dev dependencies]"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-d,--dev}"[Select dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
         "--no-default[Don't include dependencies from default seciton]"
       )
       ;;
     list)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-r,--reverse}'[Reverse the dependency graph]'
         '--graph[Display a graph of dependencies]'
       )
       ;;
     remove)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
-        {-d,--dev}"[Include dev dependencies]"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-s+,--section+}'[Specify the section the package belongs to]:section:_pdm_sections'
+        {-d,--dev}"[Remove packages from dev dependencies]"
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         "*:packages:_pdm_packages"
       )
       ;;
     run)
       _arguments -s \
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/" \
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
         {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
         {-s,--site-packages}'[Load site-packages from system interpreter]' \
         '(-)1:command:->command' \
@@ -193,38 +192,41 @@ _pdm() {
       ;;
     search)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
         '1:query string:'
       )
       ;;
     show)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         '1:package:'
       )
       ;;
     sync)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
-        {-d,--dev}"[Include dev dependencies]"
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-d,--dev}"[Select dev dependencies]"
         '--dry-run[Only prints actions without actually running them]'
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
+        "--no-default[Don't include dependencies from default seciton]"
       )
       ;;
     update)
       arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
-        {-d,--dev}'[Include dev dependencies]'
+        {-d,--dev}'[Select dev dependencies]'
         "--no-default[Don't include dependencies from default seciton]"
+        {-t,--top}'[Only update those list in pyproject.toml]'
+        "--dry-run[Show the difference only without modifying the lockfile content]"
+        "--outdated[Show the difference only without modifying the lockfile content]"
         "*:packages:_pdm_packages"
       )
       ;;
@@ -246,11 +248,18 @@ _pdm_sections() {
     _message "not a pdm project"
     return 1
   fi
-  local l mbegin mend match sections=()
+  local l match sections=() in_sections=0
   while IFS= read -r l; do
-    if [[ $l == (#b)"["tool.pdm.(*)-dependencies"]" ]]; then
-      sections+=$match[1]
-    fi
+    case $l in
+      "["project.optional-dependencies"]") in_sections=1 ;;
+      "["tool.pdm.dev-dependencies"]") in_sections=1 ;;
+      "["*"]") in_sections=0 ;;
+      *"= [")
+        if (( in_sections )); then
+          sections+=$l[(w)1]
+        fi
+        ;;
+    esac
   done <pyproject.toml
   compadd -X sections -a sections
 }
