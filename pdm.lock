@@ -341,7 +341,7 @@ summary = "A PEP 517 backend for PDM that supports PEP 621 metadata"
 [[package]]
 name = "pep517"
 sections = ["default"]
-version = "0.9.1"
+version = "0.10.0"
 summary = "Wrappers to build Python packages using PEP 517 hooks"
 dependencies = [
     "toml",
@@ -973,9 +973,9 @@ content_hash = "sha256:fbe7d1276b7e0b9dc837a7bc67039bb678655a2a250bf816a60f3cdfb
     {file = "pdm_pep517-0.6.1-py3-none-any.whl", hash = "sha256:a87f40bc988fe7395caedd0bdd5cc393e4e636e2986f46c059cffa1ae4cd6f89"},
     {file = "pdm-pep517-0.6.1.tar.gz", hash = "sha256:de2dc09a9f649850d584e352330bdc4c69d23e114e04ddbcbed81911751805c5"},
 ]
-"pep517 0.9.1" = [
-    {file = "pep517-0.9.1-py2.py3-none-any.whl", hash = "sha256:3985b91ebf576883efe5fa501f42a16de2607684f3797ddba7202b71b7d0da51"},
-    {file = "pep517-0.9.1.tar.gz", hash = "sha256:aeb78601f2d1aa461960b43add204cc7955667687fbcf9cdb5170f00556f117f"},
+"pep517 0.10.0" = [
+    {file = "pep517-0.10.0-py2.py3-none-any.whl", hash = "sha256:eba39d201ef937584ad3343df3581069085bacc95454c80188291d5b3ac7a249"},
+    {file = "pep517-0.10.0.tar.gz", hash = "sha256:ac59f3f6b9726a49e15a649474539442cf76e0697e39df4869d25e68e880931b"},
 ]
 "pip 21.0" = [
     {file = "pip-21.0-py3-none-any.whl", hash = "sha256:cf2410eedf8735fd842e0fecd4117ca79025d7fe7c161e32f8640ed6ebe5ecb9"},

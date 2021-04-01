@@ -183,6 +183,26 @@ def test_init_command_library(project_no_init, invoke, mocker):
     )
 
 
+def test_init_non_interactive(project_no_init, invoke, mocker):
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    do_init = mocker.patch.object(actions, "do_init")
+    result = invoke(["init", "-n"], obj=project_no_init)
+    assert result.exit_code == 0
+    python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
+    do_init.assert_called_with(
+        project_no_init,
+        "",
+        "",
+        "MIT",
+        "Testing",
+        "me@example.org",
+        f">={python_version}",
+    )
+
+
 def test_config_command(project, invoke):
     result = invoke(["config"], obj=project)
     assert result.exit_code == 0
