@@ -23,6 +23,7 @@ def get_python_version(
     """
     args = [
         executable,
+        "-I",
         "-c",
         "import sys,json;print"
         f"(json.dumps([sys.version_info[:{digits}], sys.maxsize > 2 ** 32]))",
@@ -40,6 +41,7 @@ def get_sys_config_paths(
     if not vars:
         args = [
             executable,
+            "-I",
             "-c",
             "import sysconfig,json;print(json.dumps(sysconfig.get_paths()))",
         ]
@@ -49,6 +51,7 @@ def get_sys_config_paths(
         env.update(SYSCONFIG_VARS=json.dumps(vars))
         args = [
             executable,
+            "-I",
             "-c",
             "import os,sysconfig,json;print(json.dumps(sysconfig."
             "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
@@ -59,5 +62,5 @@ def get_sys_config_paths(
 def get_pep508_environment(executable: str) -> Dict[str, Any]:
     """Get PEP 508 environment markers dict."""
     script = importlib.import_module("pdm.pep508").__file__.rstrip("co")
-    args = [executable, script]
+    args = [executable, "-I", script]
     return json.loads(subprocess.check_output(args))
