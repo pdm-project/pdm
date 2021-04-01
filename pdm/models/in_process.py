@@ -23,8 +23,7 @@ def get_python_version(
     """
     args = [
         executable,
-        "-I",
-        "-c",
+        "-Ic",
         "import sys,json;print"
         f"(json.dumps([sys.version_info[:{digits}], sys.maxsize > 2 ** 32]))",
     ]
@@ -41,8 +40,7 @@ def get_sys_config_paths(
     if not vars:
         args = [
             executable,
-            "-I",
-            "-c",
+            "-Ic",
             "import sysconfig,json;print(json.dumps(sysconfig.get_paths()))",
         ]
         return json.loads(subprocess.check_output(args))
@@ -51,8 +49,7 @@ def get_sys_config_paths(
         env.update(SYSCONFIG_VARS=json.dumps(vars))
         args = [
             executable,
-            "-I",
-            "-c",
+            "-Ic",
             "import os,sysconfig,json;print(json.dumps(sysconfig."
             "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
         ]
