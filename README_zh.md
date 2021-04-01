@@ -1,13 +1,22 @@
+<div align="center">
+
 # PDM - Python Development Master
 
 一个现代的 Python 包管理器，支持 PEP 582。[English version README](README.md)
 
+![PDM logo](https://github.com/pdm-project/pdm/blob/master/docs/docs/assets/logo_big.png)
+
+[📖 Documentation](https://pdm.fming.dev)
+
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/pdm-project/pdm)](https://hub.docker.com/r/pdm-project/pdm)
+[![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
+[![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 
-[![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
+[![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
-[📖 文档](https://pdm.fming.dev)
+</div>
 
 ## 这个项目是啥?
 
@@ -15,7 +24,7 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 `poetry` 用着非常好，并不想引入一个新的包管理器，那么继续使用它们吧；但如果你发现有些东西这些
 工具不支持，那么你很可能可以在 `pdm` 中找到。
 
-PEP 582提出下面这种项目的目录结构：
+PEP 582 提出下面这种项目的目录结构：
 
 ```
 foo
@@ -35,6 +44,7 @@ foo
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
 - 兼容 PEP 517 的构建后端，用于构建发布包(源码格式与 wheel 格式)
 - 具备一个完备的插件系统
+- PEP 621 元数据格式
 
 ## 为什么不用虚拟环境?
 
@@ -51,7 +61,13 @@ foo
 
 PDM 需要 Python 3.7 或更高版本。
 
-强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。
+如果你使用的是 MacOS 并且安装了`homebrew`:
+
+```bash
+$ brew install pdm
+```
+
+否则，强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。
 
 ```bash
 $ pipx install pdm
@@ -63,9 +79,54 @@ $ pipx install pdm
 $ pip install --user pdm
 ```
 
-## 使用方法
+## 快速上手
 
-作者很懒，还没来得及写，先用 `python -m pdm --help` 查看帮助吧。
+**初始化一个新的 PDM 项目**
+
+```bash
+$ pdm init
+```
+
+按照指引回答提示的问题，一个 PDM 项目和对应的`pyproject.toml`文件就创建好了。
+
+**把依赖安装到 `__pypackages__` 文件夹中**
+
+```bash
+$ pdm add requests flask
+```
+
+你可以在同一条命令中添加多个依赖。稍等片刻完成之后，你可以查看`pdm.lock`文件看看有哪些依赖以及对应版本。
+
+**在 PEP 582 加持下运行你的脚本**
+
+假设你在`__pypackages__`同级的目录下有一个`app.py`脚本，内容如下（从 Flask 的官网例子复制而来）：
+
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+if __name__ == '__main__':
+    app.run()
+```
+
+如果你使用的是 Bash，可以通过执行`eval $(pdm --pep582)`设置环境变量，现在你可以用你最熟悉的 **Python 解释器** 运行脚本了：
+
+```bash
+$ python /home/frostming/workspace/flask_app/app.py
+ * Serving Flask app "app" (lazy loading)
+ ...
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+```
+
+当当当当！你已经把应用运行起来了，而它的依赖全被安装在一个项目独立的文件夹下，而我们完全没有创建虚拟环境。
+
+如果你是 Windows 用户，请参考[文档](https://pdm.fming.dev/#enable-pep-582-globally)获取设置的方法。
+
+如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
 
 ## 常见问题
 
@@ -80,7 +141,7 @@ PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并
 
 ### 3. 使用 PDM 时会载入哪些三方库路径?
 
-只有本项目的 `__pypackages__` 中的包会被载入，也就是说，Python 的 `site-packages` 目录不会被载入，完全项目隔离。
+本项目的 `__pypackages__` 中的包会在系统的`site-packages`之前被载入，这样能更好地隔离包的环境。
 
 ### 4. 我能把 `__pypackages__` 保存下来用来部署到别的机器上吗?
 

@@ -1,14 +1,22 @@
+<div align="center">
+
 # PDM - Python Development Master
 
 A modern Python package manager with PEP 582 support. [中文版本说明](README_zh.md)
 
-![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
-![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/repository/docker/frostming/pdm)
-
-[![asciicast](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim.svg)](https://asciinema.org/a/OKzNEKz1Lj0wmCVtcIqefskim)
+![PDM logo](https://github.com/pdm-project/pdm/blob/master/docs/docs/assets/logo_big.png)
 
 [📖 Documentation](https://pdm.fming.dev)
+
+![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
+[![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
+[![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
+
+[![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
+
+</div>
 
 ## What is PDM?
 
@@ -38,17 +46,18 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
 - A PEP 517 build backend.
 - A full-featured plug-in system.
+- PEP 621 project metadata format.
 
 ## Why not virtualenv?
 
 The majority of Python packaging tools also act as virtualenv managers to gain the ability
 to isolate project environments. But things get tricky when it comes to nested venvs: One
-installs the virtualenv manager using a venv capsulated Python, and create more venvs using the tool
-which is based on a capsulated Python. One day a minor release of Python is released and one has to check
+installs the virtualenv manager using a venv encapsulated Python, and create more venvs using the tool
+which is based on an encapsulated Python. One day a minor release of Python is released and one has to check
 all those venvs and upgrade them if required.
 
 PEP 582, on the other hand, introduces a way to decouple the Python interpreter from project
-environments. It is a relative new proposal and there are not many tools supporting it (one that does is
+environments. It is a relative new proposal and there are not many tools supporting it (one that does
 is [pyflow]), but it is written with Rust and thus can't get much help from the big Python community.
 For the same reason it can't act as a PEP 517 backend.
 
@@ -56,7 +65,13 @@ For the same reason it can't act as a PEP 517 backend.
 
 PDM requires python version 3.7 or higher.
 
-It is recommended to install `pdm` in an isolated enviroment, with `pipx`.
+If you are on MacOS and using `homebrew`, install it by:
+
+```bash
+$ brew install pdm
+```
+
+Otherwise, it is recommended to install `pdm` in an isolated environment with `pipx`:
 
 ```bash
 $ pipx install pdm
@@ -68,9 +83,54 @@ Or you can install it under a user site:
 $ pip install --user pdm
 ```
 
-## Usage
+## Quickstart
 
-`python -m pdm --help` provides helpful guidance.
+**Initialize a new PDM project**
+
+```bash
+$ pdm init
+```
+
+Answer the questions following the guide, and a PDM project with a `pyproject.toml` file will be ready to use.
+
+**Install dependencies into the `__pypackages__` directory**
+
+```bash
+$ pdm add requests flask
+```
+
+You can add multiple dependencies in the same command. After a while, check the `pdm.lock` file to see what is locked for each package.
+
+**Run your script with PEP 582 support**
+
+Suppose you have a script `app.py` placed next to the `__pypackages__` directory with the following content(taken from Flask's website):
+
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
+if __name__ == '__main__':
+    app.run()
+```
+
+If you are a Bash user, set the environment variable by `eval $(pdm --pep582)`. Now you can run the app directly with your familiar **Python interpreter**:
+
+```bash
+$ python /home/frostming/workspace/flask_app/app.py
+ * Serving Flask app "app" (lazy loading)
+ ...
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+```
+
+Ta-da! You are running an app with its dependencies installed in an isolated place, while no virtualenv is involved.
+
+For Windows users, please refer to [the doc](https://pdm.fming.dev/#enable-pep-582-globally) about how to make it work.
+
+If you are curious about how this works, check [this doc section](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
 
 ## Docker image
 
@@ -88,12 +148,11 @@ CLI executables. PDM makes the decision to put `bin` and `include` together with
 ### 2. How do I run CLI scripts in the local package directory?
 
 The recommended way is to prefix your command with `pdm run`. It is also possible to run CLI scripts directly from
-the outside, the PDM's installer has already injected the package path to the `sys.path` in the entry script file.
+the outside. PDM's installer has already injected the package path to the `sys.path` in the entry script file.
 
 ### 3. What site-packages will be loaded when using PDM?
 
-Only packages in the local `__pypackages__` directory will be loaded. `site-packages` of Python interpreter isn't loaded.
-It is fully isolated.
+Packages in the local `__pypackages__` directory will be loaded before the system-level `site-packages` for isolation.
 
 ### 4. Can I relocate or move the `__pypackages__` folder for deployment?
 

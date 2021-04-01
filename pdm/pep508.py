@@ -1,18 +1,24 @@
+from __future__ import annotations
+
 import json
 import os
 import platform
 import sys
+from typing import TYPE_CHECKING, Dict
+
+if TYPE_CHECKING:
+    version_info = sys._version_info
 
 
-def format_full_version(info):
-    version = "{0.major}.{0.minor}.{0.micro}".format(info)
+def format_full_version(info: version_info) -> str:
+    version = f"{info.major}.{info.minor}.{info.micro}"
     kind = info.releaselevel
     if kind != "final":
         version += kind[0] + str(info.serial)
     return version
 
 
-def default_environment():
+def default_environment() -> Dict[str, str]:
     if hasattr(sys, "implementation"):
         iver = format_full_version(sys.implementation.version)
         implementation_name = sys.implementation.name
@@ -29,7 +35,7 @@ def default_environment():
         "platform_system": platform.system(),
         "platform_version": platform.version(),
         "python_full_version": platform.python_version(),
-        "platform_python_implementaiton": platform.python_implementation(),
+        "platform_python_implementation": platform.python_implementation(),
         "python_version": ".".join(platform.python_version_tuple()[:2]),
         "sys_platform": sys.platform,
     }

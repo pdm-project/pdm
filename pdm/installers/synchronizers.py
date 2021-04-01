@@ -1,17 +1,18 @@
+from __future__ import annotations
+
 import contextlib
 import functools
-import os
+import multiprocessing
 import traceback
-from collections import defaultdict
+from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Dict, List, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
-from click import progressbar
 from pip._vendor.pkg_resources import Distribution, safe_name
 
+from pdm import termui
 from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
-from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
@@ -20,23 +21,23 @@ from pdm.models.requirements import strip_extras
 class DummyFuture:
     _NOT_SET = object()
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._result = self._NOT_SET
         self._exc = None
 
-    def set_result(self, result):
+    def set_result(self, result: Any) -> None:
         self._result = result
 
-    def set_exception(self, exc):
+    def set_exception(self, exc: Exception) -> None:
         self._exc = exc
 
     def result(self):
         return self._result
 
-    def exception(self):
+    def exception(self) -> Optional[Exception]:
         return self._exc
 
-    def add_done_callback(self, func):
+    def add_done_callback(self, func: Callable) -> None:
         func(self)
 
 
@@ -45,7 +46,7 @@ class DummyExecutor:
     functions are called and awaited for the result
     """
 
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func: Callable, *args: str, **kwargs: Any) -> DummyFuture:
         future = DummyFuture()
         try:
             future.set_result(func(*args, **kwargs))
@@ -53,55 +54,61 @@ class DummyExecutor:
             future.set_exception(exc)
         return future
 
-    def __enter__(self):
+    def __enter__(self) -> DummyExecutor:
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
         return
 
 
 class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
-    BAR_FILLED_CHAR = "=" if os.name == "nt" else "▉"
-    BAR_EMPTY_CHAR = " "
-    RETRY_TIMES = 1
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
 
     def __init__(
         self,
         candidates: Dict[str, Candidate],
         environment: Environment,
+        clean: bool = False,
+        dry_run: bool = False,
+        retry_times: int = 1,
     ) -> None:
         self.candidates = candidates
         self.environment = environment
         self.parallel = environment.project.config["parallel_install"]
         self.all_candidates = environment.project.get_locked_candidates("__all__")
         self.working_set = environment.get_working_set()
+        self.clean = clean
+        self.dry_run = dry_run
+        self.retry_times = retry_times
+        self.ui = environment.project.core.ui
 
     @contextlib.contextmanager
-    def progressbar(self, label: str, total: int):
-        bar = progressbar(
-            length=total,
-            fill_char=stream.green(self.BAR_FILLED_CHAR),
-            empty_char=self.BAR_EMPTY_CHAR,
-            show_percent=False,
-            show_pos=True,
-            label=label,
-            bar_template="%(label)s %(bar)s %(info)s",
-        )
+    def create_executor(
+        self,
+    ) -> Union[Iterator[ThreadPoolExecutor], Iterator[DummyExecutor]]:
         if self.parallel:
-            executor = ThreadPoolExecutor()
+            executor = ThreadPoolExecutor(
+                max_workers=min(multiprocessing.cpu_count(), 8)
+            )
         else:
             executor = DummyExecutor()
         with executor:
             try:
-                yield bar, executor
+                yield executor
             except KeyboardInterrupt:
                 pass
 
     def get_installer(self) -> Installer:
         return Installer(self.environment)
+
+    @property
+    def self_key(self) -> Optional[str]:
+        meta = self.environment.project.meta
+        if meta.name:
+            return meta.project_name.lower()
+        return None
 
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
@@ -110,31 +117,50 @@ class Synchronizer:
         candidates = self.candidates.copy()
         environment = self.environment.marker_environment
         for key, dist in working_set.items():
+            if key == self.self_key:
+                continue
             if key in candidates:
                 can = candidates.pop(key)
                 if can.marker and not can.marker.evaluate(environment):
                     to_remove.append(key)
-                elif not is_dist_editable(dist) and dist.version != can.version:
-                    # XXX: An editable distribution is always considered as consistent.
+                elif (
+                    can.req.editable
+                    or is_dist_editable(dist)
+                    or (dist.version != can.version)
+                ):
                     to_update.append(key)
-            elif key not in self.all_candidates and key not in ("wheel", "setuptools"):
+            elif key not in self.all_candidates and key not in self.SEQUENTIAL_PACKAGES:
                 # Remove package only if it is not required by any section
+                # Packages for packaging will never be removed
                 to_remove.append(key)
         to_add = list(
             {
                 strip_extras(name)[0]
                 for name, can in candidates.items()
-                if not (can.marker and not can.marker.evaluate(environment))
+                if name != self.self_key
                 and strip_extras(name)[0] not in working_set
+                and not (can.marker and not can.marker.evaluate(environment))
             }
         )
-        return to_add, to_update, to_remove
+        return (
+            sorted(to_add),
+            sorted(to_update),
+            sorted(to_remove) if self.clean else [],
+        )
 
     def install_candidate(self, key: str) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
         installer = self.get_installer()
-        installer.install(can)
+        with self.ui.open_spinner(f"Installing {can.format()}...") as spinner:
+            try:
+                installer.install(can)
+            except Exception:
+                spinner.fail(f"Install {can.format()} failed")
+                raise
+            else:
+                spinner.succeed(f"Install {can.format()} successful")
+
         return can
 
     def update_candidate(self, key: str) -> Tuple[Distribution, Candidate]:
@@ -142,8 +168,26 @@ class Synchronizer:
         can = self.candidates[key]
         dist = self.working_set[safe_name(can.name).lower()]
         installer = self.get_installer()
-        installer.uninstall(dist)
-        installer.install(can)
+        with self.ui.open_spinner(
+            f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
+            f"-> {termui.yellow(can.version)}..."
+        ) as spinner:
+            try:
+                installer.uninstall(dist)
+                installer.install(can)
+            except Exception:
+                spinner.fail(
+                    f"Update {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(can.version)} failed"
+                )
+                raise
+            else:
+                spinner.succeed(
+                    f"Update {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(can.version)} successful"
+                )
         return dist, can
 
     def remove_distribution(self, key: str) -> Distribution:
@@ -153,156 +197,143 @@ class Synchronizer:
         """
         installer = self.get_installer()
         dist = self.working_set[key]
-        installer.uninstall(dist)
+        with self.ui.open_spinner(
+            f"Removing {termui.green(key, bold=True)} {termui.yellow(dist.version)}..."
+        ) as spinner:
+            try:
+                installer.uninstall(dist)
+            except Exception:
+                spinner.fail(
+                    f"Remove {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} failed"
+                )
+                raise
+            else:
+                spinner.succeed(
+                    f"Remove {termui.green(key, bold=True)} "
+                    f"{termui.yellow(dist.version)} successful"
+                )
         return dist
 
-    def _print_section_title(
-        self, action: str, number_of_packages: int, dry_run: bool
-    ) -> None:
-        plural = "s" if number_of_packages > 1 else ""
-        verb = "will be" if dry_run else "are" if plural else "is"
-        stream.echo(f"{number_of_packages} package{plural} {verb} {action}:")
+    def _show_headline(self, packages: Dict[str, List[str]]) -> None:
+        add, update, remove = packages["add"], packages["update"], packages["remove"]
+        if not any((add, update, remove)):
+            self.ui.echo("All packages are synced to date, nothing to do.\n")
+            return
+        results = [termui.bold("Synchronizing working set with lock file:")]
+        results.extend(
+            [
+                f"{termui.green(str(len(add)))} to add,",
+                f"{termui.yellow(str(len(update)))} to update,",
+                f"{termui.red(str(len(remove)))} to remove",
+            ]
+        )
+        self.ui.echo(" ".join(results) + "\n")
 
-    def summarize(self, result, dry_run=False):
-        added, updated, removed = result["add"], result["update"], result["remove"]
-        if added:
-            stream.echo("\n")
-            self._print_section_title("installed", len(added), dry_run)
-            for item in sorted(added, key=lambda x: x.name):
-                stream.echo(f"  - {item.format()}")
-        if updated:
-            stream.echo("\n")
-            self._print_section_title("updated", len(updated), dry_run)
-            for old, can in sorted(updated, key=lambda x: x[1].name):
-                stream.echo(
-                    f"  - {stream.green(can.name, bold=True)} "
-                    f"{stream.yellow(old.version)} "
-                    f"-> {stream.yellow(can.version)}"
+    def _show_summary(self, packages: Dict[str, List[str]]) -> None:
+        to_add = [self.candidates[key] for key in packages["add"]]
+        to_update = [
+            (self.working_set[key], self.candidates[key]) for key in packages["update"]
+        ]
+        to_remove = [self.working_set[key] for key in packages["remove"]]
+        lines = []
+        if to_add:
+            lines.append(termui.bold("Packages to add:"))
+            for can in to_add:
+                lines.append(f"  - {can.format()}")
+        if to_update:
+            lines.append(termui.bold("Packages to update:"))
+            for prev, cur in to_update:
+                lines.append(
+                    f"  - {termui.green(cur.name, bold=True)} "
+                    f"{termui.yellow(prev.version)} -> {termui.yellow(cur.version)}"
                 )
-        if removed:
-            stream.echo("\n")
-            self._print_section_title("removed", len(removed), dry_run)
-            for dist in sorted(removed, key=lambda x: x.key):
-                stream.echo(
-                    f"  - {stream.green(dist.key, bold=True)} "
-                    f"{stream.yellow(dist.version)}"
+        if to_remove:
+            lines.append(termui.bold("Packages to remove:"))
+            for dist in to_remove:
+                lines.append(
+                    f"  - {termui.green(dist.key, bold=True)} "
+                    f"{termui.yellow(dist.version)}"
                 )
+        if lines:
+            self.ui.echo("\n".join(lines))
 
-    def synchronize(self, clean: bool = True, dry_run: bool = False) -> None:
-        """Synchronize the working set with pinned candidates.
-
-        :param clean: Whether to remove unneeded packages, defaults to True.
-        :param dry_run: If set to True, only prints actions without actually do them.
-        """
+    def synchronize(self) -> None:
+        """Synchronize the working set with pinned candidates."""
         to_add, to_update, to_remove = self.compare_with_working_set()
-        if not clean:
-            to_remove = []
-        lists_to_check = [to_add, to_update, to_remove]
-        if not any(lists_to_check):
-            if not dry_run:
-                self.environment.write_site_py()
-            stream.echo("All packages are synced to date, nothing to do.")
+        to_do = {"remove": to_remove, "update": to_update, "add": to_add}
+
+        if self.dry_run:
+            self._show_summary(to_do)
             return
 
-        if dry_run:
-            result = dict(
-                add=[self.candidates[key] for key in to_add],
-                update=[
-                    (self.working_set[key], self.candidates[key]) for key in to_update
-                ],
-                remove=[self.working_set[key] for key in to_remove],
-            )
-            self.summarize(result, dry_run)
-            return
-
+        self._show_headline(to_do)
         handlers = {
             "add": self.install_candidate,
             "update": self.update_candidate,
             "remove": self.remove_distribution,
         }
+        sequential_jobs = []
+        parallel_jobs = []
+        # Self package will be installed after all other dependencies are installed.
+        self_action = None
+        self_key = self.self_key
+        if self_key in self.candidates:
+            self_action = "update" if self_key in self.working_set else "add"
 
-        result = defaultdict(list)
-        failed = defaultdict(list)
-        to_do = {"add": to_add, "update": to_update, "remove": to_remove}
-        # Keep track of exceptions
-        errors = []
+        for kind in to_do:
+            for key in to_do[kind]:
+                if key in self.SEQUENTIAL_PACKAGES:
+                    sequential_jobs.append((kind, key))
+                elif key in self.candidates and self.candidates[key].req.editable:
+                    # Editable packages are installed sequentially.
+                    sequential_jobs.append((kind, key))
+                else:
+                    parallel_jobs.append((kind, key))
 
-        def update_progress(future, section, key, bar):
+        errors: List[str] = []
+        failed_jobs: List[Tuple[str, str]] = []
+
+        def update_progress(
+            future: Union[Future, DummyFuture], kind: str, key: str
+        ) -> None:
             if future.exception():
-                failed[section].append(key)
-                errors.append(future.exception())
-            else:
-                result[section].append(future.result())
-            bar.update(1)
-
-        with stream.logging("install"):
-            with self.progressbar(
-                "Synchronizing:", sum(len(lst) for lst in to_do.values())
-            ) as (bar, pool):
-                # First update packages, then remove and add
-                for section in sorted(to_do, reverse=True):
-                    # setup toolkits are installed sequentially before other packages.
-                    for key in sorted(
-                        to_do[section], key=lambda x: x not in self.SEQUENTIAL_PACKAGES
-                    ):
-                        future = pool.submit(handlers[section], key)
-                        future.add_done_callback(
-                            functools.partial(
-                                update_progress, section=section, key=key, bar=bar
-                            )
-                        )
-                        if key in self.SEQUENTIAL_PACKAGES:
-                            future.result()
-
-            # Retry for failed items
-            for i in range(self.RETRY_TIMES):
-                if not any(failed.values()):
-                    break
-                stream.echo(
-                    stream.yellow("\nSome packages failed to install, retrying...")
+                failed_jobs.append((kind, key))
+                error = future.exception()
+                errors.extend(
+                    [f"{kind} {termui.green(key)} failed:\n"]
+                    + traceback.format_exception(
+                        type(error), error, error.__traceback__
+                    )
                 )
-                to_do = failed
-                failed = defaultdict(list)
-                errors.clear()
-                with self.progressbar(
-                    f"Retrying ({i + 1}/{self.RETRY_TIMES}):",
-                    sum(len(lst) for lst in to_do.values()),
-                ) as (bar, pool):
 
-                    for section in sorted(to_do, reverse=True):
-                        for key in sorted(
-                            to_do[section],
-                            key=lambda x: x not in self.SEQUENTIAL_PACKAGES,
-                        ):
-                            future = pool.submit(handlers[section], key)
+        with self.ui.logging("install"), self.environment.activate():
+            with self.ui.indent("  "):
+                for job in sequential_jobs:
+                    kind, key = job
+                    handlers[kind](key)
+                for i in range(self.retry_times + 1):
+                    with self.create_executor() as executor:
+                        for job in parallel_jobs:
+                            kind, key = job
+                            future = executor.submit(handlers[kind], key)
                             future.add_done_callback(
-                                functools.partial(
-                                    update_progress, section=section, key=key, bar=bar
-                                )
+                                functools.partial(update_progress, kind=kind, key=key)
                             )
-                            if key in self.SEQUENTIAL_PACKAGES:
-                                future.result()
-            # End installation
-            self.summarize(result)
-            self.environment.write_site_py()
-            if not any(failed.values()):
-                return
-            stream.echo("\n")
-            error_msg = []
-            if failed["add"] + failed["update"]:
-                error_msg.append(
-                    "Installation failed: "
-                    f"{', '.join(failed['add'] + failed['update'])}"
-                )
-            if failed["remove"]:
-                error_msg.append(f"Removal failed: {', '.join(failed['remove'])}")
-            for error in errors:
-                stream.echo(
-                    "".join(
-                        traceback.format_exception(
-                            type(error), error, error.__traceback__
-                        )
-                    ),
-                    verbosity=stream.DEBUG,
-                )
-            raise InstallationError("\n" + "\n".join(error_msg))
+                    if not failed_jobs or i == self.retry_times:
+                        break
+                    parallel_jobs, failed_jobs = failed_jobs, []
+                    errors.clear()
+                    self.ui.echo("Retry failed jobs")
+
+            if errors:
+                self.ui.echo(termui.red("\nERRORS:"))
+                self.ui.echo("".join(errors), err=True)
+                raise InstallationError("Some package operations are not complete yet")
+
+            if self_action:
+                self.ui.echo("Installing the project as an editable package...")
+                with self.ui.indent("  "):
+                    handlers[self_action](self_key)
+
+            self.ui.echo(f"\n{termui.Emoji.SUCC} All complete!")

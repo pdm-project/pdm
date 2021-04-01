@@ -2,44 +2,46 @@ import argparse
 
 import click
 
+from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
+from pdm.models.in_process import get_python_version
 from pdm.project import Project
-from pdm.utils import get_python_version, get_user_email_from_git
+from pdm.utils import get_user_email_from_git
 
 
 class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.set_defaults(project=self.project_class("."))
+        parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
-            stream.echo(
+            project.core.ui.echo(
                 "{}".format(
-                    stream.cyan("pyproject.toml already exists, update it now.")
+                    termui.cyan("pyproject.toml already exists, update it now.")
                 )
             )
         else:
-            stream.echo(
-                "{}".format(stream.cyan("Creating a pyproject.toml for PDM..."))
+            project.core.ui.echo(
+                "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
             )
-        python = click.prompt(
-            "Please enter the Python interpreter to use", default="", show_default=False
+        actions.do_use(project)
+        is_library = click.confirm(
+            "Is the project a library that will be upload to PyPI?",
         )
-        actions.do_use(project, python)
-        name = click.prompt("Project name", default=project.root.name)
-        version = click.prompt("Project version", default="0.0.0")
+        if is_library:
+            name = click.prompt("Project name", default=project.root.name)
+            version = click.prompt("Project version", default="0.1.0")
+        else:
+            name, version = "", ""
         license = click.prompt("License(SPDX name)", default="MIT")
 
         git_user, git_email = get_user_email_from_git()
         author = click.prompt("Author name", default=git_user)
         email = click.prompt("Author email", default=git_email)
-        python_version = ".".join(
-            map(str, get_python_version(project.environment.python_executable)[:2])
-        )
+        python_version, _ = get_python_version(project.python_executable, True, 2)
         python_requires = click.prompt(
             "Python requires('*' to allow any)", default=f">={python_version}"
         )

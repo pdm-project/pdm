@@ -1,9 +1,22 @@
-import abc
-import collections
+from __future__ import annotations
+
+import re
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
+
+import tomlkit
+from tomlkit.items import Array, InlineTable
+
+from pdm import termui
 
 
-def convert_from(field=None, name=None):
-    def wrapper(func):
+def convert_from(
+    field: str = None, name: str = None
+) -> Callable[
+    [Callable[[MetaConverter, Any], Any]], Callable[[MetaConverter, Any], Any]
+]:
+    def wrapper(
+        func: Callable[[MetaConverter, Any], Any]
+    ) -> Callable[[MetaConverter, Any], Any]:
         func._convert_from = field
         func._convert_to = name
         return func
@@ -11,8 +24,12 @@ def convert_from(field=None, name=None):
     return wrapper
 
 
-class _MetaConverterMeta(abc.ABCMeta):
-    def __init__(cls, name, bases, ns):
+class Unset(Exception):
+    pass
+
+
+class _MetaConverterMeta(type):
+    def __init__(cls, name: str, bases: Tuple[type], ns: Dict[str, Any]) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}
         _default = object()
@@ -22,24 +39,17 @@ class _MetaConverterMeta(abc.ABCMeta):
                 cls._converters[name] = value
 
 
-class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
+class MetaConverter(metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
-    def __init__(self, source, filename=None):
+    def __init__(self, source: dict, ui: Optional[termui.UI] = None) -> None:
+        self.source = source
+        self.settings = {}
         self._data = {}
-        self.filename = filename
-        self._convert(dict(source))
+        self._ui = ui
 
-    def __getitem__(self, k):
-        return self._data[k]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def _convert(self, source):
+    def convert(self) -> Tuple[Mapping, Mapping]:
+        source = self.source
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:
                 continue
@@ -47,7 +57,10 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
                 value = source
             else:
                 value = source[func._convert_from]
-            self._data[key] = func(self, value)
+            try:
+                self._data[key] = func(self, value)
+            except Unset:
+                pass
 
         # Delete all used fields
         for key, func in self._converters.items():
@@ -59,3 +72,34 @@ class MetaConverter(collections.abc.Mapping, metaclass=_MetaConverterMeta):
                 pass
         # Add remaining items to the data
         self._data.update(source)
+        return self._data, self.settings
+
+
+NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
+
+
+def make_inline_table(data: Mapping) -> InlineTable:
+    """Create an inline table from the given data."""
+    table = tomlkit.inline_table()
+    table.update(data)
+    return table
+
+
+def make_array(data: list, multiline: bool = False) -> Array:
+    if not data:
+        return []
+    array = tomlkit.array()
+    array.multiline(multiline)
+    for item in data:
+        array.append(item)
+    return array
+
+
+def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> Array:
+    return make_array([make_inline_table(item) for item in value], multiline)
+
+
+def parse_name_email(name_email: List[str]) -> Array:
+    return array_of_inline_tables(
+        [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
+    )

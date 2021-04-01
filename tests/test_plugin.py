@@ -1,6 +1,6 @@
 from unittest import mock
 
-import pkg_resources
+from pip._vendor import pkg_resources
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.project.config import ConfigItem
@@ -73,5 +73,5 @@ def test_load_multiple_plugings(invoke, mocker, project):
     result = invoke(["hello"])
     assert result.output.strip() == "Hello world"
 
-    result = invoke(["config", "get", "foo"])
+    result = invoke(["config", "foo"])
     assert result.output.strip() == "bar"

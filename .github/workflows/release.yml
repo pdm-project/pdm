@@ -14,30 +14,38 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.7
+          python-version: 3.8
           architecture: "x64"
-      - name: Cache packages
-        uses: actions/cache@v1
-        with:
-          path: __pypackages__
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: release-packages-${{ hashFiles('pdm.lock') }}
-      - name: Install editable PDM
+      - name: Get Changelog
+        id: get-changelog
         run: |
-          pip install wheel
-          python setup_dev.py
+          RELEASE_NOTES=$(awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md)
+          echo ${RELEASE_NOTES}
+          echo "::set-output name=CHANGELOG_CONTENT::${RELEASE_NOTES}"
+      - name: Install Current PDM
+        run: |
+          pip install -U pip
+          pip install .
       - name: Build artifacts
         run: |
-          __pypackages__/3.7/bin/pdm build -v
-        env:
-          PYTHONPATH: '__pypackages__/3.7/lib'
+          pdm build -v
       - name: Test Build
         run: |
           python3 -m venv fresh_env
           . fresh_env/bin/activate
           pip install dist/*.whl
-          pdm --help
+          fresh_env/bin/pdm --help
       - name: Upload to Pypi
         run: |
           pip install twine
           twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: v${{ github.ref }}
+          body: ${{ steps.get-changelog.outputs.CHANGELOG_CONTENT }}
+          draft: false
+          prerelease: false

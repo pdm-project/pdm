@@ -2,32 +2,33 @@ import argparse
 import sys
 import textwrap
 from shutil import get_terminal_size
+from typing import Optional
 
-from pkg_resources import safe_name
+from pip._vendor.pkg_resources import safe_name
 
+from pdm import termui
+from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
+from pdm.models.environment import WorkingSet
 from pdm.project import Project
-from pdm.utils import highest_version
 
 
-def print_results(hits, working_set, terminal_width=None):
+def print_results(
+    ui: termui.UI,
+    hits: SearchResult,
+    working_set: WorkingSet,
+    terminal_width: Optional[int] = None,
+) -> None:
     if not hits:
         return
     name_column_width = (
-        max(
-            [
-                len(hit["name"]) + len(highest_version(hit.get("versions", ["-"])))
-                for hit in hits
-            ]
-        )
-        + 4
+        max([len(hit.name) + len(hit.version or "") for hit in hits]) + 4
     )
 
     for hit in hits:
-        name = hit["name"]
-        summary = hit["summary"] or ""
-        latest = highest_version(hit.get("versions", ["-"]))
+        name = hit.name
+        summary = hit.summary or ""
+        latest = hit.version or ""
         if terminal_width is not None:
             target_width = terminal_width - name_column_width - 5
             if target_width > 10:
@@ -37,20 +38,20 @@ def print_results(hits, working_set, terminal_width=None):
         current_width = len(name) + len(latest) + 4
         spaces = " " * (name_column_width - current_width)
         line = "{name} ({latest}){spaces} - {summary}".format(
-            name=stream.green(name, bold=True),
-            latest=stream.yellow(latest),
+            name=termui.green(name, bold=True),
+            latest=termui.yellow(latest),
             spaces=spaces,
             summary=summary,
         )
         try:
-            stream.echo(line)
+            ui.echo(line)
             if safe_name(name).lower() in working_set:
                 dist = working_set[safe_name(name).lower()]
                 if dist.version == latest:
-                    stream.echo("  INSTALLED: %s (latest)" % dist.version)
+                    ui.echo("  INSTALLED: %s (latest)" % dist.version)
                 else:
-                    stream.echo("  INSTALLED: %s" % dist.version)
-                    stream.echo("  LATEST:    %s" % latest)
+                    ui.echo("  INSTALLED: %s" % dist.version)
+                    ui.echo("  LATEST:    %s" % latest)
         except UnicodeEncodeError:
             pass
 
@@ -66,4 +67,9 @@ class Command(BaseCommand):
         terminal_width = None
         if sys.stdout.isatty():
             terminal_width = get_terminal_size()[0]
-        print_results(result, project.environment.get_working_set(), terminal_width)
+        print_results(
+            project.core.ui,
+            result,
+            project.environment.get_working_set(),
+            terminal_width,
+        )

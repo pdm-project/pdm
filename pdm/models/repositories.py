@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import sys
-import xmlrpc.client as xmlrpc_client
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
 
-from pdm._types import CandidateInfo, SearchResult, Source
-from pdm.exceptions import CandidateInfoNotFound, CorruptedCacheError, PackageIndexError
+from pip._vendor.html5lib import parse
+
+from pdm import termui
+from pdm._types import CandidateInfo, Package, SearchResult, Source
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -14,8 +16,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.models.xmlrpc import PyPIXmlrpcTransport
-from pdm.utils import allow_all_wheels, highest_version
+from pdm.utils import allow_all_wheels
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -25,7 +26,7 @@ def cache_result(
     func: Callable[["BaseRepository", Candidate], CandidateInfo]
 ) -> Callable[["BaseRepository", Candidate], CandidateInfo]:
     @wraps(func)
-    def wrapper(self, candidate: Candidate) -> CandidateInfo:
+    def wrapper(self: BaseRepository, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
         self._candidate_info_cache.set(candidate, result)
         return result
@@ -79,6 +80,9 @@ class BaseRepository:
             requirements.append(self_req)
         return requirements, PySpecSet(requires_python), summary
 
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+        raise NotImplementedError
+
     def find_candidates(
         self,
         requirement: Requirement,
@@ -89,7 +93,38 @@ class BaseRepository:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
         """
-        raise NotImplementedError
+        # `allow_prereleases` is None means leave it to specifier to decide whether to
+        # include prereleases
+        if allow_prereleases is None:
+            allow_prereleases = requirement.allow_prereleases
+
+        requires_python = requires_python & requirement.requires_python
+        cans = list(self._find_candidates(requirement))
+
+        sorted_cans = sorted(
+            (
+                c
+                for c in cans
+                if requirement.specifier.contains(c.version, allow_prereleases)
+                and (allow_all or requires_python.is_subset(c.requires_python))
+            ),
+            key=lambda c: (c.version, c.link.is_wheel),
+            reverse=True,
+        )
+
+        if not sorted_cans and allow_prereleases is None:
+            # No non-pre-releases is found, force pre-releases now
+            sorted_cans = sorted(
+                (
+                    c
+                    for c in cans
+                    if requirement.specifier.contains(c.version, True)
+                    and (allow_all or requires_python.is_subset(c.requires_python))
+                ),
+                key=lambda c: c.version,
+                reverse=True,
+            )
+        return sorted_cans
 
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
         try:
@@ -148,6 +183,8 @@ class BaseRepository:
 class PyPIRepository(BaseRepository):
     """Get package and metadata from PyPI source."""
 
+    DEFAULT_INDEX_URL = "https://pypi.org"
+
     @cache_result
     def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateInfo:
         if not candidate.name or not candidate.version:
@@ -191,76 +228,59 @@ class PyPIRepository(BaseRepository):
         yield self._get_dependencies_from_metadata
 
     @lru_cache()
-    def find_candidates(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
-    ) -> Iterable[Candidate]:
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
-        # `allow_prereleases` is None means leave it to specifier to decide whether to
-        # include prereleases
-        if allow_prereleases is None:
-            allow_prereleases = requirement.allow_prereleases
-
-        with self.environment.get_finder(sources) as finder, allow_all_wheels():
+        with self.environment.get_finder(sources, True) as finder, allow_all_wheels():
             cans = [
                 Candidate.from_installation_candidate(c, requirement, self.environment)
                 for c in finder.find_all_candidates(requirement.project_name)
             ]
-        sorted_cans = sorted(
-            (
-                c
-                for c in cans
-                if requirement.specifier.contains(c.version, allow_prereleases)
-                and (allow_all or requires_python.is_subset(c.requires_python))
-            ),
-            key=lambda c: (c.version, c.link.is_wheel),
-            reverse=True,
-        )
-
-        if not sorted_cans and allow_prereleases is None:
-            # No non-pre-releases is found, force pre-releases now
-            sorted_cans = sorted(
-                (
-                    c
-                    for c in cans
-                    if requirement.specifier.contains(c.version, True)
-                    and (allow_all or requires_python.is_subset(c.requires_python))
-                ),
-                key=lambda c: c.version,
-                reverse=True,
+        if not cans:
+            raise CandidateNotFound(
+                f"Unable to find candidates for {requirement.project_name}. There may "
+                "exist some issues with the package index or network condition."
             )
-        return sorted_cans
+        return cans
 
     def search(self, query: str) -> SearchResult:
-        pypi_simple = self.sources[0]["url"]
-        if not pypi_simple.endswith("/simple"):
-            raise PackageIndexError(f"{pypi_simple} doesn't support '/pypi' endpoint.")
-        pypi_url = pypi_simple[:-6] + "pypi"
+        pypi_simple = self.sources[0]["url"].rstrip("/")
+        results = []
+
+        if pypi_simple.endswith("/simple"):
+            search_url = pypi_simple[:-6] + "search"
+        else:
+            search_url = pypi_simple + "/search"
+
         with self.environment.get_finder() as finder:
-            transport = PyPIXmlrpcTransport(pypi_url, finder.session)
-            pypi = xmlrpc_client.ServerProxy(pypi_url, transport)
-            hits = pypi.search({"name": query, "summary": query}, "or")
+            session = finder.session
+            resp = session.get(search_url, params={"q": query})
+            if resp.status_code == 404:
+                self.environment.project.core.ui.echo(
+                    termui.yellow(
+                        f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
+                        f"to {self.DEFAULT_INDEX_URL!r} now.\n"
+                        "This may take longer depending on your network condition."
+                    ),
+                    err=True,
+                )
+                resp = session.get(
+                    f"{self.DEFAULT_INDEX_URL}/search", params={"q": query}
+                )
+            resp.raise_for_status()
+            content = parse(resp.content, namespaceHTMLElements=False)
 
-        packages = {}
-        for hit in hits:
-            name = hit["name"]
-            summary = hit["summary"]
-            version = hit["version"]
+        for result in content.findall(".//*[@class='package-snippet']"):
+            name = result.find("h3/*[@class='package-snippet__name']").text
+            version = result.find("h3/*[@class='package-snippet__version']").text
 
-            if name not in packages.keys():
-                packages[name] = {
-                    "name": name,
-                    "summary": summary,
-                    "versions": [version],
-                }
-            else:
-                packages[name]["versions"].append(version)
+            if not name or not version:
+                continue
 
-                # if this is the highest version, replace summary and score
-                if version == highest_version(packages[name]["versions"]):
-                    packages[name]["summary"] = summary
+            description = result.find("p[@class='package-snippet__description']").text
+            if not description:
+                description = ""
 
-        return list(packages.values())
+            result = Package(name, version, description)
+            results.append(result)
+
+        return results

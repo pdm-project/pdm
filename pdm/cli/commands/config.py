@@ -1,7 +1,7 @@
 import argparse
 
+from pdm import termui
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -9,84 +9,62 @@ class Command(BaseCommand):
     """Display the current configuration"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        subparsers = parser.add_subparsers()
-        GetCommand.register_to(subparsers, "get")
-        SetCommand.register_to(subparsers, "set")
-        DeleteCommand.register_to(subparsers, "del")
+        parser.add_argument(
+            "-l",
+            "--local",
+            action="store_true",
+            help="Set config in the project's local configuration filie",
+        )
+        parser.add_argument(
+            "-d", "--delete", action="store_true", help="Unset a configuration key"
+        )
+        parser.add_argument("key", help="Config key", nargs="?")
+        parser.add_argument("value", help="Config value", nargs="?")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        stream.echo(
-            "Home configuration ({}):".format(project.global_config._config_file)
-        )
-        with stream.indent("  "):
+        if options.delete:
+            self._delete_config(project, options)
+        elif options.value:
+            self._set_config(project, options)
+        elif options.key:
+            self._get_config(project, options)
+        else:
+            self._list_config(project, options)
+
+    def _get_config(self, project: Project, options: argparse.Namespace) -> None:
+        project.core.ui.echo(project.config[options.key])
+
+    def _set_config(self, project: Project, options: argparse.Namespace) -> None:
+        config = project.project_config if options.local else project.global_config
+        config[options.key] = options.value
+
+    def _list_config(self, project: Project, options: argparse.Namespace) -> None:
+        ui = project.core.ui
+        ui.echo("Home configuration ({}):".format(project.global_config._config_file))
+        with ui.indent("  "):
             for key in sorted(project.global_config):
-                stream.echo(
-                    stream.yellow(
+                ui.echo(
+                    termui.yellow(
                         "# " + project.global_config._config_map[key].description
                     ),
-                    verbosity=stream.DETAIL,
+                    verbosity=termui.DETAIL,
                 )
-                stream.echo(f"{stream.cyan(key)} = {project.global_config[key]}")
+                ui.echo(f"{termui.cyan(key)} = {project.global_config[key]}")
 
-        stream.echo()
-        stream.echo(
+        ui.echo()
+        ui.echo(
             "Project configuration ({}):".format(project.project_config._config_file)
         )
-        with stream.indent("  "):
+        with ui.indent("  "):
             for key in sorted(project.project_config):
-                stream.echo(
-                    stream.yellow(
+                ui.echo(
+                    termui.yellow(
                         "# " + project.project_config._config_map[key].description
                     ),
-                    verbosity=stream.DETAIL,
+                    verbosity=termui.DETAIL,
                 )
-                stream.echo(f"{stream.cyan(key)} = {project.project_config[key]}")
+                ui.echo(f"{termui.cyan(key)} = {project.project_config[key]}")
 
-
-class GetCommand(BaseCommand):
-    """Show a configuration value"""
-
-    arguments = []
-
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("name", help="Config name")
-
-    def handle(self, project: Project, options: argparse.Namespace) -> None:
-        stream.echo(project.config[options.name])
-
-
-class SetCommand(BaseCommand):
-    """Set a configuration value"""
-
-    arguments = []
-
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "-l",
-            "--local",
-            action="store_true",
-            help="Save to project configuration file",
-        )
-        parser.add_argument("name", help="Config name")
-        parser.add_argument("value", help="Config value")
-
-    def handle(self, project: Project, options: argparse.Namespace) -> None:
+    def _delete_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
-        config[options.name] = options.value
-
-
-class DeleteCommand(BaseCommand):
-    """Delete a configuration value"""
-
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "-l",
-            "--local",
-            action="store_true",
-            help="Delete from project configuration file",
-        )
-        parser.add_argument("name", help="Config name")
-
-    def handle(self, project: Project, options: argparse.Namespace) -> None:
-        config = project.project_config if options.local else project.global_config
-        del config[options.name]
+        del config[options.key]

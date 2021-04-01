@@ -21,6 +21,19 @@ class Command(BaseCommand):
             help="Ignore the version constraint of packages",
         )
         parser.add_argument(
+            "-t",
+            "--top",
+            action="store_true",
+            help="Only update those list in pyproject.toml",
+        )
+        parser.add_argument(
+            "--dry-run",
+            "--outdated",
+            action="store_true",
+            dest="dry_run",
+            help="Show the difference only without modifying the lockfile content",
+        )
+        parser.add_argument(
             "packages", nargs="*", help="If packages are given, only update them"
         )
 
@@ -30,8 +43,10 @@ class Command(BaseCommand):
             dev=options.dev,
             sections=options.sections,
             default=options.default,
-            save=options.save_strategy,
-            strategy=options.update_strategy,
+            save=options.save_strategy or project.config["strategy.save"],
+            strategy=options.update_strategy or project.config["strategy.update"],
             unconstrained=options.unconstrained,
+            top=options.top,
+            dry_run=options.dry_run,
             packages=options.packages,
         )

@@ -5,15 +5,22 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-import pip_shims
 from pip._vendor.packaging.markers import InvalidMarker
+from pip._vendor.packaging.requirements import InvalidRequirement
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
-from pip_shims import path_to_url, url_to_path
 
 from pdm._types import RequirementDict
 from pdm.exceptions import ExtrasError, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_extras
+from pdm.models.pip_shims import (
+    InstallRequirement,
+    Link,
+    install_req_from_editable,
+    install_req_from_line,
+    path_to_url,
+    url_to_path,
+)
 from pdm.models.readers import SetupReader
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
@@ -25,7 +32,7 @@ from pdm.utils import (
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 VCS_REQ = re.compile(
-    rf"(?P<vcs>{'|'.join(VCS_SCHEMA)})\+" r"(?P<url>[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
+    rf"(?P<url>(?P<vcs>{'|'.join(VCS_SCHEMA)})\+[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
 )
 FILE_REQ = re.compile(
     r"(?:(?P<url>\S+://[^\s\[\];]+)|"
@@ -36,7 +43,7 @@ FILE_REQ = re.compile(
 )
 
 
-def strip_extras(line):
+def strip_extras(line: str) -> Tuple[str, Optional[Tuple]]:
     match = re.match(r"^(.+?)(?:\[([^\]]+)\])?$", line)
     assert match is not None
     name, extras = match.groups()
@@ -66,17 +73,18 @@ class Requirement:
         "url",
         "path",
         "ref",
+        "revision",
         "index",
         "version",
         "allow_prereleases",
         "from_section",
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self._marker = None
         self.from_section = "default"
-        self.marker_no_python = None  # type: Optional[Marker]
-        self.requires_python = PySpecSet()  # type: PySpecSet
+        self.marker_no_python: Optional[Marker] = None
+        self.requires_python = PySpecSet()
         for k, v in kwargs.items():
             if k == "specifier":
                 v = get_specifier(v)
@@ -85,7 +93,7 @@ class Requirement:
             self.project_name = safe_name(self.name)
             self.key = self.project_name.lower()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         hashCmp = (
             self.key,
             self.url,
@@ -95,12 +103,15 @@ class Requirement:
         )
         return hash(hashCmp)
 
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, Requirement) and hash(self) == hash(o)
+
     @property
     def marker(self) -> Optional[Marker]:
         return self._marker
 
     @marker.setter
-    def marker(self, value) -> None:
+    def marker(self, value: Optional[Marker]) -> None:
         try:
             m = self._marker = get_marker(value)
             if not m:
@@ -135,12 +146,39 @@ class Requirement:
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = req_dict[vcs]  # type: str
-                url = VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
+                url = (
+                    vcs
+                    + "+"
+                    + VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
+                )
                 return VcsRequirement(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
             return FileRequirement(name=name, **req_dict)
         specifier = req_dict.pop("version", None)
         return NamedRequirement(name=name, specifier=specifier, **req_dict)
+
+    def copy(self) -> "Requirement":
+        kwargs = {
+            k: getattr(self, k, None)
+            for k in self.attributes
+            if not is_readonly_property(self.__class__, k)
+        }
+        return self.__class__(**kwargs)
+
+    @property
+    def is_named(self) -> bool:
+        return isinstance(self, NamedRequirement)
+
+    @property
+    def is_vcs(self) -> bool:
+        return isinstance(self, VcsRequirement)
+
+    @property
+    def is_file_or_url(self) -> bool:
+        return type(self) is FileRequirement
+
+    def as_line(self) -> str:
+        raise NotImplementedError
 
     def as_req_dict(self) -> Tuple[str, RequirementDict]:
         r = {}
@@ -167,39 +205,25 @@ class Requirement:
                 r[attr] = getattr(self, attr)
         return self.project_name, r
 
-    def copy(self) -> "Requirement":
-        kwargs = {
-            k: getattr(self, k, None)
-            for k in self.attributes
-            if not is_readonly_property(self.__class__, k)
-        }
-        return self.__class__(**kwargs)
-
-    @property
-    def is_named(self) -> bool:
-        return isinstance(self, NamedRequirement)
-
-    @property
-    def is_vcs(self) -> bool:
-        return isinstance(self, VcsRequirement)
-
-    @property
-    def is_file_or_url(self) -> bool:
-        return type(self) is FileRequirement
-
-    def as_line(self) -> str:
-        raise NotImplementedError
-
-    def as_ireq(self, **kwargs) -> pip_shims.InstallRequirement:
-        if self.is_file_or_url:
-            line_for_req = self.as_line(True)
+    def matches(self, line: str, editable_match: bool = True) -> bool:
+        """Return whether the passed in PEP 508 string
+        is the same requirement as this one.
+        """
+        if line.strip().startswith("-e "):
+            req = parse_requirement(line.split("-e ", 1)[-1], True)
         else:
-            line_for_req = self.as_line()
+            req = parse_requirement(line, False)
+        return self.key == req.key and (
+            not editable_match or self.editable == req.editable
+        )
+
+    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
+        line_for_req = self.as_line()
         if self.editable:
             line_for_req = line_for_req[3:].strip()
-            ireq = pip_shims.install_req_from_editable(line_for_req, **kwargs)
+            ireq = install_req_from_editable(line_for_req, **kwargs)
         else:
-            ireq = pip_shims.install_req_from_line(line_for_req, **kwargs)
+            ireq = install_req_from_line(line_for_req, **kwargs)
         ireq.req = self
         return ireq
 
@@ -221,9 +245,11 @@ class Requirement:
 
 
 class FileRequirement(Requirement):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.path = Path(self.path) if self.path else None
+        self.path = (
+            Path(str(self.path).replace("${PROJECT_ROOT}", ".")) if self.path else None
+        )
         self.version = None
         self._parse_url()
         if self.path and not self.path.exists():
@@ -236,7 +262,11 @@ class FileRequirement(Requirement):
         if not self.path:
             return None
         result = self.path.as_posix()
-        if not self.path.is_absolute():
+        if (
+            not self.path.is_absolute()
+            and not result.startswith("./")
+            and not result.startswith("../")
+        ):
             result = "./" + result
         return result
 
@@ -256,10 +286,19 @@ class FileRequirement(Requirement):
     def _parse_url(self) -> None:
         if not self.url:
             if self.path:
-                self.url = path_to_url(self.path.as_posix())
+                self.url = path_to_url(
+                    self.path.as_posix().replace("${PROJECT_ROOT}", ".")
+                )
         else:
             try:
-                self.path = Path(url_to_path(self.url))
+                self.path = Path(
+                    url_to_path(
+                        self.url.replace(
+                            "${PROJECT_ROOT}",
+                            Path(".").absolute().as_posix().lstrip("/"),
+                        )
+                    )
+                )
             except AssertionError:
                 pass
         self._parse_name_from_url()
@@ -280,20 +319,15 @@ class FileRequirement(Requirement):
     def key(self) -> Optional[str]:
         return self.project_name.lower() if self.project_name else None
 
-    def as_line(self, for_ireq: bool = False) -> str:
-        editable = "-e " if self.editable else ""
+    def as_line(self) -> str:
         project_name = f"{self.project_name}" if self.project_name else ""
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
-        if self.path and not for_ireq and self.editable and not project_name:
-            location = self.str_path
-        else:
-            location = self.url
         marker = self._format_marker()
-        if for_ireq and project_name:
-            return f"{editable}{location}#egg={project_name}{extras}{marker}"
-        else:
-            delimiter = " @ " if project_name else ""
-            return f"{editable}{project_name}{extras}{delimiter}{location}{marker}"
+        url = url_without_fragments(self.url)
+        if self.editable:
+            return f"-e {url}#egg={project_name}{extras}{marker}"
+        delimiter = " @ " if project_name else ""
+        return f"{project_name}{extras}{delimiter}{url}{marker}"
 
     def _parse_name_from_url(self) -> None:
         parsed = urlparse.urlparse(self.url)
@@ -315,7 +349,6 @@ class FileRequirement(Requirement):
         ):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
         result = SetupReader.read_from_directory(self.path.absolute().as_posix())
-        # TODO: Assign a temp name for PEP 517 local package.
         self.name = result["name"]
 
 
@@ -338,10 +371,11 @@ class NamedRequirement(Requirement, PackageRequirement):
 
 
 class VcsRequirement(FileRequirement):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         self.repo = None
+        if not kwargs.get("vcs"):
+            kwargs["vcs"] = kwargs["url"].split("+", 1)[0]
         super().__init__(**kwargs)
-        self._parse_url()
 
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "VcsRequirement":
@@ -350,18 +384,25 @@ class VcsRequirement(FileRequirement):
         )
         return r
 
-    def as_line(self) -> str:
-        editable = "-e " if self.editable else ""
-        return f"{editable}{self.vcs}+{self.url}{self._format_marker()}"
+    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
+        ireq = super().as_ireq(**kwargs)
+        if not self.editable and self.revision:
+            # For non-editable VCS requirements, commit-hash should be used as the
+            # rev-options for InstallRequirement to consume.
+            parsed = urlparse.urlparse(ireq.link.url)
+            new_path = "@".join((parsed.path.split("@", 1)[0], self.revision))
+            new_url = urlparse.urlunparse(parsed._replace(path=new_path))
+            ireq.link = Link(new_url)
+        return ireq
 
     def _parse_url(self) -> None:
-        if self.url.startswith("git@"):
-            self.url = add_ssh_scheme_to_git_uri(self.url)
+        vcs, url_no_vcs = self.url.split("+", 1)
+        if url_no_vcs.startswith("git@"):
+            url_no_vcs = add_ssh_scheme_to_git_uri(url_no_vcs)
+            self.url = f"{vcs}+{url_no_vcs}"
         if not self.name:
             self._parse_name_from_url()
-        if not self.name:
-            raise RequirementError("VCS requirement must provide a 'egg=' fragment.")
-        repo = url_without_fragments(self.url)
+        repo = url_without_fragments(url_no_vcs)
         ref = None
         parsed = urlparse.urlparse(repo)
         if "@" in parsed.path:
@@ -379,12 +420,12 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirment_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
+    requirement_lines: List[Union[str, Dict[str, Union[str, List[str]]]]],
     extras: Sequence[str],
 ) -> List[str]:
     result = []
     extras_in_meta = []
-    for req in requirment_lines:
+    for req in requirement_lines:
         if isinstance(req, dict):
             if req.get("extra"):
                 extras_in_meta.append(req["extra"])
@@ -404,7 +445,7 @@ def filter_requirements_with_extras(
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
     if extras_not_found:
-        warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
+        warnings.warn(ExtrasError(extras_not_found))
 
     return result
 
@@ -416,8 +457,8 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         r = VcsRequirement.parse(line, m.groupdict())
     else:
         try:
-            r = NamedRequirement.parse(line)  # type: Requirement
-        except RequirementParseError as e:
+            r = NamedRequirement.parse(line)
+        except (RequirementParseError, InvalidRequirement) as e:
             m = FILE_REQ.match(line)
             if m is not None:
                 r = FileRequirement.parse(line, m.groupdict())
@@ -425,7 +466,15 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
                 raise RequirementError(str(e)) from None
         else:
             if r.url:
-                r = FileRequirement(name=r.name, url=r.url, extras=r.extras)
+                link = Link(r.url)
+                if link.is_vcs:
+                    r = VcsRequirement(
+                        name=r.name, url=r.url, extras=r.extras, marker=r.marker
+                    )
+                else:
+                    r = FileRequirement(
+                        name=r.name, url=r.url, extras=r.extras, marker=r.marker
+                    )
 
     if editable:
         if r.is_vcs or r.is_file_or_url and r.is_local_dir:

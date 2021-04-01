@@ -1,0 +1,29 @@
+[build-system]
+build-backend = "pdm.pep517.api"
+requires = ["pdm-pep517"]
+
+[tool]
+[tool.pdm]
+author = "frostming <mianghong@gmail.com>"
+description = ""
+homepage = ""
+license = "MIT"
+name = "demo-package"
+python_requires = ">=3.5"
+version = { from = "my_package/__init__.py" }
+readme = "README.md"
+
+extras = ["test"]
+
+[[tool.pdm.source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "testpypi"
+
+[tool.pdm.dependencies]
+flask = "*"
+
+[tool.pdm.dev-dependencies]
+
+[tool.pdm.test-dependencies]
+pytest = "*"

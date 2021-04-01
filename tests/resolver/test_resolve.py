@@ -1,7 +1,7 @@
 import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
-from pdm.iostream import stream
+from pdm import termui
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve
@@ -39,8 +39,8 @@ def resolve_requirements(
             requires_python,
             allow_prereleases,
         )
-
-    with stream.open_spinner("Resolving dependencies") as spin, stream.logging("lock"):
+    ui = termui.UI()
+    with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
         reporter = SpinnerReporter(spin, requirements)
         resolver = Resolver(provider, reporter)
         mapping, *_ = resolve(resolver, requirements, requires_python)
@@ -63,6 +63,10 @@ def test_resolve_requires_python(project, repository):
     assert "sqlparse" not in result
 
     result = resolve_requirements(repository, ["django"], ">=3.6")
+    assert result["django"].version == "2.2.9"
+    assert "sqlparse" in result
+
+    result = resolve_requirements(repository, ["django; python_version>='3.7'"])
     assert result["django"].version == "2.2.9"
     assert "sqlparse" in result
 
@@ -164,17 +168,6 @@ def test_resolve_no_available_versions(project, repository):
         resolve_requirements(repository, ["foo>=0.2.0"])
 
 
-def test_resolving_marker_merging(project, repository):
-    repository.add_candidate("foo", "0.1.0", ">=2.7, !=3.4.*")
-    result = resolve_requirements(
-        repository, ["foo; os_name=='nt' and python_version != '3.5'"], ">=3.6"
-    )
-    assert (
-        str(result["foo"].marker) == 'os_name == "nt" and python_version >= "2.7" '
-        'and python_version not in "3.4, 3.5"'
-    )
-
-
 def test_exclude_incompatible_requirements(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["bar; python_version < '3'"])
@@ -220,3 +213,26 @@ def test_resolve_dependency_with_extra_marker(project, repository):
 
     result = resolve_requirements(repository, ["foo[tz]"])
     assert "pytz" in result
+
+
+def test_resolve_parent_from_multiple_sources(project, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["django"])
+    repository.add_candidate("bar", "0.1.0")
+    repository.add_dependencies("bar", "0.1.0", ["django"])
+    result = resolve_requirements(
+        repository, ["foo; python_version ~= '3.8'", "bar"], ">=3.6"
+    )
+    assert not result["pytz"].marker
+
+
+def test_resolve_circular_dependencies(project, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["foobar"])
+    repository.add_candidate("foobar", "0.2.0")
+    repository.add_dependencies("foobar", "0.2.0", ["foo"])
+    result = resolve_requirements(repository, ["foo"])
+    assert result["foo"].version == "0.1.0"
+    assert result["foo"].sections == ["default"]
+    assert result["foobar"].version == "0.2.0"
+    assert result["foobar"].sections == ["default"]

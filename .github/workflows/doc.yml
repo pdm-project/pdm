@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - "*.md"
+      - docs/**
+      - "!pdm/**"
 
 jobs:
   build-doc:
@@ -14,13 +18,14 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: 3.7
-          architecture: 'x64'
+          architecture: "x64"
       - name: Build pages
         run: |
+          pip install -U pip wheel
           pip install mkdocs mkdocs-material markdown-include
           cd docs && mkdocs build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.REPO_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/site

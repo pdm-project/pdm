@@ -1,0 +1,16 @@
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
+
+[tool.pdm]
+name = "demo-module"
+version = { from = "foo_module.py" }
+author = "frostming <mianghong@gmail.com>"
+python_requires = ">=3.5"
+description = ""
+
+license = "MIT"
+homepage = ""
+
+[tool.pdm.dependencies]
+requests = "*"

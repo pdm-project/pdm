@@ -7,7 +7,7 @@ import sys
 from distutils.dir_util import copy_tree
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Tuple
 from urllib.parse import urlparse
 
 import pytest
@@ -18,20 +18,19 @@ from pip._vendor.pkg_resources import safe_name
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
-from pdm.core import main
+from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
-from pdm.iostream import stream
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import cached_property, get_finder, temp_environ
 from tests import FIXTURES
 
-stream.disable_colors()
+os.environ["CI"] = "1"
+main = Core()
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -43,9 +42,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
     def send(
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
-        file_path = self.base_path / urlparse(request.url).path.lstrip(
-            "/"
-        )  # type: Path
+        file_path = self.base_path / urlparse(request.url).path.lstrip("/")
         response = requests.models.Response()
         response.request = request
         if not file_path.exists():
@@ -75,6 +72,10 @@ class MockVersionControl(versioncontrol.VersionControl):
     @classmethod
     def get_revision(cls, location):
         return "1234567890abcdef"
+
+
+class _FakeLink:
+    is_wheel = False
 
 
 class TestRepository(BaseRepository):
@@ -116,17 +117,7 @@ class TestRepository(BaseRepository):
     def get_hashes(self, candidate: Candidate) -> None:
         candidate.hashes = {}
 
-    def find_candidates(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
-    ) -> List[Candidate]:
-        if allow_prereleases is None:
-            allow_prereleases = requirement.allow_prereleases
-
-        cans = []
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         for version, candidate in self._pypi_data.get(requirement.key, {}).items():
             c = Candidate(
                 requirement,
@@ -135,31 +126,8 @@ class TestRepository(BaseRepository):
                 version=version,
             )
             c.requires_python = candidate.get("requires_python", "")
-            cans.append(c)
-
-        sorted_cans = sorted(
-            (
-                c
-                for c in cans
-                if requirement.specifier.contains(c.version, allow_prereleases)
-            ),
-            key=lambda c: c.version,
-            reverse=True,
-        )
-        if not allow_all:
-            sorted_cans = [
-                can
-                for can in sorted_cans
-                if requires_python.is_subset(can.requires_python)
-            ]
-        if not sorted_cans and allow_prereleases is None:
-            # No non-pre-releases is found, force pre-releases now
-            sorted_cans = sorted(
-                (c for c in cans if requirement.specifier.contains(c.version, True)),
-                key=lambda c: c.version,
-                reverse=True,
-            )
-        return sorted_cans
+            c.link = _FakeLink()
+            yield c
 
     def load_fixtures(self):
         json_file = FIXTURES / "pypi.json"
@@ -177,9 +145,10 @@ class TestProject(Project):
 
 
 class Distribution:
-    def __init__(self, key, version):
+    def __init__(self, key, version, editable=False):
         self.key = key
         self.version = version
+        self.editable = editable
         self.dependencies = []
 
     def requires(self, extras=()):
@@ -212,16 +181,16 @@ class MockWorkingSet(collections.abc.MutableMapping):
 
 @pytest.fixture()
 def working_set(mocker, repository):
-    from pip._internal.utils import logging
+    from pdm.models.pip_shims import pip_logging
 
     rv = MockWorkingSet()
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate):
-        logging._log_state.indentation = 0
+        pip_logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
         key = safe_name(candidate.name).lower()
-        dist = Distribution(key, candidate.version)
+        dist = Distribution(key, candidate.version, candidate.req.editable)
         dist.dependencies = dependencies
         rv.add_distribution(dist)
 
@@ -245,7 +214,7 @@ def get_local_finder(*args, **kwargs):
 
 @pytest.fixture(autouse=True)
 def pip_global_tempdir_manager():
-    from pip._internal.utils.temp_dir import global_tempdir_manager
+    from pdm.models.pip_shims import global_tempdir_manager
 
     with global_tempdir_manager():
         yield
@@ -260,9 +229,11 @@ def project_no_init(tmp_path, mocker):
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     old_config_map = Config._config_map.copy()
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    do_use(p, sys.executable)
+    do_use(p, getattr(sys, "_base_executable", sys.executable))
     with temp_environ():
         os.environ.pop("VIRTUAL_ENV", None)
+        os.environ.pop("PYTHONPATH", None)
+        os.environ.pop("PEP582_PACKAGES", None)
         yield p
     # Restore the config items
     Config._config_map = old_config_map
@@ -272,7 +243,7 @@ def project_no_init(tmp_path, mocker):
 def project(project_no_init):
     do_init(project_no_init, "test_project", "0.0.0")
     # Clean the cached property
-    project_no_init.__dict__.pop("environment", None)
+    project_no_init._environment = None
     return project_no_init
 
 
@@ -283,6 +254,7 @@ def fixture_project(project_no_init):
     def func(project_name):
         source = FIXTURES / "projects" / project_name
         copy_tree(source.as_posix(), project_no_init.root.as_posix())
+        project_no_init._pyproject = None
         return project_no_init
 
     return func
@@ -320,5 +292,10 @@ def is_dev(request):
 
 @pytest.fixture()
 def invoke():
-    runner = CliRunner()
+    runner = CliRunner(mix_stderr=False)
     return functools.partial(runner.invoke, main, prog_name="pdm")
+
+
+@pytest.fixture()
+def core():
+    return main

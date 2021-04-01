@@ -17,9 +17,9 @@ this section.
 1. First, fork this project to your own namespace using the fork button at the top right of the repository page.
 2. Clone the **upstream** repository to local:
    ```bash
-   $ git clone https://github.com/frostming/pdm.git
+   $ git clone https://github.com/pdm-project/pdm.git
    # Or if you prefer SSH clone:
-   $ git clone git@github.com:frostming/pdm.git
+   $ git clone git@github.com:pdm-project/pdm.git
    ```
 3. Add the fork as a new remote:
    ```bash
@@ -29,7 +29,7 @@ this section.
    where `fork` is the remote name of the fork repository.
 
 **ProTips:**
-1. Don't modify code on the master branch, the master branch should always keep in track with origin/master.
+1. Don't modify code on the master branch, the master branch should always keep track of origin/master.
 
    To update master branch to date:
    ```bash
@@ -45,6 +45,8 @@ this section.
 To make sure the tests suites can run rightly, you need to install [Git LFS](https://git-lfs.github.com/), then
 ```bash
 $ git lfs install
+# If you have already cloned the repository, execute the below command as well.
+$ git lfs pull
 ```
 
 Then, you need to install base dependencies in a venv. Although PDM uses local package directory to install
@@ -61,7 +63,7 @@ which is installed in editable mode, or you can use `python -m pdm` from inside 
 ### Run tests
 
 ```bash
-$ pdm run pytest tests
+$ pdm run test
 ```
 
 The test suite is still simple and requires to be supplied, please help write more test cases.
@@ -72,8 +74,17 @@ PDM uses `pre-commit` for linting, you need to install `pre-commit` first, then:
 
 ```bash
 $ pre-commit install
-$ pre-commit run --all-files
+$ pdm run lint
 ```
 
 PDM uses `black` coding style and `isort` for sorting import statements, if you are not following them,
-the CI will fail and your Pull Request will not be merged.
+the CI will fail, and your Pull Request will not be merged.
+
+
+### Preview the documentation
+
+If you do some changes to the `docs/` and you may want to preview the build result, simply do:
+
+```bash
+$ pdm run doc
+```

@@ -3,13 +3,13 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
+        exclude: ^pdm/_vendor
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.3
     hooks:
       - id: flake8
 
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.4.2
+  - repo: https://github.com/pycqa/isort
+    rev: 5.6.3
     hooks:
       - id: isort
-        exclude: ^.*/?setup\.py$

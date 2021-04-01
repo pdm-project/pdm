@@ -2,14 +2,14 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import verbose_option
+from pdm.cli.options import project_option, verbose_option
 from pdm.project import Project
 
 
 class Command(BaseCommand):
-    """List packages installed in the current working set"""
+    """Build artifacts for distribution"""
 
-    arguments = [verbose_option]
+    arguments = [verbose_option, project_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
