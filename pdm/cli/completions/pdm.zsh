@@ -1,6 +1,6 @@
 #compdef pdm
 
-PDM_PIP_INDEXES=('https://pypi.org/simple/')
+PDM_PIP_INDEXES=($(command pdm config pypi.url))
 
 _pdm() {
   emulate -L zsh -o extended_glob
@@ -127,7 +127,7 @@ _pdm() {
         {-o+,--output+}"[Write output to the given file, or print to stdout if not given]:output file:_files"
         {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
         {-d,--dev}"[Select dev dependencies]"
-        "--no-default[Don't include dependencies from default seciton]"
+        "--no-default[Don't include dependencies from default section]"
       )
       ;;
     import)
@@ -157,7 +157,7 @@ _pdm() {
         {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
         {-d,--dev}"[Select dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
-        "--no-default[Don't include dependencies from default seciton]"
+        "--no-default[Don't include dependencies from default section]"
       )
       ;;
     list)
@@ -209,7 +209,7 @@ _pdm() {
         '--dry-run[Only prints actions without actually running them]'
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
-        "--no-default[Don't include dependencies from default seciton]"
+        "--no-default[Don't include dependencies from default section]"
       )
       ;;
     update)
@@ -223,7 +223,7 @@ _pdm() {
         '--update-eager[Try to update the packages and their dependencies recursively]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-d,--dev}'[Select dev dependencies]'
-        "--no-default[Don't include dependencies from default seciton]"
+        "--no-default[Don't include dependencies from default section]"
         {-t,--top}'[Only update those list in pyproject.toml]'
         "--dry-run[Show the difference only without modifying the lockfile content]"
         "--outdated[Show the difference only without modifying the lockfile content]"
