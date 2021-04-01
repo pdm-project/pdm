@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 from resolvelib.resolvers import Criterion, Resolution
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 # Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
-def _merge_into_criterion(self, requirement, parent):
+def _merge_into_criterion(self, requirement, parent):  # type: ignore
     self._r.adding_requirement(requirement, parent)
     name = self._p.identify(requirement)
     try:
@@ -62,12 +62,28 @@ def _build_metaset(
     return metaset or Metaset()
 
 
-def _get_sections(crit: Criterion) -> Iterable[str]:
-    for req, parent in crit.information:
-        if not parent:
-            yield req.from_section
-        else:
-            yield from parent.sections
+def populate_sections(result: Result) -> None:
+    """Determine where the candidates come from by traversing
+    the dependency tree back to the top.
+    """
+
+    resolved: Dict[str, Set[str]] = {}
+
+    def get_candidate_sections(key: str) -> Set[str]:
+        if key in resolved:
+            return resolved[key]
+        resolved[key] = res = set()
+        crit: Criterion = result.criteria[key]
+        for req, parent in crit.information:
+            if parent is None:
+                res.add(req.from_section)
+            else:
+                pkey = _identify_parent(parent)
+                res.update(get_candidate_sections(pkey))
+        return res
+
+    for k, can in result.mapping.items():
+        can.sections = sorted(get_candidate_sections(k))
 
 
 def extract_metadata(result: Result) -> Dict[str, Metaset]:
@@ -82,7 +98,7 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
     while unresolved:
         new_metasets = {}
         for k in unresolved:
-            crit = result.criteria[k]  # type: Criterion
+            crit = result.criteria[k]
             keep_unresolved = circular.get(k, set())
             # All parents must be resolved first
             if any(
@@ -91,7 +107,6 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
             ):
                 continue
             new_metasets[k] = _build_metaset(crit, all_metasets, keep_unresolved)
-            result.mapping[k].sections = list(set(_get_sections(crit)))
 
         if new_metasets:
             all_metasets.update(new_metasets)
@@ -116,14 +131,16 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
     for key in circular:
         crit = result.criteria[key]
         all_metasets[key] = _build_metaset(crit, all_metasets, set())
-        result.mapping[key].sections = list(set(_get_sections(crit)))
 
     return all_metasets
 
 
 def resolve(
-    resolver: Resolver, requirements: List[Requirement], requires_python: PySpecSet
-) -> Tuple[Dict[str, Candidate], Dict[str, Dict[str, Requirement]], Dict[str, str]]:
+    resolver: Resolver,
+    requirements: List[Requirement],
+    requires_python: PySpecSet,
+    max_rounds: int = 1000,
+) -> Tuple[Dict[str, Candidate], Dict[str, List[Requirement]], Dict[str, str]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 3 items:
 
@@ -132,7 +149,7 @@ def resolve(
         3. A map of package descriptions fetched from PyPI source.
     """
     provider, reporter = resolver.provider, resolver.reporter
-    result = resolver.resolve(requirements)
+    result = resolver.resolve(requirements, max_rounds)
 
     reporter.extract_metadata()
     all_metasets = extract_metadata(result)
@@ -156,4 +173,6 @@ def resolve(
             candidate = mapping[key]
             candidate.marker = metaset.as_marker()
             candidate.hashes = provider.get_hashes(candidate)
+
+    populate_sections(result)
     return mapping, provider.fetched_dependencies, provider.summary_collection

@@ -3,15 +3,14 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-import pip_shims
-from pip._vendor import requests
-
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
+from pdm.models import pip_shims
+from pdm.models.candidates import Candidate
 from pdm.utils import open_file
 
 if TYPE_CHECKING:
-    from pdm.models.candidates import Candidate
+    from pip._vendor import requests
 
 
 class CandidateInfoCache:
@@ -19,7 +18,7 @@ class CandidateInfoCache:
 
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
-        self._cache = {}  # type: Dict[str, Any]
+        self._cache: Dict[str, CandidateInfo] = {}
         self._read_cache()
 
     def _read_cache(self) -> None:
@@ -37,8 +36,7 @@ class CandidateInfoCache:
             json.dump(self._cache, fp)
 
     @staticmethod
-    def _get_key(candidate):
-        # type: (Candidate) -> str
+    def _get_key(candidate: Candidate) -> str:
         # Name and version are set when dependencies are resolved,
         # so use them for cache key. Local directories won't be cached.
         if not candidate.name or not candidate.version:
@@ -50,19 +48,16 @@ class CandidateInfoCache:
         )
         return f"{candidate.name}{extras}-{candidate.version}"
 
-    def get(self, candidate):
-        # type: (Candidate) -> CandidateInfo
+    def get(self, candidate: Candidate) -> CandidateInfo:
         key = self._get_key(candidate)
         return self._cache[key]
 
-    def set(self, candidate, value):
-        # type: (Candidate, CandidateInfo) -> None
+    def set(self, candidate: Candidate, value: CandidateInfo):
         key = self._get_key(candidate)
         self._cache[key] = value
         self._write_cache()
 
-    def delete(self, candidate):
-        # type: (Candidate) -> None
+    def delete(self, candidate: Candidate):
         try:
             del self._cache[self._get_key(candidate)]
         except KeyError:
@@ -80,11 +75,11 @@ class HashCache(pip_shims.SafeFileCache):
 
     Hashes are only cached when the URL appears to contain a hash in it and the
     cache key includes the hash value returned from the server). This ought to
-    avoid ssues where the location on the server changes.
+    avoid issues where the location on the server changes.
     """
 
-    def __init__(self, *args, **kwargs):
-        self.session = None  # type: Optional[requests.Session]
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self.session: Optional[requests.Session] = None
         super(HashCache, self).__init__(*args, **kwargs)
 
     def get_hash(self, link: pip_shims.Link) -> str:
@@ -92,7 +87,7 @@ class HashCache(pip_shims.SafeFileCache):
         # to store it.
         hash_value = self.get(link.url)
         if not hash_value:
-            if link.hash:
+            if link.hash and link.hash_name in pip_shims.STRONG_HASHES:
                 hash_value = f"{link.hash_name}:{link.hash}"
             else:
                 hash_value = self._get_file_hash(link)

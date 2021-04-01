@@ -2,38 +2,48 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import shutil
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
 import tomlkit
-from pip._vendor.pkg_resources import safe_name
-from pip_shims import shims
+from pythonfinder import Finder
+from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
+from pythonfinder.models.python import PythonVersion
+from tomlkit.items import Comment, Whitespace
 
+from pdm import termui
 from pdm._types import Source
-from pdm.exceptions import ProjectError
-from pdm.iostream import stream
+from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
+from pdm.models.in_process import get_python_version
 from pdm.models.repositories import BaseRepository, PyPIRepository
-from pdm.models.requirements import Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.pep517.metadata import Metadata
 from pdm.project.config import Config
+from pdm.project.metadata import MutableMetadata as Metadata
 from pdm.utils import (
     atomic_open_for_write,
     cached_property,
+    cd,
     find_project_root,
-    get_python_version,
-    get_venv_python,
+    find_python_in_path,
+    get_in_project_venv_python,
+    is_venv_python,
+    setdefault,
 )
 
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
-    from tomlkit.container import Container
 
     from pdm._vendor import halo
+    from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
 
 
@@ -41,10 +51,11 @@ class Project:
     """Core project class"""
 
     PYPROJECT_FILENAME = "pyproject.toml"
-    PDM_NAMESPACE = "tool.pdm"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    PYPROJECT_VERSION = "0.0.1"
+    PYPROJECT_VERSION = "2"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
+
+    core: Core
 
     @classmethod
     def create_global(cls, root_path: Optional[str] = None) -> "Project":
@@ -57,9 +68,10 @@ class Project:
 
     def __init__(self, root_path: Optional[str] = None) -> None:
         self.is_global = False
-        self._pyproject = None  # type: Optional[Container]
-        self._lockfile = None  # type: Optional[Container]
-        self.core = None
+        self._pyproject: Optional[Dict] = None
+        self._lockfile: Optional[Dict] = None
+        self._environment: Optional[Environment] = None
+        self._python_executable: Optional[str] = None
 
         if root_path is None:
             root_path = find_project_root()
@@ -82,39 +94,35 @@ class Project:
         return self.root / "pdm.lock"
 
     @property
-    def pyproject(self):
-        # type: () -> Container
+    def pyproject(self) -> Optional[dict]:
         if not self._pyproject and self.pyproject_file.exists():
             data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
         return self._pyproject
 
     @pyproject.setter
-    def pyproject(self, data):
+    def pyproject(self, data: Dict[str, Any]) -> None:
         self._pyproject = data
 
     @property
-    def tool_settings(self):
-        # type: () -> Union[Container, Dict]
+    def tool_settings(self) -> dict:
         data = self.pyproject
         if not data:
             return {}
-        for sec in self.PDM_NAMESPACE.split("."):
-            # setdefault has bug
-            if sec not in data:
-                data[sec] = {}
-            data = data[sec]
-        return data
+        return setdefault(setdefault(data, "tool", {}), "pdm", {})
 
     @property
-    def lockfile(self):
-        # type: () -> Container
-        if not self.lockfile_file.is_file():
-            raise ProjectError("Lock file does not exist.")
+    def lockfile(self) -> dict:
         if not self._lockfile:
+            if not self.lockfile_file.is_file():
+                raise ProjectError("Lock file does not exist.")
             data = tomlkit.parse(self.lockfile_file.read_text("utf-8"))
             self._lockfile = data
         return self._lockfile
+
+    @lockfile.setter
+    def lockfile(self, data: Dict[str, Any]) -> None:
+        self._lockfile = data
 
     @property
     def config(self) -> Dict[str, Any]:
@@ -138,44 +146,103 @@ class Project:
         return Config(self.root / ".pdm.toml")
 
     @property
-    def is_pdm(self) -> bool:
-        if not self.pyproject_file.is_file():
-            return False
-        return bool(self.tool_settings)
+    def python_executable(self) -> str:
+        if not self._python_executable:
+            self._python_executable = self.resolve_interpreter()
+        return self._python_executable
 
-    @cached_property
-    def environment(self) -> Environment:
+    @python_executable.setter
+    def python_executable(self, value: str) -> None:
+        self._python_executable = value
+        self.project_config["python.path"] = value
+
+    def resolve_interpreter(self) -> str:
+        """Get the Python interpreter path."""
+        config = self.config
+        if self.project_config.get("python.path") and not os.getenv(
+            "PDM_IGNORE_SAVED_PYTHON"
+        ):
+            saved_path = self.project_config["python.path"]
+            if not os.path.isfile(saved_path):
+                del self.project_config["python.path"]
+            else:
+                return saved_path
+        if os.name == "nt":
+            suffix = ".exe"
+            scripts = "Scripts"
+        else:
+            suffix = ""
+            scripts = "bin"
+        virtual_env = os.getenv("VIRTUAL_ENV")
+        if config["use_venv"] and virtual_env:
+            return os.path.join(virtual_env, scripts, f"python{suffix}")
+
+        for py_version in self.find_interpreters():
+            if self.python_requires.contains(str(py_version.version)):
+                self.python_executable = py_version.executable
+                return self.python_executable
+
+        raise NoPythonVersion(
+            "No Python that satisfies {} is found on the system.".format(
+                self.python_requires
+            )
+        )
+
+    def get_environment(self) -> Environment:
+        """Get the environment selected by this project"""
         if self.is_global:
             env = GlobalEnvironment(self)
             # Rewrite global project's python requires to be
             # compatible with the exact version
             env.python_requires = PySpecSet(
-                "==" + get_python_version(env.python_executable, True)
+                "==" + get_python_version(self.python_executable, True)[0]
             )
             return env
-        if self.config["use_venv"]:
-            venv_python = get_venv_python(self.root)
-            if venv_python:
-                self.project_config["python.path"] = venv_python
-                return GlobalEnvironment(self)
+        if self.config["use_venv"] and is_venv_python(self.python_executable):
+            # Only recognize venv created by python -m venv and virtualenv>20
+            return GlobalEnvironment(self)
         return Environment(self)
 
     @property
+    def environment(self) -> Environment:
+        if not self._environment:
+            self._environment = self.get_environment()
+        return self._environment
+
+    @property
     def python_requires(self) -> PySpecSet:
-        return PySpecSet(self.tool_settings.get("python_requires", ""))
+        return PySpecSet(self.meta.requires_python)
 
     def get_dependencies(self, section: Optional[str] = None) -> Dict[str, Requirement]:
+        metadata = self.meta
+        optional_dependencies = metadata.get("optional-dependencies", {})
+        dev_dependencies = self.tool_settings.get("dev-dependencies", {})
         if section in (None, "default"):
-            deps = self.tool_settings.get("dependencies", [])
-        elif section == "dev":
-            deps = self.tool_settings.get("dev-dependencies", [])
+            deps = metadata.get("dependencies", [])
         else:
-            deps = self.tool_settings[f"{section}-dependencies"]
+            if section in optional_dependencies and section in dev_dependencies:
+                self.core.ui.echo(
+                    f"The {section} section exists in both [optional-dependencies] "
+                    "and [dev-dependencies], the former is taken.",
+                    err=True,
+                    fg="yellow",
+                )
+            if section in optional_dependencies:
+                deps = optional_dependencies[section]
+            elif section in dev_dependencies:
+                deps = dev_dependencies[section]
+            else:
+                raise PdmUsageError(f"Non-exist section {section}")
         result = {}
-        for name, dep in deps.items():
-            req = Requirement.from_req_dict(name, dep)
-            req.from_section = section or "default"
-            result[req.identify()] = req
+        with cd(self.root):
+            for line in deps:
+                if line.startswith("-e "):
+                    req = parse_requirement(line[3:].strip(), True)
+                else:
+                    req = parse_requirement(line)
+                req.from_section = section or "default"
+                # make editable packages behind normal ones to override correctly.
+                result[req.identify()] = req
         return result
 
     @property
@@ -184,15 +251,29 @@ class Project:
 
     @property
     def dev_dependencies(self) -> Dict[str, Requirement]:
-        return self.get_dependencies("dev")
+        """All development dependencies"""
+        dev_group = self.tool_settings.get("dev-dependencies", {})
+        if not dev_group:
+            return {}
+        result = {}
+        with cd(self.root):
+            for section, deps in dev_group.items():
+                for line in deps:
+                    if line.startswith("-e "):
+                        req = parse_requirement(line[3:].strip(), True)
+                    else:
+                        req = parse_requirement(line)
+                    req.from_section = section
+                    result[req.identify()] = req
+        return result
 
     def iter_sections(self) -> Iterable[str]:
-        for key in self.tool_settings:
-            match = self.DEPENDENCIES_RE.match(key)
-            if not match:
-                continue
-            section = match.group(1) or "default"
-            yield section
+        result = {"default"}
+        if self.meta.optional_dependencies:
+            result.update(self.meta.optional_dependencies.keys())
+        if self.tool_settings.get("dev-dependencies"):
+            result.update(self.tool_settings["dev-dependencies"].keys())
+        return result
 
     @property
     def all_dependencies(self) -> Dict[str, Dict[str, Requirement]]:
@@ -206,7 +287,7 @@ class Project:
 
     @property
     def sources(self) -> List[Source]:
-        sources = self.tool_settings.get("source", [])
+        sources = list(self.tool_settings.get("source", []))
         if not any(source.get("name") == "pypi" for source in sources):
             sources.insert(
                 0,
@@ -280,25 +361,23 @@ class Project:
 
         return SpinnerReporter(spinner, requirements)
 
-    def get_project_metadata(self) -> Dict[str, Any]:
-        content_hash = self.get_content_hash("md5")
-        data = {
-            "meta_version": self.PYPROJECT_VERSION,
-            "content_hash": f"md5:{content_hash}",
-        }
+    def get_lock_metadata(self) -> Dict[str, Any]:
+        content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
+        content_hash.trivia.trail = "\n\n"
+        data = {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
         return data
 
-    def write_lockfile(self, toml_data: Container, show_message: bool = True) -> None:
-        toml_data.update({"root": self.get_project_metadata()})
+    def write_lockfile(self, toml_data: Dict, show_message: bool = True) -> None:
+        toml_data["metadata"].update(self.get_lock_metadata())
 
         with atomic_open_for_write(self.lockfile_file) as fp:
             fp.write(tomlkit.dumps(toml_data))
         if show_message:
-            stream.echo(f"Changes are written to {stream.green('pdm.lock')}.")
+            self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
         self._lockfile = None
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
-        req = parse_requirement(shims.path_to_url(self.root.as_posix()), editable)
+        req = parse_requirement(pip_shims.path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
         return Candidate(
             req, self.environment, name=self.meta.name, version=self.meta.version
@@ -320,10 +399,13 @@ class Project:
             package_name = package.pop("name")
             req = Requirement.from_req_dict(package_name, dict(package))
             can = Candidate(req, self.environment, name=package_name, version=version)
+            can.sections = package.get("sections", [])
             can.marker = req.marker
             can.hashes = {
                 item["file"]: item["hash"]
-                for item in self.lockfile["metadata"].get(f"{req.key} {version}", [])
+                for item in self.lockfile["metadata"]
+                .get("files", {})
+                .get(f"{req.key} {version}", [])
             } or None
             result[req.identify()] = can
         if section in ("default", "__all__") and self.meta.name and self.meta.version:
@@ -333,12 +415,13 @@ class Project:
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies sections. Otherwise lock file is
         # considered as unchanged.
-        dump_data = {"sources": self.tool_settings.get("source", [])}
-        for section in self.iter_sections():
-            toml_section = (
-                "dependencies" if section == "default" else f"{section}-dependencies"
-            )
-            dump_data[toml_section] = dict(self.tool_settings.get(toml_section, {}))
+        dump_data = {
+            "sources": self.tool_settings.get("source", []),
+            "dependencies": self.meta.get("dependencies", []),
+            "dev-dependencies": self.tool_settings.get("dev-dependencies", {}),
+            "optional-dependencies": self.meta.get("optional-dependencies", {}),
+            "requires-python": self.meta.get("requires-python", ""),
+        }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)
         hasher.update(pyproject_content.encode("utf-8"))
@@ -347,38 +430,55 @@ class Project:
     def is_lockfile_hash_match(self) -> bool:
         if not self.lockfile_file.exists():
             return False
-        hash_in_lockfile = str(self.lockfile["root"]["content_hash"])
+        hash_in_lockfile = str(
+            self.lockfile.get("metadata", {}).get("content_hash", "")
+        )
+        if not hash_in_lockfile:
+            return False
         algo, hash_value = hash_in_lockfile.split(":")
         content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
 
-    def add_dependencies(
-        self, requirements: Dict[str, Requirement], show_message: bool = True
-    ) -> None:
-        for name, dep in requirements.items():
-            if dep.from_section == "default":
-                deps = self.tool_settings["dependencies"]
-            elif dep.from_section == "dev":
-                deps = self.tool_settings["dev-dependencies"]
-            else:
-                section = f"{dep.from_section}-dependencies"
-                if section not in self.tool_settings:
-                    self.tool_settings[section] = tomlkit.table()
-                deps = self.tool_settings[section]
-
-            matched_name = next(
-                filter(
-                    lambda k: strip_extras(name)[0] == safe_name(k).lower(), deps.keys()
-                ),
-                None,
+    def get_pyproject_dependencies(self, section: str, dev: bool = False) -> List[str]:
+        """Get the dependencies array in the pyproject.toml"""
+        if section == "default":
+            return setdefault(self.meta, "dependencies", [])
+        elif dev:
+            return setdefault(
+                setdefault(self.tool_settings, "dev-dependencies", {}), section, []
             )
-            name_to_save = dep.name if matched_name is None else matched_name
-            _, req_dict = dep.as_req_dict()
-            if isinstance(req_dict, dict):
-                req = tomlkit.inline_table()
-                req.update(req_dict)
-                req_dict = req
-            deps[name_to_save] = req_dict
+        else:
+            return setdefault(
+                setdefault(self.meta, "optional-dependencies", {}), section, []
+            )
+
+    def add_dependencies(
+        self,
+        requirements: Dict[str, Requirement],
+        to_section: str = "default",
+        dev: bool = False,
+        show_message: bool = True,
+    ) -> None:
+        deps = self.get_pyproject_dependencies(to_section, dev)
+        for _, dep in requirements.items():
+            matched_index = next(
+                (i for i, r in enumerate(deps) if dep.matches(r)), None
+            )
+            if matched_index is None:
+                deps.append(dep.as_line())
+            else:
+                req = dep.as_line()
+                deps[matched_index] = req
+                # XXX: This dirty part is for tomlkit.Array.__setitem__()
+                j = 0
+                for i in range(len(deps._value)):
+                    if isinstance(deps._value[i], (Comment, Whitespace)):
+                        continue
+                    if j == matched_index:
+                        deps._value[i] = tomlkit.item(req)
+                        break
+                    j += 1
+            deps.multiline(True)
         self.write_pyproject(show_message)
 
     def write_pyproject(self, show_message: bool = True) -> None:
@@ -387,12 +487,16 @@ class Project:
         ) as f:
             f.write(tomlkit.dumps(self.pyproject))
         if show_message:
-            stream.echo("Changes are written to pyproject.toml.")
+            self.core.ui.echo(
+                f"Changes are written to {termui.green('pyproject.toml')}."
+            )
         self._pyproject = None
 
     @property
     def meta(self) -> Metadata:
-        return Metadata(self.pyproject_file)
+        if not self.pyproject:
+            self.pyproject = {"project": tomlkit.table()}
+        return Metadata(self.pyproject_file, self.pyproject.get("project", {}))
 
     def init_global_project(self) -> None:
         if not self.is_global:
@@ -401,12 +505,8 @@ class Project:
             self.root.mkdir(parents=True, exist_ok=True)
             self.pyproject_file.write_text(
                 """\
-[tool.pdm.dependencies]
-pip = "*"
-setuptools = "*"
-wheel = "*"
-
-[tool.pdm.dev-dependencies]
+[project]
+dependencies = ["pip", "setuptools", "wheel"]
 """
             )
             self._pyproject = None
@@ -420,9 +520,9 @@ wheel = "*"
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def make_wheel_cache(self) -> shims.WheelCache:
-        return shims.WheelCache(
-            self.cache_dir.as_posix(), shims.FormatControl(set(), set())
+    def make_wheel_cache(self) -> pip_shims.WheelCache:
+        return pip_shims.WheelCache(
+            self.cache_dir.as_posix(), pip_shims.FormatControl(set(), set())
         )
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
@@ -431,7 +531,52 @@ wheel = "*"
             str(self.environment.python_requires).encode()
         ).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
-        return CandidateInfoCache(self.cache_dir / file_name)
+        return CandidateInfoCache(self.cache("metadata") / file_name)
 
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())
+
+    def find_interpreters(
+        self, python_spec: Optional[str] = None
+    ) -> Iterable[PythonVersion]:
+        """Return an iterable of interpreter paths that matches the given specifier,
+        which can be:
+            1. a version specifier like 3.7
+            2. an absolute path
+            3. a short name like python3
+            4. None that returns all possible interpreters
+        """
+        config = self.config
+        PythonVersion.__hash__ = lambda self: hash(self.executable)
+
+        if not python_spec:
+            if config.get("python.use_pyenv", True) and PYENV_INSTALLED:
+                yield PythonVersion.from_path(
+                    os.path.join(PYENV_ROOT, "shims", "python")
+                )
+            if config.get("use_venv"):
+                python = get_in_project_venv_python(self.root)
+                if python:
+                    yield PythonVersion.from_path(python)
+            python = shutil.which("python")
+            if python:
+                yield PythonVersion.from_path(python)
+            args = ()
+        else:
+            if not all(c.isdigit() for c in python_spec.split(".")):
+                if Path(python_spec).exists():
+                    python = find_python_in_path(python_spec)
+                    if python:
+                        yield PythonVersion.from_path(str(python))
+                else:
+                    python = shutil.which(python_spec)
+                    if python:
+                        yield PythonVersion.from_path(python)
+                return
+            args = [int(v) for v in python_spec.split(".") if v != ""]
+        finder = Finder()
+        for entry in finder.find_all_python_versions(*args):
+            yield entry.py_version
+        if not python_spec:
+            this_python = getattr(sys, "_base_executable", sys.executable)
+            yield PythonVersion.from_path(this_python)

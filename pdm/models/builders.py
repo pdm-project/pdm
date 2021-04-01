@@ -8,16 +8,18 @@ import subprocess
 import sys
 import tempfile
 import threading
+from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
 import toml
 from pep517.wrappers import Pep517HookCaller
 
 from pdm.exceptions import BuildError
-from pdm.iostream import stream
+from pdm.models.in_process import get_python_version, get_sys_config_paths
 from pdm.pep517.base import Builder
-from pdm.utils import cached_property, get_python_version, get_sys_config_paths
+from pdm.termui import logger
+from pdm.utils import cached_property
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -37,7 +39,7 @@ class LoggerWrapper(threading.Thread):
     to a logger (see python's logging module).
     """
 
-    def __init__(self, logger, level):
+    def __init__(self, logger: Logger, level: int) -> None:
         super().__init__()
         self.daemon = True
 
@@ -52,34 +54,38 @@ class LoggerWrapper(threading.Thread):
 
         self.start()
 
-    def fileno(self):
+    def fileno(self) -> int:
         return self.fd_write
 
     @staticmethod
-    def remove_newline(msg):
+    def remove_newline(msg: str) -> str:
         return msg[:-1] if msg.endswith("\n") else msg
 
-    def run(self):
+    def run(self) -> None:
         for line in self.reader:
             if line == self._stop_bit:
                 os.close(self.fd_read)
                 break
             self._write(self.remove_newline(line))
 
-    def _write(self, message):
+    def _write(self, message: str) -> None:
         self.logger.log(self.level, message)
 
-    def stop(self):
+    def stop(self) -> None:
         with os.fdopen(self.fd_write, "w") as f:
             f.write(self._stop_bit)
         self.join()
 
 
-def log_subprocessor(cmd, cwd=None, extra_environ=None):
+def log_subprocessor(
+    cmd: List[str],
+    cwd: Optional[os.PathLike] = None,
+    extra_environ: Optional[Dict[str, str]] = None,
+):
     env = os.environ.copy()
     if extra_environ:
         env.update(extra_environ)
-    outstream = LoggerWrapper(stream.logger, logging.DEBUG)
+    outstream = LoggerWrapper(logger, logging.DEBUG)
     try:
         subprocess.check_call(
             cmd,
@@ -92,27 +98,6 @@ def log_subprocessor(cmd, cwd=None, extra_environ=None):
         raise BuildError(f"Call command {cmd} return non-zero status.")
     finally:
         outstream.stop()
-
-
-def _download_pip_wheel(path):
-    dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
-    try:
-        log_subprocessor(
-            [
-                sys.executable,
-                "-m",
-                "pip",
-                "download",
-                "--only-binary=:all:",
-                "-d",
-                dirname,
-                "pip",
-            ]
-        )
-        wheel_file = next(dirname.glob("pip-*.whl"))
-        shutil.move(str(wheel_file), path)
-    finally:
-        shutil.rmtree(dirname, ignore_errors=True)
 
 
 def _find_egg_info(directory: str) -> str:
@@ -135,13 +120,13 @@ class EnvBuilder:
 
     def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
         self._env = environment
-        self._path = None  # type: Optional[str]
+        self._path: Optional[str] = None
         self._saved_env = None
         self.executable = self._env.python_executable
         self.src_dir = src_dir
 
         try:
-            with open(os.path.join(src_dir, "pyproject.toml")) as f:
+            with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
                 spec = toml.load(f)
         except FileNotFoundError:
             spec = {}
@@ -151,10 +136,6 @@ class EnvBuilder:
 
         if "build-backend" not in self._build_system:
             self._build_system["build-backend"] = self.DEFAULT_BACKEND["build-backend"]
-            self._build_system["requires"] = (
-                self._build_system.get("requires", [])
-                + self.DEFAULT_BACKEND["requires"]
-            )
 
         if "requires" not in self._build_system:
             raise BuildError("Missing 'build-system.requires' in pyproject.toml")
@@ -170,26 +151,51 @@ class EnvBuilder:
         )
 
     @cached_property
-    def pip_command(self):
+    def pip_command(self) -> List[str]:
         return self._get_pip_command()
 
-    def subprocess_runner(self, cmd, cwd=None, extra_environ=None):
+    def subprocess_runner(
+        self,
+        cmd: List[str],
+        cwd: Optional[str] = None,
+        extra_environ: Optional[Dict[str, str]] = None,
+    ) -> Optional[Any]:
         env = self._saved_env.copy() if self._saved_env else {}
         if extra_environ:
             env.update(extra_environ)
         return log_subprocessor(cmd, cwd, extra_environ=env)
 
+    def _download_pip_wheel(self, path: os.PathLike):
+        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
+        try:
+            self.subprocess_runner(
+                [
+                    getattr(sys, "_original_executable", sys.executable),
+                    "-m",
+                    "pip",
+                    "download",
+                    "--only-binary=:all:",
+                    "-d",
+                    dirname,
+                    "pip<21",  # pip>=21 drops the support of py27
+                ]
+            )
+            wheel_file = next(dirname.glob("pip-*.whl"))
+            shutil.move(str(wheel_file), path)
+        finally:
+            shutil.rmtree(dirname, ignore_errors=True)
+
     def _get_pip_command(self) -> List[str]:
         """Get a pip command that has pip installed.
         E.g: ['python', '-m', 'pip']
         """
-        python_version = get_python_version(self.executable)
+        python_version, _ = get_python_version(self.executable)
         proc = subprocess.run(
-            [self.executable, "-m", "pip", "--version"], capture_output=True
+            [self.executable, "-Im", "pip", "--version"], capture_output=True
         )
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
-            return [self.executable, "-m", "pip"]
+            return [self.executable, "-Im", "pip"]
         if python_version[0] == 3:
             # Use the ensurepip to provision one.
             try:
@@ -199,14 +205,14 @@ class EnvBuilder:
             except BuildError:
                 pass
             else:
-                return [self.executable, "-m", "pip"]
+                return [self.executable, "-Im", "pip"]
         # Otherwise, download a pip wheel from the Internet.
         pip_wheel = self._env.project.cache_dir / "pip.whl"
         if not pip_wheel.is_file():
-            _download_pip_wheel(pip_wheel)
+            self._download_pip_wheel(pip_wheel)
         return [self.executable, str(pip_wheel / "pip")]
 
-    def __enter__(self):
+    def __enter__(self) -> EnvBuilder:
         self._path = tempfile.mkdtemp(prefix="pdm-build-env-")
         paths = get_sys_config_paths(
             self.executable, vars={"base": self._path, "platbase": self._path}
@@ -220,10 +226,10 @@ class EnvBuilder:
             "PYTHONNOUSERSITE": "1",
             "PDM_PYTHON_PEP582": "0",
         }
-        stream.logger.debug("Preparing isolated env for PEP 517 build...")
+        logger.debug("Preparing isolated env for PEP 517 build...")
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self._saved_env = None
         shutil.rmtree(self._path, ignore_errors=True)
 
@@ -264,11 +270,17 @@ class EnvBuilder:
 
     def build_egg_info(self, out_dir: str) -> str:
         # Ignore destination since editable builds should be build locally
+        from pdm.project.metadata import MutableMetadata
+
         builder = Builder(self.src_dir)
+        if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
+            builder._meta = MutableMetadata(
+                os.path.join(self.src_dir, "pyproject.toml")
+            )
         setup_py_path = builder.ensure_setup_py().as_posix()
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
-        args.extend(["egg_info", "--egg-base", out_dir])
+        args.extend(["egg_info", "--egg-base", os.path.relpath(out_dir, self.src_dir)])
         self.subprocess_runner(args, cwd=self.src_dir)
         filename = _find_egg_info(out_dir)
         return os.path.join(out_dir, filename)

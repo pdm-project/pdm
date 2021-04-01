@@ -1,29 +1,32 @@
 from __future__ import annotations
 
 import functools
+import os
 import warnings
+from argparse import Namespace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
 
 from distlib.database import EggInfoDistribution
 from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import safe_extra
-from pip_shims import shims
 
-from pdm.exceptions import ExtrasError, RequirementError
-from pdm.iostream import stream
+from pdm import termui
+from pdm.exceptions import BuildError, ExtrasError, RequirementError
+from pdm.models import pip_shims
 from pdm.models.markers import Marker
+from pdm.models.readers import SetupReader
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.utils import cached_property
+from pdm.utils import cached_property, get_rev_from_url, path_replace
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
 
     from pdm.models.environment import Environment
 
-vcs = shims.VcsSupport()
+vcs = pip_shims.VcsSupport()
 
 
-def get_sdist(egg_info) -> Optional[EggInfoDistribution]:
+def get_sdist(egg_info: str) -> Optional[EggInfoDistribution]:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
 
@@ -33,12 +36,17 @@ def _patch_version_parsing():
     list.
     """
     from distlib.version import VersionScheme
+    from packaging.requirements import InvalidRequirement
+    from packaging.requirements import Requirement as PRequirement
 
-    def is_valid_constraint_list(self, s):
-        s = ",".join(v for v in s.strip().split(",") if v)
-        return self.is_valid_matcher("dummy_name (%s)" % s)
+    def is_valid_matcher(self: Any, s: str) -> bool:
+        try:
+            PRequirement(s)
+        except InvalidRequirement:
+            return False
+        return True
 
-    VersionScheme.is_valid_constraint_list = is_valid_constraint_list
+    VersionScheme.is_valid_matcher = is_valid_matcher
 
 
 _patch_version_parsing()
@@ -69,7 +77,7 @@ def get_requirements_from_dist(
                     result.append(r.as_line())
     extras_not_found = [e for e in extras if e not in extras_in_metadata]
     if extras_not_found:
-        warnings.warn(ExtrasError(extras_not_found), stacklevel=2)
+        warnings.warn(ExtrasError(extras_not_found))
     return result
 
 
@@ -82,13 +90,12 @@ class Candidate:
 
     def __init__(
         self,
-        req,  # type: Requirement
-        environment,  # type: Environment
-        name=None,  # type: Optional[str]
-        version=None,  # type: Optional[str]
-        link=None,  # type: shims.Link
+        req: Requirement,
+        environment: Environment,
+        name: Optional[str] = None,
+        version: Optional[str] = None,
+        link: Optional[pip_shims.Link] = None,
     ):
-        # type: (...) -> None
         """
         :param req: the requirement that produces this candidate.
         :param environment: the bound environment instance.
@@ -103,7 +110,7 @@ class Candidate:
         if link is None and self.req:
             link = self.ireq.link
         self.link = link
-        self.hashes = None  # type: Optional[Dict[str, str]]
+        self.hashes: Optional[Dict[str, str]] = None
         self.marker = None
         self.sections = []
         self._requires_python = None
@@ -115,7 +122,7 @@ class Candidate:
         return hash((self.name, self.version))
 
     @cached_property
-    def ireq(self) -> shims.InstallRequirement:
+    def ireq(self) -> pip_shims.InstallRequirement:
         return self.req.as_ireq()
 
     def identify(self) -> str:
@@ -130,30 +137,52 @@ class Candidate:
     def revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
+        if self.req.revision:
+            return self.req.revision
+        if self.ireq.source_dir and not os.path.exists(self.ireq.source_dir):
+            # It happens because the cached wheel is hit and the source code isn't
+            # pulled to local. In this case the link url must contain the full commit
+            # hash which can be taken as the revision safely.
+            # See more info at https://github.com/pdm-project/pdm/issues/349
+            return get_rev_from_url(self.ireq.original_link.url)
         return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
 
-    def get_metadata(self, allow_all_wheels: bool = True) -> Optional[Metadata]:
+    def get_metadata(
+        self, allow_all_wheels: bool = True, raising: bool = False
+    ) -> Optional[Metadata]:
         """Get the metadata of the candidate.
         For editable requirements, egg info are produced, otherwise a wheel is built.
+
+        If raising is True, error will pop when the package fails to build.
         """
         if self.metadata is not None:
             return self.metadata
         ireq = self.ireq
         if self.link and not ireq.link:
             ireq.link = self.link
-        built = self.environment.build(ireq, self.hashes, allow_all_wheels)
-        if self.req.editable:
-            if not self.req.is_local_dir and not self.req.is_vcs:
-                raise RequirementError(
-                    "Editable installation is only supported for "
-                    "local directory and VCS location."
-                )
-            sdist = get_sdist(built)
-            self.metadata = sdist.metadata if sdist else None
+        try:
+            built = self.environment.build(ireq, self.hashes, allow_all_wheels)
+        except BuildError:
+            if raising:
+                raise
+            termui.logger.warn("Failed to build package, try parsing project files.")
+            meta_dict = SetupReader.read_from_directory(ireq.unpacked_source_directory)
+            meta_dict.update(summary="UNKNOWN")
+            meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
+            self.metadata = Namespace(**meta_dict)
         else:
-            # It should be a wheel path.
-            self.wheel = Wheel(built)
-            self.metadata = self.wheel.metadata
+            if self.req.editable:
+                if not self.req.is_local_dir and not self.req.is_vcs:
+                    raise RequirementError(
+                        "Editable installation is only supported for "
+                        "local directory and VCS location."
+                    )
+                sdist = get_sdist(built)
+                self.metadata = sdist.metadata if sdist else None
+            else:
+                # It should be a wheel path.
+                self.wheel = Wheel(built)
+                self.metadata = self.wheel.metadata
         if not self.name:
             self.name = self.metadata.name
             self.req.name = self.name
@@ -168,11 +197,10 @@ class Candidate:
     @classmethod
     def from_installation_candidate(
         cls,
-        candidate,  # type: shims.InstallationCandidate
-        req,  # type: Requirement
-        environment,  # type: Environment
-    ):
-        # type: (...) -> Candidate
+        candidate: pip_shims.InstallationCandidate,
+        req: Requirement,
+        environment: Environment,
+    ) -> Candidate:
         """Build a candidate from pip's InstallationCandidate."""
         inst = cls(
             req,
@@ -191,6 +219,17 @@ class Candidate:
             if not metadata:
                 return []
             return get_requirements_from_dist(self.ireq.get_dist(), extras)
+        elif hasattr(metadata, "install_requires"):
+            requires = metadata.install_requires or []
+            extras_not_found = set()
+            for extra in extras:
+                try:
+                    requires.extend((metadata.extras_require or {})[extra])
+                except KeyError:
+                    extras_not_found.add(extra)
+            if extras_not_found:
+                warnings.warn(ExtrasError(sorted(extras_not_found)))
+            return sorted(set(requires))
         else:
             return filter_requirements_with_extras(metadata.run_requires, extras)
 
@@ -230,18 +269,30 @@ class Candidate:
             "marker": str(self.marker).replace('"', "'") if self.marker else None,
             "editable": self.req.editable,
         }
+        project_root = self.environment.project.root.as_posix()
         if self.req.is_vcs:
-            result.update({self.req.vcs: self.req.repo, "revision": self.revision})
+            result.update(
+                {
+                    self.req.vcs: self.req.repo,
+                    "ref": self.req.ref,
+                }
+            )
+            if not self.req.editable:
+                result.update(revision=self.revision)
         elif not self.req.is_named:
-            if self.req.path:
-                result.update(path=self.req.str_path)
+            if self.req.is_file_or_url and self.req.is_local_dir:
+                result.update(path=path_replace(project_root, ".", self.req.str_path))
             else:
-                result.update(url=self.req.url)
+                result.update(
+                    url=path_replace(
+                        project_root.lstrip("/"), "${PROJECT_ROOT}", self.req.url
+                    )
+                )
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
         """Format for output."""
         return (
-            f"{stream.green(self.name, bold=True)} "
-            f"{stream.yellow(str(self.version))}"
+            f"{termui.green(self.name, bold=True)} "
+            f"{termui.yellow(str(self.version))}"
         )

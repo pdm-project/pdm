@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from resolvelib import AbstractProvider
 from resolvelib.resolvers import RequirementInformation
@@ -7,6 +7,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import url_without_fragments
 
 
 class BaseProvider(AbstractProvider):
@@ -19,9 +20,9 @@ class BaseProvider(AbstractProvider):
         self.repository = repository
         self.requires_python = requires_python  # Root python_requires value
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.requires_python_collection = {}  # type: Dict[Optional[str], PySpecSet]
-        self.summary_collection = {}  # type: Dict[str, str]
-        self.fetched_dependencies = {}  # type: Dict[str, Dict[str, List[Requirement]]]
+        self.requires_python_collection: Dict[Optional[str], PySpecSet] = {}
+        self.summary_collection: Dict[str, str] = {}
+        self.fetched_dependencies: Dict[str, List[Requirement]] = {}
 
     def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
         return req.identify()
@@ -52,7 +53,9 @@ class BaseProvider(AbstractProvider):
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if not requirement.is_named:
-            return not candidate.req.is_named and candidate.req.url == requirement.url
+            return not candidate.req.is_named and url_without_fragments(
+                candidate.req.url
+            ) == url_without_fragments(requirement.url)
         if not candidate.version:
             candidate.get_metadata()
         if getattr(candidate, "_preferred", False) and not candidate._requires_python:
@@ -75,7 +78,7 @@ class BaseProvider(AbstractProvider):
 
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
-        valid_deps = []
+        valid_deps: List[Requirement] = []
         for dep in deps:
             if (
                 dep.requires_python & requires_python & self.requires_python
@@ -85,14 +88,12 @@ class BaseProvider(AbstractProvider):
             valid_deps.append(dep)
 
         candidate_key = self.identify(candidate)
-        self.fetched_dependencies[candidate_key] = {
-            self.identify(r): r for r in valid_deps
-        }
+        self.fetched_dependencies[candidate_key] = valid_deps
         self.summary_collection[candidate.req.key] = summary
         self.requires_python_collection[candidate.req.key] = requires_python
         return valid_deps
 
-    def get_hashes(self, candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
         return self.repository.get_hashes(candidate)
 
 
@@ -104,8 +105,11 @@ class ReusePinProvider(BaseProvider):
     """
 
     def __init__(
-        self, preferred_pins: Dict[str, Candidate], tracked_names: Iterable[str], *args
-    ):
+        self,
+        preferred_pins: Dict[str, Candidate],
+        tracked_names: Iterable[str],
+        *args: Any
+    ) -> None:
         super().__init__(*args)
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)

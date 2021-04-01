@@ -13,13 +13,23 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
+            "-d",
+            "--dev",
+            default=False,
+            action="store_true",
+            help="import packages into dev dependencies",
+        )
+        parser.add_argument(
+            "-s", "--section", help="Specify target section to import into"
+        )
+        parser.add_argument(
             "-f",
             "--format",
             choices=FORMATS.keys(),
             help="Specify the file format explicitly",
         )
         parser.add_argument("filename", help="The file name")
-        parser.set_defaults(project=self.project_class("."))
+        parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        do_import(project, options.filename, options.format)
+        do_import(project, options.filename, options.format, options)

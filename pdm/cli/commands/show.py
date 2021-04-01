@@ -1,16 +1,16 @@
 import argparse
 
-from pkg_resources import safe_name
+from pip._vendor.pkg_resources import safe_name
 
+from pdm import termui
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.models.candidates import Candidate
-from pdm.models.metadata import Metadata
+from pdm.models.project_info import ProjectInfo
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 
 
-def normalize_package(name):
+def normalize_package(name: str) -> str:
     return safe_name(name).lower()
 
 
@@ -37,18 +37,24 @@ class Command(BaseCommand):
         matches = repository.find_candidates(
             req, project.environment.python_requires, True
         )
-        latest = next(iter(matches))
+        latest = next(iter(matches), None)
+        if not latest:
+            project.core.ui.echo(
+                termui.yellow(f"No match found for the package {package!r}"), err=True
+            )
+            return
         latest_stable = next(filter(filter_stable, matches), None)
         installed = project.environment.get_working_set().get(package)
 
         metadata = latest.get_metadata()
+        assert metadata
         if metadata._legacy:
-            result = Metadata(dict(metadata._legacy.items()), True)
+            result = ProjectInfo(dict(metadata._legacy.items()), True)
         else:
-            result = Metadata(dict(metadata._data), False)
+            result = ProjectInfo(dict(metadata._data), False)
         if latest_stable:
             result.latest_stable_version = str(latest_stable.version)
         if installed:
             result.installed_version = str(installed.version)
 
-        stream.display_columns(list(result.generate_rows()))
+        project.core.ui.display_columns(list(result.generate_rows()))

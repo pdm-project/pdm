@@ -2,14 +2,11 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import global_option
 from pdm.project import Project
 
 
 class Command(BaseCommand):
     """Show the project information"""
-
-    arguments = [global_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

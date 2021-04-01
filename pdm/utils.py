@@ -1,45 +1,65 @@
 """
-Compatibility code
+Utility functions
 """
 import atexit
 import functools
-import importlib
-import inspect
-import json
 import os
+import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
+from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from re import Match
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+    TypeVar,
+    overload,
+)
 
 from distlib.wheel import Wheel
-from packaging.version import parse as parse_version
-from pip_shims.shims import (
+from pip._vendor.packaging.tags import Tag
+from pip._vendor.requests import Session
+
+from pdm._types import Source
+from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
     PackageFinder,
-    TargetPython,
+    get_package_finder,
     url_to_path,
 )
-
-from pdm._types import Source
-
-if TYPE_CHECKING:
-    from pip_shims.compat import TCommand, TFinder, Values
 
 try:
     from functools import cached_property
 except ImportError:
 
-    class cached_property:
-        def __init__(self, func):
+    _T = TypeVar("_T")
+    _C = TypeVar("_C")
+
+    class cached_property(Generic[_T]):
+        def __init__(self, func: Callable[[Any], _T]):
             self.func = func
             self.attr_name = func.__name__
             self.__doc__ = func.__doc__
+
+        @overload
+        def __get__(self: _C, inst: None, cls: Any = ...) -> _C:
+            ...
+
+        @overload
+        def __get__(self, inst: object, cls: Any = ...) -> _T:
+            ...
 
         def __get__(self, inst, cls=None):
             if inst is None:
@@ -47,91 +67,6 @@ except ImportError:
             if self.attr_name not in inst.__dict__:
                 inst.__dict__[self.attr_name] = self.func(inst)
             return inst.__dict__[self.attr_name]
-
-
-def get_abi_tag(python_version):
-    # type: (Tuple[int, int]) -> Optional[str]
-    """Return the ABI tag based on SOABI (if available) or emulate SOABI
-    (CPython 2, PyPy).
-    A replacement for pip._internal.models.pep425tags:get_abi_tag()
-    """
-    try:
-        from wheel.pep425tags import get_abbr_impl, get_config_var
-        from wheel.pep425tags import get_flag as _get_flag
-
-        def get_flag(var, fallback, expected=True, warn=True):
-            return _get_flag(
-                var, fallback=lambda: fallback, expected=expected, warn=warn
-            )
-
-    except ModuleNotFoundError:
-        from packaging.tags import interpreter_name as get_abbr_impl
-        from wheel.bdist_wheel import get_config_var, get_flag
-
-    soabi = get_config_var("SOABI")
-    impl = get_abbr_impl()
-    abi = None  # type: Optional[str]
-
-    if not soabi and impl in {"cp", "pp"} and hasattr(sys, "maxunicode"):
-        d = ""
-        m = ""
-        u = ""
-        is_cpython = impl == "cp"
-        if get_flag("Py_DEBUG", hasattr(sys, "gettotalrefcount"), warn=False):
-            d = "d"
-        if python_version < (3, 8) and get_flag(
-            "WITH_PYMALLOC", is_cpython, warn=False
-        ):
-            m = "m"
-        if python_version < (3, 3) and get_flag(
-            "Py_UNICODE_SIZE",
-            sys.maxunicode == 0x10FFFF,
-            expected=4,
-            warn=False,
-        ):
-            u = "u"
-        abi = "%s%s%s%s%s" % (impl, "".join(map(str, python_version)), d, m, u)
-    elif soabi and soabi.startswith("cpython-"):
-        abi = "cp" + soabi.split("-")[1]
-    elif soabi:
-        abi = soabi.replace(".", "_").replace("-", "_")
-
-    return abi
-
-
-def get_package_finder(
-    install_cmd,  # type: TCommand
-    options=None,  # type: Optional[Values]
-    python_version=None,  # type: Optional[Tuple[int, int]]
-    ignore_requires_python=None,  # type: Optional[bool]
-):
-    # type: (...) -> TFinder
-    """Shim for compatibility to generate package finders.
-
-    Build and return a :class:`~pip._internal.index.package_finder.PackageFinder`
-    instance using the :class:`~pip._internal.commands.install.InstallCommand` helper
-    method to construct the finder, shimmed with backports as needed for compatibility.
-    """
-    from pip_shims.compat import get_session
-
-    if options is None:
-        options, _ = install_cmd.parser.parse_args([])  # type: ignore
-    session = get_session(install_cmd=install_cmd, options=options)  # type: ignore
-    build_kwargs = {"options": options, "session": session}
-    if python_version:
-        target_python_builder = TargetPython
-        abi = get_abi_tag(python_version)
-        builder_args = inspect.signature(target_python_builder).parameters
-        target_python_params = {"py_version_info": python_version}
-        if "abi" in builder_args:
-            target_python_params["abi"] = abi
-        elif "abis" in builder_args:
-            target_python_params["abis"] = [abi]
-        target_python = target_python_builder(**target_python_params)
-        build_kwargs["target_python"] = target_python
-
-    build_kwargs["ignore_requires_python"] = ignore_requires_python
-    return install_cmd._build_package_finder(**build_kwargs)  # type: ignore
 
 
 def prepare_pip_source_args(
@@ -159,7 +94,7 @@ def prepare_pip_source_args(
     return pip_args
 
 
-def get_pypi_source():
+def get_pypi_source() -> Tuple[str, bool]:
     """Get what is defined in pip.conf as the index-url."""
     install_cmd = InstallCommand()
     options, _ = install_cmd.parser.parse_args([])
@@ -199,7 +134,7 @@ def create_tracked_tempdir(
     name = tempfile.mkdtemp(suffix, prefix, dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
 
-    def clean_up():
+    def clean_up() -> None:
         shutil.rmtree(name, ignore_errors=True)
 
     atexit.register(clean_up)
@@ -215,7 +150,7 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def is_readonly_property(cls, name):
+def is_readonly_property(cls: Any, name: str) -> Optional[Any]:
     """Tell whether a attribute can't be setattr'ed."""
     attr = getattr(cls, name, None)
     return attr and isinstance(attr, property) and not attr.fset
@@ -228,12 +163,12 @@ def join_list_with(items: List[Any], sep: Any) -> List[Any]:
     return new_items[:-1]
 
 
-def _wheel_supported(self, tags=None):
+def _wheel_supported(self: Any, tags: List[Tag] = None) -> bool:
     # Ignore current platform. Support everything.
     return True
 
 
-def _wheel_support_index_min(self, tags=None):
+def _wheel_support_index_min(self: Any, tags: Optional[str] = None) -> int:
     # All wheels are equal priority for sorting.
     return 0
 
@@ -247,7 +182,7 @@ def allow_all_wheels(enable: bool = True):
     and set a new one, or else the results from the previous non-patched calls
     will interfere.
     """
-    from pip._internal.models.wheel import Wheel as PipWheel
+    from pdm.models.pip_shims import PipWheel
 
     if not enable:
         yield
@@ -280,60 +215,19 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
     return None
 
 
-@functools.lru_cache()
-def get_python_version(executable, as_string=False):
-    """Get the version of the Python interperter."""
-    args = [
-        executable,
-        "-c",
-        "import sys,json;print(json.dumps(tuple(sys.version_info[:3])))",
-    ]
-    result = tuple(json.loads(subprocess.check_output(args)))
-    if not as_string:
-        return result
-    return ".".join(map(str, result))
-
-
-def get_sys_config_paths(executable: str, vars=None) -> Dict[str, str]:
-    """Return the sys_config.get_paths() result for the python interpreter"""
-    if not vars:
-        args = [
-            executable,
-            "-c",
-            "import sysconfig,json;print(json.dumps(sysconfig.get_paths()))",
-        ]
-        return json.loads(subprocess.check_output(args))
-    else:
-        env = os.environ.copy()
-        env.update(SYSCONFIG_VARS=json.dumps(vars))
-        args = [
-            executable,
-            "-c",
-            "import os,sysconfig,json;print(json.dumps(sysconfig."
-            "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
-        ]
-        return json.loads(subprocess.check_output(args, env=env))
-
-
-def get_pep508_environment(executable: str) -> Dict[str, Any]:
-    script = importlib.import_module("pdm.pep508").__file__.rstrip("co")
-    args = [executable, script]
-    return json.loads(subprocess.check_output(args))
-
-
 def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
     """Convert Pipfile.lock hash lines into InstallRequirement option format.
 
     The option format uses a str-list mapping. Keys are hash algorithms, and
     the list contains all values of that algorithm.
     """
-    result = {}
+    result: Dict[str, List[str]] = {}
     for hash_value in hashes.values():
         try:
             name, hash_value = hash_value.split(":")
         except ValueError:
             name = "sha256"
-        result.setdefault(name, []).append(hash_value)
+        setdefault(result, name, []).append(hash_value)
     return result
 
 
@@ -372,29 +266,23 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
-def get_venv_python(root: Path) -> Optional[str]:
-    """Get the python interpreter path of venv"""
+def get_in_project_venv_python(root: Path) -> Optional[Path]:
+    """Get the python interpreter path of venv-in-project"""
     if os.name == "nt":
         suffix = ".exe"
         scripts = "Scripts"
     else:
         suffix = ""
         scripts = "bin"
-    venv = None
-    if "VIRTUAL_ENV" in os.environ:
-        venv = os.environ["VIRTUAL_ENV"]
-    else:
-        for possible_dir in ("venv", ".venv", "env"):
-            if (root / possible_dir / scripts / f"python{suffix}").exists():
-                venv = str(root / possible_dir)
-                break
-    if venv:
-        return os.path.join(venv, scripts, f"python{suffix}")
+    for possible_dir in ("venv", ".venv", "env"):
+        if (root / possible_dir / scripts / f"python{suffix}").exists():
+            venv = root / possible_dir
+            return venv / scripts / f"python{suffix}"
     return None
 
 
 @contextmanager
-def atomic_open_for_write(filename: Union[Path, str], *, encoding: str = "utf-8"):
+def atomic_open_for_write(filename: PathLike, *, encoding: str = "utf-8"):
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
     filename = str(filename)
     try:
@@ -424,7 +312,7 @@ def cd(path: str):
 
 
 @contextmanager
-def temp_environ():
+def temp_environ() -> Iterator:
     environ = os.environ.copy()
     try:
         yield
@@ -434,7 +322,7 @@ def temp_environ():
 
 
 @contextmanager
-def open_file(url, session=None):
+def open_file(url: str, session: Optional[Session] = None) -> TextIO:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
@@ -457,11 +345,6 @@ def open_file(url, session=None):
                 result.close()
 
 
-def highest_version(versions: List[str]) -> str:
-    """Return the highest version of a given list."""
-    return max(versions, key=parse_version)
-
-
 def populate_link(
     finder: PackageFinder,
     ireq: InstallRequirement,
@@ -474,3 +357,108 @@ def populate_link(
             return
         link = getattr(link, "link", link)
         ireq.link = link
+
+
+def setdefault(document: Dict, key: str, value: Any) -> Dict:
+    """A compatiable dict.setdefault() for tomlkit data structures."""
+    if key not in document:
+        document[key] = value
+    return document[key]
+
+
+def get_python_version_string(version: str, is_64bit: bool) -> str:
+    if os.name == "nt" and not is_64bit:
+        return f"{version}-32"
+    return version
+
+
+def expand_env_vars(credential: str, quote: bool = False) -> str:
+    """A safe implementation of env var substitution.
+    It only supports the following forms:
+
+        ${ENV_VAR}
+
+    Neither $ENV_VAR and %ENV_VAR is not supported.
+    """
+
+    def replace_func(match: Match) -> str:
+        rv = os.getenv(match.group(1), match.group(0))
+        return parse.quote(rv) if quote else rv
+
+    return re.sub(r"\$\{(.+?)\}", replace_func, credential)
+
+
+def expand_env_vars_in_auth(url: str) -> str:
+    """In-place expand the auth in url"""
+    scheme, netloc, path, params, query, fragment = parse.urlparse(url)
+    if "@" in netloc:
+        auth, rest = netloc.split("@", 1)
+        auth = expand_env_vars(auth, True)
+        netloc = "@".join([auth, rest])
+    return parse.urlunparse((scheme, netloc, path, params, query, fragment))
+
+
+@functools.lru_cache()
+def path_replace(pattern: str, replace_with: str, dest: str) -> str:
+    """Safely replace the pattern in a path with given string.
+
+    :param pattern: the pattern to match
+    :param replace_with: the string to replace with
+    :param dest: the path to replace
+    :return the replaced path
+    """
+    sub_flags = re.IGNORECASE if os.name == "nt" else 0
+    return re.sub(
+        pattern.replace("\\", "/"),
+        replace_with,
+        dest.replace("\\", "/"),
+        flags=sub_flags,
+    )
+
+
+def is_venv_python(interpreter: os.PathLike) -> bool:
+    """Check if the given interpreter path is from a virtualenv"""
+    interpreter = Path(interpreter)
+    if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
+        return True
+    if os.getenv("VIRTUAL_ENV"):
+        try:
+            interpreter.relative_to(os.getenv("VIRTUAL_ENV"))
+        except ValueError:
+            pass
+        else:
+            return True
+    return False
+
+
+def find_python_in_path(path: os.PathLike) -> Optional[Path]:
+    """Find a python interpreter from the given path, the input argument could be:
+
+    - A valid path to the interpreter
+    - A Python root directory that contains the interpreter
+    """
+    pathlib_path = Path(path).absolute()
+    if pathlib_path.is_file():
+        return pathlib_path
+
+    if os.name == "nt":
+        for root_dir in (pathlib_path, pathlib_path / "Scripts"):
+            if root_dir.joinpath("python.exe").exists():
+                return root_dir.joinpath("python.exe")
+    else:
+        executable_pattern = re.compile(r"python(?:\d(?:\.\d+m?)?)?$")
+
+        for python in pathlib_path.joinpath("bin").glob("python*"):
+            if executable_pattern.match(python.name):
+                return python
+
+    return None
+
+
+def get_rev_from_url(url: str) -> str:
+    """Get the rev part from the VCS URL."""
+    path = parse.urlparse(url).path
+    if "@" in path:
+        _, rev = path.rsplit("@", 1)
+        return rev
+    return ""

@@ -5,12 +5,12 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from pdm import termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
-from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -26,12 +26,6 @@ class Command(BaseCommand):
             "--list",
             action="store_true",
             help="Show all available scripts defined in pyproject.toml",
-        )
-        parser.add_argument(
-            "-s",
-            "--site-packages",
-            action="store_true",
-            help="Load site-packages from system interpreter",
         )
         parser.add_argument("command", nargs="?", help="The command to run")
         parser.add_argument(
@@ -49,14 +43,22 @@ class Command(BaseCommand):
         env_file: Optional[str] = None,
     ) -> None:
         if "PYTHONPATH" in os.environ:
-            new_path = os.sep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
+            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
         else:
-            new_path = PEP582_PATH
-        os.environ.update({"PYTHONPATH": new_path})
+            pythonpath = PEP582_PATH
+        project_env = project.environment
+        this_path = project_env.get_paths()["scripts"]
+        python_root = os.path.dirname(project.python_executable)
+        new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
+        os.environ.update({"PYTHONPATH": pythonpath, "PATH": new_path})
+        if project_env.packages_path:
+            os.environ.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env_file:
             import dotenv
 
-            stream.echo(f"Loading .env file: {stream.green(env_file)}", err=True)
+            project.core.ui.echo(
+                f"Loading .env file: {termui.green(env_file)}", err=True
+            )
             dotenv.load_dotenv(
                 project.root.joinpath(env_file).as_posix(), override=True
             )
@@ -66,11 +68,11 @@ class Command(BaseCommand):
             sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
 
         command, *args = args
-        expanded_command = project.environment.which(command)
+        expanded_command = project_env.which(command)
         if not expanded_command:
             raise PdmUsageError(
                 "Command {} is not found on your PATH.".format(
-                    stream.green(f"'{command}'")
+                    termui.green(f"'{command}'")
                 )
             )
         expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
@@ -82,11 +84,13 @@ class Command(BaseCommand):
         else:
             os.execv(expanded_command, expanded_args)
 
-    def _normalize_script(self, script):
+    def _normalize_script(
+        self, script: Any
+    ) -> Tuple[str, Union[List[str], str], Dict[str, Union[str, dict]]]:
         if not getattr(script, "items", None):
-            # Must be a string, regard as the same as {cmd = "..."}
+            # Regard as the same as {cmd = ... }
             kind = "cmd"
-            value = str(script)
+            value = script
             options = {}
         else:
             script = dict(script)  # to remove the effect of tomlkit's container type.
@@ -115,8 +119,11 @@ class Command(BaseCommand):
     ) -> None:
         script = project.scripts[script_name]
         kind, value, options = self._normalize_script(script)
+        options.pop("help", None)
         if kind == "cmd":
-            args = shlex.split(value) + list(args)
+            if not isinstance(value, list):
+                value = shlex.split(str(value))
+            args = value + list(args)
         elif kind == "shell":
             args = " ".join([value] + list(args))
             options["shell"] = True
@@ -140,7 +147,9 @@ class Command(BaseCommand):
         options["env_file"] = options.get(
             "env_file", global_env_options.get("env_file")
         )
-        stream.echo(f"Running {kind} script: {stream.green(str(args))}", err=True)
+        project.core.ui.echo(
+            f"Running {kind} script: {termui.green(str(args))}", err=True
+        )
         return self._run_command(project, args, **options)
 
     def _show_list(self, project: Project) -> None:
@@ -152,15 +161,15 @@ class Command(BaseCommand):
             if name == "_":
                 continue
             kind, value, options = self._normalize_script(script)
-            result.append((stream.green(name), kind, value, options.get("help", "")))
-        stream.display_columns(result, columns)
+            result.append((termui.green(name), kind, value, options.get("help", "")))
+        project.core.ui.display_columns(result, columns)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.list:
             return self._show_list(project)
         global_env_options = project.scripts.get("_", {}) if project.scripts else {}
-        if options.site_packages:
-            os.environ.update({"PDM_WITH_SITE_PACKAGES": "1"})
+        if not options.command:
+            raise PdmUsageError("No command given")
         if project.scripts and options.command in project.scripts:
             self._run_script(project, options.command, options.args, global_env_options)
         else:

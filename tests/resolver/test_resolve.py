@@ -1,7 +1,7 @@
 import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
-from pdm.iostream import stream
+from pdm import termui
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve
@@ -39,8 +39,8 @@ def resolve_requirements(
             requires_python,
             allow_prereleases,
         )
-
-    with stream.open_spinner("Resolving dependencies") as spin, stream.logging("lock"):
+    ui = termui.UI()
+    with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
         reporter = SpinnerReporter(spin, requirements)
         resolver = Resolver(provider, reporter)
         mapping, *_ = resolve(resolver, requirements, requires_python)
@@ -233,4 +233,6 @@ def test_resolve_circular_dependencies(project, repository):
     repository.add_dependencies("foobar", "0.2.0", ["foo"])
     result = resolve_requirements(repository, ["foo"])
     assert result["foo"].version == "0.1.0"
+    assert result["foo"].sections == ["default"]
     assert result["foobar"].version == "0.2.0"
+    assert result["foobar"].sections == ["default"]

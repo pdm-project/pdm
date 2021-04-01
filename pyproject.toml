@@ -1,61 +1,78 @@
-[tool.pdm]
-name = "pdm"
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+authors = [
+    {name = "frostming", email = "mianghong@gmail.com"},
+]
+dynamic = ["version", "classifiers"]
 version = {use_scm = true}
+requires-python = ">=3.7"
+license = {text = "MIT"}
+dependencies = [
+    "appdirs",
+    "click",
+    "distlib",
+    "importlib-metadata; python_version < \"3.8\"",
+    "pdm-pep517<0.7.0,>=0.6.0",
+    "pep517",
+    "pip>=20.1",
+    "pycomplete<1.0.0,>=0.2.0",
+    "python-cfonts",
+    "python-dotenv<1.0.0,>=0.15.0",
+    "pythonfinder",
+    "resolvelib<0.6.0,>=0.5.0",
+    "shellingham<2.0.0,>=1.3.2",
+    "tomlkit",
+    "wheel<1.0.0,>=0.36.2",
+    "keyring",
+]
+name = "pdm"
 description = "Python Development Master"
-author = "frostming <mianghong@gmail.com>"
-license = "MIT"
-python_requires = ">=3.7"
 readme = "README.md"
-homepage = "https://pdm.fming.dev"
-
 keywords = ["packaging", "dependency", "workflow"]
-
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Topic :: Software Development :: Build Tools",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9"
 ]
 
-[tool.pdm.project_urls]
-Repository = "https://github.com/frostming/pdm"
+[project.urls]
+homepage = "https://pdm.fming.dev"
+Repository = "https://github.com/pdm-project/pdm"
 Documentation = "https://pdm.fming.dev"
 
-[tool.pdm.dependencies]
-appdirs = "*"
-click = "*"
-distlib = "*"
-pip = ">=20.1"
-pip_shims = "*"
-pythonfinder = "*"
-tomlkit = "*"
-python-cfonts = "*"
-resolvelib = "<1.0.0,>=0.3.0"
-pdm-pep517 = "<1.0.0,>=0.1.0"
-importlib-metadata = {version = "*", marker = "python_version<'3.8'"}
-pep517 = "*"
-pycomplete = "<1.0.0,>=0.2.0"
-python-dotenv = "<1.0.0,>=0.15.0"
-shellingham = "<2.0.0,>=1.3.2"
+[project.optional-dependencies]
+
+[project.scripts]
+pdm = "pdm.core:main"
+
+[tool.pdm]
+includes = ["pdm/"]
+
+[tool.pdm.scripts]
+release = "python tasks/release.py"
+test = "pytest tests/"
+doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
+lint = "pre-commit run --all-files"
+typecheck = "mypy ./pdm"
 
 [tool.pdm.dev-dependencies]
-pytest = "*"
-pytest-cov = "*"
-pytest-mock = "*"
-towncrier = "<20.0.0,>=19.2.0"
-pytest-xdist = "<2.0.0,>=1.31.0"
-vendoring = {version = "*", marker = "python_version ~= '3.8'"}
-
-[tool.pdm.doc-dependencies]
-mkdocs = "<2.0.0,>=1.1"
-mkdocs-material = "<5.0.0,>=4.6.3"
-markdown-include = "<1.0.0,>=0.5.1"
-
-[tool.pdm.cli]
-pdm = "pdm.core:main"
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist<2.0.0,>=1.31.0",
+]
+doc = [
+    "mkdocs<2.0.0,>=1.1",
+    "mkdocs-material<7.0.0,>=6.2.4",
+    "markdown-include<1.0.0,>=0.5.1",
+]
+workflow = [
+    "parver<1.0.0,>=0.3.1",
+    "towncrier<20.0.0,>=19.2.0",
+    "vendoring; python_version ~= \"3.8\"",
+    "mypy~=0.812",
+]
 
 [tool.black]
 line-length = 88
@@ -71,14 +88,15 @@ exclude = '''
   | buck-out
   | build
   | dist
-  | pdm/_vendor/*
+  | pdm/_vendor
+  | tests/fixtures
 )/
 '''
 
 [tool.towncrier]
 package = "pdm"
 filename = "CHANGELOG.md"
-issue_format = "[#{issue}](https://github.com/frostming/pdm/issues/{issue})"
+issue_format = "[#{issue}](https://github.com/pdm-project/pdm/issues/{issue})"
 directory = "news/"
 title_format = "Release v{version} ({project_date})"
 template = "news/towncrier_template.md"
@@ -115,7 +133,7 @@ underlines = "-~^"
   showcontent = true
 
 [build-system]
-requires = ["pdm-pep517"]
+requires = ["pdm-pep517>=0.3.0"]
 build-backend = "pdm.pep517.api"
 
 [tool.isort]
@@ -143,7 +161,7 @@ requirements = "pdm/_vendor/vendors.txt"
 namespace = "pdm._vendor"
 
 protected-files = ["__init__.py", "README.md", "vendors.txt"]
-patches-dir = "vendors/patches"
+patches-dir = "tasks/patches"
 
 [tool.vendoring.transformations]
 substitute = [

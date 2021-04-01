@@ -2,7 +2,6 @@ import argparse
 import pathlib
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.iostream import stream
 from pdm.project import Project
 
 
@@ -26,7 +25,8 @@ class Command(BaseCommand):
         shell = options.shell or shellingham.detect_shell()[0]
         if shell == "zsh":
             zsh_completion = pathlib.Path(__file__).parent / "../completions/_pdm"
-            stream.echo(zsh_completion.read_text())
+            completion = zsh_completion.read_text()
         else:
             completer = Completer(project.core.parser)
-            stream.echo(completer.render(shell))
+            completion = completer.render(shell)
+        project.core.ui.echo(completion)

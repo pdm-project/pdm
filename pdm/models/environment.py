@@ -7,38 +7,34 @@ import shutil
 import sys
 import sysconfig
 from contextlib import contextmanager
+from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional, Tuple
 
 from distlib.scripts import ScriptMaker
-from pip._internal.req import req_uninstall
-from pip._internal.utils import misc
 from pip._vendor import packaging, pkg_resources
-from pip_shims import shims
-from pythonfinder import Finder
-from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
-from pdm.exceptions import NoPythonVersion
-from pdm.iostream import stream
+from pdm import termui
+from pdm.models import pip_shims
+from pdm.models.auth import make_basic_auth
 from pdm.models.builders import EnvBuilder
+from pdm.models.in_process import (
+    get_pep508_environment,
+    get_python_version,
+    get_sys_config_paths,
+)
+from pdm.models.pip_shims import misc, req_uninstall
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
     convert_hashes,
     create_tracked_tempdir,
+    expand_env_vars_in_auth,
     get_finder,
-    get_pep508_environment,
-    get_python_version,
-    get_sys_config_paths,
-    get_venv_python,
+    get_python_version_string,
     populate_link,
     temp_environ,
 )
-
-try:
-    from pip._internal.utils.compatibility_tags import get_supported
-except ImportError:
-    from pip._internal.pep425tags import get_supported
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -93,50 +89,10 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
+        self.python_executable = project.python_executable
         self._essential_installed = False
-
-    @cached_property
-    def python_executable(self) -> str:
-        """Get the Python interpreter path."""
-        config = self.project.config
-        if config.get("python.path"):
-            return config["python.path"]
-        if PYENV_INSTALLED and config.get("python.use_pyenv", True):
-            return os.path.join(PYENV_ROOT, "shims", "python")
-        if "VIRTUAL_ENV" in os.environ:
-            stream.echo(
-                "An activated virtualenv is detected, reuse the interpreter now.",
-                err=True,
-                verbosity=stream.DETAIL,
-            )
-            return get_venv_python(self.project.root)
-
-        # First try what `python` refers to.
-        path = shutil.which("python")
-        version = None
-        if path:
-            version = get_python_version(path, True)
-        if not version or not self.python_requires.contains(version):
-            finder = Finder()
-            for python in finder.find_all_python_versions():
-                version = get_python_version(python.path.as_posix(), True)
-                if self.python_requires.contains(version):
-                    path = python.path.as_posix()
-                    break
-            else:
-                version = ".".join(map(str, sys.version_info[:3]))
-                if self.python_requires.contains(version):
-                    path = sys.executable
-        if path:
-            stream.echo(
-                "Using Python interpreter: {} ({})".format(stream.green(path), version)
-            )
-            self.project.project_config["python.path"] = Path(path).as_posix()
-            return path
-        raise NoPythonVersion(
-            "No Python that satisfies {} is found on the system.".format(
-                self.python_requires
-            )
+        self.auth = make_basic_auth(
+            self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
 
     def get_paths(self) -> Dict[str, str]:
@@ -153,7 +109,7 @@ class Environment:
         return paths
 
     @contextmanager
-    def activate(self):
+    def activate(self) -> Iterator:
         """Activate the environment. Manipulate the ``PYTHONPATH`` and patches ``pip``
         to be aware of local packages. This method acts like a context manager.
 
@@ -172,57 +128,59 @@ class Environment:
             misc.is_local = req_uninstall.is_local = self.is_local
             _evaluate_marker = pkg_resources.evaluate_marker
             pkg_resources.evaluate_marker = self.evaluate_marker
-            sys_executable = sys.executable
+            bin_py = req_uninstall.bin_py
+            req_uninstall.bin_py = paths["scripts"]
+            sys._original_executable = sys.executable
             sys.executable = self.python_executable
             yield
-            sys.executable = sys_executable
+            sys.executable = sys._original_executable
+            del sys._original_executable
             pkg_resources.evaluate_marker = _evaluate_marker
             misc.is_local = req_uninstall.is_local = _is_local
+            req_uninstall.bin_py = bin_py
             misc.site_packages = _old_sitepackages
             pkg_resources.working_set = _old_ws
 
-    def is_local(self, path) -> bool:
+    def is_local(self, path: PathLike) -> bool:
         """PEP 582 version of ``is_local()`` function."""
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.packages_path.as_posix())
         )
 
-    def evaluate_marker(self, text: str, extra=None) -> bool:
+    def evaluate_marker(self, text: str, extra: Any = None) -> bool:
         marker = packaging.markers.Marker(text)
         return marker.evaluate(self.marker_environment)
 
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
+        version, is_64bit = get_python_version(self.python_executable, True, 2)
         pypackages = (
             self.project.root
             / "__pypackages__"
-            / ".".join(map(str, get_python_version(self.python_executable)[:2]))
+            / get_python_version_string(version, is_64bit)
         )
+        if not pypackages.exists() and not is_64bit:
+            compatible_packages = pypackages.parent / get_python_version_string(
+                version, True
+            )
+            if compatible_packages.exists():
+                pypackages = compatible_packages
         scripts = "Scripts" if os.name == "nt" else "bin"
         for subdir in [scripts, "include", "lib"]:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
-    def _make_building_args(self, ireq: shims.InstallRequirement) -> Dict[str, Any]:
-        src_dir = ireq.source_dir or self._get_source_dir()
+    def _get_build_dir(self, ireq: pip_shims.InstallRequirement) -> str:
         if ireq.editable:
-            build_dir = src_dir
+            return ireq.source_dir or self._get_source_dir()
         else:
-            build_dir = create_tracked_tempdir(prefix="pdm-build")
-        download_dir = self.project.cache("pkgs")
-        wheel_download_dir = self.project.cache("wheels")
-        return {
-            "build_dir": build_dir,
-            "src_dir": src_dir,
-            "download_dir": download_dir.as_posix(),
-            "wheel_download_dir": wheel_download_dir.as_posix(),
-        }
+            return create_tracked_tempdir(prefix="pdm-build-")
 
     def _get_source_dir(self) -> str:
-        build_dir = self.packages_path
-        if build_dir:
-            src_dir = build_dir / "src"
+        packages_dir = self.packages_path
+        if packages_dir:
+            src_dir = packages_dir / "src"
             src_dir.mkdir(exist_ok=True)
             return src_dir.as_posix()
         venv = os.environ.get("VIRTUAL_ENV", None)
@@ -237,7 +195,7 @@ class Environment:
         self,
         sources: Optional[List[Source]] = None,
         ignore_requires_python: bool = False,
-    ) -> shims.PackageFinder:
+    ) -> Generator[pip_shims.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
@@ -245,20 +203,24 @@ class Environment:
         """
         if sources is None:
             sources = self.project.sources
-        sources = sources or []
-        python_version = get_python_version(self.python_executable)[:2]
+        for source in sources:
+            source["url"] = expand_env_vars_in_auth(source["url"])
+
+        python_version, _ = get_python_version(self.python_executable, digits=2)
         finder = get_finder(
             sources,
             self.project.cache_dir.as_posix(),
             python_version,
             ignore_requires_python,
         )
+        # Reuse the auth across sessions to avoid prompting repeatly.
+        finder.session.auth = self.auth
         yield finder
         finder.session.close()
 
     def build(
         self,
-        ireq: shims.InstallRequirement,
+        ireq: pip_shims.InstallRequirement,
         hashes: Optional[Dict[str, str]] = None,
         allow_all: bool = True,
     ) -> str:
@@ -270,91 +232,96 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
-        kwargs = self._make_building_args(ireq)
+        build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
-        with self.get_finder() as finder:
+        supported_tags = pip_shims.get_supported(
+            "".join(map(str, get_python_version(self.python_executable, digits=2)[0]))
+        )
+        with self.get_finder(ignore_requires_python=True) as finder:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
-                if hashes is None:
-                    cache_entry = wheel_cache.get_cache_entry(
-                        ireq.link,
-                        ireq.req.project_name,
-                        get_supported(
-                            version="".join(
-                                map(str, get_python_version(self.python_executable)[:2])
-                            )
-                        ),
+            ireq.link = pip_shims.Link(
+                expand_env_vars_in_auth(
+                    ireq.link.url.replace(
+                        "${PROJECT_ROOT}", self.project.root.as_posix().lstrip("/")
                     )
-                    if cache_entry is not None:
-                        stream.logger.debug(
-                            "Using cached wheel link: %s", cache_entry.link
-                        )
-                        ireq.link = cache_entry.link
+                )
+            )
+            if hashes is None and not ireq.editable:
+                # If hashes are not given and cache is hit, replace the link with the
+                # cached one. This can speed up by skipping the download and build.
+                cache_entry = wheel_cache.get_cache_entry(
+                    ireq.link,
+                    ireq.req.project_name,
+                    supported_tags,
+                )
+                if cache_entry is not None:
+                    termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                    ireq.link = cache_entry.link
             if not ireq.editable and not ireq.req.name:
-                ireq.source_dir = kwargs["build_dir"]
+                ireq.source_dir = build_dir
             else:
-                ireq.ensure_has_source_dir(kwargs["build_dir"])
+                ireq.ensure_has_source_dir(build_dir)
 
-            download_dir = kwargs["download_dir"]
-            only_download = False
-            if ireq.link.is_wheel:
-                download_dir = kwargs["wheel_download_dir"]
-                only_download = True
             if hashes:
                 ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
-                downloader = shims.Downloader(finder.session, "off")
-                downloaded = shims.unpack_url(
+                downloader = pip_shims.Downloader(finder.session, "off")
+                downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,
                     downloader,
-                    download_dir,
-                    ireq.hashes(False),
+                    hashes=ireq.hashes(False),
                 )
-                # Preserve the downloaded file so that it won't be cleared.
-                if downloaded and only_download:
-                    try:
-                        shutil.copy(downloaded.path, download_dir)
-                    except shutil.SameFileError:
-                        pass
-            # Now all source is prepared, build it.
-            if ireq.link.is_wheel:
-                return (self.project.cache("wheels") / ireq.link.filename).as_posix()
 
-            with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
-                if ireq.editable:
-                    ret = builder.build_egg_info(kwargs["build_dir"])
-                    ireq.metadata_directory = ret
-                else:
-                    should_cache = False
-                    if ireq.link.is_vcs:
-                        vcs = shims.VcsSupport()
-                        vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
-                        if vcs_backend.is_immutable_rev_checkout(
-                            ireq.link.url, ireq.source_dir
-                        ):
-                            should_cache = True
-                    else:
-                        base, _ = ireq.link.splitext()
-                        if _egg_info_re.search(base) is not None:
-                            # Determine whether the string looks like an egg_info.
-                            should_cache = True
-                    output_dir = (
-                        wheel_cache.get_path_for_link(ireq.link)
-                        if should_cache
-                        else kwargs["build_dir"]
-                    )
-                    if not os.path.exists(output_dir):
-                        os.makedirs(output_dir, exist_ok=True)
-                    ret = builder.build_wheel(output_dir)
-            return ret
+                if ireq.link.is_wheel:
+                    # If the file is a wheel, return the downloaded file directly.
+                    return downloaded.path
+
+        # Check the built wheel cache again after hashes are resolved.
+        if not ireq.editable:
+            cache_entry = wheel_cache.get_cache_entry(
+                ireq.link,
+                ireq.req.project_name,
+                supported_tags,
+            )
+            if cache_entry is not None:
+                termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
+                return cache_entry.link.file_path
+
+        # Otherwise, as all source is already prepared, build it.
+        with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
+            if ireq.editable:
+                ret = builder.build_egg_info(build_dir)
+                ireq.metadata_directory = ret
+                return ret
+            should_cache = False
+            if ireq.link.is_vcs:
+                vcs = pip_shims.VcsSupport()
+                vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
+                if vcs_backend.is_immutable_rev_checkout(
+                    ireq.link.url, ireq.source_dir
+                ):
+                    should_cache = True
+            else:
+                base, _ = ireq.link.splitext()
+                if _egg_info_re.search(base) is not None:
+                    # Determine whether the string looks like an egg_info.
+                    should_cache = True
+            output_dir = (
+                wheel_cache.get_path_for_link(ireq.link) if should_cache else build_dir
+            )
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+            return builder.build_wheel(output_dir)
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
         paths = self.get_paths()
         return WorkingSet(
-            [paths["platlib"]], python=get_python_version(self.python_executable)
+            [paths["platlib"], paths["purelib"]],
+            python=get_python_version(self.python_executable)[0],
         )
 
     @cached_property
@@ -367,7 +334,7 @@ class Environment:
         if not os.path.isabs(command) and command.startswith("python"):
             python = os.path.splitext(command)[0]
             version = python[6:]
-            this_version = get_python_version(self.python_executable, True)
+            this_version, _ = get_python_version(self.python_executable, True)
             if not version or this_version.startswith(version):
                 return self.python_executable
         # Fallback to use shutil.which to find the executable
@@ -381,7 +348,7 @@ class Environment:
         scripts = self.get_paths()["scripts"]
         maker = ScriptMaker(None, None)
         maker.executable = new_path
-        shebang = maker._get_shebang("utf-8").rstrip()
+        shebang = maker._get_shebang("utf-8").rstrip().replace(b"\\", b"\\\\")
         for child in Path(scripts).iterdir():
             if not child.is_file() or child.suffix not in (".exe", ".py", ""):
                 continue
@@ -401,7 +368,7 @@ class GlobalEnvironment(Environment):
         paths["headers"] = paths["include"]
         return paths
 
-    def is_local(self, path) -> bool:
+    def is_local(self, path: PathLike) -> bool:
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.get_paths()["prefix"])
         )

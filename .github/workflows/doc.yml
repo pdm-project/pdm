@@ -21,10 +21,11 @@ jobs:
           architecture: "x64"
       - name: Build pages
         run: |
+          pip install -U pip wheel
           pip install mkdocs mkdocs-material markdown-include
           cd docs && mkdocs build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.REPO_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/site

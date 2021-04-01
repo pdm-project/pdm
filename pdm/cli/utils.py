@@ -1,31 +1,37 @@
 from __future__ import annotations
 
 import argparse
+import os
+from argparse import Action
 from collections import ChainMap
-from typing import TYPE_CHECKING, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Sequence, Set
 
 import cfonts
 import tomlkit
 from packaging.specifiers import SpecifierSet
+from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
 
+from pdm import termui
 from pdm.exceptions import ProjectError
 from pdm.formats import FORMATS
-from pdm.iostream import stream
+from pdm.formats.base import make_array, make_inline_table
 from pdm.models.environment import WorkingSet
 from pdm.models.requirements import Requirement, strip_extras
-from pdm.models.specifiers import bump_version, get_specifier
+from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
 if TYPE_CHECKING:
-    from pathlib import Path
-    from typing import Dict, Iterable, Tuple
+    from typing import Dict, Iterable, List, Optional, Tuple
+
+    from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.models.candidates import Candidate
 
 
 class PdmFormatter(argparse.HelpFormatter):
-    def _format_action(self, action):
+    def _format_action(self, action: Action) -> str:
         # determine the required width and the entry label
         help_position = min(self._action_max_length + 2, self._max_help_position)
         help_width = max(self._width - help_position, 11)
@@ -50,7 +56,7 @@ class PdmFormatter(argparse.HelpFormatter):
             indent_first = help_position
 
         # collect the pieces of the action help
-        parts = [stream.cyan(action_header)]
+        parts = [termui.cyan(action_header)]
 
         # if there was help for the action, add lines of help text
         if action.help:
@@ -73,9 +79,9 @@ class PdmFormatter(argparse.HelpFormatter):
 
 
 class PdmParser(argparse.ArgumentParser):
-    def format_help(self):
+    def format_help(self) -> str:
         formatter = self._get_formatter()
-        formatter.io = stream
+
         if getattr(self, "is_root", False):
             banner = (
                 cfonts.render(
@@ -97,13 +103,13 @@ class PdmParser(argparse.ArgumentParser):
             self.usage,
             self._actions,
             self._mutually_exclusive_groups,
-            prefix=stream.yellow("Usage", bold=True) + ": ",
+            prefix=termui.yellow("Usage", bold=True) + ": ",
         )
 
         # positionals, optionals and user-defined groups
         for action_group in self._action_groups:
             formatter.start_section(
-                stream.yellow(action_group.title, bold=True)
+                termui.yellow(action_group.title, bold=True)
                 if action_group.title
                 else None
             )
@@ -120,18 +126,20 @@ class PdmParser(argparse.ArgumentParser):
 class Package:
     """An internal class for the convenience of dependency graph building."""
 
-    def __init__(self, name, version, requirements):
+    def __init__(
+        self, name: str, version: str, requirements: Dict[str, Requirement]
+    ) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
         self.requirements = requirements
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
     def __repr__(self):
         return f"<Package {self.name}=={self.version}>"
 
-    def __eq__(self, value):
+    def __eq__(self, value: Package) -> bool:
         return self.name == value.name
 
 
@@ -141,7 +149,7 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
     graph.add(None)  # sentinel parent of top nodes.
     node_with_extras = set()
 
-    def add_package(key, dist):
+    def add_package(key: str, dist: Distribution) -> Package:
         name, extras = strip_extras(key)
         extras = extras or ()
         reqs = {}
@@ -192,7 +200,7 @@ def format_package(
     package: Package,
     required: str = "",
     prefix: str = "",
-    visited=None,
+    visited: Optional[Set[str]] = None,
 ) -> str:
     """Format one package.
 
@@ -206,18 +214,18 @@ def format_package(
         visited = set()
     result = []
     version = (
-        stream.red("[ not installed ]")
+        termui.red("[ not installed ]")
         if not package.version
-        else stream.red(package.version)
+        else termui.red(package.version)
         if required
         and required not in ("Any", "This project")
         and not SpecifierSet(required).contains(package.version)
-        else stream.yellow(package.version)
+        else termui.yellow(package.version)
     )
     if package.name in visited:
-        version = stream.red("[circular]")
+        version = termui.red("[circular]")
     required = f"[ required: {required} ]" if required else "[ Not required ]"
-    result.append(f"{stream.green(package.name, bold=True)} {version} {required}\n")
+    result.append(f"{termui.green(package.name, bold=True)} {version} {required}\n")
     if package.name in visited:
         return "".join(result)
     visited.add(package.name)
@@ -243,21 +251,21 @@ def format_reverse_package(
     child: Optional[Package] = None,
     requires: str = "",
     prefix: str = "",
-    visited=None,
+    visited: Optional[Set[str]] = None,
 ):
     """Format one package for output reverse dependency graph."""
     if visited is None:
         visited = set()
     result = []
     version = (
-        stream.red("[ not installed ]")
+        termui.red("[ not installed ]")
         if not package.version
-        else stream.yellow(package.version)
+        else termui.yellow(package.version)
     )
     if package.name in visited:
-        version = stream.red("[circular]")
+        version = termui.red("[circular]")
     requires = (
-        f"[ requires: {stream.red(requires)} ]"
+        f"[ requires: {termui.red(requires)} ]"
         if requires not in ("Any", "")
         and child
         and child.version
@@ -266,7 +274,7 @@ def format_reverse_package(
         if not requires
         else f"[ requires: {requires} ]"
     )
-    result.append(f"{stream.green(package.name, bold=True)} {version} {requires}\n")
+    result.append(f"{termui.green(package.name, bold=True)} {version} {requires}\n")
     if package.name in visited:
         return "".join(result)
     visited.add(package.name)
@@ -316,25 +324,21 @@ def format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> s
     return "".join(content).strip()
 
 
-def format_lockfile(mapping, fetched_dependencies, summary_collection):
+def format_lockfile(
+    mapping: Dict[str, Candidate],
+    fetched_dependencies: Dict[str, List[Requirement]],
+    summary_collection: Dict[str, str],
+) -> Dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
     packages = tomlkit.aot()
-    metadata = tomlkit.table()
+    file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry())
         base.add("summary", summary_collection[strip_extras(k)[0]])
-        deps = tomlkit.table()
-        for r in fetched_dependencies[k].values():
-            name, req = r.as_req_dict()
-            if getattr(req, "items", None) is not None:
-                inline = tomlkit.inline_table()
-                inline.update(req)
-                deps.add(name, inline)
-            else:
-                deps.add(name, req)
+        deps = make_array([r.as_line() for r in fetched_dependencies[k]], True)
         if len(deps) > 0:
             base.add("dependencies", deps)
         packages.append(base)
@@ -343,13 +347,15 @@ def format_lockfile(mapping, fetched_dependencies, summary_collection):
             array = tomlkit.array()
             array.multiline(True)
             for filename, hash_value in v.hashes.items():
-                inline = tomlkit.inline_table()
-                inline.update({"file": filename, "hash": hash_value})
+                inline = make_inline_table({"file": filename, "hash": hash_value})
                 array.append(inline)
             if array:
-                metadata.add(key, array)
+                file_hashes.add(key, array)
     doc = tomlkit.document()
-    doc.update({"package": packages, "metadata": metadata})
+    doc.add("package", packages)
+    metadata = tomlkit.table()
+    metadata.add("files", file_hashes)
+    doc.add("metadata", metadata)
     return doc
 
 
@@ -370,31 +376,17 @@ def save_version_specifiers(
                 r.specifier = get_specifier(f"=={resolved[name].version}")
             elif save_strategy == "compatible":
                 version = str(resolved[name].version)
-                next_major_version = ".".join(
-                    map(str, bump_version(tuple(version.split(".")), 0))
-                )
-                r.specifier = get_specifier(f">={version},<{next_major_version}")
+                compatible_version = ".".join((version.split(".") + ["0"])[:2])
+                r.specifier = get_specifier(f"~={compatible_version}")
 
 
 def check_project_file(project: Project) -> None:
     """Check the existence of the project file and throws an error on failure."""
-    if not project.tool_settings:
+    if not project.meta:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
-            "by running {}.".format(stream.green("'pdm init'"))
+            "by running {}.".format(termui.green("'pdm init'"))
         )
-
-
-def format_toml(pdm_settings):
-    """Ensure the dependencies are inline tables"""
-    for section in pdm_settings:
-        if not section.endswith("dependencies"):
-            continue
-        for name in pdm_settings[section]:
-            if getattr(pdm_settings[section][name], "items", None):
-                table = tomlkit.inline_table()
-                table.update(pdm_settings[section][name])
-                pdm_settings[section][name] = table
 
 
 def find_importable_files(project: Project) -> Iterable[Tuple[str, Path]]:
@@ -411,3 +403,62 @@ def find_importable_files(project: Project) -> Iterable[Tuple[str, Path]]:
         for key, module in FORMATS.items():
             if module.check_fingerprint(project, project_file.as_posix()):
                 yield key, project_file
+
+
+def set_env_in_reg(env_name: str, value: str) -> None:
+    """Manipulate the WinReg, and add value to the
+    environment variable if exists or create new.
+    """
+    import winreg
+
+    value = os.path.normcase(value)
+
+    with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
+        with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
+            try:
+                old_value, type_ = winreg.QueryValueEx(env_key, env_name)
+                if value in [
+                    os.path.normcase(item) for item in old_value.split(os.pathsep)
+                ]:
+                    return
+            except FileNotFoundError:
+                old_value, type_ = "", winreg.REG_EXPAND_SZ
+            new_value = os.pathsep.join([old_value, value]) if old_value else value
+            winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
+
+
+def format_resolution_impossible(err: ResolutionImpossible) -> str:
+    causes: List[RequirementInformation] = err.causes
+    result = []
+    result.append(
+        "Unable to find a resolution that satisfies the following requirements:"
+    )
+
+    for req, parent in causes:
+        result.append(
+            f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
+        )
+
+    result.append(
+        "Please make sure the package names are correct. If so, you can either "
+        "loosen the version constraints of these dependencies, or "
+        "set a narrower `requires-python` range in the pyproject.toml."
+    )
+    return "\n".join(result)
+
+
+def translate_sections(
+    project: Project, default: bool, dev: bool, sections: Sequence[str]
+) -> Sequence[str]:
+    """Translate default, dev and sections containing ":all" into a list of sections"""
+    sections = set(sections)
+    if dev and not sections:
+        sections.add(":all")
+    if ":all" in sections:
+        if dev:
+            sections = set(project.tool_settings.get("dev-dependencies", []))
+        else:
+            sections = set(project.meta.optional_dependencies or [])
+    if default:
+        sections.add("default")
+    return sections

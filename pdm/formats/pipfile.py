@@ -1,16 +1,23 @@
 import functools
 import operator
 import os
+from argparse import Namespace
+from os import PathLike
+from typing import Any, Dict, List, Optional, Tuple
 
-import tomlkit
+import toml
 from packaging.markers import default_environment
 
+from pdm._types import RequirementDict
+from pdm.formats.base import make_array
 from pdm.models.markers import Marker
+from pdm.models.requirements import Requirement
+from pdm.project import Project
 
 MARKER_KEYS = list(default_environment().keys())
 
 
-def convert_pipfile_requirement(req):
+def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
     markers = []
 
     if "markers" in req:
@@ -24,36 +31,47 @@ def convert_pipfile_requirement(req):
     if markers:
         marker = functools.reduce(operator.and_, markers)
         req["marker"] = str(marker).replace('"', "'")
-    return req
+    return Requirement.from_req_dict(name, req).as_line()
 
 
-def check_fingerprint(project, filename):
+def check_fingerprint(project: Project, filename: PathLike) -> bool:
     return os.path.basename(filename) == "Pipfile"
 
 
-def convert(project, filename):
+def convert(
+    project: Project, filename: PathLike, options: Optional[Namespace]
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
-        data = tomlkit.parse(fp.read())
+        data = toml.load(fp)
     result = {}
+    settings = {}
     if "pipenv" in data:
-        result["allow_prereleases"] = data["pipenv"].get("allow_prereleases", False)
+        settings["allow_prereleases"] = data["pipenv"].get("allow_prereleases", False)
     if "requires" in data:
         python_version = data["requires"].get("python_full_version") or data[
             "requires"
         ].get("python_version")
-        result["python_requires"] = f">={python_version}"
+        result["requires-python"] = f">={python_version}"
     if "source" in data:
-        result["source"] = data["source"]
-    result["dependencies"] = {
-        k: convert_pipfile_requirement(req)
-        for k, req in data.get("packages", {}).items()
+        settings["source"] = data["source"]
+    result["dependencies"] = make_array(
+        [
+            convert_pipfile_requirement(k, req)
+            for k, req in data.get("packages", {}).items()
+        ],
+        True,
+    )
+    settings["dev-dependencies"] = {
+        "dev": make_array(
+            [
+                convert_pipfile_requirement(k, req)
+                for k, req in data.get("dev-packages", {}).items()
+            ],
+            True,
+        )
     }
-    result["dev-dependencies"] = {
-        k: convert_pipfile_requirement(req)
-        for k, req in data.get("dev-packages", {}).items()
-    }
-    return result
+    return result, settings
 
 
-def export(project, candidates, options):
+def export(project: Project, candidates: List, options: Optional[Any]) -> None:
     raise NotImplementedError()

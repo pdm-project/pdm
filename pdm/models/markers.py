@@ -1,7 +1,7 @@
 import copy
 import operator
 from functools import reduce
-from typing import Any, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 from pip._vendor.packaging.markers import Marker as PackageMarker
 
@@ -120,7 +120,7 @@ def split_marker_extras(
     return result, marker
 
 
-def _only_contains_python_keys(markers):
+def _only_contains_python_keys(markers: List[Any]) -> bool:
     if isinstance(markers, tuple):
         return markers[0].value in ("python_version", "python_full_version")
 
@@ -132,8 +132,8 @@ def _only_contains_python_keys(markers):
     return True
 
 
-def _build_pyspec_from_marker(markers):
-    def split_version(version):
+def _build_pyspec_from_marker(markers: List[Any]) -> PySpecSet:
+    def split_version(version: str) -> List[str]:
         if "," in version:
             return [v.strip() for v in version.split(",")]
         return version.split()

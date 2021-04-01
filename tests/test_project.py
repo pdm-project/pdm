@@ -1,4 +1,6 @@
 import os
+import sys
+import venv
 from pathlib import Path
 
 import distlib.wheel
@@ -7,23 +9,29 @@ import pytest
 from pdm.models.requirements import filter_requirements_with_extras
 from pdm.pep517.api import build_wheel
 from pdm.project import Project
-from pdm.utils import cd
+from pdm.utils import cd, temp_environ
 
 
 def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
 
     del project.project_config["python.path"]
-    pyenv_python = os.path.join(PYENV_ROOT, "shims", "python")
+    project._python_executable = None
+    pyenv_python = Path(PYENV_ROOT, "shims", "python")
+    with temp_environ():
+        os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+        mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
+        mocker.patch(
+            "pythonfinder.models.python.get_python_version",
+            return_value="3.8.0",
+        )
+        assert Path(project.python_executable) == pyenv_python
 
-    mocker.patch("pdm.models.environment.PYENV_INSTALLED", True)
-    assert project.environment.python_executable == pyenv_python
+        # Clean cache
+        project._python_executable = None
 
-    # Clean cache
-    del project.environment.__dict__["python_executable"]
-
-    project.project_config["python.use_pyenv"] = False
-    assert project.environment.python_executable != pyenv_python
+        project.project_config["python.use_pyenv"] = False
+        assert Path(project.python_executable) != pyenv_python
 
 
 def test_project_config_items(project):
@@ -50,25 +58,25 @@ def test_project_sources_overriding(project):
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
-def test_global_project(tmp_path):
+def test_global_project(tmp_path, core):
     project = Project.create_global(tmp_path.as_posix())
+    project.core = core
     project.init_global_project()
     assert project.environment.is_global
 
 
-def test_project_use_venv(project, mocker):
+def test_project_use_venv(project):
     del project.project_config["python.path"]
+    project._python_executable = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
-
-    os.environ["VIRTUAL_ENV"] = "/path/to/env"
-    mocker.patch("pdm.models.environment.get_python_version", return_value="3.7.0")
+    venv.create(project.root / "venv")
 
     project.project_config["use_venv"] = True
     env = project.environment
     assert (
         Path(env.python_executable)
-        == Path("/path/to/env") / scripts / f"python{suffix}"
+        == project.root / "venv" / scripts / f"python{suffix}"
     )
     assert env.is_global
 
@@ -85,3 +93,66 @@ def test_project_with_combined_extras(fixture_project):
     )
     for dep in ("urllib3", "chardet", "idna"):
         assert dep in all_requires
+
+
+def test_project_packages_path(project):
+    packages_path = project.environment.packages_path
+    version = ".".join(map(str, sys.version_info[:2]))
+    if os.name == "nt" and sys.maxsize <= 2 ** 32:
+        assert packages_path.name == version + "-32"
+    else:
+        assert packages_path.name == version
+
+
+def test_project_auto_detect_venv(project):
+
+    venv.create(project.root / "test_venv")
+
+    scripts = "Scripts" if os.name == "nt" else "bin"
+    suffix = ".exe" if os.name == "nt" else ""
+
+    project.project_config["use_venv"] = True
+    project._python_executable = None
+    project.project_config["python.path"] = (
+        project.root / "test_venv" / scripts / f"python{suffix}"
+    ).as_posix()
+
+    assert project.environment.is_global
+
+
+def test_ignore_saved_python(project):
+    project.project_config["use_venv"] = True
+    project._python_executable = None
+    scripts = "Scripts" if os.name == "nt" else "bin"
+    suffix = ".exe" if os.name == "nt" else ""
+    venv.create(project.root / "venv")
+    with temp_environ():
+        os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+        assert Path(project.python_executable) != project.project_config["python.path"]
+        assert (
+            Path(project.python_executable)
+            == project.root / "venv" / scripts / f"python{suffix}"
+        )
+
+
+def test_select_dependencies(project):
+    project.meta["dependencies"] = ["requests"]
+    project.meta["optional-dependencies"] = {
+        "security": ["cryptography"],
+        "venv": ["virtualenv"],
+    }
+    project.tool_settings["dev-dependencies"] = {"test": ["pytest"], "doc": ["mkdocs"]}
+    assert sorted(project.get_dependencies()) == ["requests"]
+    assert sorted(project.dependencies) == ["requests"]
+
+    assert sorted(project.get_dependencies("security")) == ["cryptography"]
+    assert sorted(project.get_dependencies("test")) == ["pytest"]
+    assert sorted(project.dev_dependencies) == ["mkdocs", "pytest"]
+
+    assert sorted(project.iter_sections()) == [
+        "default",
+        "doc",
+        "security",
+        "test",
+        "venv",
+    ]

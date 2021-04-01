@@ -11,27 +11,21 @@ build-backend = "pdm.pep517.api"
 
 `pip` will read the backend settings to install or build a package.
 
-!!! note "About editable installation"
-    As described, [PEP 517](https://www.python.org/dev/peps/pep-0517/) doesn't provide a
-    way to specify how to install a package in editable mode. So you can't install a PEP 517
-    package by `pip install -e <path_or_url>`. But PDM can install a "PDM package" in editable
-    mode.
-
 ## Choose a Python interpreter
 
 If you have used `pdm init`, you must have already seen how PDM detects and selects the Python
 interpreter. After initialized, you can also change the settings by `pdm use <python_version_or_path>`.
 The argument can be either a version specifier of any length, or a relative or absolute path to the
-python interpreter, but remember the Python interpreter must be compatible with `python_requires`
+python interpreter, but remember the Python interpreter must conform with the `python_requires`
 constraint in the project file.
 
-### How `python_requires` controls the project
+### How `requires-python` controls the project
 
-PDM respects the value of `python_requires` in the way that it tries to pick package candidates that can work
-on all python versions that `python_requires` contains. For example if `python_requires` is `>=2.7`, PDM will try
-to find the latest version of `foo`, whose `python_requires` version range is a **superset** of `>=2.7`.
+PDM respects the value of `requires-python` in the way that it tries to pick package candidates that can work
+on all python versions that `requires-python` contains. For example, if `requires-python` is `>=2.7`, PDM will try
+to find the latest version of `foo`, whose `requires-python` version range is a **superset** of `>=2.7`.
 
-So, make sure you write `python_requires` properly if you don't want any outdated packages to be locked.
+So, make sure you write `requires-python` properly if you don't want any outdated packages to be locked.
 
 ## Build distribution artifacts
 
@@ -43,7 +37,8 @@ $ pdm build
 - Built pdm_test-0.0.0-py3-none-any.whl
 ```
 
-The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine).
+The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine). Available options can be found by
+typing `pdm build --help`.
 
 ## Show the current Python environment
 
@@ -68,7 +63,7 @@ $ pdm info --env
 }
 ```
 
-## Configrate the project
+## Configure the project
 
 PDM's `config` command works just like `git config`, except that `--list` isn't needed to
 show configurations.
@@ -91,23 +86,27 @@ Change a configuration value and store in home configuration:
 $ pdm config pypi.url "https://testpypi.org/simple"
 ```
 
-Change a configuration value and store in `.pdm.toml`:
+By default, the configuration are changed globally, if you want to make the config seen by this project only, add a `--local` flag:
 
 ```console
 $ pdm config --local pypi.url "https://testpypi.org/simple"
 ```
+
+Any local configurations will be stored in `.pdm.toml` under the project root directory.
 
 The configuration files are searched in the following order:
 
 1. `<PROJECT_ROOT>/.pdm.toml` - The project configuration
 2. `~/.pdm/config.toml` - The home configuration
 
-If `-g/--global` option is used, `~/.pdm/global-project/.pdm.toml` will replace the first item.
+If `-g/--global` option is used, the first item will be replaced by `~/.pdm/global-project/.pdm.toml`.
+
+You can find all available configuration items in [Configuration Page](configuration.md).
 
 ## Manage global project
 
-Sometimes users may want to keep track of the dependencies of global Python interpreter.
-It is easy to do it with PDM, via `-g/--global` option which is supported by most subcommands.
+Sometimes users may want to keep track of the dependencies of global Python interpreter as well.
+It is easy to do so with PDM, via `-g/--global` option which is supported by most subcommands.
 
 If the option is passed, `~/.pdm/global-project` will be used as the project directory, which is
 almost the same as normal project except that `pyproject.toml` will be created automatically for you
@@ -115,21 +114,26 @@ and it doesn't support build features. The idea is taken from Haskell's [stack](
 
 However, unlike `stack`, by default, PDM won't use global project automatically if a local project is not found.
 Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
-To change this behavior, simply change the config `auto_global` to `true`.
+But PDM also leave the decision to users, just set the config `auto_global` to `true`.
 
 If you want global project to track another project file other than `~/.pdm/global-project`, you can provide the
-project path following `-g/--global`.
+project path via `-p/--project <path>` option.
 
-!!! danger "NOTE"
-    Be careful with `remove` and `sync --clean` commands when global project is used. Because it may remove packages installed in your system Python.
+!!! attention "CAUTION"
+    Be careful with `remove` and `sync --clean` commands when global project is used, because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv
 
 Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
 by the configuration item `use_venv`. When it is set to `True` PDM will use the virtualenv if:
 
-- an virtualenv is already activated.
-- any of `venv`, `.venv`, `env` is an valid virtualenv folder.
+- a virtualenv is already activated.
+- any of `venv`, `.venv`, `env` is a valid virtualenv folder.
+
+Besides, when `use-venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
+
+For enhanced virtualenv support such as virtualenv management and auto-creation, please go for [pdm-venv](https://github.com/pdm-project/pdm-venv),
+which can be installed as a plugin.
 
 ## Import project metadata from existing project files
 
@@ -144,30 +148,44 @@ PDM provides `import` command so that you don't have to initialize the project m
 Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import
 if your PDM project has not been initialized yet.
 
-## Export locked packeges to alternative formats
+## Export locked packages to alternative formats
 
 You can also export `pdm.lock` to other formats, to ease the CI flow or image building process. Currently,
-only `requirements.txt` format is supported:
+only `requirements.txt` and `setup.py` format is supported:
 
 ```console
 $ pdm export -o requirements.txt
+$ pdm export -f setuppy -o setup.py
 ```
 
-## Available Configurations
+## Hide the credentials from pyproject.toml
 
-| Config Item        | Description                                                               | Default Value                                                             | Available in Project | Env var                |
-| ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ---------------------- |
-| `cache_dir`        | The root directory of cached files                                        | The default cache location on OS                                          | No                   |                        |
-| `auto_global`      | Use global package implicity if no local project is found                 | `False`                                                                   | No                   | `PDM_AUTO_GLOBAL`      |
-| `use_venv`         | Install packages into the activated venv site packages instead of PEP 582 | `False`                                                                   | Yes                  | `PDM_USE_VENV`         |
-| `parallel_install` | Whether to perform installation and uninstallation in parallel            | `True`                                                                    | Yes                  | `PDM_PARALLEL_INSTALL` |
-| `python.path`      | The Python interpreter path                                               |                                                                           | Yes                  | `PDM_PYTHON_PATH`      |
-| `python.use_pyenv` | Use the pyenv interpreter                                                 | `True`                                                                    | Yes                  |                        |
-| `pypi.url`         | The URL of PyPI mirror                                                    | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes                  | `PDM_PYPI_URL`         |
-| `pypi.verify_ssl`  | Verify SSL certificate when query PyPI                                    | Read `trusted-hosts` in `pip.conf`, defaults to `True`                    | Yes                  |                        |
-| `pypi.json_api`    | Consult PyPI's JSON API for package metadata                              | `False`                                                                   | Yes                  | `PDM_PYPI_JSON_API`    |
+There are many times when we need to use sensitive information, such as login credentials for the PyPI server
+and username passwords for VCS repositories. We do not want to expose this information in `pyproject.toml` and upload it to git.
 
-_If the env var is set, the value will take precendence over what is saved in the config file._
+PDM provides several methods to achieve this:
+
+1. User can give the auth information with environment variables which are encoded in the URL directly:
+
+   ```toml
+   [[tool.pdm.source]]
+   url = "http://${INDEX_USER}:${INDEX_PASSWD}@test.pypi.org/simple"
+   name = "test"
+   verify_ssl = false
+
+   [project]
+   dependencies = [
+     "mypackage @ git+http://${VCS_USER}:${VCS_PASSWD}@test.git.com/test/mypackage.git@master"
+   ]
+   ```
+
+   Environment variables must be encoded in the form `${ENV_NAME}`, other forms are not supported. Besides, only auth part will be expanded.
+
+2. If the credentials are not provided in the URL and a 401 response is received from the server, PDM will prompt for username and password when `-v/--verbose`
+   is passed as command line argument, otherwise PDM will fail with an error telling users what happens. Users can then choose to store the credentials in the
+   keyring after a confirmation question.
+
+3. A VCS repository applies the first method only, and an index server applies both methods.
 
 ## Run Scripts in Isolated Environment
 
@@ -204,11 +222,24 @@ PDM supports 3 types of scripts:
 
 ### Normal command
 
-Plain text scripts are regarded as normal command, or you can explictly specify it:
+Plain text scripts are regarded as normal command, or you can explicitly specify it:
 
 ```toml
 [tool.pdm.scripts]
 start_server = {cmd = "flask run -p 54321"}
+```
+
+In some cases, such as when wanting to add comments between parameters, it might be more convinient
+to specify the command as an array instead of a string:
+
+```toml
+[tool.pdm.scripts]
+start_server = {cmd = [
+	"flask",
+	"run",
+	# Important comment here about always using port 54321
+	"-p", "54321"
+]}
 ```
 
 ### Shell script
@@ -277,15 +308,20 @@ test_shell  shell echo $FOO        shell command
 
 You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
 
-### Include system site-packages in the isolated environment
+## Manage caches
 
-By default, system-level site-packages will be excluded from the `sys.path` when PEP 582 is enabled, unless:
+PDM provides a convenient command group to manage the cache, there are four kinds of caches:
 
-- Run `pdm run` with `-s/--site-packages` flag.
-- With environment variable `PDM_WITH_SITE_PACKAGES=1`.
+1. `wheels/` stores the built results of non-wheel distributions and files.
+1. `http/` stores the HTTP response content.
+1. `metadata/` stores package metadata retreived by the resolver.
+1. `hashes/` stores the file hashes fetched from the package index or calculated locally.
+
+See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
+Find the usage by the `--help` option of each command.
 
 ## How we make PEP 582 packages available to the Python interpreter
 
 Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`
 by executing the `sitecustomize.py` shipped with PDM. The interpreter can search the directories
-for the neareset `__pypackage__` folder and append it to the `sys.path` variable.
+for the nearest `__pypackage__` folder and append it to the `sys.path` variable.

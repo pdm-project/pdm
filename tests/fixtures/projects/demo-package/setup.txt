@@ -1,0 +1,35 @@
+
+# -*- coding: utf-8 -*-
+from setuptools import setup
+
+import codecs
+
+with codecs.open('README.md', encoding="utf-8") as fp:
+    long_description = fp.read()
+INSTALL_REQUIRES = [
+    'flask',
+]
+
+setup_kwargs = {
+    'name': 'demo-package',
+    'version': '0.1.0',
+    'description': '',
+    'long_description': long_description,
+    'license': 'MIT',
+    'author': '',
+    'author_email': 'frostming <mianghong@gmail.com>',
+    'maintainer': None,
+    'maintainer_email': None,
+    'url': '',
+    'packages': [
+        'my_package',
+    ],
+    'package_data': {'': ['*']},
+    'long_description_content_type': 'text/markdown',
+    'install_requires': INSTALL_REQUIRES,
+    'python_requires': '>=3.5',
+
+}
+
+
+setup(**setup_kwargs)

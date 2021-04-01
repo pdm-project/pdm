@@ -1,17 +1,22 @@
 [build-system]
-build-backend = "pdm.pep517.api"
 requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
 
-[tool]
-[tool.pdm]
-author = "frostming <mianghong@gmail.com>"
-description = ""
-homepage = ""
-license = "MIT"
-name = "demo-module"
-python_requires = ">=3.5"
+[project]
+# PEP 621 project metadata
+# See https://www.python.org/dev/peps/pep-0621/
+authors = [
+    {name = "frostming", email = "mianghong@gmail.com"},
+]
+dynamic = ["version"]
 version = { from = "foo_module.py" }
+requires-python = ">=3.5"
+license = {text = "MIT"}
+dependencies = []
+description = ""
+name = "demo-module"
 
-[tool.pdm.dependencies]
+[project.urls]
+homepage = ""
 
-[tool.pdm.dev-dependencies]
+[project.optional-dependencies]

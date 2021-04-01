@@ -4,8 +4,8 @@ author="Thomas Kluyver"
 author-email="thomas@kluyver.me.uk"
 home-page="https://github.com/takluyver/flit"
 requires = [
-    "requests >=2.6",
-    "configparser; python_version == '2.7'",
+    "requests>=2.6",
+    "configparser; python_version == \"2.7\"",
 ]
 dist-name = "pyflit"
 requires-python=">=3.5"
@@ -36,3 +36,7 @@ dogelang = "dogelang.lexer:DogeLexer"
 [tool.flit.sdist]
 include = ["doc/"]
 exclude = ["doc/*.html"]
+
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"

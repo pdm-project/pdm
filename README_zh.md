@@ -1,13 +1,22 @@
+<div align="center">
+
 # PDM - Python Development Master
 
 一个现代的 Python 包管理器，支持 PEP 582。[English version README](README.md)
 
+![PDM logo](https://github.com/pdm-project/pdm/blob/master/docs/docs/assets/logo_big.png)
+
+[📖 Documentation](https://pdm.fming.dev)
+
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/pdm-project/pdm)](https://hub.docker.com/r/pdm-project/pdm)
+[![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
+[![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 
-[![asciicast](hhttps://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](hhttps://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
+[![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
-[📖 文档](https://pdm.fming.dev)
+</div>
 
 ## 这个项目是啥?
 
@@ -35,6 +44,7 @@ foo
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
 - 兼容 PEP 517 的构建后端，用于构建发布包(源码格式与 wheel 格式)
 - 具备一个完备的插件系统
+- PEP 621 元数据格式
 
 ## 为什么不用虚拟环境?
 
@@ -103,7 +113,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-设置环境变量`export PDM_PYTHON_PEP582=1`，现在你可以用你最熟悉的 **Python 解释器** 运行脚本：
+如果你使用的是 Bash，可以通过执行`eval $(pdm --pep582)`设置环境变量，现在你可以用你最熟悉的 **Python 解释器** 运行脚本了：
 
 ```bash
 $ python /home/frostming/workspace/flask_app/app.py
@@ -113,6 +123,8 @@ $ python /home/frostming/workspace/flask_app/app.py
 ```
 
 当当当当！你已经把应用运行起来了，而它的依赖全被安装在一个项目独立的文件夹下，而我们完全没有创建虚拟环境。
+
+如果你是 Windows 用户，请参考[文档](https://pdm.fming.dev/#enable-pep-582-globally)获取设置的方法。
 
 如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
 
@@ -129,7 +141,7 @@ PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并
 
 ### 3. 使用 PDM 时会载入哪些三方库路径?
 
-只有本项目的 `__pypackages__` 中的包会被载入，也就是说，Python 的 `site-packages` 目录不会被载入，完全项目隔离。
+本项目的 `__pypackages__` 中的包会在系统的`site-packages`之前被载入，这样能更好地隔离包的环境。
 
 ### 4. 我能把 `__pypackages__` 保存下来用来部署到别的机器上吗?
 

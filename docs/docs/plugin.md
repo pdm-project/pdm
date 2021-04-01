@@ -10,14 +10,14 @@ It is shipped with a full-featured plug-in system, with which you can:
 
 ## What should a plugin do
 
-The core PDM project focuses on dependency management and package publishment. Other
+The core PDM project focuses on dependency management and package publishing. Other
 functionalities you wish to integrate with PDM are preferred to lie in their own plugins
-and released as standalone PyPI projects. In case the plugin is considered a good suplement
+and released as standalone PyPI projects. In case the plugin is considered a good supplement
 of the core project it may have a chance to be absorbed into PDM.
 
 ## Write your own plugin
 
-In the following sections, I will show an example of adding a new command `hello` which reads `hello.name` config.
+In the following sections, I will show an example of adding a new command `hello` which reads the `hello.name` config.
 
 ### Write the command
 
@@ -42,18 +42,18 @@ class HelloCommand(BaseCommand):
         print(f"Hello, {name}")
 ```
 
-First create a new `HelloCommand` class inherting from `pdm.cli.commands.base.BaseCommand`, it has two major functions:
+First, let's create a new `HelloCommand` class inherting from `pdm.cli.commands.base.BaseCommand`. It has two major functions:
 
 - `add_arguments()` to manipulate the argument parser passed as the only argument,
   where you can add additional command line arguments to it
 - `handle()` to do something when the subcommand is matched, you can do nothing by writing a single `pass` statement.
   It accepts two arguments: an `pdm.project.Project` object as the first one and the parsed `argparse.Namespace` object as the second.
 
-The document string will serve as the command help text, which will be show in `pdm --help`.
+The document string will serve as the command help text, which will be shown in `pdm --help`.
 
 Besides, PDM's subcommand has two default options: `-v/--verbose` to change the verbosity level and `-g/--global` to enable global project.
-If you don't want these default options, override the `arguments` class attribute to a list of `pdm.cli.options.Option` objects.
-Assign it to an empty list to have no default options:
+If you don't want these default options, override the `arguments` class attribute to a list of `pdm.cli.options.Option` objects, or
+assign it to an empty list to have no default options:
 
 ```python hl_lines="3"
 class HelloCommand(BaseCommand):
@@ -66,20 +66,20 @@ class HelloCommand(BaseCommand):
 
 ### Register the command to the core object
 
-Write a function somewhere in your plugin project. There is no limit on what the name of the function is. The function
-should accept only one argument -- the PDM core object:
+Write a function somewhere in your plugin project. There is no limit on what the name of the function is,
+but the function should take only one argument -- the PDM core object:
 
 ```python hl_lines="2"
 def hello_plugin(core):
     core.register_command(HelloCommand, "hello")
 ```
 
-Call `core.register_command()` to register the command, the second argument as the name of the subcommand is optional.
+Call `core.register_command()` to register the command. The second argument as the name of the subcommand is optional.
 PDM will look for the `HelloCommand`'s `name` attribute if the name is not passed.
 
 ### Add a new config item
 
-Remember in the first code snippet, `hello.name` config key is consulted for the name if not passed via the command line.
+Let's recall the first code snippet, `hello.name` config key is consulted for the name if not passed via the command line.
 
 ```python hl_lines="11"
 class HelloCommand(BaseCommand):
@@ -118,7 +118,7 @@ where `ConfigItem` class takes 4 parameters, in the following order:
 
 ### Other plugin points
 
-Besides commands and configurations, PDM provides some other plugin abilities
+Besides of commands and configurations, PDM provides some other plugin abilities
 which are not covered in the above example:
 
 - `core.project_class`: change the class of project object
@@ -127,21 +127,37 @@ which are not covered in the above example:
 - `core.synchronizer_class`: change the synchronizer_class, to control the installation process
 - `core.parser`: add arguments to the **root** argument parser
 
+### Tips about developing a PDM plugin.
+
+When developing a plugin, one hopes to activate and plugin in development and get updated when the code changes. This is usually done
+by `pip install -e .` or `python setup.py develop` in the **traditional** Python packaging world which leverages `setup.py` to do so. However,
+as there is no such `setup.py` in a PDM project, how can we do that?
+
+Fortunately, it becomes even easier with PDM and PEP 582. First, you should enable PEP 582 globally following the
+[corresponding part of this doc](index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
+
+```bash
+$ pdm install -d
+```
+
+After that, all the dependencies are available with a compatible Python interpreter, including the plugin itself, in editable mode. That means any change
+to the codebase will take effect immediately without re-installation. The `pdm` executable also uses a Python interpreter under the hood,
+so if you run `pdm` from inside the plugin project, the plugin in development will be activated automatically, and you can do some testing to see how it works.
+That is how PEP 582 benefits our development workflow.
+
 ## Publish your plugin
 
 Now you have defined your plugin already, let's distribute it to PyPI. PDM's plugins are discovered by entry point types.
-Create an `pdm.plugin` entry point and point to your plugin callable(yeah, it don't need to be a function, any callable object can work):
+Create an `pdm` entry point and point to your plugin callable (yeah, it doesn't need to be a function, any callable object can work):
 
-**PDM**:
+**PEP 621**:
 
 ```toml
 # pyproject.toml
 
-[tool.pdm.entry_points."pdm.plugin"]
+[project.entry-points.pdm]
 hello = "my_plugin:hello_plugin"
 ```
-
-Note that `pdm.plugin` is wrapped with double quotes to be regarded as a single key.
 
 **setuptools**:
 
@@ -150,7 +166,38 @@ Note that `pdm.plugin` is wrapped with double quotes to be regarded as a single 
 
 setup(
     ...
-    entry_points={"pdm.plugin": ["hello = my_plugin:hello_plugin"]}
+    entry_points={"pdm": ["hello = my_plugin:hello_plugin"]}
     ...
 )
+```
+
+## Activate the plugin
+
+As plugins are loaded via entry points, they can be activated with no more steps than just installing the plugin.
+
+Assume your plugin is published as `pdm-hello`, and if you installed `pdm` via `pipx`:
+
+```bash
+$ pipx inject pdm pdm-hello
+```
+
+Or if you installed `pdm` via `homebrew`:
+
+```bash
+$ $(brew --prefix pdm)/libexec/bin/python -m pip install pdm-hello
+```
+
+Otherwise, if you installed `pdm` with normal `pip install`:
+
+```bash
+$ pip install --user pdm-hello
+```
+
+The main principle is you must install the plugin in the same site-package directory as `pdm`.
+
+Now type in `pdm --help` in the terminal, you will see the new added `hello` command and use it:
+
+```bash
+$ pdm hello Jack
+Hello, Jack
 ```

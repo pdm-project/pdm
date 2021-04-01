@@ -37,8 +37,8 @@ class Command(BaseCommand):
             dev=options.dev,
             section=options.section,
             sync=options.sync,
-            save=options.save_strategy,
-            strategy=options.update_strategy,
+            save=options.save_strategy or project.config["strategy.save"],
+            strategy=options.update_strategy or project.config["strategy.update"],
             editables=options.editables,
             packages=options.packages,
         )
