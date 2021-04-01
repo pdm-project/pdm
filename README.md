@@ -10,6 +10,7 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![codecov](https://codecov.io/gh/pdm-project/pdm/branch/master/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
 [![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)

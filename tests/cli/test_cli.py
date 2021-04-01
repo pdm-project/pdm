@@ -215,6 +215,21 @@ def test_config_set_command(project, invoke):
     assert result.exit_code != 0
 
 
+def test_config_del_command(project, invoke):
+
+    result = invoke(["config", "-l", "python.use_pyenv", "false"], obj=project)
+    assert result.exit_code == 0
+
+    result = invoke(["config", "python.use_pyenv"], obj=project)
+    assert result.output.strip() == "False"
+
+    result = invoke(["config", "-ld", "python.use_pyenv"], obj=project)
+    assert result.exit_code == 0
+
+    result = invoke(["config", "python.use_pyenv"], obj=project)
+    assert result.output.strip() == "True"
+
+
 def test_config_env_var_shadowing(project, invoke):
     with temp_environ():
         os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
