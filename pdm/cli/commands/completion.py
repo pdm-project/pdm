@@ -1,7 +1,8 @@
 import argparse
-import pathlib
+import importlib.resources
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
 
@@ -9,6 +10,7 @@ class Command(BaseCommand):
     """Generate completion scripts for the given shell"""
 
     arguments = []
+    SUPPORTED_SHELLS = ("bash", "zsh", "fish", "powershell")
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -20,12 +22,12 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         import shellingham
-        from pycomplete import Completer
 
         shell = options.shell or shellingham.detect_shell()[0]
-        if shell == "zsh":
-            zsh_completion = pathlib.Path(__file__).parent / "../completions/_pdm"
-            stream.echo(zsh_completion.read_text())
-        else:
-            completer = Completer(project.core.parser)
-            stream.echo(completer.render(shell))
+        if shell not in self.SUPPORTED_SHELLS:
+            raise PdmUsageError(f"Unsupported shell: {shell}")
+        suffix = "ps1" if shell == "powershell" else shell
+        completion = importlib.resources.read_text(
+            "pdm.cli.completions", f"pdm.{suffix}"
+        )
+        project.core.ui.echo(completion)

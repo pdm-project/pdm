@@ -371,12 +371,6 @@ version = "1.10.0"
 summary = "library with cross-python path, ini-parsing, io, code, log facilities"
 
 [[package]]
-name = "pycomplete"
-sections = ["default"]
-version = "0.3.1"
-summary = "A Python library to generate static completion scripts for your CLI app"
-
-[[package]]
 name = "pycparser"
 sections = ["default"]
 version = "2.20"
@@ -651,7 +645,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:fbe7d1276b7e0b9dc837a7bc67039bb678655a2a250bf816a60f3cdfb0c6c184"
+content_hash = "sha256:d7a1b535fc534c81920b4cec1e68821f920dca5e2433679e558cdf7b1b83d1ad"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -988,10 +982,6 @@ content_hash = "sha256:fbe7d1276b7e0b9dc837a7bc67039bb678655a2a250bf816a60f3cdfb
 "py 1.10.0" = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
-]
-"pycomplete 0.3.1" = [
-    {file = "pycomplete-0.3.1-py3-none-any.whl", hash = "sha256:1221dad380f3930455726847df6d5743c3c0c7e35c06436e1b1d16569a4792fb"},
-    {file = "pycomplete-0.3.1.tar.gz", hash = "sha256:7f7532f7e0950e4e8c8017f89acb3f3e645cce1f164020ab9792fd5100c11211"},
 ]
 "pycparser 2.20" = [
     {file = "pycparser-2.20-py2.py3-none-any.whl", hash = "sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705"},
