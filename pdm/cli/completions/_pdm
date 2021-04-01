@@ -12,6 +12,7 @@ _pdm() {
   local -a arguments=(
     {-h,--help}'[Show help message and exit]'
     {-v,--verbose}'[Show detailed output]'
+    {-p,--project}'=[Specify another path as the project root]:directory:_files -/'
     '-vv[Show more detailed output]'
   )
   local sub_commands=(
@@ -39,7 +40,8 @@ _pdm() {
   _arguments -s -C -A '-*' \
     $arguments \
     {-V,--version}'[Show the version and exit]' \
-    '--pep582=[Print the command line to be eval by the shell]:shell:(zsh bash fish powershell cmd tcsh csh)' \
+    {-I,--ignore-python}'[Ignore the Python path saved in the pdm.toml config]' \
+    '--pep582=[Print the command line to be eval by the shell]:shell:(zsh bash fish tcsh csh)' \
     '*:: :->_subcmds' \
     && return 0
 
@@ -75,7 +77,12 @@ _pdm() {
       )
       ;;
     cache)
-      local -a actions=("clear:Clean all the files under cache directory")
+      local -a actions=(
+        "clear:Clean all the files under cache directory"
+        "remove:Remove files matching the given pattern"
+        "list:List the built wheels stored in the cache"
+        "info:Show the info and current size of caches"
+      )
       _describe -t command 'pdm cache actions' actions && return 0
       ;;
     config)
@@ -152,13 +159,18 @@ _pdm() {
       )
       ;;
     run)
-      arguments+=(
-        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/"
-        {-l,--list}'[Show all available scripts defined in pyproject.toml]'
-        {-s,--site-packages}'[Load site-packages from system interpreter]'
-        '(-)1:command: _command_names -e'
-        '*::arguments: _normal '
-      )
+      _arguments -s \
+        {-g+,--global+}"[Use the global project, accepts an optional path to the project directory]:directory:_files -/" \
+        {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
+        {-s,--site-packages}'[Load site-packages from system interpreter]' \
+        '(-)1:command:->command' \
+        '*:arguments: _normal ' && return 0
+      if [[ $state == command ]]; then
+        _command_names -e
+        local local_commands=(__pypackages__/3.9/bin/*(N:t))
+        _describe "local command" local_commands
+        return 0
+      fi
       ;;
     search)
       arguments+=(
