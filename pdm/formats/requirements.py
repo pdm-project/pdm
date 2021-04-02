@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from distlib.wheel import Wheel
 from pip._vendor.packaging.requirements import Requirement as PRequirement
 
-from pdm.exceptions import PdmUsageError
 from pdm.formats.base import make_array
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
@@ -109,12 +108,10 @@ def convert(
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
     deps = make_array(reqs, True)
-    data = {"dependencies": []}
+    data = {}
     settings = {}
-    if options.dev and options.section:
-        raise PdmUsageError("Can't specify --dev and --section at the same time")
-    elif options.dev:
-        settings["dev-dependencies"] = {"dev": deps}
+    if options.dev:
+        settings["dev-dependencies"] = {options.section or "dev": deps}
     elif options.section:
         data["optional-dependencies"] = {options.section: deps}
     else:

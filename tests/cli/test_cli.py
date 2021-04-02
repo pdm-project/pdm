@@ -291,6 +291,17 @@ def test_import_other_format_file(project, invoke, filename):
     assert result.exit_code == 0
 
 
+def test_import_requirement_no_overwrite(project, invoke, tmp_path):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    tmp_path.joinpath("reqs.txt").write_text("flask\nflask-login\n")
+    result = invoke(
+        ["import", "-dsweb", str(tmp_path.joinpath("reqs.txt"))], obj=project
+    )
+    assert result.exit_code == 0, result.stderr
+    assert list(project.get_dependencies()) == ["requests"]
+    assert list(project.get_dependencies("web")) == ["flask", "flask-login"]
+
+
 @pytest.mark.pypi
 def test_search_package(project, invoke):
     result = invoke(["search", "requests"], obj=project)

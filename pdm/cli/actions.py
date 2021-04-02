@@ -17,6 +17,7 @@ from pdm.cli.utils import (
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
+    merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
     translate_sections,
@@ -537,8 +538,8 @@ def do_import(
             tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
         )
 
-    pyproject["project"].update(project_data)
-    pyproject["tool"]["pdm"].update(settings)
+    merge_dictionary(pyproject["project"], project_data)
+    merge_dictionary(pyproject["tool"]["pdm"], settings)
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
         "build-backend": "pdm.pep517.api",
