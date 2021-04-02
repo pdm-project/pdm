@@ -462,3 +462,16 @@ def translate_sections(
     if default:
         sections.add("default")
     return sections
+
+
+def merge_dictionary(target: dict, input: dict) -> None:
+    """Merge the input dict with the target while preserving the existing values
+    properly. This will update the target dictionary in place.
+    """
+    for key, value in input.items():
+        if key not in target:
+            target[key] = value
+        elif isinstance(value, dict):
+            target[key].update(value)
+        elif isinstance(value, list):
+            target[key].extend(value)

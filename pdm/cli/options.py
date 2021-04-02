@@ -102,7 +102,7 @@ sections_group.add_argument(
     dest="default",
     action="store_false",
     default=True,
-    help="Don't include dependencies from default seciton",
+    help="Don't include dependencies from default section",
 )
 
 

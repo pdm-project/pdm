@@ -5,6 +5,7 @@ import sys
 import pytest
 
 from pdm import utils
+from pdm.cli import utils as cli_utils
 
 
 @pytest.mark.parametrize(
@@ -66,3 +67,21 @@ def test_find_python_in_path(tmp_path):
     )
 
     assert not utils.find_python_in_path(tmp_path)
+
+
+def test_merge_dictionary():
+    target = {
+        "existing_dict": {"foo": "bar", "hello": "world"},
+        "existing_list": ["hello"],
+    }
+    input_dict = {
+        "existing_dict": {"foo": "baz"},
+        "existing_list": ["world"],
+        "new_dict": {"name": "Sam"},
+    }
+    cli_utils.merge_dictionary(target, input_dict)
+    assert target == {
+        "existing_dict": {"foo": "baz", "hello": "world"},
+        "existing_list": ["hello", "world"],
+        "new_dict": {"name": "Sam"},
+    }
