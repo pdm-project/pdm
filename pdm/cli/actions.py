@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 from argparse import Namespace
@@ -28,7 +27,6 @@ from pdm.formats.base import array_of_inline_tables, make_array, make_inline_tab
 from pdm.installers.installers import format_dist
 from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
-from pdm.models.in_process import get_python_version
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
@@ -464,39 +462,6 @@ def do_use(
     if old_path and Path(old_path) != Path(new_path) and not project.is_global:
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)
-
-
-def do_info(
-    project: Project,
-    python: bool = False,
-    show_project: bool = False,
-    env: bool = False,
-) -> None:
-    """Show project information."""
-    check_project_file(project)
-    python_path = project.python_executable
-    python_version, is_64bit = get_python_version(python_path, True)
-    if not python and not show_project and not env:
-        rows = [
-            (termui.cyan("PDM version:", bold=True), project.core.version),
-            (
-                termui.cyan("Python Interpreter:", bold=True),
-                python_path
-                + f" ({get_python_version_string(python_version, is_64bit)})",
-            ),
-            (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
-        ]
-        project.core.ui.display_columns(rows)
-        return
-
-    if python:
-        project.core.ui.echo(python_path)
-    if show_project:
-        project.core.ui.echo(project.root.as_posix())
-    if env:
-        project.core.ui.echo(
-            json.dumps(project.environment.marker_environment, indent=2)
-        )
 
 
 def do_import(
