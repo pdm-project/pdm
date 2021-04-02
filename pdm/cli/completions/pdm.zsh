@@ -1,6 +1,7 @@
 #compdef pdm
 
 PDM_PIP_INDEXES=($(command pdm config pypi.url))
+PYTHON="%{python_executable}"
 
 _pdm() {
   emulate -L zsh -o extended_glob
@@ -264,23 +265,30 @@ _pdm_sections() {
   compadd -X sections -a sections
 }
 
+_get_packages_with_python() {
+  command ${PYTHON} - << EOF
+import os, re, toml
+PACKAGE_REGEX = re.compile(r'^[A-Za-z][A-Za-z0-9._-]*')
+def get_packages(lines):
+    return [PACKAGE_REGEX.match(line).group() for line in lines]
+
+with open('pyproject.toml', encoding='utf8') as f:
+    data = toml.load(f)
+packages = get_packages(data.get('project', {}).get('dependencies', []))
+for reqs in data.get('project', {}).get('optional-dependencies', {}).values():
+    packages.extend(get_packages(reqs))
+for reqs in data.get('tool', {}).get('pdm', {}).get('dev-dependencies', {}).values():
+    packages.extend(get_packages(reqs))
+print(*set(packages))
+EOF
+}
+
 _pdm_packages() {
   if [[ ! -f pyproject.toml ]]; then
     _message "not a pdm project"
     return 1
   fi
-  local l packages=() in_dependencies=0
-  while IFS= read -r l; do
-    case $l in
-      "["tool.pdm.*dependencies"]") in_dependencies=1 ;;
-      "["*"]") in_dependencies=0 ;;
-      *"="*)
-        if (( in_dependencies )); then
-          packages+=$l[(w)1]
-        fi
-        ;;
-    esac
-  done <pyproject.toml
+  local packages=(${=$(_get_packages_with_python)})
   compadd -X packages -a packages
 }
 

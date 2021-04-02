@@ -1,5 +1,6 @@
 import argparse
 import importlib.resources
+import sys
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
@@ -30,4 +31,4 @@ class Command(BaseCommand):
         completion = importlib.resources.read_text(
             "pdm.cli.completions", f"pdm.{suffix}"
         )
-        project.core.ui.echo(completion)
+        project.core.ui.echo(completion.replace("%{python_executable}", sys.executable))
