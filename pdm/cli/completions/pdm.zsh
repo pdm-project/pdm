@@ -1,7 +1,7 @@
 #compdef pdm
 
-PDM_PIP_INDEXES=($(command pdm config pypi.url))
 PYTHON="%{python_executable}"
+PDM_PIP_INDEXES=($(command ${PYTHON} -m pdm config pypi.url))
 
 _pdm() {
   emulate -L zsh -o extended_glob
@@ -112,7 +112,7 @@ _pdm() {
          '2:value:_files' && return 0
       if [[ $state == keys ]]; then
         local l mbegin mend match keys=()
-        for l in ${(f)"$(command pdm config)"}; do
+        for l in ${(f)"$(command ${PYTHON} -m pdm config)"}; do
           if [[ $l == (#b)" "#(*)" = "(*) ]]; then
             keys+=("$match[1]:$match[2]")
           fi
