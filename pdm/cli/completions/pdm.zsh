@@ -1,7 +1,7 @@
 #compdef pdm
 
-PYTHON="%{python_executable}"
-PDM_PIP_INDEXES=($(command ${PYTHON} -m pdm config pypi.url))
+PDM_PYTHON="%{python_executable}"
+PDM_PIP_INDEXES=($(command ${PDM_PYTHON} -m pdm config pypi.url))
 
 _pdm() {
   emulate -L zsh -o extended_glob
@@ -266,7 +266,7 @@ _pdm_sections() {
 }
 
 _get_packages_with_python() {
-  command ${PYTHON} - << EOF
+  command ${PDM_PYTHON} - << EOF
 import os, re, toml
 PACKAGE_REGEX = re.compile(r'^[A-Za-z][A-Za-z0-9._-]*')
 def get_packages(lines):

@@ -61,7 +61,7 @@ opts="--env --global --help --project --python --verbose --where"
 ;;
 
 (init)
-opts="--global --help --project --verbose"
+opts="--global --help --project --verbose --non-interactive"
 ;;
 
 (install)
@@ -97,7 +97,7 @@ opts="--clean --dev --dry-run --global --help --no-clean --no-default --project 
 ;;
 
 (update)
-opts="--dev --global --help --no-default --outdated --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose"
+opts="--dev --global --help --no-default --dry-run --outdated --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose"
 ;;
 
 (use)
