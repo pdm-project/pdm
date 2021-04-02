@@ -9,6 +9,7 @@ from pip._vendor.pkg_resources import safe_name
 from pdm import termui
 from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import verbose_option
 from pdm.models.environment import WorkingSet
 from pdm.project import Project
 
@@ -58,6 +59,8 @@ def print_results(
 
 class Command(BaseCommand):
     """Search for PyPI packages"""
+
+    arguments = [verbose_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("query", help="Query string to search")
