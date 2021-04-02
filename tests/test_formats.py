@@ -151,5 +151,5 @@ def test_import_requirements_with_section(project):
     assert "webassets==2.0" in section
     assert 'whoosh==2.7.4; sys_platform == "win32"' in section
     assert "-e git+https://github.com/pypa/pip.git@master#egg=pip" in section
-    assert not result["dependencies"]
+    assert not result.get("dependencies")
     assert not result.get("dev-dependencies", {}).get("dev")
