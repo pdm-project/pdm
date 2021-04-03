@@ -1,16 +1,11 @@
-from __future__ import annotations
-
 import json
 import os
 import platform
 import sys
-from typing import TYPE_CHECKING, Dict
-
-if TYPE_CHECKING:
-    version_info = sys._version_info
+from typing import Dict
 
 
-def format_full_version(info: version_info) -> str:
+def format_full_version(info) -> str:  # type: ignore
     version = f"{info.major}.{info.minor}.{info.micro}"
     kind = info.releaselevel
     if kind != "final":
