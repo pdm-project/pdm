@@ -16,7 +16,7 @@ dependencies = [
     "pdm-pep517<0.7.0,>=0.6.0",
     "pep517",
     "pip>=20.1",
-    "pycomplete<1.0.0,>=0.2.0",
+    
     "python-cfonts",
     "python-dotenv<1.0.0,>=0.15.0",
     "pythonfinder",
