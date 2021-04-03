@@ -1,3 +1,41 @@
+Release v1.5.0b0 (2021-04-03)
+-----------------------------
+
+### Features & Improvements
+
+- Add hand-written zsh completion script. [#188](https://github.com/pdm-project/pdm/issues/188)
+- Add a special value `:all` given to `-s/--section` to refer to all sections under the same species.
+  Adjust `add`, `sync`, `install`, `remove` and `update` to support the new `dev-dependencies` groups. Old behavior will be kept the same. [#351](https://github.com/pdm-project/pdm/issues/351)
+- `dev-dependencies` is now a table of dependencies groups, where key is the group name and value is an array of dependencies. These dependencies won't appear in the distribution's metadata. `dev-depedencies` of the old format will turn into `dev` group under `dev-dependencies`. [#351](https://github.com/pdm-project/pdm/issues/351)
+- Move `dev-dependencies`, `includes`, `excludes` and `package-dir` out from `[project]` table to `[tool.pdm]` table. The migration will be done automaticaly if old format is detected. [#351](https://github.com/pdm-project/pdm/issues/351)
+- Throws an error with meaningful message when no candidate is found for one requirement. [#357](https://github.com/pdm-project/pdm/issues/357)
+- Support `--dry-run` option for `update` command to display packages that need update, install or removal. Add `--top` option to limit to top level packages only. [#358](https://github.com/pdm-project/pdm/issues/358)
+- Full-featured completion scripts for Zsh and Powershell - section selection, package name autocompletion and so on. Windows is a first-class citizen! [#367](https://github.com/pdm-project/pdm/issues/367)
+- Support non-interactive `init` command via `-n/--non-interactive` option. No question will be asked in this mode. [#368](https://github.com/pdm-project/pdm/issues/368)
+- Show project packages path(PEP 582) in the output of `pdm info`, also add an option `--packages` to show that value only. [#372](https://github.com/pdm-project/pdm/issues/372)
+
+### Bug Fixes
+
+- Fix a bug that pure python libraries are not loaded to construct the WorkingSet. [#346](https://github.com/pdm-project/pdm/issues/346)
+- Don't write `<script>-X.Y` variant to the bin folder. [#365](https://github.com/pdm-project/pdm/issues/365)
+- Python is now run in isolated mode via subprocess to avoid accidentally importing user packages. [#369](https://github.com/pdm-project/pdm/issues/369)
+- Don't overwrite existing dependencies when importing from requirements.txt. [#370](https://github.com/pdm-project/pdm/issues/370)
+
+### Improved Documentation
+
+- Add instructions of how to integrate PDM with Emacs, contributed by @linw1995. [#372](https://github.com/pdm-project/pdm/issues/372)
+
+### Removals and Deprecations
+
+- Remove the support of project path following `-g/--global` that was deprecated in `1.4.0`. One should use `-g -p <project_path>` for that purpose. [#361](https://github.com/pdm-project/pdm/issues/361)
+
+### Miscellany
+
+- Add test coverage to PDM. [#109](https://github.com/pdm-project/pdm/issues/109)
+- Add type annotations into untyped functions to start using mypy. [#354](https://github.com/pdm-project/pdm/issues/354)
+- Refactor the format converter code to be more explicit. [#360](https://github.com/pdm-project/pdm/issues/360)
+
+
 Release v1.4.5 (2021-03-30)
 ---------------------------
 
