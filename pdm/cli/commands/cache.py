@@ -107,9 +107,11 @@ class ListCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        rows = []
-        for file in find_files(project.cache("wheels"), options.pattern):
-            rows.append((format_size(file_size(file)), os.path.basename(file)))
+        rows = [
+            (format_size(file_size(file)), os.path.basename(file))
+            for file in find_files(project.cache("wheels"), options.pattern)
+        ]
+
         project.core.ui.display_columns(rows, [">Size", "Filename"])
 
 
@@ -119,12 +121,9 @@ class InfoCommand(BaseCommand):
     arguments = [verbose_option]
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        output = []
         with project.core.ui.open_spinner("Calculating cache files") as spinner:
-            output.append(
-                f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
-                f"Total size: {format_size(directory_size(project.cache_dir))}"
-            )
+            output = [f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
+                f"Total size: {format_size(directory_size(project.cache_dir))}"]
             for name, description in [
                 ("hashes", "File Hashe Cache"),
                 ("http", "HTTP Cache"),

@@ -23,8 +23,9 @@ def print_results(
     if not hits:
         return
     name_column_width = (
-        max([len(hit.name) + len(hit.version or "") for hit in hits]) + 4
+        max(len(hit.name) + len(hit.version or "") for hit in hits) + 4
     )
+
 
     for hit in hits:
         name = hit.name

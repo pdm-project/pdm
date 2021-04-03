@@ -95,17 +95,11 @@ class PySpecSet(SpecifierSet):
             if op == "!=":
                 excludes.add(version)
             elif op[0] == ">":
-                if op == ">=":
-                    new_lower = version
-                else:
-                    new_lower = version.bump()
+                new_lower = version if op == ">=" else version.bump()
                 if new_lower > lower_bound:
                     lower_bound = new_lower
             elif op[0] == "<":
-                if op == "<=":
-                    new_upper = version.bump()
-                else:
-                    new_upper = version
+                new_upper = version.bump() if op == "<=" else version
                 if new_upper < upper_bound:
                     upper_bound = new_upper
             elif op == "~=":
@@ -127,9 +121,10 @@ class PySpecSet(SpecifierSet):
         excludes: Iterable[Version],
     ) -> Tuple[Version, Version, List[Version]]:
         sorted_excludes = sorted(excludes)
-        wildcard_excludes = set(
+        wildcard_excludes = {
             version[:-1] for version in sorted_excludes if version.is_wildcard
-        )
+        }
+
         # Remove versions that are already excluded by another wildcard exclude.
         sorted_excludes = [
             version
@@ -174,23 +169,22 @@ class PySpecSet(SpecifierSet):
                 sorted_excludes.remove(version)
                 continue
 
-            if version.is_wildcard:
-                valid_length = len(version._version) - 1
-                valid_version = version[:valid_length]
-
-                if upper.startswith(valid_version) or version.bump(-2) == upper:
-                    # Case 1: The upper bound is excluded, e.g: <3.7.3,!=3.7.*
-                    # set the upper to the zero version: <3.7.0
-                    # Case 2: The upper bound is adjacent to the excluded one,
-                    # e.g: <3.7.0,!=3.6.*
-                    # Move the upper bound to below the excluded: <3.6.0
-                    upper = valid_version.complete()
-                    sorted_excludes.remove(version)
-                else:
-                    break
-            else:
+            if not version.is_wildcard:
                 break
 
+            valid_length = len(version._version) - 1
+            valid_version = version[:valid_length]
+
+            if upper.startswith(valid_version) or version.bump(-2) == upper:
+                # Case 1: The upper bound is excluded, e.g: <3.7.3,!=3.7.*
+                # set the upper to the zero version: <3.7.0
+                # Case 2: The upper bound is adjacent to the excluded one,
+                # e.g: <3.7.0,!=3.6.*
+                # Move the upper bound to below the excluded: <3.6.0
+                upper = valid_version.complete()
+                sorted_excludes.remove(version)
+            else:
+                break
         return lower, upper, sorted_excludes
 
     def _rearrange(

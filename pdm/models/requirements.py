@@ -47,10 +47,7 @@ def strip_extras(line: str) -> Tuple[str, Optional[Tuple]]:
     match = re.match(r"^(.+?)(?:\[([^\]]+)\])?$", line)
     assert match is not None
     name, extras = match.groups()
-    if extras:
-        extras = tuple(set(e.strip() for e in extras.split(",")))
-    else:
-        extras = None
+    extras = tuple({e.strip() for e in extras.split(",")}) if extras else None
     return name, extras
 
 
@@ -250,13 +247,12 @@ class FileRequirement(Requirement):
         extras = parsed.get("extras")
         if extras:
             extras = tuple(e.strip() for e in extras[1:-1].split(","))
-        r = cls(
+        return cls(
             url=parsed.get("url"),
             path=parsed.get("path"),
             marker=parsed.get("marker"),
             extras=extras,
         )
-        return r
 
     def _parse_url(self) -> None:
         if not self.url:
@@ -354,10 +350,9 @@ class VcsRequirement(FileRequirement):
 
     @classmethod
     def parse(cls, line: str, parsed: Dict[str, str]) -> "VcsRequirement":
-        r = cls(
+        return cls(
             url=parsed.get("url"), vcs=parsed.get("vcs"), marker=parsed.get("marker")
         )
-        return r
 
     def as_ireq(self, **kwargs: Any) -> InstallRequirement:
         ireq = super().as_ireq(**kwargs)
@@ -413,7 +408,7 @@ def filter_requirements_with_extras(
                 result.append(req)
             else:
                 elements, rest = split_marker_extras(_r.marker)
-                extras_in_meta.extend(e for e in elements)
+                extras_in_meta.extend(iter(elements))
                 _r.marker = rest
                 if not elements or set(extras) & set(elements):
                     result.append(_r.as_line())

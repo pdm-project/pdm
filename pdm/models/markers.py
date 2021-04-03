@@ -95,13 +95,15 @@ def split_marker_extras(
     :param marker: the input marker string
     :returns: an iterable of (op, value) pairs together with the stripped part.
     """
-    if "or" in marker._markers:
-        if "and" in marker._markers or any(
+    if "or" in marker._markers and (
+        "and" in marker._markers
+        or any(
             not isinstance(p, tuple) or p[0].value != "extra"
             for p in marker._markers
             if p != "or"
-        ):
-            return [], marker
+        )
+    ):
+        return [], marker
     result = []
     bare_markers = [m for m in marker._markers if m not in ("and", "or")]
     for m in bare_markers[:]:

@@ -102,11 +102,7 @@ class HaloNotebook(Halo):
 
         symbol = decode_utf_8_text(symbol)
 
-        if text is not None:
-            text = decode_utf_8_text(text)
-        else:
-            text = self._text["original"]
-
+        text = decode_utf_8_text(text) if text is not None else self._text["original"]
         text = text.strip()
 
         if self._text_color:

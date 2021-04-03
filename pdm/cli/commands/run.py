@@ -104,7 +104,7 @@ class Command(BaseCommand):
                     f"Script type must be one of ({', '.join(self.TYPES)})"
                 )
             options = script.copy()
-        if not all(key in self.OPTIONS for key in options):
+        if any(key not in self.OPTIONS for key in options):
             raise PdmUsageError(
                 f"pdm scripts only accept options: ({', '.join(self.OPTIONS)})"
             )

@@ -123,12 +123,12 @@ def test_project_auto_detect_venv(project):
 def test_ignore_saved_python(project):
     project.project_config["use_venv"] = True
     project._python_executable = None
-    scripts = "Scripts" if os.name == "nt" else "bin"
-    suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
     with temp_environ():
         os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
         assert Path(project.python_executable) != project.project_config["python.path"]
+        scripts = "Scripts" if os.name == "nt" else "bin"
+        suffix = ".exe" if os.name == "nt" else ""
         assert (
             Path(project.python_executable)
             == project.root / "venv" / scripts / f"python{suffix}"

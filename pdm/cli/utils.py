@@ -318,9 +318,11 @@ def format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> s
         (node for node in graph._vertices if not list(graph.iter_children(node))),
         key=lambda p: p.name,
     )
-    content = []
-    for node in leaf_nodes:
-        content.append(format_reverse_package(graph, node, prefix="", visited=set()))
+    content = [
+        format_reverse_package(graph, node, prefix="", visited=set())
+        for node in leaf_nodes
+    ]
+
     return "".join(content).strip()
 
 
@@ -429,10 +431,9 @@ def set_env_in_reg(env_name: str, value: str) -> None:
 
 def format_resolution_impossible(err: ResolutionImpossible) -> str:
     causes: List[RequirementInformation] = err.causes
-    result = []
-    result.append(
+    result = [
         "Unable to find a resolution that satisfies the following requirements:"
-    )
+    ]
 
     for req, parent in causes:
         result.append(

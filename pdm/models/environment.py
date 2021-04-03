@@ -66,8 +66,7 @@ class WorkingSet(collections.abc.Mapping):
         return len(self.env._distmap)
 
     def __iter__(self) -> Iterator[str]:
-        for item in self.env:
-            yield item
+        yield from self.env
 
     def __add_editable_dists(self):
         """Editable distributions are not present in pkg_resources.WorkingSet,

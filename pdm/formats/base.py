@@ -53,10 +53,7 @@ class MetaConverter(metaclass=_MetaConverterMeta):
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:
                 continue
-            if func._convert_from is None:
-                value = source
-            else:
-                value = source[func._convert_from]
+            value = source if func._convert_from is None else source[func._convert_from]
             try:
                 self._data[key] = func(self, value)
             except Unset:

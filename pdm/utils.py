@@ -335,7 +335,7 @@ def open_file(url: str, session: Optional[Session] = None) -> TextIO:
         with session.get(url, headers=headers, stream=True) as resp:
             try:
                 raw = getattr(resp, "raw", None)
-                result = raw if raw else resp
+                result = raw or resp
                 yield result
             finally:
                 if raw:
