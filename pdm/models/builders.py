@@ -191,21 +191,21 @@ class EnvBuilder:
         """
         python_version, _ = get_python_version(self.executable)
         proc = subprocess.run(
-            [self.executable, "-Im", "pip", "--version"], capture_output=True
+            [self.executable, "-Esm", "pip", "--version"], capture_output=True
         )
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
-            return [self.executable, "-Im", "pip"]
+            return [self.executable, "-Esm", "pip"]
         if python_version[0] == 3:
             # Use the ensurepip to provision one.
             try:
                 self.subprocess_runner(
-                    [self.executable, "-Im", "ensurepip", "--upgrade", "--default-pip"]
+                    [self.executable, "-Esm", "ensurepip", "--upgrade", "--default-pip"]
                 )
             except BuildError:
                 pass
             else:
-                return [self.executable, "-Im", "pip"]
+                return [self.executable, "-Esm", "pip"]
         # Otherwise, download a pip wheel from the Internet.
         pip_wheel = self._env.project.cache_dir / "pip.whl"
         if not pip_wheel.is_file():

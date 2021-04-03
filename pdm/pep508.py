@@ -2,18 +2,17 @@ import json
 import os
 import platform
 import sys
-from typing import Dict
 
 
-def format_full_version(info) -> str:  # type: ignore
-    version = f"{info.major}.{info.minor}.{info.micro}"
+def format_full_version(info):
+    version = "{0.major}.{0.minor}.{0.micro}".format(info)
     kind = info.releaselevel
     if kind != "final":
         version += kind[0] + str(info.serial)
     return version
 
 
-def default_environment() -> Dict[str, str]:
+def default_environment():
     if hasattr(sys, "implementation"):
         iver = format_full_version(sys.implementation.version)
         implementation_name = sys.implementation.name

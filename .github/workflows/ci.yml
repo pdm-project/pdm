@@ -33,6 +33,34 @@ jobs:
       - uses: actions/checkout@v2
         with:
           lfs: true
+      - name: Set Python 2.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 2.7
+          architecture: ${{ matrix.arch }}
+      - name: Set Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+          architecture: ${{ matrix.arch }}
+      - name: Set Python 3.7
+        uses: actions/setup-python@v2
+        if: matrix.python-version != '3.7'
+        with:
+          python-version: 3.7
+          architecture: ${{ matrix.arch }}
+      - name: Set Python 3.8
+        uses: actions/setup-python@v2
+        if: matrix.python-version != '3.8'
+        with:
+          python-version: 3.8
+          architecture: ${{ matrix.arch }}
+      - name: Set Python 3.9
+        uses: actions/setup-python@v2
+        if: matrix.python-version != '3.9'
+        with:
+          python-version: 3.9
+          architecture: ${{ matrix.arch }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
