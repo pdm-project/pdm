@@ -1,5 +1,7 @@
 import pytest
 
+from pdm.utils import cd
+
 
 @pytest.fixture
 def strict_invoke(invoke):
@@ -22,8 +24,9 @@ def test_basic_integration(python_version, project_no_init, strict_invoke):
     strict_invoke(["use", "-f", python_version], obj=project)
     project._environment = None
     strict_invoke(["add", "django"], obj=project)
-    strict_invoke(["run", "python", "foo.py"], obj=project)
-    strict_invoke(["build", "-v"], obj=project)
+    with cd(project.root):
+        strict_invoke(["run", "python", "foo.py"], obj=project)
+        strict_invoke(["build", "-v"], obj=project)
     strict_invoke(["remove", "django"], obj=project)
     result = strict_invoke(["list"], obj=project)
     assert not any(

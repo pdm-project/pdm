@@ -4,7 +4,8 @@ import sys
 import tokenize
 
 
-def install(setup_py: str, prefix: str, lib_dir: str, bin_dir: str) -> None:
+def install(setup_py, prefix, lib_dir, bin_dir):
+    # type: (str, str, str, str) -> None
     __file__ = setup_py
 
     with getattr(tokenize, "open", open)(setup_py) as f:
