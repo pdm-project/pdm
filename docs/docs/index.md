@@ -177,3 +177,5 @@ can be run natively as [VSCode Tasks][vscode tasks].
 [vscode tasks]: https://code.visualstudio.com/docs/editor/tasks
 [pdm task provider]: https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider
 [pdm scripts]: https://pdm.fming.dev/project/#run-scripts-in-isolated-environment
+
+### [Seek for other IDEs or editors](usage/advanced.md#integrate-with-other-ide-or-editors)

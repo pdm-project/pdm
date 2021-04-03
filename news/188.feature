@@ -1,1 +1,1 @@
-Add zsh completion script 
+Add hand-written zsh completion script.
