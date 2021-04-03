@@ -17,11 +17,13 @@ def strict_invoke(invoke):
 def test_basic_integration(python_version, project_no_init, strict_invoke):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = project_no_init
-    strict_invoke(["init"], input="\n\n\n\n\n>=2.7\n", obj=project)
+    project.root.joinpath("foo.py").write_text("import django\n")
+    strict_invoke(["init"], input="\ny\n\n\n\n\n\n>=2.7\n", obj=project)
     strict_invoke(["use", "-f", python_version], obj=project)
     project._environment = None
     strict_invoke(["add", "django"], obj=project)
-    strict_invoke(["run", "django-admin", "--help"], obj=project)
+    strict_invoke(["run", "python", "foo.py"], obj=project)
+    strict_invoke(["build", "-v"], obj=project)
     strict_invoke(["remove", "django"], obj=project)
     result = strict_invoke(["list"], obj=project)
     assert not any(
