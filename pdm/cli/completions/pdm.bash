@@ -57,7 +57,7 @@ opts="--dev --format --global --help --project --section --verbose"
 ;;
 
 (info)
-opts="--env --global --help --project --python --verbose --where"
+opts="--env --global --help --project --python --verbose --where --packages"
 ;;
 
 (init)

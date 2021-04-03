@@ -144,6 +144,7 @@ _pdm() {
         '--python[Show the interpreter path]'
         '--where[Show the project root path]'
         '--env[Show PEP 508 environment markers]'
+        '--packages[Show the packages root]'
       )
       ;;
     init|lock)
@@ -186,7 +187,7 @@ _pdm() {
         '*:arguments: _normal ' && return 0
       if [[ $state == command ]]; then
         _command_names -e
-        local local_commands=(__pypackages__/3.9/bin/*(N:t))
+        local local_commands=($(_pdm_scripts))
         _describe "local command" local_commands
         return 0
       fi
@@ -249,7 +250,7 @@ _pdm_sections() {
     _message "not a pdm project"
     return 1
   fi
-  local l match sections=() in_sections=0
+  local l sections=() in_sections=0
   while IFS= read -r l; do
     case $l in
       "["project.optional-dependencies"]") in_sections=1 ;;
@@ -281,6 +282,28 @@ for reqs in data.get('tool', {}).get('pdm', {}).get('dev-dependencies', {}).valu
     packages.extend(get_packages(reqs))
 print(*set(packages))
 EOF
+}
+
+_pdm_scripts() {
+  local scripts=() package_dir=$($PDM_PYTHON -m pdm info --packages)
+  if [[ -f pyproject.toml ]]; then
+    local l in_scripts=0
+    while IFS= read -r l; do
+    case $l in
+      "["tool.pdm.scripts"]") in_scripts=1 ;;
+      "["*"]") in_scripts=0 ;;
+      *"= "*)
+        if (( in_scripts )); then
+            scripts+=$l[(w)1]
+        fi
+      ;;
+    esac
+    done < pyproject.toml
+  fi
+  if [[ $package_dir != "None" ]]; then
+    scripts+=($package_dir/bin/*(N:t))
+  fi
+  echo $scripts
 }
 
 _pdm_packages() {

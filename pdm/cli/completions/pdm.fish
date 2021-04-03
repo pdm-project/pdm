@@ -109,6 +109,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l project -d 'Specify 
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l python -d 'Show the interpreter path'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the project root path'
+complete -c pdm -A -n '__fish_seen_subcommand_from info' -l packages -d 'Show the packages root'
 
 # init
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the global project, supply the project root with `-p` option'

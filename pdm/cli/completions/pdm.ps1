@@ -157,21 +157,24 @@ function getConfigKeys() {
 }
 
 function getScripts() {
-    if (-not (Test-Path -Path "pyproject.toml")) {
-        return @()
-    }
     [string[]] $scripts = @()
-    [bool] $inScripts = $false
-    foreach ($line in (Get-Content "pyproject.toml")) {
-        if ($line -match ' *\[tool\.pdm\.scripts\]') {
-            $inScripts = $true
+    $packagesDir = (& $PDM_PYTHON -m pdm info --packages)
+    if (Test-Path -Path "pyproject.toml") {
+        [bool] $inScripts = $false
+        foreach ($line in (Get-Content "pyproject.toml")) {
+            if ($line -match ' *\[tool\.pdm\.scripts\]') {
+                $inScripts = $true
+            }
+            elseif ($inScripts -and ($line -match '(\S+) *= *')) {
+                $scripts += $Matches[1]
+            }
+            elseif ($line -like '`[*`]') {
+                $inScripts = $false
+            }
         }
-        elseif ($inScripts -and ($line -match '(\S+) *= *')) {
-            $scripts += $Matches[1]
-        }
-        elseif ($line -like '`[*`]') {
-            $inScripts = $false
-        }
+    }
+    if ($packagesDir -ne "None") {
+        $scripts+=(Get-ChildItem "$packagesDir\Scripts" | ForEach-Object { $_.Basename })
     }
     return $scripts
 
