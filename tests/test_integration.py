@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 
@@ -19,8 +17,7 @@ def strict_invoke(invoke):
 def test_basic_integration(python_version, project_no_init, strict_invoke):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = project_no_init
-    print(os.getenv("PATH"))
-    strict_invoke(["init", "-n"], obj=project)
+    strict_invoke(["init"], input="\n\n\n\n\n>=2.7\n", obj=project)
     strict_invoke(["use", "-f", python_version], obj=project)
     project._environment = None
     strict_invoke(["add", "flask"], obj=project)
