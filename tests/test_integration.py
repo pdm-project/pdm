@@ -26,7 +26,8 @@ def test_basic_integration(python_version, project_no_init, strict_invoke):
     strict_invoke(["add", "django"], obj=project)
     with cd(project.root):
         strict_invoke(["run", "python", "foo.py"], obj=project)
-        strict_invoke(["build", "-v"], obj=project)
+        if python_version != "2.7":
+            strict_invoke(["build", "-v"], obj=project)
     strict_invoke(["remove", "django"], obj=project)
     result = strict_invoke(["list"], obj=project)
     assert not any(
