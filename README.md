@@ -14,6 +14,7 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
 [![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
+[![pdm-powered](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
 [![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
@@ -163,6 +164,16 @@ in VCS and do `pdm sync` on the target environment to deploy.
 ### 5. Can I use `pdm` to manage a Python 2.7 project?
 
 Sure. The `pdm` itself can be installed under Python 3.7+ only, but it doesn't restrict the Python used by the project.
+
+## Badges
+
+Tell people you are using PDM in your project by including the markdown code in README.md:
+
+```markdown
+[![pdm-powered](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+```
+
+[![pdm-powered](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
 ## Credits
 
