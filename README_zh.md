@@ -13,7 +13,7 @@
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/pdm-project/pdm)](https://hub.docker.com/r/pdm-project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
-[![pdm-powered](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
 [![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
@@ -158,10 +158,10 @@ PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并
 在 README.md 中加入以下 Markdown 代码，向大家展示项目正在使用 PDM:
 
 ```markdown
-[![pdm-powered](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 ```
 
-[![pdm-powered](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
 ## 鸣谢
 
