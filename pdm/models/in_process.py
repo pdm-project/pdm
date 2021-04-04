@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 @functools.lru_cache()
 def get_python_abi_tag(executable: str):
-    script = (
+    script = str(
         Path(importlib.import_module("pdm.models").__file__).parent / "_get_abi_tag.py"
     )
     return json.loads(subprocess.check_output(args=[executable, "-Es", script]))
