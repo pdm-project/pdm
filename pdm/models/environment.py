@@ -20,6 +20,7 @@ from pdm.models.auth import make_basic_auth
 from pdm.models.builders import EnvBuilder
 from pdm.models.in_process import (
     get_pep508_environment,
+    get_python_abi_tag,
     get_python_version,
     get_sys_config_paths,
 )
@@ -207,10 +208,12 @@ class Environment:
             source["url"] = expand_env_vars_in_auth(source["url"])
 
         python_version, _ = get_python_version(self.python_executable, digits=2)
+        python_abi_tag = get_python_abi_tag(self.python_executable)
         finder = get_finder(
             sources,
             self.project.cache_dir.as_posix(),
             python_version,
+            python_abi_tag,
             ignore_requires_python,
         )
         # Reuse the auth across sessions to avoid prompting repeatly.

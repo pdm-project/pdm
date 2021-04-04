@@ -110,6 +110,7 @@ def get_finder(
     sources: List[Source],
     cache_dir: Optional[str] = None,
     python_version: Optional[Tuple[int, int]] = None,
+    python_abi_tag: Optional[str] = None,
     ignore_requires_python: bool = False,
 ) -> PackageFinder:
     install_cmd = InstallCommand()
@@ -121,6 +122,7 @@ def get_finder(
         install_cmd=install_cmd,
         options=options,
         python_version=python_version,
+        python_abi_tag=python_abi_tag,
         ignore_requires_python=ignore_requires_python,
     )
     if not hasattr(finder, "session"):
