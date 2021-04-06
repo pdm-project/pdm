@@ -119,7 +119,7 @@ Testing:
   steps:
     - uses: actions/checkout@v1
     - name: Set up PDM
-      uses: pdm-project/setup-pdm@v1.1
+      uses: pdm-project/setup-pdm@main
       with:
         python-version: ${{ matrix.python-version }}
 
