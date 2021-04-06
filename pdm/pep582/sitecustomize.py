@@ -55,7 +55,7 @@ def main():
     known_paths = set()
     site.addusersitepackages(known_paths)
     site.addsitepackages(known_paths)
-    known_paths = set(os.path.normcase(path) for path in known_paths)
+    known_paths = {os.path.normcase(path) for path in known_paths}
     original_sys_path = [
         path for path in original_sys_path if os.path.normcase(path) not in known_paths
     ]

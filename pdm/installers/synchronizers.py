@@ -139,7 +139,7 @@ class Synchronizer:
                 for name, can in candidates.items()
                 if name != self.self_key
                 and strip_extras(name)[0] not in working_set
-                and not (can.marker and not can.marker.evaluate(environment))
+                and (not can.marker or can.marker.evaluate(environment))
             }
         )
         return (

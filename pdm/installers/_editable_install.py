@@ -8,7 +8,7 @@ def install(setup_py, prefix, lib_dir, bin_dir):
     # type: (str, str, str, str) -> None
     __file__ = setup_py
 
-    with getattr(tokenize, "open", open)(setup_py) as f:
+    with getattr(tokenize, "open", open)(__file__) as f:
         code = f.read().replace("\\r\\n", "\n")
     if os.path.exists(os.path.join(lib_dir, "site.py")):
         # Remove the custom site.py for editable install.

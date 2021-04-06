@@ -288,7 +288,7 @@ class Project:
     @property
     def sources(self) -> List[Source]:
         sources = list(self.tool_settings.get("source", []))
-        if not any(source.get("name") == "pypi" for source in sources):
+        if all(source.get("name") != "pypi" for source in sources):
             sources.insert(
                 0,
                 {
@@ -329,20 +329,18 @@ class Project:
         allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
         if strategy == "all":
-            provider = BaseProvider(repository, requires_python, allow_prereleases)
-        else:
-            provider_class = (
-                ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
-            )
-            preferred_pins = self.get_locked_candidates("__all__")
-            provider = provider_class(
-                preferred_pins,
-                tracked_names or (),
-                repository,
-                requires_python,
-                allow_prereleases,
-            )
-        return provider
+            return BaseProvider(repository, requires_python, allow_prereleases)
+        provider_class = (
+            ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
+        )
+        preferred_pins = self.get_locked_candidates("__all__")
+        return provider_class(
+            preferred_pins,
+            tracked_names or (),
+            repository,
+            requires_python,
+            allow_prereleases,
+        )
 
     def get_reporter(
         self,
@@ -364,8 +362,7 @@ class Project:
     def get_lock_metadata(self) -> Dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
-        data = {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
-        return data
+        return {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
 
     def write_lockfile(self, toml_data: Dict, show_message: bool = True) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())

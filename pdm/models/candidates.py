@@ -202,14 +202,13 @@ class Candidate:
         environment: Environment,
     ) -> Candidate:
         """Build a candidate from pip's InstallationCandidate."""
-        inst = cls(
+        return cls(
             req,
             environment,
             name=candidate.name,
             version=candidate.version,
             link=candidate.link,
         )
-        return inst
 
     def get_dependencies_from_metadata(self) -> List[str]:
         """Get the dependencies of a candidate from metadata."""
