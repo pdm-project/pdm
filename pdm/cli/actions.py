@@ -605,7 +605,10 @@ def migrate_pyproject(project: Project):
             project.pyproject = pyproject
             project.write_pyproject()
             project.core.ui.echo(
-                f"Moved fields: {updated_fields}", fg="yellow", err=True
+                "These fields are moved from [project] to [tool.pdm] table: "
+                f"{updated_fields}",
+                fg="yellow",
+                err=True,
             )
         return
 
@@ -615,7 +618,7 @@ def migrate_pyproject(project: Project):
         return
 
     project.core.ui.echo(
-        "Legacy [tool.pdm] metadata detected, migrating to PEP 621...",
+        "Legacy pdm 0.x metadata detected, migrating to PEP 621...",
         fg="yellow",
         err=True,
     )
