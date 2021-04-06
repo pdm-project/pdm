@@ -14,21 +14,19 @@ if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
 
+_old_merge_into_criterion = Resolution._merge_into_criterion
+
 
 # Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
-def _merge_into_criterion(self, requirement, parent):  # type: ignore
-    self._r.adding_requirement(requirement, parent)
-    name = self._p.identify(requirement)
-    try:
-        crit = self.state.criteria[name]
-    except KeyError:
-        crit = Criterion.from_requirement(self._p, requirement, parent)
-    else:
-        crit = crit.merged_with(self._p, requirement, parent)
-    if not name:
+def _merge_into_criterion(
+    self, requirement: Requirement, parent: Optional[Candidate]
+) -> Tuple[str, Criterion]:
+    identifier, crit = _old_merge_into_criterion(self, requirement, parent)
+
+    if not identifier:
         # For local packages, name is only available after candidate is resolved
-        name = self._p.identify(requirement)
-    return name, crit
+        identifier = self._p.identify(requirement)
+    return identifier, crit
 
 
 Resolution._merge_into_criterion = _merge_into_criterion

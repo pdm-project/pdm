@@ -527,7 +527,7 @@ dependencies = [
 [[package]]
 name = "resolvelib"
 sections = ["default"]
-version = "0.5.3"
+version = "0.6.0"
 summary = "Resolve abstract dependencies into concrete ones"
 
 [[package]]
@@ -645,7 +645,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:d7a1b535fc534c81920b4cec1e68821f920dca5e2433679e558cdf7b1b83d1ad"
+content_hash = "sha256:928b6f3d484cdaaf88f67337a0e46aa3fb639ea8800a1ae554bdc093f72fffc4"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -1100,9 +1100,9 @@ content_hash = "sha256:d7a1b535fc534c81920b4cec1e68821f920dca5e2433679e558cdf7b1
     {file = "requests-2.25.1-py2.py3-none-any.whl", hash = "sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e"},
     {file = "requests-2.25.1.tar.gz", hash = "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"},
 ]
-"resolvelib 0.5.3" = [
-    {file = "resolvelib-0.5.3-py2.py3-none-any.whl", hash = "sha256:b55d13171a065187972f46f3df85ec6866aed2adfef04c24d70ff1844e06da78"},
-    {file = "resolvelib-0.5.3.tar.gz", hash = "sha256:c59eaf306b1735337b1eaf693514bc1adafad4a164a2c163b2cab3794a0f950c"},
+"resolvelib 0.6.0" = [
+    {file = "resolvelib-0.6.0-py2.py3-none-any.whl", hash = "sha256:33512c405ec4d5039dd0296d040b286b06af9051777ef3b27be47c477be346a0"},
+    {file = "resolvelib-0.6.0.tar.gz", hash = "sha256:9da653f664be0fba1a1ee9b339f0046a84d084e5c1bcab0469eab941a63f5117"},
 ]
 "secretstorage 3.3.0" = [
     {file = "SecretStorage-3.3.0-py3-none-any.whl", hash = "sha256:5c36f6537a523ec5f969ef9fad61c98eb9e017bc601d811e53aa25bece64892f"},
