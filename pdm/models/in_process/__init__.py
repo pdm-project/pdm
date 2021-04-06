@@ -6,15 +6,14 @@ import importlib
 import json
 import os
 import subprocess
-from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 
 @functools.lru_cache()
 def get_python_abi_tag(executable: str):
-    script = str(
-        Path(importlib.import_module("pdm.models").__file__).parent / "_get_abi_tag.py"
-    )
+    script = importlib.import_module(
+        "pdm.models.in_process.get_abi_tag"
+    ).__file__.rstrip("co")
     return json.loads(subprocess.check_output(args=[executable, "-Es", script]))
 
 
@@ -67,6 +66,8 @@ def get_sys_config_paths(
 
 def get_pep508_environment(executable: str) -> Dict[str, Any]:
     """Get PEP 508 environment markers dict."""
-    script = importlib.import_module("pdm.pep508").__file__.rstrip("co")
+    script = importlib.import_module("pdm.models.in_process.pep508").__file__.rstrip(
+        "co"
+    )
     args = [executable, "-Es", script]
     return json.loads(subprocess.check_output(args))
