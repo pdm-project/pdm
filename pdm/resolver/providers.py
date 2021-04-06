@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Union
 
 from resolvelib import AbstractProvider
 from resolvelib.resolvers import RequirementInformation
@@ -24,8 +24,10 @@ class BaseProvider(AbstractProvider):
         self.summary_collection: Dict[str, str] = {}
         self.fetched_dependencies: Dict[str, List[Requirement]] = {}
 
-    def identify(self, req: Union[Requirement, Candidate]) -> Optional[str]:
-        return req.identify()
+    def identify(
+        self, requirement_or_candidate: Union[Requirement, Candidate]
+    ) -> Optional[str]:
+        return requirement_or_candidate.identify()
 
     def get_preference(
         self,
@@ -35,20 +37,29 @@ class BaseProvider(AbstractProvider):
     ) -> int:
         return len(candidates)
 
-    def find_matches(self, requirements: List[Requirement]) -> Iterable[Candidate]:
-        file_req = next((req for req in requirements if not req.is_named), None)
+    def find_matches(
+        self,
+        identifier: str,
+        requirements: Mapping[str, Iterator[Requirement]],
+        incompatibilities: Mapping[str, Iterator[Candidate]],
+    ) -> Iterable[Candidate]:
+        reqs = list(requirements[identifier])
+        file_req = next((req for req in reqs if not req.is_named), None)
+        incompat = list(incompatibilities[identifier])
         if file_req:
             can = Candidate(file_req, self.repository.environment)
             can.get_metadata()
             candidates = [can]
         else:
             candidates = self.repository.find_candidates(
-                requirements[0], self.requires_python, self.allow_prereleases
+                reqs[0],
+                self.requires_python,
+                self.allow_prereleases,
             )
         return [
             can
             for can in candidates
-            if all(self.is_satisfied_by(r, can) for r in requirements)
+            if all(self.is_satisfied_by(r, can) for r in reqs) and can not in incompat
         ]
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
@@ -114,13 +125,19 @@ class ReusePinProvider(BaseProvider):
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
-    def find_matches(self, requirements: List[Requirement]) -> Iterable[Candidate]:
-        ident = self.identify(requirements[0])
-        if ident not in self.tracked_names and ident in self.preferred_pins:
-            pin = self.preferred_pins[ident]
-            pin._preferred = True
-            yield pin
-        yield from super().find_matches(requirements)
+    def find_matches(
+        self,
+        identifier: str,
+        requirements: Mapping[str, Iterator[Requirement]],
+        incompatibilities: Mapping[str, Iterator[Candidate]],
+    ) -> Iterable[Candidate]:
+        if identifier not in self.tracked_names and identifier in self.preferred_pins:
+            pin = self.preferred_pins[identifier]
+            incompat = list(incompatibilities[identifier])
+            if pin not in incompat:
+                pin._preferred = True
+                yield pin
+        yield from super().find_matches(identifier, requirements, incompatibilities)
 
 
 class EagerUpdateProvider(ReusePinProvider):
