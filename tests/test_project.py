@@ -16,7 +16,7 @@ def test_project_python_with_pyenv_support(project, mocker):
     from pythonfinder.environment import PYENV_ROOT
 
     del project.project_config["python.path"]
-    project._python_executable = None
+    project._python = None
     pyenv_python = Path(PYENV_ROOT, "shims", "python")
     with temp_environ():
         os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
@@ -25,13 +25,13 @@ def test_project_python_with_pyenv_support(project, mocker):
             "pythonfinder.models.python.get_python_version",
             return_value="3.8.0",
         )
-        assert Path(project.python_executable) == pyenv_python
+        assert Path(project.python.executable) == pyenv_python
 
         # Clean cache
-        project._python_executable = None
+        project._python = None
 
         project.project_config["python.use_pyenv"] = False
-        assert Path(project.python_executable) != pyenv_python
+        assert Path(project.python.executable) != pyenv_python
 
 
 def test_project_config_items(project):
@@ -67,7 +67,7 @@ def test_global_project(tmp_path, core):
 
 def test_project_use_venv(project):
     del project.project_config["python.path"]
-    project._python_executable = None
+    project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
@@ -75,7 +75,7 @@ def test_project_use_venv(project):
     project.project_config["use_venv"] = True
     env = project.environment
     assert (
-        Path(env.python_executable)
+        Path(env.interpreter.executable)
         == project.root / "venv" / scripts / f"python{suffix}"
     )
     assert env.is_global
@@ -112,7 +112,7 @@ def test_project_auto_detect_venv(project):
     suffix = ".exe" if os.name == "nt" else ""
 
     project.project_config["use_venv"] = True
-    project._python_executable = None
+    project._python = None
     project.project_config["python.path"] = (
         project.root / "test_venv" / scripts / f"python{suffix}"
     ).as_posix()
@@ -122,15 +122,15 @@ def test_project_auto_detect_venv(project):
 
 def test_ignore_saved_python(project):
     project.project_config["use_venv"] = True
-    project._python_executable = None
+    project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
     with temp_environ():
         os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
-        assert Path(project.python_executable) != project.project_config["python.path"]
+        assert Path(project.python.executable) != project.project_config["python.path"]
         assert (
-            Path(project.python_executable)
+            Path(project.python.executable)
             == project.root / "venv" / scripts / f"python{suffix}"
         )
 

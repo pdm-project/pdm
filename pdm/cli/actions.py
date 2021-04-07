@@ -434,9 +434,7 @@ def do_use(
     else:
         project.core.ui.echo("Please enter the Python interpreter to use")
         for i, py_version in enumerate(found_interpreters):
-            python_version = str(py_version.version)
-            is_64bit = py_version.get_architecture() == "64bit"
-            version_string = get_python_version_string(python_version, is_64bit)
+            version_string = get_python_version_string(py_version)
             project.core.ui.echo(
                 f"{i}. {termui.green(py_version.executable)} ({version_string})"
             )
@@ -450,15 +448,13 @@ def do_use(
 
     old_path = project.config.get("python.path")
     new_path = selected_python.executable
-    python_version = str(selected_python.version)
-    is_64bit = selected_python.get_architecture() == "64bit"
     project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(
             termui.green(str(new_path)),
-            get_python_version_string(python_version, is_64bit),
+            get_python_version_string(selected_python),
         )
     )
-    project.python_executable = new_path
+    project.python = selected_python
     if old_path and Path(old_path) != Path(new_path) and not project.is_global:
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)

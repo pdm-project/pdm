@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from pdm.cli import actions
-from pdm.models.in_process import get_python_version
 from pdm.models.requirements import parse_requirement
 from pdm.utils import temp_environ
 from tests import FIXTURES
@@ -78,7 +77,7 @@ def test_info_command(project, invoke):
     assert project.root.as_posix() in result.output
 
     result = invoke(["info", "--python"], obj=project)
-    assert result.output.strip() == project.python_executable
+    assert result.output.strip() == project.python.executable
 
     result = invoke(["info", "--where"], obj=project)
     assert result.output.strip() == project.root.as_posix()
@@ -149,7 +148,7 @@ def test_init_command(project_no_init, invoke, mocker):
     do_init = mocker.patch.object(actions, "do_init")
     result = invoke(["init"], input="\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
-    python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
         project_no_init,
         "",
@@ -171,7 +170,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
         ["init"], input="\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
     )
     assert result.exit_code == 0
-    python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
         project_no_init,
         "test-project",
@@ -191,7 +190,7 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
     do_init = mocker.patch.object(actions, "do_init")
     result = invoke(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0
-    python_version, _ = get_python_version(project_no_init.python_executable, True, 2)
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
         project_no_init,
         "",

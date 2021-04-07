@@ -5,7 +5,6 @@ from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ArgumentGroup
 from pdm.cli.utils import check_project_file
-from pdm.models.in_process import get_python_version
 from pdm.project import Project
 from pdm.utils import get_python_version_string
 
@@ -34,9 +33,9 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
-        python_path = project.python_executable
+        interpreter = project.python
         if options.python:
-            project.core.ui.echo(python_path)
+            project.core.ui.echo(interpreter.executable)
         elif options.where:
             project.core.ui.echo(project.root.as_posix())
         elif options.packages:
@@ -46,14 +45,13 @@ class Command(BaseCommand):
                 json.dumps(project.environment.marker_environment, indent=2)
             )
         else:
-            python_version, is_64bit = get_python_version(python_path, True)
 
             rows = [
                 (termui.cyan("PDM version:", bold=True), project.core.version),
                 (
                     termui.cyan("Python Interpreter:", bold=True),
-                    python_path
-                    + f" ({get_python_version_string(python_version, is_64bit)})",
+                    interpreter.executable
+                    + f" ({get_python_version_string(interpreter)})",
                 ),
                 (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
                 (

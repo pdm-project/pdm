@@ -22,7 +22,6 @@ from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
-from pdm.models.in_process import get_python_version
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -71,7 +70,7 @@ class Project:
         self._pyproject: Optional[Dict] = None
         self._lockfile: Optional[Dict] = None
         self._environment: Optional[Environment] = None
-        self._python_executable: Optional[str] = None
+        self._python: Optional[PythonVersion] = None
 
         if root_path is None:
             root_path = find_project_root()
@@ -146,27 +145,27 @@ class Project:
         return Config(self.root / ".pdm.toml")
 
     @property
-    def python_executable(self) -> str:
-        if not self._python_executable:
-            self._python_executable = self.resolve_interpreter()
-        return self._python_executable
+    def python(self) -> PythonVersion:
+        if not self._python:
+            self._python = self.resolve_interpreter()
+        return self._python
 
-    @python_executable.setter
-    def python_executable(self, value: str) -> None:
-        self._python_executable = value
-        self.project_config["python.path"] = value
+    @python.setter
+    def python(self, value: PythonVersion) -> None:
+        self._python = value
+        self.project_config["python.path"] = value.executable
 
-    def resolve_interpreter(self) -> str:
+    def resolve_interpreter(self) -> PythonVersion:
         """Get the Python interpreter path."""
         config = self.config
         if self.project_config.get("python.path") and not os.getenv(
             "PDM_IGNORE_SAVED_PYTHON"
         ):
             saved_path = self.project_config["python.path"]
-            if not os.path.isfile(saved_path):
+            try:
+                return PythonVersion.from_path(saved_path)
+            except (ValueError, FileNotFoundError):
                 del self.project_config["python.path"]
-            else:
-                return saved_path
         if os.name == "nt":
             suffix = ".exe"
             scripts = "Scripts"
@@ -175,12 +174,14 @@ class Project:
             scripts = "bin"
         virtual_env = os.getenv("VIRTUAL_ENV")
         if config["use_venv"] and virtual_env:
-            return os.path.join(virtual_env, scripts, f"python{suffix}")
+            return PythonVersion.from_path(
+                os.path.join(virtual_env, scripts, f"python{suffix}")
+            )
 
         for py_version in self.find_interpreters():
             if self.python_requires.contains(str(py_version.version)):
-                self.python_executable = py_version.executable
-                return self.python_executable
+                self.python = py_version
+                return py_version
 
         raise NoPythonVersion(
             "No Python that satisfies {} is found on the system.".format(
@@ -194,11 +195,9 @@ class Project:
             env = GlobalEnvironment(self)
             # Rewrite global project's python requires to be
             # compatible with the exact version
-            env.python_requires = PySpecSet(
-                "==" + get_python_version(self.python_executable, True)[0]
-            )
+            env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
-        if self.config["use_venv"] and is_venv_python(self.python_executable):
+        if self.config["use_venv"] and is_venv_python(self.python.executable):
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
         return Environment(self)

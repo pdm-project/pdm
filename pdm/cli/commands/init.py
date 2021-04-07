@@ -5,7 +5,6 @@ import click
 from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.models.in_process import get_python_version
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git
 
@@ -61,7 +60,7 @@ class Command(BaseCommand):
         git_user, git_email = get_user_email_from_git()
         author = self.ask("Author name", git_user, non_interactive)
         email = self.ask("Author email", git_email, non_interactive)
-        python_version, _ = get_python_version(project.python_executable, True, 2)
+        python_version = f"{project.python.major}.{project.python.minor}"
         python_requires = self.ask(
             "Python requires('*' to allow any)", f">={python_version}", non_interactive
         )
