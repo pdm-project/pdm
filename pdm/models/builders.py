@@ -16,7 +16,7 @@ import toml
 from pep517.wrappers import Pep517HookCaller
 
 from pdm.exceptions import BuildError
-from pdm.models.in_process import get_python_version, get_sys_config_paths
+from pdm.models.in_process import get_sys_config_paths
 from pdm.pep517.base import Builder
 from pdm.termui import logger
 from pdm.utils import cached_property
@@ -122,7 +122,7 @@ class EnvBuilder:
         self._env = environment
         self._path: Optional[str] = None
         self._saved_env = None
-        self.executable = self._env.python_executable
+        self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
 
         try:
@@ -189,14 +189,14 @@ class EnvBuilder:
         """Get a pip command that has pip installed.
         E.g: ['python', '-m', 'pip']
         """
-        python_version, _ = get_python_version(self.executable)
+        python_major = self._env.interpreter.major
         proc = subprocess.run(
             [self.executable, "-Esm", "pip", "--version"], capture_output=True
         )
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
             return [self.executable, "-Esm", "pip"]
-        if python_version[0] == 3:
+        if python_major == 3:
             # Use the ensurepip to provision one.
             try:
                 self.subprocess_runner(

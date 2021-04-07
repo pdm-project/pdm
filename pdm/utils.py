@@ -30,8 +30,10 @@ from typing import (
 from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
 from pip._vendor.requests import Session
+from pythonfinder.models.python import PythonVersion
 
 from pdm._types import Source
+from pdm.models.in_process import get_architecture
 from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
@@ -368,8 +370,9 @@ def setdefault(document: Dict, key: str, value: Any) -> Dict:
     return document[key]
 
 
-def get_python_version_string(version: str, is_64bit: bool) -> str:
-    if os.name == "nt" and not is_64bit:
+def get_python_version_string(python: PythonVersion) -> str:
+    version = f"{python.major}.{python.minor}"
+    if os.name == "nt" and "32bit" in get_architecture(python.executable):
         return f"{version}-32"
     return version
 

@@ -9,7 +9,7 @@ import sysconfig
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional
 
 from distlib.scripts import ScriptMaker
 from pip._vendor import packaging, pkg_resources
@@ -21,7 +21,6 @@ from pdm.models.builders import EnvBuilder
 from pdm.models.in_process import (
     get_pep508_environment,
     get_python_abi_tag,
-    get_python_version,
     get_sys_config_paths,
 )
 from pdm.models.pip_shims import misc, req_uninstall
@@ -50,7 +49,7 @@ class WorkingSet(collections.abc.Mapping):
     def __init__(
         self,
         paths: Optional[List[str]] = None,
-        python: Tuple[int, ...] = sys.version_info[:3],
+        python: str = pkg_resources.PY_MAJOR,
     ):
         self.env = pkg_resources.Environment(paths, python=python)
         self.pkg_ws = pkg_resources.WorkingSet(paths)
@@ -89,7 +88,7 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
-        self.python_executable = project.python_executable
+        self.interpreter = project.python
         self._essential_installed = False
         self.auth = make_basic_auth(
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
@@ -131,7 +130,7 @@ class Environment:
             bin_py = req_uninstall.bin_py
             req_uninstall.bin_py = paths["scripts"]
             sys._original_executable = sys.executable
-            sys.executable = self.python_executable
+            sys.executable = self.interpreter.executable
             yield
             sys.executable = sys._original_executable
             del sys._original_executable
@@ -154,16 +153,13 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
-        version, is_64bit = get_python_version(self.python_executable, True, 2)
         pypackages = (
             self.project.root
             / "__pypackages__"
-            / get_python_version_string(version, is_64bit)
+            / get_python_version_string(self.interpreter)
         )
-        if not pypackages.exists() and not is_64bit:
-            compatible_packages = pypackages.parent / get_python_version_string(
-                version, True
-            )
+        if not pypackages.exists() and "-32" in pypackages.name:
+            compatible_packages = pypackages.with_name(pypackages.name[:-3])
             if compatible_packages.exists():
                 pypackages = compatible_packages
         scripts = "Scripts" if os.name == "nt" else "bin"
@@ -206,8 +202,8 @@ class Environment:
         for source in sources:
             source["url"] = expand_env_vars_in_auth(source["url"])
 
-        python_version, _ = get_python_version(self.python_executable, digits=2)
-        python_abi_tag = get_python_abi_tag(self.python_executable)
+        python_version = self.interpreter.version_tuple[:2]
+        python_abi_tag = get_python_abi_tag(self.interpreter.executable)
         finder = get_finder(
             sources,
             self.project.cache_dir.as_posix(),
@@ -237,7 +233,7 @@ class Environment:
         build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
         supported_tags = pip_shims.get_supported(
-            "".join(map(str, get_python_version(self.python_executable, digits=2)[0]))
+            "".join(map(str, self.interpreter.version_tuple[:2]))
         )
         with self.get_finder(ignore_requires_python=True) as finder:
             with allow_all_wheels(allow_all):
@@ -323,25 +319,25 @@ class Environment:
         paths = self.get_paths()
         return WorkingSet(
             [paths["platlib"], paths["purelib"]],
-            python=get_python_version(self.python_executable)[0],
+            python=f"{self.interpreter.major}.{self.interpreter.minor}",
         )
 
     @cached_property
     def marker_environment(self) -> Dict[str, Any]:
         """Get environment for marker evaluation"""
-        return get_pep508_environment(self.python_executable)
+        return get_pep508_environment(self.interpreter.executable)
 
     def which(self, command: str) -> str:
         """Get the full path of the given executable against this environment."""
         if not os.path.isabs(command) and command.startswith("python"):
             python = os.path.splitext(command)[0]
             version = python[6:]
-            this_version, _ = get_python_version(self.python_executable, True)
-            if not version or this_version.startswith(version):
-                return self.python_executable
+            this_version = self.interpreter.version
+            if not version or str(this_version).startswith(version):
+                return self.interpreter.executable
         # Fallback to use shutil.which to find the executable
         this_path = self.get_paths()["scripts"]
-        python_root = os.path.dirname(self.python_executable)
+        python_root = os.path.dirname(self.interpreter.executable)
         new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
         return shutil.which(command, path=new_path)
 
@@ -365,7 +361,7 @@ class GlobalEnvironment(Environment):
     is_global = True
 
     def get_paths(self) -> Dict[str, str]:
-        paths = get_sys_config_paths(self.python_executable)
+        paths = get_sys_config_paths(self.interpreter.executable)
         paths["prefix"] = paths["data"]
         paths["headers"] = paths["include"]
         return paths

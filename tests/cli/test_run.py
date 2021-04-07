@@ -21,7 +21,7 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
     output = subprocess.check_output(
-        [project.python_executable, str(project.root.joinpath("main.py"))],
+        [project.python.executable, str(project.root.joinpath("main.py"))],
         env=env,
     )
     assert output.decode().strip() == "2.24.0"

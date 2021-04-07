@@ -51,7 +51,7 @@ class Installer:  # pragma: no cover
         paths = self.environment.get_paths()
         maker = distlib.scripts.ScriptMaker(None, None)
         maker.variants = set(("",))
-        maker.executable = self.environment.python_executable
+        maker.executable = self.environment.interpreter.executable
         wheel.install(paths, maker)
 
     def install_editable(self, ireq: pip_shims.InstallRequirement) -> None:
@@ -61,7 +61,7 @@ class Installer:  # pragma: no cover
             "pdm.installers._editable_install"
         ).__file__.rstrip("co")
         install_args = [
-            self.environment.python_executable,
+            self.environment.interpreter.executable,
             "-u",
             install_script,
             setup_path,
