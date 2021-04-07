@@ -4,7 +4,9 @@ A collection of functions that need to be called via a subprocess call.
 import functools
 import json
 import os
+import platform
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -45,3 +47,23 @@ def get_pep508_environment(executable: str) -> Dict[str, Any]:
     script = str(FOLDER_PATH / "pep508.py")
     args = [executable, "-Es", script]
     return json.loads(subprocess.check_output(args))
+
+
+@functools.lru_cache()
+def get_architecture(executable: str) -> str:
+    """Get the architecture bits for the given python executable"""
+    if os.path.normpath(executable) == os.path.normpath(sys.executable):
+        return platform.architecture()
+    bits, _ = platform.architecture(executable, "_DEFAULT")
+    if bits != "_DEFAULT":
+        return bits
+    # On non-Unix platforms that do not support 'file' command,
+    # platform.architecture(executable) cannot return the correct arch.
+    # Retrieve it in subprocess instead.
+    return (
+        subprocess.check_output(
+            [executable, "-Esc", "import platform;print(platform.architecture()[0])"]
+        )
+        .decode("utf8")
+        .strip()
+    )

@@ -33,6 +33,7 @@ from pip._vendor.requests import Session
 from pythonfinder.models.python import PythonVersion
 
 from pdm._types import Source
+from pdm.models.in_process import get_architecture
 from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
@@ -371,7 +372,7 @@ def setdefault(document: Dict, key: str, value: Any) -> Dict:
 
 def get_python_version_string(python: PythonVersion) -> str:
     version = f"{python.major}.{python.minor}"
-    if os.name == "nt" and "32bit" in python.architecture:
+    if os.name == "nt" and "32bit" in get_architecture(python.executable):
         return f"{version}-32"
     return version
 
