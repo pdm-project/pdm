@@ -155,6 +155,11 @@ class Project:
         self._python = value
         self.project_config["python.path"] = value.executable
 
+    @property
+    def python_executable(self) -> str:
+        """For backward compatibility"""
+        return self.python.executable
+
     def resolve_interpreter(self) -> PythonVersion:
         """Get the Python interpreter path."""
         config = self.config
