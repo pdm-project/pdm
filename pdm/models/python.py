@@ -1,6 +1,6 @@
 import dataclasses
 import os
-from typing import Tuple
+from typing import Any, Tuple
 
 from packaging.version import Version
 from pythonfinder.models.python import PythonVersion
@@ -28,6 +28,11 @@ class PythonInfo:
 
     def __hash__(self) -> int:
         return hash(os.path.normpath(self.executable))
+
+    def __eq__(self, o: Any) -> bool:
+        if not isinstance(o, PythonInfo):
+            return False
+        return os.path.normpath(self.executable) == os.path.normpath(o.executable)
 
     @property
     def major(self) -> int:
