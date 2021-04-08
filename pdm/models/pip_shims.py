@@ -50,7 +50,7 @@ class InstallCommand(_InstallCommand):
 def get_package_finder(
     install_cmd: InstallCommand,
     options: Optional[Values] = None,
-    python_version: Optional[Tuple[int, int]] = None,
+    python_version: Optional[Tuple[int, ...]] = None,
     python_abi_tag: Optional[str] = None,
     ignore_requires_python: Optional[bool] = None,
 ) -> PackageFinder:

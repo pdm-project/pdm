@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
@@ -30,10 +31,8 @@ from typing import (
 from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
 from pip._vendor.requests import Session
-from pythonfinder.models.python import PythonVersion
 
 from pdm._types import Source
-from pdm.models.in_process import get_architecture
 from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
@@ -42,9 +41,9 @@ from pdm.models.pip_shims import (
     url_to_path,
 )
 
-try:
+if sys.version_info >= (3, 8):
     from functools import cached_property
-except ImportError:
+else:
 
     _T = TypeVar("_T")
     _C = TypeVar("_C")
@@ -111,7 +110,7 @@ def get_pypi_source() -> Tuple[str, bool]:
 def get_finder(
     sources: List[Source],
     cache_dir: Optional[str] = None,
-    python_version: Optional[Tuple[int, int]] = None,
+    python_version: Optional[Tuple[int, ...]] = None,
     python_abi_tag: Optional[str] = None,
     ignore_requires_python: bool = False,
 ) -> PackageFinder:
@@ -368,13 +367,6 @@ def setdefault(document: Dict, key: str, value: Any) -> Dict:
     if key not in document:
         document[key] = value
     return document[key]
-
-
-def get_python_version_string(python: PythonVersion) -> str:
-    version = f"{python.major}.{python.minor}"
-    if os.name == "nt" and "32bit" in get_architecture(python.executable):
-        return f"{version}-32"
-    return version
 
 
 def expand_env_vars(credential: str, quote: bool = False) -> str:

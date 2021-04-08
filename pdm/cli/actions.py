@@ -7,7 +7,6 @@ from typing import Dict, Iterable, List, Optional, Sequence
 import click
 import tomlkit
 from pip._vendor.pkg_resources import safe_name
-from pythonfinder.models.python import PythonVersion
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
@@ -27,11 +26,12 @@ from pdm.formats.base import array_of_inline_tables, make_array, make_inline_tab
 from pdm.installers.installers import format_dist
 from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
+from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import get_python_version_string, setdefault
+from pdm.utils import setdefault
 
 PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
@@ -419,7 +419,7 @@ def do_use(
     The python can be a version string or interpreter path.
     """
 
-    def version_matcher(py_version: PythonVersion) -> bool:
+    def version_matcher(py_version: PythonInfo) -> bool:
         return project.python_requires.contains(str(py_version.version))
 
     python = python.strip()
@@ -434,9 +434,8 @@ def do_use(
     else:
         project.core.ui.echo("Please enter the Python interpreter to use")
         for i, py_version in enumerate(found_interpreters):
-            version_string = get_python_version_string(py_version)
             project.core.ui.echo(
-                f"{i}. {termui.green(py_version.executable)} ({version_string})"
+                f"{i}. {termui.green(py_version.executable)} ({py_version.identifier})"
             )
         selection = click.prompt(
             "Please select:",
@@ -451,7 +450,7 @@ def do_use(
     project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(
             termui.green(str(new_path)),
-            get_python_version_string(selected_python),
+            selected_python.identifier,
         )
     )
     project.python = selected_python

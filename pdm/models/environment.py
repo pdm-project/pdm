@@ -31,7 +31,6 @@ from pdm.utils import (
     create_tracked_tempdir,
     expand_env_vars_in_auth,
     get_finder,
-    get_python_version_string,
     populate_link,
     temp_environ,
 )
@@ -153,11 +152,7 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
-        pypackages = (
-            self.project.root
-            / "__pypackages__"
-            / get_python_version_string(self.interpreter)
-        )
+        pypackages = self.project.root / "__pypackages__" / self.interpreter.identifier
         if not pypackages.exists() and "-32" in pypackages.name:
             compatible_packages = pypackages.with_name(pypackages.name[:-3])
             if compatible_packages.exists():
@@ -202,7 +197,7 @@ class Environment:
         for source in sources:
             source["url"] = expand_env_vars_in_auth(source["url"])
 
-        python_version = self.interpreter.version_tuple[:2]
+        python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(self.interpreter.executable)
         finder = get_finder(
             sources,
@@ -232,9 +227,7 @@ class Environment:
         """
         build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
-        supported_tags = pip_shims.get_supported(
-            "".join(map(str, self.interpreter.version_tuple[:2]))
-        )
+        supported_tags = pip_shims.get_supported(self.interpreter.for_tag())
         with self.get_finder(ignore_requires_python=True) as finder:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.

@@ -6,7 +6,6 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ArgumentGroup
 from pdm.cli.utils import check_project_file
 from pdm.project import Project
-from pdm.utils import get_python_version_string
 
 
 class Command(BaseCommand):
@@ -50,8 +49,7 @@ class Command(BaseCommand):
                 (termui.cyan("PDM version:", bold=True), project.core.version),
                 (
                     termui.cyan("Python Interpreter:", bold=True),
-                    interpreter.executable
-                    + f" ({get_python_version_string(interpreter)})",
+                    interpreter.executable + f" ({interpreter.identifier})",
                 ),
                 (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
                 (
