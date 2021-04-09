@@ -112,7 +112,7 @@ _pdm() {
          '2:value:_files' && return 0
       if [[ $state == keys ]]; then
         local l mbegin mend match keys=()
-        for l in ${(f)"$(command ${PYTHON} -m pdm config)"}; do
+        for l in ${(f)"$(command ${PDM_PYTHON} -m pdm config)"}; do
           if [[ $l == (#b)" "#(*)" = "(*) ]]; then
             keys+=("$match[1]:$match[2]")
           fi
