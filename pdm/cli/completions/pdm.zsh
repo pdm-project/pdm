@@ -147,10 +147,10 @@ _pdm() {
         '--packages[Show the packages root]'
       )
       ;;
-    init|lock)
+    init)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-n,--non-interactive}"Don't ask questions but use default values"
+        {-n,--non-interactive}"[Don't ask questions but use default values]"
       )
       ;;
     install)
@@ -167,6 +167,11 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-r,--reverse}'[Reverse the dependency graph]'
         '--graph[Display a graph of dependencies]'
+      )
+      ;;
+    lock)
+      arguments+=(
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
       )
       ;;
     remove)
