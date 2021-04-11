@@ -320,7 +320,7 @@ class FileRequirement(Requirement):
         ):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
         result = SetupReader.read_from_directory(self.path.absolute().as_posix())
-        self.name = result["name"]
+        self.name = result.name
 
 
 class NamedRequirement(Requirement, PackageRequirement):

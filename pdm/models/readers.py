@@ -1,7 +1,27 @@
 import ast
 from configparser import ConfigParser
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+
+
+@dataclass
+class Setup:
+    name: Optional[str] = None
+    version: Optional[str] = None
+    install_requires: List[str] = field(default_factory=list)
+    extras_require: Dict[str, List[str]] = field(default_factory=dict)
+    python_requires: Optional[str] = None
+
+    def update(self, other: "Setup"):
+        result = asdict(self)
+        for key, value in asdict(other).items():
+            if value:
+                result[key] = value
+        self = self.__init__(**result)
+
+    def as_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
 class SetupReader:
@@ -9,63 +29,46 @@ class SetupReader:
     Class that reads a setup.py file without executing it.
     """
 
-    DEFAULT = {
-        "name": None,
-        "version": None,
-        "install_requires": [],
-        "extras_require": {},
-        "python_requires": None,
-    }
-
-    FILES = ["pyproject.toml", "setup.cfg", "setup.py"]
-
     @classmethod
-    def read_from_directory(
-        cls, directory: Union[str, Path]
-    ) -> Dict[str, Union[List, Dict]]:
+    def read_from_directory(cls, directory: Union[str, Path]) -> Setup:
         if isinstance(directory, str):
             directory = Path(directory)
 
-        result = cls.DEFAULT.copy()
-        for filename in cls.FILES:
+        reader = cls()
+        result = Setup()
+
+        for filename, file_reader in [
+            ("pyproject.toml", reader.read_pyproject_toml),
+            ("setup.cfg", reader.read_setup_cfg),
+            ("setup.py", reader.read_setup_py),
+        ]:
             filepath = directory / filename
             if not filepath.exists():
                 continue
 
-            new_result = getattr(cls(), "read_{}".format(filename.replace(".", "_")))(
-                filepath
-            )
-
-            for key in result.keys():
-                if new_result.get(key):
-                    result[key] = new_result[key]
+            new_result = file_reader(filepath)
+            result.update(new_result)
 
         return result
 
-    @classmethod
-    def _is_empty_result(cls, result: Dict[str, Any]) -> bool:
-        return (
-            not result["install_requires"]
-            and not result["extras_require"]
-            and not result["python_requires"]
-        )
-
-    def read_pyproject_toml(self, filepath: Path) -> Dict[str, Any]:
+    def read_pyproject_toml(self, filepath):
         from pdm.project.metadata import MutableMetadata
 
         try:
             metadata = MutableMetadata(filepath)
         except ValueError:
             return {}
-        return {
-            "name": metadata.name,
-            "version": metadata.version,
-            "install_requires": metadata.dependencies,
-            "extras_require": metadata.optional_dependencies,
-            "python_requires": metadata.requires_python,
-        }
+        return Setup(
+            **{
+                "name": metadata.name,
+                "version": metadata.version,
+                "install_requires": metadata.dependencies,
+                "extras_require": metadata.optional_dependencies,
+                "python_requires": metadata.requires_python,
+            }
+        )
 
-    def read_setup_py(self, filepath: Union[str, Path]) -> Dict[str, Union[List, Dict]]:
+    def read_setup_py(self, filepath: Union[str, Path]) -> Setup:
 
         if isinstance(filepath, str):
             filepath = Path(filepath)
@@ -90,11 +93,9 @@ class SetupReader:
             setup_call, body, "python_requires"
         )
 
-        return result
+        return Setup(**result)
 
-    def read_setup_cfg(
-        self, filepath: Union[str, Path]
-    ) -> Dict[str, Union[List, Dict]]:
+    def read_setup_cfg(self, filepath: Union[str, Path]) -> Setup:
         parser = ConfigParser()
 
         parser.read(str(filepath))
@@ -133,13 +134,15 @@ class SetupReader:
 
                     extras_require[group].append(dep)
 
-        return {
-            "name": name,
-            "version": version,
-            "install_requires": install_requires,
-            "extras_require": extras_require,
-            "python_requires": python_requires,
-        }
+        return Setup(
+            **{
+                "name": name,
+                "version": version,
+                "install_requires": install_requires,
+                "extras_require": extras_require,
+                "python_requires": python_requires,
+            }
+        )
 
     def _find_setup_call(
         self, elements: List[Any]
