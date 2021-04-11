@@ -2,7 +2,7 @@ import ast
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, no_type_check
 
 
 @dataclass
@@ -77,6 +77,7 @@ class _SetupReader:
             python_requires=metadata.requires_python,
         )
 
+    @no_type_check
     @classmethod
     def read_setup_py(cls, file: Path) -> Setup:
 
@@ -197,6 +198,7 @@ class _SetupReader:
         # Nothing, we inspect the function definitions
         return cls._find_sub_setup_call(funcdefs)
 
+    @no_type_check
     @classmethod
     def _find_sub_setup_call(
         cls, elements: List[Any]
@@ -215,6 +217,7 @@ class _SetupReader:
 
         return None, None
 
+    @no_type_check
     @classmethod
     def _find_install_requires(cls, call: ast.Call, body: Iterable[Any]) -> List[str]:
         install_requires: List[str] = []
@@ -256,6 +259,7 @@ class _SetupReader:
 
         return install_requires
 
+    @no_type_check
     @classmethod
     def _find_extras_require(
         cls, call: ast.Call, body: Iterable[Any]
