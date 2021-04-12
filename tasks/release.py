@@ -10,10 +10,10 @@ PROJECT_DIR = Path(__file__).parent.parent
 
 
 def get_current_version():
-    from pdm.core import Project
+    from pdm.pep517.metadata import Metadata
 
-    project = Project(PROJECT_DIR)
-    return project.meta.version
+    metadata = Metadata(PROJECT_DIR / "pyproject.toml")
+    return metadata.version
 
 
 def bump_version(pre=None, major=False, minor=False, patch=True):
