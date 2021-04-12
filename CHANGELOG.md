@@ -9,6 +9,8 @@ Release v1.5.0b1 (2021-04-12)
 
 - Remove the incompatible code from the files that will be run in-process. [#375](https://github.com/pdm-project/pdm/issues/375)
 - Get the correct Python ABI tag of selected interpreter [#378](https://github.com/pdm-project/pdm/issues/378)
+- Error out when doing `pdm run` on a directory not initialized yet.
+- Give warning message when the project automatically fallbacks to the global project.
 
 ### Dependencies
 
@@ -20,6 +22,7 @@ Release v1.5.0b1 (2021-04-12)
 - Add a basic integration test for cross-python check. [#377](https://github.com/pdm-project/pdm/issues/377)
 - Refactor the `project.python_executable` to `project.python` that contains all info of the interpreter. [#382](https://github.com/pdm-project/pdm/issues/382)
 - Continue refactoring Python info to extract to its own module. [#383](https://github.com/pdm-project/pdm/issues/383)
+- Refactor the creation of project.
 
 
 Release v1.5.0b0 (2021-04-03)

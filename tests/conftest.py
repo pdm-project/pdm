@@ -135,13 +135,17 @@ class TestRepository(BaseRepository):
 
 
 class TestProject(Project):
-    def __init__(self, root_path):
-        self.GLOBAL_PROJECT = Path(root_path) / ".pdm-home" / "global-project"
-        super().__init__(root_path)
+    def __init__(self, core, root_path, is_global):
+        self.root_path = Path(root_path or ".")
+        self.GLOBAL_PROJECT = self.root_path / ".pdm-home" / "global-project"
+        super().__init__(core, root_path, is_global)
 
     @cached_property
     def global_config(self):
-        return Config(self.root / ".pdm-home" / "config.toml", is_global=True)
+        return Config(self.root_path / ".pdm-home" / "config.toml", is_global=True)
+
+
+main.project_class = TestProject
 
 
 class Distribution:
@@ -222,8 +226,7 @@ def pip_global_tempdir_manager():
 
 @pytest.fixture()
 def project_no_init(tmp_path, mocker):
-    p = TestProject(tmp_path.as_posix())
-    p.core = main
+    p = main.create_project(tmp_path)
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)

@@ -8,7 +8,6 @@ import pytest
 
 from pdm.models.requirements import filter_requirements_with_extras
 from pdm.pep517.api import build_wheel
-from pdm.project import Project
 from pdm.utils import cd, temp_environ
 
 
@@ -59,10 +58,16 @@ def test_project_sources_overriding(project):
 
 
 def test_global_project(tmp_path, core):
-    project = Project.create_global(tmp_path.as_posix())
-    project.core = core
-    project.init_global_project()
+    project = core.create_project(tmp_path, True)
     assert project.environment.is_global
+
+
+def test_auto_global_project(tmp_path, core):
+    tmp_path.joinpath(".pdm-home").mkdir()
+    (tmp_path / ".pdm-home/config.toml").write_text("auto_global = true\n")
+    with cd(tmp_path):
+        project = core.create_project()
+    assert project.is_global
 
 
 def test_project_use_venv(project):

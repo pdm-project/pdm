@@ -3,7 +3,6 @@ import pytest
 from pdm.exceptions import ExtrasError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
-from pdm.project.core import Project
 from tests import FIXTURES
 
 
@@ -119,8 +118,7 @@ def test_parse_abnormal_specifiers(project):
     ],
 )
 def test_expand_project_root_in_url(req_str, core):
-    project = Project(FIXTURES.parent.parent)
-    project.core = core
+    project = core.create_project(FIXTURES.parent.parent)
     if req_str.startswith("-e "):
         req = parse_requirement(req_str[3:], True)
     else:

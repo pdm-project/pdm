@@ -7,7 +7,6 @@ from pdm.cli import actions
 from pdm.exceptions import PdmException, PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.project import Project
 from tests.conftest import Distribution
 
 Requirement = namedtuple("Requirement", "key")
@@ -489,16 +488,6 @@ def test_add_dependency_from_multiple_parents(project, working_set, mocker):
     assert "chardet" in working_set
 
 
-def test_list_packages(capsys, core):
-    project = Project()
-    project.core = core
-    actions.do_list(project)
-    out, _ = capsys.readouterr()
-    assert "pdm" in out
-    assert "tomlkit" in out
-    assert "pip" in out
-
-
 @pytest.mark.usefixtures("repository")
 def test_lock_dependencies(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
@@ -510,8 +499,7 @@ def test_lock_dependencies(project):
 
 
 def test_build_distributions(tmp_path, core):
-    project = Project()
-    project.core = core
+    project = core.create_project()
     actions.do_build(project, dest=tmp_path.as_posix())
     wheel = Wheel(next(tmp_path.glob("*.whl")).as_posix())
     assert wheel.name == "pdm"
