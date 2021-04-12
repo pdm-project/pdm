@@ -3,22 +3,21 @@ from __future__ import annotations
 import base64
 import logging
 import os
-import shutil
 import subprocess
-import sys
 import tempfile
+import textwrap
 import threading
 from logging import Logger
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
 import toml
 from pep517.wrappers import Pep517HookCaller
+from pip._vendor.pkg_resources import Requirement, VersionConflict, WorkingSet
 
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_sys_config_paths
 from pdm.termui import logger
-from pdm.utils import cached_property
+from pdm.utils import create_tracked_tempdir
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -91,6 +90,39 @@ def log_subprocessor(
         outstream.stop()
 
 
+class _Prefix:
+    def __init__(self, executable: str, path: str) -> None:
+        self.path = path
+        paths = get_sys_config_paths(executable, vars={"base": path, "platbase": path})
+        self.bin_dir = paths["scripts"]
+        self.lib_dirs = [paths["platlib"], paths["purelib"]]
+        self.site_dir = os.path.join(path, "site")
+        if not os.path.isdir(self.site_dir):
+            os.makedirs(self.site_dir)
+        with open(os.path.join(self.site_dir, "sitecustomize.py"), "w") as fp:
+            fp.write(
+                textwrap.dedent(
+                    """
+                import sys, os, site
+
+                original_sys_path = sys.path[:]
+                known_paths = set()
+                site.addusersitepackages(known_paths)
+                site.addsitepackages(known_paths)
+                known_paths = {{os.path.normpath(p) for p in known_paths}}
+                original_sys_path = [
+                    p for p in original_sys_path
+                    if os.path.normpath(p) not in known_paths]
+                sys.path[:] = original_sys_path
+                for lib_path in {lib_paths!r}:
+                    site.addsitedir(lib_path)
+                """.format(
+                        lib_paths=self.lib_dirs
+                    )
+                )
+            )
+
+
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
@@ -101,11 +133,11 @@ class EnvBuilder:
 
     def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
         self._env = environment
-        self._path: Optional[str] = None
-        self._saved_env = None
+        self._path = create_tracked_tempdir(prefix="pdm-build-env-")
         self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
-
+        self._prefix = _Prefix(self.executable, self._path)
+        logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
                 spec = toml.load(f)
@@ -131,106 +163,61 @@ class EnvBuilder:
             python_executable=self.executable,
         )
 
-    @cached_property
-    def pip_command(self) -> List[str]:
-        return self._get_pip_command()
+    @property
+    def _env_vars(self) -> Dict[str, str]:
+        return {
+            "PYTHONPATH": self._prefix.site_dir,
+            "PATH": self._prefix.bin_dir,
+            "PYTHONNOUSERSITE": "1",
+            "PDM_PYTHON_PEP582": "0",
+        }
 
     def subprocess_runner(
         self,
         cmd: List[str],
         cwd: Optional[str] = None,
         extra_environ: Optional[Dict[str, str]] = None,
+        isolated: bool = True,
     ) -> Optional[Any]:
-        env = self._saved_env.copy() if self._saved_env else {}
+        env = self._env_vars.copy() if isolated else {}
         if extra_environ:
             env.update(extra_environ)
         return log_subprocessor(cmd, cwd, extra_environ=env)
 
-    def _download_pip_wheel(self, path: os.PathLike):
-        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
-        try:
-            self.subprocess_runner(
-                [
-                    getattr(sys, "_original_executable", sys.executable),
-                    "-m",
-                    "pip",
-                    "download",
-                    "--only-binary=:all:",
-                    "-d",
-                    dirname,
-                    "pip<21",  # pip>=21 drops the support of py27
-                ]
-            )
-            wheel_file = next(dirname.glob("pip-*.whl"))
-            shutil.move(str(wheel_file), path)
-        finally:
-            shutil.rmtree(dirname, ignore_errors=True)
-
-    def _get_pip_command(self) -> List[str]:
-        """Get a pip command that has pip installed.
-        E.g: ['python', '-m', 'pip']
-        """
-        python_major = self._env.interpreter.major
-        proc = subprocess.run(
-            [self.executable, "-Esm", "pip", "--version"], capture_output=True
-        )
-        if proc.returncode == 0:
-            # The pip has already been installed with the executable, just use it
-            return [self.executable, "-Esm", "pip"]
-        if python_major == 3:
-            # Use the ensurepip to provision one.
-            try:
-                self.subprocess_runner(
-                    [self.executable, "-Esm", "ensurepip", "--upgrade", "--default-pip"]
-                )
-            except BuildError:
-                pass
-            else:
-                return [self.executable, "-Esm", "pip"]
-        # Otherwise, download a pip wheel from the Internet.
-        pip_wheel = self._env.project.cache_dir / "pip.whl"
-        if not pip_wheel.is_file():
-            self._download_pip_wheel(pip_wheel)
-        return [self.executable, str(pip_wheel / "pip")]
-
-    def __enter__(self) -> EnvBuilder:
-        self._path = tempfile.mkdtemp(prefix="pdm-build-env-")
-        paths = get_sys_config_paths(
-            self.executable, vars={"base": self._path, "platbase": self._path}
-        )
-        old_path = os.getenv("PATH")
-        self._saved_env = {
-            "PYTHONPATH": paths["purelib"],
-            "PATH": paths["scripts"]
-            if not old_path
-            else os.pathsep.join([paths["scripts"], old_path]),
-            "PYTHONNOUSERSITE": "1",
-            "PDM_PYTHON_PEP582": "0",
-        }
-        logger.debug("Preparing isolated env for PEP 517 build...")
-        return self
-
-    def __exit__(self, *args: Any) -> None:
-        self._saved_env = None
-        shutil.rmtree(self._path, ignore_errors=True)
+    def check_requirements(self, reqs: Iterable[str]) -> Iterable[str]:
+        missing = set()
+        conflicting = set()
+        if reqs:
+            ws = WorkingSet(self._prefix.lib_dirs)
+            for req in reqs:
+                try:
+                    if ws.find(Requirement.parse(req)) is None:
+                        missing.add(req)
+                except VersionConflict:
+                    conflicting.add(req)
+        if conflicting:
+            raise BuildError(f"Conflicting requirements: {', '.join(conflicting)}")
+        return missing
 
     def install(self, requirements: Iterable[str]) -> None:
-        if not requirements:
+        missing = self.check_requirements(requirements)
+        if not missing:
             return
 
         with tempfile.NamedTemporaryFile(
             "w+", prefix="pdm-build-reqs-", suffix=".txt", delete=False
         ) as req_file:
-            req_file.write(os.linesep.join(requirements))
+            req_file.write(os.linesep.join(missing))
             req_file.close()
-            cmd = self.pip_command + [
+            cmd = self._env.pip_command + [
                 "install",
+                "--ignore-installed",
                 "--prefix",
                 self._path,
                 "-r",
                 os.path.abspath(req_file.name),
             ]
-            self.subprocess_runner(cmd)
+            self.subprocess_runner(cmd, isolated=False)
             os.unlink(req_file.name)
 
     def build(self, out_dir: str) -> str:

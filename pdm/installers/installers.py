@@ -70,12 +70,9 @@ class Installer:  # pragma: no cover
             paths["purelib"],
             paths["scripts"],
         ]
-        with EnvBuilder(ireq.unpacked_source_directory, self.environment) as builder:
-            builder.install(["setuptools"])
-            extra_env = {"INJECT_SITE": "1"} if not self.environment.is_global else None
-            builder.subprocess_runner(
-                install_args, ireq.unpacked_source_directory, extra_env
-            )
+        builder = EnvBuilder(ireq.unpacked_source_directory, self.environment)
+        builder.install(["setuptools"])
+        builder.subprocess_runner(install_args, ireq.unpacked_source_directory)
 
     def uninstall(self, dist: Distribution) -> None:
         req = parse_requirement(dist.project_name)

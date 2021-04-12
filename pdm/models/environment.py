@@ -4,8 +4,10 @@ import collections
 import os
 import re
 import shutil
+import subprocess
 import sys
 import sysconfig
+import tempfile
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
@@ -15,6 +17,7 @@ from distlib.scripts import ScriptMaker
 from pip._vendor import packaging, pkg_resources
 
 from pdm import termui
+from pdm.exceptions import BuildError
 from pdm.models import pip_shims
 from pdm.models.auth import make_basic_auth
 from pdm.models.in_process import (
@@ -284,9 +287,9 @@ class Environment:
 
         # Otherwise, as all source is already prepared, build it.
         if ireq.editable:
-            with EnvEggInfoBuilder(ireq.unpacked_source_directory, self) as builder:
-                ret = ireq.metadata_directory = builder.build(build_dir)
-                return ret
+            builder = EnvEggInfoBuilder(ireq.unpacked_source_directory, self)
+            ret = ireq.metadata_directory = builder.build(build_dir)
+            return ret
         should_cache = False
         if ireq.link.is_vcs:
             vcs = pip_shims.VcsSupport()
@@ -303,8 +306,7 @@ class Environment:
         )
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
-        with EnvWheelBuilder(ireq.unpacked_source_directory, self) as builder:
-            return builder.build(output_dir)
+        return EnvWheelBuilder(ireq.unpacked_source_directory, self).build(output_dir)
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
@@ -345,6 +347,52 @@ class Environment:
             child.write_bytes(
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
+
+    def _download_pip_wheel(self, path: os.PathLike):
+        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
+        try:
+            subprocess.check_call(
+                [
+                    getattr(sys, "_original_executable", sys.executable),
+                    "-m",
+                    "pip",
+                    "download",
+                    "--only-binary=:all:",
+                    "-d",
+                    dirname,
+                    "pip<21",  # pip>=21 drops the support of py27
+                ],
+            )
+            wheel_file = next(dirname.glob("pip-*.whl"))
+            shutil.move(str(wheel_file), path)
+        except subprocess.CalledProcessError:
+            raise BuildError("Failed to download pip for the given interpreter")
+        finally:
+            shutil.rmtree(dirname, ignore_errors=True)
+
+    @cached_property
+    def pip_command(self) -> List[str]:
+        """Get a pip command for this environment, and download one if not available.
+        Return a list of args like ['python', '-m', 'pip']
+        """
+        from pip import __file__ as pip_location
+
+        python_major = self.interpreter.major
+        executable = self.interpreter.executable
+        proc = subprocess.run(
+            [executable, "-Esm", "pip", "--version"], capture_output=True
+        )
+        if proc.returncode == 0:
+            # The pip has already been installed with the executable, just use it
+            return [executable, "-Esm", "pip"]
+        if python_major == 3:
+            # Use the host pip package.
+            return [executable, "-Es", os.path.dirname(pip_location)]
+        # For py2, only pip<21 is eligible, download a pip wheel from the Internet.
+        pip_wheel = self.project.cache_dir / "pip.whl"
+        if not pip_wheel.is_file():
+            self._download_pip_wheel(pip_wheel)
+        return [executable, str(pip_wheel / "pip")]
 
 
 class GlobalEnvironment(Environment):

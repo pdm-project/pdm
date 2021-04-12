@@ -369,13 +369,11 @@ def do_build(
     with project.core.ui.logging("build"):
         if sdist:
             project.core.ui.echo("Building sdist...")
-            with EnvSdistBuilder(project.root, project.environment) as builder:
-                loc = builder.build(dest)
+            loc = EnvSdistBuilder(project.root, project.environment).build(dest)
             project.core.ui.echo(f"Built sdist at {loc}")
         if wheel:
             project.core.ui.echo("Building wheel...")
-            with EnvWheelBuilder(project.root, project.environment) as builder:
-                loc = builder.build(dest)
+            EnvWheelBuilder(project.root, project.environment).build(dest)
             project.core.ui.echo(f"Built wheel at {loc}")
 
 
