@@ -126,14 +126,23 @@ class _Prefix:
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
+    _env_cache: Dict[str, str] = {}
+
     DEFAULT_BACKEND = {
         "build-backend": "setuptools.build_meta:__legacy__",
         "requires": ["setuptools >= 40.8.0", "wheel"],
     }
 
+    @classmethod
+    def get_env_path(cls, src_dir: os.PathLike) -> str:
+        key = os.path.normpath(src_dir).rstrip("\\/")
+        if key not in cls._env_cache:
+            cls._env_cache[key] = create_tracked_tempdir(prefix="pdm-build-env-")
+        return cls._env_cache[key]
+
     def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
         self._env = environment
-        self._path = create_tracked_tempdir(prefix="pdm-build-env-")
+        self._path = self.get_env_path(src_dir)
         self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
         self._prefix = _Prefix(self.executable, self._path)
