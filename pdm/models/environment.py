@@ -4,8 +4,10 @@ import collections
 import os
 import re
 import shutil
+import subprocess
 import sys
 import sysconfig
+import tempfile
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
@@ -15,9 +17,9 @@ from distlib.scripts import ScriptMaker
 from pip._vendor import packaging, pkg_resources
 
 from pdm import termui
+from pdm.exceptions import BuildError
 from pdm.models import pip_shims
 from pdm.models.auth import make_basic_auth
-from pdm.models.builders import EnvBuilder
 from pdm.models.in_process import (
     get_pep508_environment,
     get_python_abi_tag,
@@ -225,6 +227,8 @@ class Environment:
         :param allow_all: Allow building incompatible wheels.
         :returns: The full path of the built artifact.
         """
+        from pdm.builders import EnvEggInfoBuilder, EnvWheelBuilder
+
         build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
         supported_tags = pip_shims.get_supported(self.interpreter.for_tag())
@@ -282,30 +286,27 @@ class Environment:
                 return cache_entry.link.file_path
 
         # Otherwise, as all source is already prepared, build it.
-        with EnvBuilder(ireq.unpacked_source_directory, self) as builder:
-            if ireq.editable:
-                ret = builder.build_egg_info(build_dir)
-                ireq.metadata_directory = ret
-                return ret
-            should_cache = False
-            if ireq.link.is_vcs:
-                vcs = pip_shims.VcsSupport()
-                vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
-                if vcs_backend.is_immutable_rev_checkout(
-                    ireq.link.url, ireq.source_dir
-                ):
-                    should_cache = True
-            else:
-                base, _ = ireq.link.splitext()
-                if _egg_info_re.search(base) is not None:
-                    # Determine whether the string looks like an egg_info.
-                    should_cache = True
-            output_dir = (
-                wheel_cache.get_path_for_link(ireq.link) if should_cache else build_dir
-            )
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir, exist_ok=True)
-            return builder.build_wheel(output_dir)
+        if ireq.editable:
+            builder = EnvEggInfoBuilder(ireq.unpacked_source_directory, self)
+            ret = ireq.metadata_directory = builder.build(build_dir)
+            return ret
+        should_cache = False
+        if ireq.link.is_vcs:
+            vcs = pip_shims.VcsSupport()
+            vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
+            if vcs_backend.is_immutable_rev_checkout(ireq.link.url, ireq.source_dir):
+                should_cache = True
+        else:
+            base, _ = ireq.link.splitext()
+            if _egg_info_re.search(base) is not None:
+                # Determine whether the string looks like an egg_info.
+                should_cache = True
+        output_dir = (
+            wheel_cache.get_path_for_link(ireq.link) if should_cache else build_dir
+        )
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+        return EnvWheelBuilder(ireq.unpacked_source_directory, self).build(output_dir)
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
@@ -346,6 +347,52 @@ class Environment:
             child.write_bytes(
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
+
+    def _download_pip_wheel(self, path: os.PathLike):
+        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
+        try:
+            subprocess.check_call(
+                [
+                    getattr(sys, "_original_executable", sys.executable),
+                    "-m",
+                    "pip",
+                    "download",
+                    "--only-binary=:all:",
+                    "-d",
+                    dirname,
+                    "pip<21",  # pip>=21 drops the support of py27
+                ],
+            )
+            wheel_file = next(dirname.glob("pip-*.whl"))
+            shutil.move(str(wheel_file), path)
+        except subprocess.CalledProcessError:
+            raise BuildError("Failed to download pip for the given interpreter")
+        finally:
+            shutil.rmtree(dirname, ignore_errors=True)
+
+    @cached_property
+    def pip_command(self) -> List[str]:
+        """Get a pip command for this environment, and download one if not available.
+        Return a list of args like ['python', '-m', 'pip']
+        """
+        from pip import __file__ as pip_location
+
+        python_major = self.interpreter.major
+        executable = self.interpreter.executable
+        proc = subprocess.run(
+            [executable, "-Esm", "pip", "--version"], capture_output=True
+        )
+        if proc.returncode == 0:
+            # The pip has already been installed with the executable, just use it
+            return [executable, "-Esm", "pip"]
+        if python_major == 3:
+            # Use the host pip package.
+            return [executable, "-Es", os.path.dirname(pip_location)]
+        # For py2, only pip<21 is eligible, download a pip wheel from the Internet.
+        pip_wheel = self.project.cache_dir / "pip.whl"
+        if not pip_wheel.is_file():
+            self._download_pip_wheel(pip_wheel)
+        return [executable, str(pip_wheel / "pip")]
 
 
 class GlobalEnvironment(Environment):
