@@ -7,7 +7,7 @@ import pytest
 
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
-from pdm.utils import temp_environ
+from pdm.utils import cd, temp_environ
 from tests import FIXTURES
 
 
@@ -86,8 +86,9 @@ def test_info_command(project, invoke):
     assert result.exit_code == 0
 
 
-def test_info_global_project(invoke):
-    result = invoke(["info", "-g", "--where"])
+def test_info_global_project(invoke, tmp_path):
+    with cd(tmp_path):
+        result = invoke(["info", "-g", "--where"])
     assert "global-project" in result.output.strip()
 
 

@@ -54,32 +54,29 @@ class Project:
     PYPROJECT_VERSION = "2"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
-    core: Core
-
-    @classmethod
-    def create_global(cls, root_path: Optional[str] = None) -> "Project":
-        if root_path is None:
-            root_path = cls.GLOBAL_PROJECT.as_posix()
-        project = cls(root_path)
-        project.is_global = True
-        project.init_global_project()
-        return project
-
-    def __init__(self, root_path: Optional[str] = None) -> None:
-        self.is_global = False
+    def __init__(
+        self, core: Core, root_path: Optional[os.PathLike], is_global: bool = False
+    ) -> None:
         self._pyproject: Optional[Dict] = None
         self._lockfile: Optional[Dict] = None
         self._environment: Optional[Environment] = None
         self._python: Optional[PythonInfo] = None
+        self.core = core
 
         if root_path is None:
-            root_path = find_project_root()
-        if root_path is None and self.global_config["auto_global"]:
-            self.root = self.GLOBAL_PROJECT
-            self.is_global = True
-            self.init_global_project()
-        else:
-            self.root = Path(root_path or "").absolute()
+            root_path = find_project_root() if not is_global else self.GLOBAL_PROJECT
+        if not is_global and root_path is None and self.global_config["auto_global"]:
+            self.core.ui.echo(
+                "Project is not found, fallback to the global project",
+                fg="yellow",
+                err=True,
+            )
+            root_path = self.GLOBAL_PROJECT
+            is_global = True
+
+        self.root = Path(root_path or "").absolute()
+        self.is_global = is_global
+        self.init_global_project()
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"

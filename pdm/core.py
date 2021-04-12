@@ -83,24 +83,24 @@ class Core:
             options.project = obj
         if getattr(options, "project", None) is None:
             global_project = getattr(options, "global_project", None)
-            if global_project:
-                project_factory = self.project_class.create_global
-            else:
-                project_factory = self.project_class
 
             default_root = (
                 None
                 if global_project or getattr(options, "search_parent", True)
                 else "."
             )
-            project = project_factory(
-                getattr(options, "project_path", None) or default_root
+            project = self.create_project(
+                getattr(options, "project_path", None) or default_root,
+                is_global=global_project,
             )
             options.project = project
 
-        # Add reverse reference for core object
-        options.project.core = self
         migrate_pyproject(options.project)
+
+    def create_project(
+        self, root_path: Optional[os.PathLike] = None, is_global: bool = False
+    ):
+        return self.project_class(self, root_path, is_global)
 
     def main(
         self,
