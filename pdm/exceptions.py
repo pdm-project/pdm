@@ -51,7 +51,7 @@ class ExtrasError(UserWarning):
         return f"Extras not found: {self.extras}"
 
 
-class ProjectError(PdmException):
+class ProjectError(PdmUsageError):
     pass
 
 

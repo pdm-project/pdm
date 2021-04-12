@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pdm import termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
@@ -165,6 +166,7 @@ class Command(BaseCommand):
         project.core.ui.display_columns(result, columns)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        check_project_file(project)
         if options.list:
             return self._show_list(project)
         global_env_options = project.scripts.get("_", {}) if project.scripts else {}
