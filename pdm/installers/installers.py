@@ -8,7 +8,6 @@ from pip._vendor.pkg_resources import EggInfoDistribution
 
 from pdm import termui
 from pdm.models import pip_shims
-from pdm.models.builders import EnvBuilder
 from pdm.models.requirements import parse_requirement
 
 if TYPE_CHECKING:
@@ -55,6 +54,8 @@ class Installer:  # pragma: no cover
         wheel.install(paths, maker)
 
     def install_editable(self, ireq: pip_shims.InstallRequirement) -> None:
+        from pdm.builders.base import EnvBuilder
+
         setup_path = ireq.setup_py_path
         paths = self.environment.get_paths()
         install_script = importlib.import_module(

@@ -17,20 +17,11 @@ from pep517.wrappers import Pep517HookCaller
 
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_sys_config_paths
-from pdm.pep517.base import Builder
 from pdm.termui import logger
 from pdm.utils import cached_property
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
-
-_SETUPTOOLS_SHIM = (
-    "import sys, setuptools, tokenize; sys.argv[0] = {0!r}; __file__={0!r};"
-    "f=getattr(tokenize, 'open', open)(__file__);"
-    "code=f.read().replace('\\r\\n', '\\n');"
-    "f.close();"
-    "exec(compile(code, __file__, 'exec'))"
-)
 
 
 class LoggerWrapper(threading.Thread):
@@ -98,16 +89,6 @@ def log_subprocessor(
         raise BuildError(f"Call command {cmd} return non-zero status.")
     finally:
         outstream.stop()
-
-
-def _find_egg_info(directory: str) -> str:
-    filename = next(
-        (f for f in os.listdir(directory) if f.endswith(".egg-info")),
-        None,
-    )
-    if not filename:
-        raise BuildError("No egg info is generated.")
-    return filename
 
 
 class EnvBuilder:
@@ -252,35 +233,8 @@ class EnvBuilder:
             self.subprocess_runner(cmd)
             os.unlink(req_file.name)
 
-    def build_wheel(self, out_dir: str) -> str:
-        """Build wheel and return the full path of the artifact."""
-        self.install(self._build_system["requires"])
-        requires = self._hook.get_requires_for_build_wheel()
-        self.install(requires)
-        filename = self._hook.build_wheel(out_dir)
-        return os.path.join(out_dir, filename)
-
-    def build_sdist(self, out_dir: str) -> str:
-        """Build sdist and return the full path of the artifact."""
-        self.install(self._build_system["requires"])
-        requires = self._hook.get_requires_for_build_sdist()
-        self.install(requires)
-        filename = self._hook.build_sdist(out_dir)
-        return os.path.join(out_dir, filename)
-
-    def build_egg_info(self, out_dir: str) -> str:
-        # Ignore destination since editable builds should be build locally
-        from pdm.project.metadata import MutableMetadata
-
-        builder = Builder(self.src_dir)
-        if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
-            builder._meta = MutableMetadata(
-                os.path.join(self.src_dir, "pyproject.toml")
-            )
-        setup_py_path = builder.ensure_setup_py().as_posix()
-        self.install(["setuptools"])
-        args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
-        args.extend(["egg_info", "--egg-base", os.path.relpath(out_dir, self.src_dir)])
-        self.subprocess_runner(args, cwd=self.src_dir)
-        filename = _find_egg_info(out_dir)
-        return os.path.join(out_dir, filename)
+    def build(self, out_dir: str) -> str:
+        """Build and store the artifact in out_dir,
+        return the absolute path of the built result.
+        """
+        raise NotImplementedError("Should be implemented in subclass")

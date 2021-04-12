@@ -24,7 +24,6 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.installers.installers import format_dist
-from pdm.models.builders import EnvBuilder
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -355,6 +354,8 @@ def do_build(
     clean: bool = True,
 ):
     """Build artifacts for distribution."""
+    from pdm.builders import EnvSdistBuilder, EnvWheelBuilder
+
     if project.is_global:
         raise ProjectError("Not allowed to build based on the global project.")
     check_project_file(project)
@@ -365,16 +366,16 @@ def do_build(
         dest = project.root.joinpath(dest).as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
-    with project.core.ui.logging("build"), EnvBuilder(
-        project.root, project.environment
-    ) as builder:
+    with project.core.ui.logging("build"):
         if sdist:
             project.core.ui.echo("Building sdist...")
-            loc = builder.build_sdist(dest)
+            with EnvSdistBuilder(project.root, project.environment) as builder:
+                loc = builder.build(dest)
             project.core.ui.echo(f"Built sdist at {loc}")
         if wheel:
             project.core.ui.echo("Building wheel...")
-            loc = builder.build_wheel(dest)
+            with EnvWheelBuilder(project.root, project.environment) as builder:
+                loc = builder.build(dest)
             project.core.ui.echo(f"Built wheel at {loc}")
 
 
