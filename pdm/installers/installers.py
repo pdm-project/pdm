@@ -50,7 +50,10 @@ class Installer:  # pragma: no cover
         paths = self.environment.get_paths()
         maker = distlib.scripts.ScriptMaker(None, None)
         maker.variants = set(("",))
-        maker.executable = self.environment.interpreter.executable
+        enquoted_executable = distlib.scripts.enquote_executable(
+            self.environment.interpreter.executable
+        )
+        maker.executable = enquoted_executable
         wheel.install(paths, maker)
 
     def install_editable(self, ireq: pip_shims.InstallRequirement) -> None:
