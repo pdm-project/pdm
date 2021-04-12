@@ -174,9 +174,12 @@ class EnvBuilder:
 
     @property
     def _env_vars(self) -> Dict[str, str]:
+        paths = [self._prefix.bin_dir]
+        if "PATH" in os.environ:
+            paths.append(os.getenv("PATH"))
         return {
             "PYTHONPATH": self._prefix.site_dir,
-            "PATH": self._prefix.bin_dir,
+            "PATH": os.pathsep.join(paths),
             "PYTHONNOUSERSITE": "1",
             "PDM_PYTHON_PEP582": "0",
         }

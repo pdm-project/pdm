@@ -373,7 +373,7 @@ def do_build(
             project.core.ui.echo(f"Built sdist at {loc}")
         if wheel:
             project.core.ui.echo("Building wheel...")
-            EnvWheelBuilder(project.root, project.environment).build(dest)
+            loc = EnvWheelBuilder(project.root, project.environment).build(dest)
             project.core.ui.echo(f"Built wheel at {loc}")
 
 
