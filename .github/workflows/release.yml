@@ -24,11 +24,10 @@ jobs:
           echo "::set-output name=CHANGELOG_CONTENT::${RELEASE_NOTES}"
       - name: Install Current PDM
         run: |
-          pip install -U pip
-          pip install .
+          pip install -U build
       - name: Build artifacts
         run: |
-          pdm build -v
+          python -m build --sdist --wheel .
       - name: Test Build
         run: |
           python3 -m venv fresh_env
