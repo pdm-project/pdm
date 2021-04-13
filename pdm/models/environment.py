@@ -232,6 +232,8 @@ class Environment:
         build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
         supported_tags = pip_shims.get_supported(self.interpreter.for_tag())
+        if hashes:
+            ireq.hash_options = convert_hashes(hashes)
         with self.get_finder(ignore_requires_python=True) as finder:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
@@ -259,8 +261,6 @@ class Environment:
             else:
                 ireq.ensure_has_source_dir(build_dir)
 
-            if hashes:
-                ireq.hash_options = convert_hashes(hashes)
             if not (ireq.editable and ireq.req.is_local_dir):
                 downloader = pip_shims.Downloader(finder.session, "off")
                 downloaded = pip_shims.unpack_url(
