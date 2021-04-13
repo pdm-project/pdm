@@ -86,8 +86,9 @@ sections_group.add_argument(
     dest="sections",
     metavar="SECTION",
     action="append",
-    help="(MULTIPLE) Specify section(s) of optional-dependencies "
-    "or dev-dependencies(with -d)",
+    help="Select section of optional-dependencies "
+    "or dev-dependencies(with -d). Can be supplied multiple times, "
+    'use ":all" to include all groups under the same species.',
     default=[],
 )
 sections_group.add_argument(
