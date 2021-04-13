@@ -3,7 +3,7 @@ import os
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
 import toml
 
@@ -56,7 +56,7 @@ def get_docstring_and_version_via_ast(
             and isinstance(child.value, ast.Str)
         )
         if is_version_str:
-            version = child.value.s
+            version: Optional[str] = cast(ast.Str, cast(ast.Assign, child).value).s
             break
     else:
         version = None
@@ -85,7 +85,7 @@ class FlitMetaConverter(MetaConverter):
         self._ui.echo(message, err=True, fg="yellow")
 
     @convert_from("metadata")
-    def name(self, metadata: Dict[str, List[str]]) -> str:
+    def name(self, metadata: Dict[str, Any]) -> str:
         # name
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
@@ -109,7 +109,7 @@ class FlitMetaConverter(MetaConverter):
         if "maintainer" in metadata:
             self._data["maintainers"] = _get_author(metadata, "maintainer")
         if "license" in metadata:
-            self._data["license"] = make_inline_table({"text", metadata.pop("license")})
+            self._data["license"] = make_inline_table({"text": metadata.pop("license")})
             self._data["dynamic"] = ["classifiers"]
         if "urls" in metadata:
             self._data["urls"] = metadata.pop("urls")
@@ -152,5 +152,5 @@ def convert(
         return converter.convert()
 
 
-def export(project: Project, candidates: List, options: Optional[Any]) -> None:
+def export(project: Project, candidates: List, options: Optional[Namespace]) -> None:
     raise NotImplementedError()

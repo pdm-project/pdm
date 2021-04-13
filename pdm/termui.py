@@ -9,7 +9,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import Any, Callable, ContextManager, Iterator, List, Optional, Union
+from typing import Any, Callable, Iterator, List, Optional, Sequence, Union
 
 import click
 from click._compat import strip_ansi
@@ -71,7 +71,7 @@ class DummySpinner:
     But only display text onto screen.
     """
 
-    def start(self, text: str):
+    def start(self, text: str) -> None:
         click.echo(text)
 
     succeed = fail = stop_and_persist = start
@@ -109,7 +109,7 @@ class UI:
             )
 
     def display_columns(
-        self, rows: List[List[str]], header: Optional[List[str]] = None
+        self, rows: Sequence[Sequence[str]], header: Optional[List[str]] = None
     ) -> None:
         """Print rows in aligned columns.
 
@@ -179,7 +179,7 @@ class UI:
         pip_logger = logging.getLogger("pip.subprocessor")
         pip_logger.handlers[:] = [handler]
 
-        def cleanup():
+        def cleanup() -> None:
             try:
                 os.unlink(file_name)
             except OSError:
@@ -200,18 +200,20 @@ class UI:
 
     def open_spinner(
         self, title: str, spinner: str = "dots"
-    ) -> ContextManager[Union[DummySpinner, halo.Halo]]:
+    ) -> Union[DummySpinner, halo.Halo]:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()
         else:
-            return halo.Halo(title, spinner=spinner, indent=self._indent)
+            return halo.Halo(  # type: ignore
+                title, spinner=spinner, indent=self._indent
+            )
 
 
 class Emoji:
     """A collection of emoji characters used in terminal output"""
 
-    if supports_unicode():
+    if supports_unicode():  # type: ignore
         SUCC = "🎉"
         LOCK = "🔒"
     else:

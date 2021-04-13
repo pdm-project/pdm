@@ -14,7 +14,7 @@ FOLDER_PATH = Path(__file__).parent
 
 
 @functools.lru_cache()
-def get_python_abi_tag(executable: str):
+def get_python_abi_tag(executable: str) -> str:
     script = str(FOLDER_PATH / "get_abi_tag.py")
     return json.loads(subprocess.check_output(args=[executable, "-Es", script]))
 

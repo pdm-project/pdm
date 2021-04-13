@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import contextlib
 import functools
 import multiprocessing
 import traceback
 from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
@@ -23,7 +22,7 @@ class DummyFuture:
 
     def __init__(self) -> None:
         self._result = self._NOT_SET
-        self._exc = None
+        self._exc: Optional[Exception] = None
 
     def set_result(self, result: Any) -> None:
         self._result = result
@@ -31,7 +30,7 @@ class DummyFuture:
     def set_exception(self, exc: Exception) -> None:
         self._exc = exc
 
-    def result(self):
+    def result(self) -> Any:
         return self._result
 
     def exception(self) -> Optional[Exception]:
@@ -84,21 +83,13 @@ class Synchronizer:
         self.retry_times = retry_times
         self.ui = environment.project.core.ui
 
-    @contextlib.contextmanager
     def create_executor(
         self,
-    ) -> Union[Iterator[ThreadPoolExecutor], Iterator[DummyExecutor]]:
+    ) -> Union[ThreadPoolExecutor, DummyExecutor]:
         if self.parallel:
-            executor = ThreadPoolExecutor(
-                max_workers=min(multiprocessing.cpu_count(), 8)
-            )
+            return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
         else:
-            executor = DummyExecutor()
-        with executor:
-            try:
-                yield executor
-            except KeyboardInterrupt:
-                pass
+            return DummyExecutor()
 
     def get_installer(self) -> Installer:
         return Installer(self.environment)
@@ -297,9 +288,9 @@ class Synchronizer:
         def update_progress(
             future: Union[Future, DummyFuture], kind: str, key: str
         ) -> None:
-            if future.exception():
+            error = future.exception()
+            if error:
                 failed_jobs.append((kind, key))
-                error = future.exception()
                 errors.extend(
                     [f"{kind} {termui.green(key)} failed:\n"]
                     + traceback.format_exception(
@@ -332,6 +323,7 @@ class Synchronizer:
                 raise InstallationError("Some package operations are not complete yet")
 
             if self_action:
+                assert self_key
                 self.ui.echo("Installing the project as an editable package...")
                 with self.ui.indent("  "):
                     handlers[self_action](self_key)

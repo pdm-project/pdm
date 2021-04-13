@@ -1,8 +1,7 @@
 import dataclasses
 import os
-from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, TypeVar
+from typing import Any, Callable, Dict, Iterator, MutableMapping, Optional, TypeVar
 
 import appdirs
 import click
@@ -42,7 +41,7 @@ def ensure_boolean(val: Any) -> bool:
     if not isinstance(val, str):
         return val
 
-    return val and val.lower() not in ("false", "no", "0")
+    return bool(val) and val.lower() not in ("false", "no", "0")
 
 
 @dataclasses.dataclass
@@ -61,13 +60,13 @@ class ConfigItem:
     default: Any = _NOT_SET
     global_only: bool = False
     env_var: Optional[str] = None
-    coerce: Callable[[Any], Any] = str
+    coerce: Callable = str
 
     def should_show(self) -> bool:
         return self.default is not self._NOT_SET
 
 
-class Config(MutableMapping):
+class Config(MutableMapping[str, str]):
     """A dict-like object for configuration key and values"""
 
     HOME_CONFIG = Path.home() / ".pdm" / "config.toml"
@@ -151,7 +150,7 @@ class Config(MutableMapping):
     def _save_config(self) -> None:
         """Save the changed to config file."""
         self._config_file.parent.mkdir(parents=True, exist_ok=True)
-        toml_data = {}
+        toml_data: Dict[str, Any] = {}
         for key, value in self._file_data.items():
             *parts, last = key.split(".")
             temp = toml_data
@@ -199,7 +198,7 @@ class Config(MutableMapping):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self) -> Iterable[str]:
+    def __iter__(self) -> Iterator[str]:
         return iter(self._data)
 
     def __delitem__(self, key: str) -> None:

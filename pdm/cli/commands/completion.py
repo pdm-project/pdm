@@ -1,8 +1,10 @@
 import argparse
 import importlib.resources
 import sys
+from typing import List
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import Option
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
@@ -10,7 +12,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Generate completion scripts for the given shell"""
 
-    arguments = []
+    arguments: List[Option] = []
     SUPPORTED_SHELLS = ("bash", "zsh", "fish", "powershell")
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:

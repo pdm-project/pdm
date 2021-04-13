@@ -6,7 +6,7 @@ import os
 import re
 from argparse import Namespace
 from os import PathLike
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import toml
 
@@ -67,16 +67,18 @@ def _convert_python(python: str) -> PySpecSet:
 
 def _convert_req(name: str, req_dict: RequirementDict) -> str:
     if not getattr(req_dict, "items", None):
+        assert isinstance(req_dict, str)
         return Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
+    assert isinstance(req_dict, dict)
     req_dict = dict(req_dict)
     if "version" in req_dict:
-        req_dict["version"] = _convert_specifier(req_dict["version"])
+        req_dict["version"] = _convert_specifier(str(req_dict["version"]))
     markers = []
     if "markers" in req_dict:
         markers.append(Marker(req_dict.pop("markers")))
     if "python" in req_dict:
         markers.append(
-            Marker(_convert_python(req_dict.pop("python")).as_marker_string())
+            Marker(_convert_python(str(req_dict.pop("python"))).as_marker_string())
         )
     if markers:
         req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace(
@@ -84,7 +86,7 @@ def _convert_req(name: str, req_dict: RequirementDict) -> str:
         )
     if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:
         req_dict["ref"] = req_dict.pop(
-            "rev", req_dict.pop("tag", req_dict.pop("branch", None))
+            "rev", req_dict.pop("tag", req_dict.pop("branch", None))  # type: ignore
         )
     return Requirement.from_req_dict(name, req_dict).as_line()
 
@@ -127,7 +129,7 @@ class PoetryMetaConverter(MetaConverter):
         return value
 
     @convert_from()
-    def dependencies(self, source: Source) -> List[str]:
+    def dependencies(self, source: Dict[str, Any]) -> List[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
@@ -157,8 +159,9 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from()
     def includes(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
-        result = []
+        result: List[str] = []
         for item in source.pop("packages", []):
+            assert isinstance(item, dict)
             include = item["include"]
             if item.get("from"):
                 include = f"{item.get('from')}/{include}"
@@ -178,7 +181,7 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("source")
-    def source(self, value: List[Source]) -> None:
+    def sources(self, value: List[Source]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
@@ -194,7 +197,7 @@ def convert(
     project: Optional[Project],
     filename: PathLike,
     options: Optional[Namespace],
-) -> Tuple[Dict[str, Any], Dict]:
+) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):

@@ -8,7 +8,7 @@ import tempfile
 import textwrap
 import threading
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
 
 import toml
 from pep517.wrappers import Pep517HookCaller
@@ -71,7 +71,7 @@ def log_subprocessor(
     cmd: List[str],
     cwd: Optional[os.PathLike] = None,
     extra_environ: Optional[Dict[str, str]] = None,
-):
+) -> None:
     env = os.environ.copy()
     if extra_environ:
         env.update(extra_environ)
@@ -81,7 +81,7 @@ def log_subprocessor(
             cmd,
             cwd=cwd,
             env=env,
-            stdout=outstream,
+            stdout=outstream.fileno(),
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError:
@@ -176,7 +176,7 @@ class EnvBuilder:
     def _env_vars(self) -> Dict[str, str]:
         paths = [self._prefix.bin_dir]
         if "PATH" in os.environ:
-            paths.append(os.getenv("PATH"))
+            paths.append(os.getenv("PATH", ""))
         return {
             "PYTHONPATH": self._prefix.site_dir,
             "PATH": os.pathsep.join(paths),
@@ -187,10 +187,10 @@ class EnvBuilder:
     def subprocess_runner(
         self,
         cmd: List[str],
-        cwd: Optional[str] = None,
+        cwd: Optional[os.PathLike] = None,
         extra_environ: Optional[Dict[str, str]] = None,
         isolated: bool = True,
-    ) -> Optional[Any]:
+    ) -> None:
         env = self._env_vars.copy() if isolated else {}
         if extra_environ:
             env.update(extra_environ)
