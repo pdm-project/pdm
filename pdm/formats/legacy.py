@@ -2,7 +2,7 @@ import functools
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import toml
 
@@ -39,7 +39,7 @@ class LegacyMetaConverter(MetaConverter):
         return parse_name_email([value])
 
     @convert_from("maintainer")
-    def maintainers(self, value: List[str]) -> List[str]:
+    def maintainers(self, value: str) -> List[str]:
         return parse_name_email([value])
 
     @convert_from("version")
@@ -63,7 +63,7 @@ class LegacyMetaConverter(MetaConverter):
         return make_inline_table({"text": value})
 
     @convert_from("source")
-    def source(self, value: List[Source]) -> None:
+    def sources(self, value: List[Source]) -> None:
         self.settings["source"] = value
         raise Unset()
 
@@ -101,48 +101,55 @@ class LegacyMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from(name="optional-dependencies")
-    def optional_dependencies(self, source: Dict[str, str]) -> Dict[str, str]:
+    def optional_dependencies(self, source: Dict[str, Any]) -> Dict[str, List[str]]:
         extras = {}
         for key, reqs in list(source.items()):
             if key.endswith("-dependencies") and key != "dev-dependencies":
+                reqs = cast(Dict[str, RequirementDict], reqs)
                 extra_key = key.split("-", 1)[0]
                 extras[extra_key] = [
                     Requirement.from_req_dict(name, req).as_line()
                     for name, req in reqs.items()
                 ]
                 source.pop(key)
-        for name in source.pop("extras", []):
+        for name in cast(List[str], source.pop("extras", [])):
             if name in extras:
                 continue
             if "=" in name:
-                key, parts = name.split("=", 1)
-                parts = parts.split("|")
+                key, others = name.split("=", 1)
+                parts = others.split("|")
                 extras[key] = list(
-                    functools.reduce(lambda x, y: x.union(extras[y]), parts, set())
+                    functools.reduce(
+                        lambda x, y: cast(Set[str], x).union(extras[y]),
+                        parts,
+                        cast(Set[str], set()),
+                    )
                 )
         return extras
 
     @convert_from("cli")
-    def scripts(self, value: str) -> Dict[str, str]:
+    def scripts(self, value: Dict[str, str]) -> Dict[str, str]:
         return dict(value)
 
     @convert_from("includes")
-    def includes(self, value):
+    def includes(self, value: List[str]) -> None:
         self.settings["includes"] = value
         raise Unset()
 
     @convert_from("excludes")
-    def excludes(self, value):
+    def excludes(self, value: List[str]) -> None:
         self.settings["excludes"] = value
         raise Unset()
 
     @convert_from("build")
-    def build(self, value):
+    def build(self, value: str) -> None:
         self.settings["build"] = value
         raise Unset()
 
     @convert_from("entry_points", name="entry-points")
-    def entry_points(self, value: str) -> Dict[str, str]:
+    def entry_points(
+        self, value: Dict[str, Dict[str, str]]
+    ) -> Dict[str, Dict[str, str]]:
         return dict(value)
 
     @convert_from("scripts")
@@ -158,7 +165,7 @@ class LegacyMetaConverter(MetaConverter):
 
 def convert(
     project: Project, filename: Path, options: Optional[Namespace]
-) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
+) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
         converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], project.core.ui)
         return converter.convert()

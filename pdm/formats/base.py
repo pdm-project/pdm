@@ -1,24 +1,20 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
 
 import tomlkit
 from tomlkit.items import Array, InlineTable
 
 from pdm import termui
 
+_T = TypeVar("_T", bound=Callable)
 
-def convert_from(
-    field: str = None, name: str = None
-) -> Callable[
-    [Callable[[MetaConverter, Any], Any]], Callable[[MetaConverter, Any], Any]
-]:
-    def wrapper(
-        func: Callable[[MetaConverter, Any], Any]
-    ) -> Callable[[MetaConverter, Any], Any]:
-        func._convert_from = field
-        func._convert_to = name
+
+def convert_from(field: str = None, name: str = None) -> Callable[[_T], _T]:
+    def wrapper(func: _T) -> _T:
+        func._convert_from = field  # type: ignore
+        func._convert_to = name  # type: ignore
         return func
 
     return wrapper
@@ -29,7 +25,7 @@ class Unset(Exception):
 
 
 class _MetaConverterMeta(type):
-    def __init__(cls, name: str, bases: Tuple[type], ns: Dict[str, Any]) -> None:
+    def __init__(cls, name: str, bases: Tuple[type, ...], ns: Dict[str, Any]) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}
         _default = object()
@@ -42,18 +38,24 @@ class _MetaConverterMeta(type):
 class MetaConverter(metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
+    _converters: Dict[str, Callable]
+
     def __init__(self, source: dict, ui: Optional[termui.UI] = None) -> None:
         self.source = source
-        self.settings = {}
-        self._data = {}
+        self.settings: Dict[str, Any] = {}
+        self._data: Dict[str, Any] = {}
         self._ui = ui
 
-    def convert(self) -> Tuple[Mapping, Mapping]:
+    def convert(self) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
         source = self.source
         for key, func in self._converters.items():
-            if func._convert_from and func._convert_from not in source:
+            if func._convert_from and func._convert_from not in source:  # type: ignore
                 continue
-            value = source if func._convert_from is None else source[func._convert_from]
+            value = (
+                source
+                if func._convert_from is None  # type: ignore
+                else source[func._convert_from]  # type: ignore
+            )
             try:
                 self._data[key] = func(self, value)
             except Unset:
@@ -61,10 +63,10 @@ class MetaConverter(metaclass=_MetaConverterMeta):
 
         # Delete all used fields
         for key, func in self._converters.items():
-            if func._convert_from is None:
+            if func._convert_from is None:  # type: ignore
                 continue
             try:
-                del source[func._convert_from]
+                del source[func._convert_from]  # type: ignore
             except KeyError:
                 pass
         # Add remaining items to the data
@@ -98,5 +100,5 @@ def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> Arra
 
 def parse_name_email(name_email: List[str]) -> Array:
     return array_of_inline_tables(
-        [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]
+        [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]  # type: ignore
     )

@@ -545,6 +545,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             4. None that returns all possible interpreters
         """
         config = self.config
+        python: Optional[os.PathLike] = None
 
         if not python_spec:
             if config.get("python.use_pyenv", True) and PYENV_INSTALLED:
@@ -562,7 +563,7 @@ dependencies = ["pip", "setuptools", "wheel"]
                 if Path(python_spec).exists():
                     python = find_python_in_path(python_spec)
                     if python:
-                        yield PythonInfo.from_path(str(python))
+                        yield PythonInfo.from_path(python)
                 else:
                     python = shutil.which(python_spec)
                     if python:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from argparse import Namespace
 from os import PathLike
-from typing import Iterable, Mapping, Optional, Tuple, TypeVar
+from typing import Iterable, Mapping, Optional, Tuple, TypeVar, cast
 
 from pdm._types import Protocol
 from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
@@ -14,7 +14,7 @@ _T = TypeVar("_T", Candidate, Requirement)
 
 
 class _Format(Protocol):
-    def check_fingerprint(self, project: Project, filename: PathLike) -> bool:
+    def check_fingerprint(self, project: Optional[Project], filename: PathLike) -> bool:
         ...
 
     def convert(
@@ -32,10 +32,10 @@ class _Format(Protocol):
 
 
 FORMATS: Mapping[str, _Format] = {
-    "pipfile": pipfile,
-    "poetry": poetry,
-    "flit": flit,
-    "requirements": requirements,
-    "legacy": legacy,
-    "setuppy": setup_py,
+    "pipfile": cast(_Format, pipfile),
+    "poetry": cast(_Format, poetry),
+    "flit": cast(_Format, flit),
+    "requirements": cast(_Format, requirements),
+    "legacy": cast(_Format, legacy),
+    "setuppy": cast(_Format, setup_py),
 }
