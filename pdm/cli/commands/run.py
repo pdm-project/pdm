@@ -5,7 +5,7 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Mapping, MutableMapping, Optional, Sequence, Tuple, Union, cast
 
 from pdm import termui
 from pdm.cli.actions import PEP582_PATH
@@ -38,13 +38,13 @@ class Command(BaseCommand):
     @staticmethod
     def _run_command(
         project: Project,
-        args: Union[List[str], str],
+        args: Union[Sequence[str], str],
         shell: bool = False,
-        env: Optional[Dict[str, str]] = None,
+        env: Optional[Mapping[str, str]] = None,
         env_file: Optional[str] = None,
     ) -> None:
         if "PYTHONPATH" in os.environ:
-            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH")])
+            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH", "")])
         else:
             pythonpath = PEP582_PATH
         project_env = project.environment
@@ -66,8 +66,10 @@ class Command(BaseCommand):
         if env:
             os.environ.update(env)
         if shell:
+            assert isinstance(args, str)
             sys.exit(subprocess.call(os.path.expandvars(args), shell=True))
 
+        assert isinstance(args, Sequence)
         command, *args = args
         expanded_command = project_env.which(command)
         if not expanded_command:
@@ -87,7 +89,7 @@ class Command(BaseCommand):
 
     def _normalize_script(
         self, script: Any
-    ) -> Tuple[str, Union[List[str], str], Dict[str, Union[str, dict]]]:
+    ) -> Tuple[str, Union[Sequence[str], str], MutableMapping[str, Any]]:
         if not getattr(script, "items", None):
             # Regard as the same as {cmd = ... }
             kind = "cmd"
@@ -115,8 +117,8 @@ class Command(BaseCommand):
         self,
         project: Project,
         script_name: str,
-        args: List[str],
-        global_env_options: Dict[str, Union[str, Dict[str, str]]],
+        args: Sequence[str],
+        global_env_options: Mapping[str, Union[str, Mapping[str, str]]],
     ) -> None:
         script = project.scripts[script_name]
         kind, value, options = self._normalize_script(script)
@@ -126,9 +128,11 @@ class Command(BaseCommand):
                 value = shlex.split(str(value))
             args = value + list(args)
         elif kind == "shell":
-            args = " ".join([value] + list(args))
+            assert isinstance(value, str)
+            args = " ".join([value] + list(args))  # type: ignore
             options["shell"] = True
         elif kind == "call":
+            assert isinstance(value, str)
             module, _, func = value.partition(":")
             if not module or not func:
                 raise PdmUsageError(
@@ -142,9 +146,12 @@ class Command(BaseCommand):
                 "-c",
                 f"import sys, {module} as {short_name};"
                 f"sys.exit({short_name}.{func})",
-            ] + args
+            ] + list(args)
         if "env" in global_env_options:
-            options["env"] = {**global_env_options["env"], **options.get("env", {})}
+            options["env"] = {
+                **cast(Mapping[str, str], global_env_options["env"]),
+                **options.get("env", {}),
+            }
         options["env_file"] = options.get(
             "env_file", global_env_options.get("env_file")
         )
@@ -162,7 +169,9 @@ class Command(BaseCommand):
             if name == "_":
                 continue
             kind, value, options = self._normalize_script(script)
-            result.append((termui.green(name), kind, value, options.get("help", "")))
+            result.append(
+                (termui.green(name), kind, str(value), options.get("help", ""))
+            )
         project.core.ui.display_columns(result, columns)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -177,5 +186,7 @@ class Command(BaseCommand):
             self._run_script(project, options.command, options.args, global_env_options)
         else:
             self._run_command(
-                project, [options.command] + options.args, **global_env_options
+                project,
+                [options.command] + options.args,
+                **global_env_options,  # type: ignore
             )

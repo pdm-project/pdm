@@ -24,13 +24,15 @@ class BaseCommand:
         self.add_arguments(parser)
 
     @classmethod
-    def register_to(cls, subparsers: _SubParsersAction, name: str = None) -> None:
+    def register_to(
+        cls, subparsers: _SubParsersAction, name: Optional[str] = None
+    ) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """
         help_text = cls.description or cls.__doc__
         parser = subparsers.add_parser(
-            name or cls.name,
+            name or cls.name or "",
             description=help_text,
             help=help_text,
             formatter_class=PdmFormatter,

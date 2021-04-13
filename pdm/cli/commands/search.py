@@ -32,8 +32,9 @@ def print_results(
             target_width = terminal_width - name_column_width - 5
             if target_width > 10:
                 # wrap and indent summary to fit terminal
-                summary = textwrap.wrap(summary, target_width)
-                summary = ("\n" + " " * (name_column_width + 2)).join(summary)
+                summary = ("\n" + " " * (name_column_width + 2)).join(
+                    textwrap.wrap(summary, target_width)
+                )
         current_width = len(name) + len(latest) + 4
         spaces = " " * (name_column_width - current_width)
         line = "{name} ({latest}){spaces} - {summary}".format(

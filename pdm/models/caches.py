@@ -52,12 +52,12 @@ class CandidateInfoCache:
         key = self._get_key(candidate)
         return self._cache[key]
 
-    def set(self, candidate: Candidate, value: CandidateInfo):
+    def set(self, candidate: Candidate, value: CandidateInfo) -> None:
         key = self._get_key(candidate)
         self._cache[key] = value
         self._write_cache()
 
-    def delete(self, candidate: Candidate):
+    def delete(self, candidate: Candidate) -> None:
         try:
             del self._cache[self._get_key(candidate)]
         except KeyError:
