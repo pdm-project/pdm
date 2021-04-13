@@ -2,11 +2,17 @@ import sys
 from typing import Dict, List, NamedTuple, Tuple, Union
 
 if sys.version_info >= (3, 8):
-    from typing import Literal
+    from typing import Literal, Protocol, TypedDict
 else:
-    from typing_extensions import Literal
+    from typing_extensions import Literal, Protocol, TypedDict
 
-Source = Dict[str, Union[str, bool]]
+
+class Source(TypedDict):
+    url: str
+    verify_ssl: bool
+    name: str
+
+
 RequirementDict = Union[str, Dict[str, Union[bool, str]]]
 CandidateInfo = Tuple[List[str], str, str]
 
@@ -26,4 +32,5 @@ __all__ = (
     "CandidateInfo",
     "Package",
     "SearchResult",
+    "Protocol",
 )

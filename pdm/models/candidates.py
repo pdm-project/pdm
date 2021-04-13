@@ -21,6 +21,7 @@ from pdm.utils import cached_property, get_rev_from_url, path_replace
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
+    from packaging.version import Version
 
     from pdm.models.environment import Environment
 
@@ -94,7 +95,7 @@ class Candidate:
         req: Requirement,
         environment: Environment,
         name: Optional[str] = None,
-        version: Optional[str] = None,
+        version: Optional[Version] = None,
         link: Optional[pip_shims.Link] = None,
     ):
         """

@@ -2,7 +2,7 @@ import hashlib
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.requirements import Requirement as PRequirement
@@ -102,14 +102,14 @@ def convert_url_to_source(url: str, name: Optional[str] = None) -> Dict[str, Any
 
 def convert(
     project: Project, filename: PathLike, options: Namespace
-) -> Tuple[Dict[str, Any], Dict[str, List[Dict[str, Any]]]]:
+) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
     ireqs, finder = parse_requirement_file(str(filename))
     with project.core.ui.logging("build"):
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
     deps = make_array(reqs, True)
-    data = {}
-    settings = {}
+    data: Dict[str, Any] = {}
+    settings: Dict[str, Any] = {}
     if options.dev:
         settings["dev-dependencies"] = {options.section or "dev": deps}
     elif options.section:
@@ -134,7 +134,7 @@ def export(
         req = getattr(candidate, "req", candidate).as_line()
         lines.append(req)
         if options.hashes and getattr(candidate, "hashes", None):
-            for item in candidate.hashes.values():
+            for item in cast(Dict[str, str], candidate.hashes).values():
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
     sources = project.tool_settings.get("source", [])

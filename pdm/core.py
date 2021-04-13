@@ -5,7 +5,7 @@ import importlib
 import os
 import pkgutil
 import sys
-from typing import Any, List, Optional, Type
+from typing import Any, List, Optional, Type, cast
 
 import click
 from pip._vendor import pkg_resources
@@ -22,16 +22,18 @@ from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
 
-COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
+COMMANDS_MODULE_PATH: str = importlib.import_module(
+    "pdm.cli.commands"
+).__path__  # type: ignore
 
 
 class Core:
     """A high level object that manages all classes and configurations"""
 
     def __init__(self) -> None:
-        try:
+        if sys.version_info >= (3, 8):
             import importlib.metadata as importlib_metadata
-        except ModuleNotFoundError:
+        else:
             import importlib_metadata
         self.version = importlib_metadata.version(__name__.split(".")[0])
 
@@ -41,8 +43,8 @@ class Core:
         self.synchronizer_class = Synchronizer
 
         self.ui = termui.UI()
-        self.parser: PdmParser = None
-        self.subparsers = None
+        self.parser: Optional[PdmParser] = None
+        self.subparsers: Optional[argparse._SubParsersAction] = None
 
     def init_parser(self) -> None:
         self.parser = PdmParser(
@@ -68,7 +70,7 @@ class Core:
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:
-                klass = module.Command
+                klass = module.Command  # type: ignore
             except AttributeError:
                 continue
             self.register_command(klass, klass.name or name)
@@ -90,7 +92,7 @@ class Core:
                 else "."
             )
             project = self.create_project(
-                getattr(options, "project_path", None) or default_root,
+                getattr(options, "project_path", None) or default_root,  # type: ignore
                 is_global=global_project,
             )
             options.project = project
@@ -99,7 +101,7 @@ class Core:
 
     def create_project(
         self, root_path: Optional[os.PathLike] = None, is_global: bool = False
-    ):
+    ) -> Project:
         return self.project_class(self, root_path, is_global)
 
     def main(
@@ -114,7 +116,8 @@ class Core:
 
         self.init_parser()
         self.load_plugins()
-
+        assert self.parser
+        assert self.subparsers
         options = self.parser.parse_args(args or None)
         self.ui.set_verbosity(options.verbose)
         if options.ignore_python:
@@ -139,9 +142,10 @@ class Core:
                 etype, err, traceback = sys.exc_info()
                 should_show_tb = not isinstance(err, PdmUsageError)
                 if self.ui.verbosity > termui.NORMAL and should_show_tb:
-                    raise err.with_traceback(traceback)
+                    raise cast(Exception, err).with_traceback(traceback)
                 self.ui.echo(
-                    f"{termui.red('[' + etype.__name__ + ']')}: {err}", err=True
+                    f"{termui.red('[' + etype.__name__ + ']')}: {err}",  # type: ignore
+                    err=True,
                 )
                 if should_show_tb:
                     self.ui.echo("Add '-v' to see the detailed traceback", fg="yellow")
@@ -153,6 +157,7 @@ class Core:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """
+        assert self.subparsers
         command.register_to(self.subparsers, name)
 
     @staticmethod

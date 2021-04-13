@@ -18,19 +18,20 @@ MARKER_KEYS = list(default_environment().keys())
 
 
 def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
-    markers = []
 
-    if "markers" in req:
-        markers.append(Marker(req["markers"]))
-    for key in MARKER_KEYS:
-        if key in req:
-            marker = Marker(f"{key}{req[key]}")
-            markers.append(marker)
-            del req[key]
+    if isinstance(req, dict):
+        markers = []
+        if "markers" in req:
+            markers.append(Marker(req["markers"]))
+        for key in MARKER_KEYS:
+            if key in req:
+                marker = Marker(f"{key}{req[key]}")
+                markers.append(marker)
+                del req[key]
 
-    if markers:
-        marker = functools.reduce(operator.and_, markers)
-        req["marker"] = str(marker).replace('"', "'")
+        if markers:
+            marker = functools.reduce(operator.and_, markers)
+            req["marker"] = str(marker).replace('"', "'")
     return Requirement.from_req_dict(name, req).as_line()
 
 
