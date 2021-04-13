@@ -16,6 +16,7 @@ from pathlib import Path
 from re import Match
 from typing import (
     Any,
+    AnyStr,
     Callable,
     Dict,
     Generic,
@@ -25,6 +26,7 @@ from typing import (
     TextIO,
     Tuple,
     TypeVar,
+    cast,
     overload,
 )
 
@@ -81,7 +83,7 @@ def prepare_pip_source_args(
         # Trust the host if it's not verified.
         if not sources[0].get("verify_ssl", True):
             pip_args.extend(
-                ["--trusted-host", parse.urlparse(sources[0]["url"]).hostname]
+                ["--trusted-host", parse.urlparse(sources[0]["url"]).hostname or ""]
             )  # type: ignore
         # Add additional sources as extra indexes.
         if len(sources) > 1:
@@ -90,7 +92,7 @@ def prepare_pip_source_args(
                 # Trust the host if it's not verified.
                 if not source.get("verify_ssl", True):
                     pip_args.extend(
-                        ["--trusted-host", parse.urlparse(source["url"]).hostname]
+                        ["--trusted-host", parse.urlparse(source["url"]).hostname or ""]
                     )  # type: ignore
     return pip_args
 
@@ -177,7 +179,7 @@ def _wheel_support_index_min(self: Any, tags: Optional[str] = None) -> int:
 
 
 @contextmanager
-def allow_all_wheels(enable: bool = True):
+def allow_all_wheels(enable: bool = True) -> Iterator:
     """Monkey patch pip.Wheel to allow all wheels
 
     The usual checks against platforms and Python versions are ignored to allow
@@ -227,10 +229,10 @@ def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
     result: Dict[str, List[str]] = {}
     for hash_value in hashes.values():
         try:
-            name, hash_value = hash_value.split(":")
+            name, hash_value = hash_value.split(":", 1)
         except ValueError:
             name = "sha256"
-        setdefault(result, name, []).append(hash_value)
+        setdefault(result, name, cast(List[str], [])).append(hash_value)
     return result
 
 
@@ -285,18 +287,19 @@ def get_in_project_venv_python(root: Path) -> Optional[Path]:
 
 
 @contextmanager
-def atomic_open_for_write(filename: PathLike, *, encoding: str = "utf-8"):
+def atomic_open_for_write(
+    filename: PathLike, *, encoding: str = "utf-8"
+) -> Iterator[TextIO]:
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
-    filename = str(filename)
+    fp = open(fd, "w", encoding=encoding)
     try:
-        f = open(fd, "w", encoding=encoding)
-        yield f
+        yield fp
     except Exception:
-        f.close()
+        fp.close()
         os.unlink(name)
         raise
     else:
-        f.close()
+        fp.close()
         try:
             os.unlink(filename)
         except OSError:
@@ -305,7 +308,7 @@ def atomic_open_for_write(filename: PathLike, *, encoding: str = "utf-8"):
 
 
 @contextmanager
-def cd(path: str):
+def cd(path: str) -> Iterator:
     _old_cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -325,7 +328,7 @@ def temp_environ() -> Iterator:
 
 
 @contextmanager
-def open_file(url: str, session: Optional[Session] = None) -> TextIO:
+def open_file(url: str, session: Optional[Session] = None) -> Iterator[Session]:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
@@ -334,6 +337,7 @@ def open_file(url: str, session: Optional[Session] = None) -> TextIO:
             with open(local_path, "rb") as local_file:
                 yield local_file
     else:
+        assert session
         headers = {"Accept-Encoding": "identity"}
         with session.get(url, headers=headers, stream=True) as resp:
             try:
@@ -352,7 +356,7 @@ def populate_link(
     finder: PackageFinder,
     ireq: InstallRequirement,
     upgrade: bool = False,
-):
+) -> None:
     """Populate ireq's link attribute"""
     if not ireq.link:
         link = finder.find_requirement(ireq, upgrade)
@@ -362,7 +366,10 @@ def populate_link(
         ireq.link = link
 
 
-def setdefault(document: Dict, key: str, value: Any) -> Dict:
+_VT = TypeVar("_VT")
+
+
+def setdefault(document: Dict[AnyStr, _VT], key: AnyStr, value: _VT) -> _VT:
     """A compatiable dict.setdefault() for tomlkit data structures."""
     if key not in document:
         document[key] = value
@@ -418,9 +425,10 @@ def is_venv_python(interpreter: os.PathLike) -> bool:
     interpreter = Path(interpreter)
     if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
         return True
-    if os.getenv("VIRTUAL_ENV"):
+    virtual_env = os.getenv("VIRTUAL_ENV")
+    if virtual_env:
         try:
-            interpreter.relative_to(os.getenv("VIRTUAL_ENV"))
+            interpreter.relative_to(virtual_env)
         except ValueError:
             pass
         else:

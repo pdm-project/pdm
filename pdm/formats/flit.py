@@ -152,5 +152,5 @@ def convert(
         return converter.convert()
 
 
-def export(project: Project, candidates: List, options: Optional[Any]) -> None:
+def export(project: Project, candidates: List, options: Optional[Namespace]) -> None:
     raise NotImplementedError()

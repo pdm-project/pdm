@@ -556,7 +556,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             python = shutil.which("python")
             if python:
                 yield PythonInfo.from_path(python)
-            args = ()
+            args = []
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
                 if Path(python_spec).exists():
