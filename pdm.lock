@@ -335,7 +335,7 @@ dependencies = [
 [[package]]
 name = "pdm-pep517"
 sections = ["default"]
-version = "0.6.1"
+version = "0.7.0"
 summary = "A PEP 517 backend for PDM that supports PEP 621 metadata"
 
 [[package]]
@@ -527,7 +527,7 @@ dependencies = [
 [[package]]
 name = "resolvelib"
 sections = ["default"]
-version = "0.6.0"
+version = "0.7.0"
 summary = "Resolve abstract dependencies into concrete ones"
 
 [[package]]
@@ -645,7 +645,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:928b6f3d484cdaaf88f67337a0e46aa3fb639ea8800a1ae554bdc093f72fffc4"
+content_hash = "sha256:d1307aa41e8b5ca3791dde46af51127027fe3759550b2b69e3a4e8825414813e"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -963,9 +963,9 @@ content_hash = "sha256:928b6f3d484cdaaf88f67337a0e46aa3fb639ea8800a1ae554bdc093f
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
     {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
-"pdm-pep517 0.6.1" = [
-    {file = "pdm_pep517-0.6.1-py3-none-any.whl", hash = "sha256:a87f40bc988fe7395caedd0bdd5cc393e4e636e2986f46c059cffa1ae4cd6f89"},
-    {file = "pdm-pep517-0.6.1.tar.gz", hash = "sha256:de2dc09a9f649850d584e352330bdc4c69d23e114e04ddbcbed81911751805c5"},
+"pdm-pep517 0.7.0" = [
+    {file = "pdm_pep517-0.7.0-py3-none-any.whl", hash = "sha256:b45007936cc43bd34a3e4fa7145f79ae428467b713cb4de98ef6ba0a963490d7"},
+    {file = "pdm-pep517-0.7.0.tar.gz", hash = "sha256:aeb25e17e1ddd4d06264946b84e0043db39cb2ab5f812b4cccca116511aeab81"},
 ]
 "pep517 0.10.0" = [
     {file = "pep517-0.10.0-py2.py3-none-any.whl", hash = "sha256:eba39d201ef937584ad3343df3581069085bacc95454c80188291d5b3ac7a249"},
@@ -1100,9 +1100,9 @@ content_hash = "sha256:928b6f3d484cdaaf88f67337a0e46aa3fb639ea8800a1ae554bdc093f
     {file = "requests-2.25.1-py2.py3-none-any.whl", hash = "sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e"},
     {file = "requests-2.25.1.tar.gz", hash = "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"},
 ]
-"resolvelib 0.6.0" = [
-    {file = "resolvelib-0.6.0-py2.py3-none-any.whl", hash = "sha256:33512c405ec4d5039dd0296d040b286b06af9051777ef3b27be47c477be346a0"},
-    {file = "resolvelib-0.6.0.tar.gz", hash = "sha256:9da653f664be0fba1a1ee9b339f0046a84d084e5c1bcab0469eab941a63f5117"},
+"resolvelib 0.7.0" = [
+    {file = "resolvelib-0.7.0-py2.py3-none-any.whl", hash = "sha256:f8a62e4fdf30b8d57834e4383fa09557de5c6d3a3e68455a082806cfcb6cfe7a"},
+    {file = "resolvelib-0.7.0.tar.gz", hash = "sha256:8840a8bf49fd56cff51398ebfe090e5d6aeaf4c4102472bff006aca7db470868"},
 ]
 "secretstorage 3.3.0" = [
     {file = "SecretStorage-3.3.0-py3-none-any.whl", hash = "sha256:5c36f6537a523ec5f969ef9fad61c98eb9e017bc601d811e53aa25bece64892f"},
