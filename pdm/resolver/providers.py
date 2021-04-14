@@ -31,11 +31,12 @@ class BaseProvider(AbstractProvider):
 
     def get_preference(
         self,
-        resolution: Candidate,
-        candidates: List[Candidate],
-        information: List[RequirementInformation],
+        identifier: str,
+        resolutions: Dict[str, Candidate],
+        candidates: Dict[str, Iterator[Candidate]],
+        information: Dict[str, Iterator[RequirementInformation]],
     ) -> int:
-        return len(candidates)
+        return sum(1 for _ in candidates[identifier])
 
     def find_matches(
         self,
@@ -173,12 +174,12 @@ class EagerUpdateProvider(ReusePinProvider):
 
     def get_preference(
         self,
-        resolution: Candidate,
-        candidates: List[Candidate],
-        information: List[RequirementInformation],
+        identifier: str,
+        resolutions: Dict[str, Candidate],
+        candidates: Dict[str, Iterator[Candidate]],
+        information: Dict[str, Iterator[RequirementInformation]],
     ) -> int:
         # Resolve tracking packages so we have a chance to unpin them first.
-        name = self.identify(candidates[0])
-        if name in self.tracked_names:
+        if identifier in self.tracked_names:
             return -1
-        return len(candidates)
+        return super().get_preference(identifier, resolutions, candidates, information)
