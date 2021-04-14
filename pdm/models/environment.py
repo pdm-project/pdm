@@ -181,7 +181,7 @@ class Environment:
             src_dir = os.path.join(venv, "src")
             if os.path.exists(src_dir):
                 return src_dir
-        return create_tracked_tempdir("pdm-src")
+        return create_tracked_tempdir(prefix="pdm-src-")
 
     @contextmanager
     def get_finder(
