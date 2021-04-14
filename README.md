@@ -132,7 +132,7 @@ Ta-da! You are running an app with its dependencies installed in an isolated pla
 
 For Windows users, please refer to [the doc](https://pdm.fming.dev/#enable-pep-582-globally) about how to make it work.
 
-If you are curious about how this works, check [this doc section](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
+If you are curious about how this works, check [this doc section](https://pdm.fming.dev/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
 
 ## Docker image
 

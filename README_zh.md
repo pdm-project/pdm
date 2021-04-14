@@ -127,7 +127,7 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 如果你是 Windows 用户，请参考[文档](https://pdm.fming.dev/#enable-pep-582-globally)获取设置的方法。
 
-如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
+如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
 
 ## 常见问题
 
