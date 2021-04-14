@@ -19,7 +19,9 @@ nav:
       - Manage Dependencies: usage/dependency.md
       - Manage Project: usage/project.md
       - Advanced Usage: usage/advanced.md
-  - pyproject.toml file: pyproject.md
+  - Writing pyproject.toml:
+      - pyproject/pep621.md
+      - pyproject/tool-pdm.md
   - Configuration: configuration.md
   - Plugins:
       - plugin.md
