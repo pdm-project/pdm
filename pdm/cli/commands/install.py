@@ -38,5 +38,5 @@ class Command(BaseCommand):
                 )
                 actions.do_lock(project, strategy="reuse")
         actions.do_sync(
-            project, options.sections, options.dev, options.default, False, False
+            project, sections=options.sections, dev=options.dev, default=options.default
         )

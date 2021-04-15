@@ -92,17 +92,17 @@ def do_lock(
 
 def do_sync(
     project: Project,
+    *,
     sections: Sequence[str] = (),
     dev: bool = False,
     default: bool = True,
     dry_run: bool = False,
-    clean: Optional[bool] = None,
+    clean: bool = False,
     tracked_names: Optional[Sequence[str]] = None,
 ) -> None:
     """Synchronize project"""
     if not project.lockfile_file.exists():
         raise ProjectError("Lock file does not exist, nothing to sync")
-    clean = default if clean is None else clean
     if tracked_names and dry_run:
         candidates = {
             name: c
@@ -189,6 +189,7 @@ def do_add(
 
 def do_update(
     project: Project,
+    *,
     dev: bool = False,
     sections: Sequence[str] = (),
     default: bool = True,
@@ -599,9 +600,8 @@ def migrate_pyproject(project: Project):
             project.pyproject = pyproject
             project.write_pyproject()
             project.core.ui.echo(
-                "These fields are moved from [project] to [tool.pdm] table: "
-                f"{updated_fields}",
-                fg="yellow",
+                f"{termui.yellow('[AUTO-MIGRATION]')} These fields are moved from "
+                f"[project] to [tool.pdm] table: {updated_fields}",
                 err=True,
             )
         return
@@ -612,8 +612,8 @@ def migrate_pyproject(project: Project):
         return
 
     project.core.ui.echo(
-        "Legacy pdm 0.x metadata detected, migrating to PEP 621...",
-        fg="yellow",
+        f"{termui.yellow('[AUTO-MIGRATION]')} Legacy pdm 0.x metadata detected, "
+        "migrating to PEP 621...",
         err=True,
     )
     do_import(project, project.pyproject_file, "legacy")

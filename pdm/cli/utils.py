@@ -445,20 +445,25 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
 
 
 def translate_sections(
-    project: Project, default: bool, dev: bool, sections: Sequence[str]
+    project: Project, default: bool, dev: Optional[bool], sections: Sequence[str]
 ) -> Sequence[str]:
     """Translate default, dev and sections containing ":all" into a list of sections"""
+    optional_groups = set(project.meta.optional_dependencies or [])
+    dev_groups = set(project.tool_settings.get("dev-dependencies", []))
     sections = set(sections)
-    if dev and not sections:
-        sections.add(":all")
+    original_dev = dev
+    if dev is None and sections & dev_groups:
+        dev = True
     if ":all" in sections:
-        if dev:
-            sections = set(project.tool_settings.get("dev-dependencies", []))
+        if original_dev:
+            sections = dev_groups
         else:
-            sections = set(project.meta.optional_dependencies or [])
+            sections = optional_groups
+    if dev is None or dev and not sections:
+        sections.update(dev_groups)
     if default:
         sections.add("default")
-    return sections
+    return list(sections)
 
 
 def merge_dictionary(target: dict, input: dict) -> None:
