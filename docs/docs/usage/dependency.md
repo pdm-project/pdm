@@ -29,7 +29,7 @@ dependencies = []
 If `pyproject.toml` is already present, it will be updated with the metadata. The metadata format follows the
 [PEP 621 specification](https://www.python.org/dev/peps/pep-0621/)
 
-For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](pyproject.md).
+For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](/pyproject/pep62.md).
 
 ## Add dependencies
 
@@ -49,11 +49,11 @@ the resolved result of all dependencies.
 Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
 (just like `pip install -e <local project path>` would) using `pdm add -e/--editable <local project path>`.
 
-## Add development only dependencies
+### Add development only dependencies
 
 _New in 1.5.0_
 
-PDM also supports defining groups of dependencies that are useful for development. They can be classified as different groups,
+PDM also supports defining groups of dependencies that are useful for development. They can be classified as different sections,
 e.g. some for testing and others for linting. We usually don't want these dependencies appear in the distribution's metadata
 so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
 
@@ -71,7 +71,7 @@ test = ["pytest"]
 For backward-compatibility, if `-s/--section` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
-The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
+    The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
 
 ### Save version specifiers
 
@@ -114,9 +114,9 @@ If the section is not given, PDM will search for the requirement in the default 
 To update packages in development dependencies:
 
 ```console
-# Update all dev-dependencies
+# Update all default + dev-dependencies
 $ pdm update -d
-# Update a package in the specified group of dev-dependencies
+# Update a package in the specified section of dev-dependencies
 $ pdm update -ds test pytest
 ```
 
@@ -136,9 +136,9 @@ To remove existing dependencies from project file and the library directory:
 ```console
 # Remove requests from the default dependencies
 $ pdm remove requests
-# Remove h11 from the 'web' optional group
+# Remove h11 from the 'web' section of optional-dependencies
 $ pdm remove -s web h11
-# Remove pytest-cov from the `test` dev-dependencies group
+# Remove pytest-cov from the `test` section of dev-dependencies
 $ pdm remove -ds test pytest-cov
 ```
 
@@ -146,23 +146,38 @@ $ pdm remove -ds test pytest-cov
 
 There are two similar commands to do this job with a slight difference:
 
-```console
-# Install all default dependencies
-$ pdm install
-# Install default + web optional dependencies
-$ pdm install -s web
-# Install default + all optional dependencies
-$ pdm install -s:all
-# Install default + all dev-dependencies
-$ pdm install -d
-$ pdm install -ds:all
-# Install web dependencies ONLY (without default dependencies)
-$ pdm install --no-default -s web
-```
-
 - `pdm install` will check the lock file and relock if it mismatches with project file, then install.
 - `pdm sync` installs dependencies in the lock file and will error out if it doesn't exist.
   Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
+
+### Select a subset of dependencies with CLI options
+
+Say we have a project with following dependencies:
+
+```toml
+[project]  # This is production dependencies
+dependencies = ["requests"]
+
+[project.optional-dependencies]  # This is optional dependencies
+extra1 = ["flask"]
+extra2 = ["django"]
+
+[tool.pdm.dev-dependencies]  # This is dev dependencies
+dev1 = ["pytest"]
+dev2 = ["mkdocs"]
+```
+
+| Command                         | What it does                                                        | Comments                    |
+| ------------------------------- | ------------------------------------------------------------------- | --------------------------- |
+| `pdm install`                   | install prod and dev deps(no optional)                              |                             |
+| `pdm install -s extra1`         | install prod deps, dev deps, and "extra1" optional section          |                             |
+| `pdm install -s dev1`           | install prod deps and only "dev1" dev section                       | redundant `-d` can be given |
+| `pdm install -s:all`            | install prod deps and "extra1", "extra2" optional section           |                             |
+| `pdm install -ds:all`           | install prod deps and "dev1", "dev2" dev section                    | `-d` can't be omitted       |
+| `pdm install -s extra1 -s dev1` | install prod deps, "extra1" optional section and "dev1" dev section |                             |
+| `pdm install --prod`            | install prod only                                                   |                             |
+| `pdm install --prod -s extra1`  | installs prod deps and "extra1" optional                            |                             |
+| `pdm install --prod -s dev1`    | Fail, `--prod` can't be given with dev dependencies                 | Leave the `--prod` option   |
 
 ## Show what packages are installed
 
@@ -199,21 +214,6 @@ $ pdm config pypi.url https://testpypi.org/simple
 
 By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback
 to `https://pypi.org/simple` if none is found.
-
-## Add extra sources of packages
-
-Sometimes your packages may exist on a private repository other than PyPI(and its mirrors).
-These sources should be preserved in `pyproject.toml` and shipped with the project in deployment.
-
-```toml
-[[tool.pdm.source]]
-url = "http://example.com/private/index"
-verify_ssl = false  # Don't verify SSL, it is required when you are using `HTTP` or the certificate is trusted.
-name = "private"
-```
-
-Use the name `name = "pypi"` if you want to override the configured PyPI index. Note that PDM specific settings
-are stored under `tool.pdm` namespace in the `pyproject.toml`.
 
 ## Allow prerelease versions to be installed
 

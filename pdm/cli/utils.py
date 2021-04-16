@@ -14,7 +14,7 @@ from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
 
 from pdm import termui
-from pdm.exceptions import ProjectError
+from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.environment import WorkingSet
@@ -452,8 +452,19 @@ def translate_sections(
     dev_groups = set(project.tool_settings.get("dev-dependencies", []))
     sections = set(sections)
     original_dev = dev
-    if dev is None and sections & dev_groups:
-        dev = True
+    if dev is None:
+        project.core.ui.echo(
+            f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
+            "default and can be excluded with `--prod` option",
+            err=True,
+        )
+    if sections & dev_groups:
+        if dev is None:
+            dev = True
+        if not dev:
+            raise PdmUsageError(
+                "--prod is not allowed with dev sections and should be left"
+            )
     if ":all" in sections:
         if original_dev:
             sections = dev_groups

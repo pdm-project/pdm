@@ -94,7 +94,7 @@ def do_sync(
     project: Project,
     *,
     sections: Sequence[str] = (),
-    dev: bool = False,
+    dev: Optional[bool] = None,
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
@@ -177,20 +177,13 @@ def do_add(
     project.write_lockfile(lockfile, False)
 
     if sync:
-        do_sync(
-            project,
-            sections=(section,),
-            dev=False,
-            default=False,
-            dry_run=False,
-            clean=False,
-        )
+        do_sync(project, sections=(section,), default=False)
 
 
 def do_update(
     project: Project,
     *,
-    dev: bool = False,
+    dev: Optional[bool] = None,
     sections: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",

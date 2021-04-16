@@ -6,6 +6,7 @@ import pytest
 
 from pdm import utils
 from pdm.cli import utils as cli_utils
+from pdm.exceptions import PdmUsageError
 
 
 @pytest.mark.parametrize(
@@ -116,3 +117,9 @@ def test_dependency_group_selection(project, args, golden):
     setup_dependencies(project)
     target = cli_utils.translate_sections(project, *args)
     assert sorted(golden) == sorted(target)
+
+
+def test_prod_should_not_be_with_dev(project):
+    setup_dependencies(project)
+    with pytest.raises(PdmUsageError):
+        cli_utils.translate_sections(project, True, False, ("test",))
