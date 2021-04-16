@@ -13,7 +13,7 @@ lint = [
     "flake8",
     "black"
 ]
-test = ["pytest", "pytest-cov]
+test = ["pytest", "pytest-cov"]
 doc = ["mkdocs"]
 ```
 
