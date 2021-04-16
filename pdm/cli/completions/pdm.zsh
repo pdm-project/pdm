@@ -128,6 +128,7 @@ _pdm() {
         {-o+,--output+}"[Write output to the given file, or print to stdout if not given]:output file:_files"
         {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
         {-d,--dev}"[Select dev dependencies]"
+        {--prod,--production}"[Unselect dev dependencies]"
         "--no-default[Don't include dependencies from default section]"
       )
       ;;
@@ -158,6 +159,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
         {-d,--dev}"[Select dev dependencies]"
+        {--prod,--production}"[Unselect dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
         "--no-default[Don't include dependencies from default section]"
       )
@@ -213,6 +215,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
         {-d,--dev}"[Select dev dependencies]"
+        {--prod,--production}"[Unselect dev dependencies]"
         '--dry-run[Only prints actions without actually running them]'
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
@@ -230,6 +233,7 @@ _pdm() {
         '--update-eager[Try to update the packages and their dependencies recursively]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-d,--dev}'[Select dev dependencies]'
+        {--prod,--production}"[Unselect dev dependencies]"
         "--no-default[Don't include dependencies from default section]"
         {-t,--top}'[Only update those list in pyproject.toml]'
         "--dry-run[Show the difference only without modifying the lockfile content]"

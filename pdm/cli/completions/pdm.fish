@@ -91,6 +91,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from export' -l pyproject -d 'Read
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l section -d '(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l without-hashes -d 'Don\'t include artifact hashes'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l prod -d 'Unselect dev dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l production -d 'Unselect dev dependencies'
 
 # import
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l dev -d 'import packages into dev dependencies'
@@ -127,6 +129,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-lock -d 'Don\'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l section -d '(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l prod -d 'Unselect dev dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Unselect dev dependencies'
 
 # list
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l global -d 'Use the global project, supply the project root with `-p` option'
@@ -181,6 +185,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-default -d 'Don\'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l section -d '(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l prod -d 'Unselect dev dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l production -d 'Unselect dev dependencies'
 
 # update
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l dev -d 'Select dev dependencies'
@@ -199,6 +205,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l unconstrained -d '
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l prod -d 'Unselect dev dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l production -d 'Unselect dev dependencies'
 
 # use
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l first -d 'Select the first matched interpreter'
