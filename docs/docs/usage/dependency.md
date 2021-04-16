@@ -178,7 +178,7 @@ dev2 = ["mkdocs"]
 | `pdm install --prod -s extra1`  | install prod deps and "extra1" optional                                  |                           |
 | `pdm install --prod -s dev1`    | Fail, `--prod` can't be given with dev dependencies                      | Leave the `--prod` option |
 
-Dev dependencies are included as long as `--prod` is not passed and `-s` doesn't specify any dev sections.
+**All** development dependencies are included as long as `--prod` is not passed and `-s` doesn't specify any dev sections.
 
 ## Show what packages are installed
 
