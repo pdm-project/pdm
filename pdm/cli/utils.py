@@ -451,27 +451,29 @@ def translate_sections(
     optional_groups = set(project.meta.optional_dependencies or [])
     dev_groups = set(project.tool_settings.get("dev-dependencies", []))
     sections = set(sections)
-    original_dev = dev
-    if dev is None:
+    if dev:
+        project.core.ui.echo(
+            f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
+            "default and `-d/--dev` is redundant",
+            err=True,
+        )
+    elif dev is None:
         project.core.ui.echo(
             f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
             "default and can be excluded with `--prod` option",
             err=True,
         )
+        dev = True
     if sections & dev_groups:
-        if dev is None:
-            dev = True
         if not dev:
             raise PdmUsageError(
                 "--prod is not allowed with dev sections and should be left"
             )
-    if ":all" in sections:
-        if original_dev:
-            sections = dev_groups
-        else:
-            sections = optional_groups
-    if dev is None or dev and not sections:
+    elif dev:
         sections.update(dev_groups)
+    if ":all" in sections:
+        sections.discard(":all")
+        sections.update(optional_groups)
     if default:
         sections.add("default")
     return list(sections)

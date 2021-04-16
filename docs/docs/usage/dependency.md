@@ -167,17 +167,18 @@ dev1 = ["pytest"]
 dev2 = ["mkdocs"]
 ```
 
-| Command                         | What it does                                                        | Comments                    |
-| ------------------------------- | ------------------------------------------------------------------- | --------------------------- |
-| `pdm install`                   | install prod and dev deps(no optional)                              |                             |
-| `pdm install -s extra1`         | install prod deps, dev deps, and "extra1" optional section          |                             |
-| `pdm install -s dev1`           | install prod deps and only "dev1" dev section                       | redundant `-d` can be given |
-| `pdm install -s:all`            | install prod deps and "extra1", "extra2" optional section           |                             |
-| `pdm install -ds:all`           | install prod deps and "dev1", "dev2" dev section                    | `-d` can't be omitted       |
-| `pdm install -s extra1 -s dev1` | install prod deps, "extra1" optional section and "dev1" dev section |                             |
-| `pdm install --prod`            | install prod only                                                   |                             |
-| `pdm install --prod -s extra1`  | installs prod deps and "extra1" optional                            |                             |
-| `pdm install --prod -s dev1`    | Fail, `--prod` can't be given with dev dependencies                 | Leave the `--prod` option   |
+| Command                         | What it does                                                             | Comments                  |
+| ------------------------------- | ------------------------------------------------------------------------ | ------------------------- |
+| `pdm install`                   | install prod and dev deps(no optional)                                   |                           |
+| `pdm install -s extra1`         | install prod deps, dev deps, and "extra1" optional section               |                           |
+| `pdm install -s dev1`           | install prod deps and only "dev1" dev section                            |                           |
+| `pdm install -s:all`            | install prod deps and "extra1", "extra2" optional section                |                           |
+| `pdm install -s extra1 -s dev1` | install prod deps, "extra1" optional section and only "dev1" dev section |                           |
+| `pdm install --prod`            | install prod only                                                        |                           |
+| `pdm install --prod -s extra1`  | installs prod deps and "extra1" optional                                 |                           |
+| `pdm install --prod -s dev1`    | Fail, `--prod` can't be given with dev dependencies                      | Leave the `--prod` option |
+
+Dev dependencies are included as long as `--prod` is not passed and `-s` doesn't specify any dev sections.
 
 ## Show what packages are installed
 

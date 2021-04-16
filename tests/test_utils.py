@@ -106,7 +106,7 @@ def setup_dependencies(project):
     [
         ((True, None, ()), ["default", "test", "doc"]),
         ((True, None, [":all"]), ["default", "web", "auth", "test", "doc"]),
-        ((True, True, ["web"]), ["default", "web"]),
+        ((True, True, ["web"]), ["default", "web", "test", "doc"]),
         ((True, None, ["web"]), ["default", "web", "test", "doc"]),
         ((True, None, ["test"]), ["default", "test"]),
         ((True, None, ["test", "web"]), ["default", "test", "web"]),
