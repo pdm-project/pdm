@@ -137,7 +137,7 @@ Fortunately, it becomes even easier with PDM and PEP 582. First, you should enab
 [corresponding part of this doc](index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
 
 ```bash
-$ pdm install -d
+$ pdm install
 ```
 
 After that, all the dependencies are available with a compatible Python interpreter, including the plugin itself, in editable mode. That means any change
