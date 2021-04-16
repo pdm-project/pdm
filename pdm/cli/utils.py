@@ -444,13 +444,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     return "\n".join(result)
 
 
-def translate_sections(
-    project: Project, default: bool, dev: Optional[bool], sections: Sequence[str]
-) -> Sequence[str]:
-    """Translate default, dev and sections containing ":all" into a list of sections"""
-    optional_groups = set(project.meta.optional_dependencies or [])
-    dev_groups = set(project.tool_settings.get("dev-dependencies", []))
-    sections = set(sections)
+def compatible_dev_flag(project: Project, dev: Optional[bool]) -> bool:
     if dev:
         project.core.ui.echo(
             f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
@@ -463,6 +457,18 @@ def translate_sections(
             "default and can be excluded with `--prod` option",
             err=True,
         )
+        dev = True
+    return dev
+
+
+def translate_sections(
+    project: Project, default: bool, dev: bool, sections: Sequence[str]
+) -> Sequence[str]:
+    """Translate default, dev and sections containing ":all" into a list of sections"""
+    optional_groups = set(project.meta.optional_dependencies or [])
+    dev_groups = set(project.tool_settings.get("dev-dependencies", []))
+    sections = set(sections)
+    if dev is None:
         dev = True
     if sections & dev_groups:
         if not dev:

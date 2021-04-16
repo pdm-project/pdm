@@ -12,6 +12,7 @@ from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 from pdm import termui
 from pdm.cli.utils import (
     check_project_file,
+    compatible_dev_flag,
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
@@ -94,7 +95,7 @@ def do_sync(
     project: Project,
     *,
     sections: Sequence[str] = (),
-    dev: Optional[bool] = True,
+    dev: bool = True,
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
@@ -183,7 +184,7 @@ def do_add(
 def do_update(
     project: Project,
     *,
-    dev: Optional[bool] = True,
+    dev: Optional[bool] = None,
     sections: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",
@@ -203,7 +204,9 @@ def do_update(
     all_dependencies = project.all_dependencies
     updated_deps = {}
     if not packages:
-        sections = translate_sections(project, default, dev, sections or ())
+        sections = translate_sections(
+            project, default, compatible_dev_flag(project, dev), sections or ()
+        )
         for section in sections:
             updated_deps.update(all_dependencies[section])
     else:

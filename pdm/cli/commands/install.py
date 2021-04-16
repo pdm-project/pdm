@@ -6,6 +6,7 @@ import click
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
+from pdm.cli.utils import compatible_dev_flag
 from pdm.project import Project
 
 
@@ -38,5 +39,8 @@ class Command(BaseCommand):
                 )
                 actions.do_lock(project, strategy="reuse")
         actions.do_sync(
-            project, sections=options.sections, dev=options.dev, default=options.default
+            project,
+            sections=options.sections,
+            dev=compatible_dev_flag(project, options.dev),
+            default=options.default,
         )

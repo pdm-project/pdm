@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
-from pdm.cli.utils import translate_sections
+from pdm.cli.utils import compatible_dev_flag, translate_sections
 from pdm.formats import FORMATS
 from pdm.project import Project
 
@@ -46,7 +46,7 @@ class Command(BaseCommand):
         sections = translate_sections(
             project,
             options.default,
-            options.dev,
+            compatible_dev_flag(project, options.dev),
             options.sections or (),
         )
         for section in sections:
