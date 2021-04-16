@@ -94,7 +94,7 @@ def do_sync(
     project: Project,
     *,
     sections: Sequence[str] = (),
-    dev: Optional[bool] = None,
+    dev: Optional[bool] = True,
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
@@ -183,7 +183,7 @@ def do_add(
 def do_update(
     project: Project,
     *,
-    dev: Optional[bool] = None,
+    dev: Optional[bool] = True,
     sections: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",
