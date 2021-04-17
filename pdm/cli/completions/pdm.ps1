@@ -174,7 +174,7 @@ function getScripts() {
         }
     }
     if ($packagesDir -ne "None") {
-        $scripts+=(Get-ChildItem "$packagesDir\Scripts" | ForEach-Object { $_.Basename })
+        $scripts += (Get-ChildItem "$packagesDir\Scripts" | ForEach-Object { $_.Basename })
     }
     return $scripts
 
@@ -230,7 +230,7 @@ function TabExpansion($line, $lastWord) {
             }
             "export" {
                 $completer.AddOpts(@(
-                        [Option]::new(@("--dev", "--output", "--global", "--no-default", "-g", "-d", "-o", "--without-hashes")),
+                        [Option]::new(@("--dev", "--output", "--global", "--no-default", "--prod", "--productin", "-g", "-d", "-o", "--without-hashes")),
                         $formatOption,
                         $sectionOption,
                         $projectOption
@@ -264,7 +264,7 @@ function TabExpansion($line, $lastWord) {
             }
             "install" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--no-lock")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--no-lock", "--prod", "--productin")),
                         $sectionOption,
                         $projectOption
                     ))
@@ -316,7 +316,7 @@ function TabExpansion($line, $lastWord) {
             }
             "sync" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "--prod", "--productin")),
                         $sectionOption,
                         $projectOption
                     ))
@@ -324,7 +324,7 @@ function TabExpansion($line, $lastWord) {
             }
             "update" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--productin", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained")),
                         $sectionOption,
                         $projectOption
                     ))

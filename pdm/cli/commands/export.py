@@ -3,6 +3,7 @@ from pathlib import Path
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
+from pdm.cli.utils import compatible_dev_flag, translate_sections
 from pdm.formats import FORMATS
 from pdm.project import Project
 
@@ -42,15 +43,12 @@ class Command(BaseCommand):
         sections = list(options.sections)
         if options.pyproject:
             options.hashes = False
-        if not sections and options.dev:
-            sections.append(":all")
-        if ":all" in sections:
-            if options.dev:
-                sections = list(project.tool_settings.get("dev-dependencies", []))
-            else:
-                sections = list(project.meta.optional_dependencies or [])
-        if options.default:
-            sections.append("default")
+        sections = translate_sections(
+            project,
+            options.default,
+            compatible_dev_flag(project, options.dev),
+            options.sections or (),
+        )
         for section in sections:
             if options.pyproject:
                 candidates.update(project.get_dependencies(section))

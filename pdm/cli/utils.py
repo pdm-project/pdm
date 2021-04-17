@@ -14,7 +14,7 @@ from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
 
 from pdm import termui
-from pdm.exceptions import ProjectError
+from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.environment import WorkingSet
@@ -444,21 +444,45 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     return "\n".join(result)
 
 
+def compatible_dev_flag(project: Project, dev: Optional[bool]) -> bool:
+    if dev:
+        project.core.ui.echo(
+            f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
+            "default and `-d/--dev` is redundant",
+            err=True,
+        )
+    elif dev is None:
+        project.core.ui.echo(
+            f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
+            "default and can be excluded with `--prod` option",
+            err=True,
+        )
+        dev = True
+    return dev
+
+
 def translate_sections(
     project: Project, default: bool, dev: bool, sections: Sequence[str]
 ) -> Sequence[str]:
     """Translate default, dev and sections containing ":all" into a list of sections"""
+    optional_groups = set(project.meta.optional_dependencies or [])
+    dev_groups = set(project.tool_settings.get("dev-dependencies", []))
     sections = set(sections)
-    if dev and not sections:
-        sections.add(":all")
+    if dev is None:
+        dev = True
+    if sections & dev_groups:
+        if not dev:
+            raise PdmUsageError(
+                "--prod is not allowed with dev sections and should be left"
+            )
+    elif dev:
+        sections.update(dev_groups)
     if ":all" in sections:
-        if dev:
-            sections = set(project.tool_settings.get("dev-dependencies", []))
-        else:
-            sections = set(project.meta.optional_dependencies or [])
+        sections.discard(":all")
+        sections.update(optional_groups)
     if default:
         sections.add("default")
-    return sections
+    return list(sections)
 
 
 def merge_dictionary(target: dict, input: dict) -> None:

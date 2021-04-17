@@ -91,13 +91,24 @@ sections_group.add_argument(
     'use ":all" to include all groups under the same species.',
     default=[],
 )
-sections_group.add_argument(
+
+dev_group = ArgumentGroup("dev", is_mutually_exclusive=True)
+dev_group.add_argument(
     "-d",
     "--dev",
-    default=False,
+    default=None,
+    dest="dev",
     action="store_true",
     help="Select dev dependencies",
 )
+dev_group.add_argument(
+    "--prod",
+    "--production",
+    dest="dev",
+    action="store_false",
+    help="Unselect dev dependencies",
+)
+sections_group.options.append(dev_group)
 sections_group.add_argument(
     "--no-default",
     dest="default",
@@ -164,14 +175,20 @@ global_option = Option(
 )
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
-clean_group.add_argument("--clean", action="store_true", help="clean unused packages")
 clean_group.add_argument(
-    "--no-clean", action="store_false", help="don't clean unused packages"
+    "--clean", action="store_true", dest="clean", help="clean unused packages"
+)
+clean_group.add_argument(
+    "--no-clean", action="store_false", dest="clean", help="don't clean unused packages"
 )
 
 sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
-sync_group.add_argument("--sync", action="store_true", help="sync packages")
-sync_group.add_argument("--no-sync", action="store_false", help="don't sync packages")
+sync_group.add_argument(
+    "--sync", action="store_true", dest="sync", help="sync packages"
+)
+sync_group.add_argument(
+    "--no-sync", action="store_false", dest="sync", help="don't sync packages"
+)
 
 packages_group = ArgumentGroup("Packages")
 packages_group.add_argument(

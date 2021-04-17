@@ -6,6 +6,7 @@ import pytest
 
 from pdm import utils
 from pdm.cli import utils as cli_utils
+from pdm.exceptions import PdmUsageError
 
 
 @pytest.mark.parametrize(
@@ -85,3 +86,41 @@ def test_merge_dictionary():
         "existing_list": ["hello", "world"],
         "new_dict": {"name": "Sam"},
     }
+
+
+def setup_dependencies(project):
+    project.pyproject["project"].update(
+        {
+            "dependencies": ["requests"],
+            "optional-dependencies": {"web": ["flask"], "auth": ["passlib"]},
+        }
+    )
+    project.tool_settings.update(
+        {"dev-dependencies": {"test": ["pytest"], "doc": ["mkdocs"]}}
+    )
+    project.write_pyproject()
+
+
+@pytest.mark.parametrize(
+    "args,golden",
+    [
+        ((True, None, ()), ["default", "test", "doc"]),
+        ((True, None, [":all"]), ["default", "web", "auth", "test", "doc"]),
+        ((True, True, ["web"]), ["default", "web", "test", "doc"]),
+        ((True, None, ["web"]), ["default", "web", "test", "doc"]),
+        ((True, None, ["test"]), ["default", "test"]),
+        ((True, None, ["test", "web"]), ["default", "test", "web"]),
+        ((True, False, ["web"]), ["default", "web"]),
+        ((False, None, ()), ["test", "doc"]),
+    ],
+)
+def test_dependency_group_selection(project, args, golden):
+    setup_dependencies(project)
+    target = cli_utils.translate_sections(project, *args)
+    assert sorted(golden) == sorted(target)
+
+
+def test_prod_should_not_be_with_dev(project):
+    setup_dependencies(project)
+    with pytest.raises(PdmUsageError):
+        cli_utils.translate_sections(project, True, False, ("test",))

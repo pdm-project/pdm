@@ -49,7 +49,7 @@ opts="--delete --global --help --local --project --verbose"
 ;;
 
 (export)
-opts="--dev --format --global --help --no-default --output --project --pyproject --section --verbose --without-hashes"
+opts="--dev --format --global --help --no-default --output --project --pyproject --section --verbose --without-hashes --production --prod"
 ;;
 
 (import)
@@ -65,7 +65,7 @@ opts="--global --help --project --verbose --non-interactive"
 ;;
 
 (install)
-opts="--dev --global --help --no-default --no-lock --project --section --verbose"
+opts="--dev --global --help --no-default --no-lock --project --section --verbose --production --prod"
 ;;
 
 (list)
@@ -93,11 +93,11 @@ opts="--global --help --project --verbose"
 ;;
 
 (sync)
-opts="--clean --dev --dry-run --global --help --no-clean --no-default --project --section --verbose"
+opts="--clean --dev --dry-run --global --help --no-clean --no-default --project --section --verbose --production --prod"
 ;;
 
 (update)
-opts="--dev --global --help --no-default --dry-run --outdated --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose"
+opts="--dev --global --help --no-default --dry-run --outdated --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose --production --prod"
 ;;
 
 (use)

@@ -13,17 +13,17 @@ lint = [
     "flake8",
     "black"
 ]
-test = ["pytest", "pytest-cov]
+test = ["pytest", "pytest-cov"]
 doc = ["mkdocs"]
 ```
 
 To install all of them:
 
 ```bash
-$ pdm install -d
+$ pdm install
 ```
 
-For more CLI usage, please refer to [Manage Dependencies](usage/dependency.md)
+For more CLI usage, please refer to [Manage Dependencies](/usage/dependency.md)
 
 ## Specify other sources for finding packages
 
