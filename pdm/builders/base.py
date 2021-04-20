@@ -17,7 +17,7 @@ from pip._vendor.pkg_resources import Requirement, VersionConflict, WorkingSet
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_sys_config_paths
 from pdm.termui import logger
-from pdm.utils import create_tracked_tempdir
+from pdm.utils import create_tracked_tempdir, prepare_pip_source_args
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -226,9 +226,9 @@ class EnvBuilder:
                 "--ignore-installed",
                 "--prefix",
                 self._path,
-                "-r",
-                os.path.abspath(req_file.name),
             ]
+            cmd.extend(prepare_pip_source_args(self._env.project.sources))
+            cmd.extend(["-r", req_file.name])
             self.subprocess_runner(cmd, isolated=False)
             os.unlink(req_file.name)
 
