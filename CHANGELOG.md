@@ -1,3 +1,29 @@
+Release v1.5.0 (2021-04-20)
+---------------------------
+
+### Features & Improvements
+
+- Include dev dependencies by default for `install` and `sync` commands. Add a new option `--prod/--production` to exclude them. Improve the dependency selection logic to be more convenient to use — the more common the usage is, the shorter the command is. [#391](https://github.com/pdm-project/pdm/issues/391)
+
+### Bug Fixes
+
+- Enquote executable path to ensure generating valid scripts. [#387](https://github.com/pdm-project/pdm/issues/387)
+- Consider hashes when fetching artifact link for build. [#389](https://github.com/pdm-project/pdm/issues/389)
+- Considier the sources settings when building. [#399](https://github.com/pdm-project/pdm/issues/399)
+
+### Improved Documentation
+
+- New pdm setting `source-includes` to mark files to be included only in sdist builds. [#390](https://github.com/pdm-project/pdm/issues/390)
+
+### Dependencies
+
+- Update `pdm-pep517` to `0.7.0`; update `resolvelib` to` 0.7.0`. [#390](https://github.com/pdm-project/pdm/issues/390)
+
+### Removals and Deprecations
+
+- Deprecate the usage of `-d/--dev` option in `install` and `sync` commands. [#391](https://github.com/pdm-project/pdm/issues/391)
+
+
 Release v1.5.0b1 (2021-04-12)
 -----------------------------
 
