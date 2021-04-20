@@ -228,7 +228,7 @@ class EnvBuilder:
                 self._path,
             ]
             cmd.extend(prepare_pip_source_args(self._env.project.sources))
-            cmd.extend(["-r", req_file])
+            cmd.extend(["-r", req_file.name])
             self.subprocess_runner(cmd, isolated=False)
             os.unlink(req_file.name)
 
