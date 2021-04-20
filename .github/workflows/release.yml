@@ -16,12 +16,6 @@ jobs:
         with:
           python-version: 3.8
           architecture: "x64"
-      - name: Get Changelog
-        id: get-changelog
-        run: |
-          RELEASE_NOTES=$(awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md)
-          echo ${RELEASE_NOTES}
-          echo "::set-output name=CHANGELOG_CONTENT::${RELEASE_NOTES}"
       - name: Install Current PDM
         run: |
           pip install -U build
@@ -38,13 +32,17 @@ jobs:
         run: |
           pip install twine
           twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
+      - name: Get Changelog
+        id: get-changelog
+        run: |
+          awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md > .changelog.md
       - name: Create Release
-        uses: actions/create-release@v1
+        uses: actions/create-release@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
-          body: ${{ steps.get-changelog.outputs.CHANGELOG_CONTENT }}
+          body_path: .changelog.md
           draft: false
           prerelease: false
