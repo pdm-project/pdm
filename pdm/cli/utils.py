@@ -482,7 +482,9 @@ def translate_sections(
         sections.update(optional_groups)
     if default:
         sections.add("default")
-    return list(sections)
+    # Sorts the result in ascending order instead of in random order
+    # to make this function pure
+    return sorted(sections)
 
 
 def merge_dictionary(target: dict, input: dict) -> None:
