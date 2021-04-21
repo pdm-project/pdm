@@ -17,7 +17,12 @@ from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.models.setup import Setup
-from pdm.utils import cached_property, get_rev_from_url, path_replace
+from pdm.utils import (
+    cached_property,
+    expand_env_vars_in_auth,
+    get_rev_from_url,
+    path_replace,
+)
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
@@ -125,7 +130,21 @@ class Candidate:
 
     @cached_property
     def ireq(self) -> pip_shims.InstallRequirement:
-        return self.req.as_ireq()
+        rv = self.req.as_ireq()
+        if rv.link:
+            rv.link = pip_shims.Link(
+                expand_env_vars_in_auth(
+                    rv.link.url.replace(
+                        "${PROJECT_ROOT}",
+                        self.environment.project.root.as_posix().lstrip("/"),
+                    )
+                )
+            )
+            if rv.source_dir:
+                rv.source_dir = os.path.normpath(os.path.abspath(rv.link.file_path))
+            if rv.local_file_path:
+                rv.local_file_path = rv.link.file_path
+        return rv
 
     def identify(self) -> str:
         return self.req.identify()

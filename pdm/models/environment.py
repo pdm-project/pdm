@@ -238,13 +238,6 @@ class Environment:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
-            ireq.link = pip_shims.Link(
-                expand_env_vars_in_auth(
-                    ireq.link.url.replace(
-                        "${PROJECT_ROOT}", self.project.root.as_posix().lstrip("/")
-                    )
-                )
-            )
             if hashes is None and not ireq.editable:
                 # If hashes are not given and cache is hit, replace the link with the
                 # cached one. This can speed up by skipping the download and build.
