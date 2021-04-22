@@ -6,7 +6,9 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 
 ![PDM logo](https://github.com/pdm-project/pdm/blob/master/docs/docs/assets/logo_big.png)
 
-[📖 Documentation](https://pdm.fming.dev)
+[![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm.fming.dev)
+[![Twitter Follow](https://img.shields.io/twitter/follow/pdm_project?label=get%20updates&logo=twitter&style=for-the-badge)](https://twitter.com/pdm_project)
+[![Discord](https://img.shields.io/discord/824472774965329931?label=discord&logo=discord&style=for-the-badge)](https://discord.gg/CEUwAmYm)
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)

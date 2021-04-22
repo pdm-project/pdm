@@ -12,6 +12,7 @@ theme:
     code: Fira Code
   logo: assets/logo.png
   favicon: assets/logo.png
+  custom_dir: overrides
 
 nav:
   - Home: index.md
@@ -41,3 +42,12 @@ markdown_extensions:
       base_path: docs
 
 copyright: Copyright &copy; 2019-2021 <a href="https://frostming.com">Frost Ming</a>
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pdm-project/pdm
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/pdm_project
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/CEUwAmYm
