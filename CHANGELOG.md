@@ -1,3 +1,12 @@
+Release v1.5.1 (2021-04-22)
+---------------------------
+
+### Bug Fixes
+
+- Make func translate_sections pure to avoid exporting requirements in random order. [#401](https://github.com/pdm-project/pdm/issues/401)
+- Expand the variables in install requirements' attributes for build. [#402](https://github.com/pdm-project/pdm/issues/402)
+
+
 Release v1.5.0 (2021-04-20)
 ---------------------------
 
