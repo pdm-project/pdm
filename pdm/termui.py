@@ -74,7 +74,10 @@ class DummySpinner:
     def start(self, text: str) -> None:
         click.echo(text)
 
-    succeed = fail = stop_and_persist = start
+    def stop_and_persist(self, symbol=" ", text=None) -> None:
+        click.echo(symbol + " " + text or "")
+
+    succeed = fail = start
 
     text = property(lambda self: "", start)
 

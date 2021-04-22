@@ -120,7 +120,7 @@ class InfoCommand(BaseCommand):
     arguments = [verbose_option]
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        with project.core.ui.open_spinner("Calculating cache files") as spinner:
+        with project.core.ui.open_spinner("Calculating cache files"):
             output = [
                 f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
                 f"Total size: {format_size(directory_size(project.cache_dir))}"
@@ -136,4 +136,5 @@ class InfoCommand(BaseCommand):
                 size = directory_size(cache_location)
                 output.append(f"  {termui.cyan(description)}: {cache_location}")
                 output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
-            spinner.stop_and_persist("\n".join(output))
+
+        project.core.ui.echo("\n".join(output))
