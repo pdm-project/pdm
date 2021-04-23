@@ -34,7 +34,7 @@ def main():
 
     subprocess.check_call([venv_pdm, "use", sys.executable])
     subprocess.check_call([venv_pdm, "config", "parallel_install", "false"])
-    subprocess.check_call([venv_pdm, "install", "-dvv"])
+    subprocess.check_call([venv_pdm, "install", "-vv"])
 
     pdm_path = (
         BASE_DIR
