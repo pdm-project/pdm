@@ -23,7 +23,7 @@ def install(setup_py, prefix, lib_dir, bin_dir):
         "--site-dirs={0}".format(lib_dir),
     ]
     sys.path.append(lib_dir)
-    exec(compile(code, __file__, "exec"), globals())
+    exec(compile(code, __file__, "exec"), {})
 
 
 if __name__ == "__main__":
