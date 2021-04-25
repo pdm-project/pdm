@@ -15,7 +15,9 @@ class Command(BaseCommand):
             action="store_true",
             help="Select the first matched interpreter",
         )
-        parser.add_argument("python", help="Specify the Python version or path")
+        parser.add_argument(
+            "python", nargs="?", help="Specify the Python version or path", default=""
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_use(project, options.python, options.first)
