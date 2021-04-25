@@ -14,7 +14,7 @@ import pytest
 from click.testing import CliRunner
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
-from pip._vendor.pkg_resources import safe_name
+from pip._vendor.pkg_resources import WorkingSet, safe_name
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
@@ -161,7 +161,7 @@ class Distribution:
 
 class MockWorkingSet(collections.abc.MutableMapping):
     def __init__(self, *args, **kwargs):
-        self.pkg_ws = None
+        self.pkg_ws = WorkingSet([])
         self._data = {}
 
     def add_distribution(self, dist):
