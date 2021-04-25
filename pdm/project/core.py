@@ -549,7 +549,9 @@ dependencies = ["pip", "setuptools", "wheel"]
 
         if not python_spec:
             if config.get("python.use_pyenv", True) and PYENV_INSTALLED:
-                yield PythonInfo.from_path(os.path.join(PYENV_ROOT, "shims", "python"))
+                pyenv_shim = os.path.join(PYENV_ROOT, "shims", "python")
+                if os.path.exists(pyenv_shim):
+                    yield PythonInfo.from_path(pyenv_shim)
             if config.get("use_venv"):
                 python = get_in_project_venv_python(self.root)
                 if python:
