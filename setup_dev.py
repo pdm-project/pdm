@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -35,6 +36,7 @@ def main():
     subprocess.check_call([venv_pdm, "use", sys.executable])
     subprocess.check_call([venv_pdm, "config", "parallel_install", "false"])
     subprocess.check_call([venv_pdm, "install", "-vv"])
+    pep582_output = subprocess.check_output([venv_pdm, "--pep582"]).decode("utf-8")
 
     pdm_path = (
         BASE_DIR
@@ -49,7 +51,9 @@ def main():
 
     print(
         f"An editable version of pdm is installed at {pdm_path}, "
-        "you can create an alias for it for convenience.",
+        "you can create an alias for it for convenience.\n"
+        "Ensure PEP 582 is enabled by executing\n"
+        + textwrap.indent(pep582_output, " " * 4),
         flush=True,
     )
 
