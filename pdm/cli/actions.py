@@ -1,5 +1,6 @@
 import os
 import shutil
+import textwrap
 from argparse import Namespace
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
@@ -557,11 +558,39 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
     if shell in ("zsh", "bash"):
-        result = f"export PYTHONPATH='{lib_path}':$PYTHONPATH"
+        result = textwrap.dedent(
+            f"""
+            if [ -n "$PYTHONPATH" ]; then
+                export PYTHONPATH='{lib_path}':$PYTHONPATH
+            else
+                export PYTHONPATH='{lib_path}'
+            fi
+            """
+        ).strip()
     elif shell == "fish":
-        result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
+        result = textwrap.dedent(
+            f"""
+            if test -n "$PYTHONPATH"
+                set -x PYTHONPATH '{lib_path}' $PYTHONPATH
+            else
+                set -x PYTHONPATH '{lib_path}'
+            end
+            """
+        ).strip()
     elif shell in ("tcsh", "csh"):
-        result = f"setenv PYTHONPATH '{lib_path}':$PYTHONPATH"
+        result = textwrap.dedent(
+            f"""
+            if ( $?PYTHONPATH ) then
+                if ( "$PYTHONPATH" != "" ) then
+                    setenv PYTHONPATH '{lib_path}':$PYTHONPATH
+                else
+                    setenv PYTHONPATH '{lib_path}'
+                endif
+            else
+                setenv PYTHONPATH '{lib_path}'
+            endif
+            """
+        ).strip()
     else:
         raise PdmUsageError(
             f"Unsupported shell: {shell}, please specify another shell "
