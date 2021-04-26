@@ -36,7 +36,9 @@ def main():
     subprocess.check_call([venv_pdm, "use", sys.executable])
     subprocess.check_call([venv_pdm, "config", "parallel_install", "false"])
     subprocess.check_call([venv_pdm, "install", "-vv"])
-    pep582_output = subprocess.check_output([venv_pdm, "--pep582"]).decode("utf-8")
+    pep582_output = subprocess.check_output(
+        [venv_pdm, "run", "pdm", "--pep582"]
+    ).decode("utf-8")
 
     pdm_path = (
         BASE_DIR
