@@ -181,7 +181,6 @@ class EnvBuilder:
             "PYTHONPATH": self._prefix.site_dir,
             "PATH": os.pathsep.join(paths),
             "PYTHONNOUSERSITE": "1",
-            "PDM_PYTHON_PEP582": "0",
         }
 
     def subprocess_runner(
