@@ -26,9 +26,8 @@ def main():
     subprocess.check_call([sys.executable, "-m", "venv", venv_path.as_posix()])
 
     print("Installing base requirements...", flush=True)
-    subprocess.check_call(
-        [venv_python.as_posix(), "-m", "pip", "install", "-U", "pip", "pdm"]
-    )
+    subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "-U", "pip"])
+    subprocess.check_call([venv_python.as_posix(), "-m", "pip", "install", "."])
 
     print("Setup project for development...", flush=True)
     venv_pdm = (venv_python.parent / "pdm").as_posix()
