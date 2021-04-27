@@ -81,8 +81,6 @@ $ pdm --pep582 >> ~/.bash_profile
 
 Once again, Don't forget to restart the terminal session to take effect.
 
-**This setup may become the default in the future.**
-
 ### Use the docker image
 
 PDM also provides a docker image to ease your deployment flow, to use it, write a Dockerfile with following content:
