@@ -1,3 +1,23 @@
+Release v1.5.2 (2021-04-27)
+---------------------------
+
+### Features & Improvements
+
+- Allow `pdm use` with no argument given, which will list all available pythons for pick. [#409](https://github.com/pdm-project/pdm/issues/409)
+
+### Bug Fixes
+
+- Inform user to enable PEP 582 for development script to work. [#404](https://github.com/pdm-project/pdm/issues/404)
+- Check the existence of pyenv shim Python interpreter before using it. [#406](https://github.com/pdm-project/pdm/issues/406)
+- Fix a bug that executing `setup.py` failed for NameError. [#407](https://github.com/pdm-project/pdm/issues/407)
+- Check before setting the PYTHONPATH environment variable for PEP582 [#410](https://github.com/pdm-project/pdm/issues/410)
+- Fix development setup error. [#415](https://github.com/pdm-project/pdm/issues/415)
+
+### Dependencies
+
+- Update pip to 21.1 and fix compatibility issues. [#412](https://github.com/pdm-project/pdm/issues/412)
+
+
 Release v1.5.1 (2021-04-22)
 ---------------------------
 
