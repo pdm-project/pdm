@@ -40,7 +40,7 @@ class LoggerWrapper(threading.Thread):
         self.fd_read, self.fd_write = os.pipe()
         self.reader = os.fdopen(self.fd_read)
         # A sentinel random string as stop sign
-        self._stop_bit = base64.b85encode(os.urandom(16)).decode()
+        self._stop_bit = base64.b85encode(os.urandom(16)).decode() + "\n"
 
         self.start()
 

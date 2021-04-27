@@ -65,7 +65,7 @@ class Installer:  # pragma: no cover
         install_args = [
             self.environment.interpreter.executable,
             "-u",
-            install_script,
+            str(install_script),
             setup_path,
             paths["prefix"],
             paths["purelib"],

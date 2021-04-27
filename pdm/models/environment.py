@@ -350,7 +350,7 @@ class Environment:
                     "download",
                     "--only-binary=:all:",
                     "-d",
-                    dirname,
+                    str(dirname),
                     "pip<21",  # pip>=21 drops the support of py27
                 ],
             )
