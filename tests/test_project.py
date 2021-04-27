@@ -11,16 +11,17 @@ from pdm.pep517.api import build_wheel
 from pdm.utils import cd, temp_environ
 
 
-@pytest.mark.xfail
 def test_project_python_with_pyenv_support(project, mocker):
-    from pythonfinder.environment import PYENV_ROOT
 
     del project.project_config["python.path"]
     project._python = None
-    pyenv_python = Path(PYENV_ROOT, "shims", "python")
     with temp_environ():
         os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
         mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
+        mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
+        pyenv_python = project.root / "shims/python"
+        pyenv_python.parent.mkdir()
+        pyenv_python.touch()
         mocker.patch(
             "pythonfinder.models.python.get_python_version",
             return_value="3.8.0",
