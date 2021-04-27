@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import importlib
+import pathlib
 from typing import TYPE_CHECKING
 
 import distlib.scripts
@@ -61,9 +61,7 @@ class Installer:  # pragma: no cover
 
         setup_path = ireq.setup_py_path
         paths = self.environment.get_paths()
-        install_script = importlib.import_module(
-            "pdm.installers._editable_install"
-        ).__file__.rstrip("co")
+        install_script = pathlib.Path(__file__).with_name("_editable_install.py")
         install_args = [
             self.environment.interpreter.executable,
             "-u",
