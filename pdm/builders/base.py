@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import logging
 import os
 import subprocess
@@ -39,8 +38,6 @@ class LoggerWrapper(threading.Thread):
         # create the pipe and reader
         self.fd_read, self.fd_write = os.pipe()
         self.reader = os.fdopen(self.fd_read)
-        # A sentinel random string as stop sign
-        self._stop_bit = base64.b85encode(os.urandom(16)).decode() + "\n"
 
         self.start()
 
@@ -52,18 +49,17 @@ class LoggerWrapper(threading.Thread):
         return msg[:-1] if msg.endswith("\n") else msg
 
     def run(self) -> None:
-        for line in self.reader:
-            if line == self._stop_bit:
-                os.close(self.fd_read)
-                break
-            self._write(self.remove_newline(line))
+        try:
+            for line in self.reader:
+                self._write(self.remove_newline(line))
+        finally:
+            self.reader.close()
 
     def _write(self, message: str) -> None:
         self.logger.log(self.level, message)
 
     def stop(self) -> None:
-        with os.fdopen(self.fd_write, "w") as f:
-            f.write(self._stop_bit)
+        os.close(self.fd_write)
         self.join()
 
 
