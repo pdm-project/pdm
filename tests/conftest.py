@@ -224,6 +224,13 @@ def pip_global_tempdir_manager():
         yield
 
 
+def remove_pep582_path_from_pythonpath(pythonpath):
+    """Remove all pep582 paths of PDM from PYTHONPATH"""
+    paths = pythonpath.split(os.pathsep)
+    paths = [path for path in paths if "pdm/pep582" not in path]
+    return os.pathsep.join(paths)
+
+
 @pytest.fixture()
 def project_no_init(tmp_path, mocker):
     p = main.create_project(tmp_path)
@@ -235,8 +242,11 @@ def project_no_init(tmp_path, mocker):
     do_use(p, getattr(sys, "_base_executable", sys.executable))
     with temp_environ():
         os.environ.pop("VIRTUAL_ENV", None)
-        os.environ.pop("PYTHONPATH", None)
         os.environ.pop("PEP582_PACKAGES", None)
+        pythonpath = os.environ.pop("PYTHONPATH", "")
+        pythonpath = remove_pep582_path_from_pythonpath(pythonpath)
+        if pythonpath:
+            os.environ["PYTHONPATH"] = pythonpath
         yield p
     # Restore the config items
     Config._config_map = old_config_map

@@ -1,3 +1,7 @@
+import functools
+import os
+import textwrap
+
 import pytest
 
 from pdm.utils import cd
@@ -33,3 +37,44 @@ def test_basic_integration(python_version, project_no_init, strict_invoke):
     assert not any(
         line.strip().lower().startswith("django") for line in result.output.splitlines()
     )
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("python_version", ["2.7", "3.6", "3.7", "3.8", "3.9"])
+def test_import_another_sitecustomize(python_version, project_no_init, strict_invoke):
+    project = project_no_init
+    # check django and another sitecustomize are imported
+    project.root.joinpath("foo.py").write_text(
+        textwrap.dedent(
+            """
+            import sys
+            import django
+            with open("output", "w") as f:
+                module = sys.modules.get('another_sitecustomize')
+                if module:
+                    f.write(module.__file__)
+            """
+        )
+    )
+    # ensure there have at least one sitecustomize can be imported
+    # there may have more than one sitecustomize.py in sys.path
+    project.root.joinpath("sitecustomize.py").write_text("# do nothing")
+    env = os.environ.copy()
+    paths = [str(project.root)]
+    original_paths = env.get("PYTHONPATH", "")
+    if original_paths:
+        paths.insert(0, original_paths)
+    env["PYTHONPATH"] = os.pathsep.join(paths)
+    # invoke pdm commands
+    strict_invoke = functools.partial(strict_invoke, env=env, obj=project)
+    strict_invoke(["init"], input="\ny\n\n\n\n\n\n>=2.7\n")
+    strict_invoke(["use", "-f", python_version])
+    project._environment = None
+    strict_invoke(["add", "django"])
+    with cd(project.root):
+        strict_invoke(["run", "python", "foo.py"])
+    # only the first and second sitecustomize module will be imported
+    # as sitecustomize and another_sitecustomize
+    # the first one is pdm.pep582.sitecustomize for sure
+    # the second one maybe not the dummy module injected here
+    assert project.root.joinpath("output").read_text().strip()
