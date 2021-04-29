@@ -215,7 +215,8 @@ class Candidate:
         return self.metadata
 
     def __repr__(self) -> str:
-        return f"<Candidate {self.name} {self.version}>"
+        source = getattr(self.link, "comes_from", "unknown")
+        return f"<Candidate {self.name} {self.version} from {source}>"
 
     @classmethod
     def from_installation_candidate(

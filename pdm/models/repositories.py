@@ -112,6 +112,9 @@ class BaseRepository:
             reverse=True,
         )
 
+        if not sorted_cans:
+            termui.logger.debug("\tCould not find any matching candidates.")
+
         if not sorted_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
             sorted_cans = sorted(
@@ -124,6 +127,35 @@ class BaseRepository:
                 key=lambda c: c.version,
                 reverse=True,
             )
+
+            if not sorted_cans:
+                termui.logger.debug(
+                    "\tCould not find any matching candidates even when considering "
+                    "pre-releases.",
+                )
+
+        def print_candidates(
+            title: str, candidates: List[Candidate], max_lines: int = 10
+        ) -> None:
+            termui.logger.debug("\t" + title)
+            logged_lines = set()
+            for can in candidates:
+                new_line = f"\t  {can}"
+                if new_line not in logged_lines:
+                    logged_lines.add(new_line)
+                    if len(logged_lines) > max_lines:
+                        termui.logger.debug(
+                            f"\t  ... [{len(candidates)-max_lines} more candidate(s)]"
+                        )
+                        break
+                    else:
+                        termui.logger.debug(new_line)
+
+        if sorted_cans:
+            print_candidates("Found matching candidates:", sorted_cans)
+        elif cans:
+            print_candidates("Found but non-matching candidates:", cans)
+
         return sorted_cans
 
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
