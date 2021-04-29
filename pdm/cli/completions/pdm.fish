@@ -118,7 +118,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l verbose -d '-v for detailed output and -vv for more detailed'
-complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don't ask questions but use default values'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don\'t ask questions but use default values'
 
 # install
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l dev -d 'Select dev dependencies'
