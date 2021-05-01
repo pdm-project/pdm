@@ -20,6 +20,7 @@ class Command(BaseCommand):
         RemoveCommand.register_to(subparsers, "remove")
         ListCommand.register_to(subparsers, "list")
         InfoCommand.register_to(subparsers, "info")
+        parser.set_defaults(search_parent=False)
         self.parser = parser
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
