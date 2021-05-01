@@ -293,7 +293,7 @@ def format_reverse_package(
     return "".join(result)
 
 
-def format_dependency_graph(project: Project, graph: DirectedGraph) -> str:
+def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> str:
     """Format dependency graph for output."""
     content = []
     all_dependencies = ChainMap(*project.all_dependencies.values())
@@ -311,7 +311,7 @@ def format_dependency_graph(project: Project, graph: DirectedGraph) -> str:
     return "".join(content).strip()
 
 
-def format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> str:
+def _format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> str:
     """Format reverse dependency graph for output."""
     leaf_nodes = sorted(
         (node for node in graph._vertices if not list(graph.iter_children(node))),
@@ -322,6 +322,15 @@ def format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> s
         for node in leaf_nodes
     ]
     return "".join(content).strip()
+
+
+def format_dependency_graph(
+    project: Project, graph: DirectedGraph, reverse: bool = False
+) -> str:
+    if reverse:
+        return _format_reverse_dependency_graph(project, graph)
+    else:
+        return _format_forward_dependency_graph(project, graph)
 
 
 def format_lockfile(

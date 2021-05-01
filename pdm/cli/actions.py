@@ -185,7 +185,7 @@ def do_add(
 def do_update(
     project: Project,
     *,
-    dev: Optional[bool] = None,
+    dev: bool = False,
     sections: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",
@@ -268,7 +268,7 @@ def do_remove(
     section: Optional[str] = None,
     sync: bool = True,
     packages: Sequence[str] = (),
-):
+) -> None:
     """Remove packages from working set and pyproject.toml
 
     :param project: The project instance
@@ -318,11 +318,7 @@ def do_list(project: Project, graph: bool = False, reverse: bool = False) -> Non
     :param graph: whether to display a graph.
     :param reverse: whether to display reverse graph.
     """
-    from pdm.cli.utils import (
-        build_dependency_graph,
-        format_dependency_graph,
-        format_reverse_dependency_graph,
-    )
+    from pdm.cli.utils import build_dependency_graph, format_dependency_graph
 
     check_project_file(project)
     working_set = project.environment.get_working_set()
@@ -331,11 +327,9 @@ def do_list(project: Project, graph: bool = False, reverse: bool = False) -> Non
     if graph:
         with project.environment.activate():
             dep_graph = build_dependency_graph(working_set)
-        if reverse:
-            graph = format_reverse_dependency_graph(project, dep_graph)
-        else:
-            graph = format_dependency_graph(project, dep_graph)
-        project.core.ui.echo(graph)
+        project.core.ui.echo(
+            format_dependency_graph(project, dep_graph, reverse=reverse)
+        )
     else:
         rows = [
             (termui.green(k, bold=True), format_dist(v))
@@ -350,7 +344,7 @@ def do_build(
     wheel: bool = True,
     dest: str = "dist",
     clean: bool = True,
-):
+) -> None:
     """Build artifacts for distribution."""
     from pdm.builders import EnvSdistBuilder, EnvWheelBuilder
 
@@ -419,7 +413,8 @@ def do_use(
     def version_matcher(py_version: PythonInfo) -> bool:
         return project.python_requires.contains(str(py_version.version))
 
-    python = python.strip()
+    if python:
+        python = python.strip()
 
     found_interpreters = list(
         dict.fromkeys(filter(version_matcher, project.find_interpreters(python)))
@@ -529,10 +524,10 @@ def ask_for_import(project: Project) -> None:
     if int(choice) == len(importable_files):
         return
     key, filepath = importable_files[int(choice)]
-    do_import(project, filepath, key)
+    do_import(project, str(filepath), key)
 
 
-def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
+def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
     """Print the export PYTHONPATH line to be evaluated by the shell."""
     import shellingham
 
@@ -599,7 +594,7 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO"):
     ui.echo(result)
 
 
-def migrate_pyproject(project: Project):
+def migrate_pyproject(project: Project) -> None:
     """Migrate the legacy pyproject format to PEP 621"""
 
     if project.pyproject and "project" in project.pyproject:
@@ -641,7 +636,7 @@ def migrate_pyproject(project: Project):
         "migrating to PEP 621...",
         err=True,
     )
-    do_import(project, project.pyproject_file, "legacy")
+    do_import(project, str(project.pyproject_file), "legacy")
     project.core.ui.echo(
         termui.green("pyproject.toml")
         + termui.yellow(
