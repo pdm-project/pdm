@@ -38,19 +38,21 @@ class PdmFormatter(argparse.HelpFormatter):
 
         # no help; start on same line and add a final newline
         if not action.help:
-            tup = self._current_indent, "", action_header
-            action_header = "%*s%s\n" % tup
+            action_header = "%*s%s\n" % (self._current_indent, "", action_header)
 
         # short action name; start on the same line and pad two spaces
         elif len(action_header) <= action_width:
-            tup = self._current_indent, "", action_width, action_header
-            action_header = "%*s%-*s  " % tup
+            action_header = "%*s%-*s  " % (
+                self._current_indent,
+                "",
+                action_width,
+                action_header,
+            )
             indent_first = 0
 
         # long action name; start on the next line
         else:
-            tup = self._current_indent, "", action_header
-            action_header = "%*s%s\n" % tup
+            action_header = "%*s%s\n" % (self._current_indent, "", action_header)
             indent_first = help_position
 
         # collect the pieces of the action help
