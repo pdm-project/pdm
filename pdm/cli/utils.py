@@ -5,7 +5,7 @@ import os
 from argparse import Action
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence, Set
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
 
 import cfonts
 import tomlkit
@@ -23,8 +23,6 @@ from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
 if TYPE_CHECKING:
-    from typing import Dict, Iterable, List, Optional, Tuple
-
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.models.candidates import Candidate
@@ -136,10 +134,12 @@ class Package:
     def __hash__(self) -> int:
         return hash(self.name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Package {self.name}=={self.version}>"
 
-    def __eq__(self, value: Package) -> bool:
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, Package):
+            return False
         return self.name == value.name
 
 
@@ -152,11 +152,11 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
     def add_package(key: str, dist: Distribution) -> Package:
         name, extras = strip_extras(key)
         extras = extras or ()
-        reqs = {}
+        reqs: Dict[str, Requirement] = {}
         if dist:
-            requirements = [
+            requirements = (
                 Requirement.from_pkg_requirement(r) for r in dist.requires(extras)
-            ]
+            )
             for req in requirements:
                 reqs[req.identify()] = req
             version = dist.version
@@ -252,7 +252,7 @@ def format_reverse_package(
     requires: str = "",
     prefix: str = "",
     visited: Optional[Set[str]] = None,
-):
+) -> str:
     """Format one package for output reverse dependency graph."""
     if visited is None:
         visited = set()
@@ -462,29 +462,29 @@ def compatible_dev_flag(project: Project, dev: Optional[bool]) -> bool:
 
 
 def translate_sections(
-    project: Project, default: bool, dev: bool, sections: Sequence[str]
-) -> Sequence[str]:
+    project: Project, default: bool, dev: bool, sections: Iterable[str]
+) -> Iterable[str]:
     """Translate default, dev and sections containing ":all" into a list of sections"""
     optional_groups = set(project.meta.optional_dependencies or [])
     dev_groups = set(project.tool_settings.get("dev-dependencies", []))
-    sections = set(sections)
+    sections_set = set(sections)
     if dev is None:
         dev = True
-    if sections & dev_groups:
+    if sections_set & dev_groups:
         if not dev:
             raise PdmUsageError(
                 "--prod is not allowed with dev sections and should be left"
             )
     elif dev:
-        sections.update(dev_groups)
+        sections_set.update(dev_groups)
     if ":all" in sections:
-        sections.discard(":all")
-        sections.update(optional_groups)
+        sections_set.discard(":all")
+        sections_set.update(optional_groups)
     if default:
-        sections.add("default")
+        sections_set.add("default")
     # Sorts the result in ascending order instead of in random order
     # to make this function pure
-    return sorted(sections)
+    return sorted(sections_set)
 
 
 def merge_dictionary(target: dict, input: dict) -> None:
