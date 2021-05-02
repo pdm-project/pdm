@@ -3,7 +3,7 @@ import shutil
 import textwrap
 from argparse import Namespace
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence, Set
 
 import click
 import tomlkit
@@ -154,8 +154,8 @@ def do_add(
         raise PdmUsageError("Must specify at least one package or editable package.")
     if not section:
         section = "dev" if dev else "default"
-    tracked_names = set()
-    requirements = {}
+    tracked_names: Set[str] = set()
+    requirements: Dict[str, Requirement] = {}
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:
@@ -235,7 +235,7 @@ def do_update(
             )
         )
     if unconstrained:
-        for _, dep in updated_deps.items():
+        for dep in updated_deps.values():
             dep.specifier = get_specifier("")
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     resolved = do_lock(

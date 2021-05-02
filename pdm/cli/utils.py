@@ -5,7 +5,18 @@ import os
 from argparse import Action
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence, Set
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 import cfonts
 import tomlkit
@@ -23,8 +34,6 @@ from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
 if TYPE_CHECKING:
-    from typing import Dict, Iterable, List, Optional, Tuple
-
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.models.candidates import Candidate
@@ -496,7 +505,7 @@ def translate_sections(
     return sorted(sections)
 
 
-def merge_dictionary(target: dict, input: dict) -> None:
+def merge_dictionary(target: Mapping[Any, Any], input: Mapping[Any, Any]) -> None:
     """Merge the input dict with the target while preserving the existing values
     properly. This will update the target dictionary in place.
     """
