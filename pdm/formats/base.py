@@ -62,7 +62,7 @@ class MetaConverter(metaclass=_MetaConverterMeta):
                 pass
 
         # Delete all used fields
-        for key, func in self._converters.items():
+        for func in self._converters.values():
             if func._convert_from is None:  # type: ignore
                 continue
             try:
