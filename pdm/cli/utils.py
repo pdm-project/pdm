@@ -140,9 +140,7 @@ class Package:
         return f"<Package {self.name}=={self.version}>"
 
     def __eq__(self, value: object) -> bool:
-        if not isinstance(value, Package):
-            return False
-        return self.name == value.name
+        return isinstance(value, Package) and self.name == value.name
 
 
 def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
