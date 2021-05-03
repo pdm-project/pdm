@@ -8,7 +8,7 @@ def get_pypackages_path(maxdepth=5):
         if not os.path.exists(path):
             return None
 
-        packages_name = "__pypackages__/{}/lib".format(version)
+        packages_name = f"__pypackages__/{version}/lib"
         for _ in range(maxdepth):
             if os.path.exists(os.path.join(path, packages_name)):
                 return os.path.join(path, packages_name)

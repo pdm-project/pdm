@@ -5,7 +5,7 @@ import os
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 from distlib.database import EggInfoDistribution
 from distlib.wheel import Wheel
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 vcs = pip_shims.VcsSupport()
 
 
-def get_sdist(egg_info: str) -> Optional[EggInfoDistribution]:
+def get_sdist(egg_info: str) -> EggInfoDistribution | None:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
 
@@ -63,7 +63,7 @@ del _patch_version_parsing
 @functools.lru_cache(128)
 def get_requirements_from_dist(
     dist: EggInfoDistribution, extras: Sequence[str]
-) -> List[str]:
+) -> list[str]:
     """Get requirements of a distribution, with given extras."""
     extras_in_metadata = []
     result = []
@@ -99,9 +99,9 @@ class Candidate:
         self,
         req: Requirement,
         environment: Environment,
-        name: Optional[str] = None,
-        version: Optional[Version] = None,
-        link: Optional[pip_shims.Link] = None,
+        name: str | None = None,
+        version: Version | None = None,
+        link: pip_shims.Link | None = None,
     ):
         """
         :param req: the requirement that produces this candidate.
@@ -117,7 +117,7 @@ class Candidate:
         if link is None and self.req:
             link = self.ireq.link
         self.link = link
-        self.hashes: Optional[Dict[str, str]] = None
+        self.hashes: dict[str, str] | None = None
         self.marker = None
         self.sections = []
         self._requires_python = None
@@ -149,7 +149,7 @@ class Candidate:
     def identify(self) -> str:
         return self.req.identify()
 
-    def __eq__(self, other: "Candidate") -> bool:
+    def __eq__(self, other: Candidate) -> bool:
         if self.req.is_named:
             return self.name == other.name and self.version == other.version
         return self.name == other.name and self.link == other.link
@@ -170,7 +170,7 @@ class Candidate:
 
     def get_metadata(
         self, allow_all_wheels: bool = True, raising: bool = False
-    ) -> Optional[Metadata]:
+    ) -> Metadata | None:
         """Get the metadata of the candidate.
         For editable requirements, egg info are produced, otherwise a wheel is built.
 
@@ -234,7 +234,7 @@ class Candidate:
             link=candidate.link,
         )
 
-    def get_dependencies_from_metadata(self) -> List[str]:
+    def get_dependencies_from_metadata(self) -> list[str]:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         metadata = self.get_metadata()
@@ -282,7 +282,7 @@ class Candidate:
     def requires_python(self, value: str) -> None:
         self._requires_python = value
 
-    def as_lockfile_entry(self) -> Dict[str, Any]:
+    def as_lockfile_entry(self) -> dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""
         result = {
             "name": self.name,

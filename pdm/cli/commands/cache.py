@@ -29,13 +29,13 @@ class Command(BaseCommand):
 
 def format_size(size: int) -> str:
     if size > 1000 * 1000:
-        return "{:.1f} MB".format(size / 1000.0 / 1000)
+        return f"{size / 1000.0 / 1000:.1f} MB"
     elif size > 10 * 1000:
-        return "{} kB".format(int(size / 1000))
+        return f"{int(size / 1000)} kB"
     elif size > 1000:
-        return "{:.1f} kB".format(size / 1000.0)
+        return f"{size / 1000.0:.1f} kB"
     else:
-        return "{} bytes".format(int(size))
+        return f"{int(size)} bytes"
 
 
 def remove_cache_files(project: Project, pattern: str) -> None:

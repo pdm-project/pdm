@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING
 
 from resolvelib.resolvers import Criterion, Resolution
 
@@ -19,8 +19,8 @@ _old_merge_into_criterion = Resolution._merge_into_criterion
 
 # Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
 def _merge_into_criterion(
-    self, requirement: Requirement, parent: Optional[Candidate]
-) -> Tuple[str, Criterion]:
+    self, requirement: Requirement, parent: Candidate | None
+) -> tuple[str, Criterion]:
     identifier, crit = _old_merge_into_criterion(self, requirement, parent)
 
     if not identifier:
@@ -33,14 +33,14 @@ Resolution._merge_into_criterion = _merge_into_criterion
 del _merge_into_criterion
 
 
-def _identify_parent(parent: Optional[Candidate]) -> None:
+def _identify_parent(parent: Candidate | None) -> None:
     return parent.identify() if parent else None
 
 
 def _build_metaset(
     criterion: Criterion,
-    all_metasets: Dict[str, Metaset],
-    keep_unresolved: Set[Optional[str]],
+    all_metasets: dict[str, Metaset],
+    keep_unresolved: set[str | None],
 ) -> Metaset:
 
     metaset = None
@@ -65,9 +65,9 @@ def populate_sections(result: Result) -> None:
     the dependency tree back to the top.
     """
 
-    resolved: Dict[str, Set[str]] = {}
+    resolved: dict[str, set[str]] = {}
 
-    def get_candidate_sections(key: str) -> Set[str]:
+    def get_candidate_sections(key: str) -> set[str]:
         if key in resolved:
             return resolved[key]
         resolved[key] = res = set()
@@ -84,14 +84,14 @@ def populate_sections(result: Result) -> None:
         can.sections = sorted(get_candidate_sections(k))
 
 
-def extract_metadata(result: Result) -> Dict[str, Metaset]:
+def extract_metadata(result: Result) -> dict[str, Metaset]:
     """Traverse through the parent dependencies till the top
     and merge any requirement markers on the path.
     Return a map of Metaset for each candidate.
     """
-    all_metasets: Dict[str, Metaset] = {}
-    unresolved: Set[str] = {k for k in result.mapping}
-    circular: Dict[str, Set[str]] = {}
+    all_metasets: dict[str, Metaset] = {}
+    unresolved: set[str] = {k for k in result.mapping}
+    circular: dict[str, set[str]] = {}
 
     while unresolved:
         new_metasets = {}
@@ -135,10 +135,10 @@ def extract_metadata(result: Result) -> Dict[str, Metaset]:
 
 def resolve(
     resolver: Resolver,
-    requirements: List[Requirement],
+    requirements: list[Requirement],
     requires_python: PySpecSet,
     max_rounds: int = 1000,
-) -> Tuple[Dict[str, Candidate], Dict[str, List[Requirement]], Dict[str, str]]:
+) -> tuple[dict[str, Candidate], dict[str, list[Requirement]], dict[str, str]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 3 items:
 

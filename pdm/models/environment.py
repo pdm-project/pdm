@@ -11,7 +11,7 @@ import tempfile
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Generator, Iterator
 
 from distlib.scripts import ScriptMaker
 from pip._vendor import packaging, pkg_resources
@@ -49,7 +49,7 @@ class WorkingSet(collections.abc.Mapping):
 
     def __init__(
         self,
-        paths: Optional[List[str]] = None,
+        paths: list[str] | None = None,
         python: str = pkg_resources.PY_MAJOR,
     ):
         self.env = pkg_resources.Environment(paths, python=python)
@@ -95,7 +95,7 @@ class Environment:
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
 
-    def get_paths(self) -> Dict[str, str]:
+    def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
         paths = sysconfig.get_paths()
         scripts = "Scripts" if os.name == "nt" else "bin"
@@ -184,7 +184,7 @@ class Environment:
     @contextmanager
     def get_finder(
         self,
-        sources: Optional[List[Source]] = None,
+        sources: list[Source] | None = None,
         ignore_requires_python: bool = False,
     ) -> Generator[pip_shims.PackageFinder, None, None]:
         """Return the package finder of given index sources.
@@ -214,7 +214,7 @@ class Environment:
     def build(
         self,
         ireq: pip_shims.InstallRequirement,
-        hashes: Optional[Dict[str, str]] = None,
+        hashes: dict[str, str] | None = None,
         allow_all: bool = True,
     ) -> str:
         """Build egg_info directory for editable candidates and a wheel for others.
@@ -308,7 +308,7 @@ class Environment:
         )
 
     @cached_property
-    def marker_environment(self) -> Dict[str, Any]:
+    def marker_environment(self) -> dict[str, Any]:
         """Get environment for marker evaluation"""
         return get_pep508_environment(self.interpreter.executable)
 
@@ -362,7 +362,7 @@ class Environment:
             shutil.rmtree(dirname, ignore_errors=True)
 
     @cached_property
-    def pip_command(self) -> List[str]:
+    def pip_command(self) -> list[str]:
         """Get a pip command for this environment, and download one if not available.
         Return a list of args like ['python', '-m', 'pip']
         """
@@ -391,7 +391,7 @@ class GlobalEnvironment(Environment):
 
     is_global = True
 
-    def get_paths(self) -> Dict[str, str]:
+    def get_paths(self) -> dict[str, str]:
         paths = get_sys_config_paths(self.interpreter.executable)
         paths["prefix"] = paths["data"]
         paths["headers"] = paths["include"]
@@ -403,5 +403,5 @@ class GlobalEnvironment(Environment):
         )
 
     @property
-    def packages_path(self) -> Optional[Path]:
+    def packages_path(self) -> Path | None:
         return None

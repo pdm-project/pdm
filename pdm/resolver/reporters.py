@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING
 
 from resolvelib import BaseReporter
 
@@ -21,10 +21,10 @@ def log_title(title: str) -> None:
 
 
 class SpinnerReporter(BaseReporter):
-    def __init__(self, spinner: halo.Halo, requirements: List[Requirement]) -> None:
+    def __init__(self, spinner: halo.Halo, requirements: list[Requirement]) -> None:
         self.spinner = spinner
         self.requirements = requirements
-        self._previous: Optional[Dict[str, Candidate]] = None
+        self._previous: dict[str, Candidate] | None = None
 
     def starting_round(self, index: int) -> None:
         # self.spinner.hide_and_write(f"Resolving ROUND {index}")
@@ -42,7 +42,7 @@ class SpinnerReporter(BaseReporter):
         This is NOT called if the resolution ends at this round. Use `ending`
         if you want to report finalization. The index is zero-based.
         """
-        log_title("Ending round {}".format(index))
+        log_title(f"Ending round {index}")
 
     def ending(self, state: State) -> None:
         """Called before the resolution ends successfully."""

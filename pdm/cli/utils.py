@@ -5,7 +5,7 @@ import os
 from argparse import Action
 from collections import ChainMap
 from pathlib import Path
-from typing import TYPE_CHECKING, Sequence, Set
+from typing import TYPE_CHECKING, Iterable, Sequence
 
 import cfonts
 import tomlkit
@@ -23,8 +23,6 @@ from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 
 if TYPE_CHECKING:
-    from typing import Dict, Iterable, List, Optional, Tuple
-
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.models.candidates import Candidate
@@ -127,7 +125,7 @@ class Package:
     """An internal class for the convenience of dependency graph building."""
 
     def __init__(
-        self, name: str, version: str, requirements: Dict[str, Requirement]
+        self, name: str, version: str, requirements: dict[str, Requirement]
     ) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
@@ -200,7 +198,7 @@ def format_package(
     package: Package,
     required: str = "",
     prefix: str = "",
-    visited: Optional[Set[str]] = None,
+    visited: set[str] | None = None,
 ) -> str:
     """Format one package.
 
@@ -248,10 +246,10 @@ def format_package(
 def format_reverse_package(
     graph: DirectedGraph,
     package: Package,
-    child: Optional[Package] = None,
+    child: Package | None = None,
     requires: str = "",
     prefix: str = "",
-    visited: Optional[Set[str]] = None,
+    visited: set[str] | None = None,
 ):
     """Format one package for output reverse dependency graph."""
     if visited is None:
@@ -325,10 +323,10 @@ def format_reverse_dependency_graph(project: Project, graph: DirectedGraph) -> s
 
 
 def format_lockfile(
-    mapping: Dict[str, Candidate],
-    fetched_dependencies: Dict[str, List[Requirement]],
-    summary_collection: Dict[str, str],
-) -> Dict:
+    mapping: dict[str, Candidate],
+    fetched_dependencies: dict[str, list[Requirement]],
+    summary_collection: dict[str, str],
+) -> dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
@@ -360,8 +358,8 @@ def format_lockfile(
 
 
 def save_version_specifiers(
-    requirements: Dict[str, Requirement],
-    resolved: Dict[str, Candidate],
+    requirements: dict[str, Requirement],
+    resolved: dict[str, Candidate],
     save_strategy: str,
 ) -> None:
     """Rewrite the version specifiers according to the resolved result and save strategy
@@ -389,7 +387,7 @@ def check_project_file(project: Project) -> None:
         )
 
 
-def find_importable_files(project: Project) -> Iterable[Tuple[str, Path]]:
+def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
     """Find all possible files that can be imported"""
     for filename in (
         "Pipfile",
@@ -428,7 +426,7 @@ def set_env_in_reg(env_name: str, value: str) -> None:
 
 
 def format_resolution_impossible(err: ResolutionImpossible) -> str:
-    causes: List[RequirementInformation] = err.causes
+    causes: list[RequirementInformation] = err.causes
     result = ["Unable to find a resolution that satisfies the following requirements:"]
 
     for req, parent in causes:
@@ -444,7 +442,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     return "\n".join(result)
 
 
-def compatible_dev_flag(project: Project, dev: Optional[bool]) -> bool:
+def compatible_dev_flag(project: Project, dev: bool | None) -> bool:
     if dev:
         project.core.ui.echo(
             f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "

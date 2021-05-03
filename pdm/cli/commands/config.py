@@ -40,7 +40,7 @@ class Command(BaseCommand):
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
         ui = project.core.ui
-        ui.echo("Home configuration ({}):".format(project.global_config._config_file))
+        ui.echo(f"Home configuration ({project.global_config._config_file}):")
         with ui.indent("  "):
             for key in sorted(project.global_config):
                 ui.echo(
@@ -52,9 +52,7 @@ class Command(BaseCommand):
                 ui.echo(f"{termui.cyan(key)} = {project.global_config[key]}")
 
         ui.echo()
-        ui.echo(
-            "Project configuration ({}):".format(project.project_config._config_file)
-        )
+        ui.echo(f"Project configuration ({project.project_config._config_file}):")
         with ui.indent("  "):
             for key in sorted(project.project_config):
                 ui.echo(

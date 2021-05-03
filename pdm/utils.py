@@ -266,7 +266,7 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
         parsed = parse.urlparse(uri)
         if ":" in parsed.netloc:
             netloc, _, path_start = parsed.netloc.rpartition(":")
-            path = "/{0}{1}".format(path_start, parsed.path)
+            path = f"/{path_start}{parsed.path}"
             uri = parse.urlunparse(parsed._replace(netloc=netloc, path=path))
     return uri
 
@@ -332,7 +332,7 @@ def open_file(url: str, session: Optional[Session] = None) -> Iterator[Session]:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
-            raise ValueError("Cannot open directory for read: {}".format(url))
+            raise ValueError(f"Cannot open directory for read: {url}")
         else:
             with open(local_path, "rb") as local_file:
                 yield local_file

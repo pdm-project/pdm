@@ -47,7 +47,7 @@ def strip_extras(line: str) -> Tuple[str, Optional[Tuple]]:
     match = re.match(r"^(.+?)(?:\[([^\]]+)\])?$", line)
     assert match is not None
     name, extras = match.groups()
-    extras = tuple(set(e.strip() for e in extras.split(","))) if extras else None
+    extras = tuple({e.strip() for e in extras.split(",")}) if extras else None
     return name, extras
 
 

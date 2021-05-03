@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
+from typing import Any, Callable, Mapping, TypeVar
 
 import tomlkit
 from tomlkit.items import Array, InlineTable
@@ -25,7 +25,7 @@ class Unset(Exception):
 
 
 class _MetaConverterMeta(type):
-    def __init__(cls, name: str, bases: Tuple[type, ...], ns: Dict[str, Any]) -> None:
+    def __init__(cls, name: str, bases: tuple[type, ...], ns: dict[str, Any]) -> None:
         super().__init__(name, bases, ns)
         cls._converters = {}
         _default = object()
@@ -38,15 +38,15 @@ class _MetaConverterMeta(type):
 class MetaConverter(metaclass=_MetaConverterMeta):
     """Convert a metadata dictionary to PDM's format"""
 
-    _converters: Dict[str, Callable]
+    _converters: dict[str, Callable]
 
-    def __init__(self, source: dict, ui: Optional[termui.UI] = None) -> None:
+    def __init__(self, source: dict, ui: termui.UI | None = None) -> None:
         self.source = source
-        self.settings: Dict[str, Any] = {}
-        self._data: Dict[str, Any] = {}
+        self.settings: dict[str, Any] = {}
+        self._data: dict[str, Any] = {}
         self._ui = ui
 
-    def convert(self) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
+    def convert(self) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
         source = self.source
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:  # type: ignore
@@ -94,11 +94,11 @@ def make_array(data: list, multiline: bool = False) -> Array:
     return array
 
 
-def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> Array:
+def array_of_inline_tables(value: list[Mapping], multiline: bool = True) -> Array:
     return make_array([make_inline_table(item) for item in value], multiline)
 
 
-def parse_name_email(name_email: List[str]) -> Array:
+def parse_name_email(name_email: list[str]) -> Array:
     return array_of_inline_tables(
         [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]  # type: ignore
     )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from pdm import termui
 
@@ -43,7 +43,7 @@ class CandidateInfoNotFound(PdmException):
 
 
 class ExtrasError(UserWarning):
-    def __init__(self, extras: List[str]) -> None:
+    def __init__(self, extras: list[str]) -> None:
         super().__init__()
         self.extras = tuple(extras)
 
@@ -61,7 +61,7 @@ class InstallationError(PdmException):
 
 class NoConfigError(PdmException, KeyError):
     def __init__(self, key: str) -> None:
-        super().__init__("No such config item: {}".format(key))
+        super().__init__(f"No such config item: {key}")
 
 
 class NoPythonVersion(PdmException):

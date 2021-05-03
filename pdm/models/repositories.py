@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Iterable
 
 from pip._vendor.html5lib import parse
 
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
 
 def cache_result(
-    func: Callable[["BaseRepository", Candidate], CandidateInfo]
-) -> Callable[["BaseRepository", Candidate], CandidateInfo]:
+    func: Callable[[BaseRepository, Candidate], CandidateInfo]
+) -> Callable[[BaseRepository, Candidate], CandidateInfo]:
     @wraps(func)
     def wrapper(self: BaseRepository, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
@@ -37,7 +37,7 @@ def cache_result(
 class BaseRepository:
     """A Repository acts as the source of packages and metadata."""
 
-    def __init__(self, sources: List[Source], environment: Environment) -> None:
+    def __init__(self, sources: list[Source], environment: Environment) -> None:
         """
         :param sources: a list of sources to download packages from.
         :param environment: the bound environment instance.
@@ -47,7 +47,7 @@ class BaseRepository:
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
 
-    def get_filtered_sources(self, req: Requirement) -> List[Source]:
+    def get_filtered_sources(self, req: Requirement) -> list[Source]:
         """Get matching sources based on the index attribute."""
         if not req.index:
             return self.sources
@@ -55,7 +55,7 @@ class BaseRepository:
 
     def get_dependencies(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet, str]:
+    ) -> tuple[list[Requirement], PySpecSet, str]:
         """Get (dependencies, python_specifier, summary) of the candidate."""
         requirements, requires_python, summary = [], "", ""
         last_ext_info = None
@@ -87,7 +87,7 @@ class BaseRepository:
         self,
         requirement: Requirement,
         requires_python: PySpecSet = PySpecSet(),
-        allow_prereleases: Optional[bool] = None,
+        allow_prereleases: bool | None = None,
         allow_all: bool = False,
     ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
@@ -135,7 +135,7 @@ class BaseRepository:
                 )
 
         def print_candidates(
-            title: str, candidates: List[Candidate], max_lines: int = 10
+            title: str, candidates: list[Candidate], max_lines: int = 10
         ) -> None:
             termui.logger.debug("\t" + title)
             logged_lines = set()
@@ -175,7 +175,7 @@ class BaseRepository:
         summary = candidate.metadata.summary
         return deps, requires_python, summary
 
-    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
         """Get hashes of all possible installable candidates
         of a given package version.
         """

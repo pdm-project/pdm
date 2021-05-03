@@ -7,7 +7,7 @@ import tempfile
 import textwrap
 import threading
 from logging import Logger
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Iterable
 
 import toml
 from pep517.wrappers import Pep517HookCaller
@@ -64,9 +64,9 @@ class LoggerWrapper(threading.Thread):
 
 
 def log_subprocessor(
-    cmd: List[str],
-    cwd: Optional[os.PathLike] = None,
-    extra_environ: Optional[Dict[str, str]] = None,
+    cmd: list[str],
+    cwd: os.PathLike | None = None,
+    extra_environ: dict[str, str] | None = None,
 ) -> None:
     env = os.environ.copy()
     if extra_environ:
@@ -122,7 +122,7 @@ class _Prefix:
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
-    _env_cache: Dict[str, str] = {}
+    _env_cache: dict[str, str] = {}
 
     DEFAULT_BACKEND = {
         "build-backend": "setuptools.build_meta:__legacy__",
@@ -169,7 +169,7 @@ class EnvBuilder:
         )
 
     @property
-    def _env_vars(self) -> Dict[str, str]:
+    def _env_vars(self) -> dict[str, str]:
         paths = [self._prefix.bin_dir]
         if "PATH" in os.environ:
             paths.append(os.getenv("PATH", ""))
@@ -181,9 +181,9 @@ class EnvBuilder:
 
     def subprocess_runner(
         self,
-        cmd: List[str],
-        cwd: Optional[os.PathLike] = None,
-        extra_environ: Optional[Dict[str, str]] = None,
+        cmd: list[str],
+        cwd: os.PathLike | None = None,
+        extra_environ: dict[str, str] | None = None,
         isolated: bool = True,
     ) -> None:
         env = self._env_vars.copy() if isolated else {}

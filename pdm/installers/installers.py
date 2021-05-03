@@ -49,7 +49,7 @@ class Installer:  # pragma: no cover
     def install_wheel(self, wheel: Wheel) -> None:
         paths = self.environment.get_paths()
         maker = distlib.scripts.ScriptMaker(None, None)
-        maker.variants = set(("",))
+        maker.variants = {""}
         enquoted_executable = distlib.scripts.enquote_executable(
             self.environment.interpreter.executable
         )

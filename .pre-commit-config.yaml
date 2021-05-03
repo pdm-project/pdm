@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: black
         exclude: ^pdm/_vendor
+
   - repo: https://github.com/PyCQA/flake8
     rev: 3.9.1
     hooks:
@@ -13,3 +14,10 @@ repos:
     rev: 5.8.0
     hooks:
       - id: isort
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.14.0
+    hooks:
+      - id: pyupgrade
+        exclude: ^pdm/_vendor
+        args: [--py36-plus]

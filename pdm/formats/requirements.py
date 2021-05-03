@@ -22,16 +22,16 @@ def _requirement_to_str_lowercase_name(requirement: PRequirement) -> str:
     parts = [requirement.name.lower()]
 
     if requirement.extras:
-        parts.append("[{0}]".format(",".join(sorted(requirement.extras))))
+        parts.append("[{}]".format(",".join(sorted(requirement.extras))))
 
     if requirement.specifier:
         parts.append(str(requirement.specifier))
 
     if requirement.url:
-        parts.append("@ {0}".format(requirement.url))
+        parts.append(f"@ {requirement.url}")
 
     if requirement.marker:
-        parts.append("; {0}".format(requirement.marker))
+        parts.append(f"; {requirement.marker}")
 
     return "".join(parts)
 
@@ -48,7 +48,7 @@ def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
     :rtype: str
     """
     if ireq.editable:
-        line = "-e {}".format(ireq.link)
+        line = f"-e {ireq.link}"
     else:
         if not ireq.req:
             ireq.req = parse_requirement("dummy @" + ireq.link.url)
@@ -59,11 +59,11 @@ def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
 
     if str(ireq.req.marker) != str(ireq.markers):
         if not ireq.req.marker:
-            line = "{}; {}".format(line, ireq.markers)
+            line = f"{line}; {ireq.markers}"
         else:
             name, markers = line.split(";", 1)
             markers = Marker(markers) & ireq.markers
-            line = "{}; {}".format(name, markers)
+            line = f"{name}; {markers}"
 
     return line
 

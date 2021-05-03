@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any, Iterable, List, Set, Tuple, Union, cast
+from typing import Any, Iterable, cast
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
@@ -10,7 +10,7 @@ from pdm.models.versions import Version
 
 
 @lru_cache()
-def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
+def get_specifier(version_str: SpecifierSet | str) -> SpecifierSet:
     if isinstance(version_str, SpecifierSet):
         return version_str
     if not version_str or version_str == "*":
@@ -18,7 +18,7 @@ def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
     return SpecifierSet(version_str)
 
 
-def _normalize_op_specifier(op: str, version_str: str) -> Tuple[str, Version]:
+def _normalize_op_specifier(op: str, version_str: str) -> tuple[str, Version]:
     version = Version(version_str)
     if version.is_wildcard:
         if op == "==":
@@ -76,7 +76,7 @@ class PySpecSet(SpecifierSet):
         super().__init__(version_str)
         self._lower_bound = Version.MIN
         self._upper_bound = Version.MAX
-        self._excludes: List[Version] = []
+        self._excludes: list[Version] = []
         if version_str and analyze:
             self._analyze_specifiers()
 
@@ -84,7 +84,7 @@ class PySpecSet(SpecifierSet):
         # XXX: Prerelease or postrelease specifiers will fail here, but I guess we can
         # just ignore them for now.
         lower_bound, upper_bound = Version.MIN, Version.MAX
-        excludes: Set[Version] = set()
+        excludes: set[Version] = set()
         for spec in self:
             op, version = _normalize_op_specifier(spec.operator, spec.version)
 
@@ -119,7 +119,7 @@ class PySpecSet(SpecifierSet):
         lower: Version,
         upper: Version,
         excludes: Iterable[Version],
-    ) -> Tuple[Version, Version, List[Version]]:
+    ) -> tuple[Version, Version, list[Version]]:
         sorted_excludes = sorted(excludes)
         wildcard_excludes = {
             version[:-1] for version in sorted_excludes if version.is_wildcard
@@ -198,7 +198,7 @@ class PySpecSet(SpecifierSet):
         if not self.is_impossible:
             super().__init__(str(self))
 
-    def _comp_key(self) -> Tuple[Version, Version, Tuple[Version, ...]]:
+    def _comp_key(self) -> tuple[Version, Version, tuple[Version, ...]]:
         return (self._lower_bound, self._upper_bound, tuple(self._excludes))
 
     def __hash__(self) -> int:
@@ -250,7 +250,7 @@ class PySpecSet(SpecifierSet):
     def __repr__(self) -> str:
         return f"<PySpecSet {self}>"
 
-    def copy(self) -> "PySpecSet":
+    def copy(self) -> PySpecSet:
         """Create a new specifierset that is same as the original one."""
         if self.is_impossible:
             return ImpossiblePySpecSet()
@@ -261,7 +261,7 @@ class PySpecSet(SpecifierSet):
         return instance
 
     @lru_cache()
-    def __and__(self, other: "PySpecSet") -> "PySpecSet":
+    def __and__(self, other: PySpecSet) -> PySpecSet:
         if any(s.is_impossible for s in (self, other)):
             return ImpossiblePySpecSet()
         if self.is_allow_all:
@@ -276,7 +276,7 @@ class PySpecSet(SpecifierSet):
         return rv
 
     @lru_cache()
-    def __or__(self, other: "PySpecSet") -> "PySpecSet":
+    def __or__(self, other: PySpecSet) -> PySpecSet:
         if self.is_impossible:
             return other.copy()
         elif other.is_impossible:
@@ -347,7 +347,7 @@ class PySpecSet(SpecifierSet):
                 break
 
     @lru_cache()
-    def is_superset(self, other: Union[str, SpecifierSet]) -> bool:
+    def is_superset(self, other: str | SpecifierSet) -> bool:
         if self.is_impossible:
             return False
         if self.is_allow_all:
@@ -372,7 +372,7 @@ class PySpecSet(SpecifierSet):
         )
 
     @lru_cache()
-    def is_subset(self, other: Union[str, SpecifierSet]) -> bool:
+    def is_subset(self, other: str | SpecifierSet) -> bool:
         if self.is_impossible:
             return False
         other = type(self)(str(other))

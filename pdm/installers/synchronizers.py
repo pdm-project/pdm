@@ -5,7 +5,7 @@ import multiprocessing
 import traceback
 from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
@@ -22,7 +22,7 @@ class DummyFuture:
 
     def __init__(self) -> None:
         self._result = self._NOT_SET
-        self._exc: Optional[Exception] = None
+        self._exc: Exception | None = None
 
     def set_result(self, result: Any) -> None:
         self._result = result
@@ -33,7 +33,7 @@ class DummyFuture:
     def result(self) -> Any:
         return self._result
 
-    def exception(self) -> Optional[Exception]:
+    def exception(self) -> Exception | None:
         return self._exc
 
     def add_done_callback(self, func: Callable) -> None:
@@ -67,7 +67,7 @@ class Synchronizer:
 
     def __init__(
         self,
-        candidates: Dict[str, Candidate],
+        candidates: dict[str, Candidate],
         environment: Environment,
         clean: bool = False,
         dry_run: bool = False,
@@ -85,7 +85,7 @@ class Synchronizer:
 
     def create_executor(
         self,
-    ) -> Union[ThreadPoolExecutor, DummyExecutor]:
+    ) -> ThreadPoolExecutor | DummyExecutor:
         if self.parallel:
             return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
         else:
@@ -95,13 +95,13 @@ class Synchronizer:
         return Installer(self.environment)
 
     @property
-    def self_key(self) -> Optional[str]:
+    def self_key(self) -> str | None:
         meta = self.environment.project.meta
         if meta.name:
             return meta.project_name.lower()
         return None
 
-    def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
+    def compare_with_working_set(self) -> tuple[list[str], list[str], list[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
         to_update, to_remove = [], []
@@ -154,7 +154,7 @@ class Synchronizer:
 
         return can
 
-    def update_candidate(self, key: str) -> Tuple[Distribution, Candidate]:
+    def update_candidate(self, key: str) -> tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[safe_name(can.name).lower()]
@@ -206,7 +206,7 @@ class Synchronizer:
                 )
         return dist
 
-    def _show_headline(self, packages: Dict[str, List[str]]) -> None:
+    def _show_headline(self, packages: dict[str, list[str]]) -> None:
         add, update, remove = packages["add"], packages["update"], packages["remove"]
         if not any((add, update, remove)):
             self.ui.echo("All packages are synced to date, nothing to do.\n")
@@ -221,7 +221,7 @@ class Synchronizer:
         )
         self.ui.echo(" ".join(results) + "\n")
 
-    def _show_summary(self, packages: Dict[str, List[str]]) -> None:
+    def _show_summary(self, packages: dict[str, list[str]]) -> None:
         to_add = [self.candidates[key] for key in packages["add"]]
         to_update = [
             (self.working_set[key], self.candidates[key]) for key in packages["update"]
@@ -282,12 +282,10 @@ class Synchronizer:
                 else:
                     parallel_jobs.append((kind, key))
 
-        errors: List[str] = []
-        failed_jobs: List[Tuple[str, str]] = []
+        errors: list[str] = []
+        failed_jobs: list[tuple[str, str]] = []
 
-        def update_progress(
-            future: Union[Future, DummyFuture], kind: str, key: str
-        ) -> None:
+        def update_progress(future: Future | DummyFuture, kind: str, key: str) -> None:
             error = future.exception()
             if error:
                 failed_jobs.append((kind, key))
