@@ -20,7 +20,7 @@ repos:
       - id: mypy
         args:
           - --follow-imports=skip
-        files: |
+        files: | # incremental 'fully-typed' list
           (?x)^(
               pdm/models/auth.py|
               pdm/models/caches.py|
