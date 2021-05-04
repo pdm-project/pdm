@@ -22,8 +22,13 @@ repos:
           - --follow-imports=skip
         files: | # incremental 'fully-typed' list
           (?x)^(
+              pdm/exceptions.py|
               pdm/models/auth.py|
               pdm/models/caches.py|
+              pdm/models/python.py|
               pdm/models/setup.py|
-              pdm/termui.py
+              pdm/models/specifiers.py|
+              pdm/models/versions.py|
+              pdm/termui.py|
+              pdm/utils.py
           )$
