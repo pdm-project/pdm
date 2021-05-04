@@ -23,6 +23,7 @@ repos:
         files: | # incremental 'fully-typed' list
           (?x)^(
               pdm/exceptions.py|
+              pdm/formats/.*\.py|
               pdm/models/auth.py|
               pdm/models/caches.py|
               pdm/models/python.py|
@@ -30,5 +31,5 @@ repos:
               pdm/models/specifiers.py|
               pdm/models/versions.py|
               pdm/termui.py|
-              pdm/utils.py
+              pdm/utils.py|
           )$
