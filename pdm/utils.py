@@ -346,7 +346,7 @@ def open_file(url: str, session: Optional[Session] = None) -> Iterator[Session]:
                 yield result
             finally:
                 if raw:
-                    conn = raw._connection
+                    conn = getattr(raw, "_connection", None)
                     if conn is not None:
                         conn.close()
                 result.close()
