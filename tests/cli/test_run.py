@@ -217,7 +217,7 @@ def test_run_with_another_project_root(project, invoke, capfd):
             assert out.strip() == "2.24.0"
 
 
-def test_import_another_sitecustomize(python_version, project, invoke, capfd):
+def test_import_another_sitecustomize(project, invoke, capfd):
     project.meta["requires-python"] = ">=2.7"
     project.write_pyproject()
     # a script for checking another sitecustomize is imported
