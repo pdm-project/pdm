@@ -120,7 +120,10 @@ class Requirement:
 
     def identify(self) -> str:
         extras = "[{}]".format(",".join(sorted(self.extras))) if self.extras else ""
-        return self.key + extras
+        identifier = self.key or str(self.path)
+        if not identifier:
+            raise ValueError
+        return identifier + extras
 
     def __getattr__(self, attr: str) -> Any:
         if attr in self.attributes:
