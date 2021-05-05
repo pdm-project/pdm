@@ -217,7 +217,6 @@ def test_run_with_another_project_root(project, invoke, capfd):
             assert out.strip() == "2.24.0"
 
 
-@pytest.mark.parametrize("python_version", ["2.7", "3.6", "3.7", "3.8", "3.9"])
 def test_import_another_sitecustomize(python_version, project, invoke, capfd):
     project.meta["requires-python"] = ">=2.7"
     project.write_pyproject()
@@ -243,7 +242,6 @@ def test_import_another_sitecustomize(python_version, project, invoke, capfd):
     env["PYTHONPATH"] = os.pathsep.join(paths)
     # invoke pdm commands
     invoke = functools.partial(invoke, env=env, obj=project)
-    invoke(["use", "-f", python_version])
     project._environment = None
     capfd.readouterr()
     with cd(project.root):
