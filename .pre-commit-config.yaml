@@ -19,5 +19,5 @@ repos:
     rev: v2.14.0
     hooks:
       - id: pyupgrade
-        exclude: ^pdm\/_vendor|^pdm\/installers\/_editable_install\.py
+        exclude: ^pdm\/_vendor|^pdm\/installers\/_editable_install\.py|tests\/
         args: [--py36-plus]
