@@ -14,3 +14,10 @@ repos:
     rev: 5.8.0
     hooks:
       - id: isort
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.14.0
+    hooks:
+      - id: pyupgrade
+        exclude: ^pdm\/_vendor|^pdm\/installers\/_editable_install\.py
+        args: [--py36-plus]
