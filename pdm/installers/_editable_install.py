@@ -14,11 +14,11 @@ if os.path.exists(os.path.join(lib_dir, "site.py")):
     os.remove(os.path.join(lib_dir, "site.py"))
 sys.argv[1:] = [
     "develop",
-    f"--install-dir={lib_dir}",
+    "--install-dir={0}".format(lib_dir),
     "--no-deps",
-    f"--prefix={prefix}",
-    f"--script-dir={bin_dir}",
-    f"--site-dirs={lib_dir}",
+    "--prefix={0}".format(prefix),
+    "--script-dir={0}".format(bin_dir),
+    "--site-dirs={0}".format(lib_dir),
 ]
 sys.path.append(lib_dir)
 exec(compile(code, __file__, "exec"))

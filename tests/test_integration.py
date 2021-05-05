@@ -15,7 +15,7 @@ def strict_invoke(invoke):
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("python_version", ["3.6", "3.7", "3.8", "3.9"])
+@pytest.mark.parametrize("python_version", ["2.7", "3.6", "3.7", "3.8", "3.9"])
 def test_basic_integration(python_version, project_no_init, strict_invoke):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = project_no_init
