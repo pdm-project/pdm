@@ -4,10 +4,13 @@ repos:
     hooks:
       - id: black
         exclude: ^pdm/_vendor
+
   - repo: https://github.com/PyCQA/flake8
     rev: 3.9.1
     hooks:
       - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
 
   - repo: https://github.com/pycqa/isort
     rev: 5.8.0
