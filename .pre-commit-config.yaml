@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 21.4b0
+    rev: 21.4b2
     hooks:
       - id: black
         exclude: ^pdm/_vendor
