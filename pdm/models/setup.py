@@ -17,7 +17,7 @@ class Setup:
     extras_require: Dict[str, List[str]] = field(default_factory=dict)
     python_requires: Optional[str] = None
 
-    def update(self, other: "Setup"):
+    def update(self, other: "Setup") -> None:
         if other.name:
             self.name = other.name
         if other.version:
