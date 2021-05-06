@@ -21,7 +21,7 @@ from pdm.utils import allow_all_wheels
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
 
-PY_SPEC_SET = PySpecSet()
+ALLOW_ALL_PYTHON = PySpecSet()
 
 
 def cache_result(
@@ -88,7 +88,7 @@ class BaseRepository:
     def find_candidates(
         self,
         requirement: Requirement,
-        requires_python: PySpecSet = PY_SPEC_SET,
+        requires_python: PySpecSet = ALLOW_ALL_PYTHON,
         allow_prereleases: Optional[bool] = None,
         allow_all: bool = False,
     ) -> Iterable[Candidate]:
