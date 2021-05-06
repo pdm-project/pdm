@@ -41,10 +41,24 @@ def get_pypackages_path(maxdepth=5):
                 return result
 
 
-def main():
+def ensure_another_sitecustomize_imported():
+    import imp
 
+    try:
+        f, pathname, desc = imp.find_module("sitecustomize", sys.path)
+        try:
+            imp.load_module("another_sitecustomize", f, pathname, desc)
+        finally:
+            f.close()
+    except ImportError:
+        pass
+
+
+def main():
     self_path = os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
     sys.path[:] = [path for path in sys.path if os.path.normcase(path) != self_path]
+
+    ensure_another_sitecustomize_imported()
 
     libpath = get_pypackages_path()
     if not libpath:

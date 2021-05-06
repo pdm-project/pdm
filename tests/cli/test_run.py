@@ -1,3 +1,4 @@
+import functools
 import os
 import subprocess
 import textwrap
@@ -214,3 +215,40 @@ def test_run_with_another_project_root(project, invoke, capfd):
             assert ret.exit_code == 0
             out, _ = capfd.readouterr()
             assert out.strip() == "2.24.0"
+
+
+def test_import_another_sitecustomize(project, invoke, capfd):
+    project.meta["requires-python"] = ">=2.7"
+    project.write_pyproject()
+    # a script for checking another sitecustomize is imported
+    project.root.joinpath("foo.py").write_text(
+        textwrap.dedent(
+            """
+            import sys
+            module = sys.modules.get('another_sitecustomize')
+            if module:
+                print(module.__file__)
+            """
+        )
+    )
+    # ensure there have at least one sitecustomize can be imported
+    # there may have more than one sitecustomize.py in sys.path
+    project.root.joinpath("sitecustomize.py").write_text("# do nothing")
+    env = os.environ.copy()
+    paths = [str(project.root)]
+    original_paths = env.get("PYTHONPATH", "")
+    if original_paths:
+        paths.insert(0, original_paths)
+    env["PYTHONPATH"] = os.pathsep.join(paths)
+    # invoke pdm commands
+    invoke = functools.partial(invoke, env=env, obj=project)
+    project._environment = None
+    capfd.readouterr()
+    with cd(project.root):
+        invoke(["run", "python", "foo.py"])
+    # only the first and second sitecustomize module will be imported
+    # as sitecustomize and another_sitecustomize
+    # the first one is pdm.pep582.sitecustomize for sure
+    # the second one maybe not the dummy module injected here
+    out, _ = capfd.readouterr()
+    assert out.strip()
