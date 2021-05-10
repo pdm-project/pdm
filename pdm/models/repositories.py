@@ -191,7 +191,10 @@ class BaseRepository:
             return candidate.hashes
         req = candidate.req.copy()
         req.specifier = SpecifierSet(f"=={candidate.version}")
-        matching_candidates = self.find_candidates(req, allow_all=True)
+        if candidate.req.is_file_or_url:
+            matching_candidates = [candidate]
+        else:
+            matching_candidates = self.find_candidates(req, allow_all=True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session
             return {
