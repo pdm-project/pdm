@@ -140,3 +140,17 @@ def test_build_legacy_package(fixture_project, invoke):
     assert "demo-module-0.1.0/foo_module.py" in get_tarball_names(
         project.root / "dist/demo-module-0.1.0.tar.gz"
     )
+
+
+def test_build_with_config_settings(fixture_project):
+    project = fixture_project("demo-src-package")
+    actions.do_build(project, config_settings={"--plat-name": "win_amd64"})
+
+    assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
+
+
+def test_cli_build_with_config_settings(fixture_project, invoke):
+    project = fixture_project("demo-src-package")
+    result = invoke(["build", "-C--plat-name=win_amd64"], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
