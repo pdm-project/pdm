@@ -7,7 +7,7 @@ import tempfile
 import textwrap
 import threading
 from logging import Logger
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional
 
 import toml
 from pep517.wrappers import Pep517HookCaller
@@ -227,7 +227,9 @@ class EnvBuilder:
             self.subprocess_runner(cmd, isolated=False)
             os.unlink(req_file.name)
 
-    def build(self, out_dir: str) -> str:
+    def build(
+        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+    ) -> str:
         """Build and store the artifact in out_dir,
         return the absolute path of the built result.
         """

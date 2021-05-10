@@ -175,7 +175,7 @@ class Core:
             ...
 
         """
-        for plugin in pkg_resources.iter_entry_points("pdm"):
+        for plugin in pkg_resources.iter_entry_points("pdm"):  # type: ignore
             plugin.load()(self)
 
 

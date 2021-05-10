@@ -39,6 +39,7 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from pdm._types import Source
+    from pdm.models.python import PythonInfo
     from pdm.project import Project
 
 _egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
@@ -89,7 +90,7 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
-        self.interpreter = project.python
+        self.interpreter: PythonInfo = project.python
         self._essential_installed = False
         self.auth = make_basic_auth(
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL

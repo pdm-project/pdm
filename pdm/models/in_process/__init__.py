@@ -53,7 +53,7 @@ def get_pep508_environment(executable: str) -> Dict[str, Any]:
 def get_architecture(executable: str) -> str:
     """Get the architecture bits for the given python executable"""
     if os.path.normpath(executable) == os.path.normpath(sys.executable):
-        return platform.architecture()
+        return platform.architecture()[0]
     bits, _ = platform.architecture(executable, "_DEFAULT")
     if bits != "_DEFAULT":
         return bits

@@ -1,4 +1,5 @@
 import os
+from typing import Any, Mapping, Optional
 
 from pdm.builders.base import EnvBuilder
 from pdm.exceptions import BuildError
@@ -25,7 +26,9 @@ class EnvEggInfoBuilder(EnvBuilder):
             raise BuildError("No egg info is generated.")
         return filename
 
-    def build(self, out_dir: str) -> str:
+    def build(
+        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+    ) -> str:
         from pdm.pep517.base import Builder
         from pdm.project.metadata import MutableMetadata
 
