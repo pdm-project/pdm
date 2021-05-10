@@ -73,6 +73,7 @@ _pdm() {
         "--no-wheel[Don't build wheels]"
         {-d+,--dest+}'[Target directory to put artifacts]:directory:_files -/'
         '--no-clean[Do not clean the target directory]'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=--opt(=value)" or "-C--opt(=value)"]'
       )
       ;;
     cache)

@@ -3,7 +3,7 @@ import shutil
 import textwrap
 from argparse import Namespace
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Set
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 import click
 import tomlkit
@@ -344,13 +344,13 @@ def do_build(
     wheel: bool = True,
     dest: str = "dist",
     clean: bool = True,
+    config_settings: Optional[Mapping[str, str]] = None,
 ) -> None:
     """Build artifacts for distribution."""
     from pdm.builders import EnvSdistBuilder, EnvWheelBuilder
 
     if project.is_global:
         raise ProjectError("Not allowed to build based on the global project.")
-    check_project_file(project)
     if not wheel and not sdist:
         project.core.ui.echo("All artifacts are disabled, nothing to do.", err=True)
         return
@@ -361,11 +361,15 @@ def do_build(
     with project.core.ui.logging("build"):
         if sdist:
             project.core.ui.echo("Building sdist...")
-            loc = EnvSdistBuilder(project.root, project.environment).build(dest)
+            loc = EnvSdistBuilder(project.root, project.environment).build(
+                dest, config_settings
+            )
             project.core.ui.echo(f"Built sdist at {loc}")
         if wheel:
             project.core.ui.echo("Building wheel...")
-            loc = EnvWheelBuilder(project.root, project.environment).build(dest)
+            loc = EnvWheelBuilder(project.root, project.environment).build(
+                dest, config_settings
+            )
             project.core.ui.echo(f"Built wheel at {loc}")
 
 

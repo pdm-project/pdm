@@ -407,7 +407,6 @@ def test_project_no_init_error(project_no_init):
 
     for handler in (
         actions.do_add,
-        actions.do_build,
         actions.do_list,
         actions.do_lock,
         actions.do_update,

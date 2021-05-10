@@ -36,8 +36,33 @@ class Command(BaseCommand):
             action="store_false",
             help="Do not clean the target directory",
         )
+        parser.add_argument(
+            "--config-setting",
+            "-C",
+            action="append",
+            help="Pass options to the backend. options with a value must be "
+            'specified after "=": "--config-setting=--opt(=value)" '
+            'or "-C--opt(=value)"',
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        config_settings = None
+        if options.config_setting:
+            config_settings = {}
+            for item in options.config_setting:
+                name, _, value = item.partition("=")
+                if name not in config_settings:
+                    config_settings[name] = value
+                else:
+                    if not isinstance(config_settings[name], list):
+                        config_settings[name] = [config_settings[name]]
+                    config_settings[name].append(value)
+
         actions.do_build(
-            project, options.sdist, options.wheel, options.dest, options.clean
+            project,
+            options.sdist,
+            options.wheel,
+            options.dest,
+            options.clean,
+            config_settings,
         )
