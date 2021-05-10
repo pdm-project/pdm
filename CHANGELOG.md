@@ -1,3 +1,29 @@
+Release v1.5.3 (2021-05-10)
+---------------------------
+
+### Features & Improvements
+
+- Support passing options to the build backends via `--config-setting`. [#452](https://github.com/pdm-project/pdm/issues/452)
+
+### Bug Fixes
+
+- Seek for other sitecustomize.py to import. [#422](https://github.com/pdm-project/pdm/issues/422)
+- Fix an unescaped single quote in fish completion script. [#423](https://github.com/pdm-project/pdm/issues/423)
+- The hashes of a remote file candidate should be calculated from the link itself. [#450](https://github.com/pdm-project/pdm/issues/450)
+
+### Dependencies
+
+- Remove `keyring` as a dependency and guide users to install it when it is not available. [#442](https://github.com/pdm-project/pdm/issues/442)
+- Specify the minimum version of `distlib`. [#447](https://github.com/pdm-project/pdm/issues/447)
+
+### Miscellany
+
+- Add log output about found candidates and their origin. [#421](https://github.com/pdm-project/pdm/issues/421)
+- Add [mypy](https://github.com/python/mypy) pre-commit hook [#427](https://github.com/pdm-project/pdm/issues/427)
+- Improve type safety of `pdm.cli.actions` [#428](https://github.com/pdm-project/pdm/issues/428)
+- Fix wrong mypy configuration. [#451](https://github.com/pdm-project/pdm/issues/451)
+
+
 Release v1.5.2 (2021-04-27)
 ---------------------------
 
