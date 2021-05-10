@@ -494,7 +494,9 @@ class Project:
     def meta(self) -> Metadata:
         if not self.pyproject:
             self.pyproject = {"project": tomlkit.table()}
-        return Metadata(self.pyproject_file, self.pyproject.get("project", {}))
+        m = Metadata(self.pyproject_file, self.pyproject.get("project", {}))
+        m._metadata = self.pyproject.get("project", {})
+        return m
 
     def init_global_project(self) -> None:
         if not self.is_global:

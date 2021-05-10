@@ -47,7 +47,7 @@ def supports_ansi() -> bool:
     if not hasattr(stream, "fileno"):
         return False
     try:
-        return os.isatty(stream.fileno())
+        return os.isatty(stream.fileno())  # type: ignore
     except io.UnsupportedOperation:
         return False
 
