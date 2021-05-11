@@ -161,9 +161,9 @@ class Environment:
         scripts = "Scripts" if os.name == "nt" else "bin"
         if not pypackages.parent.exists():
             pypackages.parent.mkdir(parents=True)
-            pypackages.joinpath(".gitignore").write_text("*\n!.gitignore\n")
+            pypackages.parent.joinpath(".gitignore").write_text("*\n!.gitignore\n")
         for subdir in [scripts, "include", "lib"]:
-            pypackages.joinpath(subdir).mkdir(exist_ok=True)
+            pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
     def _get_build_dir(self, ireq: pip_shims.InstallRequirement) -> str:
