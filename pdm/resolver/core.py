@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
-from resolvelib.resolvers import Criterion, Resolution
+from resolvelib.resolvers import Resolution
 
-from pdm.models.markers import PySpecSet
 from pdm.models.requirements import strip_extras
 
 if TYPE_CHECKING:
-    from resolvelib.resolvers import Resolver
+    from resolvelib.resolvers import Criterion, Resolver
 
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
+    from pdm.models.specifiers import PySpecSet
 
 _old_merge_into_criterion = Resolution._merge_into_criterion
 
@@ -54,14 +54,12 @@ def resolve(
             continue
         # Root requires_python doesn't participate in the metaset resolving,
         # now check it!
-        python = (
-            requires_python & provider.requires_python_collection[strip_extras(key)[0]]
-        )
-        if python.is_impossible:
+        candidate_requires = provider.requires_python_collection[strip_extras(key)[0]]
+        if (requires_python & candidate_requires).is_impossible:
             # Remove candidates that don't match requires_python constraint
             del mapping[key]
         else:
-            candidate.requires_python = str(python)
+            candidate.requires_python = str(candidate_requires)
             candidate.hashes = provider.get_hashes(candidate)
 
     return mapping, provider.fetched_dependencies, provider.summary_collection
