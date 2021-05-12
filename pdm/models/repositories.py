@@ -3,13 +3,13 @@ from __future__ import annotations
 import sys
 from functools import lru_cache, wraps
 from typing import (
-    Any,
-    Mapping,
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Tuple,
 )
@@ -345,6 +345,10 @@ class LockedRepository(BaseRepository):
         self.file_hashes: Dict[Tuple[str, str], Dict[str, str]] = {}
         self.candidate_info: Dict[tuple, CandidateInfo] = {}
         self._read_lockfile(lockfile)
+
+    @property
+    def all_candidates(self) -> Dict[str, Candidate]:
+        return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
         for package in lockfile.get("package", []):

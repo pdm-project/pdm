@@ -321,6 +321,7 @@ class Project:
         :returns: The provider object
         """
         import toml
+
         from pdm.resolver.providers import (
             BaseProvider,
             EagerUpdateProvider,
@@ -343,12 +344,9 @@ class Project:
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
-        preferred_pins = {
-            can.req.identify(): can for can in lock_repository.packages.values()
-        }
 
         return provider_class(
-            preferred_pins,
+            lock_repository.all_candidates,
             tracked_names or (),
             repository,
             requires_python,

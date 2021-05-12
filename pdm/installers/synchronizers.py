@@ -5,7 +5,7 @@ import multiprocessing
 import traceback
 from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
@@ -14,6 +14,7 @@ from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
+from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import strip_extras
 
 
@@ -76,12 +77,11 @@ class Synchronizer:
         self.candidates = candidates
         self.environment = environment
         self.parallel = environment.project.config["parallel_install"]
-        locked_repository = environment.project.get_provider(
-            for_install=True
-        ).repository
-        self.all_candidate_keys = {
-            can.req.identify() for can in locked_repository.packages.values()
-        }
+        locked_repository = cast(
+            LockedRepository,
+            environment.project.get_provider(for_install=True).repository,
+        )
+        self.all_candidate_keys = list(locked_repository.all_candidates)
         self.working_set = environment.get_working_set()
         self.clean = clean
         self.dry_run = dry_run
