@@ -26,7 +26,7 @@ summary = "Atomic file writes."
 [[package]]
 name = "attrs"
 sections = ["default", "test", "workflow"]
-version = "20.3.0"
+version = "21.2.0"
 summary = "Classes Without Boilerplate"
 
 [[package]]
@@ -98,7 +98,7 @@ summary = "Internationalized Domain Names in Applications (IDNA)"
 [[package]]
 name = "importlib-metadata"
 sections = ["default", "doc", "test", "workflow"]
-version = "3.4.0"
+version = "4.0.1"
 marker = "python_version < '4.0'"
 summary = "Read metadata from Python packages"
 dependencies = [
@@ -131,6 +131,7 @@ dependencies = [
 name = "joblib"
 sections = ["doc"]
 version = "1.0.0"
+marker = "python_version >= '2.8'"
 summary = "Lightweight pipelining with Python functions"
 
 [[package]]
@@ -274,7 +275,7 @@ dependencies = [
 [[package]]
 name = "packaging"
 sections = ["default", "test", "workflow"]
-version = "20.8"
+version = "20.9"
 summary = "Core utilities for Python packages"
 dependencies = [
     "pyparsing>=2.0.2",
@@ -360,7 +361,7 @@ summary = "Persistent/Functional/Immutable data structures"
 [[package]]
 name = "pytest"
 sections = ["test"]
-version = "6.2.1"
+version = "6.2.4"
 summary = "pytest: simple powerful testing with Python"
 dependencies = [
     "attrs>=19.2.0",
@@ -453,6 +454,7 @@ summary = "YAML parser and emitter for Python"
 name = "regex"
 sections = ["doc"]
 version = "2020.11.13"
+marker = "python_version >= '2.8'"
 summary = "Alternative regular expression module, to replace re."
 
 [[package]]
@@ -527,6 +529,7 @@ dependencies = [
 name = "tqdm"
 sections = ["doc"]
 version = "4.56.0"
+marker = "python_version >= '2.8'"
 summary = "Fast, Extensible Progress Meter"
 
 [[package]]
@@ -538,7 +541,7 @@ summary = "a fork of Python 2 and 3 ast modules with type comment support"
 [[package]]
 name = "typing-extensions"
 sections = ["default", "doc", "test", "workflow"]
-version = "3.7.4.3"
+version = "3.10.0.0"
 summary = "Backported and Experimental Type Hints for Python 3.5+"
 
 [[package]]
@@ -571,7 +574,7 @@ summary = "A built-package format for Python"
 [[package]]
 name = "zipp"
 sections = ["default", "doc", "test", "workflow"]
-version = "3.4.0"
+version = "3.4.1"
 marker = "python_version < '4.0'"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
@@ -596,9 +599,9 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
     {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
 ]
-"attrs 20.3.0" = [
-    {file = "attrs-20.3.0-py2.py3-none-any.whl", hash = "sha256:31b2eced602aa8423c2aea9c76a724617ed67cf9513173fd3a4f03e3a929c7e6"},
-    {file = "attrs-20.3.0.tar.gz", hash = "sha256:832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700"},
+"attrs 21.2.0" = [
+    {file = "attrs-21.2.0-py2.py3-none-any.whl", hash = "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1"},
+    {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -686,9 +689,9 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
 ]
-"importlib-metadata 3.4.0" = [
-    {file = "importlib_metadata-3.4.0-py3-none-any.whl", hash = "sha256:ace61d5fc652dc280e7b6b4ff732a9c2d40db2c0f92bc6cb74e07b73d53a1771"},
-    {file = "importlib_metadata-3.4.0.tar.gz", hash = "sha256:fa5daa4477a7414ae34e95942e4dd07f62adf589143c875c133c1e53c4eff38d"},
+"importlib-metadata 4.0.1" = [
+    {file = "importlib_metadata-4.0.1-py3-none-any.whl", hash = "sha256:d7eb1dea6d6a6086f8be21784cc9e3bcfa55872b52309bc5fad53a8ea444465d"},
+    {file = "importlib_metadata-4.0.1.tar.gz", hash = "sha256:8c501196e49fb9df5df43833bdb1e4328f64847763ec8a50703148b73784d581"},
 ]
 "incremental 17.5.0" = [
     {file = "incremental-17.5.0-py2.py3-none-any.whl", hash = "sha256:717e12246dddf231a349175f48d74d93e2897244939173b01974ab6661406b9f"},
@@ -825,9 +828,9 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
 "nltk 3.5" = [
     {file = "nltk-3.5.zip", hash = "sha256:845365449cd8c5f9731f7cb9f8bd6fd0767553b9d53af9eb1b3abf7700936b35"},
 ]
-"packaging 20.8" = [
-    {file = "packaging-20.8-py2.py3-none-any.whl", hash = "sha256:24e0da08660a87484d1602c30bb4902d74816b6985b93de36926f5bc95741858"},
-    {file = "packaging-20.8.tar.gz", hash = "sha256:78598185a7008a470d64526a8059de9aaa449238f280fc9eb6b13ba6c4109093"},
+"packaging 20.9" = [
+    {file = "packaging-20.9-py2.py3-none-any.whl", hash = "sha256:67714da7f7bc052e064859c05c595155bd1ee9f69f76557e21f051443c20947a"},
+    {file = "packaging-20.9.tar.gz", hash = "sha256:5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5"},
 ]
 "parver 0.3.1" = [
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
@@ -868,9 +871,9 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
 "pyrsistent 0.17.3" = [
     {file = "pyrsistent-0.17.3.tar.gz", hash = "sha256:2e636185d9eb976a18a8a8e96efce62f2905fea90041958d8cc2a189756ebf3e"},
 ]
-"pytest 6.2.1" = [
-    {file = "pytest-6.2.1-py3-none-any.whl", hash = "sha256:1969f797a1a0dbd8ccf0fecc80262312729afea9c17f1d70ebf85c5e76c6f7c8"},
-    {file = "pytest-6.2.1.tar.gz", hash = "sha256:66e419b1899bc27346cb2c993e12c5e5e8daba9073c1fbce33b9807abc95c306"},
+"pytest 6.2.4" = [
+    {file = "pytest-6.2.4-py3-none-any.whl", hash = "sha256:91ef2131a9bd6be8f76f1f08eac5c5317221d6ad1e143ae03894b862e8976890"},
+    {file = "pytest-6.2.4.tar.gz", hash = "sha256:50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b"},
 ]
 "pytest-cov 2.10.1" = [
     {file = "pytest_cov-2.10.1-py2.py3-none-any.whl", hash = "sha256:45ec2d5182f89a81fc3eb29e3d1ed3113b9e9a873bcddb2a71faaab066110191"},
@@ -1069,10 +1072,10 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
     {file = "typed_ast-1.4.2-cp39-cp39-win_amd64.whl", hash = "sha256:7147e2a76c75f0f64c4319886e7639e490fee87c9d25cb1d4faef1d8cf83a440"},
     {file = "typed_ast-1.4.2.tar.gz", hash = "sha256:9fc0b3cb5d1720e7141d103cf4819aea239f7d136acf9ee4a69b047b7986175a"},
 ]
-"typing-extensions 3.7.4.3" = [
-    {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
-    {file = "typing_extensions-3.7.4.3-py3-none-any.whl", hash = "sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918"},
-    {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
+"typing-extensions 3.10.0.0" = [
+    {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
+    {file = "typing_extensions-3.10.0.0-py3-none-any.whl", hash = "sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84"},
+    {file = "typing_extensions-3.10.0.0.tar.gz", hash = "sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342"},
 ]
 "urllib3 1.26.2" = [
     {file = "urllib3-1.26.2-py2.py3-none-any.whl", hash = "sha256:d8ff90d979214d7b4f8ce956e80f4028fc6860e4431f731ea4a8c08f23f99473"},
@@ -1086,7 +1089,7 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
     {file = "wheel-0.36.2-py2.py3-none-any.whl", hash = "sha256:78b5b185f0e5763c26ca1e324373aadd49182ca90e825f7853f4b2509215dc0e"},
     {file = "wheel-0.36.2.tar.gz", hash = "sha256:e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e"},
 ]
-"zipp 3.4.0" = [
-    {file = "zipp-3.4.0-py3-none-any.whl", hash = "sha256:102c24ef8f171fd729d46599845e95c7ab894a4cf45f5de11a44cc7444fb1108"},
-    {file = "zipp-3.4.0.tar.gz", hash = "sha256:ed5eee1974372595f9e416cc7bbeeb12335201d8081ca8a0743c954d4446e5cb"},
+"zipp 3.4.1" = [
+    {file = "zipp-3.4.1-py3-none-any.whl", hash = "sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098"},
+    {file = "zipp-3.4.1.tar.gz", hash = "sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76"},
 ]
