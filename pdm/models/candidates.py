@@ -17,6 +17,7 @@ from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.models.setup import Setup
+from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     cached_property,
     expand_env_vars_in_auth,
@@ -118,11 +119,9 @@ class Candidate:
             link = self.ireq.link
         self.link = link
         self.hashes: Optional[Dict[str, str]] = None
-        self.marker = None
-        self.sections = []
-        self._requires_python = None
+        self._requires_python: Optional[PySpecSet] = None
 
-        self.wheel = None
+        self.wheel: Optional[Wheel] = None
         self.metadata = None
 
     def __hash__(self):
@@ -286,10 +285,9 @@ class Candidate:
         """Build a lockfile entry dictionary for the candidate."""
         result = {
             "name": self.name,
-            "sections": sorted(self.sections),
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
-            "marker": str(self.marker).replace('"', "'") if self.marker else None,
+            "requires_python": str(self.requires_python),
             "editable": self.req.editable,
         }
         project_root = self.environment.project.root.as_posix()

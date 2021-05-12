@@ -17,40 +17,6 @@ class Marker(PackageMarker):
         inst._markers = copy.deepcopy(self._markers)
         return inst
 
-    def __and__(self, other: Optional[PackageMarker]) -> "Marker":
-        """Intersect the two markers."""
-        if other is None or self == other:
-            return self
-        lhs = f"({self})" if "or" in self._markers else str(self)
-        rhs = f"({other})" if "or" in other._markers else str(other)
-        marker_str = f"{lhs} and {rhs}"
-        return type(self)(marker_str)
-
-    def __rand__(self, other: Optional[PackageMarker]) -> "Marker":
-        if other is None or self == other:
-            return self
-        rhs = f"({self})" if "or" in self._markers else str(self)
-        lhs = f"({other})" if "or" in other._markers else str(other)
-        marker_str = f"{lhs} and {rhs}"
-        return type(self)(marker_str)
-
-    def __or__(self, other: Optional[PackageMarker]) -> "Marker":
-        """Union the two markers."""
-        if None in (self, other):
-            return None
-        if self == other:
-            return self
-        marker_str = f"{self} or {other}"
-        return type(self)(marker_str)
-
-    def __ror__(self, other: Optional[PackageMarker]) -> "Marker":
-        if None in (self, other):
-            return None
-        if self == other:
-            return self
-        marker_str = f"{other} or {self}"
-        return type(self)(marker_str)
-
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, PackageMarker):
             return False

@@ -76,7 +76,12 @@ class Synchronizer:
         self.candidates = candidates
         self.environment = environment
         self.parallel = environment.project.config["parallel_install"]
-        self.all_candidates = environment.project.get_locked_candidates("__all__")
+        locked_repository = environment.project.get_provider(
+            for_install=True
+        ).repository
+        self.all_candidate_keys = {
+            can.req.identify() for can in locked_repository.packages.values()
+        }
         self.working_set = environment.get_working_set()
         self.clean = clean
         self.dry_run = dry_run
@@ -106,21 +111,21 @@ class Synchronizer:
         working_set = self.working_set
         to_update, to_remove = [], []
         candidates = self.candidates.copy()
-        environment = self.environment.marker_environment
         for key, dist in working_set.items():
             if key == self.self_key:
                 continue
             if key in candidates:
                 can = candidates.pop(key)
-                if can.marker and not can.marker.evaluate(environment):
-                    to_remove.append(key)
-                elif (
+                if (
                     can.req.editable
                     or is_dist_editable(dist)
                     or (dist.version != can.version)
                 ):
                     to_update.append(key)
-            elif key not in self.all_candidates and key not in self.SEQUENTIAL_PACKAGES:
+            elif (
+                key not in self.all_candidate_keys
+                and key not in self.SEQUENTIAL_PACKAGES
+            ):
                 # Remove package only if it is not required by any section
                 # Packages for packaging will never be removed
                 to_remove.append(key)
@@ -128,9 +133,7 @@ class Synchronizer:
             {
                 strip_extras(name)[0]
                 for name, can in candidates.items()
-                if name != self.self_key
-                and strip_extras(name)[0] not in working_set
-                and (not can.marker or can.marker.evaluate(environment))
+                if name != self.self_key and strip_extras(name)[0] not in working_set
             }
         )
         return (

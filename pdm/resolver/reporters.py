@@ -55,9 +55,6 @@ class SpinnerReporter(BaseReporter):
             for k, can in state.mapping.items():
                 logger.info(f"  {k.rjust(column_width)} {can.version}")
 
-    def extract_metadata(self) -> None:
-        self.spinner.start("Extracting package metadata")
-
     def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:
         """Called when adding a new requirement into the resolve criteria.
 

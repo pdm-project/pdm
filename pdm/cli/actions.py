@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
 import atoml
 import click
 from pip._vendor.pkg_resources import safe_name
+from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
@@ -89,6 +90,30 @@ def do_lock(
     return mapping
 
 
+def resolve_candidates_from_lockfile(
+    project: Project, requirements: List[Requirement]
+) -> Dict[str, Candidate]:
+    ui = project.core.ui
+    resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
+    reqs = [
+        req
+        for req in requirements
+        if not req.marker or req.marker.evaluate(project.environment.marker_environment)
+    ]
+    with ui.logging("install-resolve"):
+        with ui.open_spinner("Installing from lockfile..."):
+            reporter = BaseReporter()
+            provider = project.get_provider(for_install=True)
+            resolver = project.core.resolver_class(provider, reporter)
+            mapping, *_ = resolve(
+                resolver,
+                reqs,
+                project.environment.python_requires,
+                resolve_max_rounds,
+            )
+    return mapping
+
+
 def do_sync(
     project: Project,
     *,
@@ -113,23 +138,22 @@ def do_sync(
             "Lock file hash doesn't match pyproject.toml, packages may be outdated",
             err=True,
         )
+    sections = translate_sections(project, default, dev, sections or ())
+    valid_sections = list(project.iter_sections())
+    requirements: List[Requirement] = []
+    for section in sections:
+        if section not in valid_sections:
+            raise PdmUsageError(
+                f"Section {termui.green(repr(section))} doesn't exist "
+                "in the pyproject.toml"
+            )
+        requirements.extend(project.get_dependencies(section).values())
+    candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
         candidates = {
-            name: c
-            for name, c in project.get_locked_candidates("__all__").items()
-            if name in tracked_names
+            name: c for name, c in candidates.items() if name in tracked_names
         }
-    else:
-        candidates = {}
-        sections = translate_sections(project, default, dev, sections or ())
-        valid_sections = list(project.iter_sections())
-        for section in sections:
-            if section not in valid_sections:
-                raise PdmUsageError(
-                    f"Section {termui.green(repr(section))} doesn't exist "
-                    "in the pyproject.toml"
-                )
-            candidates.update(project.get_locked_candidates(section))
+
     handler = project.core.synchronizer_class(
         candidates, project.environment, clean, dry_run
     )
