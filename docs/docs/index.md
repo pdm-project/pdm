@@ -155,7 +155,7 @@ run/debug configuration.
 
 ### VSCode
 
-Add following in the `settings.json`:
+Add the following to `.vscode/settings.json`:
 
 ```json
 {
@@ -164,6 +164,37 @@ Add following in the `settings.json`:
   "python.analysis.extraPaths": ["__pypackages__/<major.minor>/lib"]
 }
 ```
+
+[Enable PEP582 globally](https://pdm.fming.dev/#enable-pep-582-globally),
+and make sure VSCode runs using the same user and shell you enabled PEP582 for.
+
+!!! note "Cannot enable PEP582 globally?"
+    If for some reason you cannot enable PEP582 globally, you can still configure each "launch" in each project:
+    set the `PYTHONPATH` environment variable in your launch configuration, in `.vscode/launch.json`.
+    For example, to debug your `pytest` run:
+
+    ```json
+    {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "pytest",
+                "type": "python",
+                "request": "launch",
+                "module": "pytest",
+                "args": ["tests"],
+                "justMyCode": false,
+                "env": {"PYTHONPATH": "__pypackages__/<major.minor>/lib"}
+            }
+        ]
+    }
+    ```
+
+    If your package resides in a `src` directory, add it to `PYTHONPATH` as well:
+
+    ```json
+    "env": {"PYTHONPATH": "src:__pypackages__/<major.minor>/lib"}
+    ```
 
 #### Task Provider
 
