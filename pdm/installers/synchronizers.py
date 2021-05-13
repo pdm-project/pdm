@@ -73,9 +73,17 @@ class Synchronizer:
         clean: bool = False,
         dry_run: bool = False,
         retry_times: int = 1,
+        install_self: bool = False,
+        no_editable: bool = False,
     ) -> None:
         self.candidates = candidates
         self.environment = environment
+        self.clean = clean
+        self.dry_run = dry_run
+        self.retry_times = retry_times
+        self.no_editable = no_editable
+        self.install_self = install_self
+
         self.parallel = environment.project.config["parallel_install"]
         locked_repository = cast(
             LockedRepository,
@@ -83,9 +91,6 @@ class Synchronizer:
         )
         self.all_candidate_keys = list(locked_repository.all_candidates)
         self.working_set = environment.get_working_set()
-        self.clean = clean
-        self.dry_run = dry_run
-        self.retry_times = retry_times
         self.ui = environment.project.core.ui
 
     def create_executor(
@@ -109,8 +114,11 @@ class Synchronizer:
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
-        to_update, to_remove = [], []
         candidates = self.candidates.copy()
+        to_update, to_remove = [], []
+        if self.no_editable:
+            for candidate in candidates.values():
+                candidate.req.editable = None  # type: ignore
         for key, dist in working_set.items():
             if key == self.self_key:
                 continue
@@ -269,11 +277,6 @@ class Synchronizer:
         }
         sequential_jobs = []
         parallel_jobs = []
-        # Self package will be installed after all other dependencies are installed.
-        self_action = None
-        self_key = self.self_key
-        if self_key in self.candidates:
-            self_action = "update" if self_key in self.working_set else "add"
 
         for kind in to_do:
             for key in to_do[kind]:
@@ -325,10 +328,17 @@ class Synchronizer:
                 self.ui.echo("".join(errors), err=True)
                 raise InstallationError("Some package operations are not complete yet")
 
-            if self_action:
-                assert self_key
+            if self.install_self:
+                self_candidate = self.environment.project.make_self_candidate(
+                    not self.no_editable
+                )
+                self_key = self_candidate.req.key
+                self.candidates[self_key] = self_candidate
                 self.ui.echo("Installing the project as an editable package...")
                 with self.ui.indent("  "):
-                    handlers[self_action](self_key)
+                    if self_key in self.working_set:
+                        self.update_candidate(self_key)
+                    else:
+                        self.install_candidate(self_key)
 
             self.ui.echo(f"\n{termui.Emoji.SUCC} All complete!")

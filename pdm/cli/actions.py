@@ -123,6 +123,8 @@ def do_sync(
     dry_run: bool = False,
     clean: bool = False,
     tracked_names: Optional[Sequence[str]] = None,
+    no_editable: bool = False,
+    no_self: bool = False,
 ) -> None:
     """Synchronize project"""
     if not project.lockfile_file.exists():
@@ -155,7 +157,12 @@ def do_sync(
         }
 
     handler = project.core.synchronizer_class(
-        candidates, project.environment, clean, dry_run
+        candidates,
+        project.environment,
+        clean,
+        dry_run,
+        no_editable=no_editable,
+        install_self=not no_self and "default" in sections,
     )
     handler.synchronize()
 
