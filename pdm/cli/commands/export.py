@@ -1,10 +1,12 @@
 import argparse
 from pathlib import Path
+from typing import cast
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
 from pdm.cli.utils import compatible_dev_flag, translate_sections
 from pdm.formats import FORMATS
+from pdm.models.repositories import LockedRepository
 from pdm.project import Project
 
 
@@ -49,11 +51,14 @@ class Command(BaseCommand):
             compatible_dev_flag(project, options.dev),
             options.sections or (),
         )
-        for section in sections:
-            if options.pyproject:
+        if options.pyproject:
+            for section in sections:
                 candidates.update(project.get_dependencies(section))
-            else:
-                candidates.update(project.get_locked_candidates(section))
+        else:
+            locked_repository = cast(
+                LockedRepository, project.get_provider(for_install=True).repository
+            )
+            candidates.update(locked_repository.all_candidates)
         candidates.pop(project.meta.name and project.meta.project_name, None)
 
         content = FORMATS[options.format].export(project, candidates.values(), options)
