@@ -148,6 +148,42 @@ build-backend = "flit_core.buildapi"
 
 PDM will call the correct backend when `pdm build`.
 
+## Use PDM in a multi-stage Dockerfile
+
+It is possible to use PDM in a multi-stage Dockerfile to first install the project and dependencies into `__pypackages__`
+and then copy this folder into the final stage, adding it to `PYTHONPATH`.
+
+```dockerfile
+# build stage
+FROM python:3.8 AS builder
+
+# install PDM
+RUN pip install -U pip setuptools wheel
+RUN pip install pdm
+
+# copy files
+COPY pyproject.toml pdm.lock README.md /project/
+COPY src/ /project/src
+
+# install dependencies and project
+WORKDIR /project
+RUN pdm install --prod --no-lock
+# workaround for https://github.com/pdm-project/pdm/issues/443
+RUN rm __pypackages__/3.8/lib/*.egg-link
+RUN pip install . --no-deps -t __pypackages__/3.8/lib
+
+
+# run stage
+FROM python:3.8
+
+# retrieve packages from build stage
+ENV PYTHONPATH=/project/pkgs
+COPY --from=builder /project/__pypackages__/3.8/lib /project/pkgs
+
+# set command/entrypoint, adapt to fit your needs
+CMD ["python", "-m", "project"]
+```
+
 ## Integrate with other IDE or editors
 
 ### Work with lsp-python-ms in Emacs
