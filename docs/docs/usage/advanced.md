@@ -136,6 +136,14 @@ Testing:
     If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
     It is already handled by the `pdm-project/setup-pdm` action.
 
+!!! note
+    If your CI scripts run without a proper user set, you might get permission errors when PDM tries to create its cache directory.
+    To work around this, you can set the HOME environment variable yourself, to a writable directory, for example:
+    
+    ```bash
+    export HOME=/tmp/home
+    ```
+
 ## Use other PEP 517 backends
 
 PDM supports ALL PEP 517 build backends that comply with PEP 621 specification. At the time of writing, `flit` is going to switch to PEP 621 metadata in the near future, then you can keep `flit` as the build-backend while still managing dependencies using PDM:
