@@ -108,7 +108,7 @@ As specified in [PEP 420](https://www.python.org/dev/peps/pep-0420), a directory
 
 1. `<package>/__init__.py` doesn't exist, and
 2. There exist normal packages and/or other namespace packages under `<package>/*`, and
-3. `<package>` is not specified as `package-dir`
+3. `<package>` is explicitly listed in `includes`
 
 ## Build C extensions
 
