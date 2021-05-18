@@ -84,10 +84,8 @@ def do_lock(
             else:
                 data = format_lockfile(mapping, dependencies, summaries)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
-    if not dry_run:
-        project.write_lockfile(data)
-    else:
-        project.lockfile = data
+
+    project.write_lockfile(data, write=not dry_run)
 
     return mapping
 
@@ -105,6 +103,17 @@ def do_sync(
     """Synchronize project"""
     if not project.lockfile_file.exists():
         raise ProjectError("Lock file does not exist, nothing to sync")
+    elif not project.is_lockfile_compatible():
+        project.core.ui.echo(
+            "Lock file version is not compatible with PDM, "
+            "install may fail, please regenerate the pdm.lock",
+            err=True,
+        )
+    elif not project.is_lockfile_hash_match():
+        project.core.ui.echo(
+            "Lock file hash doesn't match pyproject.toml, packages may be outdated",
+            err=True,
+        )
     if tracked_names and dry_run:
         candidates = {
             name: c
