@@ -24,7 +24,7 @@ from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement
-from pdm.models.specifiers import PySpecSet
+from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
 from pdm.project.metadata import MutableMetadata as Metadata
 from pdm.utils import (
@@ -51,7 +51,7 @@ class Project:
 
     PYPROJECT_FILENAME = "pyproject.toml"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    PYPROJECT_VERSION = "2"
+    LOCKFILE_VERSION = "2"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
@@ -363,7 +363,7 @@ class Project:
     def get_lock_metadata(self) -> Dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
-        return {"lock_version": self.PYPROJECT_VERSION, "content_hash": content_hash}
+        return {"lock_version": self.LOCKFILE_VERSION, "content_hash": content_hash}
 
     def write_lockfile(self, toml_data: Dict, show_message: bool = True) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
@@ -436,6 +436,17 @@ class Project:
         algo, hash_value = hash_in_lockfile.split(":")
         content_hash = self.get_content_hash(algo)
         return content_hash == hash_value
+
+    def is_lockfile_compatible(self) -> bool:
+        if not self.lockfile_file.exists():
+            return False
+        lockfile_version = str(
+            self.lockfile.get("metadata", {}).get("lock_version", "")
+        )
+        if "." not in lockfile_version:
+            lockfile_version += ".0"
+        accepted = get_specifier(f"~={lockfile_version}")
+        return accepted.contains(self.LOCKFILE_VERSION)
 
     def get_pyproject_dependencies(self, section: str, dev: bool = False) -> List[str]:
         """Get the dependencies array in the pyproject.toml"""

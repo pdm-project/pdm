@@ -105,6 +105,17 @@ def do_sync(
     """Synchronize project"""
     if not project.lockfile_file.exists():
         raise ProjectError("Lock file does not exist, nothing to sync")
+    elif not project.is_lockfile_compatible():
+        project.core.ui.echo(
+            "Lock file version is not compatible with PDM, "
+            "install may fail, please regenerate the pdm.lock",
+            err=True,
+        )
+    elif not project.is_lockfile_hash_match():
+        project.core.ui.echo(
+            "Lock file hash doesn't match pyproject.toml, packages may be outdated",
+            err=True,
+        )
     if tracked_names and dry_run:
         candidates = {
             name: c
