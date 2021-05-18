@@ -365,14 +365,19 @@ class Project:
         content_hash.trivia.trail = "\n\n"
         return {"lock_version": self.LOCKFILE_VERSION, "content_hash": content_hash}
 
-    def write_lockfile(self, toml_data: Dict, show_message: bool = True) -> None:
+    def write_lockfile(
+        self, toml_data: Dict, show_message: bool = True, write: bool = True
+    ) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
 
-        with atomic_open_for_write(self.lockfile_file) as fp:
-            fp.write(tomlkit.dumps(toml_data))
-        if show_message:
-            self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
-        self._lockfile = None
+        if write:
+            with atomic_open_for_write(self.lockfile_file) as fp:
+                fp.write(tomlkit.dumps(toml_data))
+            if show_message:
+                self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
+            self._lockfile = None
+        else:
+            self._lockfile = toml_data
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         req = parse_requirement(pip_shims.path_to_url(self.root.as_posix()), editable)

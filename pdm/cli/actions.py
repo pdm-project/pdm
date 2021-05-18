@@ -84,10 +84,8 @@ def do_lock(
             else:
                 data = format_lockfile(mapping, dependencies, summaries)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
-    if not dry_run:
-        project.write_lockfile(data)
-    else:
-        project.lockfile = data
+
+    project.write_lockfile(data, write=not dry_run)
 
     return mapping
 
