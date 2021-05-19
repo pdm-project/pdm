@@ -17,8 +17,8 @@ from typing import (
     Tuple,
 )
 
+import atoml
 import cfonts
-import tomlkit
 from packaging.specifiers import SpecifierSet
 from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
@@ -351,10 +351,10 @@ def format_lockfile(
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
-    packages = tomlkit.aot()
-    file_hashes = tomlkit.table()
+    packages = atoml.aot()
+    file_hashes = atoml.table()
     for k, v in sorted(mapping.items()):
-        base = tomlkit.table()
+        base = atoml.table()
         base.update(v.as_lockfile_entry())
         base.add("summary", summary_collection[strip_extras(k)[0]])
         deps = make_array([r.as_line() for r in fetched_dependencies[k]], True)
@@ -363,16 +363,15 @@ def format_lockfile(
         packages.append(base)
         if v.hashes:
             key = f"{k} {v.version}"
-            array = tomlkit.array()
-            array.multiline(True)
+            array = atoml.array().multiline(True)
             for filename, hash_value in v.hashes.items():
                 inline = make_inline_table({"file": filename, "hash": hash_value})
                 array.append(inline)
             if array:
                 file_hashes.add(key, array)
-    doc = tomlkit.document()
+    doc = atoml.document()
     doc.add("package", packages)
-    metadata = tomlkit.table()
+    metadata = atoml.table()
     metadata.add("files", file_hashes)
     doc.add("metadata", metadata)
     return doc

@@ -37,3 +37,8 @@ class MutableMetadata(Metadata, MutableMapping):
 
     def __len__(self) -> int:
         return len(self._metadata)
+
+    def setdefault(
+        self, key: str, default: Union[Dict, List[str], str]
+    ) -> Union[Dict, List[str], str]:
+        return self._metadata.setdefault(key, default)

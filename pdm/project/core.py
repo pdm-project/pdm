@@ -9,10 +9,9 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
 
-import tomlkit
+import atoml
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
-from tomlkit.items import Comment, Whitespace
 
 from pdm import termui
 from pdm._types import Source
@@ -35,7 +34,6 @@ from pdm.utils import (
     find_python_in_path,
     get_in_project_venv_python,
     is_venv_python,
-    setdefault,
 )
 
 if TYPE_CHECKING:
@@ -92,7 +90,7 @@ class Project:
     @property
     def pyproject(self) -> Optional[dict]:
         if not self._pyproject and self.pyproject_file.exists():
-            data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
+            data = atoml.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = data
         return self._pyproject
 
@@ -105,14 +103,14 @@ class Project:
         data = self.pyproject
         if not data:
             return {}
-        return setdefault(setdefault(data, "tool", {}), "pdm", {})
+        return data.setdefault("tool", {}).setdefault("pdm", {})
 
     @property
     def lockfile(self) -> dict:
         if not self._lockfile:
             if not self.lockfile_file.is_file():
                 raise ProjectError("Lock file does not exist.")
-            data = tomlkit.parse(self.lockfile_file.read_text("utf-8"))
+            data = atoml.parse(self.lockfile_file.read_text("utf-8"))
             self._lockfile = data
         return self._lockfile
 
@@ -361,7 +359,7 @@ class Project:
         return SpinnerReporter(spinner, requirements)
 
     def get_lock_metadata(self) -> Dict[str, Any]:
-        content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
+        content_hash = atoml.string("sha256:" + self.get_content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
         return {"lock_version": self.LOCKFILE_VERSION, "content_hash": content_hash}
 
@@ -372,7 +370,7 @@ class Project:
 
         if write:
             with atomic_open_for_write(self.lockfile_file) as fp:
-                fp.write(tomlkit.dumps(toml_data))
+                atoml.dump(toml_data, fp)
             if show_message:
                 self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
             self._lockfile = None
@@ -456,14 +454,14 @@ class Project:
     def get_pyproject_dependencies(self, section: str, dev: bool = False) -> List[str]:
         """Get the dependencies array in the pyproject.toml"""
         if section == "default":
-            return setdefault(self.meta, "dependencies", [])
+            return self.meta.setdefault("dependencies", [])
         elif dev:
-            return setdefault(
-                setdefault(self.tool_settings, "dev-dependencies", {}), section, []
+            return self.tool_settings.setdefault("dev-dependencies", {}).setdefault(
+                section, []
             )
         else:
-            return setdefault(
-                setdefault(self.meta, "optional-dependencies", {}), section, []
+            return self.meta.setdefault("optional-dependencies", {}).setdefault(
+                section, []
             )
 
     def add_dependencies(
@@ -483,22 +481,13 @@ class Project:
             else:
                 req = dep.as_line()
                 deps[matched_index] = req
-                # XXX: This dirty part is for tomlkit.Array.__setitem__()
-                j = 0
-                for i in range(len(deps._value)):
-                    if isinstance(deps._value[i], (Comment, Whitespace)):
-                        continue
-                    if j == matched_index:
-                        deps._value[i] = tomlkit.item(req)
-                        break
-                    j += 1
         self.write_pyproject(show_message)
 
     def write_pyproject(self, show_message: bool = True) -> None:
         with atomic_open_for_write(
             self.pyproject_file.as_posix(), encoding="utf-8"
         ) as f:
-            f.write(tomlkit.dumps(self.pyproject))
+            atoml.dump(self.pyproject, f)
         if show_message:
             self.core.ui.echo(
                 f"Changes are written to {termui.green('pyproject.toml')}."
@@ -508,7 +497,7 @@ class Project:
     @property
     def meta(self) -> Metadata:
         if not self.pyproject:
-            self.pyproject = {"project": tomlkit.table()}
+            self.pyproject = {"project": atoml.table()}
         m = Metadata(self.pyproject_file, self.pyproject.get("project", {}))
         m._metadata = self.pyproject.get("project", {})
         return m

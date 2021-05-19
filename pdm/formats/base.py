@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
 
-import tomlkit
-from tomlkit.items import Array, InlineTable
+import atoml
+from atoml.items import Array, InlineTable
 
 from pdm import termui
 
@@ -79,7 +79,7 @@ NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
 
 def make_inline_table(data: Mapping) -> InlineTable:
     """Create an inline table from the given data."""
-    table = tomlkit.inline_table()
+    table = atoml.inline_table()
     table.update(data)
     return table
 
@@ -87,10 +87,8 @@ def make_inline_table(data: Mapping) -> InlineTable:
 def make_array(data: list, multiline: bool = False) -> Array:
     if not data:
         return []
-    array = tomlkit.array()
-    array.multiline(multiline)
-    for item in data:
-        array.append(item)
+    array = atoml.array().multiline(multiline)
+    array.extend(data)
     return array
 
 

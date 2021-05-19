@@ -24,6 +24,12 @@ marker = "sys_platform == 'win32'"
 summary = "Atomic file writes."
 
 [[package]]
+name = "atoml"
+sections = ["default"]
+version = "1.0.0"
+summary = "Yet another style preserving TOML library"
+
+[[package]]
 name = "attrs"
 sections = ["default", "test", "workflow"]
 version = "21.2.0"
@@ -502,12 +508,6 @@ version = "0.10.2"
 summary = "Python Library for Tom's Obvious, Minimal Language"
 
 [[package]]
-name = "tomlkit"
-sections = ["default"]
-version = "0.7.0"
-summary = "Style preserving TOML library"
-
-[[package]]
 name = "tornado"
 sections = ["doc"]
 version = "6.1"
@@ -580,7 +580,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "2"
-content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a215583b"
+content_hash = "sha256:73807ffdbe019b5543f627ff64ceb4c109f24c505af44fabc342b979ee9e0a46"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -598,6 +598,10 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
 "atomicwrites 1.4.0" = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
     {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
+]
+"atoml 1.0.0" = [
+    {file = "atoml-1.0.0-py3-none-any.whl", hash = "sha256:26bfd8fb50e8b6a91393bda95f2876d9eeceff15e610e505e81480a275050b5b"},
+    {file = "atoml-1.0.0.tar.gz", hash = "sha256:2a426af9ad1addf70fcc7c148fcc287daa4ff96835ef5b3577fbf4877cca188d"},
 ]
 "attrs 21.2.0" = [
     {file = "attrs-21.2.0-py2.py3-none-any.whl", hash = "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1"},
@@ -984,10 +988,6 @@ content_hash = "sha256:af0b3a0a695be95350d462dcc011ddd77fa90ef0df6f6e686fec6303a
 "toml 0.10.2" = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
-]
-"tomlkit 0.7.0" = [
-    {file = "tomlkit-0.7.0-py2.py3-none-any.whl", hash = "sha256:6babbd33b17d5c9691896b0e68159215a9387ebfa938aa3ac42f4a4beeb2b831"},
-    {file = "tomlkit-0.7.0.tar.gz", hash = "sha256:ac57f29693fab3e309ea789252fcce3061e19110085aa31af5446ca749325618"},
 ]
 "tornado 6.1" = [
     {file = "tornado-6.1-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:d371e811d6b156d82aa5f9a4e08b58debf97c302a35714f6f45e35139c332e32"},
