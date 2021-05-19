@@ -5,8 +5,8 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
+import atoml
 import click
-import tomlkit
 from pip._vendor.pkg_resources import safe_name
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
@@ -32,7 +32,6 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import setdefault
 
 PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
@@ -491,16 +490,16 @@ def do_import(
     if options is None:
         options = Namespace(dev=False, section=None)
     project_data, settings = FORMATS[key].convert(project, filename, options)
-    pyproject = project.pyproject or tomlkit.document()
+    pyproject = project.pyproject or atoml.document()
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
-        setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
+        pyproject.setdefault("tool", {})["pdm"] = atoml.table()
 
     if "project" not in pyproject:
-        pyproject.add("project", tomlkit.table())
-        pyproject["project"].add(tomlkit.comment("PEP 621 project metadata"))
+        pyproject.add("project", atoml.table())
+        pyproject["project"].add(atoml.comment("PEP 621 project metadata"))
         pyproject["project"].add(
-            tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
+            atoml.comment("See https://www.python.org/dev/peps/pep-0621/")
         )
 
     merge_dictionary(pyproject["project"], project_data)
@@ -617,8 +616,7 @@ def migrate_pyproject(project: Project) -> None:
         for field in ("includes", "excludes", "build", "package-dir"):
             if field in pyproject["project"]:
                 updated_fields.append(field)
-                settings[field] = pyproject["project"][field]
-                del pyproject["project"][field]
+                settings[field] = pyproject["project"].pop(field)
         if "dev-dependencies" in pyproject["project"]:
             if pyproject["project"]["dev-dependencies"]:
                 settings["dev-dependencies"] = {
@@ -628,7 +626,7 @@ def migrate_pyproject(project: Project) -> None:
             updated_fields.append("dev-dependencies")
         if updated_fields:
             if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
-                setdefault(pyproject, "tool", {})["pdm"] = tomlkit.table()
+                pyproject.setdefault("tool", {})["pdm"] = atoml.table()
             pyproject["tool"]["pdm"].update(settings)
             project.pyproject = pyproject
             project.write_pyproject()

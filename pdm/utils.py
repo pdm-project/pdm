@@ -16,7 +16,6 @@ from pathlib import Path
 from re import Match
 from typing import (
     Any,
-    AnyStr,
     Callable,
     Dict,
     Generic,
@@ -232,7 +231,7 @@ def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
             name, hash_value = hash_value.split(":", 1)
         except ValueError:
             name = "sha256"
-        setdefault(result, name, cast(List[str], [])).append(hash_value)
+        result.setdefault(name, cast(List[str], [])).append(hash_value)
     return result
 
 
@@ -367,13 +366,6 @@ def populate_link(
 
 
 _VT = TypeVar("_VT")
-
-
-def setdefault(document: Dict[AnyStr, _VT], key: AnyStr, value: _VT) -> _VT:
-    """A compatiable dict.setdefault() for tomlkit data structures."""
-    if key not in document:
-        document[key] = value
-    return document[key]
 
 
 def expand_env_vars(credential: str, quote: bool = False) -> str:
