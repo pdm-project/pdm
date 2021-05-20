@@ -2,7 +2,7 @@ import hashlib
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.requirements import Requirement as PRequirement
@@ -130,11 +130,11 @@ def export(
     options: Namespace,
 ) -> str:
     lines = []
-    for candidate in candidates:
+    for candidate in sorted(candidates, key=lambda x: x.identify()):
         req = getattr(candidate, "req", candidate).as_line()
         lines.append(req)
         if options.hashes and getattr(candidate, "hashes", None):
-            for item in cast(Dict[str, str], candidate.hashes).values():
+            for item in candidate.hashes.values():  # type: ignore
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
     sources = project.tool_settings.get("source", [])

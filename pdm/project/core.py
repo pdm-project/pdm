@@ -21,7 +21,7 @@ from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
-from pdm.models.repositories import BaseRepository, PyPIRepository
+from pdm.models.repositories import BaseRepository, LockedRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
@@ -49,7 +49,7 @@ class Project:
 
     PYPROJECT_FILENAME = "pyproject.toml"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    LOCKFILE_VERSION = "2"
+    LOCKFILE_VERSION = "3"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
@@ -307,17 +307,31 @@ class Project:
         sources = self.sources or []
         return cls(sources, self.environment)
 
+    @property
+    def locked_repository(self) -> LockedRepository:
+        import copy
+
+        try:
+            lockfile = copy.deepcopy(self.lockfile)
+        except ProjectError:
+            lockfile = {}
+
+        return LockedRepository(lockfile, self.sources, self.environment)
+
     def get_provider(
         self,
         strategy: str = "all",
         tracked_names: Optional[Iterable[str]] = None,
+        for_install: bool = False,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
         :param strategy: the resolve strategy
         :param tracked_names: the names of packages that needs to update
+        :param for_install: if the provider is for install
         :returns: The provider object
         """
+
         from pdm.resolver.providers import (
             BaseProvider,
             EagerUpdateProvider,
@@ -325,16 +339,19 @@ class Project:
         )
 
         repository = self.get_repository(cls=self.core.repository_class)
+        locked_repository = self.locked_repository
         allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
+        if for_install:
+            return BaseProvider(locked_repository, requires_python, allow_prereleases)
         if strategy == "all":
             return BaseProvider(repository, requires_python, allow_prereleases)
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
-        preferred_pins = self.get_locked_candidates("__all__")
+
         return provider_class(
-            preferred_pins,
+            locked_repository.all_candidates,
             tracked_names or (),
             repository,
             requires_python,
@@ -383,35 +400,6 @@ class Project:
         return Candidate(
             req, self.environment, name=self.meta.name, version=self.meta.version
         )
-
-    def get_locked_candidates(
-        self, section: Optional[str] = None
-    ) -> Dict[str, Candidate]:
-        if not self.lockfile_file.is_file():
-            return {}
-        section = section or "default"
-        result = {}
-        for package in [dict(p) for p in self.lockfile.get("package", [])]:
-            if section != "__all__" and section not in package["sections"]:
-                continue
-            version = package.get("version")
-            if version:
-                package["version"] = f"=={version}"
-            package_name = package.pop("name")
-            req = Requirement.from_req_dict(package_name, dict(package))
-            can = Candidate(req, self.environment, name=package_name, version=version)
-            can.sections = package.get("sections", [])
-            can.marker = req.marker
-            can.hashes = {
-                item["file"]: item["hash"]
-                for item in self.lockfile["metadata"]
-                .get("files", {})
-                .get(f"{req.key} {version}", [])
-            } or None
-            result[req.identify()] = can
-        if section in ("default", "__all__") and self.meta.name and self.meta.version:
-            result[self.meta.project_name.lower()] = self.make_self_candidate(True)
-        return result
 
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies sections. Otherwise lock file is

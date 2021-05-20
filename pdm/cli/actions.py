@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
 import atoml
 import click
 from pip._vendor.pkg_resources import safe_name
+from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
@@ -89,6 +90,30 @@ def do_lock(
     return mapping
 
 
+def resolve_candidates_from_lockfile(
+    project: Project, requirements: List[Requirement]
+) -> Dict[str, Candidate]:
+    ui = project.core.ui
+    resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
+    reqs = [
+        req
+        for req in requirements
+        if not req.marker or req.marker.evaluate(project.environment.marker_environment)
+    ]
+    with ui.logging("install-resolve"):
+        with ui.open_spinner("Resolving packages from lockfile..."):
+            reporter = BaseReporter()
+            provider = project.get_provider(for_install=True)
+            resolver = project.core.resolver_class(provider, reporter)
+            mapping, *_ = resolve(
+                resolver,
+                reqs,
+                project.environment.python_requires,
+                resolve_max_rounds,
+            )
+    return mapping
+
+
 def do_sync(
     project: Project,
     *,
@@ -97,41 +122,43 @@ def do_sync(
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
+    requirements: Optional[List[Requirement]] = None,
     tracked_names: Optional[Sequence[str]] = None,
+    no_editable: bool = False,
+    no_self: bool = False,
 ) -> None:
     """Synchronize project"""
-    if not project.lockfile_file.exists():
-        raise ProjectError("Lock file does not exist, nothing to sync")
-    elif not project.is_lockfile_compatible():
-        project.core.ui.echo(
-            "Lock file version is not compatible with PDM, "
-            "install may fail, please regenerate the pdm.lock",
-            err=True,
-        )
-    elif not project.is_lockfile_hash_match():
-        project.core.ui.echo(
-            "Lock file hash doesn't match pyproject.toml, packages may be outdated",
-            err=True,
-        )
+    if requirements is None:
+        if not project.lockfile_file.exists():
+            raise ProjectError("Lock file does not exist, nothing to sync")
+        elif not project.is_lockfile_compatible():
+            project.core.ui.echo(
+                "Lock file version is not compatible with PDM, "
+                "install may fail, please regenerate the pdm.lock",
+                err=True,
+            )
+        elif not project.is_lockfile_hash_match():
+            project.core.ui.echo(
+                "Lock file hash doesn't match pyproject.toml, packages may be outdated",
+                err=True,
+            )
+        sections = translate_sections(project, default, dev, sections or ())
+        requirements: List[Requirement] = []
+        for section in sections:
+            requirements.extend(project.get_dependencies(section).values())
+    candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
         candidates = {
-            name: c
-            for name, c in project.get_locked_candidates("__all__").items()
-            if name in tracked_names
+            name: c for name, c in candidates.items() if name in tracked_names
         }
-    else:
-        candidates = {}
-        sections = translate_sections(project, default, dev, sections or ())
-        valid_sections = list(project.iter_sections())
-        for section in sections:
-            if section not in valid_sections:
-                raise PdmUsageError(
-                    f"Section {termui.green(repr(section))} doesn't exist "
-                    "in the pyproject.toml"
-                )
-            candidates.update(project.get_locked_candidates(section))
+
     handler = project.core.synchronizer_class(
-        candidates, project.environment, clean, dry_run
+        candidates,
+        project.environment,
+        clean,
+        dry_run,
+        no_editable=no_editable,
+        install_self=not no_self and "default" in sections,
     )
     handler.synchronize()
 
@@ -260,6 +287,7 @@ def do_update(
         default=default,
         clean=False,
         dry_run=dry_run,
+        requirements=list(updated_deps.values()),
         tracked_names=updated_deps.keys() if top else None,
     )
     if unconstrained and not dry_run:

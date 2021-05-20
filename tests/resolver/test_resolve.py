@@ -2,6 +2,7 @@ import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
 from pdm import termui
+from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve
@@ -215,17 +216,6 @@ def test_resolve_dependency_with_extra_marker(project, repository):
     assert "pytz" in result
 
 
-def test_resolve_parent_from_multiple_sources(project, repository):
-    repository.add_candidate("foo", "0.1.0")
-    repository.add_dependencies("foo", "0.1.0", ["django"])
-    repository.add_candidate("bar", "0.1.0")
-    repository.add_dependencies("bar", "0.1.0", ["django"])
-    result = resolve_requirements(
-        repository, ["foo; python_version ~= '3.8'", "bar"], ">=3.6"
-    )
-    assert not result["pytz"].marker
-
-
 def test_resolve_circular_dependencies(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foobar"])
@@ -233,6 +223,47 @@ def test_resolve_circular_dependencies(project, repository):
     repository.add_dependencies("foobar", "0.2.0", ["foo"])
     result = resolve_requirements(repository, ["foo"])
     assert result["foo"].version == "0.1.0"
-    assert result["foo"].sections == ["default"]
     assert result["foobar"].version == "0.2.0"
-    assert result["foobar"].sections == ["default"]
+
+
+def test_resolve_candidates_to_install(project):
+    project.lockfile = {
+        "package": [
+            {
+                "name": "pytest",
+                "version": "4.6.0",
+                "summary": "pytest module",
+                "dependencies": ["py>=3.0", "configparser; sys_platform=='win32'"],
+            },
+            {
+                "name": "configparser",
+                "version": "1.2.0",
+                "summary": "configparser module",
+                "dependencies": ["backports"],
+            },
+            {
+                "name": "py",
+                "version": "3.6.0",
+                "summary": "py module",
+            },
+            {
+                "name": "backports",
+                "version": "2.2.0",
+                "summary": "backports module",
+            },
+        ]
+    }
+    project.environment.marker_environment["sys_platform"] = "linux"
+    reqs = [parse_requirement("pytest")]
+    result = resolve_candidates_from_lockfile(project, reqs)
+    assert result["pytest"].version == "4.6.0"
+    assert result["py"].version == "3.6.0"
+    assert "configparser" not in result
+    assert "backports" not in result
+
+    project.environment.marker_environment["sys_platform"] = "win32"
+    result = resolve_candidates_from_lockfile(project, reqs)
+    assert result["pytest"].version == "4.6.0"
+    assert result["py"].version == "3.6.0"
+    assert result["configparser"].version == "1.2.0"
+    assert result["backports"].version == "2.2.0"

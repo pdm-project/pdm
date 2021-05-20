@@ -2,9 +2,20 @@ from __future__ import annotations
 
 import sys
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+)
 
 from pip._vendor.html5lib import parse
+from pip._vendor.pkg_resources import safe_name
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
@@ -16,7 +27,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import allow_all_wheels
+from pdm.utils import allow_all_wheels, url_without_fragments
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -321,3 +332,97 @@ class PyPIRepository(BaseRepository):
             results.append(result)
 
         return results
+
+
+class LockedRepository(BaseRepository):
+    def __init__(
+        self,
+        lockfile: Mapping[str, Any],
+        sources: List[Source],
+        environment: Environment,
+    ) -> None:
+        super().__init__(sources, environment)
+        self.packages: Dict[tuple, Candidate] = {}
+        self.file_hashes: Dict[Tuple[str, str], Dict[str, str]] = {}
+        self.candidate_info: Dict[tuple, CandidateInfo] = {}
+        self._read_lockfile(lockfile)
+
+    @property
+    def all_candidates(self) -> Dict[str, Candidate]:
+        return {can.req.identify(): can for can in self.packages.values()}
+
+    def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
+        for package in lockfile.get("package", []):
+            version = package.get("version")
+            if version:
+                package["version"] = f"=={version}"
+            package_name = package.pop("name")
+            req_dict = {
+                k: v
+                for k, v in package.items()
+                if k not in ("dependencies", "requires_python", "summary")
+            }
+            req = Requirement.from_req_dict(package_name, req_dict)
+            can = Candidate(req, self.environment, name=package_name, version=version)
+            can_id = self._identify_candidate(can)
+            self.packages[can_id] = can
+            candidate_info: CandidateInfo = (
+                package.get("dependencies", []),
+                package.get("requires_python", ""),
+                package.get("summary", ""),
+            )
+            self.candidate_info[can_id] = candidate_info
+
+        for key, hashes in lockfile.get("metadata", {}).get("files", {}).items():
+            self.file_hashes[tuple(key.split())] = {
+                item["file"]: item["hash"] for item in hashes
+            }
+
+    def _identify_candidate(self, candidate: Candidate) -> tuple:
+        return (
+            candidate.identify(),
+            candidate.version,
+            url_without_fragments(candidate.req.url) if candidate.req.url else None,
+            candidate.req.editable,
+        )
+
+    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
+        return self.candidate_info[self._identify_candidate(candidate)]
+
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+        return (self._get_dependencies_from_cache, self._get_dependencies_from_lockfile)
+
+    def get_dependencies(
+        self, candidate: Candidate
+    ) -> Tuple[List[Requirement], PySpecSet, str]:
+        reqs, python, summary = super().get_dependencies(candidate)
+        reqs = tuple(
+            req
+            for req in reqs
+            if not req.marker
+            or req.marker.evaluate(self.environment.marker_environment)
+        )
+        return reqs, python, summary
+
+    def find_candidates(
+        self,
+        requirement: Requirement,
+        requires_python: PySpecSet = ALLOW_ALL_PYTHON,
+        allow_prereleases: Optional[bool] = None,
+        allow_all: bool = False,
+    ) -> Iterable[Candidate]:
+        for key, info in self.candidate_info.items():
+            if key[0] != requirement.identify():
+                continue
+            if not (requires_python & PySpecSet(info[1])).contains(
+                str(self.environment.interpreter.version)
+            ):
+                continue
+            can = self.packages[key]
+            can.requires_python = info[1]
+            yield can
+
+    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+        return self.file_hashes.get(
+            (safe_name(candidate.name).lower(), candidate.version)
+        )

@@ -72,15 +72,21 @@ class Synchronizer:
         clean: bool = False,
         dry_run: bool = False,
         retry_times: int = 1,
+        install_self: bool = False,
+        no_editable: bool = False,
     ) -> None:
         self.candidates = candidates
         self.environment = environment
-        self.parallel = environment.project.config["parallel_install"]
-        self.all_candidates = environment.project.get_locked_candidates("__all__")
-        self.working_set = environment.get_working_set()
         self.clean = clean
         self.dry_run = dry_run
         self.retry_times = retry_times
+        self.no_editable = no_editable
+        self.install_self = install_self
+
+        self.parallel = environment.project.config["parallel_install"]
+        locked_repository = environment.project.locked_repository
+        self.all_candidate_keys = list(locked_repository.all_candidates)
+        self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
 
     def create_executor(
@@ -104,23 +110,26 @@ class Synchronizer:
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
-        to_update, to_remove = [], []
         candidates = self.candidates.copy()
-        environment = self.environment.marker_environment
+        to_update, to_remove = [], []
+        if self.no_editable:
+            for candidate in candidates.values():
+                candidate.req.editable = None  # type: ignore
         for key, dist in working_set.items():
             if key == self.self_key:
                 continue
             if key in candidates:
                 can = candidates.pop(key)
-                if can.marker and not can.marker.evaluate(environment):
-                    to_remove.append(key)
-                elif (
+                if (
                     can.req.editable
                     or is_dist_editable(dist)
                     or (dist.version != can.version)
                 ):
                     to_update.append(key)
-            elif key not in self.all_candidates and key not in self.SEQUENTIAL_PACKAGES:
+            elif (
+                key not in self.all_candidate_keys
+                and key not in self.SEQUENTIAL_PACKAGES
+            ):
                 # Remove package only if it is not required by any section
                 # Packages for packaging will never be removed
                 to_remove.append(key)
@@ -128,9 +137,7 @@ class Synchronizer:
             {
                 strip_extras(name)[0]
                 for name, can in candidates.items()
-                if name != self.self_key
-                and strip_extras(name)[0] not in working_set
-                and (not can.marker or can.marker.evaluate(environment))
+                if name != self.self_key and strip_extras(name)[0] not in working_set
             }
         )
         return (
@@ -182,10 +189,7 @@ class Synchronizer:
         return dist, can
 
     def remove_distribution(self, key: str) -> Distribution:
-        """Remove distributions with given names.
-
-        :param distributions: a list of names to be removed.
-        """
+        """Remove distributions with given names."""
         installer = self.get_installer()
         dist = self.working_set[key]
         with self.ui.open_spinner(
@@ -266,11 +270,6 @@ class Synchronizer:
         }
         sequential_jobs = []
         parallel_jobs = []
-        # Self package will be installed after all other dependencies are installed.
-        self_action = None
-        self_key = self.self_key
-        if self_key in self.candidates:
-            self_action = "update" if self_key in self.working_set else "add"
 
         for kind in to_do:
             for key in to_do[kind]:
@@ -322,10 +321,17 @@ class Synchronizer:
                 self.ui.echo("".join(errors), err=True)
                 raise InstallationError("Some package operations are not complete yet")
 
-            if self_action:
-                assert self_key
+            if self.install_self:
+                self_candidate = self.environment.project.make_self_candidate(
+                    not self.no_editable
+                )
+                self_key = self_candidate.req.key
+                self.candidates[self_key] = self_candidate
                 self.ui.echo("Installing the project as an editable package...")
                 with self.ui.indent("  "):
-                    handlers[self_action](self_key)
+                    if self_key in self.working_set:
+                        self.update_candidate(self_key)
+                    else:
+                        self.install_candidate(self_key)
 
             self.ui.echo(f"\n{termui.Emoji.SUCC} All complete!")

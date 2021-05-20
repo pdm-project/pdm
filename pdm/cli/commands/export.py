@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
 from pdm.cli.utils import compatible_dev_flag, translate_sections
@@ -39,7 +40,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        candidates = {}
         sections = list(options.sections)
         if options.pyproject:
             options.hashes = False
@@ -49,14 +49,25 @@ class Command(BaseCommand):
             compatible_dev_flag(project, options.dev),
             options.sections or (),
         )
+        requirements = {}
         for section in sections:
-            if options.pyproject:
-                candidates.update(project.get_dependencies(section))
-            else:
-                candidates.update(project.get_locked_candidates(section))
-        candidates.pop(project.meta.name and project.meta.project_name, None)
+            requirements.update(project.get_dependencies(section))
+        if options.pyproject:
+            packages = requirements.values()
+        else:
+            project.core.ui.echo(
+                "The exported requirements file is no longer cross-platform. "
+                "Using it on other platforms may cause unexpected result.",
+                fg="yellow",
+                err=True,
+            )
+            candidates = resolve_candidates_from_lockfile(
+                project, requirements.values()
+            )
+            candidates.pop(project.meta.name and project.meta.project_name, None)
+            packages = candidates.values()
 
-        content = FORMATS[options.format].export(project, candidates.values(), options)
+        content = FORMATS[options.format].export(project, packages, options)
         if options.output:
             Path(options.output).write_text(content)
         else:

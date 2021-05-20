@@ -357,12 +357,14 @@ def format_lockfile(
         base = atoml.table()
         base.update(v.as_lockfile_entry())
         base.add("summary", summary_collection[strip_extras(k)[0]])
-        deps = make_array([r.as_line() for r in fetched_dependencies[k]], True)
+        deps = make_array(sorted(r.as_line() for r in fetched_dependencies[k]), True)
         if len(deps) > 0:
             base.add("dependencies", deps)
         packages.append(base)
         if v.hashes:
-            key = f"{k} {v.version}"
+            key = f"{strip_extras(k)[0]} {v.version}"
+            if key in file_hashes:
+                continue
             array = atoml.array().multiline(True)
             for filename, hash_value in v.hashes.items():
                 inline = make_inline_table({"file": filename, "hash": hash_value})
@@ -502,6 +504,12 @@ def translate_sections(
         sections_set.add("default")
     # Sorts the result in ascending order instead of in random order
     # to make this function pure
+    invalid_sections = sections_set - set(project.iter_sections())
+    if invalid_sections:
+        project.core.ui.echo(
+            f"Ignoring non-existing sections: {invalid_sections}", fg="yellow", err=True
+        )
+        sections_set -= invalid_sections
     return sorted(sections_set)
 
 
