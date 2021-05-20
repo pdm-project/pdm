@@ -109,3 +109,11 @@ def test_sync_production_packages(project, working_set, is_dev):
     actions.do_sync(project, dev=is_dev)
     assert "requests" in working_set
     assert ("pytz" in working_set) == is_dev
+
+
+@pytest.mark.usefixtures("repository")
+def test_sync_without_self(project, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    actions.do_lock(project)
+    actions.do_sync(project, no_self=True)
+    assert project.meta.name not in working_set
