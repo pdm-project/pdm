@@ -502,6 +502,12 @@ def translate_sections(
         sections_set.add("default")
     # Sorts the result in ascending order instead of in random order
     # to make this function pure
+    invalid_sections = sections_set - set(project.iter_sections())
+    if invalid_sections:
+        project.core.ui.echo(
+            f"Ignoring non-existing sections: {invalid_sections}", fg="yellow", err=True
+        )
+        sections_set -= invalid_sections
     return sorted(sections_set)
 
 

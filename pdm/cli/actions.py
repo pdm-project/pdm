@@ -141,14 +141,8 @@ def do_sync(
             err=True,
         )
     sections = translate_sections(project, default, dev, sections or ())
-    valid_sections = list(project.iter_sections())
     requirements: List[Requirement] = []
     for section in sections:
-        if section not in valid_sections:
-            raise PdmUsageError(
-                f"Section {termui.green(repr(section))} doesn't exist "
-                "in the pyproject.toml"
-            )
         requirements.extend(project.get_dependencies(section).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
