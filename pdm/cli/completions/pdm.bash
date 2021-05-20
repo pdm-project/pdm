@@ -29,7 +29,7 @@ _pdm_8820d2c61f1a916c_complete()
         case "$com" in
 
             (add)
-            opts="--dev --editable --global --help --no-editable --no-sync --project --save-compatible --save-exact --save-wildcard --section --update-eager --update-reuse --verbose"
+            opts="--dev --editable --global --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --section --update-eager --update-reuse --verbose"
             ;;
 
             (build)
@@ -65,7 +65,7 @@ _pdm_8820d2c61f1a916c_complete()
             ;;
 
             (install)
-            opts="--dev --global --help --no-default --no-editable --no-lock --production --project --section --verbose"
+            opts="--dev --global --help --no-default --no-editable --no-lock --no-self --production --project --section --verbose"
             ;;
 
             (list)
@@ -77,7 +77,7 @@ _pdm_8820d2c61f1a916c_complete()
             ;;
 
             (remove)
-            opts="--dev --global --help --no-editable --no-sync --project --section --verbose"
+            opts="--dev --global --help --no-editable --no-self --no-sync --project --section --verbose"
             ;;
 
             (run)
@@ -93,11 +93,11 @@ _pdm_8820d2c61f1a916c_complete()
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --global --help --no-clean --no-default --no-editable --production --project --section --verbose"
+            opts="--clean --dev --dry-run --global --help --no-clean --no-default --no-editable --no-self --production --project --section --verbose"
             ;;
 
             (update)
-            opts="--dev --global --help --no-default --no-editable --outdated --production --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose"
+            opts="--dev --global --help --no-default --no-editable --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose"
             ;;
 
             (use)

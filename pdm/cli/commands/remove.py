@@ -40,4 +40,5 @@ class Command(BaseCommand):
             sync=options.sync,
             packages=options.packages,
             no_editable=options.no_editable,
+            no_self=options.no_self,
         )

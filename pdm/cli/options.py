@@ -89,6 +89,12 @@ install_group.add_argument(
     dest="no_editable",
     help="Install non-editable versions for all packages",
 )
+install_group.add_argument(
+    "--no-self",
+    action="store_true",
+    dest="no_self",
+    help="Don't install the project itself",
+)
 
 sections_group = ArgumentGroup("Dependencies selection")
 sections_group.add_argument(

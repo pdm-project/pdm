@@ -50,4 +50,5 @@ class Command(BaseCommand):
             dev=compatible_dev_flag(project, options.dev),
             default=options.default,
             no_editable=options.no_editable,
+            no_self=options.no_self,
         )
