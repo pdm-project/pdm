@@ -75,7 +75,6 @@ class Synchronizer:
         install_self: bool = False,
         no_editable: bool = False,
     ) -> None:
-        self.candidates = candidates
         self.environment = environment
         self.clean = clean
         self.dry_run = dry_run
@@ -88,6 +87,11 @@ class Synchronizer:
         self.all_candidate_keys = list(locked_repository.all_candidates)
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
+
+        if self.no_editable:
+            for candidate in candidates.values():
+                candidate.req.editable = None  # type: ignore
+        self.candidates = candidates
 
     def create_executor(
         self,
@@ -112,9 +116,7 @@ class Synchronizer:
         working_set = self.working_set
         candidates = self.candidates.copy()
         to_update, to_remove = [], []
-        if self.no_editable:
-            for candidate in candidates.values():
-                candidate.req.editable = None  # type: ignore
+
         for key, dist in working_set.items():
             if key == self.self_key:
                 continue

@@ -38,7 +38,10 @@ class ArgumentGroup:
         self.argument_group = None
 
     def add_argument(self, *args: Any, **kwargs: Any) -> None:
-        self.options.append(Option(*args, **kwargs))
+        if args and isinstance(args[0], Option):
+            self.options.append(args[0])
+        else:
+            self.options.append(Option(*args, **kwargs))
 
     def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
         if self.is_mutually_exclusive:
@@ -77,6 +80,14 @@ pep582_option = Option(
     metavar="SHELL",
     nargs="?",
     help="Print the command line to be eval'd by the shell",
+)
+
+install_group = ArgumentGroup("Install options")
+install_group.add_argument(
+    "--no-editable",
+    action="store_true",
+    dest="no_editable",
+    help="Install non-editable versions for all packages",
 )
 
 sections_group = ArgumentGroup("Dependencies selection")

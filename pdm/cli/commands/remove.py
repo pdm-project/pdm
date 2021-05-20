@@ -2,6 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import install_group
 from pdm.project import Project
 
 
@@ -9,6 +10,7 @@ class Command(BaseCommand):
     """Remove packages from pyproject.toml"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        install_group.add_to_parser(parser)
         parser.add_argument(
             "-d",
             "--dev",

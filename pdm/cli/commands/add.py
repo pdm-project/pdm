@@ -2,7 +2,12 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import packages_group, save_strategy_group, update_strategy_group
+from pdm.cli.options import (
+    install_group,
+    packages_group,
+    save_strategy_group,
+    update_strategy_group,
+)
 from pdm.project import Project
 
 
@@ -30,6 +35,7 @@ class Command(BaseCommand):
         save_strategy_group.add_to_parser(parser)
         update_strategy_group.add_to_parser(parser)
         packages_group.add_to_parser(parser)
+        install_group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_add(

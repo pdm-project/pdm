@@ -50,24 +50,26 @@ test = "pytest tests/"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
 typecheck = "mypy"
+complete = {call = "tasks.complete:main"}
 
 [tool.pdm.dev-dependencies]
 test = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pytest-xdist<2.0.0,>=1.31.0",
+    "pytest-xdist<2.0.0,>=1.31.0"
 ]
 doc = [
     "mkdocs<2.0.0,>=1.1",
     "mkdocs-material<7.0.0,>=6.2.4",
-    "markdown-include<1.0.0,>=0.5.1",
+    "markdown-include<1.0.0,>=0.5.1"
 ]
 workflow = [
     "parver<1.0.0,>=0.3.1",
     "towncrier<20.0.0,>=19.2.0",
     "vendoring; python_version ~= \"3.8\"",
     "mypy~=0.812",
+    "pycomplete~=0.3"
 ]
 
 [tool.black]
