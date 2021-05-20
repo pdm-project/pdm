@@ -55,4 +55,5 @@ class Command(BaseCommand):
             top=options.top,
             dry_run=options.dry_run,
             packages=options.packages,
+            no_editable=options.no_editable,
         )

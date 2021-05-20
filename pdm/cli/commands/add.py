@@ -8,6 +8,7 @@ from pdm.cli.options import (
     save_strategy_group,
     update_strategy_group,
 )
+from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
 
@@ -38,6 +39,8 @@ class Command(BaseCommand):
         install_group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        if options.editables and options.no_editable:
+            raise PdmUsageError("`--no-editable` cannot be used with `-e/--editable`")
         actions.do_add(
             project,
             dev=options.dev,
@@ -47,4 +50,5 @@ class Command(BaseCommand):
             strategy=options.update_strategy or project.config["strategy.update"],
             editables=options.editables,
             packages=options.packages,
+            no_editable=options.no_editable,
         )

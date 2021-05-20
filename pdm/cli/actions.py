@@ -172,18 +172,9 @@ def do_add(
     strategy: str = "reuse",
     editables: Iterable[str] = (),
     packages: Iterable[str] = (),
+    no_editable: bool = False,
 ) -> None:
-    """Add packages and install
-
-    :param project: the project instance
-    :param dev: add to dev dependencies section
-    :param section: specify section to be add to
-    :param sync: whether to install added packages
-    :param save: save strategy
-    :param strategy: update strategy
-    :param editables: editable requirements
-    :param packages: normal requirements
-    """
+    """Add packages and install"""
     check_project_file(project)
     if not editables and not packages:
         raise PdmUsageError("Must specify at least one package or editable package.")
@@ -214,7 +205,7 @@ def do_add(
     project.write_lockfile(lockfile, False)
 
     if sync:
-        do_sync(project, sections=(section,), default=False)
+        do_sync(project, sections=(section,), default=False, no_editable=no_editable)
 
 
 def do_update(
@@ -229,6 +220,7 @@ def do_update(
     top: bool = False,
     dry_run: bool = False,
     packages: Sequence[str] = (),
+    no_editable: bool = False,
 ) -> None:
     """Update specified packages or all packages"""
     check_project_file(project)
@@ -289,6 +281,7 @@ def do_update(
         dry_run=dry_run,
         requirements=list(updated_deps.values()),
         tracked_names=updated_deps.keys() if top else None,
+        no_editable=no_editable,
     )
     if unconstrained and not dry_run:
         # Need to update version constraints
@@ -304,16 +297,9 @@ def do_remove(
     section: Optional[str] = None,
     sync: bool = True,
     packages: Sequence[str] = (),
+    no_editable: bool = False,
 ) -> None:
-    """Remove packages from working set and pyproject.toml
-
-    :param project: The project instance
-    :param dev: Remove package from dev-dependencies
-    :param section: Remove package from given section
-    :param sync: Whether perform syncing action
-    :param packages: Package names to be removed
-    :return: None
-    """
+    """Remove packages from working set and pyproject.toml"""
     check_project_file(project)
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
@@ -344,7 +330,13 @@ def do_remove(
     project.write_pyproject()
     do_lock(project, "reuse")
     if sync:
-        do_sync(project, sections=(section,), default=False, clean=True)
+        do_sync(
+            project,
+            sections=(section,),
+            default=False,
+            clean=True,
+            no_editable=no_editable,
+        )
 
 
 def do_list(project: Project, graph: bool = False, reverse: bool = False) -> None:

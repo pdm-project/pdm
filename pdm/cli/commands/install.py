@@ -49,4 +49,5 @@ class Command(BaseCommand):
             sections=options.sections,
             dev=compatible_dev_flag(project, options.dev),
             default=options.default,
+            no_editable=options.no_editable,
         )

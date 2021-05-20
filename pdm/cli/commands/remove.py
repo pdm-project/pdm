@@ -39,4 +39,5 @@ class Command(BaseCommand):
             section=options.section,
             sync=options.sync,
             packages=options.packages,
+            no_editable=options.no_editable,
         )
