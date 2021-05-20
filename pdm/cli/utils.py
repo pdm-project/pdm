@@ -357,7 +357,7 @@ def format_lockfile(
         base = atoml.table()
         base.update(v.as_lockfile_entry())
         base.add("summary", summary_collection[strip_extras(k)[0]])
-        deps = make_array([r.as_line() for r in fetched_dependencies[k]], True)
+        deps = make_array(sorted(r.as_line() for r in fetched_dependencies[k]), True)
         if len(deps) > 0:
             base.add("dependencies", deps)
         packages.append(base)
