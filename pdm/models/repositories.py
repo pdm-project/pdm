@@ -395,14 +395,14 @@ class LockedRepository(BaseRepository):
     def get_dependencies(
         self, candidate: Candidate
     ) -> Tuple[List[Requirement], PySpecSet, str]:
-        reqs, *rest = super().get_dependencies(candidate)
+        reqs, python, summary = super().get_dependencies(candidate)
         reqs = tuple(
             req
             for req in reqs
             if not req.marker
             or req.marker.evaluate(self.environment.marker_environment)
         )
-        return reqs, *rest
+        return reqs, python, summary
 
     def find_candidates(
         self,
