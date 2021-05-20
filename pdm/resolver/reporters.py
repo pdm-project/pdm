@@ -28,13 +28,13 @@ class SpinnerReporter(BaseReporter):
 
     def starting_round(self, index: int) -> None:
         # self.spinner.hide_and_write(f"Resolving ROUND {index}")
-        pass
+        self.spinner.text = f"Resolving round {index}"
 
     def starting(self) -> None:
         """Called before the resolution actually starts."""
         log_title("Start resolving requirements")
         for req in self.requirements:
-            logger.info("\t" + req.as_line())
+            logger.info("  " + req.as_line())
 
     def ending_round(self, index: int, state: State) -> None:
         """Called before each round of resolution ends.
@@ -42,12 +42,10 @@ class SpinnerReporter(BaseReporter):
         This is NOT called if the resolution ends at this round. Use `ending`
         if you want to report finalization. The index is zero-based.
         """
-        log_title("Ending round {}".format(index))
+        log_title(f"Ending round {index}")
 
     def ending(self, state: State) -> None:
         """Called before the resolution ends successfully."""
-        self.spinner.stop_and_persist(text="Finish resolving")
-
         log_title("Resolution Result")
         logger.info("Stable pins:")
         if state.mapping:
@@ -65,7 +63,7 @@ class SpinnerReporter(BaseReporter):
             requirements passed in from ``Resolver.resolve()``.
         """
         parent_line = f"(from {parent.name} {parent.version})" if parent else ""
-        logger.info(f"\tAdding requirement {requirement.as_line()}{parent_line}")
+        logger.info(f"  Adding requirement {requirement.as_line()}{parent_line}")
 
     def backtracking(self, candidate: Candidate) -> None:
         """Called when rejecting a candidate during backtracking."""
@@ -74,5 +72,4 @@ class SpinnerReporter(BaseReporter):
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
-        self.spinner.text = "Resolving: " + candidate.format()
-        logger.info(f"\tNew pin: {candidate.name} {candidate.version}")
+        logger.info(f"  New pin: {candidate.name} {candidate.version}")

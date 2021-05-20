@@ -362,7 +362,9 @@ def format_lockfile(
             base.add("dependencies", deps)
         packages.append(base)
         if v.hashes:
-            key = f"{k} {v.version}"
+            key = f"{strip_extras(k)[0]} {v.version}"
+            if key in file_hashes:
+                continue
             array = atoml.array().multiline(True)
             for filename, hash_value in v.hashes.items():
                 inline = make_inline_table({"file": filename, "hash": hash_value})

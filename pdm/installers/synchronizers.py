@@ -5,7 +5,7 @@ import multiprocessing
 import traceback
 from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pip._vendor.pkg_resources import Distribution, safe_name
 
@@ -14,7 +14,6 @@ from pdm.exceptions import InstallationError
 from pdm.installers.installers import Installer, is_dist_editable
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
-from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import strip_extras
 
 
@@ -85,10 +84,7 @@ class Synchronizer:
         self.install_self = install_self
 
         self.parallel = environment.project.config["parallel_install"]
-        locked_repository = cast(
-            LockedRepository,
-            environment.project.get_provider(for_install=True).repository,
-        )
+        locked_repository = environment.project.locked_repository
         self.all_candidate_keys = list(locked_repository.all_candidates)
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
@@ -193,10 +189,7 @@ class Synchronizer:
         return dist, can
 
     def remove_distribution(self, key: str) -> Distribution:
-        """Remove distributions with given names.
-
-        :param distributions: a list of names to be removed.
-        """
+        """Remove distributions with given names."""
         installer = self.get_installer()
         dist = self.working_set[key]
         with self.ui.open_spinner(

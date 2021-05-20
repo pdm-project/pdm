@@ -49,7 +49,7 @@ class Project:
 
     PYPROJECT_FILENAME = "pyproject.toml"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    LOCKFILE_VERSION = "2"
+    LOCKFILE_VERSION = "3"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
@@ -307,6 +307,16 @@ class Project:
         sources = self.sources or []
         return cls(sources, self.environment)
 
+    @property
+    def locked_repository(self) -> LockedRepository:
+        import toml
+
+        if self.lockfile_file.exists():
+            lockfile = toml.loads(self.lockfile_file.read_text("utf-8"))
+        else:
+            lockfile = {}
+        return LockedRepository(lockfile, self.sources, self.environment)
+
     def get_provider(
         self,
         strategy: str = "all",
@@ -320,7 +330,6 @@ class Project:
         :param for_install: if the provider is for install
         :returns: The provider object
         """
-        import toml
 
         from pdm.resolver.providers import (
             BaseProvider,
@@ -329,16 +338,11 @@ class Project:
         )
 
         repository = self.get_repository(cls=self.core.repository_class)
-        if self.lockfile_file.exists():
-            lockfile = toml.loads(self.lockfile_file.read_text("utf-8"))
-        else:
-            lockfile = {}
-        lock_repository = LockedRepository(lockfile, self.sources, self.environment)
-
+        locked_repository = self.locked_repository
         allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
         if for_install:
-            return BaseProvider(lock_repository, requires_python, allow_prereleases)
+            return BaseProvider(locked_repository, requires_python, allow_prereleases)
         if strategy == "all":
             return BaseProvider(repository, requires_python, allow_prereleases)
         provider_class = (
@@ -346,7 +350,7 @@ class Project:
         )
 
         return provider_class(
-            lock_repository.all_candidates,
+            locked_repository.all_candidates,
             tracked_names or (),
             repository,
             requires_python,

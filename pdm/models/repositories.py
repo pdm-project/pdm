@@ -15,6 +15,7 @@ from typing import (
 )
 
 from pip._vendor.html5lib import parse
+from pip._vendor.pkg_resources import safe_name
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
@@ -356,7 +357,12 @@ class LockedRepository(BaseRepository):
             if version:
                 package["version"] = f"=={version}"
             package_name = package.pop("name")
-            req = Requirement.from_req_dict(package_name, dict(package))
+            req_dict = {
+                k: v
+                for k, v in package.items()
+                if k not in ("dependencies", "requires_python", "summary")
+            }
+            req = Requirement.from_req_dict(package_name, req_dict)
             can = Candidate(req, self.environment, name=package_name, version=version)
             can_id = self._identify_candidate(can)
             self.packages[can_id] = can
@@ -374,7 +380,7 @@ class LockedRepository(BaseRepository):
 
     def _identify_candidate(self, candidate: Candidate) -> tuple:
         return (
-            candidate.name,
+            candidate.identify(),
             candidate.version,
             candidate.req.url,
             candidate.req.editable,
@@ -406,7 +412,7 @@ class LockedRepository(BaseRepository):
         allow_all: bool = False,
     ) -> Iterable[Candidate]:
         for key, info in self.candidate_info.items():
-            if key[0] != requirement.key:
+            if key[0] != requirement.identify():
                 continue
             if not (requires_python & PySpecSet(info[1])).contains(
                 str(self.environment.interpreter.version)
@@ -417,4 +423,6 @@ class LockedRepository(BaseRepository):
             yield can
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
-        return self.file_hashes.get((candidate.name, candidate.version))
+        return self.file_hashes.get(
+            (safe_name(candidate.name).lower(), candidate.version)
+        )

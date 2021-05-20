@@ -101,7 +101,7 @@ def resolve_candidates_from_lockfile(
         if not req.marker or req.marker.evaluate(project.environment.marker_environment)
     ]
     with ui.logging("install-resolve"):
-        with ui.open_spinner("Installing from lockfile..."):
+        with ui.open_spinner("Resolving packages from lockfile..."):
             reporter = BaseReporter()
             provider = project.get_provider(for_install=True)
             resolver = project.core.resolver_class(provider, reporter)

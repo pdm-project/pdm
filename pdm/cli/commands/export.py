@@ -1,12 +1,11 @@
 import argparse
 from pathlib import Path
-from typing import cast
 
+from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
 from pdm.cli.utils import compatible_dev_flag, translate_sections
 from pdm.formats import FORMATS
-from pdm.models.repositories import LockedRepository
 from pdm.project import Project
 
 
@@ -41,7 +40,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        candidates = {}
         sections = list(options.sections)
         if options.pyproject:
             options.hashes = False
@@ -51,17 +49,23 @@ class Command(BaseCommand):
             compatible_dev_flag(project, options.dev),
             options.sections or (),
         )
+        requirements = {}
+        for section in sections:
+            requirements.update(project.get_dependencies(section))
         if options.pyproject:
-            for section in sections:
-                candidates.update(project.get_dependencies(section))
+            packages = requirements.values()
         else:
-            locked_repository = cast(
-                LockedRepository, project.get_provider(for_install=True).repository
+            project.core.ui.echo(
+                "The exported requirements file is no longer cross-platform. "
+                "Using it on other platforms may cause unexpected result.",
+                fg="yellow",
+                err=True,
             )
-            candidates.update(locked_repository.all_candidates)
-        candidates.pop(project.meta.name and project.meta.project_name, None)
+            candidates = resolve_candidates_from_lockfile(project, requirements)
+            candidates.pop(project.meta.name and project.meta.project_name, None)
+            packages = candidates.values()
 
-        content = FORMATS[options.format].export(project, candidates.values(), options)
+        content = FORMATS[options.format].export(project, packages, options)
         if options.output:
             Path(options.output).write_text(content)
         else:
