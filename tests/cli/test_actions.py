@@ -68,6 +68,9 @@ def test_add_editable_package(project, working_set, is_dev):
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
 
+    actions.do_sync(project, no_editable=True)
+    assert not working_set["demo"].editable
+
 
 @pytest.mark.usefixtures("repository", "working_set")
 def test_add_remote_package_url(project, is_dev):

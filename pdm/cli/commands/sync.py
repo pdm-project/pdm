@@ -2,7 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import clean_group, dry_run_option, sections_group
+from pdm.cli.options import clean_group, dry_run_option, install_group, sections_group
 from pdm.cli.utils import compatible_dev_flag
 from pdm.project import Project
 
@@ -14,6 +14,7 @@ class Command(BaseCommand):
         sections_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
         clean_group.add_to_parser(parser)
+        install_group.add_to_group(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_sync(
@@ -23,4 +24,5 @@ class Command(BaseCommand):
             default=options.default,
             dry_run=options.dry_run,
             clean=options.clean,
+            no_editable=options.no_editable,
         )

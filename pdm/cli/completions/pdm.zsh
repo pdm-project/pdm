@@ -63,6 +63,7 @@ _pdm() {
         '--save-exact[Save exact version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
+        '--no-editalbe[Install non-editable versions for all packages]'
         {-e+,--editable+}'[Specify editable packages]:packages'
         '*:packages:_pdm_pip_packages'
       )
@@ -163,6 +164,7 @@ _pdm() {
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
         "--no-default[Don't include dependencies from default section]"
+        '--no-editalbe[Install non-editable versions for all packages]'
       )
       ;;
     list)
@@ -221,6 +223,7 @@ _pdm() {
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
         "--no-default[Don't include dependencies from default section]"
+        '--no-editalbe[Install non-editable versions for all packages]'
       )
       ;;
     update)
@@ -232,6 +235,7 @@ _pdm() {
         '--save-exact[Save exact version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
+        '--no-editalbe[Install non-editable versions for all packages]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-d,--dev}'[Select dev dependencies]'
         {--prod,--production}"[Unselect dev dependencies]"

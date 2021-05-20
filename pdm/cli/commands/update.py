@@ -2,7 +2,12 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import save_strategy_group, sections_group, update_strategy_group
+from pdm.cli.options import (
+    install_group,
+    save_strategy_group,
+    sections_group,
+    update_strategy_group,
+)
 from pdm.project import Project
 
 
@@ -13,6 +18,7 @@ class Command(BaseCommand):
         sections_group.add_to_parser(parser)
         save_strategy_group.add_to_parser(parser)
         update_strategy_group.add_to_parser(parser)
+        install_group.add_to_parser(parser)
         parser.add_argument(
             "-u",
             "--unconstrained",
@@ -49,4 +55,5 @@ class Command(BaseCommand):
             top=options.top,
             dry_run=options.dry_run,
             packages=options.packages,
+            no_editable=options.no_editable,
         )

@@ -5,7 +5,7 @@ import click
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import sections_group
+from pdm.cli.options import install_group, sections_group
 from pdm.cli.utils import compatible_dev_flag
 from pdm.project import Project
 
@@ -15,6 +15,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         sections_group.add_to_parser(parser)
+        install_group.add_to_parser(parser)
         parser.add_argument(
             "--no-lock",
             dest="lock",
@@ -48,4 +49,5 @@ class Command(BaseCommand):
             sections=options.sections,
             dev=compatible_dev_flag(project, options.dev),
             default=options.default,
+            no_editable=options.no_editable,
         )
