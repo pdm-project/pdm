@@ -215,17 +215,6 @@ def test_resolve_dependency_with_extra_marker(project, repository):
     assert "pytz" in result
 
 
-def test_resolve_parent_from_multiple_sources(project, repository):
-    repository.add_candidate("foo", "0.1.0")
-    repository.add_dependencies("foo", "0.1.0", ["django"])
-    repository.add_candidate("bar", "0.1.0")
-    repository.add_dependencies("bar", "0.1.0", ["django"])
-    result = resolve_requirements(
-        repository, ["foo; python_version ~= '3.8'", "bar"], ">=3.6"
-    )
-    assert not result["pytz"].marker
-
-
 def test_resolve_circular_dependencies(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foobar"])
@@ -233,6 +222,4 @@ def test_resolve_circular_dependencies(project, repository):
     repository.add_dependencies("foobar", "0.2.0", ["foo"])
     result = resolve_requirements(repository, ["foo"])
     assert result["foo"].version == "0.1.0"
-    assert result["foo"].sections == ["default"]
     assert result["foobar"].version == "0.2.0"
-    assert result["foobar"].sections == ["default"]

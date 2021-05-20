@@ -122,28 +122,30 @@ def do_sync(
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
+    requirements: Optional[List[Requirement]] = None,
     tracked_names: Optional[Sequence[str]] = None,
     no_editable: bool = False,
     no_self: bool = False,
 ) -> None:
     """Synchronize project"""
-    if not project.lockfile_file.exists():
-        raise ProjectError("Lock file does not exist, nothing to sync")
-    elif not project.is_lockfile_compatible():
-        project.core.ui.echo(
-            "Lock file version is not compatible with PDM, "
-            "install may fail, please regenerate the pdm.lock",
-            err=True,
-        )
-    elif not project.is_lockfile_hash_match():
-        project.core.ui.echo(
-            "Lock file hash doesn't match pyproject.toml, packages may be outdated",
-            err=True,
-        )
-    sections = translate_sections(project, default, dev, sections or ())
-    requirements: List[Requirement] = []
-    for section in sections:
-        requirements.extend(project.get_dependencies(section).values())
+    if requirements is None:
+        if not project.lockfile_file.exists():
+            raise ProjectError("Lock file does not exist, nothing to sync")
+        elif not project.is_lockfile_compatible():
+            project.core.ui.echo(
+                "Lock file version is not compatible with PDM, "
+                "install may fail, please regenerate the pdm.lock",
+                err=True,
+            )
+        elif not project.is_lockfile_hash_match():
+            project.core.ui.echo(
+                "Lock file hash doesn't match pyproject.toml, packages may be outdated",
+                err=True,
+            )
+        sections = translate_sections(project, default, dev, sections or ())
+        requirements: List[Requirement] = []
+        for section in sections:
+            requirements.extend(project.get_dependencies(section).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
         candidates = {
@@ -285,6 +287,7 @@ def do_update(
         default=default,
         clean=False,
         dry_run=dry_run,
+        requirements=list(updated_deps.values()),
         tracked_names=updated_deps.keys() if top else None,
     )
     if unconstrained and not dry_run:

@@ -309,12 +309,13 @@ class Project:
 
     @property
     def locked_repository(self) -> LockedRepository:
-        import toml
+        import copy
 
-        if self.lockfile_file.exists():
-            lockfile = toml.loads(self.lockfile_file.read_text("utf-8"))
-        else:
+        try:
+            lockfile = copy.deepcopy(self.lockfile)
+        except ProjectError:
             lockfile = {}
+
         return LockedRepository(lockfile, self.sources, self.environment)
 
     def get_provider(

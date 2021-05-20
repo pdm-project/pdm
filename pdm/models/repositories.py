@@ -27,7 +27,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import allow_all_wheels
+from pdm.utils import allow_all_wheels, url_without_fragments
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -382,7 +382,7 @@ class LockedRepository(BaseRepository):
         return (
             candidate.identify(),
             candidate.version,
-            candidate.req.url,
+            url_without_fragments(candidate.req.url) if candidate.req.url else None,
             candidate.req.editable,
         )
 

@@ -61,7 +61,9 @@ class Command(BaseCommand):
                 fg="yellow",
                 err=True,
             )
-            candidates = resolve_candidates_from_lockfile(project, requirements)
+            candidates = resolve_candidates_from_lockfile(
+                project, requirements.values()
+            )
             candidates.pop(project.meta.name and project.meta.project_name, None)
             packages = candidates.values()
 

@@ -137,7 +137,7 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
     result = invoke(["install"], obj=project)
     assert "Lock file hash doesn't match" in result.output
-    assert "pytz" in project.get_locked_candidates()
+    assert "pytz" in project.locked_repository.all_candidates
     assert project.is_lockfile_hash_match()
 
 
@@ -358,4 +358,4 @@ def test_lock_legacy_project(invoke, fixture_project, repository):
     project = fixture_project("demo-legacy")
     result = invoke(["lock"], obj=project)
     assert result.exit_code == 0
-    assert "urllib3" in project.get_locked_candidates()
+    assert "urllib3" in project.locked_repository.all_candidates

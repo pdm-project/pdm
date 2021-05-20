@@ -17,7 +17,7 @@ def test_add_package(project, working_set, is_dev):
     )
 
     assert section[0] == "requests~=2.19"
-    locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
@@ -28,7 +28,7 @@ def test_add_package_to_custom_section(project, working_set):
     actions.do_add(project, section="test", packages=["requests"])
 
     assert "requests" in project.meta.optional_dependencies["test"][0]
-    locked_candidates = project.get_locked_candidates("test")
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
@@ -40,7 +40,7 @@ def test_add_package_to_custom_dev_section(project, working_set):
 
     dependencies = project.tool_settings["dev-dependencies"]["test"]
     assert "requests" in dependencies[0]
-    locked_candidates = project.get_locked_candidates("test")
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
@@ -63,7 +63,7 @@ def test_add_editable_package(project, working_set, is_dev):
     )
     assert "demo" in section[0]
     assert "-e git+https://github.com/test-root/demo.git#egg=demo" in section[1]
-    locked_candidates = project.get_locked_candidates("dev" if is_dev else "default")
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["demo"].revision == "1234567890abcdef"
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
@@ -103,7 +103,7 @@ def test_remove_both_normal_and_editable_packages(project, is_dev):
     )
     actions.do_remove(project, is_dev, packages=["demo"])
     assert not section
-    assert "demo" not in project.get_locked_candidates("dev" if is_dev else "default")
+    assert "demo" not in project.locked_repository.all_candidates
 
 
 @pytest.mark.usefixtures("repository")
@@ -128,7 +128,7 @@ def test_add_package_save_wildcard(project):
 def test_add_package_update_reuse(project, repository):
     actions.do_add(project, sync=False, save="wildcard", packages=["requests", "pytz"])
 
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -149,7 +149,7 @@ def test_add_package_update_reuse(project, repository):
     actions.do_add(
         project, sync=False, save="wildcard", packages=["requests"], strategy="reuse"
     )
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -158,7 +158,7 @@ def test_add_package_update_reuse(project, repository):
 def test_add_package_update_eager(project, repository):
     actions.do_add(project, sync=False, save="wildcard", packages=["requests", "pytz"])
 
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -179,7 +179,7 @@ def test_add_package_update_eager(project, repository):
     actions.do_add(
         project, sync=False, save="wildcard", packages=["requests"], strategy="eager"
     )
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -202,7 +202,7 @@ def test_update_all_packages(project, repository, capsys):
         ],
     )
     actions.do_update(project)
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.6"
@@ -232,7 +232,7 @@ def test_update_dry_run(project, repository, capsys):
     )
     actions.do_update(project, dry_run=True)
     project.lockfile = None
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -279,7 +279,7 @@ def test_update_specified_packages(project, repository):
         ],
     )
     actions.do_update(project, packages=["requests"])
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.4"
 
@@ -301,7 +301,7 @@ def test_update_specified_packages_eager_mode(project, repository):
         ],
     )
     actions.do_update(project, strategy="eager", packages=["requests"])
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -311,7 +311,7 @@ def test_update_specified_packages_eager_mode(project, repository):
 def test_remove_package(project, working_set, is_dev):
     actions.do_add(project, dev=is_dev, packages=["requests", "pytz"])
     actions.do_remove(project, dev=is_dev, packages=["pytz"])
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert "pytz" not in locked_candidates
     assert "pytz" not in working_set
 
@@ -320,7 +320,7 @@ def test_remove_package(project, working_set, is_dev):
 def test_remove_package_no_sync(project, working_set):
     actions.do_add(project, packages=["requests", "pytz"])
     actions.do_remove(project, sync=False, packages=["pytz"])
-    locked_candidates = project.get_locked_candidates()
+    locked_candidates = project.locked_repository.all_candidates
     assert "pytz" not in locked_candidates
     assert "pytz" in working_set
 
@@ -389,7 +389,7 @@ def test_lock_dependencies(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
     actions.do_lock(project)
     assert project.lockfile_file.exists()
-    locked = project.get_locked_candidates()
+    locked = project.locked_repository.all_candidates
     for package in ("requests", "idna", "chardet", "certifi"):
         assert package in locked
 
@@ -465,11 +465,11 @@ def test_update_ignore_constraints(project, repository):
 
     actions.do_update(project, unconstrained=False, packages=("pytz",))
     assert project.meta.dependencies == ["pytz~=2019.3"]
-    assert project.get_locked_candidates()["pytz"].version == "2019.3"
+    assert project.locked_repository.all_candidates["pytz"].version == "2019.3"
 
     actions.do_update(project, unconstrained=True, packages=("pytz",))
     assert project.meta.dependencies == ["pytz~=2020.2"]
-    assert project.get_locked_candidates()["pytz"].version == "2020.2"
+    assert project.locked_repository.all_candidates["pytz"].version == "2020.2"
 
 
 def test_init_validate_python_requires(project_no_init):
