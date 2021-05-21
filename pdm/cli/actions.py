@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import shutil
 import textwrap
@@ -5,7 +7,7 @@ from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set, cast
+from typing import Iterable, Mapping, Sequence, cast
 
 import atoml
 import click
@@ -41,10 +43,10 @@ PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 def do_lock(
     project: Project,
     strategy: str = "all",
-    tracked_names: Optional[Iterable[str]] = None,
-    requirements: Optional[List[Requirement]] = None,
+    tracked_names: Iterable[str] | None = None,
+    requirements: list[Requirement] | None = None,
     dry_run: bool = False,
-) -> Dict[str, Candidate]:
+) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
     check_project_file(project)
     # TODO: multiple dependency definitions for the same package.
@@ -93,7 +95,7 @@ def do_lock(
 
 def resolve_candidates_from_lockfile(
     project: Project, requirements: Iterable[Requirement]
-) -> Dict[str, Candidate]:
+) -> dict[str, Candidate]:
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     reqs = [
@@ -123,8 +125,8 @@ def do_sync(
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
-    requirements: Optional[List[Requirement]] = None,
-    tracked_names: Optional[Sequence[str]] = None,
+    requirements: list[Requirement] | None = None,
+    tracked_names: Sequence[str] | None = None,
     no_editable: bool = False,
     no_self: bool = False,
 ) -> None:
@@ -167,7 +169,7 @@ def do_sync(
 def do_add(
     project: Project,
     dev: bool = False,
-    section: Optional[str] = None,
+    section: str | None = None,
     sync: bool = True,
     save: str = "compatible",
     strategy: str = "reuse",
@@ -182,8 +184,8 @@ def do_add(
         raise PdmUsageError("Must specify at least one package or editable package.")
     if not section:
         section = "dev" if dev else "default"
-    tracked_names: Set[str] = set()
-    requirements: Dict[str, Requirement] = {}
+    tracked_names: set[str] = set()
+    requirements: dict[str, Requirement] = {}
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:
@@ -218,7 +220,7 @@ def do_add(
 def do_update(
     project: Project,
     *,
-    dev: Optional[bool] = None,
+    dev: bool | None = None,
     sections: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",
@@ -238,7 +240,7 @@ def do_update(
             "--no-default and --top."
         )
     all_dependencies = project.all_dependencies
-    updated_deps: Dict[str, Dict[str, Requirement]] = defaultdict(dict)
+    updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
     install_dev = True if dev is None else dev
     if not packages:
         sections = translate_sections(project, default, install_dev, sections or ())
@@ -307,7 +309,7 @@ def do_update(
 def do_remove(
     project: Project,
     dev: bool = False,
-    section: Optional[str] = None,
+    section: str | None = None,
     sync: bool = True,
     packages: Sequence[str] = (),
     no_editable: bool = False,
@@ -387,7 +389,7 @@ def do_build(
     wheel: bool = True,
     dest: str = "dist",
     clean: bool = True,
-    config_settings: Optional[Mapping[str, str]] = None,
+    config_settings: Mapping[str, str] | None = None,
 ) -> None:
     """Build artifacts for distribution."""
     from pdm.builders import EnvSdistBuilder, EnvWheelBuilder
@@ -450,9 +452,7 @@ def do_init(
     project.write_pyproject()
 
 
-def do_use(
-    project: Project, python: Optional[str] = "", first: Optional[bool] = False
-) -> None:
+def do_use(project: Project, python: str = "", first: bool = False) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
@@ -501,8 +501,8 @@ def do_use(
 def do_import(
     project: Project,
     filename: str,
-    format: Optional[str] = None,
-    options: Optional[Namespace] = None,
+    format: str | None = None,
+    options: Namespace | None = None,
 ) -> None:
     """Import project metadata from given file.
 
