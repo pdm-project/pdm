@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import os
 import re
 import secrets
@@ -119,6 +120,7 @@ class Requirement:
     def __eq__(self, o: object) -> bool:
         return isinstance(o, Requirement) and hash(self) == hash(o)
 
+    @functools.lru_cache(maxsize=None)
     def identify(self) -> str:
         if not self.key:
             return f":empty:{secrets.token_urlsafe(8)}"
