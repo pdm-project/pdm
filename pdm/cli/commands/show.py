@@ -1,17 +1,12 @@
 import argparse
 
-from pip._vendor.pkg_resources import safe_name
-
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.models.candidates import Candidate
 from pdm.models.project_info import ProjectInfo
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
-
-
-def normalize_package(name: str) -> str:
-    return safe_name(name).lower()
+from pdm.utils import normalize_name
 
 
 def filter_stable(candidate: Candidate) -> bool:
@@ -24,7 +19,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "package",
-            type=normalize_package,
+            type=normalize_name,
             help="Specify the package name",
         )
 

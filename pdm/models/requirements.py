@@ -1,5 +1,6 @@
 import os
 import re
+import secrets
 import urllib.parse as urlparse
 import warnings
 from pathlib import Path
@@ -118,9 +119,9 @@ class Requirement:
         except InvalidMarker as e:
             raise RequirementError("Invalid marker: %s" % str(e)) from None
 
-    def identify(self) -> Optional[str]:
+    def identify(self) -> str:
         if not self.key:
-            return None
+            return f":empty:{secrets.token_urlsafe(8)}"
         extras = "[{}]".format(",".join(sorted(self.extras))) if self.extras else ""
         return self.key + extras
 

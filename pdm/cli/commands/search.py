@@ -4,14 +4,13 @@ import textwrap
 from shutil import get_terminal_size
 from typing import Optional
 
-from pip._vendor.pkg_resources import safe_name
-
 from pdm import termui
 from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.models.environment import WorkingSet
 from pdm.project import Project
+from pdm.utils import normalize_name
 
 
 def print_results(
@@ -45,8 +44,8 @@ def print_results(
         )
         try:
             ui.echo(line)
-            if safe_name(name).lower() in working_set:
-                dist = working_set[safe_name(name).lower()]
+            if normalize_name(name) in working_set:
+                dist = working_set[normalize_name(name)]
                 if dist.version == latest:
                     ui.echo("  INSTALLED: %s (latest)" % dist.version)
                 else:

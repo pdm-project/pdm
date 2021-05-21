@@ -7,7 +7,7 @@ from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from pip._vendor.pkg_resources import Distribution, safe_name
+from pip._vendor.pkg_resources import Distribution
 
 from pdm import termui
 from pdm.exceptions import InstallationError
@@ -15,6 +15,7 @@ from pdm.installers.installers import Installer, is_dist_editable
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
+from pdm.utils import normalize_name
 
 
 class DummyFuture:
@@ -166,7 +167,7 @@ class Synchronizer:
     def update_candidate(self, key: str) -> Tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
-        dist = self.working_set[safe_name(can.name).lower()]
+        dist = self.working_set[normalize_name(can.name)]
         installer = self.get_installer()
         with self.ui.open_spinner(
             f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "

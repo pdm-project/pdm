@@ -7,7 +7,6 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 import atoml
 import click
-from pip._vendor.pkg_resources import safe_name
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
@@ -32,6 +31,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
+from pdm.utils import normalize_name
 
 PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
@@ -90,7 +90,7 @@ def do_lock(
 
 
 def resolve_candidates_from_lockfile(
-    project: Project, requirements: List[Requirement]
+    project: Project, requirements: Iterable[Requirement]
 ) -> Dict[str, Candidate]:
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
@@ -250,8 +250,8 @@ def do_update(
         for name in packages:
             matched_name = next(
                 filter(
-                    lambda k: safe_name(strip_extras(k)[0]).lower()
-                    == safe_name(name).lower(),
+                    lambda k: normalize_name(strip_extras(k)[0])
+                    == normalize_name(name),
                     dependencies.keys(),
                 ),
                 None,

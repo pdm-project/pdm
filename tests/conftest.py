@@ -14,7 +14,7 @@ import pytest
 from click.testing import CliRunner
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
-from pip._vendor.pkg_resources import WorkingSet, safe_name
+from pip._vendor.pkg_resources import WorkingSet
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
@@ -26,7 +26,7 @@ from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.project import Project
 from pdm.project.config import Config
-from pdm.utils import cached_property, get_finder, temp_environ
+from pdm.utils import cached_property, get_finder, normalize_name, temp_environ
 from tests import FIXTURES
 
 os.environ["CI"] = "1"
@@ -85,13 +85,13 @@ class TestRepository(BaseRepository):
         self.load_fixtures()
 
     def add_candidate(self, name, version, requires_python=""):
-        pypi_data = self._pypi_data.setdefault(safe_name(name), {}).setdefault(
+        pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(
             version, {}
         )
         pypi_data["requires_python"] = requires_python
 
     def add_dependencies(self, name, version, requirements):
-        pypi_data = self._pypi_data[safe_name(name)][version]
+        pypi_data = self._pypi_data[normalize_name(name)][version]
         pypi_data.setdefault("dependencies", []).extend(requirements)
 
     def _get_dependencies_from_fixture(
@@ -193,7 +193,7 @@ def working_set(mocker, repository):
     def install(candidate):
         pip_logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
-        key = safe_name(candidate.name).lower()
+        key = normalize_name(candidate.name)
         dist = Distribution(key, candidate.version, candidate.req.editable)
         dist.dependencies = dependencies
         rv.add_distribution(dist)

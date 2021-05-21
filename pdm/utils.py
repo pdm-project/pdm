@@ -31,6 +31,7 @@ from typing import (
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
+from pip._vendor.pkg_resources import safe_name
 from pip._vendor.requests import Session
 
 from pdm._types import Source
@@ -459,3 +460,7 @@ def get_rev_from_url(url: str) -> str:
         _, rev = path.rsplit("@", 1)
         return rev
     return ""
+
+
+def normalize_name(name: str) -> str:
+    return safe_name(name).lower()  # type: ignore

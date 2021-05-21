@@ -13,7 +13,7 @@ class Command(BaseCommand):
         sections_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
         clean_group.add_to_parser(parser)
-        install_group.add_to_group(parser)
+        install_group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_sync(

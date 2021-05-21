@@ -15,7 +15,6 @@ from typing import (
 )
 
 from pip._vendor.html5lib import parse
-from pip._vendor.pkg_resources import safe_name
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
@@ -27,7 +26,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.specifiers import PySpecSet, SpecifierSet
-from pdm.utils import allow_all_wheels, url_without_fragments
+from pdm.utils import allow_all_wheels, normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -423,6 +422,4 @@ class LockedRepository(BaseRepository):
             yield can
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
-        return self.file_hashes.get(
-            (safe_name(candidate.name).lower(), candidate.version)
-        )
+        return self.file_hashes.get((normalize_name(candidate.name), candidate.version))

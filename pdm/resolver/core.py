@@ -22,7 +22,7 @@ def _merge_into_criterion(
 ) -> Tuple[str, Criterion]:
     identifier, crit = _old_merge_into_criterion(self, requirement, parent)
 
-    if not identifier:
+    if identifier.startswith(":empty:"):
         # For local packages, name is only available after candidate is resolved
         identifier = self._p.identify(requirement)
     return identifier, crit
