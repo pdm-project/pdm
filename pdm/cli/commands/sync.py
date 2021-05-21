@@ -3,7 +3,6 @@ import argparse
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import clean_group, dry_run_option, install_group, sections_group
-from pdm.cli.utils import compatible_dev_flag
 from pdm.project import Project
 
 
@@ -20,7 +19,7 @@ class Command(BaseCommand):
         actions.do_sync(
             project,
             sections=options.sections,
-            dev=compatible_dev_flag(project, options.dev),
+            dev=options.dev,
             default=options.default,
             dry_run=options.dry_run,
             clean=options.clean,

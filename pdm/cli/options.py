@@ -26,16 +26,13 @@ class ArgumentGroup:
     def __init__(
         self,
         name: str = None,
-        parser: argparse.ArgumentParser = None,
         is_mutually_exclusive: bool = False,
         required: bool = None,
     ) -> None:
         self.name = name
         self.options = []
-        self.parser = parser
         self.required = required
         self.is_mutually_exclusive = is_mutually_exclusive
-        self.argument_group = None
 
     def add_argument(self, *args: Any, **kwargs: Any) -> None:
         if args and isinstance(args[0], Option):
@@ -50,8 +47,6 @@ class ArgumentGroup:
             group = parser.add_argument_group(self.name)
         for option in self.options:
             option.add_to_group(group)
-        self.argument_group = group
-        self.parser = parser
 
     def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         self.add_to_parser(group)
@@ -108,12 +103,19 @@ sections_group.add_argument(
     'use ":all" to include all groups under the same species.',
     default=[],
 )
+sections_group.add_argument(
+    "--no-default",
+    dest="default",
+    action="store_false",
+    default=True,
+    help="Don't include dependencies from default section",
+)
 
 dev_group = ArgumentGroup("dev", is_mutually_exclusive=True)
 dev_group.add_argument(
     "-d",
     "--dev",
-    default=None,
+    default=True,
     dest="dev",
     action="store_true",
     help="Select dev dependencies",
@@ -126,14 +128,6 @@ dev_group.add_argument(
     help="Unselect dev dependencies",
 )
 sections_group.options.append(dev_group)
-sections_group.add_argument(
-    "--no-default",
-    dest="default",
-    action="store_false",
-    default=True,
-    help="Don't include dependencies from default section",
-)
-
 
 save_strategy_group = ArgumentGroup("save_strategy", is_mutually_exclusive=True)
 save_strategy_group.add_argument(

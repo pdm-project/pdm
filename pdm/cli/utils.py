@@ -464,23 +464,6 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     return "\n".join(result)
 
 
-def compatible_dev_flag(project: Project, dev: Optional[bool]) -> bool:
-    if dev:
-        project.core.ui.echo(
-            f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
-            "default and `-d/--dev` is redundant",
-            err=True,
-        )
-    elif dev is None:
-        project.core.ui.echo(
-            f"{termui.yellow('[CHANGE IN 1.5.0]')}: dev-dependencies are included by "
-            "default and can be excluded with `--prod` option",
-            err=True,
-        )
-        dev = True
-    return dev
-
-
 def translate_sections(
     project: Project, default: bool, dev: bool, sections: Iterable[str]
 ) -> Iterable[str]:

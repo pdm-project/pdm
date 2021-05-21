@@ -42,6 +42,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "packages", nargs="*", help="If packages are given, only update them"
         )
+        parser.set_defaults(dev=None)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_update(

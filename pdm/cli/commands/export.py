@@ -4,7 +4,7 @@ from pathlib import Path
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
-from pdm.cli.utils import compatible_dev_flag, translate_sections
+from pdm.cli.utils import translate_sections
 from pdm.formats import FORMATS
 from pdm.project import Project
 
@@ -46,7 +46,7 @@ class Command(BaseCommand):
         sections = translate_sections(
             project,
             options.default,
-            compatible_dev_flag(project, options.dev),
+            options.dev,
             options.sections or (),
         )
         requirements = {}
