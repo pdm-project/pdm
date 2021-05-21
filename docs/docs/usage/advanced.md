@@ -1,6 +1,8 @@
 # Advanced Usage
 
-## Automatic Testing with Tox
+## Automatic Testing
+
+### Use Tox as the runner
 
 [Tox](https://tox.readthedocs.io/en/latest/) is a great tool for testing against multiple Python versions or dependency sets.
 You can configure a `tox.ini` like the following to integrate your testing with PDM:
@@ -63,7 +65,7 @@ commands =
 
 See the [project's README](https://github.com/pdm-project/tox-pdm) for a detailed guidance.
 
-## Automatic Testing with Nox
+### Use Nox as the runner
 
 [Nox](https://nox.thea.codes/) is another great tool for automated testing. Unlike tox, Nox uses a standard Python file for configuration.
 
@@ -89,7 +91,7 @@ def lint(session):
 Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Python in the virtualenv correctly. Also make sure `pdm` is available in the `PATH`.
 Before running nox, you should also `pdm config use_venv true` to enable venv reusing.
 
-## About PEP 582 `__pypackages__` directory
+### About PEP 582 `__pypackages__` directory
 
 By default, if you run tools by `pdm run`, `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
 For `nox`, you can avoid this by adding a line in `noxfile.py`:
