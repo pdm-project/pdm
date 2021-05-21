@@ -5,9 +5,9 @@ import multiprocessing
 import traceback
 from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
-from pip._vendor.pkg_resources import Distribution, safe_name
+from pip._vendor.pkg_resources import Distribution
 
 from pdm import termui
 from pdm.exceptions import InstallationError
@@ -166,7 +166,7 @@ class Synchronizer:
     def update_candidate(self, key: str) -> Tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
-        dist = self.working_set[safe_name(can.name).lower()]
+        dist = self.working_set[strip_extras(key)[0]]
         installer = self.get_installer()
         with self.ui.open_spinner(
             f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
@@ -327,7 +327,7 @@ class Synchronizer:
                 self_candidate = self.environment.project.make_self_candidate(
                     not self.no_editable
                 )
-                self_key = self_candidate.req.key
+                self_key = cast(str, self_candidate.req.key)
                 self.candidates[self_key] = self_candidate
                 self.ui.echo("Installing the project as an editable package...")
                 with self.ui.indent("  "):

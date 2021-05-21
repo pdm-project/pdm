@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
+from typing import Iterable
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import sections_group
 from pdm.cli.utils import translate_sections
 from pdm.formats import FORMATS
+from pdm.models.candidates import Candidate
+from pdm.models.requirements import Requirement
 from pdm.project import Project
 
 
@@ -40,7 +45,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        sections = list(options.sections)
+        sections: list[str] = list(options.sections)
         if options.pyproject:
             options.hashes = False
         sections = translate_sections(
@@ -49,7 +54,8 @@ class Command(BaseCommand):
             options.dev,
             options.sections or (),
         )
-        requirements = {}
+        requirements: dict[str, Requirement] = {}
+        packages: Iterable[Requirement] | Iterable[Candidate]
         for section in sections:
             requirements.update(project.get_dependencies(section))
         if options.pyproject:
@@ -64,10 +70,11 @@ class Command(BaseCommand):
             candidates = resolve_candidates_from_lockfile(
                 project, requirements.values()
             )
-            candidates.pop(project.meta.name and project.meta.project_name, None)
             packages = candidates.values()
 
-        content = FORMATS[options.format].export(project, packages, options)
+        content = FORMATS[options.format].export(
+            project, packages, options
+        )  # type: ignore
         if options.output:
             Path(options.output).write_text(content)
         else:

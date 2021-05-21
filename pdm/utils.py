@@ -31,6 +31,7 @@ from typing import (
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
+from pip._vendor.pkg_resources import safe_name
 from pip._vendor.requests import Session
 
 from pdm._types import Source
@@ -152,12 +153,6 @@ def parse_name_version_from_wheel(filename: str) -> Tuple[str, str]:
 
 def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
-
-
-def is_readonly_property(cls: Any, name: str) -> Optional[Any]:
-    """Tell whether a attribute can't be setattr'ed."""
-    attr = getattr(cls, name, None)
-    return attr and isinstance(attr, property) and not attr.fset
 
 
 def join_list_with(items: List[Any], sep: Any) -> List[Any]:
@@ -459,3 +454,7 @@ def get_rev_from_url(url: str) -> str:
         _, rev = path.rsplit("@", 1)
         return rev
     return ""
+
+
+def normalize_name(name: str) -> str:
+    return safe_name(name).lower()  # type: ignore

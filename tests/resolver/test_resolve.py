@@ -129,11 +129,11 @@ def test_resolve_vcs_and_local_requirements(
 def test_resolve_local_and_named_requirement(project, repository, vcs):
     requirements = ["demo", "git+https://github.com/test-root/demo.git#egg=demo"]
     result = resolve_requirements(repository, requirements, ">=3.6")
-    assert result["demo"].req.repo == "https://github.com/test-root/demo.git"
+    assert result["demo"].req.is_vcs
 
     requirements = ["git+https://github.com/test-root/demo.git#egg=demo", "demo"]
     result = resolve_requirements(repository, requirements, ">=3.6")
-    assert result["demo"].req.repo == "https://github.com/test-root/demo.git"
+    assert result["demo"].req.is_vcs
 
 
 def test_resolving_auto_avoid_conflicts(project, repository):

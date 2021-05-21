@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 from typing import Any
 
@@ -11,14 +13,14 @@ class Option:
         self.args = args
         self.kwargs = kwargs
 
-    def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
+    def add_to_parser(self, parser: argparse._ActionsContainer) -> None:
         parser.add_argument(*self.args, **self.kwargs)
 
     def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         group.add_argument(*self.args, **self.kwargs)
 
 
-class ArgumentGroup:
+class ArgumentGroup(Option):
     """A reusable argument group object which can call `add_argument()`
     to add more arguments. And itself will be registered to the parser later.
     """
@@ -30,7 +32,7 @@ class ArgumentGroup:
         required: bool = None,
     ) -> None:
         self.name = name
-        self.options = []
+        self.options: list[Option] = []
         self.required = required
         self.is_mutually_exclusive = is_mutually_exclusive
 
@@ -40,7 +42,8 @@ class ArgumentGroup:
         else:
             self.options.append(Option(*args, **kwargs))
 
-    def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
+    def add_to_parser(self, parser: argparse._ActionsContainer) -> None:
+        group: argparse._ArgumentGroup
         if self.is_mutually_exclusive:
             group = parser.add_mutually_exclusive_group(required=self.required)
         else:

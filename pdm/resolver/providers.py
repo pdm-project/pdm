@@ -20,13 +20,11 @@ class BaseProvider(AbstractProvider):
         self.repository = repository
         self.requires_python = requires_python  # Root python_requires value
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.requires_python_collection: Dict[Optional[str], PySpecSet] = {}
+        self.requires_python_collection: Dict[str, PySpecSet] = {}
         self.summary_collection: Dict[str, str] = {}
         self.fetched_dependencies: Dict[str, List[Requirement]] = {}
 
-    def identify(
-        self, requirement_or_candidate: Union[Requirement, Candidate]
-    ) -> Optional[str]:
+    def identify(self, requirement_or_candidate: Union[Requirement, Candidate]) -> str:
         return requirement_or_candidate.identify()
 
     def get_preference(
@@ -74,9 +72,7 @@ class BaseProvider(AbstractProvider):
             candidate.requires_python = str(
                 self.repository.get_dependencies(candidate)[1]
             )
-        allow_prereleases = requirement.allow_prereleases
-        if allow_prereleases is None:
-            allow_prereleases = self.allow_prereleases
+        allow_prereleases = self.allow_prereleases
         if allow_prereleases is None:
             # if not specified, should allow what `find_candidates()` returns
             allow_prereleases = True
