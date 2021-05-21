@@ -72,9 +72,7 @@ class BaseProvider(AbstractProvider):
             candidate.requires_python = str(
                 self.repository.get_dependencies(candidate)[1]
             )
-        allow_prereleases = requirement.allow_prereleases
-        if allow_prereleases is None:
-            allow_prereleases = self.allow_prereleases
+        allow_prereleases = self.allow_prereleases
         if allow_prereleases is None:
             # if not specified, should allow what `find_candidates()` returns
             allow_prereleases = True

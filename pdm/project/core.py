@@ -362,7 +362,7 @@ class Project:
         self,
         requirements: List[Requirement],
         tracked_names: Optional[Iterable[str]] = None,
-        spinner: Optional[halo.Halo] = None,
+        spinner: Union[halo.Halo, termui.DummySpinner] = None,
     ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 

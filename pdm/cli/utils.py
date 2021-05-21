@@ -390,13 +390,11 @@ def save_version_specifiers(
     for name, r in requirements.items():
         if r.is_named and not r.specifier:
             if save_strategy == "exact":
-                r.specifier = get_specifier(  # type: ignore
-                    f"=={resolved[name].version}"
-                )
+                r.specifier = get_specifier(f"=={resolved[name].version}")
             elif save_strategy == "compatible":
                 version = str(resolved[name].version)
                 compatible_version = ".".join((version.split(".") + ["0"])[:2])
-                r.specifier = get_specifier(f"~={compatible_version}")  # type: ignore
+                r.specifier = get_specifier(f"~={compatible_version}")
 
 
 def check_project_file(project: Project) -> None:

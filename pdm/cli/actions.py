@@ -8,7 +8,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
 import atoml
 import click
 from resolvelib.reporters import BaseReporter
-from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
+from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
 
 from pdm import termui
 from pdm.cli.utils import (
@@ -58,7 +58,7 @@ def do_lock(
         # any message is thrown to the output.
         with ui.open_spinner(title="Resolving dependencies", spinner="dots") as spin:
             reporter = project.get_reporter(requirements, tracked_names, spin)
-            resolver = project.core.resolver_class(provider, reporter)
+            resolver: Resolver = project.core.resolver_class(provider, reporter)
             try:
                 mapping, dependencies, summaries = resolve(
                     resolver,
@@ -103,7 +103,7 @@ def resolve_candidates_from_lockfile(
         with ui.open_spinner("Resolving packages from lockfile..."):
             reporter = BaseReporter()
             provider = project.get_provider(for_install=True)
-            resolver = project.core.resolver_class(provider, reporter)
+            resolver: Resolver = project.core.resolver_class(provider, reporter)
             mapping, *_ = resolve(
                 resolver,
                 reqs,
@@ -142,7 +142,7 @@ def do_sync(
                 err=True,
             )
         sections = translate_sections(project, default, dev, sections or ())
-        requirements: List[Requirement] = []
+        requirements = []
         for section in sections:
             requirements.extend(project.get_dependencies(section).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)

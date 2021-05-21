@@ -155,12 +155,6 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def is_readonly_property(cls: Any, name: str) -> Optional[Any]:
-    """Tell whether a attribute can't be setattr'ed."""
-    attr = getattr(cls, name, None)
-    return attr and isinstance(attr, property) and not attr.fset
-
-
 def join_list_with(items: List[Any], sep: Any) -> List[Any]:
     new_items = []
     for item in items:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import sys
 from functools import lru_cache, wraps
 from typing import (
@@ -25,7 +26,7 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_requirement,
 )
-from pdm.models.specifiers import PySpecSet, SpecifierSet
+from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import allow_all_wheels, normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
@@ -87,8 +88,7 @@ class BaseRepository:
             # (same pinned version, no extras) as its dependency. This ensures
             # the same package with different extras (treated as distinct by
             # the resolver) have the same version.
-            self_req = candidate.req.copy()
-            self_req.extras = None
+            self_req = dataclasses.replace(candidate.req, extras=None)
             requirements.append(self_req)
         return requirements, PySpecSet(requires_python), summary
 
@@ -107,9 +107,6 @@ class BaseRepository:
         """
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
-        if allow_prereleases is None:
-            allow_prereleases = requirement.allow_prereleases
-
         requires_python = requires_python & requirement.requires_python
         cans = list(self._find_candidates(requirement))
 
@@ -199,8 +196,9 @@ class BaseRepository:
             return
         if candidate.hashes:
             return candidate.hashes
-        req = candidate.req.copy()
-        req.specifier = SpecifierSet(f"=={candidate.version}")
+        req = dataclasses.replace(
+            candidate.req, specifier=get_specifier(f"=={candidate.version}")
+        )
         if candidate.req.is_file_or_url:
             matching_candidates = [candidate]
         else:
@@ -378,10 +376,11 @@ class LockedRepository(BaseRepository):
             }
 
     def _identify_candidate(self, candidate: Candidate) -> tuple:
+        url = getattr(candidate.req, "url", None)
         return (
             candidate.identify(),
             candidate.version,
-            url_without_fragments(candidate.req.url) if candidate.req.url else None,
+            url_without_fragments(url) if url else None,
             candidate.req.editable,
         )
 
