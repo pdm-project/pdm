@@ -379,7 +379,7 @@ class VcsRequirement(FileRequirement):
         fragments = f"#egg={urlparse.quote(name)}"
         if "subdirectory" in req_dict:
             fragments += (
-                "&subdirectory="
+                "&subdirectory="  # type: ignore
                 f"{urlparse.quote(req_dict.pop('subdirectory'))}"  # type: ignore
             )
         return f"{url}{ref}{fragments}"
