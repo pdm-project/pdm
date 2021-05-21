@@ -23,7 +23,7 @@ To install all of them:
 $ pdm install
 ```
 
-For more CLI usage, please refer to [Manage Dependencies](/usage/dependency.md)
+For more CLI usage, please refer to [Manage Dependencies](/usage/dependency/)
 
 ## Specify other sources for finding packages
 
