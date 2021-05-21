@@ -180,6 +180,8 @@ dev2 = ["mkdocs"]
 
 **All** development dependencies are included as long as `--prod` is not passed and `-s` doesn't specify any dev sections.
 
+Besides, if you don't want the root project to be installed, add `--no-self` option, and `--no-editable` can be used when you want all packages to be installed in non-editable versions. With `--no-editable` turn on, you can safely archive the whole `__pypackages__` and copy it to the target environment for deployment.
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:

@@ -175,10 +175,7 @@ COPY src/ /project/src
 
 # install dependencies and project
 WORKDIR /project
-RUN pdm install --prod --no-lock
-# workaround for https://github.com/pdm-project/pdm/issues/443
-RUN rm __pypackages__/3.8/lib/*.egg-link
-RUN pip install . --no-deps -t __pypackages__/3.8/lib
+RUN pdm install --prod --no-lock --no-editable
 
 
 # run stage
