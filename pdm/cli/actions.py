@@ -173,6 +173,7 @@ def do_add(
     editables: Iterable[str] = (),
     packages: Iterable[str] = (),
     no_editable: bool = False,
+    no_self: bool = False,
 ) -> None:
     """Add packages and install"""
     check_project_file(project)
@@ -205,7 +206,13 @@ def do_add(
     project.write_lockfile(lockfile, False)
 
     if sync:
-        do_sync(project, sections=(section,), default=False, no_editable=no_editable)
+        do_sync(
+            project,
+            sections=(section,),
+            default=False,
+            no_editable=no_editable,
+            no_self=no_self,
+        )
 
 
 def do_update(
@@ -221,6 +228,7 @@ def do_update(
     dry_run: bool = False,
     packages: Sequence[str] = (),
     no_editable: bool = False,
+    no_self: bool = False,
 ) -> None:
     """Update specified packages or all packages"""
     check_project_file(project)
@@ -282,6 +290,7 @@ def do_update(
         requirements=list(updated_deps.values()),
         tracked_names=updated_deps.keys() if top else None,
         no_editable=no_editable,
+        no_self=no_self,
     )
     if unconstrained and not dry_run:
         # Need to update version constraints
@@ -298,6 +307,7 @@ def do_remove(
     sync: bool = True,
     packages: Sequence[str] = (),
     no_editable: bool = False,
+    no_self: bool = False,
 ) -> None:
     """Remove packages from working set and pyproject.toml"""
     check_project_file(project)
@@ -336,6 +346,7 @@ def do_remove(
             default=False,
             clean=True,
             no_editable=no_editable,
+            no_self=no_self,
         )
 
 

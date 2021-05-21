@@ -25,4 +25,5 @@ class Command(BaseCommand):
             dry_run=options.dry_run,
             clean=options.clean,
             no_editable=options.no_editable,
+            no_self=options.no_self,
         )

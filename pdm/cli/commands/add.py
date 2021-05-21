@@ -51,4 +51,5 @@ class Command(BaseCommand):
             editables=options.editables,
             packages=options.packages,
             no_editable=options.no_editable,
+            no_self=options.no_self,
         )

@@ -64,6 +64,7 @@ _pdm() {
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--no-editalbe[Install non-editable versions for all packages]'
+        "--no-self[Don't install the project itself]"
         {-e+,--editable+}'[Specify editable packages]:packages'
         '*:packages:_pdm_pip_packages'
       )
@@ -165,6 +166,7 @@ _pdm() {
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
         "--no-default[Don't include dependencies from default section]"
         '--no-editalbe[Install non-editable versions for all packages]'
+        "--no-self[Don't install the project itself]"
       )
       ;;
     list)
@@ -185,6 +187,8 @@ _pdm() {
         {-s+,--section+}'[Specify the section the package belongs to]:section:_pdm_sections'
         {-d,--dev}"[Remove packages from dev dependencies]"
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
+        '--no-editalbe[Install non-editable versions for all packages]'
+        "--no-self[Don't install the project itself]"
         "*:packages:_pdm_packages"
       )
       ;;
@@ -224,6 +228,7 @@ _pdm() {
         "--no-clean[Don't clean unused packages]"
         "--no-default[Don't include dependencies from default section]"
         '--no-editalbe[Install non-editable versions for all packages]'
+        "--no-self[Don't install the project itself]"
       )
       ;;
     update)
@@ -236,6 +241,7 @@ _pdm() {
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--no-editalbe[Install non-editable versions for all packages]'
+        "--no-self[Don't install the project itself]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-d,--dev}'[Select dev dependencies]'
         {--prod,--production}"[Unselect dev dependencies]"
