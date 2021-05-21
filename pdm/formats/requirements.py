@@ -1,3 +1,4 @@
+import dataclasses
 import hashlib
 import urllib.parse
 from argparse import Namespace
@@ -131,8 +132,12 @@ def export(
 ) -> str:
     lines = []
     for candidate in sorted(candidates, key=lambda x: x.identify()):
-        req = getattr(candidate, "req", candidate).as_line()
-        lines.append(req)
+        if isinstance(candidate, Candidate):
+            req = dataclasses.replace(candidate.req, specifier=f"=={candidate.version}")
+        else:
+            assert isinstance(candidate, Requirement)
+            req = candidate
+        lines.append(req.as_line())
         if options.hashes and getattr(candidate, "hashes", None):
             for item in candidate.hashes.values():  # type: ignore
                 lines.append(f" \\\n    --hash={item}")

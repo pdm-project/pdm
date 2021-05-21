@@ -62,9 +62,7 @@ class BaseRepository:
 
     def get_filtered_sources(self, req: Requirement) -> List[Source]:
         """Get matching sources based on the index attribute."""
-        if not req.index:
-            return self.sources
-        return [source for source in self.sources if source["name"] == req.index]
+        return self.sources
 
     def get_dependencies(
         self, candidate: Candidate

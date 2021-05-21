@@ -2,8 +2,10 @@ import os
 import shutil
 import textwrap
 from argparse import Namespace
+from collections import defaultdict
+from itertools import chain
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set, cast
 
 import atoml
 import click
@@ -186,7 +188,6 @@ def do_add(
         parse_requirement(line) for line in packages
     ]:
         key = r.identify()
-        r.from_section = section
         tracked_names.add(key)
         requirements[key] = r
     project.core.ui.echo(
@@ -199,7 +200,7 @@ def do_add(
     resolved = do_lock(project, strategy, tracked_names, reqs)
 
     # Update dependency specifiers and lockfile hash.
-    save_version_specifiers(requirements, resolved, save)
+    save_version_specifiers({section: requirements}, resolved, save)
     project.add_dependencies(requirements, section, dev)
     lockfile = project.lockfile
     project.write_lockfile(lockfile, False)
@@ -237,13 +238,12 @@ def do_update(
             "--no-default and --top."
         )
     all_dependencies = project.all_dependencies
-    updated_deps = {}
+    updated_deps: Dict[str, Dict[str, Requirement]] = defaultdict(dict)
+    install_dev = True if dev is None else dev
     if not packages:
-        sections = translate_sections(
-            project, default, True if dev is None else dev, sections or ()
-        )
+        sections = translate_sections(project, default, install_dev, sections or ())
         for section in sections:
-            updated_deps.update(all_dependencies[section])
+            updated_deps[section] = all_dependencies[section]
     else:
         section = sections[0] if sections else ("dev" if dev else "default")
         dependencies = all_dependencies[section]
@@ -262,39 +262,44 @@ def do_update(
                         termui.green(name, bold=True), section, "dev-" if dev else ""
                     )
                 )
-            updated_deps[matched_name] = dependencies[matched_name]
+            updated_deps[section][matched_name] = dependencies[matched_name]
         project.core.ui.echo(
             "Updating packages: {}.".format(
-                ", ".join(termui.green(v, bold=True) for v in updated_deps)
+                ", ".join(
+                    termui.green(v, bold=True)
+                    for v in chain.from_iterable(updated_deps.values())
+                )
             )
         )
     if unconstrained:
-        for dep in updated_deps.values():
-            dep.specifier = get_specifier("")
+        for deps in updated_deps.values():
+            for dep in deps.values():
+                dep.specifier = get_specifier("")
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     resolved = do_lock(
         project,
         strategy if top or packages else "all",
-        updated_deps.keys(),
+        chain.from_iterable(updated_deps.values()),
         reqs,
         dry_run=dry_run,
     )
     do_sync(
         project,
         sections=sections,
-        dev=dev,
+        dev=install_dev,
         default=default,
         clean=False,
         dry_run=dry_run,
-        requirements=list(updated_deps.values()),
-        tracked_names=updated_deps.keys() if top else None,
+        requirements=[r for deps in updated_deps.values() for r in deps.values()],
+        tracked_names=list(chain.from_iterable(updated_deps.values())) if top else None,
         no_editable=no_editable,
         no_self=no_self,
     )
     if unconstrained and not dry_run:
         # Need to update version constraints
         save_version_specifiers(updated_deps, resolved, save)
-        project.add_dependencies(updated_deps, section, dev)
+        for section, deps in updated_deps.items():
+            project.add_dependencies(deps, section, dev or False)
         lockfile = project.lockfile
         project.write_lockfile(lockfile, False)
 
@@ -440,8 +445,8 @@ def do_init(
     if not project.pyproject:
         project._pyproject = data
     else:
-        project._pyproject["project"] = data["project"]
-        project._pyproject["build-system"] = data["build-system"]
+        project._pyproject["project"] = data["project"]  # type: ignore
+        project._pyproject["build-system"] = data["build-system"]  # type: ignore
     project.write_pyproject()
 
 
@@ -522,23 +527,25 @@ def do_import(
     project_data, settings = FORMATS[key].convert(project, filename, options)
     pyproject = project.pyproject or atoml.document()
 
-    if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
+    if "tool" not in pyproject or "pdm" not in pyproject["tool"]:  # type: ignore
         pyproject.setdefault("tool", {})["pdm"] = atoml.table()
 
     if "project" not in pyproject:
-        pyproject.add("project", atoml.table())
-        pyproject["project"].add(atoml.comment("PEP 621 project metadata"))
-        pyproject["project"].add(
+        pyproject.add("project", atoml.table())  # type: ignore
+        pyproject["project"].add(  # type: ignore
+            atoml.comment("PEP 621 project metadata")
+        )
+        pyproject["project"].add(  # type: ignore
             atoml.comment("See https://www.python.org/dev/peps/pep-0621/")
         )
 
-    merge_dictionary(pyproject["project"], project_data)
-    merge_dictionary(pyproject["tool"]["pdm"], settings)
+    merge_dictionary(pyproject["project"], project_data)  # type: ignore
+    merge_dictionary(pyproject["tool"]["pdm"], settings)  # type: ignore
     pyproject["build-system"] = {
         "requires": ["pdm-pep517"],
         "build-backend": "pdm.pep517.api",
     }
-    project.pyproject = pyproject
+    project.pyproject = cast(dict, pyproject)
     project.write_pyproject()
 
 

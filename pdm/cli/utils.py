@@ -377,7 +377,7 @@ def format_lockfile(
 
 
 def save_version_specifiers(
-    requirements: dict[str, Requirement],
+    requirements: dict[str, dict[str, Requirement]],
     resolved: dict[str, Candidate],
     save_strategy: str,
 ) -> None:
@@ -387,14 +387,15 @@ def save_version_specifiers(
     :param resolved: the resolved mapping
     :param save_strategy: compatible/wildcard/exact
     """
-    for name, r in requirements.items():
-        if r.is_named and not r.specifier:
-            if save_strategy == "exact":
-                r.specifier = get_specifier(f"=={resolved[name].version}")
-            elif save_strategy == "compatible":
-                version = str(resolved[name].version)
-                compatible_version = ".".join((version.split(".") + ["0"])[:2])
-                r.specifier = get_specifier(f"~={compatible_version}")
+    for reqs in requirements.values():
+        for name, r in reqs.items():
+            if r.is_named and not r.specifier:
+                if save_strategy == "exact":
+                    r.specifier = get_specifier(f"=={resolved[name].version}")
+                elif save_strategy == "compatible":
+                    version = str(resolved[name].version)
+                    compatible_version = ".".join((version.split(".") + ["0"])[:2])
+                    r.specifier = get_specifier(f"~={compatible_version}")
 
 
 def check_project_file(project: Project) -> None:

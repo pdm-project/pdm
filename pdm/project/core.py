@@ -239,7 +239,6 @@ class Project:
                     req = parse_requirement(line[3:].strip(), True)
                 else:
                     req = parse_requirement(line)
-                req.from_section = section or "default"
                 # make editable packages behind normal ones to override correctly.
                 result[req.identify()] = req
         return result
@@ -256,13 +255,12 @@ class Project:
             return {}
         result = {}
         with cd(self.root):
-            for section, deps in dev_group.items():
+            for _, deps in dev_group.items():
                 for line in deps:
                     if line.startswith("-e "):
                         req = parse_requirement(line[3:].strip(), True)
                     else:
                         req = parse_requirement(line)
-                    req.from_section = section
                     result[req.identify()] = req
         return result
 
@@ -339,17 +337,17 @@ class Project:
         )
 
         repository = self.get_repository(cls=self.core.repository_class)
-        locked_repository = self.locked_repository
-        allow_prereleases = self.allow_prereleases
         requires_python = self.environment.python_requires
+        allow_prereleases = self.allow_prereleases
+        if not for_install and strategy == "all":
+            return BaseProvider(repository, requires_python, allow_prereleases)
+
+        locked_repository = self.locked_repository
         if for_install:
             return BaseProvider(locked_repository, requires_python, allow_prereleases)
-        if strategy == "all":
-            return BaseProvider(repository, requires_python, allow_prereleases)
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
-
         return provider_class(
             locked_repository.all_candidates,
             tracked_names or (),
@@ -443,14 +441,15 @@ class Project:
         """Get the dependencies array in the pyproject.toml"""
         if section == "default":
             return self.meta.setdefault("dependencies", [])
-        elif dev:
-            return self.tool_settings.setdefault("dev-dependencies", {}).setdefault(
-                section, []
-            )
         else:
-            return self.meta.setdefault("optional-dependencies", {}).setdefault(
-                section, []
-            )
+            deps_dict = {
+                False: self.meta.setdefault("optional-dependencies", {}),
+                True: self.tool_settings.setdefault("dev-dependencies", {}),
+            }
+            for deps in deps_dict.values():
+                if section in deps:
+                    return deps[section]
+            return deps_dict[dev].setdefault(section, [])
 
     def add_dependencies(
         self,

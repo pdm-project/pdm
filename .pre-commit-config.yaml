@@ -28,6 +28,7 @@ repos:
               pdm/__init__\.py|
               pdm/__main__\.py|
               pdm/builders/|
+              pdm/cli/|
               pdm/exceptions\.py|
               pdm/formats/|
               pdm/installers/|

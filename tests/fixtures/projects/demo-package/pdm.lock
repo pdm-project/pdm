@@ -1,31 +1,31 @@
 [[package]]
 name = "click"
-sections = ["default"]
 version = "7.1.2"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 summary = "Composable command line interface toolkit"
 
 [[package]]
 name = "flask"
-sections = ["default"]
-version = "1.1.2"
+version = "1.1.4"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 summary = "A simple framework for building complex web applications."
 dependencies = [
-    "Werkzeug>=0.15",
-    "Jinja2>=2.10.1",
-    "itsdangerous>=0.24",
-    "click>=5.1",
+    "Jinja2<3.0,>=2.10.1",
+    "Werkzeug<2.0,>=0.15",
+    "click<8.0,>=5.1",
+    "itsdangerous<2.0,>=0.24",
 ]
 
 [[package]]
 name = "itsdangerous"
-sections = ["default"]
 version = "1.1.0"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 summary = "Various helpers to pass data to untrusted environments and back."
 
 [[package]]
 name = "Jinja2"
-sections = ["default"]
 version = "2.11.3"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 summary = "A very fast and expressive template engine."
 dependencies = [
     "MarkupSafe>=0.23",
@@ -33,18 +33,18 @@ dependencies = [
 
 [[package]]
 name = "MarkupSafe"
-sections = ["default"]
 version = "1.1.1"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 summary = "Safely add untrusted strings to HTML/XML markup."
 
 [[package]]
 name = "Werkzeug"
-sections = ["default"]
 version = "1.0.1"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 summary = "The comprehensive WSGI web application library."
 
 [metadata]
-lock_version = "2"
+lock_version = "3"
 content_hash = "sha256:e7d5fc5ef44897e132127714303b47d189d905df437d07d987c8bf772bb02d1c"
 
 [metadata.files]
@@ -52,9 +52,9 @@ content_hash = "sha256:e7d5fc5ef44897e132127714303b47d189d905df437d07d987c8bf772
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
     {file = "click-7.1.2.tar.gz", hash = "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"},
 ]
-"flask 1.1.2" = [
-    {file = "Flask-1.1.2-py2.py3-none-any.whl", hash = "sha256:8a4fdd8936eba2512e9c85df320a37e694c93945b33ef33c89946a340a238557"},
-    {file = "Flask-1.1.2.tar.gz", hash = "sha256:4efa1ae2d7c9865af48986de8aeb8504bf32c7f3d6fdc9353d34b21f4b127060"},
+"flask 1.1.4" = [
+    {file = "Flask-1.1.4-py2.py3-none-any.whl", hash = "sha256:c34f04500f2cbbea882b1acb02002ad6fe6b7ffa64a6164577995657f50aed22"},
+    {file = "Flask-1.1.4.tar.gz", hash = "sha256:0fbeb6180d383a9186d0d6ed954e0042ad9f18e0e8de088b2b419d526927d196"},
 ]
 "itsdangerous 1.1.0" = [
     {file = "itsdangerous-1.1.0-py2.py3-none-any.whl", hash = "sha256:72a1252c0b2cc2bcc351acf2cfe2ec0159d8578c54767d5c2aa67fd869346e55"},

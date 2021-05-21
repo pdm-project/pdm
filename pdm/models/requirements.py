@@ -133,9 +133,11 @@ class Requirement:
 
     @classmethod
     def create(cls: Type[T], **kwargs: Any) -> T:
-        print(cls)
         if "marker" in kwargs:
-            kwargs["marker"] = get_marker(kwargs["marker"])
+            try:
+                kwargs["marker"] = get_marker(kwargs["marker"])
+            except InvalidMarker as e:
+                raise RequirementError("Invalid marker: %s" % str(e)) from None
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(
                 e.strip() for e in kwargs["extras"][1:-1].split(",")
@@ -222,6 +224,9 @@ class Requirement:
 
 @dataclasses.dataclass
 class NamedRequirement(Requirement):
+    def __hash__(self) -> int:
+        return hash(self._hash_key())
+
     def as_line(self) -> str:
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
         return f"{self.project_name}{extras}{self.specifier}{self._format_marker()}"
@@ -242,6 +247,9 @@ class FileRequirement(Requirement):
 
     def _hash_key(self) -> tuple:
         return super()._hash_key() + (self.url, self.editable)
+
+    def __hash__(self) -> int:
+        return hash(self._hash_key())
 
     @classmethod
     def create(cls: Type[T], **kwargs: Any) -> T:
@@ -329,6 +337,9 @@ class VcsRequirement(FileRequirement):
     vcs: str = ""
     ref: str | None = None
     revision: str | None = None
+
+    def __hash__(self) -> int:
+        return hash(self._hash_key())
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -419,8 +430,6 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             if m is None:
                 raise RequirementError(str(e)) from None
             r = FileRequirement.create(**m.groupdict())
-        except InvalidMarker as e:
-            raise RequirementError("Invalid marker: %s" % str(e)) from None
         else:
             r = Requirement.from_pkg_requirement(package_req)
 
