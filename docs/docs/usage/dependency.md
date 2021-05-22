@@ -46,7 +46,7 @@ PDM also allows extra dependency groups by providing `-s/--section <name>` optio
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see
 the resolved result of all dependencies.
 
-Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs)
+Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs)
 (just like `pip install -e <local project path>` would) using `pdm add -e/--editable <local project path>`.
 
 ### Add development only dependencies
