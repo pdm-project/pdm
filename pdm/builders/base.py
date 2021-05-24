@@ -7,7 +7,8 @@ import tempfile
 import textwrap
 import threading
 from logging import Logger
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 import toml
 from pep517.wrappers import Pep517HookCaller
@@ -64,9 +65,9 @@ class LoggerWrapper(threading.Thread):
 
 
 def log_subprocessor(
-    cmd: List[str],
-    cwd: Optional[os.PathLike] = None,
-    extra_environ: Optional[Dict[str, str]] = None,
+    cmd: list[str],
+    cwd: str | Path | None = None,
+    extra_environ: dict[str, str] | None = None,
 ) -> None:
     env = os.environ.copy()
     if extra_environ:
@@ -122,7 +123,7 @@ class _Prefix:
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
-    _env_cache: Dict[str, str] = {}
+    _env_cache: dict[str, str] = {}
 
     DEFAULT_BACKEND = {
         "build-backend": "setuptools.build_meta:__legacy__",
@@ -130,13 +131,13 @@ class EnvBuilder:
     }
 
     @classmethod
-    def get_env_path(cls, src_dir: os.PathLike) -> str:
+    def get_env_path(cls, src_dir: str | Path) -> str:
         key = os.path.normpath(src_dir).rstrip("\\/")
         if key not in cls._env_cache:
             cls._env_cache[key] = create_tracked_tempdir(prefix="pdm-build-env-")
         return cls._env_cache[key]
 
-    def __init__(self, src_dir: os.PathLike, environment: Environment) -> None:
+    def __init__(self, src_dir: str | Path, environment: Environment) -> None:
         self._env = environment
         self._path = self.get_env_path(src_dir)
         self.executable = self._env.interpreter.executable
@@ -169,7 +170,7 @@ class EnvBuilder:
         )
 
     @property
-    def _env_vars(self) -> Dict[str, str]:
+    def _env_vars(self) -> dict[str, str]:
         paths = [self._prefix.bin_dir]
         if "PATH" in os.environ:
             paths.append(os.getenv("PATH", ""))
@@ -181,9 +182,9 @@ class EnvBuilder:
 
     def subprocess_runner(
         self,
-        cmd: List[str],
-        cwd: Optional[os.PathLike] = None,
-        extra_environ: Optional[Dict[str, str]] = None,
+        cmd: list[str],
+        cwd: str | Path | None = None,
+        extra_environ: dict[str, str] | None = None,
         isolated: bool = True,
     ) -> None:
         env = self._env_vars.copy() if isolated else {}
@@ -228,7 +229,7 @@ class EnvBuilder:
             os.unlink(req_file.name)
 
     def build(
-        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+        self, out_dir: str, config_settings: Mapping[str, Any] | None = None
     ) -> str:
         """Build and store the artifact in out_dir,
         return the absolute path of the built result.

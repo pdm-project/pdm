@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import functools
 import operator
 import os
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import toml
 from packaging.markers import default_environment
@@ -20,9 +22,9 @@ MARKER_KEYS = list(default_environment().keys())
 def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
 
     if isinstance(req, dict):
-        markers = []
+        markers: list[Marker] = []
         if "markers" in req:
-            markers.append(Marker(req["markers"]))
+            markers.append(Marker(req["markers"]))  # type: ignore
         for key in MARKER_KEYS:
             if key in req:
                 marker = Marker(f"{key}{req[key]}")
@@ -40,8 +42,8 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
 
 
 def convert(
-    project: Project, filename: PathLike, options: Optional[Namespace]
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    project: Project, filename: PathLike, options: Namespace | None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
         data = toml.load(fp)
     result = {}
@@ -74,5 +76,5 @@ def convert(
     return result, settings
 
 
-def export(project: Project, candidates: List, options: Optional[Any]) -> None:
+def export(project: Project, candidates: list, options: Any) -> None:
     raise NotImplementedError()

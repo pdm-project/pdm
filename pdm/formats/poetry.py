@@ -5,8 +5,8 @@ import operator
 import os
 import re
 from argparse import Namespace
-from os import PathLike
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, Union
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Mapping
 
 import toml
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 from pdm.utils import cd
 
 
-def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
+def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
             data = toml.load(fp)
@@ -73,9 +73,9 @@ def _convert_req(name: str, req_dict: RequirementDict) -> str:
     req_dict = dict(req_dict)
     if "version" in req_dict:
         req_dict["version"] = _convert_specifier(str(req_dict["version"]))
-    markers = []
+    markers: list[Marker] = []
     if "markers" in req_dict:
-        markers.append(Marker(req_dict.pop("markers")))
+        markers.append(Marker(req_dict.pop("markers")))  # type: ignore
     if "python" in req_dict:
         markers.append(
             Marker(_convert_python(str(req_dict.pop("python"))).as_marker_string())
@@ -93,26 +93,26 @@ def _convert_req(name: str, req_dict: RequirementDict) -> str:
 
 class PoetryMetaConverter(MetaConverter):
     @convert_from("authors")
-    def authors(self, value: List[str]) -> List[str]:
+    def authors(self, value: list[str]) -> list[str]:
         return parse_name_email(value)
 
     @convert_from("maintainers")
-    def maintainers(self, value: List[str]) -> List[str]:
+    def maintainers(self, value: list[str]) -> list[str]:
         return parse_name_email(value)
 
     @convert_from("license")
-    def license(self, value: str) -> Dict[str, str]:
+    def license(self, value: str) -> dict[str, str]:
         self._data["dynamic"] = ["classifiers"]
         return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
-    def requires_python(self, source: Dict[str, Any]) -> str:
+    def requires_python(self, source: dict[str, Any]) -> str:
         python = source.get("dependencies", {}).pop("python", None)
         self._data["dynamic"] = ["classifiers"]
         return str(_convert_python(python))
 
     @convert_from()
-    def urls(self, source: Dict[str, Any]) -> Dict[str, str]:
+    def urls(self, source: dict[str, Any]) -> dict[str, str]:
         rv = source.pop("urls", {})
         if "homepage" in source:
             rv["homepage"] = source.pop("homepage")
@@ -124,12 +124,12 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from("plugins", name="entry-points")
     def entry_points(
-        self, value: Dict[str, Dict[str, str]]
-    ) -> Dict[str, Dict[str, str]]:
+        self, value: dict[str, dict[str, str]]
+    ) -> dict[str, dict[str, str]]:
         return value
 
     @convert_from()
-    def dependencies(self, source: Dict[str, Any]) -> List[str]:
+    def dependencies(self, source: dict[str, Any]) -> list[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
@@ -158,8 +158,8 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from()
-    def includes(self, source: Dict[str, Union[List[str], str]]) -> List[str]:
-        result: List[str] = []
+    def includes(self, source: dict[str, list[str] | str]) -> list[str]:
+        result: list[str] = []
         for item in source.pop("packages", []):
             assert isinstance(item, dict)
             include = item["include"]
@@ -171,7 +171,7 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("exclude")
-    def excludes(self, value: List[str]) -> None:
+    def excludes(self, value: list[str]) -> None:
         self.settings["excludes"] = value
         raise Unset()
 
@@ -181,7 +181,7 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("source")
-    def sources(self, value: List[Source]) -> None:
+    def sources(self, value: list[Source]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
@@ -194,10 +194,10 @@ class PoetryMetaConverter(MetaConverter):
 
 
 def convert(
-    project: Optional[Project],
-    filename: PathLike,
-    options: Optional[Namespace],
-) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
+    project: Project | None,
+    filename: str | Path,
+    options: Namespace | None,
+) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, encoding="utf-8") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
@@ -207,5 +207,5 @@ def convert(
         return converter.convert()
 
 
-def export(project: Project, candidates: List, options: Optional[Any]) -> None:
+def export(project: Project, candidates: list, options: Any) -> None:
     raise NotImplementedError()
