@@ -25,7 +25,6 @@ from typing import (
     Iterator,
     TextIO,
     TypeVar,
-    cast,
     no_type_check,
     overload,
 )
@@ -228,7 +227,7 @@ def convert_hashes(hashes: dict[str, str]) -> dict[str, list[str]]:
             name, hash_value = hash_value.split(":", 1)
         except ValueError:
             name = "sha256"
-        result.setdefault(name, cast(list[str], [])).append(hash_value)
+        result.setdefault(name, []).append(hash_value)
     return result
 
 
