@@ -162,16 +162,6 @@ def join_list_with(items: list[Any], sep: Any) -> list[Any]:
     return new_items[:-1]
 
 
-def _wheel_supported(self: Wheel, tags: Iterable[Tag]) -> bool:
-    # Ignore current platform. Support everything.
-    return True
-
-
-def _wheel_support_index_min(self: Wheel, tags: list[Tag]) -> int:
-    # All wheels are equal priority for sorting.
-    return 0
-
-
 @no_type_check
 @contextmanager
 def allow_all_wheels(enable: bool = True) -> Iterator:
@@ -188,14 +178,39 @@ def allow_all_wheels(enable: bool = True) -> Iterator:
         yield
         return
 
+    def _wheel_supported(self: PipWheel, tags: Iterable[Tag]) -> bool:
+        # Ignore current platform. Support everything.
+        return True
+
+    def _wheel_support_index_min(self: PipWheel, tags: list[Tag]) -> int:
+        # All wheels are equal priority for sorting.
+        return 0
+
+    def _find_most_preferred_tag(
+        self: PipWheel, tags: list[Tag], tag_to_priority: dict[Tag, int]
+    ) -> int:
+        return 0
+
+    has_find_most_preferred_tag = (
+        getattr(PipWheel, "find_most_preferred_tag", None) is not None
+    )
+
     original_wheel_supported = PipWheel.supported
     original_support_index_min = PipWheel.support_index_min
+    if has_find_most_preferred_tag:
+        original_find = PipWheel.find_most_preferred_tag
+    else:
+        original_find = None
 
     PipWheel.supported = _wheel_supported
     PipWheel.support_index_min = _wheel_support_index_min
+    if has_find_most_preferred_tag:
+        PipWheel.find_most_preferred_tag = _find_most_preferred_tag
     yield
     PipWheel.supported = original_wheel_supported
     PipWheel.support_index_min = original_support_index_min
+    if has_find_most_preferred_tag:
+        PipWheel.find_most_preferred_tag = original_find
 
 
 def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
