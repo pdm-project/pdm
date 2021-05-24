@@ -28,7 +28,7 @@ class SpinnerReporter(BaseReporter):
 
     def starting_round(self, index: int) -> None:
         # self.spinner.hide_and_write(f"Resolving ROUND {index}")
-        self.spinner.text = f"Resolving round {index}"
+        log_title(f"Starting round {index}")
 
     def starting(self) -> None:
         """Called before the resolution actually starts."""
@@ -72,4 +72,4 @@ class SpinnerReporter(BaseReporter):
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
-        logger.info(f"  New pin: {candidate.name} {candidate.version}")
+        self.spinner.text = f"Resolving: new pin {candidate.format()}"
