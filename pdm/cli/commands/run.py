@@ -164,6 +164,7 @@ class Command(BaseCommand):
         project.core.ui.echo(
             f"Running {kind} script: {termui.green(str(args))}", err=True
         )
+        os.chdir(project.root)
         return self._run_command(project, args, **options)
 
     def _show_list(self, project: Project) -> None:
