@@ -293,6 +293,8 @@ start_server = "flask run -p 54321"
 migrate_db = "flask db upgrade"
 ```
 
+Besides, PDM also injects the root path of the project via `PDM_PROJECT_ROOT` environment variable.
+
 ### Show the list of scripts shortcuts
 
 Use `pdm run --list/-l` to show the list of available script shortcuts:

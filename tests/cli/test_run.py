@@ -55,6 +55,22 @@ def test_run_cmd_script_with_array(project, invoke):
     assert result.exit_code == 22
 
 
+def test_run_script_pass_project_root(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "test_script": [
+            "python",
+            "-c",
+            "import os;print(os.getenv('PDM_PROJECT_ROOT'))",
+        ]
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    result = invoke(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert Path(out.strip()) == project.root
+
+
 def test_run_shell_script(project, invoke):
     project.tool_settings["scripts"] = {
         "test_script": {

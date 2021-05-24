@@ -51,7 +51,13 @@ class Command(BaseCommand):
         this_path = project_env.get_paths()["scripts"]
         python_root = os.path.dirname(project.python.executable)
         new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
-        os.environ.update({"PYTHONPATH": pythonpath, "PATH": new_path})
+        os.environ.update(
+            {
+                "PYTHONPATH": pythonpath,
+                "PATH": new_path,
+                "PDM_PROJECT_ROOT": str(project.root),
+            }
+        )
         if project_env.packages_path:
             os.environ.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env_file:
