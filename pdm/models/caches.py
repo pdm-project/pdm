@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import hashlib
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
@@ -18,7 +20,7 @@ class CandidateInfoCache:
 
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
-        self._cache: Dict[str, CandidateInfo] = {}
+        self._cache: dict[str, CandidateInfo] = {}
         self._read_cache()
 
     def _read_cache(self) -> None:
@@ -79,7 +81,7 @@ class HashCache(pip_shims.SafeFileCache):
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self.session: Optional[requests.Session] = None
+        self.session: requests.Session | None = None
         super(HashCache, self).__init__(*args, **kwargs)
 
     def get_hash(self, link: pip_shims.Link) -> str:
@@ -88,10 +90,9 @@ class HashCache(pip_shims.SafeFileCache):
         hash_value = self.get(link.url)
         if not hash_value:
             if link.hash and link.hash_name in pip_shims.STRONG_HASHES:
-                hash_value = f"{link.hash_name}:{link.hash}"
+                hash_value = f"{link.hash_name}:{link.hash}".encode()
             else:
-                hash_value = self._get_file_hash(link)
-            hash_value = hash_value.encode()
+                hash_value = self._get_file_hash(link).encode()
             self.set(link.url, hash_value)
         return hash_value.decode("utf8")
 

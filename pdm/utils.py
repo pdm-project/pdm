@@ -1,6 +1,8 @@
 """
 Utility functions
 """
+from __future__ import annotations
+
 import atexit
 import functools
 import os
@@ -16,16 +18,15 @@ from pathlib import Path
 from re import Match
 from typing import (
     Any,
+    BinaryIO,
     Callable,
-    Dict,
     Generic,
+    Iterable,
     Iterator,
-    List,
-    Optional,
     TextIO,
-    Tuple,
     TypeVar,
     cast,
+    no_type_check,
     overload,
 )
 
@@ -73,8 +74,8 @@ else:
 
 
 def prepare_pip_source_args(
-    sources: List[Source], pip_args: Optional[List[str]] = None
-) -> List[str]:
+    sources: list[Source], pip_args: list[str] | None = None
+) -> list[str]:
     if pip_args is None:
         pip_args = []
     if sources:
@@ -97,7 +98,7 @@ def prepare_pip_source_args(
     return pip_args
 
 
-def get_pypi_source() -> Tuple[str, bool]:
+def get_pypi_source() -> tuple[str, bool]:
     """Get what is defined in pip.conf as the index-url."""
     install_cmd = InstallCommand()
     options, _ = install_cmd.parser.parse_args([])
@@ -110,10 +111,10 @@ def get_pypi_source() -> Tuple[str, bool]:
 
 
 def get_finder(
-    sources: List[Source],
-    cache_dir: Optional[str] = None,
-    python_version: Optional[Tuple[int, ...]] = None,
-    python_abi_tag: Optional[str] = None,
+    sources: list[Source],
+    cache_dir: str | None = None,
+    python_version: tuple[int, ...] | None = None,
+    python_abi_tag: str | None = None,
     ignore_requires_python: bool = False,
 ) -> PackageFinder:
     install_cmd = InstallCommand()
@@ -129,12 +130,12 @@ def get_finder(
         ignore_requires_python=ignore_requires_python,
     )
     if not hasattr(finder, "session"):
-        finder.session = finder._link_collector.session
+        finder.session = finder._link_collector.session  # type: ignore
     return finder
 
 
 def create_tracked_tempdir(
-    suffix: Optional[str] = None, prefix: Optional[str] = "", dir: Optional[str] = None
+    suffix: str | None = None, prefix: str | None = None, dir: str | None = None
 ) -> str:
     name = tempfile.mkdtemp(suffix, prefix, dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
@@ -146,7 +147,7 @@ def create_tracked_tempdir(
     return name
 
 
-def parse_name_version_from_wheel(filename: str) -> Tuple[str, str]:
+def parse_name_version_from_wheel(filename: str) -> tuple[str, str]:
     w = Wheel(filename)
     return w.name, w.version
 
@@ -155,23 +156,24 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def join_list_with(items: List[Any], sep: Any) -> List[Any]:
+def join_list_with(items: list[Any], sep: Any) -> list[Any]:
     new_items = []
     for item in items:
         new_items.extend([item, sep])
     return new_items[:-1]
 
 
-def _wheel_supported(self: Any, tags: List[Tag] = None) -> bool:
+def _wheel_supported(self: Wheel, tags: Iterable[Tag]) -> bool:
     # Ignore current platform. Support everything.
     return True
 
 
-def _wheel_support_index_min(self: Any, tags: Optional[str] = None) -> int:
+def _wheel_support_index_min(self: Wheel, tags: list[Tag]) -> int:
     # All wheels are equal priority for sorting.
     return 0
 
 
+@no_type_check
 @contextmanager
 def allow_all_wheels(enable: bool = True) -> Iterator:
     """Monkey patch pip.Wheel to allow all wheels
@@ -197,7 +199,7 @@ def allow_all_wheels(enable: bool = True) -> Iterator:
     PipWheel.support_index_min = original_support_index_min
 
 
-def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
+def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
     """Recursively find a `pyproject.toml` at given path or current working directory.
     If none if found, go to the parent directory, at most `max_depth` levels will be
     looked for.
@@ -214,23 +216,23 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> Optional[str]:
     return None
 
 
-def convert_hashes(hashes: Dict[str, str]) -> Dict[str, List[str]]:
+def convert_hashes(hashes: dict[str, str]) -> dict[str, list[str]]:
     """Convert Pipfile.lock hash lines into InstallRequirement option format.
 
     The option format uses a str-list mapping. Keys are hash algorithms, and
     the list contains all values of that algorithm.
     """
-    result: Dict[str, List[str]] = {}
+    result: dict[str, list[str]] = {}
     for hash_value in hashes.values():
         try:
             name, hash_value = hash_value.split(":", 1)
         except ValueError:
             name = "sha256"
-        result.setdefault(name, cast(List[str], [])).append(hash_value)
+        result.setdefault(name, cast(list[str], [])).append(hash_value)
     return result
 
 
-def get_user_email_from_git() -> Tuple[str, str]:
+def get_user_email_from_git() -> tuple[str, str]:
     """Get username and email from git config.
     Return empty if not configured or git is not found.
     """
@@ -265,7 +267,7 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
-def get_in_project_venv_python(root: Path) -> Optional[Path]:
+def get_in_project_venv_python(root: Path) -> Path | None:
     """Get the python interpreter path of venv-in-project"""
     if os.name == "nt":
         suffix = ".exe"
@@ -322,7 +324,7 @@ def temp_environ() -> Iterator:
 
 
 @contextmanager
-def open_file(url: str, session: Optional[Session] = None) -> Iterator[Session]:
+def open_file(url: str, session: Session | None = None) -> Iterator[BinaryIO]:
     if url.startswith("file://"):
         local_path = url_to_path(url)
         if os.path.isdir(local_path):
@@ -353,10 +355,10 @@ def populate_link(
 ) -> None:
     """Populate ireq's link attribute"""
     if not ireq.link:
-        link = finder.find_requirement(ireq, upgrade)
-        if not link:
+        candidate = finder.find_requirement(ireq, upgrade)
+        if not candidate:
             return
-        link = getattr(link, "link", link)
+        link = getattr(candidate, "link", candidate)
         ireq.link = link
 
 
@@ -423,7 +425,7 @@ def is_venv_python(interpreter: os.PathLike) -> bool:
     return False
 
 
-def find_python_in_path(path: os.PathLike) -> Optional[Path]:
+def find_python_in_path(path: os.PathLike) -> Path | None:
     """Find a python interpreter from the given path, the input argument could be:
 
     - A valid path to the interpreter

@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import dataclasses
 import hashlib
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Mapping, cast
 
 from distlib.wheel import Wheel
 from pip._vendor.packaging.requirements import Requirement as PRequirement
@@ -11,7 +13,6 @@ from pip._vendor.packaging.requirements import Requirement as PRequirement
 from pdm.formats.base import make_array
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
-from pdm.models.markers import Marker
 from pdm.models.pip_shims import InstallRequirement, PackageFinder, parse_requirements
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
@@ -52,32 +53,27 @@ def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
         line = "-e {}".format(ireq.link)
     else:
         if not ireq.req:
-            ireq.req = parse_requirement("dummy @" + ireq.link.url)
+            ireq.req = parse_requirement("dummy @" + ireq.link.url)  # type: ignore
             wheel = Wheel(environment.build(ireq))
-            ireq.req.name = wheel.name
+            ireq.req.name = wheel.name  # type: ignore
 
-        line = _requirement_to_str_lowercase_name(ireq.req)
-
-    if str(ireq.req.marker) != str(ireq.markers):
-        if not ireq.req.marker:
-            line = "{}; {}".format(line, ireq.markers)
-        else:
-            name, markers = line.split(";", 1)
-            markers = Marker(markers) & ireq.markers
-            line = "{}; {}".format(name, markers)
+        line = _requirement_to_str_lowercase_name(cast(PRequirement, ireq.req))
+    assert ireq.req
+    if not ireq.req.marker and ireq.markers:
+        line = f"{line}; {ireq.markers}"
 
     return line
 
 
 def parse_requirement_file(
     filename: str,
-) -> Tuple[List[InstallRequirement], PackageFinder]:
+) -> tuple[list[InstallRequirement], PackageFinder]:
     from pdm.models.pip_shims import install_req_from_parsed_requirement
 
     finder = get_finder([])
     ireqs = [
         install_req_from_parsed_requirement(pr)
-        for pr in parse_requirements(filename, finder.session, finder)
+        for pr in parse_requirements(filename, finder.session, finder)  # type: ignore
     ]
     return ireqs, finder
 
@@ -95,7 +91,7 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
             return False
 
 
-def convert_url_to_source(url: str, name: Optional[str] = None) -> Dict[str, Any]:
+def convert_url_to_source(url: str, name: str | None = None) -> dict[str, Any]:
     if not name:
         name = hashlib.sha1(url.encode("utf-8")).hexdigest()[:6]
     return {"name": name, "url": url, "verify_ssl": url.startswith("https://")}
@@ -103,14 +99,14 @@ def convert_url_to_source(url: str, name: Optional[str] = None) -> Dict[str, Any
 
 def convert(
     project: Project, filename: PathLike, options: Namespace
-) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
+) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     ireqs, finder = parse_requirement_file(str(filename))
     with project.core.ui.logging("build"):
         reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
 
     deps = make_array(reqs, True)
-    data: Dict[str, Any] = {}
-    settings: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
+    settings: dict[str, Any] = {}
     if options.dev:
         settings["dev-dependencies"] = {options.section or "dev": deps}
     elif options.section:
@@ -127,7 +123,7 @@ def convert(
 
 def export(
     project: Project,
-    candidates: Union[List[Candidate], List[Requirement]],
+    candidates: list[Candidate] | list[Requirement],
     options: Namespace,
 ) -> str:
     lines = []
