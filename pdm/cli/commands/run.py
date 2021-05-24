@@ -39,6 +39,7 @@ class Command(BaseCommand):
     def _run_command(
         project: Project,
         args: Union[Sequence[str], str],
+        chdir: bool = False,
         shell: bool = False,
         env: Optional[Mapping[str, str]] = None,
         env_file: Optional[str] = None,
@@ -89,8 +90,11 @@ class Command(BaseCommand):
         if os.name == "nt" or "CI" in os.environ:
             # In order to make sure pytest is playing well,
             # don't hand over the process under a testing environment.
-            sys.exit(subprocess.call(expanded_args))
+            cwd = project.root if chdir else None
+            sys.exit(subprocess.call(expanded_args, cwd=cwd))
         else:
+            if chdir:
+                os.chdir(project.root)
             os.execv(expanded_command, expanded_args)
 
     def _normalize_script(
@@ -164,8 +168,7 @@ class Command(BaseCommand):
         project.core.ui.echo(
             f"Running {kind} script: {termui.green(str(args))}", err=True
         )
-        os.chdir(project.root)
-        return self._run_command(project, args, **options)
+        return self._run_command(project, args, chdir=True, **options)
 
     def _show_list(self, project: Project) -> None:
         if not project.scripts:
