@@ -1,4 +1,6 @@
-from typing import Any, Dict, Iterable, Iterator, List, Mapping, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Iterable, Iterator, Mapping
 
 from resolvelib import AbstractProvider
 from resolvelib.resolvers import RequirementInformation
@@ -15,24 +17,24 @@ class BaseProvider(AbstractProvider):
         self,
         repository: BaseRepository,
         requires_python: PySpecSet,
-        allow_prereleases: Optional[bool] = None,
+        allow_prereleases: bool | None = None,
     ) -> None:
         self.repository = repository
         self.requires_python = requires_python  # Root python_requires value
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.requires_python_collection: Dict[str, PySpecSet] = {}
-        self.summary_collection: Dict[str, str] = {}
-        self.fetched_dependencies: Dict[str, List[Requirement]] = {}
+        self.requires_python_collection: dict[str, PySpecSet] = {}
+        self.summary_collection: dict[str, str] = {}
+        self.fetched_dependencies: dict[str, list[Requirement]] = {}
 
-    def identify(self, requirement_or_candidate: Union[Requirement, Candidate]) -> str:
+    def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
         return requirement_or_candidate.identify()
 
     def get_preference(
         self,
         identifier: str,
-        resolutions: Dict[str, Candidate],
-        candidates: Dict[str, Iterator[Candidate]],
-        information: Dict[str, Iterator[RequirementInformation]],
+        resolutions: dict[str, Candidate],
+        candidates: dict[str, Iterator[Candidate]],
+        information: dict[str, Iterator[RequirementInformation]],
     ) -> int:
         return sum(1 for _ in candidates[identifier])
 
@@ -81,15 +83,18 @@ class BaseProvider(AbstractProvider):
             candidate.version, allow_prereleases
         ) and requires_python.is_subset(candidate.requires_python)
 
-    def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
+    def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         deps, requires_python, summary = self.repository.get_dependencies(candidate)
 
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
-        valid_deps: List[Requirement] = []
+        valid_deps: list[Requirement] = []
         for dep in deps:
             if (
-                dep.requires_python & requires_python & self.requires_python
+                dep.requires_python
+                & requires_python
+                & self.requires_python
+                & candidate.req.requires_python
             ).is_impossible:
                 continue
             dep.requires_python &= candidate.req.requires_python
@@ -101,7 +106,7 @@ class BaseProvider(AbstractProvider):
         self.requires_python_collection[candidate.req.key] = requires_python
         return valid_deps
 
-    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
         return self.repository.get_hashes(candidate)
 
 
@@ -114,7 +119,7 @@ class ReusePinProvider(BaseProvider):
 
     def __init__(
         self,
-        preferred_pins: Dict[str, Candidate],
+        preferred_pins: dict[str, Candidate],
         tracked_names: Iterable[str],
         *args: Any
     ) -> None:
@@ -158,7 +163,7 @@ class EagerUpdateProvider(ReusePinProvider):
             return False
         return super().is_satisfied_by(requirement, candidate)
 
-    def get_dependencies(self, candidate: Candidate) -> List[Requirement]:
+    def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         # If this package is being tracked for upgrade, remove pins of its
         # dependencies, and start tracking these new packages.
         dependencies = super().get_dependencies(candidate)
@@ -171,9 +176,9 @@ class EagerUpdateProvider(ReusePinProvider):
     def get_preference(
         self,
         identifier: str,
-        resolutions: Dict[str, Candidate],
-        candidates: Dict[str, Iterator[Candidate]],
-        information: Dict[str, Iterator[RequirementInformation]],
+        resolutions: dict[str, Candidate],
+        candidates: dict[str, Iterator[Candidate]],
+        information: dict[str, Iterator[RequirementInformation]],
     ) -> int:
         # Resolve tracking packages so we have a chance to unpin them first.
         if identifier in self.tracked_names:
