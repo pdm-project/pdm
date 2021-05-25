@@ -291,7 +291,7 @@ class Environment:
             vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
             if vcs_backend.is_immutable_rev_checkout(ireq.link.url, ireq.source_dir):
                 should_cache = True
-        else:
+        elif not ireq.link.is_existing_dir:
             base, _ = ireq.link.splitext()
             if _egg_info_re.search(base) is not None:
                 # Determine whether the string looks like an egg_info.
