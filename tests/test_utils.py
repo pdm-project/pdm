@@ -52,7 +52,10 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
 
 def test_find_python_in_path(tmp_path):
 
-    assert utils.find_python_in_path(sys.executable) == pathlib.Path(sys.executable)
+    assert (
+        utils.find_python_in_path(sys.executable)
+        == pathlib.Path(sys.executable).resolve()
+    )
 
     posix_path_to_executable = pathlib.Path(sys.executable).as_posix().lower()
     if sys.platform == "darwin":
