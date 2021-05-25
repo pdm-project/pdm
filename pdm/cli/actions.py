@@ -493,7 +493,11 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
         )
     )
     project.python = selected_python
-    if old_path and Path(old_path) != Path(new_path) and not project.is_global:
+    if (
+        old_path
+        and Path(old_path) != Path(new_path)
+        and not project.environment.is_global
+    ):
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
         project.environment.update_shebangs(new_path)
 

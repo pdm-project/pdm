@@ -99,23 +99,21 @@ class _Prefix:
         with open(os.path.join(self.site_dir, "sitecustomize.py"), "w") as fp:
             fp.write(
                 textwrap.dedent(
-                    """
+                    f"""
                 import sys, os, site
 
                 original_sys_path = sys.path[:]
                 known_paths = set()
                 site.addusersitepackages(known_paths)
                 site.addsitepackages(known_paths)
-                known_paths = {{os.path.normpath(p) for p in known_paths}}
+                known_paths = {{os.path.normcase(p) for p in known_paths}}
                 original_sys_path = [
                     p for p in original_sys_path
-                    if os.path.normpath(p) not in known_paths]
+                    if os.path.normcase(p) not in known_paths]
                 sys.path[:] = original_sys_path
-                for lib_path in {lib_paths!r}:
+                for lib_path in {self.lib_dirs!r}:
                     site.addsitedir(lib_path)
-                """.format(
-                        lib_paths=self.lib_dirs
-                    )
+                """
                 )
             )
 
