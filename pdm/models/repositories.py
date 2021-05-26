@@ -416,6 +416,7 @@ class LockedRepository(BaseRepository):
                 continue
             can = self.packages[key]
             can.requires_python = info[1]
+            can.req = requirement
             yield can
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
