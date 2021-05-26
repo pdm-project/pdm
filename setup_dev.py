@@ -1,6 +1,6 @@
 """
 This script is used to setup development environment of pdm. It follows the naming
-convention of setuptools but it is not basically a setuptools setup script.
+convention of setuptools but isn't a real setuptools setup script.
 
 After running this script, an editable version of pdm will be installed into
 `__packages__`.
