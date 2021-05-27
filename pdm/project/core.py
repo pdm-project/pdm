@@ -343,6 +343,13 @@ class Project:
         repository = self.get_repository(cls=self.core.repository_class)
         requires_python = self.environment.python_requires
         allow_prereleases = self.allow_prereleases
+        if strategy != "all" and not self.is_lockfile_compatible:
+            self.core.ui.echo(
+                "Updating the whole lock file as it is not compatible with PDM",
+                fg="yellow",
+                err=True,
+            )
+            strategy = "all"
         if not for_install and strategy == "all":
             return BaseProvider(repository, requires_python, allow_prereleases)
 

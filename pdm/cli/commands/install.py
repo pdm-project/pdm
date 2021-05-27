@@ -33,11 +33,6 @@ class Command(BaseCommand):
                     "Lock file does not exist, trying to generate one..."
                 )
                 actions.do_lock(project, strategy="all")
-            elif not project.is_lockfile_compatible():
-                project.core.ui.echo(
-                    "Lock file version is not compatible with PDM, regenerate..."
-                )
-                actions.do_lock(project, strategy="all")
             elif not project.is_lockfile_hash_match():
                 project.core.ui.echo(
                     "Lock file hash doesn't match pyproject.toml, regenerating..."
