@@ -108,7 +108,7 @@ Only one thing to keep in mind -- PDM can't be installed on Python < 3.7, so if 
 you have to make sure PDM is installed on the correct Python version, which can be different from the target Python version the particular job/task is run on.
 
 Fortunately, if you are using GitHub Action, there is [pdm-project/setup-pdm](https://github.com/marketplace/actions/setup-pdm) to make this process easier.
-Here is an example worflow of GitHub Actions, while you can adapt it for other CI platforms.
+Here is an example workflow of GitHub Actions, while you can adapt it for other CI platforms.
 
 ```yaml
 Testing:
@@ -141,7 +141,7 @@ Testing:
 !!! note
     If your CI scripts run without a proper user set, you might get permission errors when PDM tries to create its cache directory.
     To work around this, you can set the HOME environment variable yourself, to a writable directory, for example:
-    
+
     ```bash
     export HOME=/tmp/home
     ```
