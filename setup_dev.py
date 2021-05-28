@@ -18,6 +18,9 @@ if sys.version_info < (3, 7):
 
 
 def main():
+    if str(BASE_DIR) != os.getcwd():
+        print(f"Running in {BASE_DIR}", flush=True)
+        os.chdir(BASE_DIR)
     venv_path = BASE_DIR / "env"
     scripts_dir = "Scripts" if os.name == "nt" else "bin"
     venv_python = venv_path / scripts_dir / "python"
