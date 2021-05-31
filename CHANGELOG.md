@@ -1,3 +1,41 @@
+Release v1.6.0 (2021-05-31)
+---------------------------
+
+### Features & Improvements
+
+- Add structural typing for requirements module. Refactor the requirments module for that purpose. [#433](https://github.com/pdm-project/pdm/issues/433)
+- Introduce `--no-editable` option to install non-editable versions of all packages. [#443](https://github.com/pdm-project/pdm/issues/443)
+- Introduce `--no-self` option to prevent the project itself from being installed. [#444](https://github.com/pdm-project/pdm/issues/444)
+- Add a default `.gitignore` file in the `__pypackages__` directory. [#446](https://github.com/pdm-project/pdm/issues/446)
+- Check if the lock file version is compatible with PDM program before installation. [#463](https://github.com/pdm-project/pdm/issues/463)
+- Expose the project root path via `PDM_PROJECT_ROOT` env var. Change to the project root when executing scripts. [#470](https://github.com/pdm-project/pdm/issues/470)
+- Fix a bug that installation resolution doesn't respect the requirement markers from pyproject config. [#480](https://github.com/pdm-project/pdm/issues/480)
+
+### Bug Fixes
+
+- Changing to multiline breaks the parsing of TOML document. [#462](https://github.com/pdm-project/pdm/issues/462)
+- Fix a bug that transient dependencies of conditional requirements can't be resolved. [#472](https://github.com/pdm-project/pdm/issues/472)
+- Fix a bug that invalid wheels are rejected while they are acceptable for resolution. [#473](https://github.com/pdm-project/pdm/issues/473)
+- Fix a bug that build environment is not fully isolated with the hosted environment. [#477](https://github.com/pdm-project/pdm/issues/477)
+- Ensure the lock file is compatible before looking for the locked candidates. [#484](https://github.com/pdm-project/pdm/issues/484)
+
+### Improved Documentation
+
+- Fix 404 links in documentation. [#472](https://github.com/pdm-project/pdm/issues/472)
+
+### Dependencies
+
+- Migrate from `tomlkit` to `atoml` as the style-preserving TOML parser and writer. [#465](https://github.com/pdm-project/pdm/issues/465)
+
+### Removals and Deprecations
+
+- Remove the warning of `--dev` flag for older versions of PDM. [#444](https://github.com/pdm-project/pdm/issues/444)
+
+### Miscellany
+
+- Add Python 3.10 beta CI job. [#457](https://github.com/pdm-project/pdm/issues/457)
+
+
 Release v1.5.3 (2021-05-10)
 ---------------------------
 
