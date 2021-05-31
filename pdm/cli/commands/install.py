@@ -28,9 +28,12 @@ class Command(BaseCommand):
             actions.ask_for_import(project)
 
         if options.lock:
-            if not project.lockfile_file.exists():
+            if not (
+                project.lockfile_file.exists() and project.is_lockfile_compatible()
+            ):
                 project.core.ui.echo(
-                    "Lock file does not exist, trying to generate one..."
+                    "Lock file does not exist or is incompatible, "
+                    "trying to generate one..."
                 )
                 actions.do_lock(project, strategy="all")
             elif not project.is_lockfile_hash_match():
