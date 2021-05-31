@@ -9,7 +9,7 @@ on:
       - Dockerfile
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - "docs/**"
       - "news/**"

@@ -29,15 +29,15 @@ this section.
    where `fork` is the remote name of the fork repository.
 
 **ProTips:**
-1. Don't modify code on the master branch, the master branch should always keep track of origin/master.
+1. Don't modify code on the main branch, the main branch should always keep track of origin/main.
 
-   To update master branch to date:
+   To update main branch to date:
    ```bash
-   $ git pull origin master
-   # In rare cases that your local master branch diverges from the remote master:
-   $ git fetch origin && git reset --hard master
+   $ git pull origin main
+   # In rare cases that your local main branch diverges from the remote main:
+   $ git fetch origin && git reset --hard main
    ```
-2. Create a new branch based on the up-to-date master for new patches.
+2. Create a new branch based on the up-to-date main branch for new patches.
 3. Create a Pull Request from that patch branch.
 
 ## Local development

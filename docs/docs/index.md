@@ -52,7 +52,7 @@ $ pip install --user pdm
 Install the head version of GitHub repository:
 
 ```console
-$ pipx install git+https://github.com/pdm-project/pdm.git@master#egg=pdm
+$ pipx install git+https://github.com/pdm-project/pdm.git@main#egg=pdm
 ```
 
 Make sure you have installed [Git LFS](https://git-lfs.github.com/) on your system.

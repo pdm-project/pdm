@@ -4,7 +4,7 @@
 
 A modern Python package manager with PEP 582 support. [中文版本说明](README_zh.md)
 
-![PDM logo](https://github.com/pdm-project/pdm/blob/master/docs/docs/assets/logo_big.png)
+![PDM logo](https://github.com/pdm-project/pdm/blob/main/docs/docs/assets/logo_big.png)
 
 [![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm.fming.dev)
 [![Twitter Follow](https://img.shields.io/twitter/follow/pdm_project?label=get%20updates&logo=twitter&style=for-the-badge)](https://twitter.com/pdm_project)
@@ -12,7 +12,7 @@ A modern Python package manager with PEP 582 support. [中文版本说明](READM
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
-[![codecov](https://codecov.io/gh/pdm-project/pdm/branch/master/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
+[![codecov](https://codecov.io/gh/pdm-project/pdm/branch/main/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
 [![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
