@@ -161,7 +161,7 @@ def do_sync(
         clean,
         dry_run,
         no_editable=no_editable,
-        install_self=not no_self and "default" in sections,
+        install_self=not no_self and "default" in sections and project.meta.name,
     )
     handler.synchronize()
 
