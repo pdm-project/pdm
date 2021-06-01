@@ -15,6 +15,8 @@ Release v1.6.0 (2021-05-31)
 
 ### Features & Improvements
 
+- Use a new approach to determine the packages to be installed. This requires a quick resolution step before installation. [#456](https://github.com/pdm-project/pdm/issues/456)
+- `pdm export` no longer produces requirements file applicable for all platforms due to the new approach. [#456](https://github.com/pdm-project/pdm/issues/456)
 - Add structural typing for requirements module. Refactor the requirments module for that purpose. [#433](https://github.com/pdm-project/pdm/issues/433)
 - Introduce `--no-editable` option to install non-editable versions of all packages. [#443](https://github.com/pdm-project/pdm/issues/443)
 - Introduce `--no-self` option to prevent the project itself from being installed. [#444](https://github.com/pdm-project/pdm/issues/444)

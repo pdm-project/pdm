@@ -469,7 +469,7 @@ class Project:
         dev: bool = False,
         show_message: bool = True,
     ) -> None:
-        deps = self.get_pyproject_dependencies(to_section, dev)
+        deps = self.get_pyproject_dependencies(to_section, dev).multiline(True)
         for _, dep in requirements.items():
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)), None
