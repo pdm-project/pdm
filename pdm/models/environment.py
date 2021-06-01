@@ -257,17 +257,20 @@ class Environment:
                 ireq.ensure_has_source_dir(build_dir)
 
             if not (ireq.editable and ireq.req.is_local_dir):
-                downloader = pip_shims.Downloader(finder.session, "off")
-                downloaded = pip_shims.unpack_url(
-                    ireq.link,
-                    ireq.source_dir,
-                    downloader,
-                    hashes=ireq.hashes(False),
-                )
+                if ireq.link.is_existing_dir():
+                    ireq.source_dir = ireq.link.file_path
+                else:
+                    downloader = pip_shims.Downloader(finder.session, "off")
+                    downloaded = pip_shims.unpack_url(
+                        ireq.link,
+                        ireq.source_dir,
+                        downloader,
+                        hashes=ireq.hashes(False),
+                    )
 
-                if ireq.link.is_wheel:
-                    # If the file is a wheel, return the downloaded file directly.
-                    return downloaded.path
+                    if ireq.link.is_wheel:
+                        # If the file is a wheel, return the downloaded file directly.
+                        return downloaded.path
 
         # Check the built wheel cache again after hashes are resolved.
         if not ireq.editable:
