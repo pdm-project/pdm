@@ -34,9 +34,12 @@ class EnvEggInfoBuilder(EnvBuilder):
 
         builder = Builder(self.src_dir)
         if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
-            builder._meta = MutableMetadata(
-                os.path.join(self.src_dir, "pyproject.toml")
-            )
+            try:
+                builder._meta = MutableMetadata(
+                    os.path.join(self.src_dir, "pyproject.toml")
+                )
+            except ValueError:
+                builder._meta = None
         setup_py_path = builder.ensure_setup_py().as_posix()
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
