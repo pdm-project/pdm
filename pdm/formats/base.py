@@ -74,7 +74,7 @@ class MetaConverter(metaclass=_MetaConverterMeta):
         return self._data, self.settings
 
 
-NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*<(?P<email>.+)>\s*$")
+NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*(?:<(?P<email>.+)>)?\s*$")
 
 
 def make_inline_table(data: Mapping) -> InlineTable:
@@ -98,5 +98,14 @@ def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> Arra
 
 def parse_name_email(name_email: List[str]) -> Array:
     return array_of_inline_tables(
-        [NAME_EMAIL_RE.match(item).groupdict() for item in name_email]  # type: ignore
+        [
+            {
+                k: v
+                for k, v in NAME_EMAIL_RE.match(item)
+                .groupdict()  # type: ignore
+                .items()
+                if v is not None
+            }
+            for item in name_email
+        ]
     )
