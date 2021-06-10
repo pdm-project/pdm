@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 
 from resolvelib import BaseReporter
 
+from pdm import termui
+
 if TYPE_CHECKING:
-    from resolvelib.resolvers import State
+    from resolvelib.resolvers import State  # type: ignore
 
     from pdm._vendor import halo
     from pdm.models.candidates import Candidate
@@ -21,7 +23,9 @@ def log_title(title: str) -> None:
 
 
 class SpinnerReporter(BaseReporter):
-    def __init__(self, spinner: halo.Halo, requirements: List[Requirement]) -> None:
+    def __init__(
+        self, spinner: halo.Halo | termui.DummySpinner, requirements: List[Requirement]
+    ) -> None:
         self.spinner = spinner
         self.requirements = requirements
         self._previous: Optional[Dict[str, Candidate]] = None

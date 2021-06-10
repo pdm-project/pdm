@@ -5,6 +5,7 @@ import importlib
 import os
 import pkgutil
 import sys
+from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
 import click
@@ -100,7 +101,7 @@ class Core:
         migrate_pyproject(options.project)
 
     def create_project(
-        self, root_path: Optional[os.PathLike] = None, is_global: bool = False
+        self, root_path: str | Path | None = None, is_global: bool = False
     ) -> Project:
         return self.project_class(self, root_path, is_global)
 

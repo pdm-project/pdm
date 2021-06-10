@@ -8,7 +8,7 @@ from __future__ import annotations
 import atexit
 import contextlib
 import inspect
-from typing import TYPE_CHECKING, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Tuple
 
 from pip._internal.cache import WheelCache
 from pip._internal.commands.install import InstallCommand as _InstallCommand
@@ -69,7 +69,7 @@ def get_package_finder(
         assert python_abi_tag is not None
         target_python_builder = TargetPython
         builder_args = inspect.signature(target_python_builder).parameters
-        target_python_params = {"py_version_info": python_version}
+        target_python_params: dict[str, Any] = {"py_version_info": python_version}
         if "abi" in builder_args:
             target_python_params["abi"] = python_abi_tag
         elif "abis" in builder_args:
@@ -87,11 +87,11 @@ def patch_bin_prefix(bin_prefix: str) -> Iterator:
     bin_py = getattr(req_uninstall, "bin_py", None)
     get_bin_prefix = getattr(req_uninstall, "get_bin_prefix", None)
     if bin_py:
-        req_uninstall.bin_py = bin_prefix
+        req_uninstall.bin_py = bin_prefix  # type: ignore
     if get_bin_prefix:
         req_uninstall.get_bin_prefix = lambda: bin_prefix
     yield
     if bin_py:
-        req_uninstall.bin_py = bin_py
+        req_uninstall.bin_py = bin_py  # type: ignore
     if get_bin_prefix:
         req_uninstall.get_bin_prefix = get_bin_prefix

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar, cast
 
 import atoml
-from atoml.items import Array, InlineTable
 
 from pdm import termui
 
@@ -77,26 +76,26 @@ class MetaConverter(metaclass=_MetaConverterMeta):
 NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*(?:<(?P<email>.+)>)?\s*$")
 
 
-def make_inline_table(data: Mapping) -> InlineTable:
+def make_inline_table(data: Mapping) -> dict:
     """Create an inline table from the given data."""
-    table = atoml.inline_table()
+    table = cast(dict, atoml.inline_table())
     table.update(data)
     return table
 
 
-def make_array(data: list, multiline: bool = False) -> Array:
+def make_array(data: list, multiline: bool = False) -> list:
     if not data:
         return []
-    array = atoml.array().multiline(multiline)
+    array = cast(list, atoml.array().multiline(multiline))
     array.extend(data)
     return array
 
 
-def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> Array:
+def array_of_inline_tables(value: List[Mapping], multiline: bool = True) -> list[str]:
     return make_array([make_inline_table(item) for item in value], multiline)
 
 
-def parse_name_email(name_email: List[str]) -> Array:
+def parse_name_email(name_email: List[str]) -> list[str]:
     return array_of_inline_tables(
         [
             {

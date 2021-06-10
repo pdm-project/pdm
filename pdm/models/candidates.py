@@ -27,7 +27,6 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from distlib.metadata import Metadata
-    from packaging.version import Version
 
     from pdm.models.environment import Environment
 
@@ -101,7 +100,7 @@ class Candidate:
         req: Requirement,
         environment: Environment,
         name: Optional[str] = None,
-        version: Optional[Version] = None,
+        version: Optional[str] = None,
         link: Optional[pip_shims.Link] = None,
     ):
         """
@@ -229,7 +228,7 @@ class Candidate:
             req,
             environment,
             name=candidate.name,
-            version=candidate.version,
+            version=str(candidate.version),
             link=candidate.link,
         )
 

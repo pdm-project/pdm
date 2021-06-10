@@ -33,7 +33,7 @@ def load_config(file_path: Path) -> Dict[str, Any]:
 
     if not file_path.is_file():
         return {}
-    return get_item(dict(atoml.parse(file_path.read_text("utf-8"))))
+    return get_item(dict(atoml.parse(file_path.read_text("utf-8"))))  # type: ignore
 
 
 def ensure_boolean(val: Any) -> bool:
@@ -161,7 +161,7 @@ class Config(MutableMapping[str, str]):
             temp[last] = value
 
         with self._config_file.open("w", encoding="utf-8") as fp:
-            atoml.dump(toml_data, fp)
+            atoml.dump(toml_data, fp)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
         env_var = self._config_map[key].env_var

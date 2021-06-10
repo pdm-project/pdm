@@ -5,7 +5,7 @@ import multiprocessing
 import traceback
 from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pip._vendor.pkg_resources import Distribution
 
@@ -327,7 +327,8 @@ class Synchronizer:
                 self_candidate = self.environment.project.make_self_candidate(
                     not self.no_editable
                 )
-                self_key = cast(str, self_candidate.req.key)
+                self_key = self.self_key
+                assert self_key
                 self.candidates[self_key] = self_candidate
                 self.ui.echo("Installing the project as an editable package...")
                 with self.ui.indent("  "):

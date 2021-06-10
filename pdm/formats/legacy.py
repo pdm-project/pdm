@@ -36,11 +36,11 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
 class LegacyMetaConverter(MetaConverter):
     @convert_from("author")
     def authors(self, value: str) -> List[str]:
-        return parse_name_email([value])
+        return cast(List[str], parse_name_email([value]))
 
     @convert_from("maintainer")
     def maintainers(self, value: str) -> List[str]:
-        return parse_name_email([value])
+        return cast(List[str], parse_name_email([value]))
 
     @convert_from("version")
     def version(
@@ -60,7 +60,7 @@ class LegacyMetaConverter(MetaConverter):
     def license(self, value: str) -> Dict[str, str]:
         if "classifiers" not in self._data.setdefault("dynamic", []):
             self._data["dynamic"].append("classifiers")
-        return make_inline_table({"text": value})
+        return cast(Dict[str, str], make_inline_table({"text": value}))
 
     @convert_from("source")
     def sources(self, value: List[Source]) -> None:
@@ -79,12 +79,15 @@ class LegacyMetaConverter(MetaConverter):
 
     @convert_from("dependencies")
     def dependencies(self, value: Dict[str, str]) -> List[str]:
-        return make_array(
-            [
-                Requirement.from_req_dict(name, req).as_line()
-                for name, req in value.items()
-            ],
-            True,
+        return cast(
+            List[str],
+            make_array(
+                [
+                    Requirement.from_req_dict(name, req).as_line()
+                    for name, req in value.items()
+                ],
+                True,
+            ),
         )
 
     @convert_from("dev-dependencies")

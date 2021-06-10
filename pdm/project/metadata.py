@@ -1,8 +1,10 @@
 from collections.abc import MutableMapping
-from typing import Dict, Iterator, List, Union
+from typing import Dict, Iterator, List, TypeVar, Union
 
 from pdm.formats import flit, poetry
 from pdm.pep517.metadata import Metadata
+
+T = TypeVar("T")
 
 
 class MutableMetadata(Metadata, MutableMapping):
@@ -16,8 +18,10 @@ class MutableMetadata(Metadata, MutableMapping):
             return super()._read_pyproject()
         except ValueError:
             for converter in (poetry, flit):
-                if converter.check_fingerprint(None, self.filepath):
-                    data, settings = converter.convert(None, self.filepath, None)
+                if converter.check_fingerprint(None, self.filepath):  # type: ignore
+                    data, settings = converter.convert(  # type: ignore
+                        None, self.filepath, None
+                    )
                     self._metadata = dict(data)
                     self._tool_settings = settings
                     return
@@ -38,7 +42,5 @@ class MutableMetadata(Metadata, MutableMapping):
     def __len__(self) -> int:
         return len(self._metadata)
 
-    def setdefault(
-        self, key: str, default: Union[Dict, List[str], str]
-    ) -> Union[Dict, List[str], str]:
+    def setdefault(self, key: str, default: T) -> T:  # type: ignore
         return self._metadata.setdefault(key, default)

@@ -407,7 +407,7 @@ def filter_requirements_with_extras(
             else:
                 elements, rest = split_marker_extras(_r.marker)
                 extras_in_meta.extend(elements)
-                _r.marker = rest
+                _r.marker = Marker(str(rest))
                 if not elements or set(extras) & set(elements):
                     result.append(_r.as_line())
 

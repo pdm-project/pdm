@@ -57,7 +57,7 @@ def convert(
         result["requires-python"] = f">={python_version}"
     if "source" in data:
         settings["source"] = data["source"]
-    result["dependencies"] = make_array(
+    result["dependencies"] = make_array(  # type: ignore
         [
             convert_pipfile_requirement(k, req)
             for k, req in data.get("packages", {}).items()

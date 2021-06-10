@@ -53,7 +53,7 @@ def get_marker(marker: Union[PackageMarker, Marker, None]) -> Optional[Marker]:
 
 def split_marker_extras(
     marker: PackageMarker,
-) -> Tuple[Sequence[str], Optional[Marker]]:
+) -> Tuple[Sequence[str], Optional[PackageMarker]]:
     """An element can be stripped from the marker only if all parts are connected
     with `and` operater. The rest part are returned as a string or `None` if all are
     stripped.

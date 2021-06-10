@@ -32,7 +32,7 @@ def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
 def _get_author(metadata: Dict[str, Any], type_: str = "author") -> List[str]:
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
-    return array_of_inline_tables([{"name": name, "email": email}])
+    return cast(List[str], array_of_inline_tables([{"name": name, "email": email}]))
 
 
 def get_docstring_and_version_via_ast(

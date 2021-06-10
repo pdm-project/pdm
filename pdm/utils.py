@@ -13,7 +13,6 @@ import sys
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
-from os import PathLike
 from pathlib import Path
 from re import Match
 from typing import (
@@ -298,7 +297,7 @@ def get_in_project_venv_python(root: Path) -> Path | None:
 
 @contextmanager
 def atomic_open_for_write(
-    filename: PathLike, *, encoding: str = "utf-8"
+    filename: str | Path, *, encoding: str = "utf-8"
 ) -> Iterator[TextIO]:
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
     fp = open(fd, "w", encoding=encoding)
@@ -318,7 +317,7 @@ def atomic_open_for_write(
 
 
 @contextmanager
-def cd(path: str) -> Iterator:
+def cd(path: str | Path) -> Iterator:
     _old_cwd = os.getcwd()
     os.chdir(path)
     try:
@@ -423,7 +422,7 @@ def path_replace(pattern: str, replace_with: str, dest: str) -> str:
     )
 
 
-def is_venv_python(interpreter: os.PathLike) -> bool:
+def is_venv_python(interpreter: str | Path) -> bool:
     """Check if the given interpreter path is from a virtualenv"""
     interpreter = Path(interpreter)
     if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
@@ -439,7 +438,7 @@ def is_venv_python(interpreter: os.PathLike) -> bool:
     return False
 
 
-def find_python_in_path(path: os.PathLike) -> Path | None:
+def find_python_in_path(path: str | Path) -> Path | None:
     """Find a python interpreter from the given path, the input argument could be:
 
     - A valid path to the interpreter

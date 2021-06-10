@@ -72,8 +72,8 @@ class _SetupReader:
         return Setup(
             name=metadata.name,
             version=metadata.version,
-            install_requires=metadata.dependencies,
-            extras_require=metadata.optional_dependencies,
+            install_requires=metadata.dependencies or [],
+            extras_require=metadata.optional_dependencies or {},
             python_requires=metadata.requires_python,
         )
 

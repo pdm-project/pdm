@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Iterable, Type, cast
 
 import atoml
 from pythonfinder import Finder
@@ -53,12 +53,12 @@ class Project:
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
-        self, core: Core, root_path: Optional[os.PathLike], is_global: bool = False
+        self, core: Core, root_path: str | Path | None, is_global: bool = False
     ) -> None:
-        self._pyproject: Optional[Dict] = None
-        self._lockfile: Optional[Dict] = None
-        self._environment: Optional[Environment] = None
-        self._python: Optional[PythonInfo] = None
+        self._pyproject: dict | None = None
+        self._lockfile: dict | None = None
+        self._environment: Environment | None = None
+        self._python: PythonInfo | None = None
         self.core = core
 
         if root_path is None:
@@ -88,14 +88,14 @@ class Project:
         return self.root / "pdm.lock"
 
     @property
-    def pyproject(self) -> Optional[dict]:
+    def pyproject(self) -> dict | None:
         if not self._pyproject and self.pyproject_file.exists():
             data = atoml.parse(self.pyproject_file.read_text("utf-8"))
-            self._pyproject = data
+            self._pyproject = cast(dict, data)
         return self._pyproject
 
     @pyproject.setter
-    def pyproject(self, data: Dict[str, Any]) -> None:
+    def pyproject(self, data: dict[str, Any]) -> None:
         self._pyproject = data
 
     @property
@@ -111,23 +111,23 @@ class Project:
             if not self.lockfile_file.is_file():
                 raise ProjectError("Lock file does not exist.")
             data = atoml.parse(self.lockfile_file.read_text("utf-8"))
-            self._lockfile = data
+            self._lockfile = cast(dict, data)
         return self._lockfile
 
     @lockfile.setter
-    def lockfile(self, data: Dict[str, Any]) -> None:
+    def lockfile(self, data: dict[str, Any]) -> None:
         self._lockfile = data
 
     @property
-    def config(self) -> Dict[str, Any]:
+    def config(self) -> dict[str, Any]:
         """A read-only dict configuration, any modifications won't land in the file."""
         result = dict(self.global_config)
         result.update(self.project_config)
         return result
 
     @property
-    def scripts(self) -> Dict[str, Union[str, Dict[str, str]]]:
-        return self.tool_settings.get("scripts")
+    def scripts(self) -> dict[str, str | dict[str, str]]:
+        return self.tool_settings.get("scripts")  # type: ignore
 
     @cached_property
     def global_config(self) -> Config:
@@ -216,7 +216,7 @@ class Project:
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.meta.requires_python)
 
-    def get_dependencies(self, section: Optional[str] = None) -> Dict[str, Requirement]:
+    def get_dependencies(self, section: str | None = None) -> dict[str, Requirement]:
         metadata = self.meta
         optional_dependencies = metadata.get("optional-dependencies", {})
         dev_dependencies = self.tool_settings.get("dev-dependencies", {})
@@ -248,11 +248,11 @@ class Project:
         return result
 
     @property
-    def dependencies(self) -> Dict[str, Requirement]:
+    def dependencies(self) -> dict[str, Requirement]:
         return self.get_dependencies()
 
     @property
-    def dev_dependencies(self) -> Dict[str, Requirement]:
+    def dev_dependencies(self) -> dict[str, Requirement]:
         """All development dependencies"""
         dev_group = self.tool_settings.get("dev-dependencies", {})
         if not dev_group:
@@ -277,17 +277,17 @@ class Project:
         return result
 
     @property
-    def all_dependencies(self) -> Dict[str, Dict[str, Requirement]]:
+    def all_dependencies(self) -> dict[str, dict[str, Requirement]]:
         return {
             section: self.get_dependencies(section) for section in self.iter_sections()
         }
 
     @property
-    def allow_prereleases(self) -> Optional[bool]:
+    def allow_prereleases(self) -> bool | None:
         return self.tool_settings.get("allow_prereleases")
 
     @property
-    def sources(self) -> List[Source]:
+    def sources(self) -> list[Source]:
         sources = list(self.tool_settings.get("source", []))
         if all(source.get("name") != "pypi" for source in sources):
             sources.insert(
@@ -300,9 +300,7 @@ class Project:
             )
         return sources
 
-    def get_repository(
-        self, cls: Optional[Type[BaseRepository]] = None
-    ) -> BaseRepository:
+    def get_repository(self, cls: Type[BaseRepository] | None = None) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = PyPIRepository
@@ -323,7 +321,7 @@ class Project:
     def get_provider(
         self,
         strategy: str = "all",
-        tracked_names: Optional[Iterable[str]] = None,
+        tracked_names: Iterable[str] | None = None,
         for_install: bool = False,
     ) -> BaseProvider:
         """Build a provider class for resolver.
@@ -369,9 +367,9 @@ class Project:
 
     def get_reporter(
         self,
-        requirements: List[Requirement],
-        tracked_names: Optional[Iterable[str]] = None,
-        spinner: Union[halo.Halo, termui.DummySpinner] = None,
+        requirements: list[Requirement],
+        tracked_names: Iterable[str] | None = None,
+        spinner: halo.Halo | termui.DummySpinner | None = None,
     ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 
@@ -382,21 +380,21 @@ class Project:
         """
         from pdm.resolver.reporters import SpinnerReporter
 
-        return SpinnerReporter(spinner, requirements)
+        return SpinnerReporter(spinner or termui.DummySpinner(), requirements)
 
-    def get_lock_metadata(self) -> Dict[str, Any]:
+    def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = atoml.string("sha256:" + self.get_content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
         return {"lock_version": self.LOCKFILE_VERSION, "content_hash": content_hash}
 
     def write_lockfile(
-        self, toml_data: Dict, show_message: bool = True, write: bool = True
+        self, toml_data: dict, show_message: bool = True, write: bool = True
     ) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
 
         if write:
             with atomic_open_for_write(self.lockfile_file) as fp:
-                atoml.dump(toml_data, fp)
+                atoml.dump(toml_data, fp)  # type: ignore
             if show_message:
                 self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
             self._lockfile = None
@@ -448,7 +446,7 @@ class Project:
         accepted = get_specifier(f"~={lockfile_version}")
         return accepted.contains(self.LOCKFILE_VERSION)
 
-    def get_pyproject_dependencies(self, section: str, dev: bool = False) -> List[str]:
+    def get_pyproject_dependencies(self, section: str, dev: bool = False) -> list[str]:
         """Get the dependencies array in the pyproject.toml"""
         if section == "default":
             return self.meta.setdefault("dependencies", [])
@@ -464,12 +462,16 @@ class Project:
 
     def add_dependencies(
         self,
-        requirements: Dict[str, Requirement],
+        requirements: dict[str, Requirement],
         to_section: str = "default",
         dev: bool = False,
         show_message: bool = True,
     ) -> None:
-        deps = self.get_pyproject_dependencies(to_section, dev).multiline(True)
+        deps = self.get_pyproject_dependencies(
+            to_section, dev
+        ).multiline(  # type: ignore
+            True
+        )
         for _, dep in requirements.items():
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)), None
@@ -485,7 +487,7 @@ class Project:
         with atomic_open_for_write(
             self.pyproject_file.as_posix(), encoding="utf-8"
         ) as f:
-            atoml.dump(self.pyproject, f)
+            atoml.dump(self.pyproject, f)  # type: ignore
         if show_message:
             self.core.ui.echo(
                 f"Changes are written to {termui.green('pyproject.toml')}."
@@ -515,7 +517,7 @@ dependencies = ["pip", "setuptools", "wheel"]
 
     @property
     def cache_dir(self) -> Path:
-        return Path(self.config.get("cache_dir"))
+        return Path(self.config.get("cache_dir", ""))
 
     def cache(self, name: str) -> Path:
         path = self.cache_dir / name
@@ -538,9 +540,7 @@ dependencies = ["pip", "setuptools", "wheel"]
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())
 
-    def find_interpreters(
-        self, python_spec: Optional[str] = None
-    ) -> Iterable[PythonInfo]:
+    def find_interpreters(self, python_spec: str | None = None) -> Iterable[PythonInfo]:
         """Return an iterable of interpreter paths that matches the given specifier,
         which can be:
             1. a version specifier like 3.7
@@ -549,7 +549,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             4. None that returns all possible interpreters
         """
         config = self.config
-        python: Optional[os.PathLike] = None
+        python: str | Path | None = None
 
         if not python_spec:
             if config.get("python.use_pyenv", True) and PYENV_INSTALLED:

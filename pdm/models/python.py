@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import dataclasses
 import os
-from typing import Any, Tuple
+from pathlib import Path
+from typing import Any
 
 from packaging.version import Version
 from pythonfinder.models.python import PythonVersion
@@ -23,7 +26,7 @@ class PythonInfo:
         return cls(executable=py_version.executable, version=py_version.version)
 
     @classmethod
-    def from_path(cls, path: os.PathLike) -> "PythonInfo":
+    def from_path(cls, path: str | Path) -> "PythonInfo":
         return cls.from_python_version(PythonVersion.from_path(str(path)))
 
     def __hash__(self) -> int:
@@ -47,7 +50,7 @@ class PythonInfo:
         return self.version.micro
 
     @property
-    def version_tuple(self) -> Tuple[int, ...]:
+    def version_tuple(self) -> tuple[int, ...]:
         return (self.major, self.minor, self.micro)
 
     @cached_property
