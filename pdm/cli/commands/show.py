@@ -1,5 +1,4 @@
 import argparse
-import typing as t
 
 from packaging.version import Version
 
@@ -13,7 +12,7 @@ from pdm.utils import normalize_name
 
 
 def filter_stable(candidate: Candidate) -> bool:
-    return not t.cast(Version, candidate.version).is_prerelease
+    return not Version(candidate.version).is_prerelease
 
 
 class Command(BaseCommand):
