@@ -23,6 +23,8 @@ def get_sys_config_paths(
     executable: str, vars: Optional[Dict[str, str]] = None
 ) -> Dict[str, str]:
     """Return the sys_config.get_paths() result for the python interpreter"""
+    env = os.environ.copy()
+    env.pop("__PYVENV_LAUNCHER__", None)
     if not vars:
         args = [
             executable,
@@ -31,13 +33,14 @@ def get_sys_config_paths(
         ]
         return json.loads(subprocess.check_output(args))
     else:
-        env = os.environ.copy()
+        os_name = os.name
+        scheme = "posix_prefix" if os_name == "posix" else os.name
         env.update(SYSCONFIG_VARS=json.dumps(vars))
         args = [
             executable,
             "-Esc",
             "import os,sysconfig,json;print(json.dumps(sysconfig."
-            "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
+            f"get_paths({scheme!r}, vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
         ]
         return json.loads(subprocess.check_output(args, env=env))
 
