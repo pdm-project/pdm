@@ -23,6 +23,9 @@ repos:
     rev: v0.902
     hooks:
       - id: mypy
+        additional_dependencies:
+          - types-click
+          - types-toml
         args:
           - pdm
           - |
@@ -50,6 +53,3 @@ repos:
               pdm/core\.py
             ).*\.py$ # incremental 'fully-typed' list
         pass_filenames: false
-        additional_dependencies:
-          - types-click
-          - types-toml
