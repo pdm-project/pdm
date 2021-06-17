@@ -16,6 +16,7 @@ from typing import (
 )
 
 from pip._vendor.html5lib import parse
+from pkg_resources import parse_version
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
@@ -107,7 +108,6 @@ class BaseRepository:
         # include prereleases
         requires_python = requires_python & requirement.requires_python
         cans = list(self._find_candidates(requirement))
-
         sorted_cans = sorted(
             (
                 c
@@ -115,7 +115,7 @@ class BaseRepository:
                 if requirement.specifier.contains(c.version, allow_prereleases)
                 and (allow_all or requires_python.is_subset(c.requires_python))
             ),
-            key=lambda c: (c.version, c.link.is_wheel),
+            key=lambda c: (parse_version(c.version), c.link.is_wheel),
             reverse=True,
         )
 

@@ -307,6 +307,7 @@ def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> 
             required = str(all_dependencies[package.name].specifier or "Any")
         elif (
             not project.environment.is_global
+            and project.meta.name
             and package.name == project.meta.project_name.lower()
         ):
             required = "This project"
