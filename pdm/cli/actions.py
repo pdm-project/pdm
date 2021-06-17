@@ -175,6 +175,7 @@ def do_add(
     strategy: str = "reuse",
     editables: Iterable[str] = (),
     packages: Iterable[str] = (),
+    unconstrained: bool = False,
     no_editable: bool = False,
     no_self: bool = False,
 ) -> None:
@@ -197,13 +198,18 @@ def do_add(
         + ", ".join(termui.green(key or "", bold=True) for key in requirements)
     )
     all_dependencies = project.all_dependencies
-    all_dependencies.setdefault(section, {}).update(requirements)
+    section_deps = all_dependencies.setdefault(section, {})
+    if unconstrained:
+        for req in section_deps.values():
+            req.specifier = get_specifier("")
+    section_deps.update(requirements)
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     resolved = do_lock(project, strategy, tracked_names, reqs)
 
     # Update dependency specifiers and lockfile hash.
-    save_version_specifiers({section: requirements}, resolved, save)
-    project.add_dependencies(requirements, section, dev)
+    deps_to_update = section_deps if unconstrained else requirements
+    save_version_specifiers({section: deps_to_update}, resolved, save)
+    project.add_dependencies(deps_to_update, section, dev)
     lockfile = project.lockfile
     project.write_lockfile(lockfile, False)
 

@@ -27,6 +27,13 @@ class Command(BaseCommand):
             "-s", "--section", help="Specify target section to add into"
         )
         parser.add_argument(
+            "-u",
+            "--unconstrained",
+            action="store_true",
+            default=False,
+            help="Ignore the version constraint of pinned packages",
+        )
+        parser.add_argument(
             "--no-sync",
             dest="sync",
             default=True,
@@ -50,6 +57,7 @@ class Command(BaseCommand):
             strategy=options.update_strategy or project.config["strategy.update"],
             editables=options.editables,
             packages=options.packages,
+            unconstrained=options.unconstrained,
             no_editable=options.no_editable,
             no_self=options.no_self,
         )
