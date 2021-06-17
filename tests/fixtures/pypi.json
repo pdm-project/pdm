@@ -39,5 +39,10 @@
         "security": ["requests; python_version>='3.6'"]
       }
     }
+  },
+  "django-toolbar": {
+    "1.0": {
+      "dependencies": ["django<2"]
+    }
   }
 }

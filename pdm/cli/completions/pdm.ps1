@@ -185,7 +185,7 @@ function TabExpansion($line, $lastWord) {
 
     if ($lastBlock -match "^pdm ") {
         [string[]]$words = $lastBlock.Split()[1..$lastBlock.Length]
-        [string[]]$AllCommands = ("add", "build", "cache", "config", "export", "import", "info", "init", "install", "list", "lock", "remove", "run", "search", "show", "sync", "update", "use")
+        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "import", "info", "init", "install", "list", "lock", "remove", "run", "search", "show", "sync", "update", "use")
         [string[]]$commands = $words.Where( { $_ -notlike "-*" })
         $command = $commands[0]
         $completer = [Completer]::new()
@@ -198,7 +198,7 @@ function TabExpansion($line, $lastWord) {
 
             "add" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained")),
                         $sectionOption,
                         $projectOption,
                         [Option]::new(@("-e", "--editable")).WithValues(@(getPyPIPackages))
@@ -343,6 +343,7 @@ function TabExpansion($line, $lastWord) {
             default {
                 # No command
                 $command = $null
+                $completer.AddOpts(([Option]::new(("--pep582", "-I", "--ignore-python"))))
                 $completer.AddParams($AllCommands, $false)
             }
         }

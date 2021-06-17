@@ -65,6 +65,7 @@ _pdm() {
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-e+,--editable+}'[Specify editable packages]:packages'
         '*:packages:_pdm_pip_packages'
       )
