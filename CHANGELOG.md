@@ -1,3 +1,19 @@
+Release v1.6.3 (2021-06-17)
+---------------------------
+
+### Features & Improvements
+
+- Add an option `-u/--unconstrained` to support unconstraining version specifiers when adding packages. [#501](https://github.com/pdm-project/pdm/issues/501)
+
+### Bug Fixes
+
+- Fix the format of dependency arrays when a new value is appended. [#487](https://github.com/pdm-project/pdm/issues/487)
+- Allow missing email attribute for authors and maintainers. [#492](https://github.com/pdm-project/pdm/issues/492)
+- Fix a bug that editable install shouldn't require pyproject.toml to be valid. [#497](https://github.com/pdm-project/pdm/issues/497)
+- Fix a bug on MacOS that purelib and platlib paths of isolated build envs cannot be substituted correctly if the Python is a framework build. [#502](https://github.com/pdm-project/pdm/issues/502)
+- Fix the version sort of candidates. [#506](https://github.com/pdm-project/pdm/issues/506)
+
+
 Release v1.6.2 (2021-05-31)
 ---------------------------
 
