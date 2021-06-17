@@ -199,11 +199,11 @@ def test_add_package_unconstrained_rewrite_specifier(project):
     actions.do_add(project, packages=["django"], no_self=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "2.2.9"
-    project.meta.dependencies[0] == "django~=2.2"
+    assert project.meta.dependencies[0] == "django~=2.2"
 
     actions.do_add(
         project, packages=["django-toolbar"], no_self=True, unconstrained=True
     )
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "1.11.8"
-    project.meta.dependencies[0] == "django~=1.11"
+    assert project.meta.dependencies[0] == "django~=1.11"
