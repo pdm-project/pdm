@@ -506,4 +506,4 @@ def merge_dictionary(
         elif isinstance(value, dict):
             target[key].update(value)
         elif isinstance(value, list):
-            target[key].extend(value)
+            target[key].extend(atoml.item(v) for v in value)

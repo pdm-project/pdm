@@ -441,6 +441,8 @@ class Project:
         lockfile_version = str(
             self.lockfile.get("metadata", {}).get("lock_version", "")
         )
+        if not lockfile_version:
+            return False
         if "." not in lockfile_version:
             lockfile_version += ".0"
         accepted = get_specifier(f"~={lockfile_version}")
