@@ -25,10 +25,11 @@ from pip import __file__ as pip_location
 
 
 def _all_plugins() -> list[str]:
-    return [
-        safe_name(ep.name).lower()
-        for ep in importlib_metadata.entry_points().get("pdm", [])
-    ]
+    result: list[str] = []
+    for dist in importlib_metadata.distributions():
+        if any(ep.group == "pdm" for ep in dist.entry_points):
+            result.append(safe_name(dist.metadata["Name"]).lower())
+    return result
 
 
 class Command(BaseCommand):
@@ -56,7 +57,6 @@ class ListCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         plugins = _all_plugins()
-        print(plugins)
         echo = project.core.ui.echo
         if not plugins:
             echo("No plugin is installed with PDM", err=True)
@@ -103,8 +103,13 @@ class AddCommand(BaseCommand):
         with project.core.ui.open_spinner(
             f"Installing plugins: {options.packages}"
         ) as spinner:
-            subprocess.check_call(pip_command)
-            spinner.succeed("Installation succeeds.")
+            try:
+                subprocess.check_output(pip_command, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as e:
+                spinner.fail("Installation failed: \n" + e.output)
+                sys.exit(1)
+            else:
+                spinner.succeed("Installation succeeds.")
 
 
 class RemoveCommand(BaseCommand):
@@ -173,5 +178,10 @@ class RemoveCommand(BaseCommand):
         with project.core.ui.open_spinner(
             f"Uninstalling plugins: {valid_packages}"
         ) as spinner:
-            subprocess.check_call(pip_command)
-            spinner.succeed("Uninstallation succeeds.")
+            try:
+                subprocess.check_output(pip_command, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as e:
+                spinner.fail("Uninstallation failed: \n" + e.output)
+                sys.exit(1)
+            else:
+                spinner.succeed("Uninstallation succeeds.")
