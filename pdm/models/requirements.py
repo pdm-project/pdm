@@ -238,6 +238,7 @@ class NamedRequirement(Requirement):
 class FileRequirement(Requirement):
     url: str = ""
     path: Path | None = None
+    subdirectory: str | None = None
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -305,8 +306,11 @@ class FileRequirement(Requirement):
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
         marker = self._format_marker()
         url = url_without_fragments(self.url)
-        if self.editable:
-            return f"-e {url}#egg={project_name}{extras}{marker}"
+        if self.editable or self.subdirectory:
+            fragments = f"egg={project_name}{extras}"
+            if self.subdirectory:
+                fragments = f"{fragments}&subdirectory={self.subdirectory}"
+            return f"{'-e ' if self.editable else ''}{url}#{fragments}{marker}"
         delimiter = " @ " if project_name else ""
         return f"{project_name}{extras}{delimiter}{url}{marker}"
 
@@ -368,7 +372,10 @@ class VcsRequirement(FileRequirement):
             self._parse_name_from_url()
         repo = url_without_fragments(url_no_vcs)
         ref: str | None = None
-        parsed = urlparse.urlparse(repo)
+        parsed = urlparse.urlparse(url_no_vcs)
+        fragments = dict(urlparse.parse_qsl(parsed.fragment))
+        if "subdirectory" in fragments:
+            self.subdirectory = fragments["subdirectory"]
         if "@" in parsed.path:
             path, ref = parsed.path.split("@", 1)
             repo = urlparse.urlunparse(parsed._replace(path=path))

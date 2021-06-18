@@ -167,23 +167,27 @@ class Environment:
         return pypackages
 
     def _get_build_dir(self, ireq: pip_shims.InstallRequirement) -> str:
-        if ireq.editable:
-            return ireq.source_dir or self._get_source_dir()
+        if ireq.editable or ireq.link.is_existing_dir():
+            return self._get_source_dir(ireq)
         else:
             return create_tracked_tempdir(prefix="pdm-build-")
 
-    def _get_source_dir(self) -> str:
-        packages_dir = self.packages_path
-        if packages_dir:
-            src_dir = packages_dir / "src"
-            src_dir.mkdir(exist_ok=True)
-            return src_dir.as_posix()
-        venv = os.environ.get("VIRTUAL_ENV", None)
-        if venv:
-            src_dir = os.path.join(venv, "src")
-            if os.path.exists(src_dir):
-                return src_dir
-        return create_tracked_tempdir(prefix="pdm-src-")
+    def _get_source_dir(self, ireq: pip_shims.InstallRequirement) -> str:
+        if ireq.source_dir:
+            return ireq.source_dir
+        if ireq.link.is_existing_dir():
+            ireq.source_dir = ireq.link.file_path
+            return ireq.source_dir
+        if self.packages_path:
+            src_dir = self.packages_path / "src"
+        elif os.environ.get("VIRTUAL_ENV", None):
+            src_dir = Path(os.environ.get["VIRTUAL_ENV"]) / "src"
+        else:
+            src_dir = Path("src")
+        if not src_dir.is_dir():
+            src_dir.mkdir()
+        ireq.ensure_has_source_dir(str(src_dir))
+        return ireq.source_dir
 
     @contextmanager
     def get_finder(
@@ -231,7 +235,6 @@ class Environment:
         """
         from pdm.builders import EnvEggInfoBuilder, EnvWheelBuilder
 
-        build_dir = self._get_build_dir(ireq)
         wheel_cache = self.project.make_wheel_cache()
         supported_tags = pip_shims.get_supported(self.interpreter.for_tag())
         if hashes:
@@ -251,26 +254,22 @@ class Environment:
                 if cache_entry is not None:
                     termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
                     ireq.link = cache_entry.link
-            if not ireq.editable and not ireq.req.name:
+            build_dir = self._get_build_dir(ireq)
+            if not ireq.source_dir:
                 ireq.source_dir = build_dir
-            else:
-                ireq.ensure_has_source_dir(build_dir)
 
-            if not (ireq.editable and ireq.req.is_local_dir):
-                if ireq.link.is_existing_dir():
-                    ireq.source_dir = ireq.link.file_path
-                else:
-                    downloader = pip_shims.Downloader(finder.session, "off")
-                    downloaded = pip_shims.unpack_url(
-                        ireq.link,
-                        ireq.source_dir,
-                        downloader,
-                        hashes=ireq.hashes(False),
-                    )
+            if not ireq.link.is_existing_dir():
+                downloader = pip_shims.Downloader(finder.session, "off")
+                downloaded = pip_shims.unpack_url(
+                    ireq.link,
+                    ireq.source_dir,
+                    downloader,
+                    hashes=ireq.hashes(False),
+                )
 
-                    if ireq.link.is_wheel:
-                        # If the file is a wheel, return the downloaded file directly.
-                        return downloaded.path
+                if ireq.link.is_wheel:
+                    # If the file is a wheel, return the downloaded file directly.
+                    return downloaded.path
 
         # Check the built wheel cache again after hashes are resolved.
         if not ireq.editable:
@@ -284,9 +283,12 @@ class Environment:
                 return cache_entry.link.file_path
 
         # Otherwise, as all source is already prepared, build it.
+        output_dir = os.path.join(build_dir, "dist")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
         if ireq.editable:
             builder = EnvEggInfoBuilder(ireq.unpacked_source_directory, self)
-            ret = ireq.metadata_directory = builder.build(build_dir)
+            ret = ireq.metadata_directory = builder.build(output_dir)
             return ret
         should_cache = False
         if ireq.link.is_vcs:
@@ -299,9 +301,8 @@ class Environment:
             if _egg_info_re.search(base) is not None:
                 # Determine whether the string looks like an egg_info.
                 should_cache = True
-        output_dir = (
-            wheel_cache.get_path_for_link(ireq.link) if should_cache else build_dir
-        )
+        if should_cache:
+            output_dir = wheel_cache.get_path_for_link(ireq.link)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         return EnvWheelBuilder(ireq.unpacked_source_directory, self).build(output_dir)
