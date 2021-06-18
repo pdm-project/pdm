@@ -182,13 +182,19 @@ def test_parse_flit_project_metadata(project, is_editable):
 
 @pytest.mark.usefixtures("vcs")
 def test_vcs_candidate_in_subdirectory(project, is_editable):
-    line = "git+https://github.com/test-root/demo-parent-package.git@master#egg=package-a&subdirectory=package-a"
+    line = (
+        "git+https://github.com/test-root/demo-parent-package.git"
+        "@master#egg=package-a&subdirectory=package-a"
+    )
     req = parse_requirement(line, is_editable)
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == ["flask"]
     assert candidate.version == "0.1.0"
 
-    line = "git+https://github.com/test-root/demo-parent-package.git@master#egg=package-b&subdirectory=package-b"
+    line = (
+        "git+https://github.com/test-root/demo-parent-package.git"
+        "@master#egg=package-b&subdirectory=package-b"
+    )
     req = parse_requirement(line, is_editable)
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == ["django"]
