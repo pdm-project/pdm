@@ -208,3 +208,7 @@ can be run natively as [VSCode Tasks][vscode tasks].
 [pdm scripts]: https://pdm.fming.dev/project/#run-scripts-in-isolated-environment
 
 ### [Seek for other IDEs or editors](usage/advanced.md#integrate-with-other-ide-or-editors)
+
+## PDM Eco-system
+
+[Awesome PDM](https://github.com/pdm-project/awesome-pdm) is a curated list of awesome PDM plugins and resources.

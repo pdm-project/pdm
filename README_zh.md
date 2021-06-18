@@ -131,6 +131,21 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
 
+## 徽章
+
+在 README.md 中加入以下 Markdown 代码，向大家展示项目正在使用 PDM:
+
+```markdown
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+```
+
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+
+## PDM 生态
+
+[Awesome PDM](https://github.com/pdm-project/awesome-pdm) 这个项目收集了一些非常有用的 PDM 插件及相关资源。
+
+
 ## 常见问题
 
 ### 1. `__pypackages__` 里都包含什么?
@@ -154,16 +169,6 @@ PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并
 ### 5. 我能用`pdm`管理一个 Python 2.7 的项目吗？
 
 当然可以。只是`pdm`本身的安装需要 Python 版本高于 3.7，它并不限制项目使用的 Python 版本。
-
-## 徽章
-
-在 README.md 中加入以下 Markdown 代码，向大家展示项目正在使用 PDM:
-
-```markdown
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
-```
-
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
 ## 鸣谢
 

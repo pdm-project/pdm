@@ -142,6 +142,20 @@ If you are curious about how this works, check [this doc section](https://pdm.fm
 $ docker pull frostming/pdm
 ```
 
+## Badges
+
+Tell people you are using PDM in your project by including the markdown code in README.md:
+
+```markdown
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+```
+
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+
+## PDM Eco-system
+
+[Awesome PDM](https://github.com/pdm-project/awesome-pdm) is a curated list of awesome PDM plugins and resources.
+
 ## FAQ
 
 ### 1. What is put in `__pypackages__`?
@@ -166,16 +180,6 @@ in VCS and do `pdm sync` on the target environment to deploy.
 ### 5. Can I use `pdm` to manage a Python 2.7 project?
 
 Sure. The `pdm` itself can be installed under Python 3.7+ only, but it doesn't restrict the Python used by the project.
-
-## Badges
-
-Tell people you are using PDM in your project by including the markdown code in README.md:
-
-```markdown
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
-```
-
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
 ## Credits
 
