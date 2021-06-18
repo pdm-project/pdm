@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
 import click
-from pip._vendor import pkg_resources
 from resolvelib import Resolver
 
 from pdm import termui
@@ -23,6 +22,11 @@ from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
 
+if sys.version_info >= (3, 8):
+    import importlib.metadata as importlib_metadata
+else:
+    import importlib_metadata
+
 COMMANDS_MODULE_PATH: str = importlib.import_module(
     "pdm.cli.commands"
 ).__path__  # type: ignore
@@ -32,10 +36,6 @@ class Core:
     """A high level object that manages all classes and configurations"""
 
     def __init__(self) -> None:
-        if sys.version_info >= (3, 8):
-            import importlib.metadata as importlib_metadata
-        else:
-            import importlib_metadata
         self.version = importlib_metadata.version(__name__.split(".")[0])
 
         self.project_class = Project
@@ -176,7 +176,7 @@ class Core:
             ...
 
         """
-        for plugin in pkg_resources.iter_entry_points("pdm"):  # type: ignore
+        for plugin in importlib_metadata.entry_points().get("pdm", []):
             plugin.load()(self)
 
 
