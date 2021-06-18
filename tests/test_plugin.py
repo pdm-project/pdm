@@ -1,9 +1,12 @@
 from unittest import mock
 
-from pip._vendor import pkg_resources
-
 from pdm.cli.commands.base import BaseCommand
 from pdm.project.config import ConfigItem
+
+try:
+    import importlib.metadata as importlib_metadata
+except ModuleNotFoundError:
+    import importlib_metadata
 
 
 class HelloCommand(BaseCommand):
@@ -37,7 +40,9 @@ def make_entry_point(plugin):
 
 def test_plugin_new_command(invoke, mocker, project):
     mocker.patch.object(
-        pkg_resources, "iter_entry_points", return_value=[make_entry_point(new_command)]
+        importlib_metadata,
+        "entry_points",
+        return_value={"pdm": [make_entry_point(new_command)]},
     )
     result = invoke(["--help"], obj=project)
     assert "hello" in result.output
@@ -51,9 +56,9 @@ def test_plugin_new_command(invoke, mocker, project):
 
 def test_plugin_replace_command(invoke, mocker, project):
     mocker.patch.object(
-        pkg_resources,
-        "iter_entry_points",
-        return_value=[make_entry_point(replace_command)],
+        importlib_metadata,
+        "entry_points",
+        return_value={"pdm": [make_entry_point(replace_command)]},
     )
 
     result = invoke(["info"], obj=project)
@@ -65,9 +70,11 @@ def test_plugin_replace_command(invoke, mocker, project):
 
 def test_load_multiple_plugings(invoke, mocker, project):
     mocker.patch.object(
-        pkg_resources,
-        "iter_entry_points",
-        return_value=[make_entry_point(new_command), make_entry_point(add_new_config)],
+        importlib_metadata,
+        "entry_points",
+        return_value={
+            "pdm": [make_entry_point(new_command), make_entry_point(add_new_config)]
+        },
     )
 
     result = invoke(["hello"])
