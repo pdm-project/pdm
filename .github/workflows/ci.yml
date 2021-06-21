@@ -28,7 +28,7 @@ jobs:
           - python-version: 3.8
             os: windows-latest
             arch: x86
-          - python-version: 3.10.0-beta.1
+          - python-version: '3.10.0-beta - 3.10.0'
             os: ubuntu-latest
             arch: x64
 
