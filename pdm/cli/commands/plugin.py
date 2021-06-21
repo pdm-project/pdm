@@ -32,6 +32,13 @@ def _all_plugins() -> list[str]:
     return result
 
 
+def run_pip(args: list[str]) -> bytes:
+    return subprocess.check_output(
+        [sys.executable, "-I", os.path.dirname(pip_location)] + args,
+        stderr=subprocess.STDOUT,
+    )
+
+
 class Command(BaseCommand):
     """Manage the PDM plugins"""
 
@@ -60,7 +67,7 @@ class ListCommand(BaseCommand):
         echo = project.core.ui.echo
         if not plugins:
             echo("No plugin is installed with PDM", err=True)
-            return
+            sys.exit(1)
         echo("Installed plugins:", err=True)
         for plugin in plugins:
             metadata = importlib_metadata.metadata(plugin)
@@ -91,20 +98,16 @@ class AddCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        pip_command = (
-            [sys.executable, "-I", os.path.dirname(pip_location), "install"]
-            + shlex.split(options.pip_args)
-            + options.packages
-        )
+        pip_args = ["install"] + shlex.split(options.pip_args) + options.packages
 
         project.core.ui.echo(
-            f"Running pip command: {pip_command}", verbosity=termui.DETAIL
+            f"Running pip command: {pip_args}", verbosity=termui.DETAIL
         )
         with project.core.ui.open_spinner(
             f"Installing plugins: {options.packages}"
         ) as spinner:
             try:
-                subprocess.check_output(pip_command, stderr=subprocess.STDOUT)
+                run_pip(pip_args)
             except subprocess.CalledProcessError as e:
                 spinner.fail("Installation failed: \n" + e.output)
                 sys.exit(1)
@@ -123,6 +126,9 @@ class RemoveCommand(BaseCommand):
             "--pip-args",
             help="Arguments that will be passed to pip uninstall",
             default="",
+        )
+        parser.add_argument(
+            "-y", "--yes", action="store_true", help="Answer yes on the question"
         )
         parser.add_argument(
             "packages", nargs="+", help="Specify one or many plugin names"
@@ -163,23 +169,24 @@ class RemoveCommand(BaseCommand):
         packages_to_remove = self._resolve_dependencies_to_remove(valid_packages)
         if not packages_to_remove:
             project.core.ui.echo("No package to remove.", err=True)
+            sys.exit(1)
+        if not (
+            options.yes
+            or click.confirm(f"Will remove: {packages_to_remove}, continue?")
+        ):
             return
-        if not click.confirm(f"Will remove: {packages_to_remove}, continue?"):
-            return
-        pip_command = (
-            [sys.executable, "-I", os.path.dirname(pip_location), "uninstall", "-y"]
-            + shlex.split(options.pip_args)
-            + packages_to_remove
+        pip_args = (
+            ["uninstall", "-y"] + shlex.split(options.pip_args) + packages_to_remove
         )
 
         project.core.ui.echo(
-            f"Running pip command: {pip_command}", verbosity=termui.DETAIL
+            f"Running pip command: {pip_args}", verbosity=termui.DETAIL
         )
         with project.core.ui.open_spinner(
             f"Uninstalling plugins: {valid_packages}"
         ) as spinner:
             try:
-                subprocess.check_output(pip_command, stderr=subprocess.STDOUT)
+                run_pip(pip_args)
             except subprocess.CalledProcessError as e:
                 spinner.fail("Uninstallation failed: \n" + e.output)
                 sys.exit(1)
