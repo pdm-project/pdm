@@ -76,6 +76,10 @@ _pdm_25182a7ef85b840e_complete()
             opts="--global --help --project --verbose"
             ;;
 
+            (plugin)
+            opts="--help --verbose"
+            ;;
+
             (remove)
             opts="--dev --global --help --no-editable --no-self --no-sync --project --section --verbose"
             ;;
@@ -114,7 +118,7 @@ _pdm_25182a7ef85b840e_complete()
 
     # completing for a command
     if [[ $cur == $com ]]; then
-        coms="add build cache completion config export import info init install list lock remove run search show sync update use"
+        coms="add build cache completion config export import info init install list lock plugin remove run search show sync update use"
 
         COMPREPLY=($(compgen -W "${coms}" -- ${cur}))
         __ltrim_colon_completions "$cur"

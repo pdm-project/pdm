@@ -3,7 +3,7 @@
 
 function __fish_pdm_7426f3abf02b4bb8_complete_no_subcommand
     for i in (commandline -opc)
-        if contains -- $i add build cache completion config export import info init install list lock remove run search show sync update use
+        if contains -- $i add build cache completion config export import info init install list lock plugin remove run search show sync update use
             return 1
         end
     end
@@ -30,6 +30,7 @@ complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a in
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a install -d 'Install dependencies from lock file'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a list -d 'List packages installed in the current working set'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a lock -d 'Resolve and lock dependencies'
+complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a plugin -d 'Manage the PDM plugins'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a remove -d 'Remove packages from pyproject.toml'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a run -d 'Run commands or scripts with local packages loaded'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a search -d 'Search for PyPI packages'
@@ -149,6 +150,10 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d '-v for detailed output and -vv for more detailed'
+
+# plugin
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin' -l help -d 'show this help message and exit'
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # remove
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l dev -d 'Remove packages from dev dependencies'

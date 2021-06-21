@@ -185,7 +185,7 @@ function TabExpansion($line, $lastWord) {
 
     if ($lastBlock -match "^pdm ") {
         [string[]]$words = $lastBlock.Split()[1..$lastBlock.Length]
-        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "import", "info", "init", "install", "list", "lock", "remove", "run", "search", "show", "sync", "update", "use")
+        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "import", "info", "init", "install", "list", "lock", "plugin", "remove", "run", "search", "show", "sync", "update", "use")
         [string[]]$commands = $words.Where( { $_ -notlike "-*" })
         $command = $commands[0]
         $completer = [Completer]::new()
@@ -215,12 +215,12 @@ function TabExpansion($line, $lastWord) {
                         $command = $subCommand
                         break
                     }
-                    $null {
+                    Default {
                         $completer.AddParams(@("clear", "remove", "info", "list"), $false)
                         break
                     }
-                    Default {}
                 }
+                break
             }
             "completion" { $completer.AddParams(@("powershell", "bash", "zsh", "fish")); break }
             "config" {
@@ -284,6 +284,27 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new(@("--global", "-g")),
                         $projectOption
                     ))
+                break
+            }
+            "plugin" {
+                $subCommand = $commands[1]
+                switch ($subCommand) {
+                    "add" {
+                        $completer.AddOpts(([Option]::new(("--pip-args"))))
+                        $completer.AddParams(@(getPyPIPackages), $true)
+                        $command = $subCommand
+                        break
+                    }
+                    "remove" {
+                        $completer.AddOpts(([Option]::new(("--pip-args", "-y", "--yes"))))
+                        $command = $subCommand
+                        break
+                    }
+                    Default {
+                        $completer.AddParams(@("add", "remove", "list"), $false)
+                        break
+                    }
+                }
                 break
             }
             "remove" {

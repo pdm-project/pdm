@@ -27,6 +27,7 @@ _pdm() {
     'install:Install dependencies from lock file'
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
+    'plugin:Manage the PDM plugins'
     'remove:Remove packages from pyproject.toml'
     'run:Run commands or scripts with local packages loaded'
     'search:Search for PyPI packages'
@@ -181,6 +182,42 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
       )
+      ;;
+    plugin)
+      _arguments -C \
+        $arguments \
+        ': :->command' \
+        '*:: :->args' && ret=0
+      case $state in
+        command)
+          local -a actions=(
+            "add:Install new plugins with PDM"
+            "remove:Remove plugins from PDM's environment"
+            "list:List all plugins installed with PDM"
+          )
+          _describe -t command 'pdm plugin actions' actions && ret=0
+          ;;
+        args)
+          case $words[1] in
+            add)
+              arguments+=(
+                '--pip-args[Arguments that will be passed to pip install]:pip args:'
+                '*:packages:_pdm_pip_packages'
+              )
+              ;;
+            remove)
+              arguments+=(
+                '--pip-args[Arguments that will be passed to pip uninstall]:pip args:'
+                {-y,--yes}'[Answer yes on the question]'
+                '*:packages:_pdm_pip_packages'
+              )
+              ;;
+            *)
+              ;;
+          esac
+          ;;
+      esac
+      return $ret
       ;;
     remove)
       arguments+=(
