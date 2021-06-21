@@ -330,7 +330,8 @@ class Synchronizer:
                 self_key = self.self_key
                 assert self_key
                 self.candidates[self_key] = self_candidate
-                self.ui.echo("Installing the project as an editable package...")
+                word = "a" if self.no_editable else "an editable"
+                self.ui.echo(f"Installing the project as {word} package...")
                 with self.ui.indent("  "):
                     if self_key in self.working_set:
                         self.update_candidate(self_key)
