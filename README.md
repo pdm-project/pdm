@@ -65,9 +65,47 @@ environments. It is a relative new proposal and there are not many tools support
 is [pyflow]), but it is written with Rust and thus can't get much help from the big Python community.
 For the same reason it can't act as a PEP 517 backend.
 
-## Installation:
+## Installation
 
 PDM requires python version 3.7 or higher.
+
+Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
+
+**For Linux/Mac**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/install-pdm.py | python -
+```
+
+**For Windows**
+
+```powershell
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/install-pdm.py -UseBasicParsing).Content | python -
+```
+
+The installer will install PDM into the user site and the location depends on the system:
+
+- `$HOME/.local/bin` for Unix
+- `%APPDATA%\Python\Scripts` on Windows
+
+You can pass additional options to the script to control how PDM is installed:
+
+```
+usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v VERSION, --version VERSION | envvar: PDM_VERSION
+                        Specify the version to be installed, or HEAD to install from the main branch
+  --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
+  --remove | envvar: PDM_REMOVE            Remove the PDM installation
+  -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
+  -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
+```
+
+You can either pass the options after the script or set the env var value.
+
+## Alternative Installation Methods
 
 If you are on MacOS and using `homebrew`, install it by:
 
