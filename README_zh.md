@@ -60,11 +60,49 @@ foo
 没有很多相关的工具实现它，这其中就有 [pyflow]。但 pyflow 又是用 Rust 写的，不是所有 Python 的社区
 都会用 Rust，这样就没法贡献代码，而且，基于同样的原因，pyflow 并不支持 PEP 517 构建。
 
-## 安装:
+## 安装
 
 PDM 需要 Python 3.7 或更高版本。
 
-如果你使用的是 MacOS 并且安装了`homebrew`:
+像 pip 一样，PDM 也提供了一键安装脚本，用来将 PDM 安装在一个隔离的环境中。
+
+**Linux/Mac 安装命令**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/install-pdm.py | python -
+```
+
+**Windows 安装命令**
+
+```powershell
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/install-pdm.py -UseBasicParsing).Content | python -
+```
+
+默认情况下，此脚本会将 PDM 安装在 Python 的用户目录下，具体位置取决于当前系统：
+
+- Unix 上是 `$HOME/.local/bin`
+- Windows 上是 `%APPDATA%\Python\Scripts`
+
+你还可以通过命令行的选项来改变安装脚本的行为：
+
+```
+usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v VERSION, --version VERSION | envvar: PDM_VERSION
+                        Specify the version to be installed, or HEAD to install from the main branch
+  --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
+  --remove | envvar: PDM_REMOVE            Remove the PDM installation
+  -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
+  -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
+```
+
+你既可以通过直接增加选项，也可以通过设置对应的环境变量来达到这一效果。
+
+## 其他安装方法
+
+如果你使用的是 MacOS 并且安装了 `homebrew`:
 
 ```bash
 $ brew install pdm
@@ -144,7 +182,6 @@ $ python /home/frostming/workspace/flask_app/app.py
 ## PDM 生态
 
 [Awesome PDM](https://github.com/pdm-project/awesome-pdm) 这个项目收集了一些非常有用的 PDM 插件及相关资源。
-
 
 ## 常见问题
 
