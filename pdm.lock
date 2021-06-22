@@ -543,6 +543,7 @@ summary = "Backported and Experimental Type Hints for Python 3.5+"
 [[package]]
 name = "urllib3"
 version = "1.26.4"
+requires_python = ">=2.7,<4.0,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
 
 [[package]]
@@ -572,7 +573,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3"
-content_hash = "sha256:1b02b23b5228edf4588e29d706eaaf06943b4eb1316d6f018cecc7fade29694f"
+content_hash = "sha256:441ff829254fcc69025839e04e5e4bee194897ba020b62fd4f602a7bc9fbe3e1"
 
 [metadata.files]
 "apipkg 1.5" = [
