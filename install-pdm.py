@@ -46,7 +46,7 @@ def _call_subprocess(args: list[str]) -> int:
         ).returncode
     except subprocess.CalledProcessError as e:
         print(f"An error occurred when executing {args}:", file=sys.stderr)
-        print(e.output.decode("utf-8"))
+        print(e.output.decode("utf-8"), file=sys.stderr)
         sys.exit(e.returncode)
 
 
@@ -54,61 +54,114 @@ def _echo(text: str) -> None:
     sys.stdout.write(text + "\n")
 
 
-def _get_win_folder_with_ctypes(csidl_name):
-    import ctypes
-
-    csidl_const = {
-        "CSIDL_APPDATA": 26,
-        "CSIDL_COMMON_APPDATA": 35,
-        "CSIDL_LOCAL_APPDATA": 28,
-    }[csidl_name]
-
-    buf = ctypes.create_unicode_buffer(1024)
-    ctypes.windll.shell32.SHGetFolderPathW(None, csidl_const, None, 0, buf)
-
-    # Downgrade to short path name if have highbit chars. See
-    # <http://bugs.activestate.com/show_bug.cgi?id=85099>.
-    has_high_char = False
-    for c in buf:
-        if ord(c) > 255:
-            has_high_char = True
-            break
-    if has_high_char:
-        buf2 = ctypes.create_unicode_buffer(1024)
-        if ctypes.windll.kernel32.GetShortPathNameW(buf.value, buf2, 1024):
-            buf = buf2
-
-    return buf.value
-
-
-def _get_win_folder_from_registry(csidl_name):
-    """This is a fallback technique at best. I'm not sure if using the
-    registry for this guarantees us the correct answer for all CSIDL_*
-    names.
-    """
+if WINDOWS:
     import winreg
 
-    shell_folder_name = {
-        "CSIDL_APPDATA": "AppData",
-        "CSIDL_COMMON_APPDATA": "Common AppData",
-        "CSIDL_LOCAL_APPDATA": "Local AppData",
-    }[csidl_name]
+    def _get_win_folder_with_ctypes(csidl_name: str) -> str:
+        import ctypes
 
-    key = winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER,
-        r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",
-    )
-    dir, _ = winreg.QueryValueEx(key, shell_folder_name)
-    return dir
+        csidl_const = {
+            "CSIDL_APPDATA": 26,
+            "CSIDL_COMMON_APPDATA": 35,
+            "CSIDL_LOCAL_APPDATA": 28,
+        }[csidl_name]
 
+        buf = ctypes.create_unicode_buffer(1024)
+        ctypes.windll.shell32.SHGetFolderPathW(None, csidl_const, None, 0, buf)
 
-if WINDOWS:
+        # Downgrade to short path name if have highbit chars. See
+        # <http://bugs.activestate.com/show_bug.cgi?id=85099>.
+        has_high_char = False
+        for c in buf:
+            if ord(c) > 255:
+                has_high_char = True
+                break
+        if has_high_char:
+            buf2 = ctypes.create_unicode_buffer(1024)
+            if ctypes.windll.kernel32.GetShortPathNameW(buf.value, buf2, 1024):
+                buf = buf2
+
+        return buf.value
+
+    def _get_win_folder_from_registry(csidl_name: str) -> str:
+        """This is a fallback technique at best. I'm not sure if using the
+        registry for this guarantees us the correct answer for all CSIDL_*
+        names.
+        """
+        shell_folder_name = {
+            "CSIDL_APPDATA": "AppData",
+            "CSIDL_COMMON_APPDATA": "Common AppData",
+            "CSIDL_LOCAL_APPDATA": "Local AppData",
+        }[csidl_name]
+
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",
+        )
+        dir, _ = winreg.QueryValueEx(key, shell_folder_name)
+        return dir
+
     try:
         from ctypes import windll  # noqa
 
         _get_win_folder = _get_win_folder_with_ctypes
     except ImportError:
         _get_win_folder = _get_win_folder_from_registry
+
+    def _remove_path_windows(target: Path) -> None:
+        value = os.path.normcase(target)
+
+        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
+            with winreg.OpenKey(
+                root, "Environment", 0, winreg.KEY_ALL_ACCESS
+            ) as env_key:
+                try:
+                    old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
+                    paths = [
+                        os.path.normcase(item) for item in old_value.split(os.pathsep)
+                    ]
+                    if value not in paths:
+                        return
+
+                    new_value = os.pathsep.join(p for p in paths if p != value)
+                    winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
+                except FileNotFoundError:
+                    return
+
+
+def _add_to_path(target: Path) -> None:
+    value = os.path.normcase(target)
+
+    if WINDOWS:
+        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
+            with winreg.OpenKey(
+                root, "Environment", 0, winreg.KEY_ALL_ACCESS
+            ) as env_key:
+                try:
+                    old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
+                    if value in [
+                        os.path.normcase(item) for item in old_value.split(os.pathsep)
+                    ]:
+                        return
+                except FileNotFoundError:
+                    old_value, type_ = "", winreg.REG_EXPAND_SZ
+                new_value = os.pathsep.join([old_value, value]) if old_value else value
+                winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
+
+        _echo(
+            "Post-install: {} is added to PATH env, please restart your terminal "
+            "to take effect".format(colored("green", value))
+        )
+    else:
+        paths = [os.path.normcase(p) for p in os.getenv("PATH", "").split(os.pathsep)]
+        if value in paths:
+            return
+        _echo(
+            "Post-install: Please add {} to PATH by executing:\n    {}".format(
+                colored("green", value),
+                colored("cyan", f"export PATH={value}:$PATH"),
+            )
+        )
 
 
 def support_ansi() -> False:
@@ -280,70 +333,6 @@ class Installer:
             shutil.copy(target, script)
         return bin_path
 
-    def _add_to_path(self, target: Path) -> None:
-        value = os.path.normcase(target)
-
-        if WINDOWS:
-
-            import winreg
-
-            with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-                with winreg.OpenKey(
-                    root, "Environment", 0, winreg.KEY_ALL_ACCESS
-                ) as env_key:
-                    try:
-                        old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
-                        if value in [
-                            os.path.normcase(item)
-                            for item in old_value.split(os.pathsep)
-                        ]:
-                            return
-                    except FileNotFoundError:
-                        old_value, type_ = "", winreg.REG_EXPAND_SZ
-                    new_value = (
-                        os.pathsep.join([old_value, value]) if old_value else value
-                    )
-                    winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
-
-            _echo(
-                "Post-install: {} is added to PATH env, please restart your terminal "
-                "to take effect".format(colored("green", value))
-            )
-        else:
-            paths = [
-                os.path.normcase(p) for p in os.getenv("PATH", "").split(os.pathsep)
-            ]
-            if value in paths:
-                return
-            _echo(
-                "Post-install: Please add {} to PATH by executing:\n    {}".format(
-                    colored("green", value),
-                    colored("cyan", f"export PATH={value}:$PATH"),
-                )
-            )
-
-    def _remove_path_windows(self, target: Path) -> None:
-        value = os.path.normcase(target)
-
-        import winreg
-
-        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-            with winreg.OpenKey(
-                root, "Environment", 0, winreg.KEY_ALL_ACCESS
-            ) as env_key:
-                try:
-                    old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
-                    paths = [
-                        os.path.normcase(item) for item in old_value.split(os.pathsep)
-                    ]
-                    if value not in paths:
-                        return
-
-                    new_value = os.pathsep.join(p for p in paths if p != value)
-                    winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
-                except FileNotFoundError:
-                    return
-
     def _post_install(self, venv_path: Path, bin_path: Path) -> None:
         if WINDOWS:
             script = bin_path / "pdm.exe"
@@ -358,7 +347,7 @@ class Installer:
                 colored("cyan", str(script)),
             )
         )
-        self._add_to_path(bin_path)
+        _add_to_path(bin_path)
 
     def install(self) -> None:
         venv = self._make_env()
@@ -388,7 +377,7 @@ class Installer:
         script.unlink()
 
         if WINDOWS:
-            self._remove_path_windows(bin_path)
+            _remove_path_windows(bin_path)
 
         print()
         _echo("Successfully uninstalled")
