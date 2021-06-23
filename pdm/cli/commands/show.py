@@ -12,6 +12,7 @@ from pdm.utils import normalize_name
 
 
 def filter_stable(candidate: Candidate) -> bool:
+    assert candidate.version
     return not Version(candidate.version).is_prerelease
 
 
