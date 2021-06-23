@@ -1,3 +1,22 @@
+Release v1.6.4 (2021-06-23)
+---------------------------
+
+### Features & Improvements
+
+- Extract package name from egg-info in filename when eligible. Remove the patching code of resolvelib's inner class. [#441](https://github.com/pdm-project/pdm/issues/441)
+- Support installing packages from subdiretories of VCS repository. [#507](https://github.com/pdm-project/pdm/issues/507)
+- Add an install script to bootstrap PDM quickly without help of other tools. Modify docs to recommend this installation method. [#508](https://github.com/pdm-project/pdm/issues/508)
+- Add a new subcommand `plugin` to manage pdm plugins, including `add`, `remove` and `list` commands. [#510](https://github.com/pdm-project/pdm/issues/510)
+
+### Bug Fixes
+
+- Don't monkeypatch the internal class of `resolvelib` any more. This makes PDM more stable across updates of sub-dependencies. [#515](https://github.com/pdm-project/pdm/issues/515)
+
+### Miscellany
+
+- Clear the type errors from mypy. [#261](https://github.com/pdm-project/pdm/issues/261)
+
+
 Release v1.6.3 (2021-06-17)
 ---------------------------
 
