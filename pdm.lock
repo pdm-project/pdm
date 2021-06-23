@@ -479,7 +479,7 @@ dependencies = [
 
 [[package]]
 name = "resolvelib"
-version = "0.7.0"
+version = "0.7.1"
 summary = "Resolve abstract dependencies into concrete ones"
 
 [[package]]
@@ -967,9 +967,9 @@ content_hash = "sha256:441ff829254fcc69025839e04e5e4bee194897ba020b62fd4f602a7bc
     {file = "requests-2.25.1-py2.py3-none-any.whl", hash = "sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e"},
     {file = "requests-2.25.1.tar.gz", hash = "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"},
 ]
-"resolvelib 0.7.0" = [
-    {file = "resolvelib-0.7.0-py2.py3-none-any.whl", hash = "sha256:f8a62e4fdf30b8d57834e4383fa09557de5c6d3a3e68455a082806cfcb6cfe7a"},
-    {file = "resolvelib-0.7.0.tar.gz", hash = "sha256:8840a8bf49fd56cff51398ebfe090e5d6aeaf4c4102472bff006aca7db470868"},
+"resolvelib 0.7.1" = [
+    {file = "resolvelib-0.7.1-py2.py3-none-any.whl", hash = "sha256:4bb1e7ec9b3054c3914cad1e715288b11091756bdb72af49fb8986931715a01a"},
+    {file = "resolvelib-0.7.1.tar.gz", hash = "sha256:c526cda7f080d908846262d86c738231d9bfb556eb02d77167b685d65d85ace9"},
 ]
 "setuptools 56.2.0" = [
     {file = "setuptools-56.2.0-py3-none-any.whl", hash = "sha256:bc30153eec47d82f20c6f5e1a13d4ee725c6deb7013a67557f89bfe5d25235c4"},

@@ -9,9 +9,8 @@ import sys
 import sysconfig
 import tempfile
 from contextlib import contextmanager
-from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generator, Iterator, List, Optional
+from typing import TYPE_CHECKING, Any, Generator, Iterator
 
 from distlib.scripts import ScriptMaker
 from pip._vendor import packaging, pkg_resources
@@ -26,6 +25,7 @@ from pdm.models.in_process import (
     get_sys_config_paths,
 )
 from pdm.models.pip_shims import misc, patch_bin_prefix, req_uninstall
+from pdm.models.requirements import _egg_info_re
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
@@ -42,15 +42,13 @@ if TYPE_CHECKING:
     from pdm.models.python import PythonInfo
     from pdm.project import Project
 
-_egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
-
 
 class WorkingSet(collections.abc.Mapping):
     """A dict-like class that holds all installed packages in the lib directory."""
 
     def __init__(
         self,
-        paths: Optional[List[str]] = None,
+        paths: list[str] | None = None,
         python: str = pkg_resources.PY_MAJOR,
     ):
         self.env = pkg_resources.Environment(paths, python=python)
@@ -96,7 +94,7 @@ class Environment:
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
 
-    def get_paths(self) -> Dict[str, str]:
+    def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
         paths = sysconfig.get_paths()
         scripts = "Scripts" if os.name == "nt" else "bin"
@@ -140,7 +138,7 @@ class Environment:
             misc.site_packages = _old_sitepackages
             pkg_resources.working_set = _old_ws
 
-    def is_local(self, path: PathLike) -> bool:
+    def is_local(self, path: str) -> bool:
         """PEP 582 version of ``is_local()`` function."""
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.packages_path.as_posix())
@@ -192,7 +190,7 @@ class Environment:
     @contextmanager
     def get_finder(
         self,
-        sources: Optional[List[Source]] = None,
+        sources: list[Source] | None = None,
         ignore_requires_python: bool = False,
     ) -> Generator[pip_shims.PackageFinder, None, None]:
         """Return the package finder of given index sources.
@@ -222,7 +220,7 @@ class Environment:
     def build(
         self,
         ireq: pip_shims.InstallRequirement,
-        hashes: Optional[Dict[str, str]] = None,
+        hashes: dict[str, str] | None = None,
         allow_all: bool = True,
     ) -> str:
         """Build egg_info directory for editable candidates and a wheel for others.
@@ -316,7 +314,7 @@ class Environment:
         )
 
     @cached_property
-    def marker_environment(self) -> Dict[str, Any]:
+    def marker_environment(self) -> dict[str, Any]:
         """Get environment for marker evaluation"""
         return get_pep508_environment(self.interpreter.executable)
 
@@ -347,7 +345,7 @@ class Environment:
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
 
-    def _download_pip_wheel(self, path: os.PathLike):
+    def _download_pip_wheel(self, path: str | Path):
         dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
         try:
             subprocess.check_call(
@@ -370,7 +368,7 @@ class Environment:
             shutil.rmtree(dirname, ignore_errors=True)
 
     @cached_property
-    def pip_command(self) -> List[str]:
+    def pip_command(self) -> list[str]:
         """Get a pip command for this environment, and download one if not available.
         Return a list of args like ['python', '-m', 'pip']
         """
@@ -399,17 +397,17 @@ class GlobalEnvironment(Environment):
 
     is_global = True
 
-    def get_paths(self) -> Dict[str, str]:
+    def get_paths(self) -> dict[str, str]:
         paths = get_sys_config_paths(self.interpreter.executable)
         paths["prefix"] = paths["data"]
         paths["headers"] = paths["include"]
         return paths
 
-    def is_local(self, path: PathLike) -> bool:
+    def is_local(self, path: str) -> bool:
         return misc.normalize_path(path).startswith(
             misc.normalize_path(self.get_paths()["prefix"])
         )
 
     @property
-    def packages_path(self) -> Optional[Path]:
+    def packages_path(self) -> Path | None:
         return None

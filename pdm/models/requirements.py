@@ -36,16 +36,17 @@ from pdm.utils import (
 )
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
-VCS_REQ = re.compile(
+_vcs_req_re = re.compile(
     rf"(?P<url>(?P<vcs>{'|'.join(VCS_SCHEMA)})\+[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
 )
-FILE_REQ = re.compile(
+_file_req_re = re.compile(
     r"(?:(?P<url>\S+://[^\s\[\];]+)|"
     r"(?P<path>(?:[^\s;\[\]]|\\ )*"
     r"|'(?:[^']|\\')*'"
     r"|\"(?:[^\"]|\\\")*\"))"
     r"(?P<extras>\[[^\[\]]+\])?(?P<marker>[\t ]*;[^\n]+)?"
 )
+_egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
 T = TypeVar("T", bound="Requirement")
 
 
@@ -326,6 +327,12 @@ class FileRequirement(Requirement):
             filename = os.path.basename(url_without_fragments(self.url))
             if filename.endswith(".whl"):
                 self.name, self.version = parse_name_version_from_wheel(filename)
+            else:
+                match = _egg_info_re.match(filename)
+                # Filename is like `<name>-<version>.tar.gz`, where name will be
+                # extracted and version will be left to be determined from the metadata.
+                if match:
+                    self.name = match.group(1)
 
     def _check_installable(self) -> None:
         assert self.path
@@ -427,7 +434,7 @@ def filter_requirements_with_extras(
 
 def parse_requirement(line: str, editable: bool = False) -> Requirement:
 
-    m = VCS_REQ.match(line)
+    m = _vcs_req_re.match(line)
     r: Requirement
     if m is not None:
         r = VcsRequirement.create(**m.groupdict())
@@ -435,7 +442,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         try:
             package_req = PackageRequirement(line)  # type: ignore
         except (RequirementParseError, InvalidRequirement) as e:
-            m = FILE_REQ.match(line)
+            m = _file_req_re.match(line)
             if m is None:
                 raise RequirementError(str(e)) from None
             r = FileRequirement.create(**m.groupdict())
