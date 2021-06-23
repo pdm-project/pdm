@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Dict, cast
 
+from pdm.models.candidates import Candidate
 from pdm.models.requirements import strip_extras
+from pdm.resolver.providers import BaseProvider
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Resolver
 
-    from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
     from pdm.models.specifiers import PySpecSet
-    from pdm.resolver.providers import BaseProvider
 
 
 def resolve(
@@ -29,7 +29,7 @@ def resolve(
     provider = cast(BaseProvider, resolver.provider)
     result = resolver.resolve(requirements, max_rounds)
 
-    mapping = cast(dict[str, Candidate], result.mapping)
+    mapping = cast(Dict[str, Candidate], result.mapping)
     for key, candidate in list(result.mapping.items()):
         if key is None:
             continue
