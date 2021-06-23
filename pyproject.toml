@@ -49,7 +49,6 @@ release = "python tasks/release.py"
 test = "pytest tests/"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
-typecheck = "mypy"
 complete = {call = "tasks.complete:main"}
 
 [tool.pdm.dev-dependencies]

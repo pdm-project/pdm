@@ -68,7 +68,7 @@ class WorkingSet(collections.abc.Mapping):
     def __iter__(self) -> Iterator[str]:
         return iter(self.env)
 
-    def __add_editable_dists(self):
+    def __add_editable_dists(self) -> None:
         """Editable distributions are not present in pkg_resources.WorkingSet,
         Get them from self.env
         """
@@ -118,7 +118,7 @@ class Environment:
         with temp_environ():
             working_set = self.get_working_set()
             _old_ws = pkg_resources.working_set
-            pkg_resources.working_set = working_set.pkg_ws
+            pkg_resources.working_set = working_set.pkg_ws  # type: ignore
             # HACK: Replace the is_local with environment version so that packages can
             # be removed correctly.
             _old_sitepackages = misc.site_packages
@@ -127,12 +127,12 @@ class Environment:
             misc.is_local = req_uninstall.is_local = self.is_local
             _evaluate_marker = pkg_resources.evaluate_marker
             pkg_resources.evaluate_marker = self.evaluate_marker
-            sys._original_executable = sys.executable
+            sys._original_executable = sys.executable  # type: ignore
             sys.executable = self.interpreter.executable
             with patch_bin_prefix(paths["scripts"]):
                 yield
-            sys.executable = sys._original_executable
-            del sys._original_executable
+            sys.executable = sys._original_executable  # type: ignore
+            del sys._original_executable  # type: ignore
             pkg_resources.evaluate_marker = _evaluate_marker
             misc.is_local = req_uninstall.is_local = _is_local
             misc.site_packages = _old_sitepackages
@@ -151,7 +151,11 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
-        pypackages = self.project.root / "__pypackages__" / self.interpreter.identifier
+        pypackages = (
+            self.project.root  # type: ignore
+            / "__pypackages__"
+            / self.interpreter.identifier
+        )
         if not pypackages.exists() and "-32" in pypackages.name:
             compatible_packages = pypackages.with_name(pypackages.name[:-3])
             if compatible_packages.exists():
@@ -165,7 +169,7 @@ class Environment:
         return pypackages
 
     def _get_build_dir(self, ireq: pip_shims.InstallRequirement) -> str:
-        if ireq.editable or ireq.link.is_existing_dir():
+        if ireq.editable or ireq.link and ireq.link.is_existing_dir():
             return self._get_source_dir(ireq)
         else:
             return create_tracked_tempdir(prefix="pdm-build-")
@@ -173,18 +177,19 @@ class Environment:
     def _get_source_dir(self, ireq: pip_shims.InstallRequirement) -> str:
         if ireq.source_dir:
             return ireq.source_dir
-        if ireq.link.is_existing_dir():
+        if ireq.link and ireq.link.is_existing_dir():
             ireq.source_dir = ireq.link.file_path
             return ireq.source_dir
         if self.packages_path:
             src_dir = self.packages_path / "src"
-        elif os.environ.get("VIRTUAL_ENV", None):
-            src_dir = Path(os.environ.get["VIRTUAL_ENV"]) / "src"
+        elif os.getenv("VIRTUAL_ENV", None):
+            src_dir = Path(os.environ["VIRTUAL_ENV"]) / "src"
         else:
             src_dir = Path("src")
         if not src_dir.is_dir():
             src_dir.mkdir()
         ireq.ensure_has_source_dir(str(src_dir))
+        assert ireq.source_dir
         return ireq.source_dir
 
     @contextmanager
@@ -213,9 +218,9 @@ class Environment:
             ignore_requires_python,
         )
         # Reuse the auth across sessions to avoid prompting repeatly.
-        finder.session.auth = self.auth
+        finder.session.auth = self.auth  # type: ignore
         yield finder
-        finder.session.close()
+        finder.session.close()  # type: ignore
 
     def build(
         self,
@@ -241,12 +246,13 @@ class Environment:
             with allow_all_wheels(allow_all):
                 # temporarily allow all wheels to get a link.
                 populate_link(finder, ireq, False)
+            assert ireq.link
             if hashes is None and not ireq.editable:
                 # If hashes are not given and cache is hit, replace the link with the
                 # cached one. This can speed up by skipping the download and build.
                 cache_entry = wheel_cache.get_cache_entry(
                     ireq.link,
-                    ireq.req.project_name,
+                    ireq.req.project_name,  # type: ignore
                     supported_tags,
                 )
                 if cache_entry is not None:
@@ -257,7 +263,7 @@ class Environment:
                 ireq.source_dir = build_dir
 
             if not ireq.link.is_existing_dir():
-                downloader = pip_shims.Downloader(finder.session, "off")
+                downloader = pip_shims.Downloader(finder.session, "off")  # type: ignore
                 downloaded = pip_shims.unpack_url(
                     ireq.link,
                     ireq.source_dir,
@@ -267,13 +273,14 @@ class Environment:
 
                 if ireq.link.is_wheel:
                     # If the file is a wheel, return the downloaded file directly.
+                    assert downloaded
                     return downloaded.path
 
         # Check the built wheel cache again after hashes are resolved.
         if not ireq.editable:
             cache_entry = wheel_cache.get_cache_entry(
                 ireq.link,
-                ireq.req.project_name,
+                ireq.req.project_name,  # type: ignore
                 supported_tags,
             )
             if cache_entry is not None:
@@ -292,7 +299,9 @@ class Environment:
         if ireq.link.is_vcs:
             vcs = pip_shims.VcsSupport()
             vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
-            if vcs_backend.is_immutable_rev_checkout(ireq.link.url, ireq.source_dir):
+            if vcs_backend and vcs_backend.is_immutable_rev_checkout(
+                ireq.link.url, ireq.source_dir
+            ):
                 should_cache = True
         elif not ireq.link.is_existing_dir:
             base, _ = ireq.link.splitext()
@@ -318,7 +327,7 @@ class Environment:
         """Get environment for marker evaluation"""
         return get_pep508_environment(self.interpreter.executable)
 
-    def which(self, command: str) -> str:
+    def which(self, command: str) -> str | None:
         """Get the full path of the given executable against this environment."""
         if not os.path.isabs(command) and command.startswith("python"):
             python = os.path.splitext(command)[0]
@@ -345,7 +354,7 @@ class Environment:
                 re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
             )
 
-    def _download_pip_wheel(self, path: str | Path):
+    def _download_pip_wheel(self, path: str | Path) -> None:
         dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
         try:
             subprocess.check_call(
@@ -409,5 +418,5 @@ class GlobalEnvironment(Environment):
         )
 
     @property
-    def packages_path(self) -> Path | None:
+    def packages_path(self) -> Path | None:  # type: ignore
         return None

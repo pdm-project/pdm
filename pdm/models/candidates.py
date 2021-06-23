@@ -5,7 +5,7 @@ import os
 import warnings
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence
+from typing import TYPE_CHECKING, Any, Sequence, cast, no_type_check
 
 from distlib.database import EggInfoDistribution
 from distlib.wheel import Wheel
@@ -17,7 +17,6 @@ from pdm.models import pip_shims
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.models.setup import Setup
-from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     cached_property,
     expand_env_vars_in_auth,
@@ -33,12 +32,12 @@ if TYPE_CHECKING:
 vcs = pip_shims.VcsSupport()
 
 
-def get_sdist(egg_info: str) -> Optional[EggInfoDistribution]:
+def get_sdist(egg_info: str) -> EggInfoDistribution | None:
     """Get a distribution from egg_info directory."""
     return EggInfoDistribution(egg_info) if egg_info else None
 
 
-def _patch_version_parsing():
+def _patch_version_parsing() -> None:
     """Monkey patches the version parsing to allow empty parts in version constraint
     list.
     """
@@ -63,10 +62,10 @@ del _patch_version_parsing
 @functools.lru_cache(128)
 def get_requirements_from_dist(
     dist: EggInfoDistribution, extras: Sequence[str]
-) -> List[str]:
+) -> list[str]:
     """Get requirements of a distribution, with given extras."""
     extras_in_metadata = []
-    result = []
+    result: list[str] = []
     dep_map = dist._build_dep_map()
     for extra, reqs in dep_map.items():
         reqs = [Requirement.from_pkg_requirement(r) for r in reqs]
@@ -99,9 +98,9 @@ class Candidate:
         self,
         req: Requirement,
         environment: Environment,
-        name: Optional[str] = None,
-        version: Optional[str] = None,
-        link: Optional[pip_shims.Link] = None,
+        name: str | None = None,
+        version: str | None = None,
+        link: pip_shims.Link | None = None,
     ):
         """
         :param req: the requirement that produces this candidate.
@@ -117,13 +116,13 @@ class Candidate:
         if link is None and self.req:
             link = self.ireq.link
         self.link = link
-        self.hashes: Optional[Dict[str, str]] = None
-        self._requires_python: Optional[PySpecSet] = None
+        self.hashes: dict[str, str] | None = None
+        self._requires_python: str | None = None
 
-        self.wheel: Optional[Wheel] = None
-        self.metadata = None
+        self.wheel: Wheel | None = None
+        self.metadata: Namespace | Metadata | None = None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.name, self.version))
 
     @cached_property
@@ -134,7 +133,9 @@ class Candidate:
                 expand_env_vars_in_auth(
                     rv.link.url.replace(
                         "${PROJECT_ROOT}",
-                        self.environment.project.root.as_posix().lstrip("/"),
+                        self.environment.project.root.as_posix().lstrip(  # type: ignore
+                            "/"
+                        ),
                     )
                 )
             )
@@ -147,7 +148,9 @@ class Candidate:
     def identify(self) -> str:
         return self.req.identify()
 
-    def __eq__(self, other: "Candidate") -> bool:
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Candidate):
+            return False
         if self.req.is_named:
             return self.name == other.name and self.version == other.version
         return self.name == other.name and self.link == other.link
@@ -156,19 +159,21 @@ class Candidate:
     def revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
-        if self.req.revision:
-            return self.req.revision
+        if self.req.revision:  # type: ignore
+            return self.req.revision  # type: ignore
         if self.ireq.source_dir and not os.path.exists(self.ireq.source_dir):
             # It happens because the cached wheel is hit and the source code isn't
             # pulled to local. In this case the link url must contain the full commit
             # hash which can be taken as the revision safely.
             # See more info at https://github.com/pdm-project/pdm/issues/349
-            return get_rev_from_url(self.ireq.original_link.url)
-        return vcs.get_backend(self.req.vcs).get_revision(self.ireq.source_dir)
+            return get_rev_from_url(self.ireq.original_link.url)  # type: ignore
+        return vcs.get_backend(self.req.vcs).get_revision(  # type: ignore
+            cast(str, self.ireq.source_dir)
+        )
 
     def get_metadata(
         self, allow_all_wheels: bool = True, raising: bool = False
-    ) -> Optional[Metadata]:
+    ) -> Metadata | None | Namespace:
         """Get the metadata of the candidate.
         For editable requirements, egg info are produced, otherwise a wheel is built.
 
@@ -193,7 +198,7 @@ class Candidate:
             self.metadata = Namespace(**meta_dict)
         else:
             if self.req.editable:
-                if not self.req.is_local_dir and not self.req.is_vcs:
+                if not self.req.is_local_dir and not self.req.is_vcs:  # type: ignore
                     raise RequirementError(
                         "Editable installation is only supported for "
                         "local directory and VCS location."
@@ -205,10 +210,10 @@ class Candidate:
                 self.wheel = Wheel(built)
                 self.metadata = self.wheel.metadata
         if not self.name:
-            self.name = self.metadata.name
+            self.name = str(self.metadata.name)  # type: ignore
             self.req.name = self.name
         if not self.version:
-            self.version = self.metadata.version
+            self.version = self.metadata.version  # type: ignore
         self.link = ireq.link
         return self.metadata
 
@@ -232,7 +237,7 @@ class Candidate:
             link=candidate.link,
         )
 
-    def get_dependencies_from_metadata(self) -> List[str]:
+    def get_dependencies_from_metadata(self) -> list[str]:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         metadata = self.get_metadata()
@@ -241,25 +246,29 @@ class Candidate:
                 return []
             return get_requirements_from_dist(self.ireq.get_dist(), extras)
         elif hasattr(metadata, "install_requires"):
-            requires = metadata.install_requires or []
+            requires = metadata.install_requires or []  # type: ignore
             extras_not_found = set()
             for extra in extras:
                 try:
-                    requires.extend((metadata.extras_require or {})[extra])
+                    requires.extend(
+                        (metadata.extras_require or {})[extra]  # type: ignore
+                    )
                 except KeyError:
                     extras_not_found.add(extra)
             if extras_not_found:
                 warnings.warn(ExtrasError(sorted(extras_not_found)))
             return sorted(set(requires))
         else:
-            return filter_requirements_with_extras(metadata.run_requires, extras)
+            return filter_requirements_with_extras(
+                metadata.run_requires, extras  # type: ignore
+            )
 
     @property
     def requires_python(self) -> str:
         """The Python version constraint of the candidate."""
         if self._requires_python is not None:
             return self._requires_python
-        requires_python = self.link.requires_python or ""
+        requires_python = self.link.requires_python or ""  # type: ignore
         if not requires_python and self.metadata:
             # For candidates fetched from PyPI simple API, requires_python is not
             # available yet. Just allow all candidates, and dismatching candidates
@@ -280,7 +289,8 @@ class Candidate:
     def requires_python(self, value: str) -> None:
         self._requires_python = value
 
-    def as_lockfile_entry(self) -> Dict[str, Any]:
+    @no_type_check
+    def as_lockfile_entry(self) -> dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""
         result = {
             "name": self.name,

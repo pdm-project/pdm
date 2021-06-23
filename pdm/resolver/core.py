@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pdm.models.requirements import strip_extras
 
@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
     from pdm.models.specifiers import PySpecSet
+    from pdm.resolver.providers import BaseProvider
 
 
 def resolve(
@@ -25,10 +26,10 @@ def resolve(
         2. A map of resolved dependencies from each section of pyproject.toml
         3. A map of package descriptions fetched from PyPI source.
     """
-    provider = resolver.provider
+    provider = cast(BaseProvider, resolver.provider)
     result = resolver.resolve(requirements, max_rounds)
 
-    mapping = result.mapping
+    mapping = cast(dict[str, Candidate], result.mapping)
     for key, candidate in list(result.mapping.items()):
         if key is None:
             continue
