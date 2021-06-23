@@ -1,43 +1,23 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
-
-from resolvelib.resolvers import Resolution
+from typing import TYPE_CHECKING
 
 from pdm.models.requirements import strip_extras
 
 if TYPE_CHECKING:
-    from resolvelib.resolvers import Criterion, Resolver
+    from resolvelib.resolvers import Resolver
 
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
     from pdm.models.specifiers import PySpecSet
 
-_old_merge_into_criterion = Resolution._merge_into_criterion
-
-
-# Monkey patch `resolvelib.resolvers.Resolution._merge_into_criterion`.
-def _merge_into_criterion(
-    self, requirement: Requirement, parent: Optional[Candidate]
-) -> Tuple[str, Criterion]:
-    identifier, crit = _old_merge_into_criterion(self, requirement, parent)
-
-    if identifier.startswith(":empty:"):
-        # For local packages, name is only available after candidate is resolved
-        identifier = self._p.identify(requirement)
-    return identifier, crit
-
-
-Resolution._merge_into_criterion = _merge_into_criterion
-del _merge_into_criterion
-
 
 def resolve(
     resolver: Resolver,
-    requirements: List[Requirement],
+    requirements: list[Requirement],
     requires_python: PySpecSet,
     max_rounds: int = 10000,
-) -> Tuple[Dict[str, Candidate], Dict[str, List[Requirement]], Dict[str, str]]:
+) -> tuple[dict[str, Candidate], dict[str, list[Requirement]], dict[str, str]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 3 items:
 
@@ -52,6 +32,12 @@ def resolve(
     for key, candidate in list(result.mapping.items()):
         if key is None:
             continue
+        # For source distribution whose name can only be determined after it is built,
+        # the key in the resolution map should be updated.
+        if key.startswith(":empty:"):
+            new_key = provider.identify(candidate)
+            mapping[new_key] = mapping.pop(key)
+            key = new_key
         # Root requires_python doesn't participate in the metaset resolving,
         # now check it!
         candidate_requires = provider.requires_python_collection[strip_extras(key)[0]]
