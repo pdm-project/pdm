@@ -9,10 +9,7 @@ try:
 except ImportError:
     from backports.shutil_get_terminal_size import get_terminal_size
 
-from pdm._vendor.colorama import init
 from pdm._vendor.termcolor import colored
-
-init(autoreset=True)
 
 
 def is_supported():
