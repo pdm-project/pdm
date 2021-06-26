@@ -47,7 +47,7 @@ class Command(BaseCommand):
             False
             if non_interactive
             else click.confirm(
-                "Is the project a library that will be upload to PyPI?",
+                "Is the project a library that will be uploaded to PyPI?",
             )
         )
         if is_library:
