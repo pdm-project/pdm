@@ -436,13 +436,12 @@ def set_env_in_reg(env_name: str, value: str) -> None:
         with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
             try:
                 old_value, type_ = winreg.QueryValueEx(env_key, env_name)
-                if value in [
-                    os.path.normcase(item) for item in old_value.split(os.pathsep)
-                ]:
+                paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
+                if value in paths:
                     return
             except FileNotFoundError:
-                old_value, type_ = "", winreg.REG_EXPAND_SZ
-            new_value = os.pathsep.join([old_value, value]) if old_value else value
+                paths, type_ = [], winreg.REG_EXPAND_SZ
+            new_value = os.pathsep.join([value] + paths)
             winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
 
 
