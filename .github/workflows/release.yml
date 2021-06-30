@@ -46,3 +46,9 @@ jobs:
           body_path: .changelog.md
           draft: false
           prerelease: false
+      - name: Trigger Bucket Update
+        run: |
+          curl -XPOST -H "Content-Type:application/json" -H "Authorization:token ${GITHUB_TOKEN}" -d '{"inputs":{},"ref":"master"}' https://api.github.com/repos/frostming/frostming.github.io/actions/workflows/${WORKFLOW_ID}/dispatches
+        env:
+          GITHUB_TOKEN: ${{ secrets.G_T }}
+          WORKFLOW_ID: ${{ secrets.WORKFLOW_ID }}
