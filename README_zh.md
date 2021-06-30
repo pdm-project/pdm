@@ -102,10 +102,17 @@ optional arguments:
 
 ## 其他安装方法
 
-如果你使用的是 MacOS 并且安装了 `homebrew`:
+如果你使用的是 MacOS 并且安装了 `homebrew`：
 
 ```bash
 $ brew install pdm
+```
+
+如果你在Windows上使用 [Scoop](https://scoop.sh/), 运行以下命令安装：
+
+```
+PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+PS> scoop install pdm
 ```
 
 否则，强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。

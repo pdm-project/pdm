@@ -113,6 +113,13 @@ If you are on MacOS and using `homebrew`, install it by:
 $ brew install pdm
 ```
 
+If you are on Windows and using [Scoop](https://scoop.sh/), install it by:
+
+```
+PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+PS> scoop install pdm
+```
+
 Otherwise, it is recommended to install `pdm` in an isolated environment with `pipx`:
 
 ```bash

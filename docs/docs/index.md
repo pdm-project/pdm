@@ -75,6 +75,13 @@ If your are on MacOS and using `homebrew`, install it by:
 $ brew install pdm
 ```
 
+If you are on Windows and using [Scoop](https://scoop.sh/), install it by:
+
+```
+PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+PS> scoop install pdm
+```
+
 Otherwise, to avoid messing up with the system Python environment, the most recommended way to install PDM
 is via [pipx](https://pypi.org/project/pipx):
 
