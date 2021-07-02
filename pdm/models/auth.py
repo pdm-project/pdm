@@ -1,7 +1,6 @@
-from typing import Any, List
+from typing import List, Optional, Tuple
 
 import click
-from pip._vendor.requests.models import Response
 
 from pdm._types import Source
 from pdm.exceptions import PdmException
@@ -20,13 +19,21 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         - It shows an error message when credentials are not provided or correect.
     """
 
-    def handle_401(self, resp: Response, **kwargs: Any) -> Response:
-        if resp.status_code == 401 and not self.prompting:
+    def __init__(
+        self, prompting: bool = True, index_urls: Optional[List[str]] = None
+    ) -> None:
+        super().__init__(prompting=True, index_urls=index_urls)
+        self._real_prompting = prompting
+
+    def _prompt_for_password(
+        self, netloc: str
+    ) -> Tuple[Optional[str], Optional[str], bool]:
+        if not self._real_prompting:
             raise PdmException(
-                f"The credentials for {resp.request.url} are not provided or correct. "
+                f"The credentials for {netloc} are incorrect. "
                 "Please run the command with `-v` option."
             )
-        return super().handle_401(resp, **kwargs)
+        return super()._prompt_for_password(netloc)
 
     def _should_save_password_to_keyring(self) -> bool:
         if keyring is None:
