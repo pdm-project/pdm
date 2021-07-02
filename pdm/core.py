@@ -36,7 +36,10 @@ class Core:
     """A high level object that manages all classes and configurations"""
 
     def __init__(self) -> None:
-        self.version = importlib_metadata.version(__name__.split(".")[0])
+        try:
+            self.version = importlib_metadata.version(__name__.split(".")[0])
+        except importlib_metadata.PackageNotFoundError:
+            self.version = "UNKNOWN"
 
         self.project_class = Project
         self.repository_class = PyPIRepository
