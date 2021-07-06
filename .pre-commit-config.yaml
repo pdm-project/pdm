@@ -25,3 +25,6 @@ repos:
       - id: mypy
         args: [pdm]
         pass_filenames: false
+        additional_dependencies:
+          - types-setuptools
+          - types-toml
