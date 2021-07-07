@@ -93,7 +93,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (show)
-            opts="--global --help --project --verbose"
+            opts="--global --help --keywords --license --name --platform --project --summary --verbose --version"
             ;;
 
             (sync)

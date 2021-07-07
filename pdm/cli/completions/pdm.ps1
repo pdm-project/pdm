@@ -330,7 +330,7 @@ function TabExpansion($line, $lastWord) {
             "show" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g")),
+                        [Option]::new(@("--global", "-g", "--name", "--version", "--summary", "--license", "--platform", "--keywords")),
                         $projectOption
                     ))
                 break
