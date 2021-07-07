@@ -44,6 +44,8 @@ Documentation = "https://pdm.fming.dev"
 pdm = "pdm.core:main"
 
 [tool.pdm]
+includes = ["pdm"]
+source-includes = ["tests"]
 
 [tool.pdm.scripts]
 release = "python tasks/release.py"
