@@ -319,6 +319,19 @@ def test_show_package_on_pypi(invoke):
     assert result.exit_code == 0
     assert "requests" in result.output.splitlines()[0]
 
+    result = invoke(["show", "--name", "requests"])
+    assert result.exit_code == 0
+    assert "requests" in result.output.splitlines()[0]
+
+
+def test_show_self_package(project, invoke):
+    result = invoke(["show"], obj=project)
+    assert result.exit_code == 0, result.stderr
+
+    result = invoke(["show", "--name", "--version"], obj=project)
+    assert result.exit_code == 0
+    assert "test_project\n0.0.0\n" == result.output
+
 
 def test_export_to_requirements_txt(invoke, fixture_project):
     project = fixture_project("demo-package")
