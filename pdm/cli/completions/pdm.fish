@@ -15,7 +15,7 @@ complete -c pdm -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -l help 
 complete -c pdm -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -l ignore-python -d 'Ignore the Python path saved in the pdm.toml config'
 complete -c pdm -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -l pep582 -d 'Print the command line to be eval\'d by the shell'
 complete -c pdm -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -l verbose -d '-v for detailed output and -vv for more detailed'
-complete -c pdm -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -l version -d 'show the version and exit'
+complete -c pdm -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -l version -d 'Show version'
 
 # commands
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a add -d 'Add package(s) to pyproject.toml and install them'
@@ -180,8 +180,14 @@ complete -c pdm -A -n '__fish_seen_subcommand_from search' -l verbose -d '-v for
 # show
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l help -d 'show this help message and exit'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l keywords -d 'Show keywords'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l license -d 'Show license'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l name -d 'Show name'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l platform -d 'Show platform'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l summary -d 'Show summary'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l version -d 'Show version'
 
 # sync
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l clean -d 'clean unused packages'

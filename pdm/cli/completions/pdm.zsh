@@ -252,6 +252,12 @@ _pdm() {
     show)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        '--name[Show name]'
+        '--version[Show version]'
+        '--summary[Show summary]'
+        '--license[Show license]'
+        '--platform[Show platform]'
+        '--keywords[Show keywords]'
         '1:package:'
       )
       ;;
