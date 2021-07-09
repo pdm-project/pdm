@@ -3,6 +3,7 @@ from distlib.wheel import Wheel
 
 from pdm.cli import actions
 from pdm.exceptions import PdmException, PdmUsageError
+from pdm.models.pip_shims import FrozenRequirement
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 
@@ -256,6 +257,17 @@ def test_list_dependency_graph_with_circular(project, capsys, repository):
     actions.do_list(project, True)
     content, _ = capsys.readouterr()
     assert "foo [circular]" in content
+
+
+@pytest.mark.usefixtures("repository", "working_set")
+def test_freeze_dependencies_list(project, capsys, monkeypatch):
+    actions.do_add(project, packages=["requests"])
+    capsys.readouterr()
+    monkeypatch.setattr(FrozenRequirement, "from_dist", lambda d: d.as_req())
+    actions.do_list(project, freeze=True)
+    content, _ = capsys.readouterr()
+    assert "requests==2.19.1" in content
+    assert "urllib3==1.22" in content
 
 
 def test_list_reverse_without_graph_flag(project):

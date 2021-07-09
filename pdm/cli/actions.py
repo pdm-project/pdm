@@ -30,6 +30,7 @@ from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.installers.installers import format_dist
 from pdm.models.candidates import Candidate
+from pdm.models.pip_shims import FrozenRequirement
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
@@ -362,19 +363,17 @@ def do_remove(
         )
 
 
-def do_list(project: Project, graph: bool = False, reverse: bool = False) -> None:
-    """Display a list of packages installed in the local packages directory.
-
-    :param project: the project instance.
-    :param graph: whether to display a graph.
-    :param reverse: whether to display reverse graph.
-    """
+def do_list(
+    project: Project,
+    graph: bool = False,
+    reverse: bool = False,
+    freeze: bool = False,
+) -> None:
+    """Display a list of packages installed in the local packages directory."""
     from pdm.cli.utils import build_dependency_graph, format_dependency_graph
 
     check_project_file(project)
     working_set = project.environment.get_working_set()
-    if reverse and not graph:
-        raise PdmUsageError("--reverse must be used with --graph")
     if graph:
         with project.environment.activate():
             dep_graph = build_dependency_graph(working_set)
@@ -382,6 +381,15 @@ def do_list(project: Project, graph: bool = False, reverse: bool = False) -> Non
             format_dependency_graph(project, dep_graph, reverse=reverse)
         )
     else:
+        if reverse:
+            raise PdmUsageError("--reverse must be used with --graph")
+        if freeze:
+            reqs = [
+                str(FrozenRequirement.from_dist(dist))
+                for dist in sorted(working_set.values(), key=lambda d: d.project_name)
+            ]
+            project.core.ui.echo("".join(reqs))
+            return
         rows = [
             (termui.green(k, bold=True), format_dist(v))
             for k, v in sorted(working_set.items())

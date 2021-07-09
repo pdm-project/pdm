@@ -138,6 +138,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l section -d 'Selec
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # list
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l freeze -d 'Show the installed dependencies as pip\'s requirements.txt format'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l graph -d 'Display a graph of dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l help -d 'show this help message and exit'

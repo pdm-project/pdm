@@ -273,7 +273,7 @@ function TabExpansion($line, $lastWord) {
             "list" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--graph", "--global", "-g", "--reverse", "-r")),
+                        [Option]::new(@("--graph", "--global", "-g", "--reverse", "-r", "--freeze")),
                         $projectOption
                     ))
                 break

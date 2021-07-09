@@ -21,6 +21,7 @@ from pip._internal.models.wheel import Wheel as PipWheel
 from pip._internal.network.auth import MultiDomainBasicAuth
 from pip._internal.network.cache import SafeFileCache
 from pip._internal.network.download import Downloader
+from pip._internal.operations.freeze import FrozenRequirement
 from pip._internal.operations.prepare import unpack_url
 from pip._internal.req import InstallRequirement, req_uninstall
 from pip._internal.req.constructors import (

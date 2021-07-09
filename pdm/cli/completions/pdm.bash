@@ -69,7 +69,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (list)
-            opts="--global --graph --help --project --reverse --verbose"
+            opts="--freeze --global --graph --help --project --reverse --verbose"
             ;;
 
             (lock)
