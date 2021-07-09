@@ -27,7 +27,7 @@ from pip import __file__ as pip_location
 def _all_plugins() -> list[str]:
     result: list[str] = []
     for dist in importlib_metadata.distributions():
-        if any(ep.group == "pdm" for ep in dist.entry_points):
+        if any(ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points):
             result.append(safe_name(dist.metadata["Name"]).lower())
     return result
 

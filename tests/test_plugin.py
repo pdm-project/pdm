@@ -82,3 +82,20 @@ def test_load_multiple_plugings(invoke, mocker, project):
 
     result = invoke(["config", "foo"])
     assert result.output.strip() == "bar"
+
+
+def test_old_entry_point_compatibility(invoke, mocker, project):
+    mocker.patch.object(
+        importlib_metadata,
+        "entry_points",
+        return_value={
+            "pdm": [make_entry_point(new_command)],
+            "pdm.plugin": [make_entry_point(add_new_config)],
+        },
+    )
+
+    result = invoke(["hello"])
+    assert result.output.strip() == "Hello world"
+
+    result = invoke(["config", "foo"])
+    assert result.output.strip() == "bar"

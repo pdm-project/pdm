@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import itertools
 import os
 import pkgutil
 import sys
@@ -179,7 +180,10 @@ class Core:
             ...
 
         """
-        for plugin in importlib_metadata.entry_points().get("pdm", []):
+        entry_points = importlib_metadata.entry_points()
+        for plugin in itertools.chain(
+            entry_points.get("pdm", []), entry_points.get("pdm.plugin", [])
+        ):
             plugin.load()(self)
 
 
