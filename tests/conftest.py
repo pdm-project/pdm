@@ -150,10 +150,13 @@ main.project_class = TestProject
 
 class Distribution:
     def __init__(self, key, version, editable=False):
-        self.key = key
+        self.key = self.project_name = key
         self.version = version
         self.editable = editable
         self.dependencies = []
+
+    def as_req(self):
+        return f"{self.key}=={self.version}\n"
 
     def requires(self, extras=()):
         return self.dependencies

@@ -176,6 +176,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-r,--reverse}'[Reverse the dependency graph]'
         '--graph[Display a graph of dependencies]'
+        "--freeze[Show the installed dependencies as pip's requirements.txt format]"
       )
       ;;
     lock)
