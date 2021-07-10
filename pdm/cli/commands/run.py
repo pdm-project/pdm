@@ -95,7 +95,9 @@ class Command(BaseCommand):
         else:
             if chdir:
                 os.chdir(project.root)
-            os.execv(expanded_command, expanded_args)
+            os.execv(
+                project.python_executable, [project.python_executable] + expanded_args
+            )
 
     def _normalize_script(
         self, script: Any
