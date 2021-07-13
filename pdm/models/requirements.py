@@ -37,7 +37,8 @@ from pdm.utils import (
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 _vcs_req_re = re.compile(
-    rf"(?P<url>(?P<vcs>{'|'.join(VCS_SCHEMA)})\+[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?"
+    rf"(?P<url>(?P<vcs>{'|'.join(VCS_SCHEMA)})\+[^\s;]+)(?P<marker>[\t ]*;[^\n]+)?",
+    flags=re.IGNORECASE,
 )
 _file_req_re = re.compile(
     r"(?:(?P<url>\S+://[^\s\[\];]+)|"
