@@ -16,7 +16,7 @@ from pdm import termui
 from pdm.cli.actions import migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
-from pdm.cli.utils import PdmFormatter, PdmParser
+from pdm.cli.utils import PdmFormatter
 from pdm.exceptions import PdmUsageError
 from pdm.installers import Synchronizer
 from pdm.models.repositories import PyPIRepository
@@ -48,14 +48,15 @@ class Core:
         self.synchronizer_class = Synchronizer
 
         self.ui = termui.UI()
-        self.parser: Optional[PdmParser] = None
+        self.parser: Optional[argparse.ArgumentParser] = None
         self.subparsers: Optional[argparse._SubParsersAction] = None
 
     def init_parser(self) -> None:
-        self.parser = PdmParser(
+        self.parser = argparse.ArgumentParser(
             prog="pdm",
             description="PDM - Python Development Master",
             formatter_class=PdmFormatter,
+            usage="pdm [OPTIONS] [COMMANDS] ...",
         )
         self.parser.is_root = True  # type: ignore
         self.parser.add_argument(
@@ -67,6 +68,7 @@ class Core:
             ),
             help="show the version and exit",
         )
+        self.parser._positionals.title = "Commands"
         verbose_option.add_to_parser(self.parser)
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)

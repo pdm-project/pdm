@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import argparse
 import os
-from argparse import Action
+from argparse import Action, _ArgumentGroup
 from collections import ChainMap
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping, MutableMapping, cast
 
 import atoml
-import cfonts
 from packaging.specifiers import SpecifierSet
 from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
@@ -29,6 +28,25 @@ if TYPE_CHECKING:
 
 
 class PdmFormatter(argparse.HelpFormatter):
+    def start_section(self, heading: str | None) -> None:
+        return super().start_section(
+            termui.yellow(heading.title() if heading else heading, bold=True)
+        )
+
+    def _format_usage(
+        self,
+        usage: str,
+        actions: Iterable[Action],
+        groups: Iterable[_ArgumentGroup],
+        prefix: str | None,
+    ) -> str:
+        if prefix is None:
+            prefix = "Usage: "
+        result = super()._format_usage(usage, actions, groups, prefix)
+        if prefix:
+            return result.replace(prefix, termui.yellow(prefix, bold=True))
+        return result
+
     def _format_action(self, action: Action) -> str:
         # determine the required width and the entry label
         help_position = min(self._action_max_length + 2, self._max_help_position)
@@ -74,51 +92,6 @@ class PdmFormatter(argparse.HelpFormatter):
 
         # return a single string
         return self._join_parts(parts)
-
-
-class PdmParser(argparse.ArgumentParser):
-    def format_help(self) -> str:
-        formatter = self._get_formatter()
-
-        if getattr(self, "is_root", False):
-            banner = (
-                cfonts.render(
-                    "PDM",
-                    font="slick",
-                    gradient=["bright_red", "bright_green"],
-                    space=False,
-                )
-                + "\n"
-            )
-            formatter._add_item(lambda x: x, [banner])
-            self._positionals.title = "Commands"
-        self._optionals.title = "Options"
-        # description
-        formatter.add_text(self.description)
-
-        # usage
-        formatter.add_usage(
-            self.usage or "",
-            self._actions,
-            self._mutually_exclusive_groups,
-            prefix=termui.yellow("Usage", bold=True) + ": ",
-        )
-
-        # positionals, optionals and user-defined groups
-        for action_group in self._action_groups:
-            formatter.start_section(
-                termui.yellow(action_group.title, bold=True)
-                if action_group.title
-                else None
-            )
-            formatter.add_text(action_group.description)
-            formatter.add_arguments(action_group._group_actions)
-            formatter.end_section()
-
-        # epilog
-        formatter.add_text(self.epilog)
-        # determine help from format above
-        return formatter.format_help()
 
 
 class Package:

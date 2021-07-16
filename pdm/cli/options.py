@@ -204,7 +204,7 @@ sync_group.add_argument(
     "--no-sync", action="store_false", dest="sync", help="don't sync packages"
 )
 
-packages_group = ArgumentGroup("Packages")
+packages_group = ArgumentGroup("Package Arguments")
 packages_group.add_argument(
     "-e",
     "--editable",
