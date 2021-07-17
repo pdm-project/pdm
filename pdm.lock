@@ -22,7 +22,7 @@ summary = "Atomic file writes."
 
 [[package]]
 name = "atoml"
-version = "1.0.1"
+version = "1.0.3"
 requires_python = ">=3.6"
 summary = "Yet another style preserving TOML library"
 
@@ -583,9 +583,9 @@ content_hash = "sha256:11056763b67c6b940dd9921b4fed7e19751f5098c100c8e6a5cc347df
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
     {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
 ]
-"atoml 1.0.1" = [
-    {file = "atoml-1.0.1-py3-none-any.whl", hash = "sha256:d548546234d04df56da21863b94fdb95de6779c09dbdc21032f10b772d1d9625"},
-    {file = "atoml-1.0.1.tar.gz", hash = "sha256:f8180558dcb74891325e05776f07f8780a7ed9b20948693d07366bff55d3470d"},
+"atoml 1.0.3" = [
+    {file = "atoml-1.0.3-py3-none-any.whl", hash = "sha256:944c0e9043ca4e0729d4125132841ef1110677b8d015a624892d63cdc4988655"},
+    {file = "atoml-1.0.3.tar.gz", hash = "sha256:5dd70efcafde94a6aa5db2e8c6af5d832bf95b38f47d3283ee3779e920218e94"},
 ]
 "attrs 21.2.0" = [
     {file = "attrs-21.2.0-py2.py3-none-any.whl", hash = "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1"},
