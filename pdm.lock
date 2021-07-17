@@ -428,15 +428,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "python-cfonts"
-version = "1.5.1"
-requires_python = ">=3.6"
-summary = "Sexy fonts for the console"
-dependencies = [
-    "colorama",
-]
-
-[[package]]
 name = "python-dotenv"
 version = "0.17.1"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
@@ -573,7 +564,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3"
-content_hash = "sha256:d1de6a85e8612eb606c5850923178e1542004fb0cf7eef2ddc37274815e5735a"
+content_hash = "sha256:11056763b67c6b940dd9921b4fed7e19751f5098c100c8e6a5cc347df96cdbe2"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -876,10 +867,6 @@ content_hash = "sha256:d1de6a85e8612eb606c5850923178e1542004fb0cf7eef2ddc3727481
 "pytest-xdist 1.34.0" = [
     {file = "pytest_xdist-1.34.0-py2.py3-none-any.whl", hash = "sha256:ba5d10729372d65df3ac150872f9df5d2ed004a3b0d499cc0164aafedd8c7b66"},
     {file = "pytest-xdist-1.34.0.tar.gz", hash = "sha256:340e8e83e2a4c0d861bdd8d05c5d7b7143f6eea0aba902997db15c2a86be04ee"},
-]
-"python-cfonts 1.5.1" = [
-    {file = "python_cfonts-1.5.1-py3-none-any.whl", hash = "sha256:bba39c61d9f8950a951d976d2238ee1ffa479a5e128631ab57207c73d7a92fd1"},
-    {file = "python-cfonts-1.5.1.tar.gz", hash = "sha256:ee87438593aacd4cc3a385f2166d6eebf8f7377a1e1039c57a3a3f1683d0392b"},
 ]
 "python-dotenv 0.17.1" = [
     {file = "python_dotenv-0.17.1-py2.py3-none-any.whl", hash = "sha256:00aa34e92d992e9f8383730816359647f358f4a3be1ba45e5a5cefd27ee91544"},

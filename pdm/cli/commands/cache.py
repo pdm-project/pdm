@@ -15,7 +15,7 @@ class Command(BaseCommand):
     arguments = [verbose_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        subparsers = parser.add_subparsers()
+        subparsers = parser.add_subparsers(title="Sub commands")
         ClearCommand.register_to(subparsers, "clear")
         RemoveCommand.register_to(subparsers, "remove")
         ListCommand.register_to(subparsers, "list")
