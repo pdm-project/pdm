@@ -88,11 +88,15 @@ def log_subprocessor(
 
 
 class _Prefix:
-    def __init__(self, executable: str, path: str) -> None:
-        self.path = path
-        paths = get_sys_config_paths(executable, vars={"base": path, "platbase": path})
-        self.bin_dir = paths["scripts"]
-        self.lib_dirs = [paths["platlib"], paths["purelib"]]
+    def __init__(self, executable: str, shared: str, overlay: str) -> None:
+        self.bin_dirs: list[str] = []
+        self.lib_dirs: list[str] = []
+        for path in (overlay, shared):
+            paths = get_sys_config_paths(
+                executable, vars={"base": path, "platbase": path}
+            )
+            self.bin_dirs.append(paths["scripts"])
+            self.lib_dirs.extend([paths["platlib"], paths["purelib"]])
         self.site_dir = os.path.join(path, "site")
         if not os.path.isdir(self.site_dir):
             os.makedirs(self.site_dir)
@@ -116,12 +120,15 @@ class _Prefix:
                 """
                 )
             )
+        self.shared = shared
+        self.overlay = overlay
 
 
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
-    _env_cache: dict[str, str] = {}
+    _shared_envs: dict[int, str] = {}
+    _overlay_envs: dict[str, str] = {}
 
     DEFAULT_BACKEND = {
         "build-backend": "setuptools.build_meta:__legacy__",
@@ -129,18 +136,25 @@ class EnvBuilder:
     }
 
     @classmethod
-    def get_env_path(cls, src_dir: str | Path) -> str:
-        key = os.path.normpath(src_dir).rstrip("\\/")
-        if key not in cls._env_cache:
-            cls._env_cache[key] = create_tracked_tempdir(prefix="pdm-build-env-")
-        return cls._env_cache[key]
+    def get_shared_env(cls, key: int) -> str:
+        if key not in cls._shared_envs:
+            cls._shared_envs[key] = create_tracked_tempdir("-shared", "pdm-build-env-")
+        else:
+            logger.debug("Reusing shared build env: %s", cls._shared_envs[key])
+        return cls._shared_envs[key]
+
+    @classmethod
+    def get_overlay_env(cls, key: str) -> str:
+        if key not in cls._overlay_envs:
+            cls._overlay_envs[key] = create_tracked_tempdir(
+                "-overlay", "pdm-build-env-"
+            )
+        return cls._overlay_envs[key]
 
     def __init__(self, src_dir: str | Path, environment: Environment) -> None:
         self._env = environment
-        self._path = self.get_env_path(src_dir)
         self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
-        self._prefix = _Prefix(self.executable, self._path)
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
@@ -159,6 +173,12 @@ class EnvBuilder:
 
         self._backend = self._build_system["build-backend"]
 
+        self._prefix = _Prefix(
+            self.executable,
+            shared=self.get_shared_env(hash(frozenset(self._build_system["requires"]))),
+            overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
+        )
+
         self._hook = Pep517HookCaller(
             src_dir,
             self._backend,
@@ -169,7 +189,7 @@ class EnvBuilder:
 
     @property
     def _env_vars(self) -> dict[str, str]:
-        paths = [self._prefix.bin_dir]
+        paths = self._prefix.bin_dirs
         if "PATH" in os.environ:
             paths.append(os.getenv("PATH", ""))
         return {
@@ -205,10 +225,11 @@ class EnvBuilder:
             raise BuildError(f"Conflicting requirements: {', '.join(conflicting)}")
         return missing
 
-    def install(self, requirements: Iterable[str]) -> None:
+    def install(self, requirements: Iterable[str], shared: bool = False) -> None:
         missing = self.check_requirements(requirements)
         if not missing:
             return
+        path = self._prefix.shared if shared else self._prefix.overlay
 
         with tempfile.NamedTemporaryFile(
             "w+", prefix="pdm-build-reqs-", suffix=".txt", delete=False
@@ -219,7 +240,7 @@ class EnvBuilder:
                 "install",
                 "--ignore-installed",
                 "--prefix",
-                self._path,
+                path,
             ]
             cmd.extend(prepare_pip_source_args(self._env.project.sources))
             cmd.extend(["-r", req_file.name])
