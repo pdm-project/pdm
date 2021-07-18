@@ -137,11 +137,11 @@ class EnvBuilder:
 
     @classmethod
     def get_shared_env(cls, key: int) -> str:
-        if key not in cls._shared_envs:
-            cls._shared_envs[key] = create_tracked_tempdir("-shared", "pdm-build-env-")
-        else:
+        if key in cls._shared_envs:
             logger.debug("Reusing shared build env: %s", cls._shared_envs[key])
-        return cls._shared_envs[key]
+            return cls._shared_envs[key]
+        # Postpone the cache after installation is done
+        return create_tracked_tempdir("-shared", "pdm-build-env-")
 
     @classmethod
     def get_overlay_env(cls, key: str) -> str:
@@ -246,6 +246,13 @@ class EnvBuilder:
             cmd.extend(["-r", req_file.name])
             self.subprocess_runner(cmd, isolated=False)
             os.unlink(req_file.name)
+
+        if shared:
+            # The shared env is prepared and is safe to be cached now. This is to make
+            # sure no broken env is returned when run in parallel mode.
+            key = hash(frozenset(requirements))
+            if key not in self._shared_envs:
+                self._shared_envs[key] = path
 
     def build(
         self, out_dir: str, config_settings: Mapping[str, Any] | None = None
