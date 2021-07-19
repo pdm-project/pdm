@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import re
 import sys
-from importlib.metadata import Distribution, PathDistribution
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
@@ -30,9 +29,9 @@ from pdm.utils import (
 )
 
 if sys.version_info >= (3, 8):
-    import importlib.metadata as importlib_metadata
+    from importlib.metadata import Distribution, PathDistribution
 else:
-    import importlib_metadata
+    from importlib_metadata import Distribution, PathDistribution
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -188,7 +187,7 @@ class Candidate:
             self.source_dir = ireq.unpacked_source_directory
 
     @cached_property
-    def metadata(self) -> importlib_metadata.Distribution:
+    def metadata(self) -> Distribution:
         """Get the metadata of the candidate.
         Will call the prepare_metadata_* hooks behind the scene
         """

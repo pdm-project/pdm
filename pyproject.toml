@@ -132,6 +132,11 @@ underlines = "-~^"
   name = "Miscellany"
   showcontent = true
 
+  [[tool.towncrier.type]]
+  directory = "refactor"
+  name = "Refactor"
+  showcontent = true
+
 [build-system]
 requires = ["pdm-pep517>=0.3.0"]
 build-backend = "pdm.pep517.api"
