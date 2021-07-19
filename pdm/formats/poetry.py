@@ -8,7 +8,7 @@ from argparse import Namespace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping
 
-import toml
+import tomli
 
 from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
@@ -32,8 +32,8 @@ from pdm.utils import cd
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
-            data = toml.load(fp)
-        except toml.TomlDecodeError:
+            data = tomli.load(fp)
+        except tomli.TOMLDecodeError:
             return False
 
     return "tool" in data and "poetry" in data["tool"]
@@ -202,7 +202,7 @@ def convert(
         os.path.dirname(os.path.abspath(filename))
     ):
         converter = PoetryMetaConverter(
-            toml.load(fp)["tool"]["poetry"], project.core.ui if project else None
+            tomli.load(fp)["tool"]["poetry"], project.core.ui if project else None
         )
         return converter.convert()
 

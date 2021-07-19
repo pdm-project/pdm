@@ -10,7 +10,7 @@ from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
-import toml
+import tomli
 from pep517.wrappers import Pep517HookCaller
 from pip._vendor.pkg_resources import Requirement, VersionConflict, WorkingSet
 
@@ -158,7 +158,7 @@ class EnvBuilder:
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
-                spec = toml.load(f)
+                spec = tomli.load(f)
         except FileNotFoundError:
             spec = {}
         except Exception as e:

@@ -430,7 +430,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     result.append(
         "Please make sure the package names are correct. If so, you can either "
         "loosen the version constraints of these dependencies, or "
-        "set a narrower `requires-python` range in the pyproject.toml."
+        "set a narrower `requires-python` range in the pyproject.tomli."
     )
     return "\n".join(result)
 
