@@ -316,7 +316,7 @@ def atomic_open_for_write(
         # The tempfile is created with mode 600, we need to restore the default mode
         # with copyfile() instead of move().
         # See: https://github.com/pdm-project/pdm/issues/542
-        shutil.copyfile(name, filename)
+        shutil.copyfile(name, str(filename))
     finally:
         os.unlink(name)
 

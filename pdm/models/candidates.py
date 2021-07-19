@@ -235,7 +235,7 @@ class Candidate:
         cached = self._get_cached_wheel()
         if cached:
             self.wheel = cached.file_path
-            return self.wheel
+            return self.wheel  # type: ignore
         assert self.source_dir, "Source directory isn't ready yet"
         builder = WheelBuilder(self.source_dir, self.environment)
         build_dir = self._get_wheel_dir()
