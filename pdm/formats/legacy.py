@@ -4,7 +4,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
-import toml
+import tomli
 
 from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
@@ -22,8 +22,8 @@ from pdm.project.core import Project
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
-            data = toml.load(fp)
-        except toml.TomlDecodeError:
+            data = tomli.load(fp)
+        except tomli.TOMLDecodeError:
             return False
 
     return (
@@ -170,7 +170,7 @@ def convert(
     project: Project, filename: Path, options: Optional[Namespace]
 ) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
-        converter = LegacyMetaConverter(toml.load(fp)["tool"]["pdm"], project.core.ui)
+        converter = LegacyMetaConverter(tomli.load(fp)["tool"]["pdm"], project.core.ui)
         return converter.convert()
 
 

@@ -7,7 +7,7 @@ from argparse import Namespace
 from os import PathLike
 from typing import Any
 
-import toml
+import tomli
 from packaging.markers import default_environment
 
 from pdm._types import RequirementDict
@@ -45,7 +45,7 @@ def convert(
     project: Project, filename: PathLike, options: Namespace | None
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     with open(filename, encoding="utf-8") as fp:
-        data = toml.load(fp)
+        data = tomli.load(fp)
     result = {}
     settings = {}
     if "pipenv" in data:

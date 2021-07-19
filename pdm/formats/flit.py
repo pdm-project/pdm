@@ -5,7 +5,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
-import toml
+import tomli
 
 from pdm.formats.base import (
     MetaConverter,
@@ -22,8 +22,8 @@ from pdm.utils import cd
 def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     with open(filename, encoding="utf-8") as fp:
         try:
-            data = toml.load(fp)
-        except toml.TomlDecodeError:
+            data = tomli.load(fp)
+        except tomli.TOMLDecodeError:
             return False
 
     return "tool" in data and "flit" in data["tool"]
@@ -147,7 +147,7 @@ def convert(
         os.path.dirname(os.path.abspath(filename))
     ):
         converter = FlitMetaConverter(
-            toml.load(fp)["tool"]["flit"], project.core.ui if project else None
+            tomli.load(fp)["tool"]["flit"], project.core.ui if project else None
         )
         return converter.convert()
 

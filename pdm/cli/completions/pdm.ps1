@@ -131,7 +131,7 @@ def get_packages(lines):
     return [PACKAGE_REGEX.match(line).group() for line in lines]
 
 with open('pyproject.toml', encoding='utf8') as f:
-    data = toml.load(f)
+    data = tomli.load(f)
 packages = get_packages(data.get('project', {}).get('dependencies', []))
 for reqs in data.get('project', {}).get('optional-dependencies', {}).values():
     packages.extend(get_packages(reqs))
