@@ -1,9 +1,9 @@
-from pdm.builders.egg_info import EnvEggInfoBuilder
-from pdm.builders.sdist import EnvSdistBuilder
-from pdm.builders.wheel import EnvWheelBuilder
+from pdm.builders.editable import EditableBuilder
+from pdm.builders.sdist import SdistBuilder
+from pdm.builders.wheel import WheelBuilder
 
 __all__ = (
-    EnvEggInfoBuilder.__name__,
-    EnvSdistBuilder.__name__,
-    EnvWheelBuilder.__name__,
+    EditableBuilder.__name__,
+    SdistBuilder.__name__,
+    WheelBuilder.__name__,
 )

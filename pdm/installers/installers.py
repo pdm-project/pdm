@@ -4,6 +4,7 @@ import pathlib
 from typing import TYPE_CHECKING
 
 import distlib.scripts
+from distlib.wheel import Wheel
 from pip._vendor.pkg_resources import EggInfoDistribution
 
 from pdm import termui
@@ -11,7 +12,6 @@ from pdm.models import pip_shims
 from pdm.models.requirements import parse_requirement
 
 if TYPE_CHECKING:
-    from distlib.wheel import Wheel
     from pip._vendor.pkg_resources import Distribution
 
     from pdm.models.candidates import Candidate
@@ -40,11 +40,11 @@ class Installer:  # pragma: no cover
         pip_shims.pip_logging._log_state.indentation = 0
 
     def install(self, candidate: Candidate) -> None:
-        candidate.get_metadata(allow_all_wheels=False, raising=True)
         if candidate.req.editable:
             self.install_editable(candidate.ireq)
         else:
-            self.install_wheel(candidate.wheel)
+            built = candidate.build()
+            self.install_wheel(Wheel(built))
 
     def install_wheel(self, wheel: Wheel) -> None:
         paths = self.environment.get_paths()
@@ -57,9 +57,10 @@ class Installer:  # pragma: no cover
         wheel.install(paths, maker)
 
     def install_editable(self, ireq: pip_shims.InstallRequirement) -> None:
-        from pdm.builders.base import EnvBuilder
+        from pdm.builders import EditableBuilder
 
-        setup_path = ireq.setup_py_path
+        builder = EditableBuilder(ireq.unpacked_source_directory, self.environment)
+        setup_path = builder.ensure_setup_py()
         paths = self.environment.get_paths()
         install_script = pathlib.Path(__file__).with_name("_editable_install.py")
         install_args = [
@@ -71,7 +72,6 @@ class Installer:  # pragma: no cover
             paths["purelib"],
             paths["scripts"],
         ]
-        builder = EnvBuilder(ireq.unpacked_source_directory, self.environment)
         builder.install(["setuptools"])
         builder.subprocess_runner(install_args, ireq.unpacked_source_directory)
 

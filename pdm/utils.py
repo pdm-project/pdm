@@ -28,7 +28,6 @@ from typing import (
     overload,
 )
 
-from distlib.wheel import Wheel
 from pip._vendor.packaging.tags import Tag
 from pip._vendor.pkg_resources import safe_name
 from pip._vendor.requests import Session
@@ -37,7 +36,9 @@ from pdm._types import Source
 from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
+    Link,
     PackageFinder,
+    PipWheel,
     get_package_finder,
     url_to_path,
 )
@@ -146,7 +147,7 @@ def create_tracked_tempdir(
 
 
 def parse_name_version_from_wheel(filename: str) -> tuple[str, str]:
-    w = Wheel(filename)
+    w = PipWheel(os.path.basename(filename))
     return w.name, w.version
 
 
@@ -365,14 +366,15 @@ def populate_link(
     finder: PackageFinder,
     ireq: InstallRequirement,
     upgrade: bool = False,
-) -> None:
+) -> Link | None:
     """Populate ireq's link attribute"""
     if not ireq.link:
         candidate = finder.find_requirement(ireq, upgrade)
         if not candidate:
-            return
+            return None
         link = getattr(candidate, "link", candidate)
         ireq.link = link
+    return ireq.link
 
 
 _VT = TypeVar("_VT")

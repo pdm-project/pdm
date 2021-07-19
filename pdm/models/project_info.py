@@ -1,65 +1,43 @@
 from __future__ import annotations
 
 import itertools
+import sys
 from typing import Any, Iterator
-
-from distlib.metadata import Metadata as DistMeta
 
 from pdm import termui
 from pdm.pep517.metadata import Metadata
 
+if sys.version_info >= (3, 8):
+    from importlib.metadata import Distribution
+else:
+    from importlib_metadata import Distribution
+
 
 class ProjectInfo:
-    def __init__(self, metadata: DistMeta | Metadata) -> None:
+    def __init__(self, metadata: Distribution | Metadata) -> None:
         self.latest_stable_version = ""
         self.installed_version = ""
         if isinstance(metadata, Metadata):
             self._parsed = self._parse_self(metadata)
-        elif metadata._legacy:
-            self._parsed = self._parse_legacy(
-                dict(metadata._legacy.items())  # type: ignore
-            )
         else:
-            self._parsed = self._parse(dict(metadata._data))  # type: ignore
+            self._parsed = self._parse(metadata)
 
-    def _parse(self, data: dict[str, Any]) -> dict[str, Any]:
-        result = {
-            "name": data["name"],
-            "version": data["version"],
-            "summary": data.get("summary", ""),
-            "license": data.get("license", ""),
-            "homepage": data.get("extensions", {})
-            .get("python.details", {})
-            .get("project_urls", {})
-            .get("Home", ""),
-            "project_urls": [data.get("project_url", "")],
-            "platform": data.get("platform", ""),
-            "keywords": ", ".join(data.get("keywords", [])),
-        }
-        contacts = data.get("extensions", {}).get("python.details", {}).get("contacts")
-        if contacts:
-            author_contact: dict[str, Any] = next(
-                iter(c for c in contacts if c["role"] == "author"), {}
-            )
-            result.update(
-                author=author_contact.get("name", ""),
-                email=author_contact.get("email", ""),
-            )
-        return result
-
-    def _parse_legacy(self, data: dict[str, Any]) -> dict[str, Any]:
+    def _parse(self, data: Distribution) -> dict[str, Any]:
+        metadata = data.metadata
         return {
-            "name": data["Name"],
-            "version": data["Version"],
-            "summary": data.get("Summary", ""),
-            "author": data.get("Author", ""),
-            "email": data.get("Author-email", ""),
-            "license": data.get("License", ""),
-            "requires-python": data.get("Requires-Python", ""),
-            "platform": ", ".join(data.get("Platform", [])),
-            "keywords": ", ".join(data.get("Keywords", [])),
-            "homepage": data.get("Home-page", ""),
-            "project-urls": [": ".join(parts) for parts in data.get("Project-URL", [])],
+            "name": metadata["Name"],
+            "version": metadata["Version"],
+            "summary": metadata.get("Summary", ""),
+            "author": metadata.get("Author", ""),
+            "email": metadata.get("Author-email", ""),
+            "license": metadata.get("License", ""),
+            "requires-python": metadata.get("Requires-Python", ""),
+            "platform": ", ".join(metadata.get("Platform", [])),
+            "keywords": ", ".join(metadata.get("Keywords", [])),
+            "homepage": metadata.get("Home-page", ""),
+            "project-urls": [
+                ": ".join(parts) for parts in metadata.get("Project-URL", [])
+            ],
         }
 
     def _parse_self(self, metadata: Metadata) -> dict[str, Any]:

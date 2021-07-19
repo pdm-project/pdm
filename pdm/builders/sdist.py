@@ -4,11 +4,14 @@ from typing import Any, Mapping, Optional
 from pdm.builders.base import EnvBuilder
 
 
-class EnvSdistBuilder(EnvBuilder):
+class SdistBuilder(EnvBuilder):
     """Build sdist in isolated env with managed Python."""
 
     def build(
-        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+        self,
+        out_dir: str,
+        config_settings: Optional[Mapping[str, Any]] = None,
+        metadata_directory: Optional[str] = None,
     ) -> str:
         self.install(self._build_system["requires"], shared=True)
         requires = self._hook.get_requires_for_build_sdist(config_settings)

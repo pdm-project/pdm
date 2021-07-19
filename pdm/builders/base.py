@@ -254,8 +254,19 @@ class EnvBuilder:
             if key not in self._shared_envs:
                 self._shared_envs[key] = path
 
-    def build(
+    def prepare_metadata(
         self, out_dir: str, config_settings: Mapping[str, Any] | None = None
+    ) -> str:
+        """Prepare metadata and store in the out_dir. Some backends doesn't provide that API,
+        in that case the metadata will be retreived from the built result.
+        """
+        raise NotImplementedError("Should be implemented in subclass")
+
+    def build(
+        self,
+        out_dir: str,
+        config_settings: Mapping[str, Any] | None = None,
+        metadata_directory: str | None = None,
     ) -> str:
         """Build and store the artifact in out_dir,
         return the absolute path of the built result.

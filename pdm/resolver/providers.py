@@ -49,7 +49,7 @@ class BaseProvider(AbstractProvider):
         incompat = list(incompatibilities[identifier])
         if file_req:
             can = Candidate(file_req, self.repository.environment)
-            can.get_metadata()
+            can.metadata
             candidates = [can]
         else:
             candidates = self.repository.find_candidates(
@@ -69,7 +69,7 @@ class BaseProvider(AbstractProvider):
                 candidate.req.url
             ) == url_without_fragments(requirement.url)
         if not candidate.version:
-            candidate.get_metadata()
+            candidate.metadata
         if getattr(candidate, "_preferred", False) and not candidate._requires_python:
             candidate.requires_python = str(
                 self.repository.get_dependencies(candidate)[1]

@@ -1,7 +1,11 @@
+import shutil
+from pathlib import Path
+
 import pytest
 
 from pdm.exceptions import ExtrasError
 from pdm.models.candidates import Candidate
+from pdm.models.pip_shims import Link, path_to_url
 from pdm.models.requirements import parse_requirement
 from tests import FIXTURES
 
@@ -139,10 +143,21 @@ def test_expand_project_root_in_url(req_str, core):
 def test_parse_project_file_on_build_error(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
     candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == [
-        "chardet; os_name=='nt'",
+    assert sorted(candidate.get_dependencies_from_metadata()) == [
+        'chardet; os_name == "nt"',
         "idna",
     ]
+    assert candidate.name == "demo"
+    assert candidate.version == "0.0.1"
+
+
+def test_parse_project_file_on_build_error_with_extras(project):
+    req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
+    req.extras = ("security", "tests")
+    candidate = Candidate(req, project.environment)
+    deps = candidate.get_dependencies_from_metadata()
+    assert 'requests; python_version >= "3.6"' in deps
+    assert "pytest" in deps
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
 
@@ -199,3 +214,25 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
     candidate = Candidate(req, project.environment)
     assert candidate.get_dependencies_from_metadata() == ["django"]
     assert candidate.version == "0.1.0"
+
+
+def test_sdist_candidate_with_wheel_cache(project, mocker):
+    file_link = Link(path_to_url((FIXTURES / "artifacts/demo-0.0.1.tar.gz").as_posix()))
+    built_path = (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix()
+    wheel_cache = project.make_wheel_cache()
+    cache_path = wheel_cache.get_path_for_link(file_link)
+    if not Path(cache_path).exists():
+        Path(cache_path).mkdir(parents=True)
+    shutil.copy2(built_path, cache_path)
+    req = parse_requirement(file_link.url)
+    candidate = Candidate(req, project.environment)
+    downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
+    candidate.prepare(True)
+    downloader.assert_not_called()
+    assert Path(candidate.wheel) == Path(cache_path) / Path(built_path).name
+
+    candidate.wheel = None
+    builder = mocker.patch("pdm.builders.WheelBuilder.build")
+    candidate.build()
+    builder.assert_not_called()
+    assert Path(candidate.wheel) == Path(cache_path) / Path(built_path).name

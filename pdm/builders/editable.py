@@ -13,7 +13,7 @@ _SETUPTOOLS_SHIM = (
 )
 
 
-class EnvEggInfoBuilder(EnvBuilder):
+class EditableBuilder(EnvBuilder):
     """Build egg-info in isolated env with managed Python."""
 
     @staticmethod
@@ -26,9 +26,7 @@ class EnvEggInfoBuilder(EnvBuilder):
             raise BuildError("No egg info is generated.")
         return filename
 
-    def build(
-        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
-    ) -> str:
+    def ensure_setup_py(self) -> str:
         from pdm.pep517.base import Builder
         from pdm.project.metadata import MutableMetadata
 
@@ -40,10 +38,15 @@ class EnvEggInfoBuilder(EnvBuilder):
                 )
             except ValueError:
                 builder._meta = None
-        setup_py_path = builder.ensure_setup_py().as_posix()
+        return builder.ensure_setup_py().as_posix()
+
+    def prepare_metadata(
+        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+    ) -> str:
+        setup_py_path = self.ensure_setup_py()
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
-        args.extend(["egg_info", "--egg-base", os.path.relpath(out_dir, self.src_dir)])
+        args.extend(["egg_info", "--egg-base", out_dir])
         self.subprocess_runner(args, cwd=self.src_dir)
         filename = self._find_egg_info(out_dir)
         return os.path.join(out_dir, filename)
