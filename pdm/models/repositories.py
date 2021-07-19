@@ -184,7 +184,7 @@ class BaseRepository:
     def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateInfo:
         deps = candidate.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
-        summary = candidate.metadata.summary  # type: ignore
+        summary = candidate.metadata.metadata["Summary"]
         return deps, requires_python, summary
 
     def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:

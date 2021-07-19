@@ -1,90 +1,66 @@
 from __future__ import annotations
 
-import functools
 import os
-import warnings
-from argparse import Namespace
+import re
+import sys
+from importlib.metadata import Distribution, PathDistribution
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence, cast, no_type_check
-
-from distlib.database import EggInfoDistribution
-from distlib.wheel import Wheel
-from pip._vendor.pkg_resources import safe_extra
+from typing import TYPE_CHECKING, Any, cast, no_type_check
+from zipfile import ZipFile
 
 from pdm import termui
-from pdm.exceptions import BuildError, ExtrasError, RequirementError
+from pdm.builders import EditableBuilder, WheelBuilder
+from pdm.exceptions import BuildError, CandidateNotFound
 from pdm.models import pip_shims
-from pdm.models.markers import Marker
-from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.models.setup import Setup
+from pdm.models.requirements import (
+    Requirement,
+    _egg_info_re,
+    filter_requirements_with_extras,
+    parse_metadata_from_source,
+)
 from pdm.utils import (
+    allow_all_wheels,
     cached_property,
+    convert_hashes,
+    create_tracked_tempdir,
     expand_env_vars_in_auth,
     get_rev_from_url,
     path_replace,
+    populate_link,
 )
 
-if TYPE_CHECKING:
-    from distlib.metadata import Metadata
+if sys.version_info >= (3, 8):
+    import importlib.metadata as importlib_metadata
+else:
+    import importlib_metadata
 
+if TYPE_CHECKING:
     from pdm.models.environment import Environment
 
 vcs = pip_shims.VcsSupport()
 
 
-def get_sdist(egg_info: str) -> EggInfoDistribution | None:
-    """Get a distribution from egg_info directory."""
-    return EggInfoDistribution(egg_info) if egg_info else None
+def _dist_info_files(whl_zip: ZipFile) -> list[str]:
+    """Identify the .dist-info folder inside a wheel ZipFile."""
+    res = []
+    for path in whl_zip.namelist():
+        m = re.match(r"[^/\\]+-[^/\\]+\.dist-info/", path)
+        if m:
+            res.append(path)
+    if res:
+        return res
+    raise Exception("No .dist-info folder found in wheel")
 
 
-def _patch_version_parsing() -> None:
-    """Monkey patches the version parsing to allow empty parts in version constraint
-    list.
+def _get_wheel_metadata_from_wheel(whl_file: str, metadata_directory: str) -> str:
+    """Extract the metadata from a wheel.
+    Fallback for when the build backend does not
+    define the 'get_wheel_metadata' hook.
     """
-    from distlib.version import VersionScheme
-    from packaging.requirements import InvalidRequirement
-    from packaging.requirements import Requirement as PRequirement
-
-    def is_valid_matcher(self: Any, s: str) -> bool:
-        try:
-            PRequirement(s)
-        except InvalidRequirement:
-            return False
-        return True
-
-    VersionScheme.is_valid_matcher = is_valid_matcher
-
-
-_patch_version_parsing()
-del _patch_version_parsing
-
-
-@functools.lru_cache(128)
-def get_requirements_from_dist(
-    dist: EggInfoDistribution, extras: Sequence[str]
-) -> list[str]:
-    """Get requirements of a distribution, with given extras."""
-    extras_in_metadata = []
-    result: list[str] = []
-    dep_map = dist._build_dep_map()
-    for extra, reqs in dep_map.items():
-        reqs = [Requirement.from_pkg_requirement(r) for r in reqs]
-        if not extra:
-            # requirements without extras are always required.
-            result.extend(r.as_line() for r in reqs)
-        else:
-            new_extra, _, marker = extra.partition(":")
-            extras_in_metadata.append(new_extra.strip())
-            # Only include requirements that match one of extras.
-            if not new_extra.strip() or safe_extra(new_extra.strip()) in extras:
-                marker = Marker(marker) if marker else None
-                for r in reqs:
-                    r.marker = marker
-                    result.append(r.as_line())
-    extras_not_found = [e for e in extras if e not in extras_in_metadata]
-    if extras_not_found:
-        warnings.warn(ExtrasError(extras_not_found))
-    return result
+    with ZipFile(whl_file) as zipf:
+        dist_info = _dist_info_files(zipf)
+        zipf.extractall(path=metadata_directory, members=dist_info)
+    return os.path.join(metadata_directory, dist_info[0].split("/")[0])
 
 
 class Candidate:
@@ -116,11 +92,12 @@ class Candidate:
         if link is None and self.req:
             link = self.ireq.link
         self.link = link
+        self.source_dir: str | None = None
         self.hashes: dict[str, str] | None = None
         self._requires_python: str | None = None
 
-        self.wheel: Wheel | None = None
-        self.metadata: Namespace | Metadata | None = None
+        self.wheel: str | None = None
+        self._metadata_dir: str | None = None
 
     def __hash__(self) -> int:
         return hash((self.name, self.version))
@@ -171,51 +148,95 @@ class Candidate:
             cast(str, self.ireq.source_dir)
         )
 
-    def get_metadata(
-        self, allow_all_wheels: bool = True, raising: bool = False
-    ) -> Metadata | None | Namespace:
-        """Get the metadata of the candidate.
-        For editable requirements, egg info are produced, otherwise a wheel is built.
+    def prepare(self, allow_all: bool = False) -> None:
+        """Fetch the link of the candidate and unpack to local if necessary.
 
-        If raising is True, error will pop when the package fails to build.
+        :param allow_all: If true, don't validate the wheel tag nor hashes
         """
-        if self.metadata is not None:
-            return self.metadata
+        wheel_compatible = self._wheel_compatible(allow_all)
+        if self.source_dir or wheel_compatible:
+            return
         ireq = self.ireq
-        if self.link and not ireq.link:
-            ireq.link = self.link
-        try:
-            built = self.environment.build(ireq, self.hashes, allow_all_wheels)
-        except BuildError:
-            if raising:
-                raise
-            termui.logger.warn("Failed to build package, try parsing project files.")
-            meta_dict = Setup.from_directory(
-                Path(ireq.unpacked_source_directory)
-            ).as_dict()
-            meta_dict.update(summary="UNKNOWN")
-            meta_dict["requires_python"] = meta_dict.pop("python_requires", None)
-            self.metadata = Namespace(**meta_dict)
+        with self.environment.get_finder(ignore_requires_python=True) as finder:
+            if not self.link or not wheel_compatible:
+                self.link = None
+                with allow_all_wheels(allow_all):
+                    self.link = populate_link(finder, ireq, False)
+                if not self.link:
+                    raise CandidateNotFound("No candidate is found for %s", self)
+            if allow_all and not self.req.editable:
+                cached = self._get_cached_wheel()
+                if cached:
+                    self.wheel = cached.file_path
+                    return
+            if not allow_all and self.hashes:
+                ireq.hash_options = convert_hashes(self.hashes)
+            downloader = pip_shims.Downloader(finder.session, "off")  # type: ignore
+            self._populate_source_dir(ireq)
+            if not self.link.is_existing_dir():
+                assert ireq.source_dir
+                downloaded = pip_shims.unpack_url(
+                    self.link,
+                    ireq.source_dir,
+                    downloader,
+                    hashes=ireq.hashes(False),
+                )
+                if self.link.is_wheel:
+                    assert downloaded
+                    self.wheel = downloaded.path
+                    return
+            self.source_dir = ireq.unpacked_source_directory
+
+    @cached_property
+    def metadata(self) -> importlib_metadata.Distribution:
+        """Get the metadata of the candidate.
+        Will call the prepare_metadata_* hooks behind the scene
+        """
+        self.prepare(True)
+        metadir_parent = create_tracked_tempdir("pdm-meta-")
+        if self.wheel:
+            self._metadata_dir = _get_wheel_metadata_from_wheel(
+                self.wheel, metadir_parent
+            )
+            result: Distribution = PathDistribution(Path(self._metadata_dir))
         else:
-            if self.req.editable:
-                if not self.req.is_local_dir and not self.req.is_vcs:  # type: ignore
-                    raise RequirementError(
-                        "Editable installation is only supported for "
-                        "local directory and VCS location."
-                    )
-                sdist = get_sdist(built)
-                self.metadata = sdist.metadata if sdist else None
+            assert self.source_dir
+            builder = EditableBuilder if self.req.editable else WheelBuilder
+            try:
+                self._metadata_dir = builder(
+                    self.source_dir, self.environment
+                ).prepare_metadata(metadir_parent)
+            except BuildError:
+                termui.logger.warn(
+                    "Failed to build package, try parsing project files."
+                )
+                result = parse_metadata_from_source(self.source_dir)
             else:
-                # It should be a wheel path.
-                self.wheel = Wheel(built)
-                self.metadata = self.wheel.metadata
+                result = PathDistribution(Path(self._metadata_dir))
         if not self.name:
-            self.name = str(self.metadata.name)  # type: ignore
+            self.name = str(result.metadata["Name"])  # type: ignore
             self.req.name = self.name
         if not self.version:
-            self.version = self.metadata.version  # type: ignore
-        self.link = ireq.link
-        return self.metadata
+            self.version = result.version  # type: ignore
+        self.requires_python = result.metadata.get("Requires-Python")
+        return result
+
+    def build(self) -> str:
+        """Call PEP 517 build hook to build the candidate into a wheel"""
+        self.prepare()
+        if self.wheel:
+            return self.wheel
+        cached = self._get_cached_wheel()
+        if cached:
+            self.wheel = cached.file_path
+            return self.wheel
+        assert self.source_dir, "Source directory isn't ready yet"
+        builder = WheelBuilder(self.source_dir, self.environment)
+        build_dir = self._get_wheel_dir()
+        if not os.path.exists(build_dir):
+            os.makedirs(build_dir)
+        self.wheel = builder.build(build_dir, metadata_directory=self._metadata_dir)
+        return self.wheel
 
     def __repr__(self) -> str:
         source = getattr(self.link, "comes_from", "unknown")
@@ -240,50 +261,21 @@ class Candidate:
     def get_dependencies_from_metadata(self) -> list[str]:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
-        metadata = self.get_metadata()
-        if self.req.editable:
-            if not metadata:
-                return []
-            return get_requirements_from_dist(self.ireq.get_dist(), extras)
-        elif hasattr(metadata, "install_requires"):
-            requires = metadata.install_requires or []  # type: ignore
-            extras_not_found = set()
-            for extra in extras:
-                try:
-                    requires.extend(
-                        (metadata.extras_require or {})[extra]  # type: ignore
-                    )
-                except KeyError:
-                    extras_not_found.add(extra)
-            if extras_not_found:
-                warnings.warn(ExtrasError(sorted(extras_not_found)))
-            return sorted(set(requires))
-        else:
-            return filter_requirements_with_extras(
-                metadata.run_requires, extras  # type: ignore
-            )
+        return filter_requirements_with_extras(
+            self.metadata.requires or [], extras  # type: ignore
+        )
 
     @property
     def requires_python(self) -> str:
         """The Python version constraint of the candidate."""
         if self._requires_python is not None:
             return self._requires_python
-        requires_python = self.link.requires_python or ""  # type: ignore
-        if not requires_python and self.metadata:
-            # For candidates fetched from PyPI simple API, requires_python is not
-            # available yet. Just allow all candidates, and dismatching candidates
-            # will be filtered out during resolving process.
-            try:
-                requires_python = self.metadata.requires_python
-            except AttributeError:
-                requires_python = getattr(
-                    self.metadata._legacy, "requires_python", "UNKNOWN"
-                )
-            if not requires_python or requires_python == "UNKNOWN":
-                requires_python = ""
-        if requires_python.isdigit():
+        assert self.link
+        requires_python = self.link.requires_python
+        if requires_python and requires_python.isdigit():
             requires_python = f">={requires_python},<{int(requires_python) + 1}"
-        return requires_python
+            self._requires_python = requires_python
+        return requires_python or ""
 
     @requires_python.setter
     def requires_python(self, value: str) -> None:
@@ -326,3 +318,63 @@ class Candidate:
             f"{termui.green(self.name, bold=True)} "
             f"{termui.yellow(str(self.version))}"
         )
+
+    def _get_cached_wheel(self) -> pip_shims.Link | None:
+        wheel_cache = self.environment.project.make_wheel_cache()
+        supported_tags = pip_shims.get_supported(self.environment.interpreter.for_tag())
+        assert self.link
+        cache_entry = wheel_cache.get_cache_entry(
+            self.link,
+            self.req.project_name,  # type: ignore
+            supported_tags,
+        )
+        if cache_entry is not None:
+            termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
+            return cache_entry.link
+        return None
+
+    def _populate_source_dir(self, ireq: pip_shims.InstallRequirement) -> None:
+        assert self.link
+        if self.link.is_existing_dir():
+            ireq.source_dir = self.link.file_path
+        elif self.req.editable:
+            if self.environment.packages_path:
+                src_dir = self.environment.packages_path / "src"
+            elif os.getenv("VIRTUAL_ENV"):
+                src_dir = Path(os.environ["VIRTUAL_ENV"]) / "src"
+            else:
+                src_dir = Path("src")
+            if not src_dir.is_dir():
+                src_dir.mkdir()
+            ireq.ensure_has_source_dir(str(src_dir))
+        elif not ireq.source_dir:
+            ireq.source_dir = create_tracked_tempdir(prefix="pdm-build-")
+
+    def _wheel_compatible(self, allow_all: bool) -> bool:
+        if not self.wheel:
+            return False
+        if allow_all:
+            return True
+        supported_tags = pip_shims.get_supported(self.environment.interpreter.for_tag())
+        return pip_shims.PipWheel(self.wheel).supported(supported_tags)
+
+    def _get_wheel_dir(self) -> str:
+        should_cache = False
+        wheel_cache = self.environment.project.make_wheel_cache()
+        assert self.link
+        if self.link.is_vcs:
+            vcs = pip_shims.VcsSupport()
+            vcs_backend = vcs.get_backend_for_scheme(self.link.scheme)
+            if vcs_backend and vcs_backend.is_immutable_rev_checkout(
+                self.link.url, cast(str, self.ireq.source_dir)
+            ):
+                should_cache = True
+        elif not self.link.is_existing_dir():
+            base, _ = self.link.splitext()
+            if _egg_info_re.search(base) is not None:
+                # Determine whether the string looks like an egg_info.
+                should_cache = True
+        if should_cache:
+            return wheel_cache.get_path_for_link(self.link)
+        else:
+            return create_tracked_tempdir("pdm-wheel-")

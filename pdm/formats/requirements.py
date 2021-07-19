@@ -7,7 +7,6 @@ from argparse import Namespace
 from os import PathLike
 from typing import Any, Mapping, cast
 
-from distlib.wheel import Wheel
 from pip._vendor.packaging.requirements import Requirement as PRequirement
 
 from pdm.formats.base import make_array
@@ -53,9 +52,9 @@ def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
         line = "-e {}".format(ireq.link)
     else:
         if not ireq.req:
-            ireq.req = parse_requirement("dummy @" + ireq.link.url)  # type: ignore
-            wheel = Wheel(environment.build(ireq))
-            ireq.req.name = wheel.name  # type: ignore
+            req = parse_requirement("dummy @" + ireq.link.url)  # type: ignore
+            req.name = Candidate(req, environment).metadata.metadata["Name"]
+            ireq.req = req  # type: ignore
 
         line = _requirement_to_str_lowercase_name(cast(PRequirement, ireq.req))
     assert ireq.req

@@ -52,7 +52,7 @@ class Command(BaseCommand):
                 return
             latest_stable = next(filter(filter_stable, matches), None)
 
-            metadata = latest.get_metadata()
+            metadata = latest.metadata
         else:
             if not project.meta.name:
                 raise PdmUsageError("This project is not a package")

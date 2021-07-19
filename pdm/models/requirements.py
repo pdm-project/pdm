@@ -5,6 +5,7 @@ import functools
 import os
 import re
 import secrets
+import sys
 import urllib.parse as urlparse
 import warnings
 from pathlib import Path
@@ -34,6 +35,11 @@ from pdm.utils import (
     parse_name_version_from_wheel,
     url_without_fragments,
 )
+
+if sys.version_info >= (3, 8):
+    from importlib.metadata import Distribution
+else:
+    from importlib_metadata import Distribution
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 _vcs_req_re = re.compile(
@@ -403,28 +409,21 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirement_lines: list[str | dict[str, str | list[str]]],
+    requirement_lines: list[str],
     extras: Sequence[str],
 ) -> list[str]:
     result: list[str] = []
-    extras_in_meta = []
+    extras_in_meta: list[str] = []
     for req in requirement_lines:
-        if isinstance(req, dict):
-            if req.get("extra"):
-                extras_in_meta.append(req["extra"])
-            if not req.get("extra") or req.get("extra") in extras:
-                marker = f"; {req['environment']}" if req.get("environment") else ""
-                result.extend(f"{line}{marker}" for line in req.get("requires", []))
+        _r = parse_requirement(req)
+        if not _r.marker:
+            result.append(req)
         else:
-            _r = parse_requirement(req)
-            if not _r.marker:
-                result.append(req)
-            else:
-                elements, rest = split_marker_extras(_r.marker)
-                extras_in_meta.extend(elements)
-                _r.marker = Marker(str(rest)) if rest else None
-                if not elements or set(extras) & set(elements):
-                    result.append(_r.as_line())
+            elements, rest = split_marker_extras(_r.marker)
+            extras_in_meta.extend(elements)
+            _r.marker = Marker(str(rest)) if rest else None
+            if not elements or set(extras) & set(elements):
+                result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
     if extras_not_found:
@@ -460,3 +459,47 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
                 " or local directory."
             )
     return r
+
+
+class MockDistribution(Distribution):
+    def __init__(self, data: Setup) -> None:
+        self._data = data
+
+    def read_text(self, filename: str) -> str | None:
+        return None
+
+    def locate_file(self, path: os.PathLike[str] | str) -> os.PathLike[str]:
+        return Path("")
+
+    @property
+    def metadata(self) -> dict[str, Any]:  # type: ignore
+        return {
+            "Name": self._data.name,
+            "Version": self._data.version,
+            "Summary": "UNKNOWN",
+            "Requires-Python": self._data.python_requires,
+        }
+
+    @property
+    def requires(self) -> list[str] | None:
+        result = self._data.install_requires
+        for extra, reqs in self._data.extras_require.items():
+            extra_marker = f"extra == '{extra}'"
+            for req in reqs:
+                parsed = parse_requirement(req)
+                old_marker = str(parsed.marker) if parsed.marker else None
+                if old_marker:
+                    if " or " in old_marker:
+                        new_marker = f"({old_marker}) and {extra_marker}"
+                    else:
+                        new_marker = f"{old_marker} and {extra_marker}"
+                else:
+                    new_marker = extra_marker
+                parsed.marker = Marker(new_marker)
+                result.append(parsed.as_line())
+        return result
+
+
+def parse_metadata_from_source(src_dir: str) -> Distribution:
+    setup = Setup.from_directory(Path(src_dir))
+    return MockDistribution(setup)

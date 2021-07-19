@@ -18,7 +18,8 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
     project.root.joinpath("main.py").write_text(
         "import requests\nprint(requests.__version__)\n"
     )
-    invoke(["add", "requests==2.24.0"], obj=project)
+    result = invoke(["add", "requests==2.24.0"], obj=project)
+    assert result.exit_code == 0, result.stderr
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
     output = subprocess.check_output(

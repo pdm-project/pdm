@@ -25,17 +25,7 @@ from pdm.models.in_process import (
     get_sys_config_paths,
 )
 from pdm.models.pip_shims import misc, patch_bin_prefix, req_uninstall
-from pdm.models.requirements import _egg_info_re
-from pdm.utils import (
-    allow_all_wheels,
-    cached_property,
-    convert_hashes,
-    create_tracked_tempdir,
-    expand_env_vars_in_auth,
-    get_finder,
-    populate_link,
-    temp_environ,
-)
+from pdm.utils import cached_property, expand_env_vars_in_auth, get_finder, temp_environ
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -168,30 +158,6 @@ class Environment:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
-    def _get_build_dir(self, ireq: pip_shims.InstallRequirement) -> str:
-        if ireq.editable or ireq.link and ireq.link.is_existing_dir():
-            return self._get_source_dir(ireq)
-        else:
-            return create_tracked_tempdir(prefix="pdm-build-")
-
-    def _get_source_dir(self, ireq: pip_shims.InstallRequirement) -> str:
-        if ireq.source_dir:
-            return ireq.source_dir
-        if ireq.link and ireq.link.is_existing_dir():
-            ireq.source_dir = ireq.link.file_path
-            return ireq.source_dir
-        if self.packages_path:
-            src_dir = self.packages_path / "src"
-        elif os.getenv("VIRTUAL_ENV", None):
-            src_dir = Path(os.environ["VIRTUAL_ENV"]) / "src"
-        else:
-            src_dir = Path("src")
-        if not src_dir.is_dir():
-            src_dir.mkdir()
-        ireq.ensure_has_source_dir(str(src_dir))
-        assert ireq.source_dir
-        return ireq.source_dir
-
     @contextmanager
     def get_finder(
         self,
@@ -221,98 +187,6 @@ class Environment:
         finder.session.auth = self.auth  # type: ignore
         yield finder
         finder.session.close()  # type: ignore
-
-    def build(
-        self,
-        ireq: pip_shims.InstallRequirement,
-        hashes: dict[str, str] | None = None,
-        allow_all: bool = True,
-    ) -> str:
-        """Build egg_info directory for editable candidates and a wheel for others.
-
-        :param ireq: the InstallRequirment of the candidate.
-        :param hashes: a dictionary of filename: hash_value to check against downloaded
-        artifacts.
-        :param allow_all: Allow building incompatible wheels.
-        :returns: The full path of the built artifact.
-        """
-        from pdm.builders import EnvEggInfoBuilder, EnvWheelBuilder
-
-        wheel_cache = self.project.make_wheel_cache()
-        supported_tags = pip_shims.get_supported(self.interpreter.for_tag())
-        if hashes:
-            ireq.hash_options = convert_hashes(hashes)
-        with self.get_finder(ignore_requires_python=True) as finder:
-            with allow_all_wheels(allow_all):
-                # temporarily allow all wheels to get a link.
-                populate_link(finder, ireq, False)
-            assert ireq.link
-            if hashes is None and not ireq.editable:
-                # If hashes are not given and cache is hit, replace the link with the
-                # cached one. This can speed up by skipping the download and build.
-                cache_entry = wheel_cache.get_cache_entry(
-                    ireq.link,
-                    ireq.req.project_name,  # type: ignore
-                    supported_tags,
-                )
-                if cache_entry is not None:
-                    termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
-                    ireq.link = cache_entry.link
-            build_dir = self._get_build_dir(ireq)
-            if not ireq.source_dir:
-                ireq.source_dir = build_dir
-
-            if not ireq.link.is_existing_dir():
-                downloader = pip_shims.Downloader(finder.session, "off")  # type: ignore
-                downloaded = pip_shims.unpack_url(
-                    ireq.link,
-                    ireq.source_dir,
-                    downloader,
-                    hashes=ireq.hashes(False),
-                )
-
-                if ireq.link.is_wheel:
-                    # If the file is a wheel, return the downloaded file directly.
-                    assert downloaded
-                    return downloaded.path
-
-        # Check the built wheel cache again after hashes are resolved.
-        if not ireq.editable:
-            cache_entry = wheel_cache.get_cache_entry(
-                ireq.link,
-                ireq.req.project_name,  # type: ignore
-                supported_tags,
-            )
-            if cache_entry is not None:
-                termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
-                return cache_entry.link.file_path
-
-        # Otherwise, as all source is already prepared, build it.
-        output_dir = os.path.join(build_dir, "dist")
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-        if ireq.editable:
-            builder = EnvEggInfoBuilder(ireq.unpacked_source_directory, self)
-            ret = ireq.metadata_directory = builder.build(output_dir)
-            return ret
-        should_cache = False
-        if ireq.link.is_vcs:
-            vcs = pip_shims.VcsSupport()
-            vcs_backend = vcs.get_backend_for_scheme(ireq.link.scheme)
-            if vcs_backend and vcs_backend.is_immutable_rev_checkout(
-                ireq.link.url, ireq.source_dir
-            ):
-                should_cache = True
-        elif not ireq.link.is_existing_dir:
-            base, _ = ireq.link.splitext()
-            if _egg_info_re.search(base) is not None:
-                # Determine whether the string looks like an egg_info.
-                should_cache = True
-        if should_cache:
-            output_dir = wheel_cache.get_path_for_link(ireq.link)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-        return EnvWheelBuilder(ireq.unpacked_source_directory, self).build(output_dir)
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""

@@ -139,10 +139,21 @@ def test_expand_project_root_in_url(req_str, core):
 def test_parse_project_file_on_build_error(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
     candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == [
-        "chardet; os_name=='nt'",
+    assert sorted(candidate.get_dependencies_from_metadata()) == [
+        'chardet; os_name == "nt"',
         "idna",
     ]
+    assert candidate.name == "demo"
+    assert candidate.version == "0.0.1"
+
+
+def test_parse_project_file_on_build_error_with_extras(project):
+    req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
+    req.extras = ("security", "tests")
+    candidate = Candidate(req, project.environment)
+    deps = candidate.get_dependencies_from_metadata()
+    assert 'requests; python_version >= "3.6"' in deps
+    assert "pytest" in deps
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
 
