@@ -306,7 +306,6 @@ def atomic_open_for_write(
         yield fp
     except Exception:
         fp.close()
-        os.unlink(name)
         raise
     else:
         fp.close()
@@ -314,7 +313,12 @@ def atomic_open_for_write(
             os.unlink(filename)
         except OSError:
             pass
-        shutil.move(name, filename)
+        # The tempfile is created with mode 600, we need to restore the default mode
+        # with copyfile() instead of move().
+        # See: https://github.com/pdm-project/pdm/issues/542
+        shutil.copyfile(name, filename)
+    finally:
+        os.unlink(name)
 
 
 @contextmanager
