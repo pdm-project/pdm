@@ -152,12 +152,19 @@ class Candidate:
 
         :param allow_all: If true, don't validate the wheel tag nor hashes
         """
-        wheel_compatible = self._wheel_compatible(allow_all)
-        if self.source_dir or wheel_compatible:
+        if (
+            self.source_dir
+            or self.wheel
+            and self._wheel_compatible(self.wheel, allow_all)
+        ):
             return
         ireq = self.ireq
         with self.environment.get_finder(ignore_requires_python=True) as finder:
-            if not self.link or not wheel_compatible:
+            if (
+                not self.link
+                or self.link.is_wheel
+                and not self._wheel_compatible(self.link.filename, allow_all)
+            ):
                 self.link = None
                 with allow_all_wheels(allow_all):
                     self.link = populate_link(finder, ireq, False)
@@ -192,7 +199,7 @@ class Candidate:
         Will call the prepare_metadata_* hooks behind the scene
         """
         self.prepare(True)
-        metadir_parent = create_tracked_tempdir("pdm-meta-")
+        metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
         if self.wheel:
             self._metadata_dir = _get_wheel_metadata_from_wheel(
                 self.wheel, metadir_parent
@@ -349,13 +356,13 @@ class Candidate:
         elif not ireq.source_dir:
             ireq.source_dir = create_tracked_tempdir(prefix="pdm-build-")
 
-    def _wheel_compatible(self, allow_all: bool) -> bool:
-        if not self.wheel:
-            return False
+    def _wheel_compatible(self, wheel_file: str, allow_all: bool) -> bool:
         if allow_all:
             return True
         supported_tags = pip_shims.get_supported(self.environment.interpreter.for_tag())
-        return pip_shims.PipWheel(self.wheel).supported(supported_tags)
+        return pip_shims.PipWheel(os.path.basename(wheel_file)).supported(
+            supported_tags
+        )
 
     def _get_wheel_dir(self) -> str:
         should_cache = False
@@ -376,4 +383,4 @@ class Candidate:
         if should_cache:
             return wheel_cache.get_path_for_link(self.link)
         else:
-            return create_tracked_tempdir("pdm-wheel-")
+            return create_tracked_tempdir(prefix="pdm-wheel-")

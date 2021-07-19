@@ -46,7 +46,7 @@ class EditableBuilder(EnvBuilder):
         setup_py_path = self.ensure_setup_py()
         self.install(["setuptools"])
         args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
-        args.extend(["egg_info", "--egg-base", os.path.relpath(out_dir, self.src_dir)])
+        args.extend(["egg_info", "--egg-base", out_dir])
         self.subprocess_runner(args, cwd=self.src_dir)
         filename = self._find_egg_info(out_dir)
         return os.path.join(out_dir, filename)

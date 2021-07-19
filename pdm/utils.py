@@ -147,7 +147,7 @@ def create_tracked_tempdir(
 
 
 def parse_name_version_from_wheel(filename: str) -> tuple[str, str]:
-    w = PipWheel(filename)
+    w = PipWheel(os.path.basename(filename))
     return w.name, w.version
 
 
