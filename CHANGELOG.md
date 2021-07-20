@@ -1,3 +1,35 @@
+Release v1.7.0 (2021-07-20)
+---------------------------
+
+### Features & Improvements
+
+- Support showing individual fields by `--<field-name>` options in pdm show. When no package is given, show this project. [#527](https://github.com/pdm-project/pdm/issues/527)
+- Add `--freeze` option to `pdm list` command which shows the dependencies list as pip's requirements.txt format. [#531](https://github.com/pdm-project/pdm/issues/531)
+
+### Bug Fixes
+
+- Fix the path manipulation on Windows, now the PEP 582 path is prepended to the `PYTHONPATH`. [#522](https://github.com/pdm-project/pdm/issues/522)
+- Fix the handling of auth prompting: will try keyring in non-verbose mode. [#523](https://github.com/pdm-project/pdm/issues/523)
+- Recognize old entry point name "pdm.plugin" for backward-compatibility. [#530](https://github.com/pdm-project/pdm/issues/530)
+- Match the VCS scheme in case-insensitive manner. [#537](https://github.com/pdm-project/pdm/issues/537)
+- Use the default permission bits when writing project files. [#542](https://github.com/pdm-project/pdm/issues/542)
+- Fix the VCS url to be consistent between lock and install. [#547](https://github.com/pdm-project/pdm/issues/547)
+
+### Improved Documentation
+
+- Add installation instructions for Scoop. [#522](https://github.com/pdm-project/pdm/issues/522)
+
+### Dependencies
+
+- Update `pdm-pep517` to `0.8.0`. [#524](https://github.com/pdm-project/pdm/issues/524)
+- Switch from `toml` to `tomli`. [#541](https://github.com/pdm-project/pdm/issues/541)
+
+### Refactor
+
+- Seperate the build env into two different levels for better caching. [#541](https://github.com/pdm-project/pdm/issues/541)
+- Refactor the build part into smaller functions. [#543](https://github.com/pdm-project/pdm/issues/543)
+
+
 Release v1.6.4 (2021-06-23)
 ---------------------------
 
