@@ -1,7 +1,12 @@
+import shutil
+from pathlib import Path
+
 import pytest
 
 from pdm.cli import actions
+from pdm.models.pip_shims import Link
 from pdm.models.specifiers import PySpecSet
+from tests import FIXTURES
 
 
 @pytest.mark.usefixtures("repository")
@@ -207,3 +212,22 @@ def test_add_package_unconstrained_rewrite_specifier(project):
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "1.11.8"
     assert project.meta.dependencies[0] == "django~=1.11"
+
+
+@pytest.mark.usefixtures("repository", "working_set", "vcs")
+def test_add_cached_vcs_requirement(project, mocker):
+    url = "git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
+    built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
+    wheel_cache = project.make_wheel_cache()
+    cache_path = Path(wheel_cache.get_path_for_link(Link(url)))
+    if not cache_path.exists():
+        cache_path.mkdir(parents=True)
+    shutil.copy2(built_path, cache_path)
+    actions.do_add(project, packages=[url], no_self=True)
+    lockfile_entry = next(p for p in project.lockfile["package"] if p["name"] == "demo")
+    assert lockfile_entry["revision"] == "1234567890abcdef"
+
+    downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
+    builder = mocker.patch("pdm.builders.WheelBuilder.build")
+    downloader.assert_not_called()
+    builder.assert_not_called()

@@ -49,7 +49,7 @@ class Project:
 
     PYPROJECT_FILENAME = "pyproject.toml"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    LOCKFILE_VERSION = "3"
+    LOCKFILE_VERSION = "3.1"
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
@@ -437,7 +437,7 @@ class Project:
 
     def is_lockfile_compatible(self) -> bool:
         if not self.lockfile_file.exists():
-            return False
+            return True
         lockfile_version = str(
             self.lockfile.get("metadata", {}).get("lock_version", "")
         )

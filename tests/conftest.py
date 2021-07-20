@@ -73,6 +73,11 @@ class MockVersionControl(versioncontrol.VersionControl):
     def get_revision(cls, location):
         return "1234567890abcdef"
 
+    def is_immutable_rev_checkout(self, url: str, dest: str) -> bool:
+        if "@1234567890abcdef" in url:
+            return True
+        return super().is_immutable_rev_checkout(url, dest)
+
 
 class _FakeLink:
     is_wheel = False

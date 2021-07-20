@@ -164,11 +164,7 @@ class Requirement:
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = cast(str, req_dict.pop(vcs, None))
-                url = (
-                    vcs
-                    + "+"
-                    + VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
-                )
+                url = vcs + "+" + repo
                 return VcsRequirement.create(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
             return FileRequirement.create(name=name, **req_dict)
@@ -366,33 +362,39 @@ class VcsRequirement(FileRequirement):
         if not self.vcs:
             self.vcs = self.url.split("+", 1)[0]
 
-    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
-        ireq = super().as_ireq(**kwargs)
-        if not self.editable and self.revision:
-            # For non-editable VCS requirements, commit-hash should be used as the
-            # rev-options for InstallRequirement to consume.
-            parsed = urlparse.urlparse(cast(Link, ireq.link).url)
-            new_path = "@".join((parsed.path.split("@", 1)[0], self.revision))
-            new_url = urlparse.urlunparse(parsed._replace(path=new_path))
-            ireq.link = Link(new_url)
-        return ireq
+    def as_line(self) -> str:
+        project_name = f"{self.project_name}" if self.project_name else ""
+        extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
+        marker = self._format_marker()
+        url = url_without_fragments(self.url)
+        if self.revision and not self.editable:
+            url += f"@{self.revision}"
+        elif self.ref:
+            url += f"@{self.ref}"
+        if self.editable or self.subdirectory:
+            fragments = f"egg={project_name}{extras}"
+            if self.subdirectory:
+                fragments = f"{fragments}&subdirectory={self.subdirectory}"
+            return f"{'-e ' if self.editable else ''}{url}#{fragments}{marker}"
+        delimiter = " @ " if project_name else ""
+        return f"{project_name}{extras}{delimiter}{url}{marker}"
 
     def _parse_url(self) -> None:
         vcs, url_no_vcs = self.url.split("+", 1)
         if url_no_vcs.startswith("git@"):
             url_no_vcs = add_ssh_scheme_to_git_uri(url_no_vcs)
-            self.url = f"{vcs}+{url_no_vcs}"
         if not self.name:
             self._parse_name_from_url()
-        repo = url_without_fragments(url_no_vcs)
-        ref: str | None = None
+        ref = self.ref
         parsed = urlparse.urlparse(url_no_vcs)
+        path = parsed.path
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
         if "subdirectory" in fragments:
             self.subdirectory = fragments["subdirectory"]
         if "@" in parsed.path:
             path, ref = parsed.path.split("@", 1)
-            repo = urlparse.urlunparse(parsed._replace(path=path))
+        repo = urlparse.urlunparse(parsed._replace(path=path, fragment=""))
+        self.url = f"{vcs}+{repo}"
         self.repo, self.ref = repo, ref  # type: ignore
 
     @staticmethod
