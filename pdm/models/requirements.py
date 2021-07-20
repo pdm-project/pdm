@@ -164,11 +164,7 @@ class Requirement:
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = cast(str, req_dict.pop(vcs, None))
-                url = (
-                    vcs
-                    + "+"
-                    + VcsRequirement._build_url_from_req_dict(name, repo, req_dict)
-                )
+                url = vcs + "+" + repo
                 return VcsRequirement.create(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
             return FileRequirement.create(name=name, **req_dict)
@@ -389,7 +385,7 @@ class VcsRequirement(FileRequirement):
             url_no_vcs = add_ssh_scheme_to_git_uri(url_no_vcs)
         if not self.name:
             self._parse_name_from_url()
-        ref: str | None = None
+        ref = self.ref
         parsed = urlparse.urlparse(url_no_vcs)
         path = parsed.path
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
