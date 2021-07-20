@@ -52,3 +52,4 @@ jobs:
           workflow: Excavator
           repo: frostming/scoop-frostming
           token: ${{ secrets.G_T }}
+          ref: master
