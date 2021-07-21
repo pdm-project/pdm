@@ -267,3 +267,8 @@ def test_resolve_candidates_to_install(project):
     assert result["py"].version == "3.6.0"
     assert result["configparser"].version == "1.2.0"
     assert result["backports"].version == "2.2.0"
+
+
+def test_resolve_prefer_requirement_with_prereleases(project, repository):
+    result = resolve_requirements(repository, ["urllib3", "requests>=2.20.0b0"])
+    assert result["urllib3"].version == "1.23b0"

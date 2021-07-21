@@ -26,6 +26,23 @@ class BaseProvider(AbstractProvider):
         self.summary_collection: dict[str, str] = {}
         self.fetched_dependencies: dict[str, list[Requirement]] = {}
 
+    def requirement_preference(self, requirement: Requirement) -> tuple:
+        """Return the preference of a requirement to find candidates.
+
+        - Editable requirements are preferered.
+        - File links are preferred.
+        - The one with narrower specifierset is perferred.
+        """
+        editable = requirement.editable
+        is_file = requirement.is_file_or_url
+        is_prerelease = (
+            bool(requirement.specifier.prereleases)
+            if requirement.specifier is not None
+            else False
+        )
+        specifier_parts = len(requirement.specifier) if requirement.specifier else 0
+        return (editable, is_file, is_prerelease, specifier_parts)
+
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
         return requirement_or_candidate.identify()
 
@@ -44,7 +61,9 @@ class BaseProvider(AbstractProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Iterable[Candidate]:
-        reqs = list(requirements[identifier])
+        reqs = sorted(
+            requirements[identifier], key=self.requirement_preference, reverse=True
+        )
         file_req = next((req for req in reqs if not req.is_named), None)
         incompat = list(incompatibilities[identifier])
         if file_req:
