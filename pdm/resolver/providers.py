@@ -35,7 +35,11 @@ class BaseProvider(AbstractProvider):
         """
         editable = requirement.editable
         is_file = requirement.is_file_or_url
-        is_prerelease = requirement.specifier and requirement.specifier.prereleases
+        is_prerelease = (
+            bool(requirement.specifier.prereleases)
+            if requirement.specifier is not None
+            else False
+        )
         specifier_parts = len(requirement.specifier) if requirement.specifier else 0
         return (editable, is_file, is_prerelease, specifier_parts)
 
