@@ -243,7 +243,8 @@ def test_cache_vcs_immutable_revision(project):
     req = parse_requirement("git+https://github.com/test-root/demo.git@master#egg=demo")
     candidate = Candidate(req, project.environment)
     wheel = candidate.build()
-    assert not Path(wheel).is_relative_to(project.cache_dir)
+    with pytest.raises(ValueError):
+        Path(wheel).relative_to(project.cache_dir)
     assert candidate.revision == "1234567890abcdef"
 
     req = parse_requirement(
@@ -251,7 +252,7 @@ def test_cache_vcs_immutable_revision(project):
     )
     candidate = Candidate(req, project.environment)
     wheel = candidate.build()
-    assert Path(wheel).is_relative_to(project.cache_dir)
+    assert Path(wheel).relative_to(project.cache_dir)
     assert candidate.revision == "1234567890abcdef"
 
     # test the revision can be got correctly after cached
