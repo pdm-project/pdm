@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from packaging.version import Version
+from pythonfinder import InvalidPythonVersion
 from pythonfinder.models.python import PythonVersion
 
 from pdm.exceptions import InvalidPyVersion
@@ -35,7 +36,10 @@ class PythonInfo:
 
     @classmethod
     def from_path(cls, path: str | Path) -> "PythonInfo":
-        return cls.from_python_version(PythonVersion.from_path(str(path)))
+        try:
+            return cls.from_python_version(PythonVersion.from_path(str(path)))
+        except InvalidPythonVersion as e:
+            raise InvalidPyVersion(str(e)) from e
 
     def __hash__(self) -> int:
         return hash(os.path.normcase(self.executable))
