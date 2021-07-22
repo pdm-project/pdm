@@ -165,7 +165,7 @@ class Candidate:
                 or self.link.is_wheel
                 and not self._wheel_compatible(self.link.filename, allow_all)
             ):
-                self.link = None
+                self.link = ireq.link = None
                 with allow_all_wheels(allow_all):
                     self.link = populate_link(finder, ireq, False)
                 if not self.link:

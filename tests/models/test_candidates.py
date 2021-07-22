@@ -236,3 +236,64 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     candidate.build()
     builder.assert_not_called()
     assert Path(candidate.wheel) == Path(cache_path) / Path(built_path).name
+
+
+@pytest.mark.usefixtures("vcs")
+def test_cache_vcs_immutable_revision(project):
+    req = parse_requirement("git+https://github.com/test-root/demo.git@master#egg=demo")
+    candidate = Candidate(req, project.environment)
+    wheel = candidate.build()
+    assert not Path(wheel).is_relative_to(project.cache_dir)
+    assert candidate.revision == "1234567890abcdef"
+
+    req = parse_requirement(
+        "git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
+    )
+    candidate = Candidate(req, project.environment)
+    wheel = candidate.build()
+    assert Path(wheel).is_relative_to(project.cache_dir)
+    assert candidate.revision == "1234567890abcdef"
+
+    # test the revision can be got correctly after cached
+    candidate = Candidate(req, project.environment)
+    wheel = candidate.prepare(True)
+    assert candidate.revision == "1234567890abcdef"
+
+
+def test_invalidate_incompatible_wheel_link(project, mocker):
+    from pip._internal.index.collector import HTMLPage, LinkCollector
+
+    req = parse_requirement("demo")
+    page = """<html>
+    <body>
+    <a href="http://fixtures.test/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl">
+    demo-0.0.1-cp36-cp36m-win_amd64.whl
+    </a>
+    <a href="http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl">
+    demo-0.0.1-py2.py3-none-any.whl
+    </a>
+    </body>
+    </html>
+    """
+    mocker.patch.object(
+        LinkCollector,
+        "fetch_page",
+        return_value=HTMLPage(
+            page.encode(), "utf-8", url="https://test.pypi.org/simple/demo"
+        ),
+    )
+    candidate = Candidate(req, project.environment, name="demo", version="0.0.1")
+
+    candidate.prepare(True)
+    assert (
+        Path(candidate.wheel).name
+        == candidate.link.filename
+        == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
+    )
+
+    candidate.prepare()
+    assert (
+        Path(candidate.wheel).name
+        == candidate.link.filename
+        == "demo-0.0.1-py2.py3-none-any.whl"
+    )
