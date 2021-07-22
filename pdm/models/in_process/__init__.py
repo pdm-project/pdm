@@ -70,3 +70,15 @@ def get_architecture(executable: str) -> str:
         .decode("utf8")
         .strip()
     )
+
+
+@functools.lru_cache()
+def get_underlying_executable(executable: str) -> str:
+    """Find the real sys.executable under the wrapper script if any"""
+    return (
+        subprocess.check_output(
+            [executable, "-Esc", "import sys;print(sys.executable)"]
+        )
+        .decode("utf8")
+        .strip()
+    )

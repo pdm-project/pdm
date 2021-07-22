@@ -26,13 +26,17 @@ def test_project_python_with_pyenv_support(project, mocker):
             "pythonfinder.models.python.get_python_version",
             return_value="3.8.0",
         )
-        assert Path(project.python.executable) == pyenv_python
+        mocker.patch(
+            "pdm.models.python.get_underlying_executable", return_value=sys.executable
+        )
+        assert Path(project.python.path) == pyenv_python
+        assert project.python.executable == Path(sys.executable).as_posix()
 
         # Clean cache
         project._python = None
 
         project.project_config["python.use_pyenv"] = False
-        assert Path(project.python.executable) != pyenv_python
+        assert Path(project.python.path) != pyenv_python
 
 
 def test_project_config_items(project):

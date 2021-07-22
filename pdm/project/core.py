@@ -148,7 +148,7 @@ class Project:
     @python.setter
     def python(self, value: PythonInfo) -> None:
         self._python = value
-        self.project_config["python.path"] = value.executable
+        self.project_config["python.path"] = value.path
 
     @property
     def python_executable(self) -> str:
