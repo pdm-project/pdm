@@ -498,7 +498,7 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
         )
         selected_python = found_interpreters[int(selection)]
 
-    old_path = project.config.get("python.path")
+    old_path = project.python.executable if "python.path" in project.config else None
     new_path = selected_python.executable
     project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(

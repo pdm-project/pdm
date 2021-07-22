@@ -1,8 +1,11 @@
+import os
+import sys
+
 import pytest
 from distlib.wheel import Wheel
 
 from pdm.cli import actions
-from pdm.exceptions import PdmException, PdmUsageError
+from pdm.exceptions import InvalidPyVersion, PdmException, PdmUsageError
 from pdm.models.pip_shims import FrozenRequirement
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -321,3 +324,30 @@ def test_editable_package_override_non_editable(project, working_set):
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
     assert working_set["demo"].editable
+
+
+@pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")
+def test_use_wrapper_python(project):
+    wrapper_script = """#!/bin/bash
+exec "{}" "$@"
+""".format(
+        sys.executable
+    )
+    shim_path = project.root.joinpath("python_shim.sh")
+    shim_path.write_text(wrapper_script)
+    shim_path.chmod(0o755)
+
+    actions.do_use(project, shim_path.as_posix())
+    assert project.python.executable == sys.executable
+
+
+@pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")
+def test_use_invalid_wrapper_python(project):
+    wrapper_script = """#!/bin/bash
+echo hello
+"""
+    shim_path = project.root.joinpath("python_shim.sh")
+    shim_path.write_text(wrapper_script)
+    shim_path.chmod(0o755)
+    with pytest.raises(InvalidPyVersion):
+        actions.do_use(project, shim_path.as_posix())

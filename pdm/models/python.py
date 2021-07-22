@@ -8,7 +8,8 @@ from typing import Any
 from packaging.version import Version
 from pythonfinder.models.python import PythonVersion
 
-from pdm.models.in_process import get_architecture
+from pdm.exceptions import InvalidPyVersion
+from pdm.models.in_process import get_architecture, get_underlying_executable
 from pdm.utils import cached_property
 
 
@@ -18,24 +19,31 @@ class PythonInfo:
     A convenient helper class that holds all information of a Python interepreter.
     """
 
-    executable: str
+    path: str
     version: Version
+    executable: str = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        executable = get_underlying_executable(self.path)
+        if executable is None:
+            raise InvalidPyVersion(f"Not a valid Python executable: {self.path}")
+        self.executable = Path(executable).as_posix()
 
     @classmethod
     def from_python_version(cls, py_version: PythonVersion) -> "PythonInfo":
-        return cls(executable=py_version.executable, version=py_version.version)
+        return cls(path=py_version.executable, version=py_version.version)
 
     @classmethod
     def from_path(cls, path: str | Path) -> "PythonInfo":
         return cls.from_python_version(PythonVersion.from_path(str(path)))
 
     def __hash__(self) -> int:
-        return hash(os.path.normpath(self.executable))
+        return hash(os.path.normcase(self.executable))
 
     def __eq__(self, o: Any) -> bool:
         if not isinstance(o, PythonInfo):
             return False
-        return os.path.normpath(self.executable) == os.path.normpath(o.executable)
+        return os.path.normcase(self.executable) == os.path.normcase(o.executable)
 
     @property
     def major(self) -> int:
