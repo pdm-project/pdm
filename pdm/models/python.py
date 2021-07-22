@@ -26,8 +26,6 @@ class PythonInfo:
 
     def __post_init__(self) -> None:
         executable = get_underlying_executable(self.path)
-        if executable is None:
-            raise InvalidPyVersion(f"Not a valid Python executable: {self.path}")
         self.executable = Path(executable).as_posix()
 
     @classmethod

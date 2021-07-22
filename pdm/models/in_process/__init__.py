@@ -73,15 +73,12 @@ def get_architecture(executable: str) -> str:
 
 
 @functools.lru_cache()
-def get_underlying_executable(executable: str) -> Optional[str]:
+def get_underlying_executable(executable: str) -> str:
     """Find the real sys.executable under the wrapper script if any"""
-    try:
-        return (
-            subprocess.check_output(
-                [executable, "-Esc", "import sys;print(sys.executable)"]
-            )
-            .decode("utf8")
-            .strip()
+    return (
+        subprocess.check_output(
+            [executable, "-Esc", "import sys;print(sys.executable)"]
         )
-    except subprocess.CalledProcessError:
-        return None
+        .decode("utf8")
+        .strip()
+    )
