@@ -137,12 +137,14 @@ class Candidate:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
         if self.req.revision:  # type: ignore
             return self.req.revision  # type: ignore
-        if self.ireq.source_dir and not os.path.exists(self.ireq.source_dir):
+        if not (self.ireq.source_dir and os.path.exists(self.ireq.source_dir)):
             # It happens because the cached wheel is hit and the source code isn't
             # pulled to local. In this case the link url must contain the full commit
             # hash which can be taken as the revision safely.
             # See more info at https://github.com/pdm-project/pdm/issues/349
-            return get_rev_from_url(self.ireq.original_link.url)  # type: ignore
+            rev = get_rev_from_url(self.ireq.original_link.url)  # type: ignore
+            if rev:
+                return rev
         return vcs.get_backend(self.req.vcs).get_revision(  # type: ignore
             cast(str, self.ireq.source_dir)
         )

@@ -258,33 +258,20 @@ def test_cache_vcs_immutable_revision(project):
     # test the revision can be got correctly after cached
     candidate = Candidate(req, project.environment)
     wheel = candidate.prepare(True)
+    assert not candidate.source_dir
     assert candidate.revision == "1234567890abcdef"
 
 
-def test_invalidate_incompatible_wheel_link(project, mocker):
-    from pip._internal.index.collector import HTMLPage, LinkCollector
+def test_cache_egg_info_sdist(project):
+    req = parse_requirement("demo @ http://fixtures.test/artifacts/demo-0.0.1.tar.gz")
+    candidate = Candidate(req, project.environment)
+    wheel = candidate.build()
+    assert Path(wheel).relative_to(project.cache_dir)
 
+
+def test_invalidate_incompatible_wheel_link(project, index):
     req = parse_requirement("demo")
-    page = """<html>
-    <body>
-    <a href="http://fixtures.test/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl">
-    demo-0.0.1-cp36-cp36m-win_amd64.whl
-    </a>
-    <a href="http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl">
-    demo-0.0.1-py2.py3-none-any.whl
-    </a>
-    </body>
-    </html>
-    """
-    mocker.patch.object(
-        LinkCollector,
-        "fetch_page",
-        return_value=HTMLPage(
-            page.encode(), "utf-8", url="https://test.pypi.org/simple/demo"
-        ),
-    )
     candidate = Candidate(req, project.environment, name="demo", version="0.0.1")
-
     candidate.prepare(True)
     assert (
         Path(candidate.wheel).name
@@ -298,3 +285,13 @@ def test_invalidate_incompatible_wheel_link(project, mocker):
         == candidate.link.filename
         == "demo-0.0.1-py2.py3-none-any.whl"
     )
+
+
+def test_legacy_pep345_tag_link(project, index):
+    req = parse_requirement("pep345-legacy")
+    candidate = Candidate(req, project.environment)
+    try:
+        candidate.prepare()
+    except Exception:
+        pass
+    assert candidate.requires_python == ">=3,<4"
