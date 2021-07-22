@@ -2,6 +2,7 @@ import collections
 import functools
 import json
 import os
+import re
 import shutil
 import sys
 from distutils.dir_util import copy_tree
@@ -320,3 +321,20 @@ def invoke():
 @pytest.fixture()
 def core():
     return main
+
+
+@pytest.fixture()
+def index():
+    from pip._internal.index.collector import HTMLPage, LinkCollector
+
+    old_fetcher = LinkCollector.fetch_page
+
+    def fetch_page(self, location):
+        m = re.search(r"/simple/([^/]+)/?", location.url)
+        if not m:
+            return old_fetcher(self, location)
+        path = FIXTURES / "index" / (m.group(1) + ".html")
+        return HTMLPage(path.read_bytes(), "utf-8", location.url)
+
+    LinkCollector.fetch_page = fetch_page
+    return
