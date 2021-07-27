@@ -109,7 +109,7 @@ class AddCommand(BaseCommand):
             try:
                 run_pip(pip_args)
             except subprocess.CalledProcessError as e:
-                spinner.fail("Installation failed: \n" + e.output)
+                spinner.fail("Installation failed: \n" + e.output.decode("utf8"))
                 sys.exit(1)
             else:
                 spinner.succeed("Installation succeeds.")
@@ -188,7 +188,7 @@ class RemoveCommand(BaseCommand):
             try:
                 run_pip(pip_args)
             except subprocess.CalledProcessError as e:
-                spinner.fail("Uninstallation failed: \n" + e.output)
+                spinner.fail("Uninstallation failed: \n" + e.output.decode("utf8"))
                 sys.exit(1)
             else:
                 spinner.succeed("Uninstallation succeeds.")
