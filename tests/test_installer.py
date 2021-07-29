@@ -14,3 +14,15 @@ def test_install_wheel_with_inconsistent_dist_info(project):
     installer = Installer(project.environment)
     installer.install(candidate)
     assert "pyfunctional" in project.environment.get_working_set()
+
+
+def test_install_with_file_existing(project):
+    req = parse_requirement("demo")
+    candidate = Candidate(
+        req,
+        project.environment,
+        link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
+    )
+    (project.environment.packages_path / "lib/demo.py").touch()
+    installer = Installer(project.environment)
+    installer.install(candidate)

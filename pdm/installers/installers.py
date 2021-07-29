@@ -4,6 +4,7 @@ import pathlib
 import sys
 from typing import TYPE_CHECKING
 
+from installer.destinations import SchemeDictionaryDestination
 from installer.exceptions import InvalidWheelSource
 from installer.sources import WheelFile as _WheelFile
 from pip._vendor.pkg_resources import EggInfoDistribution
@@ -14,6 +15,10 @@ from pdm.models.requirements import parse_requirement
 from pdm.utils import cached_property
 
 if TYPE_CHECKING:
+    from typing import BinaryIO
+
+    from installer.destinations import Scheme
+    from installer.records import RecordEntry
     from pip._vendor.pkg_resources import Distribution
 
     from pdm.models.candidates import Candidate
@@ -49,6 +54,16 @@ class WheelFile(_WheelFile):
             )
 
 
+class InstallDestination(SchemeDictionaryDestination):
+    def write_to_fs(
+        self, scheme: Scheme, path: str | pathlib.Path, stream: BinaryIO
+    ) -> RecordEntry:
+        target_path = pathlib.Path(self.scheme_dict[scheme], path)
+        if target_path.exists():
+            target_path.unlink()
+        return super().write_to_fs(scheme, path, stream)
+
+
 class Installer:  # pragma: no cover
     """The installer that performs the installation and uninstallation actions."""
 
@@ -67,9 +82,8 @@ class Installer:  # pragma: no cover
 
     def install_wheel(self, wheel: str) -> None:
         from installer import __version__, install
-        from installer.destinations import SchemeDictionaryDestination
 
-        destination = SchemeDictionaryDestination(
+        destination = InstallDestination(
             self.environment.get_paths(),
             interpreter=self.environment.interpreter.executable,
             script_kind=self._get_kind(),

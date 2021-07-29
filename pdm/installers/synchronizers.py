@@ -291,12 +291,12 @@ class Synchronizer:
         ) -> None:
             error = future.exception()
             if error:
+                exc_info = (type(error), error, error.__traceback__)
+                termui.logger.exception("Error occurs: ", exc_info=exc_info)
                 failed_jobs.append((kind, key))
                 errors.extend(
                     [f"{kind} {termui.green(key)} failed:\n"]
-                    + traceback.format_exception(
-                        type(error), error, error.__traceback__
-                    )
+                    + traceback.format_exception(*exc_info)
                 )
 
         with self.ui.logging("install"), self.environment.activate():
