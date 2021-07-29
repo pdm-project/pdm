@@ -1,3 +1,19 @@
+Release v1.7.1 (2021-07-29)
+---------------------------
+
+### Bug Fixes
+
+- Accept non-canonical distribution name in the wheel's dist-info directory name. [#529](https://github.com/pdm-project/pdm/issues/529)
+- Prefer requirments with narrower version constraints or allowing prereleases to find matches. [#551](https://github.com/pdm-project/pdm/issues/551)
+- Use the underlying real executable path for writing shebangs. [#553](https://github.com/pdm-project/pdm/issues/553)
+- Fix a bug that extra markers cannot be extracted when combined with other markers with "and". [#559](https://github.com/pdm-project/pdm/issues/559)
+- Fix a bug that redacted credentials in source urls get overwritten with the plain text after locking. [#561](https://github.com/pdm-project/pdm/issues/561)
+
+### Refactor
+
+- Use installer as the wheel installer, replacing `distlib`. [#519](https://github.com/pdm-project/pdm/issues/519)
+
+
 Release v1.7.0 (2021-07-20)
 ---------------------------
 
