@@ -2,7 +2,6 @@ import os
 import sys
 
 import pytest
-from distlib.wheel import Wheel
 
 from pdm.cli import actions
 from pdm.exceptions import InvalidPyVersion, PdmException, PdmUsageError
@@ -222,8 +221,8 @@ def test_lock_dependencies(project):
 def test_build_distributions(tmp_path, core):
     project = core.create_project()
     actions.do_build(project, dest=tmp_path.as_posix())
-    wheel = Wheel(next(tmp_path.glob("*.whl")).as_posix())
-    assert wheel.name == "pdm"
+    wheel = next(tmp_path.glob("*.whl"))
+    assert wheel.name.startswith("pdm-")
     tarball = next(tmp_path.glob("*.tar.gz"))
     assert tarball.exists()
 

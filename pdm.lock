@@ -90,11 +90,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "distlib"
-version = "0.3.1"
-summary = "Distribution utilities"
-
-[[package]]
 name = "execnet"
 version = "1.8.0"
 requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
@@ -134,6 +129,12 @@ summary = "A small library that versions your Python projects."
 name = "iniconfig"
 version = "1.1.1"
 summary = "iniconfig: brain-dead simple config-ini parsing"
+
+[[package]]
+name = "installer"
+version = "0.2.3"
+requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+summary = "A library for installing Python wheels."
 
 [[package]]
 name = "jinja2"
@@ -569,8 +570,8 @@ requires_python = ">=3.6"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
-lock_version = "3"
-content_hash = "sha256:1dda92e8f2bf9a0ca53b40866f7c0e09d88363a1b330c03d8f706ada164b16ca"
+lock_version = "3.1"
+content_hash = "sha256:ef1810dc6aa55d1080c66929b119e303156dfa40818c2174443864343b51a073"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -674,10 +675,6 @@ content_hash = "sha256:1dda92e8f2bf9a0ca53b40866f7c0e09d88363a1b330c03d8f706ada1
     {file = "coverage-5.5-pp37-none-any.whl", hash = "sha256:2a3859cb82dcbda1cfd3e6f71c27081d18aa251d20a17d87d26d4cd216fb0af4"},
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
 ]
-"distlib 0.3.1" = [
-    {file = "distlib-0.3.1-py2.py3-none-any.whl", hash = "sha256:8c09de2c67b3e7deef7184574fc060ab8a793e7adbb183d942c389c8b13c52fb"},
-    {file = "distlib-0.3.1.zip", hash = "sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1"},
-]
 "execnet 1.8.0" = [
     {file = "execnet-1.8.0-py2.py3-none-any.whl", hash = "sha256:7a13113028b1e1cc4c6492b28098b3c6576c9dccc7973bfe47b342afadafb2ac"},
     {file = "execnet-1.8.0.tar.gz", hash = "sha256:b73c5565e517f24b62dea8a5ceac178c661c4309d3aa0c3e420856c072c411b4"},
@@ -700,6 +697,10 @@ content_hash = "sha256:1dda92e8f2bf9a0ca53b40866f7c0e09d88363a1b330c03d8f706ada1
 "iniconfig 1.1.1" = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
+]
+"installer 0.2.3" = [
+    {file = "installer-0.2.3-py2.py3-none-any.whl", hash = "sha256:e649b9c7a454708a33a39db69f8daee515c9345020ab2fb2299d6639aad65711"},
+    {file = "installer-0.2.3.tar.gz", hash = "sha256:82c899f5e3c78303242df9c9ca7ac58001c9806d8c23fa2772be769d1f560fe5"},
 ]
 "jinja2 3.0.1" = [
     {file = "Jinja2-3.0.1-py3-none-any.whl", hash = "sha256:1f06f2da51e7b56b8f238affdd6b4e2c61e39598a378cc49345bc1bd42a978a4"},
