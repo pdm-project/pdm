@@ -513,7 +513,7 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
         and not project.environment.is_global
     ):
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
-        project.environment.update_shebangs(new_path)
+        project.environment.update_shebangs(old_path, new_path)
 
 
 def do_import(

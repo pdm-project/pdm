@@ -3,11 +3,8 @@ import sys
 import venv
 from pathlib import Path
 
-import distlib.wheel
 import pytest
 
-from pdm.models.requirements import filter_requirements_with_extras
-from pdm.pep517.api import build_wheel
 from pdm.utils import cd, temp_environ
 
 
@@ -90,20 +87,6 @@ def test_project_use_venv(project):
         == project.root / "venv" / scripts / f"python{suffix}"
     )
     assert env.is_global
-
-
-def test_project_with_combined_extras(fixture_project):
-    project = fixture_project("demo-combined-extras")
-    (project.root / "build").mkdir(exist_ok=True)
-    with cd(project.root.as_posix()):
-        wheel_name = build_wheel(str(project.root / "build"))
-        wheel = distlib.wheel.Wheel(str(project.root / "build" / wheel_name))
-
-    all_requires = filter_requirements_with_extras(
-        wheel.metadata.run_requires, ("all",)
-    )
-    for dep in ("urllib3", "chardet", "idna"):
-        assert dep in all_requires
 
 
 def test_project_packages_path(project):

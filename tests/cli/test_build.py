@@ -1,8 +1,6 @@
 import tarfile
 import zipfile
 
-from distlib.wheel import Wheel
-
 from pdm.cli import actions
 
 
@@ -39,10 +37,6 @@ def test_build_single_module(fixture_project):
 
     for name in ("pyproject.toml", "LICENSE"):
         assert name not in zip_names
-
-    assert Wheel(
-        (project.root / "dist/demo_module-0.1.0-py3-none-any.whl").as_posix()
-    ).metadata
 
 
 def test_build_single_module_with_readme(fixture_project):

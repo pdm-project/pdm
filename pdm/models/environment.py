@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import collections
 import os
-import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -12,7 +12,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generator, Iterator
 
-from distlib.scripts import ScriptMaker
 from pip._vendor import packaging, pkg_resources
 
 from pdm import termui
@@ -31,6 +30,19 @@ if TYPE_CHECKING:
     from pdm._types import Source
     from pdm.models.python import PythonInfo
     from pdm.project import Project
+
+
+def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
+    """Get the interpreter path in the shebang line
+
+    The launcher can just use the command as-is.
+    Otherwise if the path contains whitespace or is too long, both distlib
+    and installer use a clever hack to make the shebang after ``/bin/sh``,
+    where the interpreter path is quoted.
+    """
+    if is_launcher or " " not in executable and (len(executable) + 3) <= 127:
+        return executable.encode("utf-8")
+    return shlex.quote(executable).encode("utf-8")
 
 
 class WorkingSet(collections.abc.Mapping):
@@ -217,18 +229,16 @@ class Environment:
         new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
         return shutil.which(command, path=new_path)
 
-    def update_shebangs(self, new_path: str) -> None:
+    def update_shebangs(self, old_path: str, new_path: str) -> None:
         """Update the shebang lines"""
         scripts = self.get_paths()["scripts"]
-        maker = ScriptMaker(None, None)
-        maker.executable = new_path
-        shebang = maker._get_shebang("utf-8").rstrip().replace(b"\\", b"\\\\")
         for child in Path(scripts).iterdir():
             if not child.is_file() or child.suffix not in (".exe", ".py", ""):
                 continue
-            child.write_bytes(
-                re.sub(rb"#!.+?python.*?$", shebang, child.read_bytes(), flags=re.M)
-            )
+            is_launcher = child.suffix == ".exe"
+            old_shebang = _get_shebang_path(old_path, is_launcher)
+            new_shebang = _get_shebang_path(new_path, is_launcher)
+            child.write_bytes(child.read_bytes().replace(old_shebang, new_shebang, 1))
 
     def _download_pip_wheel(self, path: str | Path) -> None:
         dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
