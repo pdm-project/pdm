@@ -4,11 +4,14 @@ import pathlib
 import sys
 from typing import TYPE_CHECKING
 
+from installer.exceptions import InvalidWheelSource
+from installer.sources import WheelFile as _WheelFile
 from pip._vendor.pkg_resources import EggInfoDistribution
 
 from pdm import termui
 from pdm.models import pip_shims
 from pdm.models.requirements import parse_requirement
+from pdm.utils import cached_property
 
 if TYPE_CHECKING:
     from pip._vendor.pkg_resources import Distribution
@@ -27,6 +30,23 @@ def format_dist(dist: Distribution) -> str:
     if is_dist_editable(dist):
         path = f" (-e {dist.location})"
     return formatter.format(version=termui.yellow(dist.version), path=path)
+
+
+class WheelFile(_WheelFile):
+    @cached_property
+    def dist_info_dir(self) -> str:
+        namelist = self._zipfile.namelist()
+        try:
+            return next(
+                name.split("/")[0]
+                for name in namelist
+                if name.split("/")[0].endswith(".dist-info")
+            )
+        except StopIteration:  # pragma: no cover
+            canonical_name = super().dist_info_dir
+            raise InvalidWheelSource(
+                f"The wheel doesn't contain metadata {canonical_name!r}"
+            )
 
 
 class Installer:  # pragma: no cover
@@ -48,7 +68,6 @@ class Installer:  # pragma: no cover
     def install_wheel(self, wheel: str) -> None:
         from installer import __version__, install
         from installer.destinations import SchemeDictionaryDestination
-        from installer.sources import WheelFile
 
         destination = SchemeDictionaryDestination(
             self.environment.get_paths(),
