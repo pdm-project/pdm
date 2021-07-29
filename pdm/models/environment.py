@@ -171,8 +171,10 @@ class Environment:
         """
         if sources is None:
             sources = self.project.sources
-        for source in sources:
-            source["url"] = expand_env_vars_in_auth(source["url"])
+        sources = [
+            dict(source, url=expand_env_vars_in_auth(source["url"]))  # type: ignore
+            for source in sources
+        ]
 
         python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(self.interpreter.executable)
