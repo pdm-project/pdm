@@ -1,3 +1,12 @@
+Release v1.7.2 (2021-07-30)
+---------------------------
+
+### Bug Fixes
+
+- Remove the existing files before installing. [#565](https://github.com/pdm-project/pdm/issues/565)
+- Deduplicate the plugins list. [#566](https://github.com/pdm-project/pdm/issues/566)
+
+
 Release v1.7.1 (2021-07-29)
 ---------------------------
 
