@@ -30,6 +30,7 @@ from pdm.utils import (
     atomic_open_for_write,
     cached_property,
     cd,
+    expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
     get_in_project_venv_python,
@@ -298,6 +299,8 @@ class Project:
                     "name": "pypi",
                 },
             )
+        for source in sources:
+            source["url"] = expand_env_vars_in_auth(source["url"])
         return sources
 
     def get_repository(self, cls: Type[BaseRepository] | None = None) -> BaseRepository:
