@@ -299,9 +299,15 @@ class Project:
                     "name": "pypi",
                 },
             )
-        for source in sources:
-            source["url"] = expand_env_vars_in_auth(source["url"])
-        return sources
+        expanded_sources: list[Source] = [
+            Source(
+                url=expand_env_vars_in_auth(s["url"]),
+                verify_ssl=s["verify_ssl"],
+                name=s["name"],
+            )
+            for s in sources
+        ]
+        return expanded_sources
 
     def get_repository(self, cls: Type[BaseRepository] | None = None) -> BaseRepository:
         """Get the repository object"""
