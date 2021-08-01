@@ -1,4 +1,3 @@
-import importlib.util
 from typing import List, Optional, Tuple
 
 import click
@@ -7,7 +6,10 @@ from pdm._types import Source
 from pdm.exceptions import PdmException
 from pdm.models.pip_shims import MultiDomainBasicAuth
 
-has_keyring = importlib.util.find_spec("keyring") is not None
+try:
+    import keyring
+except ModuleNotFoundError:
+    keyring = None  # type: ignore
 
 
 class PdmBasicAuth(MultiDomainBasicAuth):
@@ -34,7 +36,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         return super()._prompt_for_password(netloc)
 
     def _should_save_password_to_keyring(self) -> bool:
-        if not has_keyring:
+        if keyring is None:
             click.secho(
                 "The provided credentials will not be saved into your system.\n"
                 "You can enable this by installing keyring:\n"
