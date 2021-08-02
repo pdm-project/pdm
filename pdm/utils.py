@@ -79,21 +79,20 @@ def prepare_pip_source_args(
         pip_args = []
     if sources:
         # Add the source to pip9.
-        pip_args.extend(["-i", sources[0]["url"]])  # type: ignore
+        pip_args.extend(["-i", sources[0]["url"]])
         # Trust the host if it's not verified.
         if not sources[0].get("verify_ssl", True):
             pip_args.extend(
                 ["--trusted-host", parse.urlparse(sources[0]["url"]).hostname or ""]
-            )  # type: ignore
+            )
         # Add additional sources as extra indexes.
-        if len(sources) > 1:
-            for source in sources[1:]:
-                pip_args.extend(["--extra-index-url", source["url"]])  # type: ignore
-                # Trust the host if it's not verified.
-                if not source.get("verify_ssl", True):
-                    pip_args.extend(
-                        ["--trusted-host", parse.urlparse(source["url"]).hostname or ""]
-                    )  # type: ignore
+        for source in sources[1:]:
+            pip_args.extend(["--extra-index-url", source["url"]])
+            # Trust the host if it's not verified.
+            if not source.get("verify_ssl", True):
+                pip_args.extend(
+                    ["--trusted-host", parse.urlparse(source["url"]).hostname or ""]
+                )
     return pip_args
 
 
