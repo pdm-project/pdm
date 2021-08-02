@@ -24,7 +24,7 @@ from pdm.models.in_process import (
     get_sys_config_paths,
 )
 from pdm.models.pip_shims import misc, patch_bin_prefix, req_uninstall
-from pdm.utils import cached_property, expand_env_vars_in_auth, get_finder, temp_environ
+from pdm.utils import cached_property, get_finder, temp_environ
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -183,10 +183,6 @@ class Environment:
         """
         if sources is None:
             sources = self.project.sources
-        sources = [
-            dict(source, url=expand_env_vars_in_auth(source["url"]))  # type: ignore
-            for source in sources
-        ]
 
         python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(self.interpreter.executable)

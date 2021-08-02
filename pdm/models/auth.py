@@ -9,7 +9,7 @@ from pdm.models.pip_shims import MultiDomainBasicAuth
 try:
     import keyring
 except ModuleNotFoundError:
-    keyring = None
+    keyring = None  # type: ignore
 
 
 class PdmBasicAuth(MultiDomainBasicAuth):

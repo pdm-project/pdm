@@ -127,3 +127,40 @@ def test_prod_should_not_be_with_dev(project):
     setup_dependencies(project)
     with pytest.raises(PdmUsageError):
         cli_utils.translate_sections(project, True, False, ("test",))
+
+
+@pytest.mark.parametrize(
+    "sources,pip_args,expected",
+    [
+        ([], None, []),
+        ([], ["-v"], ["-v"]),
+        ([{"url": "https://pypi.org/"}], None, ["-i", "https://pypi.org/"]),
+        (
+            [{"url": "https://pypi.org/", "verify_ssl": False}],
+            None,
+            ["-i", "https://pypi.org/", "--trusted-host", "pypi.org"],
+        ),
+        (
+            [
+                {"url": "https://pypi.org/", "verify_ssl": False},
+                {"url": "https://other_pypi.org/", "verify_ssl": True},
+            ],
+            None,
+            [
+                "-i",
+                "https://pypi.org/",
+                "--trusted-host",
+                "pypi.org",
+                "--extra-index-url",
+                "https://other_pypi.org/",
+            ],
+        ),
+        (
+            [{"url": "some_malformed_url", "verify_ssl": False}],
+            None,
+            ["-i", "some_malformed_url", "--trusted-host", ""],
+        ),
+    ],
+)
+def test_prepare_pip_source_args(sources, pip_args, expected):
+    assert utils.prepare_pip_source_args(sources, pip_args) == expected

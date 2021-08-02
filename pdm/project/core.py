@@ -8,6 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Type, cast
+from urllib.parse import urlparse
 
 import atoml
 from pythonfinder import Finder
@@ -30,6 +31,7 @@ from pdm.utils import (
     atomic_open_for_write,
     cached_property,
     cd,
+    expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
     get_in_project_venv_python,
@@ -298,7 +300,15 @@ class Project:
                     "name": "pypi",
                 },
             )
-        return sources
+        expanded_sources: list[Source] = [
+            Source(
+                url=expand_env_vars_in_auth(s["url"]),
+                verify_ssl=s.get("verify_ssl", True),
+                name=s.get("name", urlparse(s["url"]).hostname),
+            )
+            for s in sources
+        ]
+        return expanded_sources
 
     def get_repository(self, cls: Type[BaseRepository] | None = None) -> BaseRepository:
         """Get the repository object"""
