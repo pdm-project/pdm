@@ -8,6 +8,7 @@ import shutil
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Type, cast
+from urllib.parse import urlparse
 
 import atoml
 from pythonfinder import Finder
@@ -302,8 +303,8 @@ class Project:
         expanded_sources: list[Source] = [
             Source(
                 url=expand_env_vars_in_auth(s["url"]),
-                verify_ssl=s["verify_ssl"],
-                name=s["name"],
+                verify_ssl=s.get("verify_ssl", True),
+                name=s.get("name", urlparse(s["url"]).hostname),
             )
             for s in sources
         ]
