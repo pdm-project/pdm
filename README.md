@@ -62,8 +62,7 @@ all those venvs and upgrade them if required.
 
 PEP 582, on the other hand, introduces a way to decouple the Python interpreter from project
 environments. It is a relative new proposal and there are not many tools supporting it (one that does
-is [pyflow]), but it is written with Rust and thus can't get much help from the big Python community.
-For the same reason it can't act as a PEP 517 backend.
+is [pyflow], but it is written with Rust and thus can't get much help from the big Python community and for the same reason it can't act as a PEP 517 backend).
 
 ## Installation
 
