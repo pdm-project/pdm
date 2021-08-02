@@ -60,6 +60,51 @@ def test_project_sources_overriding(project):
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
+def test_project_sources_env_var_expansion(project):
+    os.environ["PYPI_USER"] = "user"
+    os.environ["PYPI_PASS"] = "password"
+    project.project_config[
+        "pypi.url"
+    ] = "https://${PYPI_USER}:${PYPI_PASS}@testpypi.org/simple"
+    # expanded in sources
+    assert project.sources[0]["url"] == "https://user:password@testpypi.org/simple"
+    # not expanded in project config
+    assert (
+        project.project_config["pypi.url"]
+        == "https://${PYPI_USER}:${PYPI_PASS}@testpypi.org/simple"
+    )
+
+    project.tool_settings["source"] = [
+        {
+            "url": "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple",
+            "name": "pypi",
+            "verify_ssl": True,
+        }
+    ]
+    # expanded in sources
+    assert project.sources[0]["url"] == "https://user:password@example.org/simple"
+    # not expanded in tool settings
+    assert (
+        project.tool_settings["source"][0]["url"]
+        == "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple"
+    )
+
+    project.tool_settings["source"] = [
+        {
+            "url": "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple",
+            "name": "example2",
+            "verify_ssl": True,
+        }
+    ]
+    # expanded in sources
+    assert project.sources[1]["url"] == "https://user:password@example2.org/simple"
+    # not expanded in tool settings
+    assert (
+        project.tool_settings["source"][0]["url"]
+        == "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple"
+    )
+
+
 def test_global_project(tmp_path, core):
     project = core.create_project(tmp_path, True)
     assert project.environment.is_global
