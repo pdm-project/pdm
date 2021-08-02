@@ -270,7 +270,7 @@ class Installer:
                 sys.path.insert(0, tmpdir.name)
                 import virtualenv
 
-                virtualenv.cli_run([str(venv_path)])
+            virtualenv.cli_run([str(venv_path)])
         else:
             venv.create(venv_path, clear=False, with_pip=True)
 
