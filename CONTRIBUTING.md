@@ -87,9 +87,20 @@ the CI will fail and your Pull Request will not be merged.
 ### News fragments
 
 When you make changes such as fixing a bug or adding a feature, you must add a news fragment describing
-your change. News fragments are placed in the `news/` directory, and should be named according to this
-pattern: `<issue_num>.<issue_type>.md` (e.g., `566.bugfix.md`). The contents of the file should be a single sentence in the imperative
-mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See entries in the [change log](/changelog) for more examples.
+your change. News fragments are placed in the `news/` directory, and should be named according to this pattern: `<issue_num>.<issue_type>.md` (e.g., `566.bugfix.md`).
+
+#### Issue Types
+
+- `feature`: Features and improvements
+- `bugfix`: Bug fixes
+- `refactor`: Code restructures
+- `doc`: Added or improved documentation
+- `dep`: Changes to dependencies
+- `removal`: Removals or deprecations in the API
+- `misc`: Miscellaneous changes that don't fit any of the other categories
+
+The contents of the file should be a single sentence in the imperative
+mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See entries in the [Change Log](/changelog) for more examples.
 
 ### Preview the documentation
 
