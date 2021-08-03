@@ -5,7 +5,6 @@ import os
 import re
 import shutil
 import sys
-from distutils.dir_util import copy_tree
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Iterable, List, Tuple
@@ -108,8 +107,6 @@ class TestRepository(BaseRepository):
         except KeyError:
             raise CandidateInfoNotFound(candidate)
         deps = pypi_data.get("dependencies", [])
-        for extra in candidate.req.extras or ():
-            deps.extend(pypi_data.get("extras_require", {}).get(extra, []))
         deps = filter_requirements_with_extras(deps, candidate.req.extras or ())
         return deps, pypi_data.get("requires_python", ""), ""
 
@@ -269,13 +266,23 @@ def project(project_no_init):
     return project_no_init
 
 
+def copytree(src: Path, dst: Path) -> None:
+    if not dst.exists():
+        dst.mkdir(parents=True)
+    for subpath in src.iterdir():
+        if subpath.is_dir():
+            copytree(subpath, dst / subpath.name)
+        else:
+            shutil.copy2(subpath, dst)
+
+
 @pytest.fixture()
 def fixture_project(project_no_init):
     """Initailize a project from a fixture project"""
 
     def func(project_name):
         source = FIXTURES / "projects" / project_name
-        copy_tree(source.as_posix(), project_no_init.root.as_posix())
+        copytree(source, project_no_init.root)
         project_no_init._pyproject = None
         return project_no_init
 

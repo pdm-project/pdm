@@ -5,24 +5,20 @@
         "certifi>=2017.4.17",
         "chardet<3.1.0,>=3.0.2",
         "idna<2.8,>=2.5",
-        "urllib3<1.24,>=1.21.1"
-      ],
-      "extras_require": {
-        "socks": ["PySocks>=1.5.6,!=1.5.7"],
-        "security": ["pyOpenSSL>=0.14"]
-      }
+        "urllib3<1.24,>=1.21.1",
+        "PySocks>=1.5.6,!=1.5.7; extra=='socks'",
+        "pyOpenSSL>=0.14; extra=='security'"
+      ]
     },
     "2.20.0b1": {
       "dependencies": [
         "certifi>=2017.4.17",
         "chardet<3.1.0,>=3.0.2",
         "idna<2.8,>=2.5",
-        "urllib3<1.24,>=1.23b0"
-      ],
-      "extras_require": {
-        "socks": ["PySocks>=1.5.6,!=1.5.7"],
-        "security": ["pyOpenSSL>=0.14"]
-      }
+        "urllib3<1.24,>=1.23b0",
+        "PySocks>=1.5.6,!=1.5.7; extra=='socks'",
+        "pyOpenSSL>=0.14; extra=='security'"
+      ]
     }
   },
   "urllib3": { "1.22": {}, "1.23b0": {} },
@@ -45,11 +41,12 @@
   "demo": {
     "0.0.1": {
       "requires_python": ">=3.3",
-      "dependencies": ["idna", "chardet; os_name=='nt'"],
-      "extras_require": {
-        "tests": ["pytest"],
-        "security": ["requests; python_version>='3.6'"]
-      }
+      "dependencies": [
+        "idna",
+        "chardet; os_name=='nt'",
+        "pytest; extra=='tests'",
+        "requests; python_version>='3.6' and extra=='security'"
+      ]
     }
   },
   "django-toolbar": {
