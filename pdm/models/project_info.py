@@ -2,15 +2,21 @@ from __future__ import annotations
 
 import itertools
 import sys
-from typing import Any, Iterator
+from typing import Any, Iterator, List
 
 from pdm import termui
 from pdm.pep517.metadata import Metadata
 
 if sys.version_info >= (3, 8):
+    from email.message import Message as DistributionMetadata
     from importlib.metadata import Distribution
 else:
     from importlib_metadata import Distribution
+    from importlib_metadata._meta import PackageMetadata as DistributionMetadata
+
+
+def get_as_dot_list(metadata: DistributionMetadata, key: str) -> List[str]:
+    return metadata.get(key, "").split(",")
 
 
 class ProjectInfo:
@@ -24,6 +30,12 @@ class ProjectInfo:
 
     def _parse(self, data: Distribution) -> dict[str, Any]:
         metadata = data.metadata
+        keywords = get_as_dot_list(metadata, "Keywords")
+        platforms = get_as_dot_list(metadata, "Platform")
+        project_urls = {
+            k.strip(): v.strip()
+            for k, v in (row.split(",") for row in metadata.get_all("Project-URL", []))
+        }
         return {
             "name": metadata["Name"],
             "version": metadata["Version"],
@@ -32,12 +44,10 @@ class ProjectInfo:
             "email": metadata.get("Author-email", ""),
             "license": metadata.get("License", ""),
             "requires-python": metadata.get("Requires-Python", ""),
-            "platform": ", ".join(metadata.get("Platform", [])),
-            "keywords": ", ".join(metadata.get("Keywords", [])),
+            "platform": ", ".join(platforms),
+            "keywords": ", ".join(keywords),
             "homepage": metadata.get("Home-page", ""),
-            "project-urls": [
-                ": ".join(parts) for parts in metadata.get("Project-URL", [])
-            ],
+            "project-urls": [": ".join(parts) for parts in project_urls.items()],
         }
 
     def _parse_self(self, metadata: Metadata) -> dict[str, Any]:
