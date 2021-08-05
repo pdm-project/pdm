@@ -245,21 +245,41 @@ def test_project_no_init_error(project_no_init):
 @pytest.mark.usefixtures("repository", "working_set")
 def test_list_dependency_graph(project, capsys):
     actions.do_add(project, packages=["requests"])
-    actions.do_list(project, True)
+    actions.do_list(project, graph=True)
     content, _ = capsys.readouterr()
     assert "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in content
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_dependency_graph_with_circular(project, capsys, repository):
+def test_list_dependency_graph_with_circular_forward(project, capsys, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo-bar", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
     actions.do_add(project, packages=["foo"])
-    actions.do_list(project, True)
+    capsys.readouterr()
+    actions.do_list(project, graph=True)
     content, _ = capsys.readouterr()
     assert "foo [circular]" in content
+
+
+@pytest.mark.usefixtures("working_set")
+def test_list_dependency_graph_with_circular_reverse(project, capsys, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_candidate("foo-bar", "0.1.0")
+    repository.add_candidate("baz", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
+    repository.add_dependencies("foo-bar", "0.1.0", ["foo", "baz"])
+    repository.add_dependencies("baz", "0.1.0", [])
+    actions.do_add(project, packages=["foo"])
+    capsys.readouterr()
+    actions.do_list(project, graph=True, reverse=True)
+    content, _ = capsys.readouterr()
+    expected = """
+    └── foo 0.1.0 [ requires: Any ]
+        ├── foo-bar [circular] [ requires: Any ]
+        └── test-project 0.0.0 [ requires: ~=0.1 ]"""
+    assert expected in content
 
 
 @pytest.mark.usefixtures("repository", "working_set")
@@ -281,6 +301,7 @@ def test_list_reverse_without_graph_flag(project):
 @pytest.mark.usefixtures("repository", "working_set")
 def test_list_reverse_dependency_graph(project, capsys):
     actions.do_add(project, packages=["requests"])
+    capsys.readouterr()
     actions.do_list(project, True, True)
     content, _ = capsys.readouterr()
     assert "└── requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in content
@@ -429,6 +450,98 @@ def test_list_json_reverse(project, capsys):
         },
     ]
 
+    assert expected == loads(content)
+
+
+@pytest.mark.usefixtures("working_set")
+def test_list_json_with_circular_forward(project, capsys, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_candidate("foo-bar", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
+    repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
+    actions.do_add(project, packages=["foo"])
+    capsys.readouterr()
+    actions.do_list(project, graph=True, json=True)
+    content, _ = capsys.readouterr()
+    expected = [
+        {
+            "package": "test-project",
+            "version": "0.0.0",
+            "required": "This project",
+            "dependencies": [
+                {
+                    "package": "foo",
+                    "version": "0.1.0",
+                    "required": "~=0.1",
+                    "dependencies": [
+                        {
+                            "package": "foo-bar",
+                            "version": "0.1.0",
+                            "required": "Any",
+                            "dependencies": [
+                                {
+                                    "package": "foo",
+                                    "version": "0.1.0",
+                                    "required": "Any",
+                                    "dependencies": [],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        },
+    ]
+    assert expected == loads(content)
+
+
+@pytest.mark.usefixtures("working_set")
+def test_list_json_with_circular_reverse(project, capsys, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_candidate("foo-bar", "0.1.0")
+    repository.add_candidate("baz", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
+    repository.add_dependencies("foo-bar", "0.1.0", ["foo", "baz"])
+    repository.add_dependencies("baz", "0.1.0", [])
+    actions.do_add(project, packages=["foo"])
+    capsys.readouterr()
+    actions.do_list(project, graph=True, json=True, reverse=True)
+    content, _ = capsys.readouterr()
+    expected = [
+        {
+            "package": "baz",
+            "version": "0.1.0",
+            "requires": None,
+            "dependents": [
+                {
+                    "package": "foo-bar",
+                    "version": "0.1.0",
+                    "requires": "Any",
+                    "dependents": [
+                        {
+                            "package": "foo",
+                            "version": "0.1.0",
+                            "requires": "Any",
+                            "dependents": [
+                                {
+                                    "package": "foo-bar",
+                                    "version": "0.1.0",
+                                    "requires": "Any",
+                                    "dependents": [],
+                                },
+                                {
+                                    "package": "test-project",
+                                    "version": "0.0.0",
+                                    "requires": "~=0.1",
+                                    "dependents": [],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+        },
+    ]
     assert expected == loads(content)
 
 
