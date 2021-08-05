@@ -24,6 +24,12 @@ class ProjectInfo:
 
     def _parse(self, data: Distribution) -> dict[str, Any]:
         metadata = data.metadata
+        keywords = metadata.get("Keywords", "").replace(",", ", ")
+        platform = metadata.get("Platform", "").replace(",", ", ")
+        project_urls = {
+            k.strip(): v.strip()
+            for k, v in (row.split(",") for row in metadata.get_all("Project-URL", []))
+        }
         return {
             "name": metadata["Name"],
             "version": metadata["Version"],
@@ -32,12 +38,10 @@ class ProjectInfo:
             "email": metadata.get("Author-email", ""),
             "license": metadata.get("License", ""),
             "requires-python": metadata.get("Requires-Python", ""),
-            "platform": ", ".join(metadata.get("Platform", [])),
-            "keywords": ", ".join(metadata.get("Keywords", [])),
+            "platform": platform,
+            "keywords": keywords,
             "homepage": metadata.get("Home-page", ""),
-            "project-urls": [
-                ": ".join(parts) for parts in metadata.get("Project-URL", [])
-            ],
+            "project-urls": [": ".join(parts) for parts in project_urls.items()],
         }
 
     def _parse_self(self, metadata: Metadata) -> dict[str, Any]:
