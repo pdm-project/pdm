@@ -1,5 +1,6 @@
 import os
 import sys
+from json import loads
 
 import pytest
 
@@ -283,6 +284,152 @@ def test_list_reverse_dependency_graph(project, capsys):
     actions.do_list(project, True, True)
     content, _ = capsys.readouterr()
     assert "└── requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in content
+
+
+def test_list_json_without_graph_flag(project):
+    with pytest.raises(PdmException):
+        actions.do_list(project, json=True)
+
+
+@pytest.mark.usefixtures("repository", "working_set")
+def test_list_json(project, capsys):
+    actions.do_add(project, packages=["requests"])
+    content, _ = capsys.readouterr()
+    actions.do_list(project, graph=True, json=True)
+    content, _ = capsys.readouterr()
+    expected = [
+        {
+            "package": "test-project",
+            "version": "0.0.0",
+            "required": "This project",
+            "dependencies": [
+                {
+                    "package": "requests",
+                    "version": "2.19.1",
+                    "required": "~=2.19",
+                    "dependencies": [
+                        {
+                            "package": "certifi",
+                            "version": "2018.11.17",
+                            "required": ">=2017.4.17",
+                            "dependencies": [],
+                        },
+                        {
+                            "package": "chardet",
+                            "version": "3.0.4",
+                            "required": "<3.1.0,>=3.0.2",
+                            "dependencies": [],
+                        },
+                        {
+                            "package": "idna",
+                            "version": "2.7",
+                            "required": "<2.8,>=2.5",
+                            "dependencies": [],
+                        },
+                        {
+                            "package": "urllib3",
+                            "version": "1.22",
+                            "required": "<1.24,>=1.21.1",
+                            "dependencies": [],
+                        },
+                    ],
+                }
+            ],
+        },
+    ]
+    assert expected == loads(content)
+
+
+@pytest.mark.usefixtures("repository", "working_set")
+def test_list_json_reverse(project, capsys):
+    actions.do_add(project, packages=["requests"])
+    capsys.readouterr()
+    actions.do_list(project, graph=True, reverse=True, json=True)
+    content, _ = capsys.readouterr()
+    expected = [
+        {
+            "package": "certifi",
+            "version": "2018.11.17",
+            "requires": None,
+            "dependents": [
+                {
+                    "package": "requests",
+                    "version": "2.19.1",
+                    "requires": ">=2017.4.17",
+                    "dependents": [
+                        {
+                            "package": "test-project",
+                            "version": "0.0.0",
+                            "requires": "~=2.19",
+                            "dependents": [],
+                        }
+                    ],
+                }
+            ],
+        },
+        {
+            "package": "chardet",
+            "version": "3.0.4",
+            "requires": None,
+            "dependents": [
+                {
+                    "package": "requests",
+                    "version": "2.19.1",
+                    "requires": "<3.1.0,>=3.0.2",
+                    "dependents": [
+                        {
+                            "package": "test-project",
+                            "version": "0.0.0",
+                            "requires": "~=2.19",
+                            "dependents": [],
+                        }
+                    ],
+                }
+            ],
+        },
+        {
+            "package": "idna",
+            "version": "2.7",
+            "requires": None,
+            "dependents": [
+                {
+                    "package": "requests",
+                    "version": "2.19.1",
+                    "requires": "<2.8,>=2.5",
+                    "dependents": [
+                        {
+                            "package": "test-project",
+                            "version": "0.0.0",
+                            "requires": "~=2.19",
+                            "dependents": [],
+                        }
+                    ],
+                }
+            ],
+        },
+        {
+            "package": "urllib3",
+            "version": "1.22",
+            "requires": None,
+            "dependents": [
+                {
+                    "package": "requests",
+                    "version": "2.19.1",
+                    "requires": "<1.24,>=1.21.1",
+                    "dependents": [
+                        {
+                            "package": "test-project",
+                            "version": "0.0.0",
+                            "requires": "~=2.19",
+                            "dependents": [],
+                        }
+                    ],
+                }
+            ],
+        },
+    ]
+
+    assert expected == loads(content)
 
 
 @pytest.mark.usefixtures("repository", "working_set")
