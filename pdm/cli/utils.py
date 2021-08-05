@@ -383,14 +383,9 @@ def build_dependency_json_tree(
     else:
         top_level_packages = graph.iter_children(None)  # root nodes
         build_dependency_json_subtree = build_forward_dependency_json_subtree
-
-    top_level_packages = iter(
-        sorted(top_level_packages, key=lambda p: p.name if p else "")
-    )
-
     return [
         build_dependency_json_subtree(p, project, graph)
-        for p in top_level_packages
+        for p in iter(sorted(top_level_packages, key=lambda p: p.name if p else ""))
         if p
     ]
 
