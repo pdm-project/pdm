@@ -143,9 +143,7 @@ class FlitMetaConverter(MetaConverter):
 def convert(
     project: Optional[Project], filename: PathLike, options: Optional[Namespace]
 ) -> Tuple[Mapping, Mapping]:
-    with open(filename, "rb") as fp, cd(
-        os.path.dirname(os.path.abspath(filename))
-    ):
+    with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         converter = FlitMetaConverter(
             tomli.load(fp)["tool"]["flit"], project.core.ui if project else None
         )

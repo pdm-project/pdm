@@ -198,9 +198,7 @@ def convert(
     filename: str | Path,
     options: Namespace | None,
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-    with open(filename, "rb") as fp, cd(
-        os.path.dirname(os.path.abspath(filename))
-    ):
+    with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         converter = PoetryMetaConverter(
             tomli.load(fp)["tool"]["poetry"], project.core.ui if project else None
         )
