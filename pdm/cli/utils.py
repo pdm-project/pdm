@@ -3,9 +3,10 @@ from __future__ import annotations
 import argparse
 import os
 from argparse import Action, _ArgumentGroup
-from collections import ChainMap
+from collections import ChainMap, OrderedDict
+from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, MutableMapping, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast
 
 import atoml
 from packaging.specifiers import SpecifierSet
@@ -171,6 +172,10 @@ NON_LAST_CHILD = "├── "
 NON_LAST_PREFIX = "│   "
 
 
+def specifier_from_requirement(requirement: Requirement) -> str:
+    return str(requirement.specifier or "Any")
+
+
 def format_package(
     graph: DirectedGraph,
     package: Package,
@@ -210,7 +215,7 @@ def format_package(
         is_last = i == len(children) - 1
         head = LAST_CHILD if is_last else NON_LAST_CHILD
         cur_prefix = LAST_PREFIX if is_last else NON_LAST_PREFIX
-        required = str(package.requirements[child.name].specifier or "Any")
+        required = specifier_from_requirement(package.requirements[child.name])
         result.append(
             prefix
             + head
@@ -260,7 +265,7 @@ def format_reverse_package(
         is_last = i == len(parents) - 1
         head = LAST_CHILD if is_last else NON_LAST_CHILD
         cur_prefix = LAST_PREFIX if is_last else NON_LAST_PREFIX
-        requires = str(parent.requirements[package.name].specifier or "Any")
+        requires = specifier_from_requirement(parent.requirements[package.name])
         result.append(
             prefix
             + head
@@ -271,18 +276,23 @@ def format_reverse_package(
     return "".join(result)
 
 
+def package_is_project(package: Package, project: Project) -> bool:
+    return (
+        not project.environment.is_global
+        and bool(project.meta.name)
+        and package.name == project.meta.project_name.lower()
+    )
+
+
 def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> str:
     """Format dependency graph for output."""
     content = []
     all_dependencies = ChainMap(*project.all_dependencies.values())
-    for package in sorted(graph.iter_children(None), key=lambda p: p.name):
+    top_level_dependencies = sorted(graph.iter_children(None), key=lambda p: p.name)
+    for package in top_level_dependencies:
         if package.name in all_dependencies:
-            required = str(all_dependencies[package.name].specifier or "Any")
-        elif (
-            not project.environment.is_global
-            and project.meta.name
-            and package.name == project.meta.project_name.lower()
-        ):
+            required = specifier_from_requirement(all_dependencies[package.name])
+        elif package_is_project(package, project):
             required = "This project"
         else:
             required = ""
@@ -291,23 +301,112 @@ def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> 
 
 
 def _format_reverse_dependency_graph(
-    project: Project, graph: DirectedGraph[Package]
+    project: Project, graph: DirectedGraph[Package | None]
 ) -> str:
     """Format reverse dependency graph for output."""
     leaf_nodes = sorted(
-        (node for node in graph if not list(graph.iter_children(node))),
+        (node for node in graph if not list(graph.iter_children(node)) and node),
         key=lambda p: p.name,
     )
     content = [
         format_reverse_package(graph, node, prefix="", visited=set())
         for node in leaf_nodes
+        if node
     ]
     return "".join(content).strip()
 
 
+def build_forward_dependency_json_subtree(
+    root: Package,
+    project: Project,
+    graph: DirectedGraph[Package | None],
+    required_by: Package = None,
+) -> dict:
+    if not package_is_project(root, project):
+        requirements = (
+            required_by.requirements
+            if required_by
+            else ChainMap(*project.all_dependencies.values())
+        )
+        if root.name in requirements:
+            required = specifier_from_requirement(requirements[root.name])
+        else:
+            required = "Not required"
+    else:
+        required = "This project"
+    return OrderedDict(
+        package=root.name,
+        version=root.version,
+        required=required,
+        dependencies=sorted(
+            (
+                build_forward_dependency_json_subtree(p, project, graph, root)
+                for p in graph.iter_children(root)
+                if p
+            ),
+            key=lambda d: d["package"],
+        ),
+    )
+
+
+def build_reverse_dependency_json_subtree(
+    root: Package,
+    project: Project,
+    graph: DirectedGraph[Package | None],
+    requires: Package = None,
+) -> dict:
+    return OrderedDict(
+        package=root.name,
+        version=root.version,
+        requires=specifier_from_requirement(root.requirements[requires.name])
+        if requires
+        else None,
+        dependents=sorted(
+            (
+                build_reverse_dependency_json_subtree(p, project, graph, root)
+                for p in graph.iter_parents(root)
+                if p
+            ),
+            key=lambda d: d["package"],
+        ),
+    )
+
+
+def build_dependency_json_tree(
+    project: Project, graph: DirectedGraph[Package | None], reverse: bool
+) -> list[dict]:
+    if reverse:
+        top_level_packages = filter(
+            lambda n: not list(graph.iter_children(n)), graph
+        )  # leaf nodes
+        build_dependency_json_subtree: Callable = build_reverse_dependency_json_subtree
+    else:
+        top_level_packages = graph.iter_children(None)  # root nodes
+        build_dependency_json_subtree = build_forward_dependency_json_subtree
+
+    top_level_packages = iter(
+        sorted(top_level_packages, key=lambda p: p.name if p else "")
+    )
+
+    return [
+        build_dependency_json_subtree(p, project, graph)
+        for p in top_level_packages
+        if p
+    ]
+
+
 def format_dependency_graph(
-    project: Project, graph: DirectedGraph[Package], reverse: bool = False
+    project: Project,
+    graph: DirectedGraph[Package | None],
+    reverse: bool = False,
+    json: bool = False,
 ) -> str:
+    if json:
+        return dumps(
+            build_dependency_json_tree(project, graph, reverse),
+            indent=2,
+        )
+
     if reverse:
         return _format_reverse_dependency_graph(project, graph)
     else:
