@@ -181,7 +181,7 @@ def format_package(
     package: Package,
     required: str = "",
     prefix: str = "",
-    visited: set[str] | None = None,
+    visited: frozenset[str] = frozenset(),
 ) -> str:
     """Format one package.
 
@@ -191,8 +191,6 @@ def format_package(
     :param prefix: prefix text for children
     :param visited: the visited package collection
     """
-    if visited is None:
-        visited = set()
     result = []
     version = (
         termui.red("[ not installed ]")
@@ -209,7 +207,6 @@ def format_package(
     result.append(f"{termui.green(package.name, bold=True)} {version} {required}\n")
     if package.name in visited:
         return "".join(result)
-    visited.add(package.name)
     children = sorted(graph.iter_children(package), key=lambda p: p.name)
     for i, child in enumerate(children):
         is_last = i == len(children) - 1
@@ -220,7 +217,7 @@ def format_package(
             prefix
             + head
             + format_package(
-                graph, child, required, prefix + cur_prefix, visited.copy()
+                graph, child, required, prefix + cur_prefix, visited | {package.name}
             )
         )
     return "".join(result)
@@ -232,11 +229,9 @@ def format_reverse_package(
     child: Package | None = None,
     requires: str = "",
     prefix: str = "",
-    visited: set[str] | None = None,
+    visited: frozenset[str] = frozenset(),
 ) -> str:
     """Format one package for output reverse dependency graph."""
-    if visited is None:
-        visited = set()
     version = (
         termui.red("[ not installed ]")
         if not package.version
@@ -257,7 +252,6 @@ def format_reverse_package(
     result = [f"{termui.green(package.name, bold=True)} {version} {requires}\n"]
     if package.name in visited:
         return "".join(result)
-    visited.add(package.name)
     parents: list[Package] = sorted(
         filter(None, graph.iter_parents(package)), key=lambda p: p.name
     )
@@ -270,7 +264,12 @@ def format_reverse_package(
             prefix
             + head
             + format_reverse_package(
-                graph, parent, package, requires, prefix + cur_prefix, visited.copy()
+                graph,
+                parent,
+                package,
+                requires,
+                prefix + cur_prefix,
+                visited | {package.name},
             )
         )
     return "".join(result)
@@ -296,7 +295,7 @@ def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> 
             required = "This project"
         else:
             required = ""
-        content.append(format_package(graph, package, required, "", set()))
+        content.append(format_package(graph, package, required, ""))
     return "".join(content).strip()
 
 
@@ -309,9 +308,7 @@ def _format_reverse_dependency_graph(
         key=lambda p: p.name,
     )
     content = [
-        format_reverse_package(graph, node, prefix="", visited=set())
-        for node in leaf_nodes
-        if node
+        format_reverse_package(graph, node, prefix="") for node in leaf_nodes if node
     ]
     return "".join(content).strip()
 
@@ -321,6 +318,7 @@ def build_forward_dependency_json_subtree(
     project: Project,
     graph: DirectedGraph[Package | None],
     required_by: Package = None,
+    visited: frozenset[str] = frozenset(),
 ) -> dict:
     if not package_is_project(root, project):
         requirements = (
@@ -334,14 +332,19 @@ def build_forward_dependency_json_subtree(
             required = "Not required"
     else:
         required = "This project"
+
+    children = graph.iter_children(root) if root.name not in visited else []
+
     return OrderedDict(
         package=root.name,
         version=root.version,
         required=required,
         dependencies=sorted(
             (
-                build_forward_dependency_json_subtree(p, project, graph, root)
-                for p in graph.iter_children(root)
+                build_forward_dependency_json_subtree(
+                    p, project, graph, root, visited | {root.name}
+                )
+                for p in children
                 if p
             ),
             key=lambda d: d["package"],
@@ -354,7 +357,9 @@ def build_reverse_dependency_json_subtree(
     project: Project,
     graph: DirectedGraph[Package | None],
     requires: Package = None,
+    visited: frozenset[str] = frozenset(),
 ) -> dict:
+    parents = graph.iter_parents(root) if root.name not in visited else []
     return OrderedDict(
         package=root.name,
         version=root.version,
@@ -363,8 +368,10 @@ def build_reverse_dependency_json_subtree(
         else None,
         dependents=sorted(
             (
-                build_reverse_dependency_json_subtree(p, project, graph, root)
-                for p in graph.iter_parents(root)
+                build_reverse_dependency_json_subtree(
+                    p, project, graph, root, visited | {root.name}
+                )
+                for p in parents
                 if p
             ),
             key=lambda d: d["package"],
