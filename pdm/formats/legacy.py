@@ -20,7 +20,7 @@ from pdm.project.core import Project
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, "rb") as fp:
         try:
             data = tomli.load(fp)
         except tomli.TOMLDecodeError:
@@ -169,7 +169,7 @@ class LegacyMetaConverter(MetaConverter):
 def convert(
     project: Project, filename: Path, options: Optional[Namespace]
 ) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, "rb") as fp:
         converter = LegacyMetaConverter(tomli.load(fp)["tool"]["pdm"], project.core.ui)
         return converter.convert()
 

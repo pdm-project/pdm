@@ -30,7 +30,7 @@ from pdm.utils import cd
 
 
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, "rb") as fp:
         try:
             data = tomli.load(fp)
         except tomli.TOMLDecodeError:
@@ -198,7 +198,7 @@ def convert(
     filename: str | Path,
     options: Namespace | None,
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-    with open(filename, encoding="utf-8") as fp, cd(
+    with open(filename, "rb") as fp, cd(
         os.path.dirname(os.path.abspath(filename))
     ):
         converter = PoetryMetaConverter(

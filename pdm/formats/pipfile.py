@@ -44,7 +44,7 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
 def convert(
     project: Project, filename: PathLike, options: Namespace | None
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, "rb") as fp:
         data = tomli.load(fp)
     result = {}
     settings = {}

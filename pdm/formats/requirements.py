@@ -80,7 +80,7 @@ def parse_requirement_file(
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
     import tomli
 
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, "rb") as fp:
         try:
             tomli.load(fp)
         except ValueError:
