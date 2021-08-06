@@ -262,9 +262,12 @@ class StashedRemovePaths(BaseRemovePaths):
 
     def commit(self) -> None:
         for tempdir in self._tempdirs.values():
-            tempdir.cleanup()
-        self._stashed.clear()
+            try:
+                tempdir.cleanup()
+            except FileNotFoundError:
+                pass
         self._tempdirs.clear()
+        self._stashed.clear()
         self._saved_pth = None
 
     def rollback(self) -> None:
