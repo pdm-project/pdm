@@ -368,6 +368,7 @@ def do_list(
     graph: bool = False,
     reverse: bool = False,
     freeze: bool = False,
+    json: bool = False,
 ) -> None:
     """Display a list of packages installed in the local packages directory."""
     from pdm.cli.utils import build_dependency_graph, format_dependency_graph
@@ -378,11 +379,13 @@ def do_list(
         with project.environment.activate():
             dep_graph = build_dependency_graph(working_set)
         project.core.ui.echo(
-            format_dependency_graph(project, dep_graph, reverse=reverse)
+            format_dependency_graph(project, dep_graph, reverse=reverse, json=json)
         )
     else:
         if reverse:
             raise PdmUsageError("--reverse must be used with --graph")
+        if json:
+            raise PdmUsageError("--json must be used with --graph")
         if freeze:
             reqs = [
                 str(FrozenRequirement.from_dist(dist))
