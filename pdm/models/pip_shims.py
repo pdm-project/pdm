@@ -6,9 +6,8 @@ All pip members are imported here for compatiblity purpose.
 from __future__ import annotations
 
 import atexit
-import contextlib
 import inspect
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from pip._internal.cache import WheelCache
 from pip._internal.commands.install import InstallCommand as _InstallCommand
@@ -81,18 +80,3 @@ def get_package_finder(
 
     build_kwargs["ignore_requires_python"] = ignore_requires_python
     return install_cmd._build_package_finder(**build_kwargs)  # type: ignore
-
-
-@contextlib.contextmanager
-def patch_bin_prefix(bin_prefix: str) -> Iterator:
-    bin_py = getattr(req_uninstall, "bin_py", None)
-    get_bin_prefix = getattr(req_uninstall, "get_bin_prefix", None)
-    if bin_py:
-        req_uninstall.bin_py = bin_prefix  # type: ignore
-    if get_bin_prefix:
-        req_uninstall.get_bin_prefix = lambda: bin_prefix
-    yield
-    if bin_py:
-        req_uninstall.bin_py = bin_py  # type: ignore
-    if get_bin_prefix:
-        req_uninstall.get_bin_prefix = get_bin_prefix
