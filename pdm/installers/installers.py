@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING
 from installer.destinations import SchemeDictionaryDestination
 from installer.exceptions import InvalidWheelSource
 from installer.sources import WheelFile as _WheelFile
-from pip._vendor.pkg_resources import EggInfoDistribution
 
 from pdm import termui
+from pdm.exceptions import UninstallError
+from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
 from pdm.models import pip_shims
-from pdm.models.requirements import parse_requirement
-from pdm.utils import cached_property
+from pdm.utils import cached_property, is_dist_editable
 
 if TYPE_CHECKING:
     from typing import BinaryIO
@@ -23,10 +23,6 @@ if TYPE_CHECKING:
 
     from pdm.models.candidates import Candidate
     from pdm.models.environment import Environment
-
-
-def is_dist_editable(dist: Distribution) -> bool:
-    return isinstance(dist, EggInfoDistribution) or getattr(dist, "editable", False)
 
 
 def format_dist(dist: Distribution) -> str:
@@ -67,11 +63,8 @@ class InstallDestination(SchemeDictionaryDestination):
 class Installer:  # pragma: no cover
     """The installer that performs the installation and uninstallation actions."""
 
-    def __init__(self, environment: Environment, auto_confirm: bool = True) -> None:
+    def __init__(self, environment: Environment) -> None:
         self.environment = environment
-        self.auto_confirm = auto_confirm
-        # XXX: Patch pip to make it work under multi-thread mode
-        pip_shims.pip_logging._log_state.indentation = 0
 
     def install(self, candidate: Candidate) -> None:
         if candidate.req.editable:
@@ -118,14 +111,22 @@ class Installer:  # pragma: no cover
         builder.install(["setuptools"])
         builder.subprocess_runner(install_args, ireq.unpacked_source_directory)
 
-    def uninstall(self, dist: Distribution) -> None:
-        req = parse_requirement(dist.project_name)
-        ireq = pip_shims.install_req_from_line(dist.project_name)
-        ireq.req = req  # type: ignore
+    def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:
+        """Get the path collection to be removed from the disk"""
+        return StashedRemovePaths.from_dist(dist, envrionment=self.environment)
 
-        pathset = ireq.uninstall(auto_confirm=self.auto_confirm)
-        if pathset:
-            pathset.commit()
+    def uninstall(self, dist: Distribution) -> None:
+        """Perform the uninstallation for a given distribution"""
+        remove_path = self.get_paths_to_remove(dist)
+        try:
+            remove_path.remove()
+            remove_path.commit()
+        except OSError as e:
+            termui.logger.info(
+                "Error occurred during uninstalltion, roll back the changes now."
+            )
+            remove_path.rollback()
+            raise UninstallError(e) from e
 
     def _get_kind(self) -> str:
         if sys.platform != "win32":

@@ -299,7 +299,7 @@ class Synchronizer:
                     + traceback.format_exception(*exc_info)
                 )
 
-        with self.ui.logging("install"), self.environment.activate():
+        with self.ui.logging("install"):
             with self.ui.indent("  "):
                 for job in sequential_jobs:
                     kind, key = job

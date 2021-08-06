@@ -23,8 +23,7 @@ from pdm.models.in_process import (
     get_python_abi_tag,
     get_sys_config_paths,
 )
-from pdm.models.pip_shims import misc, patch_bin_prefix, req_uninstall
-from pdm.utils import cached_property, get_finder, temp_environ
+from pdm.utils import cached_property, get_finder
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -111,40 +110,19 @@ class Environment:
 
     @contextmanager
     def activate(self) -> Iterator:
-        """Activate the environment. Manipulate the ``PYTHONPATH`` and patches ``pip``
-        to be aware of local packages. This method acts like a context manager.
+        """A context manager to activate the environment.
+        This is only used to patch the evaluate_marker method inside pkg_resources.
 
-        :param site_packages: whether to inject base site-packages into the sub env.
+        TODO: TO BE REFACTORED
         """
-        paths = self.get_paths()
-        with temp_environ():
-            working_set = self.get_working_set()
-            _old_ws = pkg_resources.working_set
-            pkg_resources.working_set = working_set.pkg_ws  # type: ignore
-            # HACK: Replace the is_local with environment version so that packages can
-            # be removed correctly.
-            _old_sitepackages = misc.site_packages
-            misc.site_packages = paths["purelib"]
-            _is_local = misc.is_local
-            misc.is_local = req_uninstall.is_local = self.is_local
-            _evaluate_marker = pkg_resources.evaluate_marker
-            pkg_resources.evaluate_marker = self.evaluate_marker
-            sys._original_executable = sys.executable  # type: ignore
-            sys.executable = self.interpreter.executable
-            with patch_bin_prefix(paths["scripts"]):
-                yield
-            sys.executable = sys._original_executable  # type: ignore
-            del sys._original_executable  # type: ignore
-            pkg_resources.evaluate_marker = _evaluate_marker
-            misc.is_local = req_uninstall.is_local = _is_local
-            misc.site_packages = _old_sitepackages
-            pkg_resources.working_set = _old_ws
-
-    def is_local(self, path: str) -> bool:
-        """PEP 582 version of ``is_local()`` function."""
-        return misc.normalize_path(path).startswith(
-            misc.normalize_path(self.packages_path.as_posix())
-        )
+        working_set = self.get_working_set()
+        _old_ws = pkg_resources.working_set
+        pkg_resources.working_set = working_set.pkg_ws  # type: ignore
+        _evaluate_marker = pkg_resources.evaluate_marker
+        pkg_resources.evaluate_marker = self.evaluate_marker
+        yield
+        pkg_resources.evaluate_marker = _evaluate_marker
+        pkg_resources.working_set = _old_ws
 
     def evaluate_marker(self, text: str, extra: Any = None) -> bool:
         marker = packaging.markers.Marker(text)
@@ -293,11 +271,6 @@ class GlobalEnvironment(Environment):
         paths["prefix"] = paths["data"]
         paths["headers"] = paths["include"]
         return paths
-
-    def is_local(self, path: str) -> bool:
-        return misc.normalize_path(path).startswith(
-            misc.normalize_path(self.get_paths()["prefix"])
-        )
 
     @property
     def packages_path(self) -> Path | None:  # type: ignore

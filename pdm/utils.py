@@ -29,7 +29,7 @@ from typing import (
 )
 
 from pip._vendor.packaging.tags import Tag
-from pip._vendor.pkg_resources import safe_name
+from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_name
 from pip._vendor.requests import Session
 
 from pdm._types import Source
@@ -478,3 +478,7 @@ def get_rev_from_url(url: str) -> str:
 
 def normalize_name(name: str) -> str:
     return safe_name(name).lower()  # type: ignore
+
+
+def is_dist_editable(dist: Distribution) -> bool:
+    return isinstance(dist, EggInfoDistribution) or getattr(dist, "editable", False)
