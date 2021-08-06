@@ -59,6 +59,10 @@ class InstallationError(PdmException):
     pass
 
 
+class UninstallError(PdmException):
+    pass
+
+
 class NoConfigError(PdmException, KeyError):
     def __init__(self, key: str) -> None:
         super().__init__("No such config item: {}".format(key))
