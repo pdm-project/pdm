@@ -157,7 +157,7 @@ class EnvBuilder:
         self.src_dir = src_dir
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
-            with open(os.path.join(src_dir, "pyproject.toml"), encoding="utf8") as f:
+            with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
                 spec = tomli.load(f)
         except FileNotFoundError:
             spec = {}

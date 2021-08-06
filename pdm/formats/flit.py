@@ -20,7 +20,7 @@ from pdm.utils import cd
 
 
 def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
-    with open(filename, encoding="utf-8") as fp:
+    with open(filename, "rb") as fp:
         try:
             data = tomli.load(fp)
         except tomli.TOMLDecodeError:
@@ -143,9 +143,7 @@ class FlitMetaConverter(MetaConverter):
 def convert(
     project: Optional[Project], filename: PathLike, options: Optional[Namespace]
 ) -> Tuple[Mapping, Mapping]:
-    with open(filename, encoding="utf-8") as fp, cd(
-        os.path.dirname(os.path.abspath(filename))
-    ):
+    with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         converter = FlitMetaConverter(
             tomli.load(fp)["tool"]["flit"], project.core.ui if project else None
         )

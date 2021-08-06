@@ -21,7 +21,7 @@ dependencies = [
     "resolvelib>=0.7.0,<0.8.0",
     "shellingham<2.0.0,>=1.3.2",
     "wheel<1.0.0,>=0.36.2",
-    "tomli~=1.0",
+    "tomli>=1.1.0,<2.0.0",
     "installer~=0.2",
 ]
 name = "pdm"

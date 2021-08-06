@@ -130,7 +130,7 @@ PACKAGE_REGEX = re.compile(r'^[A-Za-z][A-Za-z0-9._-]*')
 def get_packages(lines):
     return [PACKAGE_REGEX.match(line).group() for line in lines]
 
-with open('pyproject.toml', encoding='utf8') as f:
+with open('pyproject.toml', 'rb') as f:
     data = tomli.load(f)
 packages = get_packages(data.get('project', {}).get('dependencies', []))
 for reqs in data.get('project', {}).get('optional-dependencies', {}).values():
