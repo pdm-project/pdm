@@ -123,7 +123,7 @@ class Installer:  # pragma: no cover
             remove_path.commit()
         except OSError as e:
             termui.logger.info(
-                "Error occurred during uninstalltion, roll back the changes now."
+                "Error occurred during uninstallation, roll back the changes now."
             )
             remove_path.rollback()
             raise UninstallError(e) from e
