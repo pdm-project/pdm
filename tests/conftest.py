@@ -207,11 +207,12 @@ def working_set(mocker, repository):
     def uninstall(dist):
         del rv[dist.key]
 
-    installer = mocker.MagicMock()
-    installer.install.side_effect = install
-    installer.uninstall.side_effect = uninstall
-    mocker.patch("pdm.installers.synchronizers.Installer", return_value=installer)
-    mocker.patch("pdm.installers.Installer", return_value=installer)
+    install_manager = mocker.MagicMock()
+    install_manager.install.side_effect = install
+    install_manager.uninstall.side_effect = uninstall
+    mocker.patch(
+        "pdm.installers.Synchronizer.get_manager", return_value=install_manager
+    )
 
     yield rv
 

@@ -13,6 +13,7 @@ from pip._vendor import pkg_resources
 
 from pdm import termui
 from pdm.exceptions import UninstallError
+from pdm.installers.packages import CachedPackage
 from pdm.models.environment import Environment
 from pdm.utils import is_dist_editable
 
@@ -195,6 +196,10 @@ class BaseRemovePaths(abc.ABC):
         self._paths.add(path)
         if path.endswith(".py"):
             self._paths.update(_cache_file_from_source(path))
+        elif os.path.basename(path) == "REFER_TO":
+            line = open(path, "rb").readline().decode().strip()
+            if line:
+                self.refer_to = line
 
 
 class StashedRemovePaths(BaseRemovePaths):
@@ -243,7 +248,7 @@ class StashedRemovePaths(BaseRemovePaths):
                 # Don't stash cache files, remove them directly
                 os.unlink(old_path)
             root = _get_file_root(
-                old_path, os.path.abspath(self.envrionment.packages_path)
+                old_path, os.path.abspath(self.envrionment.get_paths()["prefix"])
             )
             if root is None:
                 termui.logger.debug(
@@ -269,6 +274,10 @@ class StashedRemovePaths(BaseRemovePaths):
         self._tempdirs.clear()
         self._stashed.clear()
         self._saved_pth = None
+        refer_to = getattr(self, "refer_to", None)
+        if refer_to:
+            termui.logger.debug("Unlink from cached package %s", refer_to)
+            CachedPackage(refer_to).remove_referrer(os.path.dirname(refer_to))
 
     def rollback(self) -> None:
         if not self._stashed:

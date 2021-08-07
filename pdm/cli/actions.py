@@ -28,7 +28,7 @@ from pdm.cli.utils import (
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
-from pdm.installers.installers import format_dist
+from pdm.installers.manager import format_dist
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import FrozenRequirement
 from pdm.models.python import PythonInfo
@@ -163,6 +163,7 @@ def do_sync(
         dry_run,
         no_editable=no_editable,
         install_self=not no_self and "default" in sections and bool(project.meta.name),
+        use_package_cache=project.config["feature.package_cache"],
     )
     handler.synchronize()
 

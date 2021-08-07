@@ -6,7 +6,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-import sysconfig
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -23,7 +22,7 @@ from pdm.models.in_process import (
     get_python_abi_tag,
     get_sys_config_paths,
 )
-from pdm.utils import cached_property, get_finder
+from pdm.utils import cached_property, get_finder, pdm_scheme
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -97,16 +96,7 @@ class Environment:
 
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
-        paths = sysconfig.get_paths()
-        scripts = "Scripts" if os.name == "nt" else "bin"
-        packages_path = self.packages_path
-        paths["platlib"] = paths["purelib"] = (packages_path / "lib").as_posix()
-        paths["scripts"] = (packages_path / scripts).as_posix()
-        paths["data"] = paths["prefix"] = packages_path.as_posix()
-        paths["include"] = paths["platinclude"] = paths["headers"] = (
-            packages_path / "include"
-        ).as_posix()
-        return paths
+        return pdm_scheme(str(self.packages_path))
 
     @contextmanager
     def activate(self) -> Iterator:

@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import urllib.parse as parse
 from contextlib import contextmanager
@@ -482,3 +483,21 @@ def normalize_name(name: str) -> str:
 
 def is_dist_editable(dist: Distribution) -> bool:
     return isinstance(dist, EggInfoDistribution) or getattr(dist, "editable", False)
+
+
+def pdm_scheme(base: str) -> dict[str, str]:
+    """Return a PEP 582 style install scheme"""
+    if "pdm" not in sysconfig._INSTALL_SCHEMES:  # type: ignore
+        bin_prefix = "Scripts" if os.name == "nt" else "bin"
+        sysconfig._INSTALL_SCHEMES["pdm"] = {  # type: ignore
+            "stdlib": "{base}/lib",
+            "platstdlib": "{base}/lib",
+            "purelib": "{base}/lib",
+            "platlib": "{base}/lib",
+            "include": "{base}/include",
+            "scripts": "{base}/%s" % bin_prefix,
+            "data": "{base}",
+            "prefix": "{base}",
+            "headers": "{base}/include",
+        }
+    return sysconfig.get_paths("pdm", vars={"base": base}, expand=True)

@@ -1,7 +1,7 @@
 import logging
 import os
 
-from pdm.installers import Installer
+from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link
 from pdm.models.requirements import parse_requirement
@@ -14,7 +14,7 @@ def test_install_wheel_with_inconsistent_dist_info(project):
         project.environment,
         link=Link("http://fixtures.test/artifacts/PyFunctional-1.4.3-py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     installer.install(candidate)
     assert "pyfunctional" in project.environment.get_working_set()
 
@@ -27,7 +27,7 @@ def test_install_with_file_existing(project):
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
     (project.environment.packages_path / "lib/demo.py").touch()
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     installer.install(candidate)
 
 
@@ -38,7 +38,7 @@ def test_uninstall_commit_rollback(project):
         project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     lib_path = project.environment.get_paths()["purelib"]
     installer.install(candidate)
     lib_file = os.path.join(lib_path, "demo.py")
@@ -60,7 +60,7 @@ def test_rollback_after_commit(project, caplog):
         project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     lib_path = project.environment.get_paths()["purelib"]
     installer.install(candidate)
     lib_file = os.path.join(lib_path, "demo.py")
@@ -88,7 +88,7 @@ def test_uninstall_with_console_scripts(project):
         project.environment,
         link=Link("http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     installer.install(candidate)
     celery_script = os.path.join(
         project.environment.get_paths()["scripts"],
