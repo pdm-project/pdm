@@ -1,6 +1,8 @@
 import logging
 import os
 
+import pytest
+
 from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link
@@ -81,14 +83,15 @@ def test_rollback_after_commit(project, caplog):
     )
 
 
-def test_uninstall_with_console_scripts(project):
+@pytest.mark.parametrize("use_install_cache", [False, True])
+def test_uninstall_with_console_scripts(project, use_install_cache):
     req = parse_requirement("celery")
     candidate = Candidate(
         req,
         project.environment,
         link=Link("http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"),
     )
-    installer = InstallManager(project.environment)
+    installer = InstallManager(project.environment, use_install_cache=use_install_cache)
     installer.install(candidate)
     celery_script = os.path.join(
         project.environment.get_paths()["scripts"],
