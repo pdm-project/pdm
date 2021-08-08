@@ -181,9 +181,10 @@ def _install_from_cache(candidate: Candidate, package_cache: CachedPackage) -> N
 
         # Write .pth file
         lib_path = package_cache.scheme()["purelib"]
+        filename = normalize_name(candidate.name).replace("-", "_")  # type: ignore
         record = destination.write_file(
             scheme=root_scheme,
-            path=f"{normalize_name(candidate.name)}.pth",  # type: ignore
+            path=f"{filename}.pth",
             stream=io.BytesIO(f"{lib_path}\n".encode()),
         )
         written_records.append(record)

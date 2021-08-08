@@ -345,4 +345,5 @@ def index():
         return HTMLPage(path.read_bytes(), "utf-8", location.url)
 
     LinkCollector.fetch_page = fetch_page
-    return
+    yield
+    LinkCollector.fetch_page = old_fetcher

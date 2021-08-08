@@ -125,8 +125,8 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_USE_VENV",
             coerce=ensure_boolean,
         ),
-        "feature.package_cache": ConfigItem(
-            "Cache packages when install and only put symlinks in the library root",
+        "feature.install_cache": ConfigItem(
+            "Cache wheel installation and only put symlinks in the library root",
             False,
             coerce=ensure_boolean,
         ),

@@ -75,7 +75,7 @@ class Synchronizer:
         retry_times: int = 1,
         install_self: bool = False,
         no_editable: bool = False,
-        use_package_cache: bool = False,
+        use_install_cache: bool = False,
     ) -> None:
         self.environment = environment
         self.clean = clean
@@ -83,7 +83,7 @@ class Synchronizer:
         self.retry_times = retry_times
         self.no_editable = no_editable
         self.install_self = install_self
-        self.use_package_cache = use_package_cache
+        self.use_install_cache = use_install_cache
 
         self.parallel = environment.project.config["parallel_install"]
         locked_repository = environment.project.locked_repository
@@ -113,7 +113,7 @@ class Synchronizer:
 
     def get_manager(self) -> InstallManager:
         return self.environment.project.core.install_manager_class(
-            self.environment, use_package_cache=self.use_package_cache
+            self.environment, use_install_cache=self.use_install_cache
         )
 
     @property

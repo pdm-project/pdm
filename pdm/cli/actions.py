@@ -163,7 +163,7 @@ def do_sync(
         dry_run,
         no_editable=no_editable,
         install_self=not no_self and "default" in sections and bool(project.meta.name),
-        use_package_cache=project.config["feature.package_cache"],
+        use_install_cache=project.config["feature.install_cache"],
     )
     handler.synchronize()
 

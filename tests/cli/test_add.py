@@ -223,11 +223,10 @@ def test_add_cached_vcs_requirement(project, mocker):
     if not cache_path.exists():
         cache_path.mkdir(parents=True)
     shutil.copy2(built_path, cache_path)
+    downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
+    builder = mocker.patch("pdm.builders.WheelBuilder.build")
     actions.do_add(project, packages=[url], no_self=True)
     lockfile_entry = next(p for p in project.lockfile["package"] if p["name"] == "demo")
     assert lockfile_entry["revision"] == "1234567890abcdef"
-
-    downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
-    builder = mocker.patch("pdm.builders.WheelBuilder.build")
     downloader.assert_not_called()
     builder.assert_not_called()

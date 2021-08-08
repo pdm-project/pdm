@@ -31,15 +31,15 @@ class InstallManager:
     """The manager that performs the installation and uninstallation actions."""
 
     def __init__(
-        self, environment: Environment, *, use_package_cache: bool = False
+        self, environment: Environment, *, use_install_cache: bool = False
     ) -> None:
         self.environment = environment
-        self.use_package_cache = use_package_cache
+        self.use_install_cache = use_install_cache
 
     def install(self, candidate: Candidate) -> None:
         if candidate.req.editable:
             installer = install_editable
-        elif self.use_package_cache and candidate.req.is_named:
+        elif self.use_install_cache and candidate.req.is_named:
             # Only cache wheels from PyPI
             installer = install_wheel_with_cache
         else:
