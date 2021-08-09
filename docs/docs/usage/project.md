@@ -103,6 +103,23 @@ If `-g/--global` option is used, the first item will be replaced by `~/.pdm/glob
 
 You can find all available configuration items in [Configuration Page](/configuration/).
 
+## Cache the installation of wheels
+
+If a package is required by many projects on the system, each project has to keep its own copy. This may become a waste of disk space especially for data science and machine learning libraries.
+
+PDM supports *caching* the installations of the same wheel by installing it into a centralized package repository and linking to that installation in different projects. To enabled it, run:
+
+```bash
+$ pdm config feature.install_cache on
+```
+
+It can be enabled on a project basis, by adding `--local` option to the command.
+
+The caches are located under `$(pdm config cache_dir)/packages`. One can view the cache usage by `pdm cache info`. But be noted the cached installations are managed automatically -- They get deleted when not linked from any projects. Manually deleting the caches from the disk may break some projects on the system.
+
+!!! note
+    Only the installation of *named requirements* resolved from PyPI can be cached.
+
 ## Manage global project
 
 Sometimes users may want to keep track of the dependencies of global Python interpreter as well.

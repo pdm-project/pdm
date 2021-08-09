@@ -192,11 +192,11 @@ class BaseRemovePaths(abc.ABC):
         self._pth_entries.add(line)
 
     def add_path(self, path: str) -> None:
-        path = os.path.normcase(os.path.expanduser(os.path.abspath(path)))
-        self._paths.add(path)
+        normalized_path = os.path.normcase(os.path.expanduser(os.path.abspath(path)))
+        self._paths.add(normalized_path)
         if path.endswith(".py"):
-            self._paths.update(_cache_file_from_source(path))
-        elif os.path.basename(path) == "REFER_TO":
+            self._paths.update(_cache_file_from_source(normalized_path))
+        elif path.replace("\\", "/").endswith(".dist-info/REFER_TO"):
             line = open(path, "rb").readline().decode().strip()
             if line:
                 self.refer_to = line
