@@ -13,10 +13,6 @@ else:
     import importlib_metadata as im
 
 
-class _PreparedForEgglink(im.Prepared):  # type: ignore
-    suffixes = (".egg-link",)
-
-
 default_context = im.DistributionFinder.Context()
 
 
@@ -41,15 +37,17 @@ class EgglinkFinder(im.DistributionFinder):
             )
             if not dist:
                 continue
-            dist.link_file = link  # type: ignore
+            dist.link_file = link.absolute()  # type: ignore
             yield dist
 
     @classmethod
     def _search_paths(cls, name: str | None, paths: list[str]) -> Iterable[Path]:
-        return itertools.chain.from_iterable(
-            path.search(_PreparedForEgglink(name))
-            for path in map(im.FastPath, paths)  # type: ignore
-        )
+        for path in paths:
+            if name:
+                if Path(path).joinpath(f"{name}.egg-link").is_file():
+                    yield Path(path).joinpath(f"{name}.egg-link")
+            else:
+                return Path(path).glob("*.egg-link")
 
 
 def distributions(path: list[str]) -> Iterable[im.Distribution]:
