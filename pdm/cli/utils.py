@@ -536,36 +536,36 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     return "\n".join(result)
 
 
-def translate_sections(
-    project: Project, default: bool, dev: bool, sections: Iterable[str]
+def translate_groups(
+    project: Project, default: bool, dev: bool, groups: Iterable[str]
 ) -> list[str]:
-    """Translate default, dev and sections containing ":all" into a list of sections"""
+    """Translate default, dev and groups containing ":all" into a list of groups"""
     optional_groups = set(project.meta.optional_dependencies or [])
     dev_groups = set(project.tool_settings.get("dev-dependencies", []))
-    sections_set = set(sections)
+    groups_set = set(groups)
     if dev is None:
         dev = True
-    if sections_set & dev_groups:
+    if groups_set & dev_groups:
         if not dev:
             raise PdmUsageError(
-                "--prod is not allowed with dev sections and should be left"
+                "--prod is not allowed with dev groups and should be left"
             )
     elif dev:
-        sections_set.update(dev_groups)
-    if ":all" in sections:
-        sections_set.discard(":all")
-        sections_set.update(optional_groups)
+        groups_set.update(dev_groups)
+    if ":all" in groups:
+        groups_set.discard(":all")
+        groups_set.update(optional_groups)
     if default:
-        sections_set.add("default")
+        groups_set.add("default")
     # Sorts the result in ascending order instead of in random order
     # to make this function pure
-    invalid_sections = sections_set - set(project.iter_sections())
-    if invalid_sections:
+    invalid_groups = groups_set - set(project.iter_groups())
+    if invalid_groups:
         project.core.ui.echo(
-            f"Ignoring non-existing sections: {invalid_sections}", fg="yellow", err=True
+            f"Ignoring non-existing groups: {invalid_groups}", fg="yellow", err=True
         )
-        sections_set -= invalid_sections
-    return sorted(sections_set)
+        groups_set -= invalid_groups
+    return sorted(groups_set)
 
 
 def merge_dictionary(

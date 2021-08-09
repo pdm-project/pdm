@@ -24,14 +24,14 @@ def test_convert_pipfile(project):
 def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    options = Namespace(dev=is_dev, section=None)
+    options = Namespace(dev=is_dev, group=None)
     result, settings = requirements.convert(project, golden_file, options)
-    section = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
+    group = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
 
     assert len(settings["source"]) == 2
-    assert "webassets==2.0" in section
-    assert 'whoosh==2.7.4; sys_platform == "win32"' in section
-    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in section
+    assert "webassets==2.0" in group
+    assert 'whoosh==2.7.4; sys_platform == "win32"' in group
+    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
 
 
 def test_convert_requirements_file_without_name(project, vcs):
@@ -41,7 +41,7 @@ def test_convert_requirements_file_without_name(project, vcs):
     )
     assert requirements.check_fingerprint(project, str(req_file))
     result, _ = requirements.convert(
-        project, str(req_file), Namespace(dev=False, section=None)
+        project, str(req_file), Namespace(dev=False, group=None)
     )
 
     assert result["dependencies"] == ["demo@ git+https://github.com/test-root/demo.git"]
@@ -52,7 +52,7 @@ def test_convert_poetry(project):
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
         result, settings = poetry.convert(
-            project, golden_file, Namespace(dev=False, section=None)
+            project, golden_file, Namespace(dev=False, group=None)
         )
 
     assert result["authors"][0] == {
@@ -140,16 +140,16 @@ def test_export_setup_py(fixture_project):
     assert content == project.root.joinpath("setup.txt").read_text()
 
 
-def test_import_requirements_with_section(project):
+def test_import_requirements_with_group(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
     result, _ = requirements.convert(
-        project, golden_file, Namespace(dev=False, section="test")
+        project, golden_file, Namespace(dev=False, group="test")
     )
 
-    section = result["optional-dependencies"]["test"]
-    assert "webassets==2.0" in section
-    assert 'whoosh==2.7.4; sys_platform == "win32"' in section
-    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in section
+    group = result["optional-dependencies"]["test"]
+    assert "webassets==2.0" in group
+    assert 'whoosh==2.7.4; sys_platform == "win32"' in group
+    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
     assert not result.get("dependencies")
     assert not result.get("dev-dependencies", {}).get("dev")

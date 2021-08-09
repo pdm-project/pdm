@@ -23,8 +23,8 @@ def resolve(
     Return a tuple containing 3 items:
 
         1. A map of pinned candidates
-        2. A map of resolved dependencies from each section of pyproject.toml
-        3. A map of package descriptions fetched from PyPI source.
+        2. A map of resolved dependencies for each dependency group
+        3. A map of package descriptions fetched from PyPI source
     """
     provider = cast(BaseProvider, resolver.provider)
     result = resolver.resolve(requirements, max_rounds)

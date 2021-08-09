@@ -22,7 +22,7 @@ commands =
 [testenv:lint]
 deps = pdm
 commands =
-    pdm install -s lint
+    pdm install -G lint
     flake8 src/
 ```
 

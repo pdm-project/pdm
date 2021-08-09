@@ -188,7 +188,7 @@ def test_select_dependencies(project):
     assert sorted(project.get_dependencies("test")) == ["pytest"]
     assert sorted(project.dev_dependencies) == ["mkdocs", "pytest"]
 
-    assert sorted(project.iter_sections()) == [
+    assert sorted(project.iter_groups()) == [
         "default",
         "doc",
         "security",

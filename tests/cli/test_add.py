@@ -12,13 +12,13 @@ from tests import FIXTURES
 @pytest.mark.usefixtures("repository")
 def test_add_package(project, working_set, is_dev):
     actions.do_add(project, is_dev, packages=["requests"])
-    section = (
+    group = (
         project.tool_settings["dev-dependencies"]["dev"]
         if is_dev
         else project.meta["dependencies"]
     )
 
-    assert section[0] == "requests~=2.19"
+    assert group[0] == "requests~=2.19"
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -26,8 +26,8 @@ def test_add_package(project, working_set, is_dev):
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_package_to_custom_section(project, working_set):
-    actions.do_add(project, section="test", packages=["requests"])
+def test_add_package_to_custom_group(project, working_set):
+    actions.do_add(project, group="test", packages=["requests"])
 
     assert "requests" in project.meta.optional_dependencies["test"][0]
     locked_candidates = project.locked_repository.all_candidates
@@ -37,8 +37,8 @@ def test_add_package_to_custom_section(project, working_set):
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_package_to_custom_dev_section(project, working_set):
-    actions.do_add(project, dev=True, section="test", packages=["requests"])
+def test_add_package_to_custom_dev_group(project, working_set):
+    actions.do_add(project, dev=True, group="test", packages=["requests"])
 
     dependencies = project.tool_settings["dev-dependencies"]["test"]
     assert "requests" in dependencies[0]
@@ -58,13 +58,13 @@ def test_add_editable_package(project, working_set, is_dev):
         is_dev,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    section = (
+    group = (
         project.tool_settings["dev-dependencies"]["dev"]
         if is_dev
         else project.meta["dependencies"]
     )
-    assert "demo" in section[0]
-    assert "-e git+https://github.com/test-root/demo.git#egg=demo" in section[1]
+    assert "demo" in group[0]
+    assert "-e git+https://github.com/test-root/demo.git#egg=demo" in group[1]
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["demo"].revision == "1234567890abcdef"
     assert locked_candidates["idna"].version == "2.7"
@@ -81,13 +81,13 @@ def test_add_remote_package_url(project, is_dev):
         is_dev,
         packages=["http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"],
     )
-    section = (
+    group = (
         project.tool_settings["dev-dependencies"]["dev"]
         if is_dev
         else project.meta["dependencies"]
     )
     assert (
-        section[0]
+        group[0]
         == "demo @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
 

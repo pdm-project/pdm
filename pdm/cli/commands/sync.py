@@ -2,7 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import clean_group, dry_run_option, install_group, sections_group
+from pdm.cli.options import clean_group, dry_run_option, groups_group, install_group
 from pdm.project import Project
 
 
@@ -10,7 +10,7 @@ class Command(BaseCommand):
     """Synchronize the current working set with lock file"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        sections_group.add_to_parser(parser)
+        groups_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
         clean_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_sync(
             project,
-            sections=options.sections,
+            groups=options.groups,
             dev=options.dev,
             default=options.default,
             dry_run=options.dry_run,
