@@ -18,7 +18,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter
 from pdm.exceptions import PdmUsageError
-from pdm.installers import Synchronizer
+from pdm.installers import InstallManager, Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
@@ -46,6 +46,7 @@ class Core:
         self.repository_class = PyPIRepository
         self.resolver_class = Resolver
         self.synchronizer_class = Synchronizer
+        self.install_manager_class = InstallManager
 
         self.ui = termui.UI()
         self.parser: Optional[argparse.ArgumentParser] = None

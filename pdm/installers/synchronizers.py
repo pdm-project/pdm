@@ -11,10 +11,11 @@ from pip._vendor.pkg_resources import Distribution
 
 from pdm import termui
 from pdm.exceptions import InstallationError
-from pdm.installers.installers import Installer, is_dist_editable
+from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
+from pdm.utils import is_dist_editable
 
 
 class DummyFuture:
@@ -74,6 +75,7 @@ class Synchronizer:
         retry_times: int = 1,
         install_self: bool = False,
         no_editable: bool = False,
+        use_install_cache: bool = False,
     ) -> None:
         self.environment = environment
         self.clean = clean
@@ -81,6 +83,7 @@ class Synchronizer:
         self.retry_times = retry_times
         self.no_editable = no_editable
         self.install_self = install_self
+        self.use_install_cache = use_install_cache
 
         self.parallel = environment.project.config["parallel_install"]
         locked_repository = environment.project.locked_repository
@@ -92,6 +95,7 @@ class Synchronizer:
             for candidate in candidates.values():
                 candidate.req.editable = None  # type: ignore
         self.candidates = candidates
+        self._manager: InstallManager | None = None
 
     def create_executor(
         self,
@@ -101,8 +105,16 @@ class Synchronizer:
         else:
             return DummyExecutor()
 
-    def get_installer(self) -> Installer:
-        return Installer(self.environment)
+    @property
+    def manager(self) -> InstallManager:
+        if not self._manager:
+            self._manager = self.get_manager()
+        return self._manager
+
+    def get_manager(self) -> InstallManager:
+        return self.environment.project.core.install_manager_class(
+            self.environment, use_install_cache=self.use_install_cache
+        )
 
     @property
     def self_key(self) -> Optional[str]:
@@ -151,10 +163,9 @@ class Synchronizer:
     def install_candidate(self, key: str) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
-        installer = self.get_installer()
         with self.ui.open_spinner(f"Installing {can.format()}...") as spinner:
             try:
-                installer.install(can)
+                self.manager.install(can)
             except Exception:
                 spinner.fail(f"Install {can.format()} failed")
                 raise
@@ -167,14 +178,13 @@ class Synchronizer:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[strip_extras(key)[0]]
-        installer = self.get_installer()
         with self.ui.open_spinner(
             f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
             f"-> {termui.yellow(can.version)}..."
         ) as spinner:
             try:
-                installer.uninstall(dist)
-                installer.install(can)
+                self.manager.uninstall(dist)
+                self.manager.install(can)
             except Exception:
                 spinner.fail(
                     f"Update {termui.green(key, bold=True)} "
@@ -192,13 +202,12 @@ class Synchronizer:
 
     def remove_distribution(self, key: str) -> Distribution:
         """Remove distributions with given names."""
-        installer = self.get_installer()
         dist = self.working_set[key]
         with self.ui.open_spinner(
             f"Removing {termui.green(key, bold=True)} {termui.yellow(dist.version)}..."
         ) as spinner:
             try:
-                installer.uninstall(dist)
+                self.manager.uninstall(dist)
             except Exception:
                 spinner.fail(
                     f"Remove {termui.green(key, bold=True)} "

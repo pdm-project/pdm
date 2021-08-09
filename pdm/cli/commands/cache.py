@@ -131,6 +131,7 @@ class InfoCommand(BaseCommand):
                 ("http", "HTTP Cache"),
                 ("wheels", "Wheels Cache"),
                 ("metadata", "Metadata Cache"),
+                ("packages", "Package Cache"),
             ]:
                 cache_location = project.cache(name)
                 files = list(find_files(cache_location.as_posix(), "*"))

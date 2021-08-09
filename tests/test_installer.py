@@ -1,7 +1,9 @@
 import logging
 import os
 
-from pdm.installers import Installer
+import pytest
+
+from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link
 from pdm.models.requirements import parse_requirement
@@ -14,7 +16,7 @@ def test_install_wheel_with_inconsistent_dist_info(project):
         project.environment,
         link=Link("http://fixtures.test/artifacts/PyFunctional-1.4.3-py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     installer.install(candidate)
     assert "pyfunctional" in project.environment.get_working_set()
 
@@ -27,7 +29,7 @@ def test_install_with_file_existing(project):
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
     (project.environment.packages_path / "lib/demo.py").touch()
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     installer.install(candidate)
 
 
@@ -38,7 +40,7 @@ def test_uninstall_commit_rollback(project):
         project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     lib_path = project.environment.get_paths()["purelib"]
     installer.install(candidate)
     lib_file = os.path.join(lib_path, "demo.py")
@@ -60,7 +62,7 @@ def test_rollback_after_commit(project, caplog):
         project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment)
     lib_path = project.environment.get_paths()["purelib"]
     installer.install(candidate)
     lib_file = os.path.join(lib_path, "demo.py")
@@ -81,14 +83,15 @@ def test_rollback_after_commit(project, caplog):
     )
 
 
-def test_uninstall_with_console_scripts(project):
+@pytest.mark.parametrize("use_install_cache", [False, True])
+def test_uninstall_with_console_scripts(project, use_install_cache):
     req = parse_requirement("celery")
     candidate = Candidate(
         req,
         project.environment,
         link=Link("http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"),
     )
-    installer = Installer(project.environment)
+    installer = InstallManager(project.environment, use_install_cache=use_install_cache)
     installer.install(candidate)
     celery_script = os.path.join(
         project.environment.get_paths()["scripts"],
@@ -97,3 +100,49 @@ def test_uninstall_with_console_scripts(project):
     assert os.path.exists(celery_script)
     installer.uninstall(project.environment.get_working_set()["celery"])
     assert not os.path.exists(celery_script)
+
+
+def test_install_wheel_with_cache(project, invoke):
+    req = parse_requirement("future-fstrings")
+    candidate = Candidate(
+        req,
+        project.environment,
+        link=Link(
+            "http://fixtures.test/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl"
+        ),
+    )
+    installer = InstallManager(project.environment, use_install_cache=True)
+    installer.install(candidate)
+
+    lib_path = project.environment.get_paths()["purelib"]
+    assert os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
+    assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+
+    cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
+    assert cache_path.is_dir()
+    r = invoke(["run", "python", "-c", "import future_fstrings"], obj=project)
+    assert r.exit_code == 0
+
+    dist = project.environment.get_working_set()["future-fstrings"]
+    installer.uninstall(dist)
+    assert not os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
+    assert not os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    assert not cache_path.exists()
+
+
+def test_url_requirement_is_not_cached(project):
+    req = parse_requirement(
+        "future-fstrings @ http://fixtures.test/artifacts/"
+        "future_fstrings-1.2.0-py2.py3-none-any.whl"
+    )
+    candidate = Candidate(
+        req,
+        project.environment,
+    )
+    installer = InstallManager(project.environment, use_install_cache=True)
+    installer.install(candidate)
+    cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
+    assert not cache_path.is_dir()
+    lib_path = project.environment.get_paths()["purelib"]
+    assert os.path.isfile(os.path.join(lib_path, "future_fstrings.py"))
+    assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
