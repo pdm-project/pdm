@@ -40,7 +40,7 @@ $ pdm add requests
 `pdm add` can be followed by one or several dependencies, and the dependency specification is described in
 [PEP 508](https://www.python.org/dev/peps/pep-0508/).
 
-PDM also allows extra dependency groups by providing `-s/--section <name>` option, and those dependencies will go to
+PDM also allows extra dependency groups by providing `-G/--group <name>` option, and those dependencies will go to
 `[project.optional-dependencies.<name>]` table in the project file, respectively.
 
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see
@@ -53,7 +53,7 @@ Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable
 
 _New in 1.5.0_
 
-PDM also supports defining groups of dependencies that are useful for development. They can be classified as different sections,
+PDM also supports defining groups of dependencies that are useful for development,
 e.g. some for testing and others for linting. We usually don't want these dependencies appear in the distribution's metadata
 so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
 
@@ -68,7 +68,7 @@ This will result in a pyproject.toml as following:
 test = ["pytest"]
 ```
 
-For backward-compatibility, if `-s/--section` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
+For backward-compatibility, if `-G/--group` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
     The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
@@ -97,26 +97,26 @@ To update the specified package(s):
 $ pdm update requests
 ```
 
-To update multiple sections of dependencies:
+To update multiple groups of dependencies:
 
 ```console
-$ pdm update -s security -s http
+$ pdm update -G security -G http
 ```
 
-To update a given package in the specified section:
+To update a given package in the specified group:
 
 ```console
-$ pdm update -s security cryptography
+$ pdm update -G security cryptography
 ```
 
-If the section is not given, PDM will search for the requirement in the default dependencies set and raises an error if none is found.
+If the group is not given, PDM will search for the requirement in the default dependencies set and raises an error if none is found.
 
 To update packages in development dependencies:
 
 ```console
 # Update all default + dev-dependencies
 $ pdm update -d
-# Update a package in the specified section of dev-dependencies
+# Update a package in the specified group of dev-dependencies
 $ pdm update -ds test pytest
 ```
 
@@ -136,10 +136,10 @@ To remove existing dependencies from project file and the library directory:
 ```console
 # Remove requests from the default dependencies
 $ pdm remove requests
-# Remove h11 from the 'web' section of optional-dependencies
-$ pdm remove -s web h11
-# Remove pytest-cov from the `test` section of dev-dependencies
-$ pdm remove -ds test pytest-cov
+# Remove h11 from the 'web' group of optional-dependencies
+$ pdm remove -G web h11
+# Remove pytest-cov from the `test` group of dev-dependencies
+$ pdm remove -dG test pytest-cov
 ```
 
 ## Install the packages pinned in lock file
@@ -170,15 +170,15 @@ dev2 = ["mkdocs"]
 | Command                         | What it does                                                             | Comments                  |
 | ------------------------------- | ------------------------------------------------------------------------ | ------------------------- |
 | `pdm install`                   | install prod and dev deps (no optional)                                  |                           |
-| `pdm install -s extra1`         | install prod deps, dev deps, and "extra1" optional section               |                           |
-| `pdm install -s dev1`           | install prod deps and only "dev1" dev section                            |                           |
-| `pdm install -s:all`            | install prod deps, dev deps and "extra1", "extra2" optional sections     |                           |
-| `pdm install -s extra1 -s dev1` | install prod deps, "extra1" optional section and only "dev1" dev section |                           |
+| `pdm install -G extra1`         | install prod deps, dev deps, and "extra1" optional group               |                           |
+| `pdm install -G dev1`           | install prod deps and only "dev1" dev group                            |                           |
+| `pdm install -G:all`            | install prod deps, dev deps and "extra1", "extra2" optional groups     |                           |
+| `pdm install -G extra1 -G dev1` | install prod deps, "extra1" optional group and only "dev1" dev group |                           |
 | `pdm install --prod`            | install prod only                                                        |                           |
-| `pdm install --prod -s extra1`  | install prod deps and "extra1" optional                                  |                           |
-| `pdm install --prod -s dev1`    | Fail, `--prod` can't be given with dev dependencies                      | Leave the `--prod` option |
+| `pdm install --prod -G extra1`  | install prod deps and "extra1" optional                                  |                           |
+| `pdm install --prod -G dev1`    | Fail, `--prod` can't be given with dev dependencies                      | Leave the `--prod` option |
 
-**All** development dependencies are included as long as `--prod` is not passed and `-s` doesn't specify any dev sections.
+**All** development dependencies are included as long as `--prod` is not passed and `-G` doesn't specify any dev groups.
 
 Besides, if you don't want the root project to be installed, add `--no-self` option, and `--no-editable` can be used when you want all packages to be installed in non-editable versions. With `--no-editable` turn on, you can safely archive the whole `__pypackages__` and copy it to the target environment for deployment.
 

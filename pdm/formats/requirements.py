@@ -107,9 +107,9 @@ def convert(
     data: dict[str, Any] = {}
     settings: dict[str, Any] = {}
     if options.dev:
-        settings["dev-dependencies"] = {options.section or "dev": deps}
-    elif options.section:
-        data["optional-dependencies"] = {options.section: deps}
+        settings["dev-dependencies"] = {options.group or "dev": deps}
+    elif options.group:
+        data["optional-dependencies"] = {options.group: deps}
     else:
         data["dependencies"] = deps
     if finder.index_urls:

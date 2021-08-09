@@ -6,8 +6,8 @@ from typing import Iterable
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import sections_group
-from pdm.cli.utils import translate_sections
+from pdm.cli.options import groups_group
+from pdm.cli.utils import translate_groups
 from pdm.formats import FORMATS
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
@@ -25,7 +25,7 @@ class Command(BaseCommand):
             default="requirements",
             help="Specify the export file format",
         )
-        sections_group.add_to_parser(parser)
+        groups_group.add_to_parser(parser)
         parser.add_argument(
             "--without-hashes",
             dest="hashes",
@@ -45,19 +45,19 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        sections: list[str] = list(options.sections)
+        groups: list[str] = list(options.groups)
         if options.pyproject:
             options.hashes = False
-        sections = translate_sections(
+        groups = translate_groups(
             project,
             options.default,
             options.dev,
-            options.sections or (),
+            options.groups or (),
         )
         requirements: dict[str, Requirement] = {}
         packages: Iterable[Requirement] | Iterable[Candidate]
-        for section in sections:
-            requirements.update(project.get_dependencies(section))
+        for group in groups:
+            requirements.update(project.get_dependencies(group))
         if options.pyproject:
             packages = requirements.values()
         else:

@@ -23,7 +23,7 @@ from pdm.cli.utils import (
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
-    translate_sections,
+    translate_groups,
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
@@ -121,7 +121,7 @@ def resolve_candidates_from_lockfile(
 def do_sync(
     project: Project,
     *,
-    sections: Sequence[str] = (),
+    groups: Sequence[str] = (),
     dev: bool = True,
     default: bool = True,
     dry_run: bool = False,
@@ -146,10 +146,10 @@ def do_sync(
                 "Lock file hash doesn't match pyproject.toml, packages may be outdated",
                 err=True,
             )
-        sections = translate_sections(project, default, dev, sections or ())
+        groups = translate_groups(project, default, dev, groups or ())
         requirements = []
-        for section in sections:
-            requirements.extend(project.get_dependencies(section).values())
+        for group in groups:
+            requirements.extend(project.get_dependencies(group).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
         candidates = {
@@ -162,7 +162,7 @@ def do_sync(
         clean,
         dry_run,
         no_editable=no_editable,
-        install_self=not no_self and "default" in sections and bool(project.meta.name),
+        install_self=not no_self and "default" in groups and bool(project.meta.name),
         use_install_cache=project.config["feature.install_cache"],
     )
     handler.synchronize()
@@ -171,7 +171,7 @@ def do_sync(
 def do_add(
     project: Project,
     dev: bool = False,
-    section: str | None = None,
+    group: str | None = None,
     sync: bool = True,
     save: str = "compatible",
     strategy: str = "reuse",
@@ -185,8 +185,8 @@ def do_add(
     check_project_file(project)
     if not editables and not packages:
         raise PdmUsageError("Must specify at least one package or editable package.")
-    if not section:
-        section = "dev" if dev else "default"
+    if not group:
+        group = "dev" if dev else "default"
     tracked_names: set[str] = set()
     requirements: dict[str, Requirement] = {}
     for r in [parse_requirement(line, True) for line in editables] + [
@@ -196,29 +196,29 @@ def do_add(
         tracked_names.add(key)
         requirements[key] = r
     project.core.ui.echo(
-        f"Adding packages to {section} {'dev-' if dev else ''}dependencies: "
+        f"Adding packages to {group} {'dev-' if dev else ''}dependencies: "
         + ", ".join(termui.green(key or "", bold=True) for key in requirements)
     )
     all_dependencies = project.all_dependencies
-    section_deps = all_dependencies.setdefault(section, {})
+    group_deps = all_dependencies.setdefault(group, {})
     if unconstrained:
-        for req in section_deps.values():
+        for req in group_deps.values():
             req.specifier = get_specifier("")
-    section_deps.update(requirements)
+    group_deps.update(requirements)
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     resolved = do_lock(project, strategy, tracked_names, reqs)
 
     # Update dependency specifiers and lockfile hash.
-    deps_to_update = section_deps if unconstrained else requirements
-    save_version_specifiers({section: deps_to_update}, resolved, save)
-    project.add_dependencies(deps_to_update, section, dev)
+    deps_to_update = group_deps if unconstrained else requirements
+    save_version_specifiers({group: deps_to_update}, resolved, save)
+    project.add_dependencies(deps_to_update, group, dev)
     lockfile = project.lockfile
     project.write_lockfile(lockfile, False)
 
     if sync:
         do_sync(
             project,
-            sections=(section,),
+            groups=(group,),
             default=False,
             no_editable=no_editable,
             no_self=no_self,
@@ -229,7 +229,7 @@ def do_update(
     project: Project,
     *,
     dev: bool | None = None,
-    sections: Sequence[str] = (),
+    groups: Sequence[str] = (),
     default: bool = True,
     strategy: str = "reuse",
     save: str = "compatible",
@@ -242,21 +242,21 @@ def do_update(
 ) -> None:
     """Update specified packages or all packages"""
     check_project_file(project)
-    if len(packages) > 0 and (top or len(sections) > 1 or not default):
+    if len(packages) > 0 and (top or len(groups) > 1 or not default):
         raise PdmUsageError(
-            "packages argument can't be used together with multiple -s or "
+            "packages argument can't be used together with multiple -G or "
             "--no-default and --top."
         )
     all_dependencies = project.all_dependencies
     updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
     install_dev = True if dev is None else dev
     if not packages:
-        sections = translate_sections(project, default, install_dev, sections or ())
-        for section in sections:
-            updated_deps[section] = all_dependencies[section]
+        groups = translate_groups(project, default, install_dev, groups or ())
+        for group in groups:
+            updated_deps[group] = all_dependencies[group]
     else:
-        section = sections[0] if sections else ("dev" if dev else "default")
-        dependencies = all_dependencies[section]
+        group = groups[0] if groups else ("dev" if dev else "default")
+        dependencies = all_dependencies[group]
         for name in packages:
             matched_name = next(
                 filter(
@@ -269,10 +269,10 @@ def do_update(
             if not matched_name:
                 raise ProjectError(
                     "{} does not exist in {} {}dependencies.".format(
-                        termui.green(name, bold=True), section, "dev-" if dev else ""
+                        termui.green(name, bold=True), group, "dev-" if dev else ""
                     )
                 )
-            updated_deps[section][matched_name] = dependencies[matched_name]
+            updated_deps[group][matched_name] = dependencies[matched_name]
         project.core.ui.echo(
             "Updating packages: {}.".format(
                 ", ".join(
@@ -295,7 +295,7 @@ def do_update(
     )
     do_sync(
         project,
-        sections=sections,
+        groups=groups,
         dev=install_dev,
         default=default,
         clean=False,
@@ -308,8 +308,8 @@ def do_update(
     if unconstrained and not dry_run:
         # Need to update version constraints
         save_version_specifiers(updated_deps, resolved, save)
-        for section, deps in updated_deps.items():
-            project.add_dependencies(deps, section, dev or False)
+        for group, deps in updated_deps.items():
+            project.add_dependencies(deps, group, dev or False)
         lockfile = project.lockfile
         project.write_lockfile(lockfile, False)
 
@@ -317,7 +317,7 @@ def do_update(
 def do_remove(
     project: Project,
     dev: bool = False,
-    section: str | None = None,
+    group: str | None = None,
     sync: bool = True,
     packages: Sequence[str] = (),
     no_editable: bool = False,
@@ -327,14 +327,14 @@ def do_remove(
     check_project_file(project)
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
-    if not section:
-        section = "dev" if dev else "default"
-    if section not in list(project.iter_sections()):
-        raise ProjectError(f"No-exist section {section}")
+    if not group:
+        group = "dev" if dev else "default"
+    if group not in list(project.iter_groups()):
+        raise ProjectError(f"No-exist group {group}")
 
-    deps = project.get_pyproject_dependencies(section, dev)
+    deps = project.get_pyproject_dependencies(group, dev)
     project.core.ui.echo(
-        f"Removing packages from {section} {'dev-' if dev else ''}dependencies: "
+        f"Removing packages from {group} {'dev-' if dev else ''}dependencies: "
         + ", ".join(str(termui.green(name, bold=True)) for name in packages)
     )
     for name in packages:
@@ -345,7 +345,7 @@ def do_remove(
         if not matched_indexes:
             raise ProjectError(
                 "{} does not exist in {} dependencies.".format(
-                    termui.green(name, bold=True), section
+                    termui.green(name, bold=True), group
                 )
             )
         for i in matched_indexes:
@@ -356,7 +356,7 @@ def do_remove(
     if sync:
         do_sync(
             project,
-            sections=(section,),
+            groups=(group,),
             default=False,
             clean=True,
             no_editable=no_editable,
@@ -545,7 +545,7 @@ def do_import(
     else:
         key = format
     if options is None:
-        options = Namespace(dev=False, section=None)
+        options = Namespace(dev=False, group=None)
     project_data, settings = FORMATS[key].convert(project, filename, options)
     pyproject = project.pyproject or atoml.document()
 

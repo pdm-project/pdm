@@ -7,12 +7,12 @@ from tests.conftest import Distribution
 
 
 @pytest.mark.usefixtures("repository")
-def test_sync_packages_with_section_all(project, working_set):
+def test_sync_packages_with_group_all(project, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")})
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "date")
     project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
     actions.do_lock(project)
-    actions.do_sync(project, sections=[":all"])
+    actions.do_sync(project, groups=[":all"])
     assert "pytz" in working_set
     assert "requests" in working_set
     assert "idna" in working_set
@@ -91,11 +91,11 @@ def test_sync_in_sequential_mode(project, working_set, capsys):
 
 
 @pytest.mark.usefixtures("repository")
-def test_sync_packages_with_sections(project, working_set):
+def test_sync_packages_with_groups(project, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")})
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "date")
     actions.do_lock(project)
-    actions.do_sync(project, sections=["date"])
+    actions.do_sync(project, groups=["date"])
     assert "pytz" in working_set
     assert "requests" in working_set
     assert "idna" in working_set

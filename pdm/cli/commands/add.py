@@ -3,6 +3,7 @@ import argparse
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import (
+    deprecated,
     install_group,
     packages_group,
     save_strategy_group,
@@ -24,7 +25,17 @@ class Command(BaseCommand):
             help="Add packages into dev dependencies",
         )
         parser.add_argument(
-            "-s", "--section", help="Specify target section to add into"
+            "-s",
+            "--section",
+            dest="group",
+            help="(DEPRECATED) Alias of `-G/--group`",
+            type=deprecated(
+                "`-s/--section` is deprecated in favor of `-G/--groups` "
+                "and will be removed in the next minor release."
+            ),
+        )
+        parser.add_argument(
+            "-G", "--group", help="Specify the target dependency group to add into"
         )
         parser.add_argument(
             "-u",
@@ -51,7 +62,7 @@ class Command(BaseCommand):
         actions.do_add(
             project,
             dev=options.dev,
-            section=options.section,
+            group=options.group,
             sync=options.sync,
             save=options.save_strategy or project.config["strategy.save"],
             strategy=options.update_strategy or project.config["strategy.update"],

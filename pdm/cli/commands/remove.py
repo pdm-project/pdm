@@ -2,7 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import install_group
+from pdm.cli.options import deprecated, install_group
 from pdm.project import Project
 
 
@@ -19,7 +19,17 @@ class Command(BaseCommand):
             help="Remove packages from dev dependencies",
         )
         parser.add_argument(
-            "-s", "--section", help="Specify the section the package belongs to"
+            "-s",
+            "--section",
+            dest="group",
+            help="(DEPRECATED) Alias of `-G/--group`",
+            type=deprecated(
+                "`-s/--section` is deprecated in favor of `-G/--groups` "
+                "and will be removed in the next minor release."
+            ),
+        )
+        parser.add_argument(
+            "-G", "--group", help="Specify the target dependency group to remove from"
         )
         parser.add_argument(
             "--no-sync",
@@ -36,7 +46,7 @@ class Command(BaseCommand):
         actions.do_remove(
             project,
             dev=options.dev,
-            section=options.section,
+            group=options.group,
             sync=options.sync,
             packages=options.packages,
             no_editable=options.no_editable,

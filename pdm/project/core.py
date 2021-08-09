@@ -218,26 +218,26 @@ class Project:
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.meta.requires_python)
 
-    def get_dependencies(self, section: str | None = None) -> dict[str, Requirement]:
+    def get_dependencies(self, group: str | None = None) -> dict[str, Requirement]:
         metadata = self.meta
         optional_dependencies = metadata.get("optional-dependencies", {})
         dev_dependencies = self.tool_settings.get("dev-dependencies", {})
-        if section in (None, "default"):
+        if group in (None, "default"):
             deps = metadata.get("dependencies", [])
         else:
-            if section in optional_dependencies and section in dev_dependencies:
+            if group in optional_dependencies and group in dev_dependencies:
                 self.core.ui.echo(
-                    f"The {section} section exists in both [optional-dependencies] "
+                    f"The {group} group exists in both [optional-dependencies] "
                     "and [dev-dependencies], the former is taken.",
                     err=True,
                     fg="yellow",
                 )
-            if section in optional_dependencies:
-                deps = optional_dependencies[section]
-            elif section in dev_dependencies:
-                deps = dev_dependencies[section]
+            if group in optional_dependencies:
+                deps = optional_dependencies[group]
+            elif group in dev_dependencies:
+                deps = dev_dependencies[group]
             else:
-                raise PdmUsageError(f"Non-exist section {section}")
+                raise PdmUsageError(f"Non-exist group {group}")
         result = {}
         with cd(self.root):
             for line in deps:
@@ -270,19 +270,17 @@ class Project:
                     result[req.identify()] = req
         return result
 
-    def iter_sections(self) -> Iterable[str]:
-        result = {"default"}
+    def iter_groups(self) -> Iterable[str]:
+        groups = {"default"}
         if self.meta.optional_dependencies:
-            result.update(self.meta.optional_dependencies.keys())
+            groups.update(self.meta.optional_dependencies.keys())
         if self.tool_settings.get("dev-dependencies"):
-            result.update(self.tool_settings["dev-dependencies"].keys())
-        return result
+            groups.update(self.tool_settings["dev-dependencies"].keys())
+        return groups
 
     @property
     def all_dependencies(self) -> dict[str, dict[str, Requirement]]:
-        return {
-            section: self.get_dependencies(section) for section in self.iter_sections()
-        }
+        return {group: self.get_dependencies(group) for group in self.iter_groups()}
 
     @property
     def allow_prereleases(self) -> bool | None:
@@ -419,7 +417,7 @@ class Project:
         )
 
     def get_content_hash(self, algo: str = "md5") -> str:
-        # Only calculate sources and dependencies sections. Otherwise lock file is
+        # Only calculate sources and dependencies groups. Otherwise lock file is
         # considered as unchanged.
         dump_data = {
             "sources": self.tool_settings.get("source", []),
@@ -458,9 +456,9 @@ class Project:
         accepted = get_specifier(f"~={lockfile_version}")
         return accepted.contains(self.LOCKFILE_VERSION)
 
-    def get_pyproject_dependencies(self, section: str, dev: bool = False) -> list[str]:
+    def get_pyproject_dependencies(self, group: str, dev: bool = False) -> list[str]:
         """Get the dependencies array in the pyproject.toml"""
-        if section == "default":
+        if group == "default":
             return self.meta.setdefault("dependencies", [])
         else:
             deps_dict = {
@@ -468,20 +466,18 @@ class Project:
                 True: self.tool_settings.setdefault("dev-dependencies", {}),
             }
             for deps in deps_dict.values():
-                if section in deps:
-                    return deps[section]
-            return deps_dict[dev].setdefault(section, [])
+                if group in deps:
+                    return deps[group]
+            return deps_dict[dev].setdefault(group, [])
 
     def add_dependencies(
         self,
         requirements: dict[str, Requirement],
-        to_section: str = "default",
+        to_group: str = "default",
         dev: bool = False,
         show_message: bool = True,
     ) -> None:
-        deps = self.get_pyproject_dependencies(
-            to_section, dev
-        ).multiline(  # type: ignore
+        deps = self.get_pyproject_dependencies(to_group, dev).multiline(  # type: ignore
             True
         )
         for _, dep in requirements.items():

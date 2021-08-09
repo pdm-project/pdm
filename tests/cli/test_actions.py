@@ -20,13 +20,13 @@ def test_remove_both_normal_and_editable_packages(project, is_dev):
         is_dev,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    section = (
+    group = (
         project.tool_settings["dev-dependencies"]["dev"]
         if is_dev
         else project.meta["dependencies"]
     )
     actions.do_remove(project, is_dev, packages=["demo"])
-    assert not section
+    assert not group
     assert "demo" not in project.locked_repository.all_candidates
 
 
@@ -178,7 +178,7 @@ def test_remove_package_not_exist(project):
 
 
 @pytest.mark.usefixtures("repository")
-def test_remove_package_exist_in_multi_section(project, working_set):
+def test_remove_package_exist_in_multi_groups(project, working_set):
     actions.do_add(project, packages=["requests"])
     actions.do_add(project, dev=True, packages=["urllib3"])
     actions.do_remove(project, dev=True, packages=["urllib3"])
@@ -200,10 +200,10 @@ def test_add_remove_no_package(project):
 
 
 @pytest.mark.usefixtures("repository", "working_set")
-def test_update_with_package_and_sections_argument(project):
+def test_update_with_package_and_groups_argument(project):
     actions.do_add(project, packages=["requests", "pytz"])
     with pytest.raises(PdmUsageError):
-        actions.do_update(project, sections=("default", "dev"), packages=("requests",))
+        actions.do_update(project, groups=("default", "dev"), packages=("requests",))
 
     with pytest.raises(PdmUsageError):
         actions.do_update(project, default=False, packages=("requests",))

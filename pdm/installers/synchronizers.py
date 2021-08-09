@@ -144,7 +144,7 @@ class Synchronizer:
                 key not in self.all_candidate_keys
                 and key not in self.SEQUENTIAL_PACKAGES
             ):
-                # Remove package only if it is not required by any section
+                # Remove package only if it is not required by any group
                 # Packages for packaging will never be removed
                 to_remove.append(key)
         to_add = list(

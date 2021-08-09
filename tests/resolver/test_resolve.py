@@ -184,7 +184,7 @@ def test_union_markers_from_different_parents(project, repository):
     assert not result["bar"].requires_python
 
 
-def test_requirements_from_different_sections(project, repository):
+def test_requirements_from_different_groups(project, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo", "0.2.0")
     requirements = ["foo", "foo<0.2.0"]

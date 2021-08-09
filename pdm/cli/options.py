@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
-from typing import Any
+from typing import Any, Callable
+
+from click import secho
 
 
 class Option:
@@ -55,6 +57,16 @@ class ArgumentGroup(Option):
         self.add_to_parser(group)
 
 
+def deprecated(message: str, type_: type = str) -> Callable[[Any], Any]:
+    """Prints deprecation message for the argument"""
+
+    def wrapped_type(obj: Any) -> Any:
+        secho(f"DEPRECATED: {message}", fg="red", err=True)
+        return type_(obj)
+
+    return wrapped_type
+
+
 verbose_option = Option(
     "-v",
     "--verbose",
@@ -94,24 +106,37 @@ install_group.add_argument(
     help="Don't install the project itself",
 )
 
-sections_group = ArgumentGroup("Dependencies selection")
-sections_group.add_argument(
+groups_group = ArgumentGroup("Dependencies selection")
+groups_group.add_argument(
     "-s",
     "--section",
-    dest="sections",
-    metavar="SECTION",
+    dest="groups",
+    metavar="GROUP",
     action="append",
-    help="Select section of optional-dependencies "
+    help="(DEPRECATED) alias of `--group`",
+    default=[],
+    type=deprecated(
+        "`-s/--section` is deprecated in favor of `-G/--groups` "
+        "and will be removed in the next minor release."
+    ),
+)
+groups_group.add_argument(
+    "-G",
+    "--group",
+    dest="groups",
+    metavar="GROUP",
+    action="append",
+    help="Select group of optional-dependencies "
     "or dev-dependencies(with -d). Can be supplied multiple times, "
     'use ":all" to include all groups under the same species.',
     default=[],
 )
-sections_group.add_argument(
+groups_group.add_argument(
     "--no-default",
     dest="default",
     action="store_false",
     default=True,
-    help="Don't include dependencies from default section",
+    help="Don't include dependencies from the default group",
 )
 
 dev_group = ArgumentGroup("dev", is_mutually_exclusive=True)
@@ -130,7 +155,7 @@ dev_group.add_argument(
     action="store_false",
     help="Unselect dev dependencies",
 )
-sections_group.options.append(dev_group)
+groups_group.options.append(dev_group)
 
 save_strategy_group = ArgumentGroup("save_strategy", is_mutually_exclusive=True)
 save_strategy_group.add_argument(

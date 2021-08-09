@@ -119,14 +119,14 @@ def setup_dependencies(project):
 )
 def test_dependency_group_selection(project, args, golden):
     setup_dependencies(project)
-    target = cli_utils.translate_sections(project, *args)
+    target = cli_utils.translate_groups(project, *args)
     assert sorted(golden) == sorted(target)
 
 
 def test_prod_should_not_be_with_dev(project):
     setup_dependencies(project)
     with pytest.raises(PdmUsageError):
-        cli_utils.translate_sections(project, True, False, ("test",))
+        cli_utils.translate_groups(project, True, False, ("test",))
 
 
 @pytest.mark.parametrize(

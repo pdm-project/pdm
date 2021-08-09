@@ -5,7 +5,7 @@ import click
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import install_group, sections_group
+from pdm.cli.options import groups_group, install_group
 from pdm.project import Project
 
 
@@ -13,7 +13,7 @@ class Command(BaseCommand):
     """Install dependencies from lock file"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        sections_group.add_to_parser(parser)
+        groups_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
         parser.add_argument(
             "--no-lock",
@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 actions.do_lock(project, strategy="reuse")
         actions.do_sync(
             project,
-            sections=options.sections,
+            groups=options.groups,
             dev=options.dev,
             default=options.default,
             no_editable=options.no_editable,
