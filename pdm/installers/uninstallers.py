@@ -123,6 +123,7 @@ class BaseRemovePaths(abc.ABC):
         self.envrionment = envrionment
         self._paths: set[str] = set()
         self._pth_entries: set[str] = set()
+        self.refer_to: str | None = None
 
     @abc.abstractmethod
     def remove(self) -> None:
@@ -274,10 +275,10 @@ class StashedRemovePaths(BaseRemovePaths):
         self._tempdirs.clear()
         self._stashed.clear()
         self._saved_pth = None
-        refer_to = getattr(self, "refer_to", None)
-        if refer_to:
-            termui.logger.debug("Unlink from cached package %s", refer_to)
-            CachedPackage(refer_to).remove_referrer(os.path.dirname(refer_to))
+        if self.refer_to:
+            termui.logger.debug("Unlink from cached package %s", self.refer_to)
+            CachedPackage(self.refer_to).remove_referrer(os.path.dirname(self.refer_to))
+            self.refer_to = None
 
     def rollback(self) -> None:
         if not self._stashed:
