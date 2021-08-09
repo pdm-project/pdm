@@ -10,11 +10,10 @@ from pdm.installers.installers import (
     install_wheel_with_cache,
 )
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
-from pdm.utils import is_dist_editable
+from pdm.utils import is_egg_link
 
 if TYPE_CHECKING:
-    from pip._vendor.pkg_resources import Distribution
-
+    from pdm._types import Distribution
     from pdm.models.candidates import Candidate
     from pdm.models.environment import Environment
 
@@ -22,8 +21,8 @@ if TYPE_CHECKING:
 def format_dist(dist: Distribution) -> str:
     formatter = "{version}{path}"
     path = ""
-    if is_dist_editable(dist):
-        path = f" (-e {dist.location})"
+    if is_egg_link(dist):
+        path = f" (-e {dist._path.parent})"  # type: ignore
     return formatter.format(version=termui.yellow(dist.version), path=path)
 
 

@@ -6,7 +6,6 @@ import pytest
 
 from pdm.cli import actions
 from pdm.exceptions import InvalidPyVersion, PdmException, PdmUsageError
-from pdm.models.pip_shims import FrozenRequirement
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 
@@ -283,10 +282,12 @@ def test_list_dependency_graph_with_circular_reverse(project, capsys, repository
 
 
 @pytest.mark.usefixtures("repository", "working_set")
-def test_freeze_dependencies_list(project, capsys, monkeypatch):
+def test_freeze_dependencies_list(project, capsys, mocker):
     actions.do_add(project, packages=["requests"])
     capsys.readouterr()
-    monkeypatch.setattr(FrozenRequirement, "from_dist", lambda d: d.as_req())
+    mocker.patch(
+        "pdm.cli.actions.frozen_requirement_from_dist", side_effect=lambda d: d.as_req()
+    )
     actions.do_list(project, freeze=True)
     content, _ = capsys.readouterr()
     assert "requests==2.19.1" in content
@@ -570,19 +571,6 @@ def test_update_ignore_constraints(project, repository):
 def test_init_validate_python_requires(project_no_init):
     with pytest.raises(ValueError):
         actions.do_init(project_no_init, python_requires="3.7")
-
-
-@pytest.mark.usefixtures("repository", "vcs")
-def test_editable_package_override_non_editable(project, working_set):
-    project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(
-        project, packages=["git+https://github.com/test-root/demo.git#egg=demo"]
-    )
-    actions.do_add(
-        project,
-        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
-    )
-    assert working_set["demo"].editable
 
 
 @pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")

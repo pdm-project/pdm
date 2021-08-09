@@ -10,16 +10,21 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMappi
 
 import atoml
 from packaging.specifiers import SpecifierSet
-from pip._vendor.pkg_resources import Distribution
 from resolvelib.structs import DirectedGraph
 
 from pdm import termui
+from pdm._types import Distribution
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
-from pdm.models.environment import WorkingSet
-from pdm.models.requirements import Requirement, strip_extras
+from pdm.models.requirements import (
+    Requirement,
+    filter_requirements_with_extras,
+    parse_requirement,
+    strip_extras,
+)
 from pdm.models.specifiers import get_specifier
+from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 
 if TYPE_CHECKING:
@@ -99,7 +104,7 @@ class Package:
     """An internal class for the convenience of dependency graph building."""
 
     def __init__(
-        self, name: str, version: str, requirements: dict[str, Requirement]
+        self, name: str, version: str | None, requirements: dict[str, Requirement]
     ) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
@@ -117,24 +122,27 @@ class Package:
         return self.name == value.name
 
 
-def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
+def build_dependency_graph(
+    working_set: WorkingSet, marker_env: dict[str, str] | None = None
+) -> DirectedGraph:
     """Build a dependency graph from locked result."""
     graph: DirectedGraph[Package | None] = DirectedGraph()
     graph.add(None)  # sentinel parent of top nodes.
-    node_with_extras = set()
+    node_with_extras: set[str] = set()
 
-    def add_package(key: str, dist: Distribution) -> Package:
+    def add_package(key: str, dist: Distribution | None) -> Package:
         name, extras = strip_extras(key)
         extras = extras or ()
         reqs: dict[str, Requirement] = {}
         if dist:
             requirements = (
-                Requirement.from_pkg_requirement(r)
-                for r in dist.requires(extras)  # type: ignore
+                parse_requirement(r)
+                for r in filter_requirements_with_extras(dist.requires or [], extras)
             )
             for req in requirements:
-                reqs[req.identify()] = req
-            version = dist.version
+                if not req.marker or req.marker.evaluate(marker_env):
+                    reqs[req.identify()] = req
+            version: str | None = dist.version
         else:
             version = None
 
@@ -145,9 +153,7 @@ def build_dependency_graph(working_set: WorkingSet) -> DirectedGraph:
             graph.add(node)
 
             for k in reqs:
-                child = add_package(
-                    k, cast(Distribution, working_set.get(strip_extras(k)[0]))
-                )
+                child = add_package(k, working_set.get(strip_extras(k)[0]))
                 graph.connect(node, child)
 
         return node
@@ -581,3 +587,17 @@ def merge_dictionary(
             target[key].update(value)
         elif isinstance(value, list):
             target[key].extend(atoml.item(v) for v in value)
+
+
+def frozen_requirement_from_dist(dist: Distribution) -> str:
+    """Get the requirement line from a distribution"""
+    from pip._vendor.pkg_resources import distributions_from_metadata
+
+    from pdm.models.pip_shims import FrozenRequirement
+
+    dist_path = str(dist._path)  # type: ignore
+    try:
+        pkg_dist = next(distributions_from_metadata(dist_path))
+    except StopIteration:
+        raise TypeError(f"Not a valid distribution metadata: {dist_path}")
+    return str(FrozenRequirement.from_dist(pkg_dist))

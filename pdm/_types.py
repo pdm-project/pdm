@@ -2,8 +2,10 @@ import sys
 from typing import Dict, List, NamedTuple, Tuple, Union
 
 if sys.version_info >= (3, 8):
+    from importlib.metadata import Distribution
     from typing import Literal, Protocol, TypedDict
 else:
+    from importlib_metadata import Distribution
     from typing_extensions import Literal, Protocol, TypedDict
 
 
@@ -30,6 +32,7 @@ __all__ = (
     "Source",
     "RequirementDict",
     "CandidateInfo",
+    "Distribution",
     "Package",
     "SearchResult",
     "Protocol",

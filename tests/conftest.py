@@ -14,7 +14,6 @@ import pytest
 from click.testing import CliRunner
 from pip._internal.vcs import versioncontrol
 from pip._vendor import requests
-from pip._vendor.pkg_resources import WorkingSet
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
@@ -153,21 +152,25 @@ main.project_class = TestProject
 
 class Distribution:
     def __init__(self, key, version, editable=False):
-        self.key = self.project_name = key
         self.version = version
-        self.editable = editable
+        self.link_file = "editable" if editable else None
         self.dependencies = []
+        self.metadata = {"Name": key}
+
+    @property
+    def key(self):
+        return self.metadata["Name"]
 
     def as_req(self):
         return f"{self.key}=={self.version}\n"
 
-    def requires(self, extras=()):
+    @property
+    def requires(self):
         return self.dependencies
 
 
 class MockWorkingSet(collections.abc.MutableMapping):
     def __init__(self, *args, **kwargs):
-        self.pkg_ws = WorkingSet([])
         self._data = {}
 
     def add_distribution(self, dist):
@@ -191,17 +194,15 @@ class MockWorkingSet(collections.abc.MutableMapping):
 
 @pytest.fixture()
 def working_set(mocker, repository):
-    from pdm.models.pip_shims import pip_logging
 
     rv = MockWorkingSet()
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate):
-        pip_logging._log_state.indentation = 0
         dependencies = repository.get_dependencies(candidate)[0]
         key = normalize_name(candidate.name)
         dist = Distribution(key, candidate.version, candidate.req.editable)
-        dist.dependencies = dependencies
+        dist.dependencies = [dep.as_line() for dep in dependencies]
         rv.add_distribution(dist)
 
     def uninstall(dist):

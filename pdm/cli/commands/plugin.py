@@ -14,7 +14,7 @@ from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
 from pdm.models.environment import WorkingSet
 from pdm.project import Project
-from pdm.utils import safe_name
+from pdm.utils import normalize_name
 
 if sys.version_info >= (3, 8):
     import importlib.metadata as importlib_metadata
@@ -28,7 +28,7 @@ def _all_plugins() -> list[str]:
     result: set[str] = set()
     for dist in importlib_metadata.distributions():
         if any(ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points):
-            result.add(safe_name(dist.metadata["Name"]).lower())
+            result.add(normalize_name(dist.metadata["Name"]))
     return sorted(result)
 
 
@@ -144,7 +144,7 @@ class RemoveCommand(BaseCommand):
         while to_resolve:
             temp: list[Package] = []
             for name in to_resolve:
-                key = safe_name(name).lower()
+                key = normalize_name(name)
                 if key in ws:
                     result.add(key)
                 package = Package(key, "0.0.0", {})
@@ -163,9 +163,7 @@ class RemoveCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         plugins = _all_plugins()
-        valid_packages = [
-            p for p in options.packages if safe_name(p).lower() in plugins
-        ]
+        valid_packages = [p for p in options.packages if normalize_name(p) in plugins]
         packages_to_remove = self._resolve_dependencies_to_remove(valid_packages)
         if not packages_to_remove:
             project.core.ui.echo("No package to remove.", err=True)

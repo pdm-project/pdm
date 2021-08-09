@@ -71,7 +71,20 @@ def test_add_editable_package(project, working_set, is_dev):
     assert "idna" in working_set
 
     actions.do_sync(project, no_editable=True)
-    assert not working_set["demo"].editable
+    assert not working_set["demo"].link_file
+
+
+@pytest.mark.usefixtures("repository", "vcs")
+def test_editable_package_override_non_editable(project, working_set):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    actions.do_add(
+        project, packages=["git+https://github.com/test-root/demo.git#egg=demo"]
+    )
+    actions.do_add(
+        project,
+        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
+    )
+    assert working_set["demo"].link_file
 
 
 @pytest.mark.usefixtures("repository", "working_set")

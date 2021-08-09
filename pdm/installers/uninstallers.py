@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import csv
 import glob
 import os
 import shutil
@@ -9,25 +8,14 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterable, Type, TypeVar, cast
 
-from pip._vendor import pkg_resources
-
 from pdm import termui
+from pdm._types import Distribution
 from pdm.exceptions import UninstallError
 from pdm.installers.packages import CachedPackage
 from pdm.models.environment import Environment
-from pdm.utils import is_dist_editable
+from pdm.utils import is_egg_link
 
 _T = TypeVar("_T", bound="BaseRemovePaths")
-
-
-def get_egg_link_path(
-    dist: pkg_resources.Distribution, site_packages: str
-) -> str | None:
-    """Find the .egg-link file for the editable distribution"""
-    egglink = os.path.join(site_packages, dist.project_name) + ".egg-link"
-    if os.path.isfile(egglink):
-        return egglink
-    return None
 
 
 def renames(old: str, new: str) -> None:
@@ -116,9 +104,7 @@ def _get_file_root(path: str, base: str) -> str | None:
 class BaseRemovePaths(abc.ABC):
     """A collection of paths and/or pth entries to remove"""
 
-    def __init__(
-        self, dist: pkg_resources.Distribution, envrionment: Environment
-    ) -> None:
+    def __init__(self, dist: Distribution, envrionment: Environment) -> None:
         self.dist = dist
         self.envrionment = envrionment
         self._paths: set[str] = set()
@@ -136,54 +122,54 @@ class BaseRemovePaths(abc.ABC):
         """Roll back the removal operations"""
 
     @classmethod
-    def from_dist(
-        cls: Type[_T], dist: pkg_resources.Distribution, envrionment: Environment
-    ) -> _T:
+    def from_dist(cls: Type[_T], dist: Distribution, envrionment: Environment) -> _T:
         """Create an instance from the distribution"""
         scheme = envrionment.get_paths()
         instance = cls(dist, envrionment)
-        if is_dist_editable(dist):
-            egg_link_path = get_egg_link_path(dist, scheme["purelib"])
+        meta_location = os.path.normcase(dist._path.absolute())  # type: ignore
+        dist_location = os.path.dirname(meta_location)
+        if is_egg_link(dist):
+            egg_link_path = cast("Path | None", getattr(dist, "link_file", None))
             if not egg_link_path:
                 termui.logger.warn(
                     "No egg link is found for editable distribution %s, do nothing.",
-                    dist.project_name,
+                    dist.metadata["Name"],
                 )
             else:
-                link_pointer = os.path.normcase(next(open(egg_link_path)).strip())
-                if link_pointer != dist.location:
+                link_pointer = os.path.normcase(
+                    egg_link_path.open("rb").readline().decode().strip()
+                )
+                if link_pointer != dist_location:
                     raise UninstallError(
                         f"The link pointer in {egg_link_path} doesn't match "
-                        f"the location of {dist.project_name}(at {dist.location}"
+                        f"the location of {dist.metadata['Name']}(at {dist_location}"
                     )
-                instance.add_path(egg_link_path)
+                instance.add_path(str(egg_link_path))
                 instance.add_pth(link_pointer)
-        else:
-            records = csv.reader(dist.get_metadata_lines("RECORD"))
-            for filename, *_ in records:
-                location = os.path.join(dist.location, filename)
-                instance.add_path(location)
+        elif dist.files:
+            for file in dist.files:
+                location = dist.locate_file(file)
+                instance.add_path(str(location))
                 bare_name, ext = os.path.splitext(location)
                 if ext == ".py":
                     # .pyc files are added by add_path()
                     instance.add_path(bare_name + ".pyo")
 
         bin_dir = scheme["scripts"]
-        if dist.has_metadata("scripts") and dist.metadata_isdir("scripts"):
-            for script in dist.metadata_listdir("scripts"):
+
+        if os.path.isdir(os.path.join(meta_location, "scripts")):
+            for script in os.listdir(os.path.join(meta_location, "scripts")):
                 instance.add_path(os.path.join(bin_dir, script))
                 if os.name == "nt":
                     instance.add_path(os.path.join(bin_dir, script) + ".bat")
 
         # find console_scripts
         _scripts_to_remove: list[str] = []
-        console_scripts = cast(dict, dist.get_entry_map(group="console_scripts"))
-        for name in console_scripts:
-            _scripts_to_remove.extend(_script_names(name, False))
-        # find gui_scripts
-        gui_scripts = dist.get_entry_map(group="gui_scripts")
-        for name in gui_scripts:
-            _scripts_to_remove.extend(_script_names(name, True))
+        for ep in dist.entry_points:
+            if ep.group == "console_scripts":
+                _scripts_to_remove.extend(_script_names(ep.name, False))
+            elif ep.group == "gui_scripts":
+                _scripts_to_remove.extend(_script_names(ep.name, True))
 
         for s in _scripts_to_remove:
             instance.add_path(os.path.join(bin_dir, s))
@@ -208,9 +194,7 @@ class StashedRemovePaths(BaseRemovePaths):
 
     PTH_REGISTRY = "easy-install.pth"
 
-    def __init__(
-        self, dist: pkg_resources.Distribution, environment: Environment
-    ) -> None:
+    def __init__(self, dist: Distribution, environment: Environment) -> None:
         super().__init__(dist, environment)
         self._pth_file = os.path.join(
             self.envrionment.get_paths()["purelib"], self.PTH_REGISTRY

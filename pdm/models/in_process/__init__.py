@@ -8,7 +8,7 @@ import platform
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 FOLDER_PATH = Path(__file__).parent
 
@@ -45,7 +45,7 @@ def get_sys_config_paths(
         return json.loads(subprocess.check_output(args, env=env))
 
 
-def get_pep508_environment(executable: str) -> Dict[str, Any]:
+def get_pep508_environment(executable: str) -> Dict[str, str]:
     """Get PEP 508 environment markers dict."""
     script = str(FOLDER_PATH / "pep508.py")
     args = [executable, "-Es", script]
