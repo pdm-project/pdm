@@ -47,7 +47,7 @@ class EgglinkFinder(im.DistributionFinder):
                 if Path(path).joinpath(f"{name}.egg-link").is_file():
                     yield Path(path).joinpath(f"{name}.egg-link")
             else:
-                return Path(path).glob("*.egg-link")
+                yield from Path(path).glob("*.egg-link")
 
 
 def distributions(path: list[str]) -> Iterable[im.Distribution]:
@@ -87,3 +87,6 @@ class WorkingSet(Mapping[str, im.Distribution]):
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._dist_map)
+
+    def __repr__(self) -> str:
+        return repr(self._dist_map)
