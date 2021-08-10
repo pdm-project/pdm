@@ -12,10 +12,11 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 import tomli
 from pep517.wrappers import Pep517HookCaller
-from pip._vendor.pkg_resources import Requirement, VersionConflict, WorkingSet
 
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_sys_config_paths
+from pdm.models.requirements import parse_requirement
+from pdm.models.working_set import WorkingSet
 from pdm.termui import logger
 from pdm.utils import create_tracked_tempdir, prepare_pip_source_args
 
@@ -216,10 +217,12 @@ class EnvBuilder:
         if reqs:
             ws = WorkingSet(self._prefix.lib_dirs)
             for req in reqs:
-                try:
-                    if ws.find(Requirement.parse(req)) is None:
-                        missing.add(req)
-                except VersionConflict:
+                parsed_req = parse_requirement(req)
+                if parsed_req.identify() not in ws:
+                    missing.add(req)
+                elif parsed_req.specifier and not parsed_req.specifier.contains(
+                    ws[parsed_req.identify()].version, prereleases=True
+                ):
                     conflicting.add(req)
         if conflicting:
             raise BuildError(f"Conflicting requirements: {', '.join(conflicting)}")

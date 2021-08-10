@@ -7,15 +7,14 @@ from concurrent.futures._base import Future
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from pip._vendor.pkg_resources import Distribution
-
 from pdm import termui
+from pdm._types import Distribution
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import strip_extras
-from pdm.utils import is_dist_editable
+from pdm.utils import is_egg_link
 
 
 class DummyFuture:
@@ -136,7 +135,7 @@ class Synchronizer:
                 can = candidates.pop(key)
                 if (
                     can.req.editable
-                    or is_dist_editable(dist)
+                    or is_egg_link(dist)
                     or (dist.version != can.version)
                 ):
                     to_update.append(key)
@@ -150,7 +149,7 @@ class Synchronizer:
         to_add = list(
             {
                 strip_extras(name)[0]
-                for name, can in candidates.items()
+                for name, _ in candidates.items()
                 if name != self.self_key and strip_extras(name)[0] not in working_set
             }
         )
@@ -178,6 +177,7 @@ class Synchronizer:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[strip_extras(key)[0]]
+        dist_version = dist.version
         with self.ui.open_spinner(
             f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
             f"-> {termui.yellow(can.version)}..."
@@ -188,14 +188,14 @@ class Synchronizer:
             except Exception:
                 spinner.fail(
                     f"Update {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(dist_version)} -> "
                     f"{termui.yellow(can.version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
                     f"Update {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(dist_version)} -> "
                     f"{termui.yellow(can.version)} successful"
                 )
         return dist, can
@@ -203,6 +203,7 @@ class Synchronizer:
     def remove_distribution(self, key: str) -> Distribution:
         """Remove distributions with given names."""
         dist = self.working_set[key]
+        dist_version = dist.version
         with self.ui.open_spinner(
             f"Removing {termui.green(key, bold=True)} {termui.yellow(dist.version)}..."
         ) as spinner:
@@ -211,13 +212,13 @@ class Synchronizer:
             except Exception:
                 spinner.fail(
                     f"Remove {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} failed"
+                    f"{termui.yellow(dist_version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
                     f"Remove {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} successful"
+                    f"{termui.yellow(dist_version)} successful"
                 )
         return dist
 
@@ -258,7 +259,7 @@ class Synchronizer:
             lines.append(termui.bold("Packages to remove:"))
             for dist in to_remove:
                 lines.append(
-                    f"  - {termui.green(dist.key, bold=True)} "
+                    f"  - {termui.green(dist.metadata['Name'], bold=True)} "
                     f"{termui.yellow(dist.version)}"
                 )
         if lines:

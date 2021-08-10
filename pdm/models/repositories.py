@@ -110,37 +110,33 @@ class BaseRepository:
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
         requires_python = requires_python & requirement.requires_python
-        cans = list(self._find_candidates(requirement))
-        sorted_cans = sorted(
-            (
-                c
-                for c in cans
-                if requirement.specifier.contains(  # type: ignore
-                    c.version, allow_prereleases  # type: ignore
-                )
-                and (allow_all or requires_python.is_subset(c.requires_python))
-            ),
+        cans = sorted(
+            self._find_candidates(requirement),
             key=lambda c: (parse_version(c.version), c.link.is_wheel),  # type: ignore
             reverse=True,
         )
+        applicable_cans = [
+            c
+            for c in cans
+            if requirement.specifier.contains(  # type: ignore
+                c.version, allow_prereleases  # type: ignore
+            )
+            and (allow_all or requires_python.is_subset(c.requires_python))
+        ]
 
-        if not sorted_cans:
+        if not applicable_cans:
             termui.logger.debug("\tCould not find any matching candidates.")
 
-        if not sorted_cans and allow_prereleases is None:
+        if not applicable_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
-            sorted_cans = sorted(
-                (
-                    c
-                    for c in cans
-                    if requirement.specifier.contains(c.version, True)  # type: ignore
-                    and (allow_all or requires_python.is_subset(c.requires_python))
-                ),
-                key=lambda c: c.version,  # type: ignore
-                reverse=True,
-            )
+            applicable_cans = [
+                c
+                for c in cans
+                if requirement.specifier.contains(c.version, True)  # type: ignore
+                and (allow_all or requires_python.is_subset(c.requires_python))
+            ]
 
-            if not sorted_cans:
+            if not applicable_cans:
                 termui.logger.debug(
                     "\tCould not find any matching candidates even when considering "
                     "pre-releases.",
@@ -163,12 +159,12 @@ class BaseRepository:
                     else:
                         termui.logger.debug(new_line)
 
-        if sorted_cans:
-            print_candidates("Found matching candidates:", sorted_cans)
+        if applicable_cans:
+            print_candidates("Found matching candidates:", applicable_cans)
         elif cans:
             print_candidates("Found but non-matching candidates:", cans)
 
-        return sorted_cans
+        return applicable_cans
 
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
         try:

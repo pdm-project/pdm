@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import collections
 import os
 import shlex
 import shutil
@@ -9,9 +8,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator, Iterator
-
-from pip._vendor import packaging, pkg_resources
+from typing import TYPE_CHECKING, Generator
 
 from pdm import termui
 from pdm.exceptions import BuildError
@@ -22,6 +19,7 @@ from pdm.models.in_process import (
     get_python_abi_tag,
     get_sys_config_paths,
 )
+from pdm.models.working_set import WorkingSet
 from pdm.utils import cached_property, get_finder, pdm_scheme
 
 if TYPE_CHECKING:
@@ -41,40 +39,6 @@ def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
     if is_launcher or " " not in executable and (len(executable) + 3) <= 127:
         return executable.encode("utf-8")
     return shlex.quote(executable).encode("utf-8")
-
-
-class WorkingSet(collections.abc.Mapping):
-    """A dict-like class that holds all installed packages in the lib directory."""
-
-    def __init__(
-        self,
-        paths: list[str] | None = None,
-        python: str = pkg_resources.PY_MAJOR,
-    ):
-        self.env = pkg_resources.Environment(paths, python=python)
-        self.pkg_ws = pkg_resources.WorkingSet(paths)
-        self.__add_editable_dists()
-
-    def __getitem__(self, key: str) -> pkg_resources.Distribution:
-        rv = self.env[key]
-        if rv:
-            return rv[0]
-        else:
-            raise KeyError(key)
-
-    def __len__(self) -> int:
-        return len(self.env._distmap)
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self.env)
-
-    def __add_editable_dists(self) -> None:
-        """Editable distributions are not present in pkg_resources.WorkingSet,
-        Get them from self.env
-        """
-        missing_keys = [key for key in self if key not in self.pkg_ws.by_key]
-        for key in missing_keys:
-            self.pkg_ws.add(self[key])
 
 
 class Environment:
@@ -97,26 +61,6 @@ class Environment:
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
         return pdm_scheme(str(self.packages_path))
-
-    @contextmanager
-    def activate(self) -> Iterator:
-        """A context manager to activate the environment.
-        This is only used to patch the evaluate_marker method inside pkg_resources.
-
-        TODO: TO BE REFACTORED
-        """
-        working_set = self.get_working_set()
-        _old_ws = pkg_resources.working_set
-        pkg_resources.working_set = working_set.pkg_ws  # type: ignore
-        _evaluate_marker = pkg_resources.evaluate_marker
-        pkg_resources.evaluate_marker = self.evaluate_marker
-        yield
-        pkg_resources.evaluate_marker = _evaluate_marker
-        pkg_resources.working_set = _old_ws
-
-    def evaluate_marker(self, text: str, extra: Any = None) -> bool:
-        marker = packaging.markers.Marker(text)
-        return marker.evaluate(self.marker_environment)
 
     @cached_property
     def packages_path(self) -> Path:
@@ -169,13 +113,10 @@ class Environment:
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
         paths = self.get_paths()
-        return WorkingSet(
-            [paths["platlib"], paths["purelib"]],
-            python=f"{self.interpreter.major}.{self.interpreter.minor}",
-        )
+        return WorkingSet([paths["platlib"], paths["purelib"]])
 
     @cached_property
-    def marker_environment(self) -> dict[str, Any]:
+    def marker_environment(self) -> dict[str, str]:
         """Get environment for marker evaluation"""
         return get_pep508_environment(self.interpreter.executable)
 

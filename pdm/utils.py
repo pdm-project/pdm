@@ -30,10 +30,9 @@ from typing import (
 )
 
 from pip._vendor.packaging.tags import Tag
-from pip._vendor.pkg_resources import Distribution, EggInfoDistribution, safe_name
 from pip._vendor.requests import Session
 
-from pdm._types import Source
+from pdm._types import Distribution, Source
 from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,
@@ -478,11 +477,11 @@ def get_rev_from_url(url: str) -> str:
 
 
 def normalize_name(name: str) -> str:
-    return safe_name(name).lower()  # type: ignore
+    return re.sub(r"[^A-Za-z0-9.]+", "-", name).lower()
 
 
-def is_dist_editable(dist: Distribution) -> bool:
-    return isinstance(dist, EggInfoDistribution) or getattr(dist, "editable", False)
+def is_egg_link(dist: Distribution) -> bool:
+    return getattr(dist, "link_file", None) is not None
 
 
 def pdm_scheme(base: str) -> dict[str, str]:

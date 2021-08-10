@@ -20,6 +20,7 @@ from pdm.cli.utils import (
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
+    frozen_requirement_from_dist,
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
@@ -30,7 +31,6 @@ from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.installers.manager import format_dist
 from pdm.models.candidates import Candidate
-from pdm.models.pip_shims import FrozenRequirement
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
@@ -377,8 +377,9 @@ def do_list(
     check_project_file(project)
     working_set = project.environment.get_working_set()
     if graph:
-        with project.environment.activate():
-            dep_graph = build_dependency_graph(working_set)
+        dep_graph = build_dependency_graph(
+            working_set, project.environment.marker_environment
+        )
         project.core.ui.echo(
             format_dependency_graph(project, dep_graph, reverse=reverse, json=json)
         )
@@ -389,8 +390,10 @@ def do_list(
             raise PdmUsageError("--json must be used with --graph")
         if freeze:
             reqs = [
-                str(FrozenRequirement.from_dist(dist))
-                for dist in sorted(working_set.values(), key=lambda d: d.project_name)
+                frozen_requirement_from_dist(dist)
+                for dist in sorted(
+                    working_set.values(), key=lambda d: d.metadata["Name"]
+                )
             ]
             project.core.ui.echo("".join(reqs))
             return
