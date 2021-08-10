@@ -32,17 +32,17 @@ PDM requires python version 3.7 or higher.
 
 Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
 
-**For Linux/Mac**
+=== "Linux/Mac"
 
-```bash
-curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python -
-```
+    ```bash
+    $ curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python -
+    ```
 
-**For Windows**
+=== "Windows"
 
-```powershell
-(Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
-```
+    ```powershell
+    PS> (Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
+    ```
 
 The installer will install PDM into the user site and the location depends on the system:
 
@@ -69,39 +69,39 @@ You can either pass the options after the script or set the env var value.
 
 ### Other installation methods
 
-If your are on MacOS and using `homebrew`, install it by:
+=== "Homebrew"
 
-```bash
-$ brew install pdm
-```
+    ```bash
+    $ brew install pdm
+    ```
 
-If you are on Windows and using [Scoop](https://scoop.sh/), install it by:
+=== "Scoop"
 
-```
-PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
-PS> scoop install pdm
-```
+    ```
+    PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+    PS> scoop install pdm
+    ```
 
-Otherwise, to avoid messing up with the system Python environment, the most recommended way to install PDM
-is via [pipx](https://pypi.org/project/pipx):
+=== "pipx"
 
-```console
-$ pipx install pdm
-```
+    ```bash
+    $ pipx install pdm
+    ```
 
-Or you can install PDM into the user site with `pip`:
+    Install the head version of GitHub repository.
+    Make sure you have installed [Git LFS](https://git-lfs.github.com/) on your system.
 
-```console
-$ pip install --user pdm
-```
+    ```bash
+    $ pipx install git+https://github.com/pdm-project/pdm.git@main#egg=pdm
+    ```
 
-Install the head version of GitHub repository:
+    See also: <https://pypa.github.io/pipx/>
 
-```console
-$ pipx install git+https://github.com/pdm-project/pdm.git@main#egg=pdm
-```
+=== "pip"
 
-Make sure you have installed [Git LFS](https://git-lfs.github.com/) on your system.
+    ```console
+    $ pip install --user pdm
+    ```
 
 ### Enable PEP 582 globally
 
@@ -144,34 +144,48 @@ CMD ["pdm", "run", "python", "main.py"]
 
 PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. Here are some common locations for each shell:
 
-```bash
-# Bash
-$ pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+=== "Bash"
 
-# Zsh
-# Make sure ~/.zfunc is added to fpath, before compinit.
-$ pdm completion zsh > ~/.zfunc/_pdm
+    ```bash
+    $ pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+    ```
 
-# Oh-My-Zsh
-$ mkdir $ZSH_CUSTOM/plugins/pdm
-$ pdm completion zsh > $ZSH_CUSTOM/plugins/pdm/_pdm
-# Then make sure pdm plugin is enabled in ~/.zshrc
+=== "Zsh"
 
-# Fish
-$ pdm completion fish > ~/.config/fish/completions/pdm.fish
+    ```bash
+    # Make sure ~/.zfunc is added to fpath, before compinit.
+    $ pdm completion zsh > ~/.zfunc/_pdm
+    ```
 
-# Powershell
-# Create a directory to store completion scripts
-PS > mkdir $PROFILE\..\Completions
-PS > echo @'
-Get-ChildItem "$PROFILE\..\Completions\" | ForEach-Object {
-    . $_.FullName
-}
-'@ | Out-File -Append -Encoding utf8 $PROFILE
-# Generate script
-PS > Set-ExecutionPolicy Unrestricted -Scope CurrentUser
-PS > pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
-```
+    Oh-My-Zsh:
+
+    ```bash
+    $ mkdir $ZSH_CUSTOM/plugins/pdm
+    $ pdm completion zsh > $ZSH_CUSTOM/plugins/pdm/_pdm
+    ```
+
+    Then make sure pdm plugin is enabled in ~/.zshrc
+
+=== "Fish"
+
+    ```bash
+    $ pdm completion fish > ~/.config/fish/completions/pdm.fish
+    ```
+
+=== "Powershell"
+
+    ```ps1
+    # Create a directory to store completion scripts
+    PS > mkdir $PROFILE\..\Completions
+    PS > echo @'
+    Get-ChildItem "$PROFILE\..\Completions\" | ForEach-Object {
+        . $_.FullName
+    }
+    '@ | Out-File -Append -Encoding utf8 $PROFILE
+    # Generate script
+    PS > Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+    PS > pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
+    ```
 
 ## Unicode and ANSI supports
 
