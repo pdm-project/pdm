@@ -22,3 +22,11 @@ def test_basic_integration(python_version, project_no_init, invoke):
     assert not any(
         line.strip().lower().startswith("django") for line in result.output.splitlines()
     )
+
+
+@pytest.mark.integration
+def test_actual_list_freeze(project, invoke):
+    project.meta["requires-python"] = ">=3.6"
+    invoke(["add", "click==7.1.2"], obj=project, strict=True)
+    r = invoke(["list", "--freeze"], obj=project)
+    assert "click==7.1.2" in r.output
