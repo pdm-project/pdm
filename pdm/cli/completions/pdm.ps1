@@ -190,7 +190,7 @@ function TabExpansion($line, $lastWord) {
         $command = $commands[0]
         $completer = [Completer]::new()
         $completer.AddOpts(([Option]::new(("-h", "--help", "-v", "--verbose"))))
-        $sectionOption = [Option]::new(@("-s", "--section")).WithValues(@(getSections))
+        $sectionOption = [Option]::new(@("-G", "--group")).WithValues(@(getSections))
         $projectOption = [Option]::new(@("-p", "--project")).WithValues(@())
         $formatOption = [Option]::new(@("-f", "--format")).WithValues(@("setuppy", "requirements", "poetry", "flit"))
 
@@ -273,7 +273,7 @@ function TabExpansion($line, $lastWord) {
             "list" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--graph", "--global", "-g", "--reverse", "-r", "--freeze")),
+                        [Option]::new(@("--graph", "--global", "-g", "--reverse", "-r", "--freeze", "--json")),
                         $projectOption
                     ))
                 break

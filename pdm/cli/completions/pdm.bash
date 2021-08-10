@@ -29,7 +29,7 @@ _pdm_25182a7ef85b840e_complete()
         case "$com" in
 
             (add)
-            opts="--dev --editable --global --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --section --unconstrained --update-eager --update-reuse --verbose"
+            opts="--dev --editable --global --group --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --unconstrained --update-eager --update-reuse --verbose"
             ;;
 
             (build)
@@ -49,11 +49,11 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (export)
-            opts="--dev --format --global --help --no-default --output --production --project --pyproject --section --verbose --without-hashes"
+            opts="--dev --format --global --group --help --no-default --output --production --project --pyproject --verbose --without-hashes"
             ;;
 
             (import)
-            opts="--dev --format --global --help --project --section --verbose"
+            opts="--dev --format --global --group --help --project --verbose"
             ;;
 
             (info)
@@ -65,11 +65,11 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (install)
-            opts="--dev --global --help --no-default --no-editable --no-lock --no-self --production --project --section --verbose"
+            opts="--dev --global --group --help --no-default --no-editable --no-lock --no-self --production --project --verbose"
             ;;
 
             (list)
-            opts="--freeze --global --graph --help --project --reverse --verbose"
+            opts="--freeze --global --graph --help --json --project --reverse --verbose"
             ;;
 
             (lock)
@@ -81,7 +81,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (remove)
-            opts="--dev --global --help --no-editable --no-self --no-sync --project --section --verbose"
+            opts="--dev --global --group --help --no-editable --no-self --no-sync --project --verbose"
             ;;
 
             (run)
@@ -97,11 +97,11 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --global --help --no-clean --no-default --no-editable --no-self --production --project --section --verbose"
+            opts="--clean --dev --dry-run --global --group --help --no-clean --no-default --no-editable --no-self --production --project --verbose"
             ;;
 
             (update)
-            opts="--dev --global --help --no-default --no-editable --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --section --top --unconstrained --update-eager --update-reuse --verbose"
+            opts="--dev --global --group --help --no-default --no-editable --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --top --unconstrained --update-eager --update-reuse --verbose"
             ;;
 
             (use)

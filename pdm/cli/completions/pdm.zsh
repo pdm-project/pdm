@@ -57,7 +57,7 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-d,--dev}'[Add packages into dev dependencies]'
-        {-s+,--section+}'[Specify target section to add into]:section:_pdm_sections'
+        {-G,--group}'[Specify the target dependency group to add into]:group:_pdm_groups'
         '--no-sync[Only write pyproject.toml and do not sync the working set]'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
@@ -131,10 +131,10 @@ _pdm() {
         {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements setuppy)"
         "--without-hashes[Don't include artifact hashes]"
         {-o+,--output+}"[Write output to the given file, or print to stdout if not given]:output file:_files"
-        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
-        "--no-default[Don't include dependencies from default section]"
+        "--no-default[Don't include dependencies from the default group]"
       )
       ;;
     import)
@@ -162,11 +162,11 @@ _pdm() {
     install)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
-        "--no-default[Don't include dependencies from default section]"
+        "--no-default[Don\'t include dependencies from the default group]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
       )
@@ -175,6 +175,7 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-r,--reverse}'[Reverse the dependency graph]'
+        '--json[Show the installed dependencies in JSON document format]'
         '--graph[Display a graph of dependencies]'
         "--freeze[Show the installed dependencies as pip's requirements.txt format]"
       )
@@ -223,7 +224,7 @@ _pdm() {
     remove)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-s+,--section+}'[Specify the section the package belongs to]:section:_pdm_sections'
+        {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editalbe[Install non-editable versions for all packages]'
@@ -265,13 +266,13 @@ _pdm() {
     sync)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         '--dry-run[Only prints actions without actually running them]'
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
-        "--no-default[Don't include dependencies from default section]"
+        "--no-default[Don\'t include dependencies from the default group]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
       )
@@ -279,7 +280,7 @@ _pdm() {
     update)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-s+,--section+}'[(MULTIPLE) Specify section(s) of optional-dependencies or dev-dependencies(with -d)]:section:_pdm_sections'
+        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
@@ -290,7 +291,7 @@ _pdm() {
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-d,--dev}'[Select dev dependencies]'
         {--prod,--production}"[Unselect dev dependencies]"
-        "--no-default[Don't include dependencies from default section]"
+        "--no-default[Don\'t include dependencies from the default group]"
         {-t,--top}'[Only update those list in pyproject.toml]'
         "--dry-run[Show the difference only without modifying the lockfile content]"
         "--outdated[Show the difference only without modifying the lockfile content]"
@@ -310,25 +311,25 @@ _pdm() {
   return ret
 }
 
-_pdm_sections() {
+_pdm_groups() {
   if [[ ! -f pyproject.toml ]]; then
     _message "not a pdm project"
     return 1
   fi
-  local l sections=() in_sections=0
+  local l groups=() in_groups=0
   while IFS= read -r l; do
     case $l in
-      "["project.optional-dependencies"]") in_sections=1 ;;
-      "["tool.pdm.dev-dependencies"]") in_sections=1 ;;
-      "["*"]") in_sections=0 ;;
+      "["project.optional-dependencies"]") in_groups=1 ;;
+      "["tool.pdm.dev-dependencies"]") in_groups=1 ;;
+      "["*"]") in_groups=0 ;;
       *"= [")
-        if (( in_sections )); then
-          sections+=$l[(w)1]
+        if (( in_groups )); then
+          groups+=$l[(w)1]
         fi
         ;;
     esac
   done <pyproject.toml
-  compadd -X sections -a sections
+  compadd -X groups -a groups
 }
 
 _get_packages_with_python() {
