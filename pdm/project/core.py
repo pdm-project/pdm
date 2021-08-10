@@ -565,7 +565,7 @@ dependencies = ["pip", "setuptools", "wheel"]
                 if os.path.exists(pyenv_shim):
                     yield PythonInfo.from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim[:-1]):
-                    yield PythonInfo.from_path(pyenv_shim)
+                    yield PythonInfo.from_path(pyenv_shim[:-1])
             if config.get("use_venv"):
                 python = get_in_project_venv_python(self.root)
                 if python:
