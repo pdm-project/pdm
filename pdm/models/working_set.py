@@ -22,12 +22,14 @@ class EgglinkFinder(im.DistributionFinder):
         cls, context: im.DistributionFinder.Context = default_context
     ) -> Iterable[im.Distribution]:
         found_links = cls._search_paths(context.name, context.path)
+        # For Py3.7 compatibility, handle both classmethod and instance method
+        meta_finder = im.MetadataPathFinder()
         for link in found_links:
             name = link.stem
             link_pointer = Path(link.open("rb").readline().decode().strip())
             dist = next(
                 iter(
-                    im.MetadataPathFinder.find_distributions(
+                    meta_finder.find_distributions(
                         im.DistributionFinder.Context(
                             name=name, path=[str(link_pointer)]
                         )

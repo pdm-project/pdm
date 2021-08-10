@@ -177,6 +177,7 @@ class Synchronizer:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[strip_extras(key)[0]]
+        dist_version = dist.version
         with self.ui.open_spinner(
             f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
             f"-> {termui.yellow(can.version)}..."
@@ -187,14 +188,14 @@ class Synchronizer:
             except Exception:
                 spinner.fail(
                     f"Update {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(dist_version)} -> "
                     f"{termui.yellow(can.version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
                     f"Update {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} -> "
+                    f"{termui.yellow(dist_version)} -> "
                     f"{termui.yellow(can.version)} successful"
                 )
         return dist, can
@@ -202,6 +203,7 @@ class Synchronizer:
     def remove_distribution(self, key: str) -> Distribution:
         """Remove distributions with given names."""
         dist = self.working_set[key]
+        dist_version = dist.version
         with self.ui.open_spinner(
             f"Removing {termui.green(key, bold=True)} {termui.yellow(dist.version)}..."
         ) as spinner:
@@ -210,13 +212,13 @@ class Synchronizer:
             except Exception:
                 spinner.fail(
                     f"Remove {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} failed"
+                    f"{termui.yellow(dist_version)} failed"
                 )
                 raise
             else:
                 spinner.succeed(
                     f"Remove {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist.version)} successful"
+                    f"{termui.yellow(dist_version)} successful"
                 )
         return dist
 

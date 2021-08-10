@@ -1,5 +1,4 @@
 import collections
-import functools
 import json
 import os
 import re
@@ -324,7 +323,18 @@ def is_dev(request):
 @pytest.fixture()
 def invoke():
     runner = CliRunner(mix_stderr=False)
-    return functools.partial(runner.invoke, main, prog_name="pdm")
+
+    def caller(args, strict=False, **kwargs):
+        result = runner.invoke(
+            main, args, catch_exceptions=not strict, prog_name="pdm", **kwargs
+        )
+        if strict and result.exit_code != 0:
+            raise RuntimeError(
+                f"Call command {args} failed({result.exit_code}): {result.stderr}"
+            )
+        return result
+
+    return caller
 
 
 @pytest.fixture()
