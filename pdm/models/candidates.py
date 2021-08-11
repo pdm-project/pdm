@@ -161,6 +161,8 @@ class Candidate:
         ):
             return
         ireq = self.ireq
+        if not allow_all and self.hashes:
+            ireq.hash_options = convert_hashes(self.hashes)
         with self.environment.get_finder(ignore_requires_python=True) as finder:
             if (
                 not self.link
@@ -177,8 +179,6 @@ class Candidate:
                 if cached:
                     self.wheel = cached.file_path
                     return
-            if not allow_all and self.hashes:
-                ireq.hash_options = convert_hashes(self.hashes)
             downloader = pip_shims.Downloader(finder.session, "off")  # type: ignore
             self._populate_source_dir(ireq)
             if not self.link.is_existing_dir():

@@ -117,3 +117,30 @@ def test_sync_without_self(project, working_set):
     actions.do_lock(project)
     actions.do_sync(project, no_self=True)
     assert project.meta.name not in working_set
+
+
+def test_sync_with_index_change(project, index):
+    project.meta["requires-python"] = ">=3.6"
+    project.meta["dependencies"] = ["future-fstrings"]
+    project.write_pyproject()
+    index[
+        "future-fstrings"
+    ] = """
+    <html>
+    <body>
+        <h1>future-fstrings</h1>
+        <a href="http://fixtures.test/artifacts/future_fstrings-1.2.0.tar.gz\
+#sha256=6cf41cbe97c398ab5a81168ce0dbb8ad95862d3caf23c21e4430627b90844089">
+        future_fstrings-1.2.0.tar.gz
+        </a>
+    </body>
+    </html>
+    """.encode()
+    actions.do_lock(project)
+    file_hashes = project.lockfile["metadata"]["files"]["future-fstrings 1.2.0"]
+    assert [e["hash"] for e in file_hashes] == [
+        "sha256:6cf41cbe97c398ab5a81168ce0dbb8ad95862d3caf23c21e4430627b90844089"
+    ]
+    # Mimic the CDN inconsistences of PyPI simple index. See issues/596.
+    del index["future-fstrings"]
+    actions.do_sync(project)
