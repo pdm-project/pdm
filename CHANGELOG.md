@@ -1,3 +1,33 @@
+Release v1.8.0 (2021-08-16)
+---------------------------
+
+### Features & Improvements
+
+- Added a new mode `--json` to the list command which outputs the dependency graph as a JSON document. [#583](https://github.com/pdm-project/pdm/issues/583)
+- Add a new config `feature.install_cache`. When it is turned on, wheels will be installed into a centralized package repo and create `.pth` files under project packages directory to link to the cached package. [#589](https://github.com/pdm-project/pdm/issues/589)
+
+### Bug Fixes
+
+- Fix env vars in source URLs not being expanded in all cases. [#570](https://github.com/pdm-project/pdm/issues/570)
+- Fix the weird output of `pdm show`. [#580](https://github.com/pdm-project/pdm/issues/580)
+- Prefer `~/.pyenv/shims/python3` as the pyenv interpreter. [#590](https://github.com/pdm-project/pdm/issues/590)
+- Fix a bug that installing will download candidates that do not match the locked hashes. [#596](https://github.com/pdm-project/pdm/issues/596)
+
+### Improved Documentation
+
+- Added instructions to the Contributing section for creating news fragments [#573](https://github.com/pdm-project/pdm/issues/573)
+
+### Removals and Deprecations
+
+- Deprecate `-s/--section` option in favor of `-G/--group`. [#591](https://github.com/pdm-project/pdm/issues/591)
+
+### Refactor
+
+- Switch to a self-implemented version of uninstaller. [#586](https://github.com/pdm-project/pdm/issues/586)
+- `pdm/installers/installers.py` is renamed to `pdm/installers/manager.py` to be more accurate. The `Installer` class under that file is renamed to `InstallerManager` and is exposed in the `pdm.core.Core` object for overriding. The new `pdm/installers/installers.py` contains some installation implementations. [#589](https://github.com/pdm-project/pdm/issues/589)
+- Switch from `pkg_resources.Distribution` to the implementation of `importlib.metadata`. [#592](https://github.com/pdm-project/pdm/issues/592)
+
+
 Release v1.7.2 (2021-07-30)
 ---------------------------
 
