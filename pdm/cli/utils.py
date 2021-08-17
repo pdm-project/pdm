@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 from argparse import Action, _ArgumentGroup
 from collections import ChainMap, OrderedDict
 from json import dumps
@@ -601,3 +602,21 @@ def frozen_requirement_from_dist(dist: Distribution) -> str:
     except StopIteration:
         raise TypeError(f"Not a valid distribution metadata: {dist_path}")
     return str(FrozenRequirement.from_dist(pkg_dist))
+
+
+def is_pipx_installation() -> bool:
+    return sys.prefix.split(os.sep)[-3:-1] == ["pipx", "venvs"]
+
+
+def is_homebrew_installation() -> bool:
+    return "/libexec" in sys.prefix.replace("\\", "/")
+
+
+def is_scoop_installation() -> bool:
+    if os.name != "nt":
+        return False
+    try:
+        Path(sys.prefix).relative_to(Path.home() / "scoop/apps/pdm")
+    except ValueError:
+        return False
+    return True

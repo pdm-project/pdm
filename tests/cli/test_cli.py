@@ -372,3 +372,14 @@ def test_lock_legacy_project(invoke, fixture_project, repository):
     result = invoke(["lock"], obj=project)
     assert result.exit_code == 0
     assert "urllib3" in project.locked_repository.all_candidates
+
+
+def test_show_update_hint(invoke, project):
+    prev_version = project.core.version
+    try:
+        project.core.version = "0.0.0"
+        r = invoke(["config"], obj=project)
+    finally:
+        project.core.version = prev_version
+    assert "to upgrade." in r.output
+    assert "Run $ pdm config check_update false to disable the check." in r.output
