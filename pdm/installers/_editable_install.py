@@ -3,6 +3,10 @@ import os
 import sys
 import tokenize
 
+# Initialize working_set early so it WON'T see the dependencies in lib_dir
+# See issue/601
+__import__("pkg_resources")  # noqa
+
 setup_py, prefix, lib_dir, bin_dir = sys.argv[1:5]
 __file__ = setup_py
 
