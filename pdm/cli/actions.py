@@ -718,3 +718,46 @@ def migrate_pyproject(project: Project) -> None:
         ),
         err=True,
     )
+
+
+def check_update(project: Project) -> None:
+    """Check if there is a new version of PDM available"""
+    import sys
+    from shlex import quote
+
+    from pip._vendor.packaging.version import parse as parse_version
+
+    from pdm.cli.utils import (
+        is_homebrew_installation,
+        is_pipx_installation,
+        is_scoop_installation,
+    )
+    from pdm.utils import get_finder
+
+    this_version = parse_version(project.core.version)
+    candidate = get_finder([]).find_best_candidate("pdm")
+    if not candidate.best_candidate or candidate.best_candidate.version <= this_version:
+        return
+
+    latest_version = candidate.best_candidate.version
+    if is_pipx_installation():  # pragma: no cover
+        install_command = "$ pipx upgrade pdm"
+    elif is_scoop_installation():  # pragma: no cover
+        install_command = "$ scoop update pdm"
+    elif is_homebrew_installation():  # pragma: no cover
+        install_command = "$ brew upgrade pdm"
+    else:
+        install_command = f"$ {quote(sys.executable)} -m pip install -U pdm"
+
+    disable_command = "$ pdm config check_update false"
+
+    message = [
+        termui.blue(f"\nPDM {termui.cyan(str(this_version))}"),
+        termui.blue(f" is installed, while {termui.cyan(str(latest_version))}"),
+        termui.blue(" is available.\n"),
+        termui.blue(f"Please run {termui.green(install_command, bold=True)}"),
+        termui.blue(" to upgrade.\n"),
+        termui.blue(f"Run {termui.green(disable_command, bold=True)}"),
+        termui.blue(" to disable the check."),
+    ]
+    project.core.ui.echo("".join(message), err=True)

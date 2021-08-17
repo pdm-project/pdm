@@ -13,7 +13,7 @@ import click
 from resolvelib import Resolver
 
 from pdm import termui
-from pdm.cli.actions import migrate_pyproject, print_pep582_command
+from pdm.cli.actions import check_update, migrate_pyproject, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter
@@ -158,6 +158,9 @@ class Core:
                 if should_show_tb:
                     self.ui.echo("Add '-v' to see the detailed traceback", fg="yellow")
                 sys.exit(1)
+            else:
+                if options.project.config["check_update"]:
+                    check_update(options.project)
 
     def register_command(
         self, command: Type[BaseCommand], name: Optional[str] = None
