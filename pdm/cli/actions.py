@@ -760,4 +760,4 @@ def check_update(project: Project) -> None:
         termui.blue(f"Run {termui.green(disable_command, bold=True)}"),
         termui.blue(" to disable the check."),
     ]
-    project.core.ui.echo("".join(message))
+    project.core.ui.echo("".join(message), err=True)
