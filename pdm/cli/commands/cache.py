@@ -1,5 +1,7 @@
 import argparse
 import os
+from pathlib import Path
+from typing import Iterable
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
@@ -61,28 +63,63 @@ class ClearCommand(BaseCommand):
     """Clean all the files under cache directory"""
 
     arguments = [verbose_option]
-    CACHE_TYPES = ("hashes", "http", "wheels", "metadata")
+    CACHE_TYPES = ("hashes", "http", "wheels", "metadata", "packages")
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("type", nargs="?", help="Clear the given type of caches")
+        parser.add_argument(
+            "type",
+            nargs="?",
+            help="Clear the given type of caches",
+            choices=self.CACHE_TYPES,
+        )
+
+    @staticmethod
+    def _clear_packages(root: Path) -> int:
+        from pdm.installers.packages import CachedPackage
+
+        cleared = 0
+        for subdir in root.iterdir():
+            if not subdir.is_dir():
+                continue
+            pkg = CachedPackage(subdir)
+            if not pkg.referrers:
+                pkg.cleanup()
+                cleared += 1
+        return cleared
+
+    @staticmethod
+    def _clear_files(root: Path) -> int:
+        files = find_files(root.as_posix(), "*")
+        for file in files:
+            os.unlink(file)
+        return len(files)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+
         if not options.type:
-            cache_parent = project.cache_dir
+            types: Iterable[str] = self.CACHE_TYPES
         elif options.type not in self.CACHE_TYPES:
             raise PdmUsageError(
                 f"Invalid cache type {options.type}, should one of {self.CACHE_TYPES}"
             )
         else:
-            cache_parent = project.cache(options.type)
+            types = (str(options.type),)
 
+        packages = files = 0
         with project.core.ui.open_spinner(
             f"Clearing {options.type or 'all'} caches..."
         ) as spinner:
-            files = list(find_files(cache_parent.as_posix(), "*"))
-            for file in files:
-                os.unlink(file)
-            spinner.succeed(f"{len(files)} file{'s' if len(files) > 1 else ''} removed")
+            for type_ in types:
+                if type_ == "packages":
+                    packages += self._clear_packages(project.cache(type_))
+                else:
+                    files += self._clear_files(project.cache(type_))
+            message = []
+            if packages:
+                message.append(f"{packages} package{'s' if packages > 1 else ''}")
+            if files:
+                message.append(f"{files} file{'s' if files > 1 else ''}")
+            spinner.succeed(f"{' and '.join(message)} are removed")
 
 
 class RemoveCommand(BaseCommand):

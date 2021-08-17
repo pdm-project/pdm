@@ -1,5 +1,6 @@
 import pytest
 
+from pdm.installers.packages import CachedPackage
 from pdm.models.pip_shims import Link
 from tests import FIXTURES
 
@@ -160,3 +161,17 @@ def test_hash_cache(project, url, hash):
         hash_cache = project.make_hash_cache()
         hash_cache.session = finder.session
         assert hash_cache.get_hash(Link(url)) == hash
+
+
+def test_clear_package_cache(project, invoke):
+    pkg = CachedPackage(project.cache("packages") / "test_package")
+    pkg.path.mkdir()
+    refer_pkg = project.root / "refer_pkg"
+    refer_pkg.mkdir()
+    pkg.add_referrer(str(refer_pkg))
+    assert len(pkg.referrers) == 1
+    pkg._referrers = None
+
+    refer_pkg.rmdir()
+    invoke(["cache", "clear", "packages"], obj=project, strict=True)
+    assert not pkg.path.exists()
