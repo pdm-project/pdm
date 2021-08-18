@@ -12,6 +12,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         groups_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
+        parser.add_argument(
+            "-r",
+            "--reinstall",
+            action="store_true",
+            help="Force reinstall existing dependencies",
+        )
         clean_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
 
@@ -25,4 +31,5 @@ class Command(BaseCommand):
             clean=options.clean,
             no_editable=options.no_editable,
             no_self=options.no_self,
+            reinstall=options.reinstall,
         )

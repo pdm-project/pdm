@@ -270,6 +270,7 @@ _pdm() {
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         '--dry-run[Only prints actions without actually running them]'
+        {-r,--reinstall}"[Force reinstall existing dependencies]"
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
         "--no-default[Don\'t include dependencies from the default group]"

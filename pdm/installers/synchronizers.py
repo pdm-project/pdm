@@ -75,6 +75,7 @@ class Synchronizer:
         install_self: bool = False,
         no_editable: bool = False,
         use_install_cache: bool = False,
+        reinstall: bool = False,
     ) -> None:
         self.environment = environment
         self.clean = clean
@@ -83,6 +84,7 @@ class Synchronizer:
         self.no_editable = no_editable
         self.install_self = install_self
         self.use_install_cache = use_install_cache
+        self.reinstall = reinstall
 
         self.parallel = environment.project.config["parallel_install"]
         locked_repository = environment.project.locked_repository
@@ -135,6 +137,7 @@ class Synchronizer:
                 can = candidates.pop(key)
                 if (
                     can.req.editable
+                    or self.reinstall
                     or is_egg_link(dist)
                     or (dist.version != can.version)
                 ):

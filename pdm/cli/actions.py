@@ -130,6 +130,7 @@ def do_sync(
     tracked_names: Sequence[str] | None = None,
     no_editable: bool = False,
     no_self: bool = False,
+    reinstall: bool = False,
 ) -> None:
     """Synchronize project"""
     if requirements is None:
@@ -164,6 +165,7 @@ def do_sync(
         no_editable=no_editable,
         install_self=not no_self and "default" in groups and bool(project.meta.name),
         use_install_cache=project.config["feature.install_cache"],
+        reinstall=reinstall,
     )
     handler.synchronize()
 
