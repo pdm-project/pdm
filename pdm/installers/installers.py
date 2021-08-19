@@ -128,7 +128,7 @@ def _install_wheel(
         for record_elements, stream in source.get_contents():
             source_record = RecordEntry.from_elements(*record_elements)
             path = source_record.path
-            if path == record_file_path:
+            if os.path.normcase(path) == os.path.normcase(record_file_path):
                 continue
             # Figure out where to write this file.
             scheme, destination_path = _determine_scheme(
