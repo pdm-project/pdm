@@ -5,7 +5,7 @@ import json
 import os
 import stat
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 from installer import __version__
 from installer._core import _determine_scheme, _process_WHEEL_file
@@ -45,13 +45,22 @@ class WheelFile(_WheelFile):
 
 
 class InstallDestination(SchemeDictionaryDestination):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.root_scheme = cast("Scheme", "purelib")
+
     def write_to_fs(
         self, scheme: Scheme, path: str | Path, stream: BinaryIO
     ) -> RecordEntry:
-        target_path = Path(self.scheme_dict[scheme], path)
-        if target_path.exists():
-            target_path.unlink()
-        return super().write_to_fs(scheme, path, stream)
+        target_path = os.path.join(self.scheme_dict[scheme], path)
+        if os.path.exists(target_path):
+            os.unlink(target_path)
+        record_path = os.path.relpath(
+            target_path, self.scheme_dict[self.root_scheme]
+        ).replace("\\", "/")
+        record = super().write_to_fs(scheme, path, stream)
+        record.path = record_path
+        return record
 
 
 def install_wheel(
@@ -98,6 +107,7 @@ def _install_wheel(
 
     with WheelFile.open(wheel) as source:
         root_scheme = _process_WHEEL_file(source)
+        destination.root_scheme = root_scheme
 
         # RECORD handling
         record_file_path = os.path.join(source.dist_info_dir, "RECORD")
@@ -113,6 +123,7 @@ def _install_wheel(
                     attr=attr,
                     section=section,
                 )
+                written_records.append(record)
 
         for record_elements, stream in source.get_contents():
             source_record = RecordEntry.from_elements(*record_elements)
