@@ -41,7 +41,9 @@ class CachedPackage:
         """Add a new referrer"""
         path = os.path.normcase(os.path.expanduser(os.path.abspath(path)))
         referrers = self.referrers | {path}
-        (self.path / "referrers").write_text("\n".join(referrers) + "\n", "utf8")
+        (self.path / "referrers").write_text(
+            "\n".join(sorted(referrers)) + "\n", "utf8"
+        )
         self._referrers = None
 
     def remove_referrer(self, path: str) -> None:

@@ -149,3 +149,25 @@ def test_url_requirement_is_not_cached(project):
     assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     dist = project.environment.get_working_set()["future-fstrings"]
     assert dist.read_text("direct_url.json")
+
+
+@pytest.mark.parametrize("use_install_cache", [False, True])
+def test_install_wheel_with_data_scripts(project, use_install_cache):
+    req = parse_requirement("jmespath")
+    candidate = Candidate(
+        req,
+        project.environment,
+        link=Link(
+            "http://fixtures.test/artifacts/jmespath-0.10.0-py2.py3-none-any.whl"
+        ),
+    )
+    installer = InstallManager(project.environment, use_install_cache=use_install_cache)
+    installer.install(candidate)
+    bin_path = os.path.join(project.environment.get_paths()["scripts"], "jp.py")
+    assert os.path.isfile(bin_path)
+    if os.name != "nt":
+        assert os.stat(bin_path).st_mode & 0o100
+
+    dist = project.environment.get_working_set()["jmespath"]
+    installer.uninstall(dist)
+    assert not os.path.exists(bin_path)
