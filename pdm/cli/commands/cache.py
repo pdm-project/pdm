@@ -119,7 +119,11 @@ class ClearCommand(BaseCommand):
                 message.append(f"{packages} package{'s' if packages > 1 else ''}")
             if files:
                 message.append(f"{files} file{'s' if files > 1 else ''}")
-            spinner.succeed(f"{' and '.join(message)} are removed")
+            if not message:  # pragma: no cover
+                text = "No files need to be removed"
+            else:
+                text = f"{' and '.join(message)} are removed"
+            spinner.succeed(text)
 
 
 class RemoveCommand(BaseCommand):
