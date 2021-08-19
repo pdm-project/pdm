@@ -127,6 +127,7 @@ def test_install_wheel_with_cache(project, invoke):
     installer.uninstall(dist)
     assert not os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
     assert not os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    assert not dist.read_text("direct_url.json")
     assert not cache_path.exists()
 
 
@@ -146,3 +147,5 @@ def test_url_requirement_is_not_cached(project):
     lib_path = project.environment.get_paths()["purelib"]
     assert os.path.isfile(os.path.join(lib_path, "future_fstrings.py"))
     assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    dist = project.environment.get_working_set()["future-fstrings"]
+    assert dist.read_text("direct_url.json")

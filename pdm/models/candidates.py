@@ -12,7 +12,9 @@ from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.exceptions import BuildError, CandidateNotFound
 from pdm.models import pip_shims
 from pdm.models.requirements import (
+    FileRequirement,
     Requirement,
+    VcsRequirement,
     _egg_info_re,
     filter_requirements_with_extras,
     parse_metadata_from_source,
@@ -26,6 +28,7 @@ from pdm.utils import (
     get_rev_from_url,
     path_replace,
     populate_link,
+    url_without_fragments,
 )
 
 if sys.version_info >= (3, 8):
@@ -60,6 +63,11 @@ def _get_wheel_metadata_from_wheel(whl_file: str, metadata_directory: str) -> st
         dist_info = _dist_info_files(zipf)
         zipf.extractall(path=metadata_directory, members=dist_info)
     return os.path.join(metadata_directory, dist_info[0].split("/")[0])
+
+
+def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
+    """Return a new dict without None values"""
+    return {k: v for k, v in data.items() if v is not None}
 
 
 class Candidate:
@@ -148,6 +156,40 @@ class Candidate:
         return vcs.get_backend(self.req.vcs).get_revision(  # type: ignore
             cast(str, self.ireq.source_dir)
         )
+
+    def direct_url(self) -> dict[str, Any] | None:
+        """PEP 610 direct_url.json data"""
+        req = self.req
+        if isinstance(req, VcsRequirement):
+            return {
+                "url": url_without_fragments(req.url),
+                "vcs_info": _filter_none(
+                    {
+                        "vcs": req.vcs,
+                        "requested_revision": req.ref,
+                        "commit_id": self.revision,
+                    }
+                ),
+            }
+        elif isinstance(req, FileRequirement):
+            if req.is_local_dir:
+                return {
+                    "url": url_without_fragments(req.url),
+                    "dir_info": _filter_none({"editable": req.editable or None}),
+                }
+            with self.environment.get_finder() as finder:
+                hash_cache = self.environment.project.make_hash_cache()
+                hash_cache.session = finder.session  # type: ignore
+                return {
+                    "url": url_without_fragments(req.url),
+                    "archive_info": {
+                        "hash": hash_cache.get_hash(pip_shims.Link(req.url)).replace(
+                            ":", "="
+                        )
+                    },
+                }
+        else:
+            return None
 
     def prepare(self, allow_all: bool = False) -> None:
         """Fetch the link of the candidate and unpack to local if necessary.
