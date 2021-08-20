@@ -16,10 +16,9 @@ from installer.sources import WheelFile as _WheelFile
 from installer.utils import parse_entrypoints
 
 from pdm.installers.packages import CachedPackage
-from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.termui import logger
-from pdm.utils import cached_property, normalize_name
+from pdm.utils import cached_property
 
 if TYPE_CHECKING:
     from typing import BinaryIO
@@ -64,25 +63,71 @@ class InstallDestination(SchemeDictionaryDestination):
 
 
 def install_wheel(
-    candidate: Candidate, scheme_dict: dict[str, str] | None = None
+    wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None
 ) -> None:
-    """Install a normal wheel file into the environment.
-    Optional install scheme can be given to change the destination.
-    """
+    """Install a normal wheel file into the environment."""
     additional_metadata = None
-    env = candidate.environment
-    direct_url = candidate.direct_url()
     if direct_url is not None:
         additional_metadata = {
             "direct_url.json": json.dumps(direct_url, indent=2).encode()
         }
     _install_wheel(
-        wheel=candidate.build(),
-        interpreter=env.interpreter.executable,
-        script_kind=_get_kind(env),
-        scheme_dict=scheme_dict or env.get_paths(),
+        wheel=wheel,
+        interpreter=environment.interpreter.executable,
+        script_kind=_get_kind(environment),
+        scheme_dict=environment.get_paths(),
         additional_metadata=additional_metadata,
     )
+
+
+def install_wheel_with_cache(
+    wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None
+) -> None:
+    """Only create .pth files referring to the cached package.
+    If the cache doesn't exist, create one.
+    """
+    wheel_stem = Path(wheel).stem
+    cache_path = environment.project.cache("packages") / wheel_stem
+    package_cache = CachedPackage(cache_path)
+    interpreter = environment.interpreter.executable
+    script_kind = _get_kind(environment)
+    if not cache_path.is_dir():
+        logger.debug("Installing wheel into cached location %s", cache_path)
+        cache_path.mkdir(exist_ok=True)
+        _install_wheel(
+            wheel=wheel,
+            interpreter=interpreter,
+            script_kind=script_kind,
+            scheme_dict=package_cache.scheme(),
+        )
+
+    additional_metadata = {"REFER_TO": package_cache.path.as_posix().encode()}
+
+    if direct_url is not None:
+        additional_metadata["direct_url.json"] = json.dumps(
+            direct_url, indent=2
+        ).encode()
+
+    def skip_files(scheme: Scheme, path: str) -> bool:
+        return not (
+            scheme == "scripts"
+            or path.split("/")[0].endswith(".dist-info")
+            or path.endswith(".pth")
+        )
+
+    filename = wheel_stem.split("-")[0] + ".pth"
+    lib_path = package_cache.scheme()["purelib"]
+
+    dist_info_dir = _install_wheel(
+        wheel=wheel,
+        interpreter=interpreter,
+        script_kind=script_kind,
+        scheme_dict=environment.get_paths(),
+        excludes=skip_files,
+        additional_files=[(None, filename, io.BytesIO(f"{lib_path}\n".encode()))],
+        additional_metadata=additional_metadata,
+    )
+    package_cache.add_referrer(dist_info_dir)
 
 
 def _install_wheel(
@@ -197,82 +242,3 @@ def _get_kind(environment: Environment) -> str:
         return "win-ia32"
     else:
         return "win-amd64"
-
-
-def install_editable(
-    candidate: Candidate, scheme_dict: dict[str, str] | None = None
-) -> None:
-    """Install package in editable mode using the legacy `python setup.py develop`"""
-    # TODO: PEP 660
-    from pdm.builders import EditableBuilder
-
-    candidate.prepare()
-    env = candidate.environment
-    assert candidate.source_dir
-    builder = EditableBuilder(candidate.source_dir, env)
-    setup_path = builder.ensure_setup_py()
-    paths = scheme_dict or env.get_paths()
-    install_script = Path(__file__).with_name("_editable_install.py")
-    install_args = [
-        env.interpreter.executable,
-        "-u",
-        str(install_script),
-        setup_path,
-        paths["prefix"],
-        paths["purelib"],
-        paths["scripts"],
-    ]
-    builder.install(["setuptools"])
-    builder.subprocess_runner(install_args, candidate.source_dir)
-
-
-def install_wheel_with_cache(
-    candidate: Candidate, scheme_dict: dict[str, str] | None = None
-) -> None:
-    """Only create .pth files referring to the cached package.
-    If the cache doesn't exist, create one.
-    """
-    wheel = candidate.build()
-    wheel_stem = Path(wheel).stem
-    cache_path = candidate.environment.project.cache("packages") / wheel_stem
-    package_cache = CachedPackage(cache_path)
-    env = candidate.environment
-    interpreter = env.interpreter.executable
-    script_kind = _get_kind(env)
-    if not cache_path.is_dir():
-        logger.debug("Installing wheel into cached location %s", cache_path)
-        cache_path.mkdir(exist_ok=True)
-        _install_wheel(
-            wheel=wheel,
-            interpreter=interpreter,
-            script_kind=script_kind,
-            scheme_dict=package_cache.scheme(),
-        )
-
-    additional_metadata = {"REFER_TO": package_cache.path.as_posix().encode()}
-    direct_url = candidate.direct_url()
-    if direct_url is not None:
-        additional_metadata["direct_url.json"] = json.dumps(
-            direct_url, indent=2
-        ).encode()
-
-    def skip_files(scheme: Scheme, path: str) -> bool:
-        return not (
-            scheme == "scripts"
-            or path.split("/")[0].endswith(".dist-info")
-            or path.endswith(".pth")
-        )
-
-    filename = normalize_name(candidate.name).replace("-", "_") + ".pth"  # type: ignore
-    lib_path = package_cache.scheme()["purelib"]
-
-    dist_info_dir = _install_wheel(
-        wheel=wheel,
-        interpreter=interpreter,
-        script_kind=script_kind,
-        scheme_dict=scheme_dict or env.get_paths(),
-        excludes=skip_files,
-        additional_files=[(None, filename, io.BytesIO(f"{lib_path}\n".encode()))],
-        additional_metadata=additional_metadata,
-    )
-    package_cache.add_referrer(dist_info_dir)

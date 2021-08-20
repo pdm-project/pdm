@@ -281,7 +281,8 @@ class Candidate:
             self.wheel = cached.file_path
             return self.wheel  # type: ignore
         assert self.source_dir, "Source directory isn't ready yet"
-        builder = WheelBuilder(self.source_dir, self.environment)
+        builder_cls = EditableBuilder if self.req.editable else WheelBuilder
+        builder = builder_cls(self.source_dir, self.environment)
         build_dir = self._get_wheel_dir()
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
@@ -412,7 +413,7 @@ class Candidate:
         should_cache = False
         wheel_cache = self.environment.project.make_wheel_cache()
         assert self.link
-        if self.link.is_vcs:
+        if self.link.is_vcs and not self.req.editable:
             vcs = pip_shims.VcsSupport()
             vcs_backend = vcs.get_backend_for_scheme(self.link.scheme)
             if vcs_backend and vcs_backend.is_immutable_rev_checkout(

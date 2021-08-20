@@ -3,8 +3,7 @@ from __future__ import annotations
 import functools
 import multiprocessing
 import traceback
-from concurrent.futures._base import Future
-from concurrent.futures.thread import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pdm import termui
@@ -13,7 +12,7 @@ from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
-from pdm.models.requirements import strip_extras
+from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.utils import is_egg_link
 
 
@@ -60,6 +59,17 @@ class DummyExecutor:
         return
 
 
+def editables_candidate(environment: Environment) -> Candidate | None:
+    """Return a candidate for `editables` package"""
+    with environment.get_finder() as finder:
+        best_match = finder.find_best_candidate("editables")
+        if best_match.best_candidate is None:
+            return None
+        return Candidate.from_installation_candidate(
+            best_match.best_candidate, parse_requirement("editables"), environment
+        )
+
+
 class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
@@ -95,6 +105,11 @@ class Synchronizer:
         if self.no_editable:
             for candidate in candidates.values():
                 candidate.req.editable = None  # type: ignore
+        elif self.install_self and "editables" not in candidates:
+            # Install `editables` as well as required by self project
+            editables = editables_candidate(environment)
+            if editables is not None:
+                candidates["editables"] = editables
         self.candidates = candidates
         self._manager: InstallManager | None = None
 

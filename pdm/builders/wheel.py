@@ -10,7 +10,7 @@ class WheelBuilder(EnvBuilder):
     def prepare_metadata(
         self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
     ) -> str:
-        self.install(self._build_system["requires"], shared=True)
+        self.install(self._requires, shared=True)
         requires = self._hook.get_requires_for_build_wheel(config_settings)
         self.install(requires)
         filename = self._hook.prepare_metadata_for_build_wheel(out_dir, config_settings)
@@ -22,7 +22,7 @@ class WheelBuilder(EnvBuilder):
         config_settings: Optional[Mapping[str, Any]] = None,
         metadata_directory: Optional[str] = None,
     ) -> str:
-        self.install(self._build_system["requires"], shared=True)
+        self.install(self._requires, shared=True)
         requires = self._hook.get_requires_for_build_wheel(config_settings)
         self.install(requires)
         filename = self._hook.build_wheel(out_dir, config_settings, metadata_directory)
