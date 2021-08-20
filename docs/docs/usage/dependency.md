@@ -212,7 +212,7 @@ bump2version 1.0.0
 You can specify a PyPI mirror URL by following commands:
 
 ```console
-$ pdm config pypi.url https://testpypi.org/simple
+$ pdm config pypi.url https://test.pypi.org/simple
 ```
 
 By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback

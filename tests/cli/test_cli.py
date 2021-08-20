@@ -257,7 +257,7 @@ def test_config_env_var_shadowing(project, invoke):
         assert result.output.strip() == "https://example.org/simple"
 
         result = invoke(
-            ["config", "pypi.url", "https://testpypi.org/pypi"], obj=project
+            ["config", "pypi.url", "https://test.pypi.org/pypi"], obj=project
         )
         assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
         result = invoke(["config", "pypi.url"], obj=project)
@@ -265,7 +265,7 @@ def test_config_env_var_shadowing(project, invoke):
 
         del os.environ["PDM_PYPI_URL"]
         result = invoke(["config", "pypi.url"], obj=project)
-        assert result.output.strip() == "https://testpypi.org/pypi"
+        assert result.output.strip() == "https://test.pypi.org/pypi"
 
 
 def test_config_project_global_precedence(project, invoke):
