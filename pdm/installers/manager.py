@@ -4,11 +4,7 @@ from typing import TYPE_CHECKING
 
 from pdm import termui
 from pdm.exceptions import UninstallError
-from pdm.installers.installers import (
-    install_editable,
-    install_wheel,
-    install_wheel_with_cache,
-)
+from pdm.installers.installers import install_wheel, install_wheel_with_cache
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
 from pdm.utils import is_egg_link
 
@@ -36,14 +32,12 @@ class InstallManager:
         self.use_install_cache = use_install_cache
 
     def install(self, candidate: Candidate) -> None:
-        if candidate.req.editable:
-            installer = install_editable
-        elif self.use_install_cache and candidate.req.is_named:
+        if self.use_install_cache and candidate.req.is_named:
             # Only cache wheels from PyPI
             installer = install_wheel_with_cache
         else:
             installer = install_wheel
-        installer(candidate)
+        installer(candidate.build(), self.environment, candidate.direct_url())
 
     def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:
         """Get the path collection to be removed from the disk"""

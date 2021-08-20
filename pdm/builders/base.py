@@ -128,13 +128,17 @@ class _Prefix:
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
-    _shared_envs: dict[int, str] = {}
-    _overlay_envs: dict[str, str] = {}
-
     DEFAULT_BACKEND = {
         "build-backend": "setuptools.build_meta:__legacy__",
         "requires": ["setuptools >= 40.8.0", "wheel"],
     }
+
+    _shared_envs: dict[int, str] = {}
+    _overlay_envs: dict[str, str] = {}
+
+    if TYPE_CHECKING:
+        _hook: Pep517HookCaller
+        _requires: list[str]
 
     @classmethod
     def get_shared_env(cls, key: int) -> str:
@@ -164,29 +168,31 @@ class EnvBuilder:
             spec = {}
         except Exception as e:
             raise BuildError(e) from e
-        self._build_system = spec.get("build-system", self.DEFAULT_BACKEND)
+        build_system = spec.get("build-system", self.DEFAULT_BACKEND)
 
-        if "build-backend" not in self._build_system:
-            self._build_system["build-backend"] = self.DEFAULT_BACKEND["build-backend"]
+        if "build-backend" not in build_system:
+            build_system["build-backend"] = self.DEFAULT_BACKEND["build-backend"]
 
-        if "requires" not in self._build_system:
+        if "requires" not in build_system:
             raise BuildError("Missing 'build-system.requires' in pyproject.toml")
 
-        self._backend = self._build_system["build-backend"]
-
+        self.init_build_system(build_system)
         self._prefix = _Prefix(
             self.executable,
-            shared=self.get_shared_env(hash(frozenset(self._build_system["requires"]))),
+            shared=self.get_shared_env(hash(frozenset(self._requires))),
             overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
         )
 
+    def init_build_system(self, build_system: dict[str, Any]) -> None:
+        """Initialize the build system and requires list from the PEP 517 spec"""
         self._hook = Pep517HookCaller(
-            src_dir,
-            self._backend,
-            backend_path=self._build_system.get("backend-path"),
+            self.src_dir,
+            build_system["build-backend"],
+            backend_path=build_system.get("backend-path"),
             runner=self.subprocess_runner,
             python_executable=self.executable,
         )
+        self._requires = build_system["requires"]
 
     @property
     def _env_vars(self) -> dict[str, str]:

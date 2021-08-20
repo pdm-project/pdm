@@ -1,30 +1,53 @@
 import os
 from typing import Any, Mapping, Optional
 
-from pdm.builders.base import EnvBuilder
-from pdm.exceptions import BuildError
+from pep517.wrappers import HookMissing
 
-_SETUPTOOLS_SHIM = (
-    "import sys, setuptools, tokenize; sys.argv[0] = {0!r}; __file__={0!r};"
-    "f=getattr(tokenize, 'open', open)(__file__);"
-    "code=f.read().replace('\\r\\n', '\\n');"
-    "f.close();"
-    "exec(compile(code, __file__, 'exec'))"
-)
+from pdm.builders.base import EnvBuilder
 
 
 class EditableBuilder(EnvBuilder):
     """Build egg-info in isolated env with managed Python."""
 
-    @staticmethod
-    def _find_egg_info(directory: str) -> str:
-        filename = next(
-            (f for f in os.listdir(directory) if f.endswith(".egg-info")),
-            None,
-        )
-        if not filename:
-            raise BuildError("No egg info is generated.")
-        return filename
+    FALLBACK_BACKEND = {
+        "build-backend": "pdm.pep517.setuptools",
+        "requires": ["pdm-pep517[setuptools]"],
+    }
+
+    def prepare_metadata(
+        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+    ) -> str:
+        self.install(self._requires, shared=True)
+        try:
+            requires = self._hook.get_requires_for_build_editable(config_settings)
+            self.install(requires)
+            filename = self._hook.prepare_metadata_for_build_editable(
+                out_dir, config_settings
+            )
+        except HookMissing:
+            self.init_build_system(self.FALLBACK_BACKEND)
+            self.ensure_setup_py()
+            return self.prepare_metadata(out_dir, config_settings)
+        return os.path.join(out_dir, filename)
+
+    def build(
+        self,
+        out_dir: str,
+        config_settings: Optional[Mapping[str, Any]] = None,
+        metadata_directory: Optional[str] = None,
+    ) -> str:
+        self.install(self._requires, shared=True)
+        try:
+            requires = self._hook.get_requires_for_build_editable(config_settings)
+            self.install(requires)
+            filename = self._hook.build_editable(
+                out_dir, config_settings, metadata_directory
+            )
+        except HookMissing:
+            self.init_build_system(self.FALLBACK_BACKEND)
+            self.ensure_setup_py()
+            return self.build(out_dir, config_settings, metadata_directory)
+        return os.path.join(out_dir, filename)
 
     def ensure_setup_py(self) -> str:
         from pdm.pep517.base import Builder
@@ -39,14 +62,3 @@ class EditableBuilder(EnvBuilder):
             except ValueError:
                 builder._meta = None
         return builder.ensure_setup_py().as_posix()
-
-    def prepare_metadata(
-        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
-    ) -> str:
-        setup_py_path = self.ensure_setup_py()
-        self.install(["setuptools"])
-        args = [self.executable, "-c", _SETUPTOOLS_SHIM.format(setup_py_path)]
-        args.extend(["egg_info", "--egg-base", out_dir])
-        self.subprocess_runner(args, cwd=self.src_dir)
-        filename = self._find_egg_info(out_dir)
-        return os.path.join(out_dir, filename)
