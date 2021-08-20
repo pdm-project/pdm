@@ -51,8 +51,8 @@ def test_project_config_set_invalid_key(project):
 
 
 def test_project_sources_overriding(project):
-    project.project_config["pypi.url"] = "https://testpypi.org/simple"
-    assert project.sources[0]["url"] == "https://testpypi.org/simple"
+    project.project_config["pypi.url"] = "https://test.pypi.org/simple"
+    assert project.sources[0]["url"] == "https://test.pypi.org/simple"
 
     project.tool_settings["source"] = [
         {"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}
@@ -65,13 +65,13 @@ def test_project_sources_env_var_expansion(project):
     os.environ["PYPI_PASS"] = "password"
     project.project_config[
         "pypi.url"
-    ] = "https://${PYPI_USER}:${PYPI_PASS}@testpypi.org/simple"
+    ] = "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
     # expanded in sources
-    assert project.sources[0]["url"] == "https://user:password@testpypi.org/simple"
+    assert project.sources[0]["url"] == "https://user:password@test.pypi.org/simple"
     # not expanded in project config
     assert (
         project.project_config["pypi.url"]
-        == "https://${PYPI_USER}:${PYPI_PASS}@testpypi.org/simple"
+        == "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
     )
 
     project.tool_settings["source"] = [

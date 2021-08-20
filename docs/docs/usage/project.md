@@ -83,13 +83,13 @@ $ pdm config pypi.url
 Change a configuration value and store in home configuration:
 
 ```console
-$ pdm config pypi.url "https://testpypi.org/simple"
+$ pdm config pypi.url "https://test.pypi.org/simple"
 ```
 
 By default, the configuration are changed globally, if you want to make the config seen by this project only, add a `--local` flag:
 
 ```console
-$ pdm config --local pypi.url "https://testpypi.org/simple"
+$ pdm config --local pypi.url "https://test.pypi.org/simple"
 ```
 
 Any local configurations will be stored in `.pdm.toml` under the project root directory.
