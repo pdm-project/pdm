@@ -128,7 +128,7 @@ class BaseRemovePaths(abc.ABC):
         instance = cls(dist, envrionment)
         meta_location = os.path.normcase(dist._path.absolute())  # type: ignore
         dist_location = os.path.dirname(meta_location)
-        if is_egg_link(dist):
+        if is_egg_link(dist):  # pragma: no cover
             egg_link_path = cast("Path | None", getattr(dist, "link_file", None))
             if not egg_link_path:
                 termui.logger.warn(
@@ -157,7 +157,7 @@ class BaseRemovePaths(abc.ABC):
 
         bin_dir = scheme["scripts"]
 
-        if os.path.isdir(os.path.join(meta_location, "scripts")):
+        if os.path.isdir(os.path.join(meta_location, "scripts")):  # pragma: no cover
             for script in os.listdir(os.path.join(meta_location, "scripts")):
                 instance.add_path(os.path.join(bin_dir, script))
                 if os.name == "nt":

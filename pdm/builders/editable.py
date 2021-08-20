@@ -10,8 +10,8 @@ class EditableBuilder(EnvBuilder):
     """Build egg-info in isolated env with managed Python."""
 
     FALLBACK_BACKEND = {
-        "build-backend": "pdm.pep517.setuptools",
-        "requires": ["pdm-pep517[setuptools]"],
+        "build-backend": "setuptools_pep660",
+        "requires": ["setuptools_pep660"],
     }
 
     def prepare_metadata(

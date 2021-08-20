@@ -59,11 +59,12 @@ class DummyExecutor:
         return
 
 
-def editables_candidate(environment: Environment) -> Candidate:
+def editables_candidate(environment: Environment) -> Candidate | None:
     """Return a candidate for `editables` package"""
     with environment.get_finder() as finder:
         best_match = finder.find_best_candidate("editables")
-        assert best_match.best_candidate
+        if best_match.best_candidate is None:
+            return None
         return Candidate.from_installation_candidate(
             best_match.best_candidate, parse_requirement("editables"), environment
         )
@@ -106,7 +107,9 @@ class Synchronizer:
                 candidate.req.editable = None  # type: ignore
         elif self.install_self and "editables" not in candidates:
             # Install `editables` as well as required by self project
-            candidates["editables"] = editables_candidate(environment)
+            editables = editables_candidate(environment)
+            if editables is not None:
+                candidates["editables"] = editables
         self.candidates = candidates
         self._manager: InstallManager | None = None
 
