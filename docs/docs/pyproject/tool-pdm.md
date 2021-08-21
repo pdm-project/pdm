@@ -52,7 +52,6 @@ name = "pypi"
     write it in the `[[tool.pdm.source]]`. Otherwise if you would like to change the index temporarily on the current platform (for network reasons), you should use
     `pdm config pypi.url https://private.pypi.org/simple`.
 
-
 ## Include and exclude package files
 
 The way of specifying include and exclude files are simple, they are given as a list of glob patterns:
@@ -87,7 +86,6 @@ If you don't specify any of these fields, PDM also provides smart default values
 
 If your project follows the above conventions you don't need to config any of these fields and it just works.
 Be awared PDM won't add [PEP 420 implicit namespace packages](https://www.python.org/dev/peps/pep-0420/) automatically and they should always be specified in `includes` explicitly.
-
 
 ## Select another package directory to look for packages
 
@@ -135,3 +133,27 @@ Now, specify the build script path via `build` in the `pyproject.toml`:
 [tool.pdm]
 build = "build.py"
 ```
+
+## Editable build backend
+
+PDM leverages [PEP 660](https://www.python.org/dev/peps/pep-0660/) to build wheels for editable installation.
+One can choose how to generate the wheel out of the two methods:
+
+- `editables`: (Default)Create proxy modules under the packages path.
+- `path`: The legacy method used by setuptools that create .pth files under the packages path.
+
+Read the PEP for the difference of the two methods and how they work.
+
+Specify the method in pyproject.toml like below:
+
+```toml
+[tool.pdm]
+editable-backend = "path"
+```
+
+`editables` backend is more recommended but there is a known limitation that it can't work with PEP 420 namespace packages.
+So you would need to change to `path` in that case.
+
+!!! note "About Python 2 compatibility"
+    Due to the fact that the build backend for PDM managed projects requires Python>=3.6, you would not be able to
+    install the current project if Python 2 is being used as the host interpreter. You can still install other dependencies not PDM-backed.

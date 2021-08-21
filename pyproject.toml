@@ -46,6 +46,8 @@ pdm = "pdm.core:main"
 [tool.pdm]
 includes = ["pdm"]
 source-includes = ["tests"]
+# editables backend doesn't work well with namespace packages
+editable-backend = "path"
 
 [tool.pdm.scripts]
 release = "python tasks/release.py"

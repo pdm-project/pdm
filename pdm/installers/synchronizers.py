@@ -105,7 +105,12 @@ class Synchronizer:
         if self.no_editable:
             for candidate in candidates.values():
                 candidate.req.editable = None  # type: ignore
-        elif self.install_self and "editables" not in candidates:
+        elif (
+            self.install_self
+            and getattr(self.environment.project.meta, "editable_backend", "editables")
+            == "editables"
+            and "editables" not in candidates
+        ):
             # Install `editables` as well as required by self project
             editables = editables_candidate(environment)
             if editables is not None:

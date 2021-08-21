@@ -302,7 +302,7 @@ dependencies = [
 
 [[package]]
 name = "pdm-pep517"
-version = "0.8.0"
+version = "0.8.3"
 requires_python = ">=3.6"
 summary = "A PEP 517 backend for PDM that supports PEP 621 metadata"
 
@@ -836,9 +836,9 @@ content_hash = "sha256:a692d60fde5d8b39dc3ae0c0569614588c567691f817ffdb1ba48d2e1
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
     {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
-"pdm-pep517 0.8.0" = [
-    {file = "pdm_pep517-0.8.0-py3-none-any.whl", hash = "sha256:16b739cc38b73ef84f6f9baef3f5ab945d9d1c2c7b5227ac6b941c150358c40d"},
-    {file = "pdm-pep517-0.8.0.tar.gz", hash = "sha256:f1fcde8abe39df39ec58077ebab4bd26f0c2bfce023c8aec0d8762abf71ff7c5"},
+"pdm-pep517 0.8.3" = [
+    {file = "pdm_pep517-0.8.3-py3-none-any.whl", hash = "sha256:d3ed361e917107d38d38ccbc0920ec201b4def2c00aea03fc39a5efcc4e82c66"},
+    {file = "pdm-pep517-0.8.3.tar.gz", hash = "sha256:76c383a4ab2e612884c9118514d46e748720da4659cc4ea029ac4439c7af103a"},
 ]
 "pep517 0.11.0" = [
     {file = "pep517-0.11.0-py2.py3-none-any.whl", hash = "sha256:3fa6b85b9def7ba4de99fb7f96fe3f02e2d630df8aa2720a5cf3b183f087a738"},
