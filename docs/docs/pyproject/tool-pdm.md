@@ -85,7 +85,7 @@ If you don't specify any of these fields, PDM also provides smart default values
 - `src` directory will be detected as the `package-dir` if it exists.
 
 If your project follows the above conventions you don't need to config any of these fields and it just works.
-Be awared PDM won't add [PEP 420 implicit namespace packages](https://www.python.org/dev/peps/pep-0420/) automatically and they should always be specified in `includes` explicitly.
+Be aware PDM won't add [PEP 420 implicit namespace packages](https://www.python.org/dev/peps/pep-0420/) automatically and they should always be specified in `includes` explicitly.
 
 ## Select another package directory to look for packages
 

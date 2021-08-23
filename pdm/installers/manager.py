@@ -32,7 +32,7 @@ class InstallManager:
 
     def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:
         """Get the path collection to be removed from the disk"""
-        return StashedRemovePaths.from_dist(dist, envrionment=self.environment)
+        return StashedRemovePaths.from_dist(dist, environment=self.environment)
 
     def uninstall(self, dist: Distribution) -> None:
         """Perform the uninstallation for a given distribution"""

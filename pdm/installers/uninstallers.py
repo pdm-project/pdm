@@ -104,9 +104,9 @@ def _get_file_root(path: str, base: str) -> str | None:
 class BaseRemovePaths(abc.ABC):
     """A collection of paths and/or pth entries to remove"""
 
-    def __init__(self, dist: Distribution, envrionment: Environment) -> None:
+    def __init__(self, dist: Distribution, environment: Environment) -> None:
         self.dist = dist
-        self.envrionment = envrionment
+        self.environment = environment
         self._paths: set[str] = set()
         self._pth_entries: set[str] = set()
         self.refer_to: str | None = None
@@ -122,10 +122,10 @@ class BaseRemovePaths(abc.ABC):
         """Roll back the removal operations"""
 
     @classmethod
-    def from_dist(cls: Type[_T], dist: Distribution, envrionment: Environment) -> _T:
+    def from_dist(cls: Type[_T], dist: Distribution, environment: Environment) -> _T:
         """Create an instance from the distribution"""
-        scheme = envrionment.get_paths()
-        instance = cls(dist, envrionment)
+        scheme = environment.get_paths()
+        instance = cls(dist, environment)
         meta_location = os.path.normcase(dist._path.absolute())  # type: ignore
         dist_location = os.path.dirname(meta_location)
         if is_egg_link(dist):  # pragma: no cover
@@ -197,7 +197,7 @@ class StashedRemovePaths(BaseRemovePaths):
     def __init__(self, dist: Distribution, environment: Environment) -> None:
         super().__init__(dist, environment)
         self._pth_file = os.path.join(
-            self.envrionment.get_paths()["purelib"], self.PTH_REGISTRY
+            self.environment.get_paths()["purelib"], self.PTH_REGISTRY
         )
         self._saved_pth: bytes | None = None
         self._stashed: list[tuple[str, str]] = []
@@ -233,7 +233,7 @@ class StashedRemovePaths(BaseRemovePaths):
                 # Don't stash cache files, remove them directly
                 os.unlink(old_path)
             root = _get_file_root(
-                old_path, os.path.abspath(self.envrionment.get_paths()["prefix"])
+                old_path, os.path.abspath(self.environment.get_paths()["prefix"])
             )
             if root is None:
                 termui.logger.debug(

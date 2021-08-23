@@ -40,7 +40,7 @@ class DummyFuture:
 
 
 class DummyExecutor:
-    """A synchronous pool class to mimick ProcessPoolExecuter's interface.
+    """A synchronous pool class to mimic ProcessPoolExecuter's interface.
     functions are called and awaited for the result
     """
 

@@ -42,7 +42,7 @@ class HelloCommand(BaseCommand):
         print(f"Hello, {name}")
 ```
 
-First, let's create a new `HelloCommand` class inherting from `pdm.cli.commands.base.BaseCommand`. It has two major functions:
+First, let's create a new `HelloCommand` class inheriting from `pdm.cli.commands.base.BaseCommand`. It has two major functions:
 
 - `add_arguments()` to manipulate the argument parser passed as the only argument,
   where you can add additional command line arguments to it

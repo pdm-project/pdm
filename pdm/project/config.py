@@ -80,7 +80,7 @@ class Config(MutableMapping[str, str]):
             "Check if there is any newer version available", True, True
         ),
         "auto_global": ConfigItem(
-            "Use global package implicity if no local project is found",
+            "Use global package implicitly if no local project is found",
             False,
             True,
             "PDM_AUTO_GLOBAL",
