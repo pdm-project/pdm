@@ -161,33 +161,51 @@ class Candidate:
         """PEP 610 direct_url.json data"""
         req = self.req
         if isinstance(req, VcsRequirement):
-            return {
-                "url": url_without_fragments(req.url),
-                "vcs_info": _filter_none(
+            if req.editable:
+                assert self.ireq.source_dir
+                return _filter_none(
                     {
-                        "vcs": req.vcs,
-                        "requested_revision": req.ref,
-                        "commit_id": self.revision,
+                        "url": pip_shims.path_to_url(self.ireq.source_dir),
+                        "dir_info": {"editable": True},
+                        "subdirectory": req.subdirectory,
                     }
-                ),
-            }
+                )
+            return _filter_none(
+                {
+                    "url": url_without_fragments(req.url),
+                    "vcs_info": _filter_none(
+                        {
+                            "vcs": req.vcs,
+                            "requested_revision": req.ref,
+                            "commit_id": self.revision,
+                        }
+                    ),
+                    "subdirectory": req.subdirectory,
+                }
+            )
         elif isinstance(req, FileRequirement):
             if req.is_local_dir:
-                return {
-                    "url": url_without_fragments(req.url),
-                    "dir_info": _filter_none({"editable": req.editable or None}),
-                }
+                return _filter_none(
+                    {
+                        "url": url_without_fragments(req.url),
+                        "dir_info": _filter_none({"editable": req.editable or None}),
+                        "subdirectory": req.subdirectory,
+                    }
+                )
             with self.environment.get_finder() as finder:
                 hash_cache = self.environment.project.make_hash_cache()
                 hash_cache.session = finder.session  # type: ignore
-                return {
-                    "url": url_without_fragments(req.url),
-                    "archive_info": {
-                        "hash": hash_cache.get_hash(pip_shims.Link(req.url)).replace(
-                            ":", "="
-                        )
-                    },
-                }
+                return _filter_none(
+                    {
+                        "url": url_without_fragments(req.url),
+                        "archive_info": {
+                            "hash": hash_cache.get_hash(
+                                pip_shims.Link(req.url)
+                            ).replace(":", "=")
+                        },
+                        "subdirectory": req.subdirectory,
+                    }
+                )
         else:
             return None
 

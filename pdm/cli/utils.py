@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from argparse import Action, _ArgumentGroup
@@ -18,6 +19,7 @@ from pdm._types import Distribution
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
+from pdm.models.pip_shims import url_to_path
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -620,3 +622,16 @@ def is_scoop_installation() -> bool:
     except ValueError:
         return False
     return True
+
+
+def get_dist_location(dist: Distribution) -> str:
+    direct_url = dist.read_text("direct_url.json")
+    if not direct_url:
+        return ""
+    direct_url_data = json.loads(direct_url)
+    url = cast(str, direct_url_data["url"])
+    if url.startswith("file:"):
+        path = url_to_path(url)
+        editable = direct_url_data.get("dir_info", {}).get("editable", False)
+        return f"{'-e ' if editable else ''}{path}"
+    return ""

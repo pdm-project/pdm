@@ -13,7 +13,7 @@ from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import parse_requirement, strip_extras
-from pdm.utils import is_egg_link
+from pdm.utils import is_editable
 
 
 class DummyFuture:
@@ -158,7 +158,7 @@ class Synchronizer:
                 if (
                     can.req.editable
                     or self.reinstall
-                    or is_egg_link(dist)
+                    or is_editable(dist)
                     or (dist.version != can.version)
                 ):
                     to_update.append(key)

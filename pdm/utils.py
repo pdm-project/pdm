@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import atexit
 import functools
+import json
 import os
 import re
 import shutil
@@ -481,7 +482,19 @@ def normalize_name(name: str) -> str:
 
 
 def is_egg_link(dist: Distribution) -> bool:
+    """Check if the distribution is an egg-link install"""
     return getattr(dist, "link_file", None) is not None
+
+
+def is_editable(dist: Distribution) -> bool:
+    """Check if the distribution is installed in editable mode"""
+    if is_egg_link(dist):
+        return True
+    direct_url = dist.read_text("direct_url.json")
+    if not direct_url:
+        return False
+    direct_url_data = json.loads(direct_url)
+    return direct_url_data.get("dir_info", {}).get("editable", False)
 
 
 def pdm_scheme(base: str) -> dict[str, str]:
