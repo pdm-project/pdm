@@ -31,7 +31,7 @@ class BaseProvider(AbstractProvider):
 
         - Editable requirements are preferered.
         - File links are preferred.
-        - The one with narrower specifierset is perferred.
+        - The one with narrower specifierset is preferred.
         """
         editable = requirement.editable
         is_file = requirement.is_file_or_url

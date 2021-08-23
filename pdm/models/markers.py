@@ -56,7 +56,7 @@ def split_marker_extras(
     marker: PackageMarker,
 ) -> Tuple[List[str], Optional[PackageMarker]]:
     """An element can be stripped from the marker only if all parts are connected
-    with `and` operater. The rest part are returned as a string or `None` if all are
+    with `and` operator. The rest part are returned as a string or `None` if all are
     stripped.
 
     :param marker: the input marker string

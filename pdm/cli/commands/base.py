@@ -14,7 +14,7 @@ class BaseCommand:
     name: Optional[str] = None
     # The subcommand's help string, if not given, __doc__ will be used.
     description: Optional[str] = None
-    # A list of pre-defined options which will be loaded on initailizing
+    # A list of pre-defined options which will be loaded on initializing
     # Rewrite this if you don't want the default ones
     arguments: List[Option] = [verbose_option, global_option, project_option]
 

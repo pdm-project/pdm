@@ -16,7 +16,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
     """A custom auth class that differs from Pip's implementation in the
     following ways:
 
-        - It shows an error message when credentials are not provided or correect.
+        - It shows an error message when credentials are not provided or correct.
     """
 
     def __init__(

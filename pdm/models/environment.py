@@ -105,7 +105,7 @@ class Environment:
             python_abi_tag,
             ignore_requires_python,
         )
-        # Reuse the auth across sessions to avoid prompting repeatly.
+        # Reuse the auth across sessions to avoid prompting repeatedly.
         finder.session.auth = self.auth  # type: ignore
         yield finder
         finder.session.close()  # type: ignore

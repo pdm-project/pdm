@@ -246,7 +246,7 @@ Plain text scripts are regarded as normal command, or you can explicitly specify
 start_server = {cmd = "flask run -p 54321"}
 ```
 
-In some cases, such as when wanting to add comments between parameters, it might be more convinient
+In some cases, such as when wanting to add comments between parameters, it might be more convenient
 to specify the command as an array instead of a string:
 
 ```toml
@@ -333,7 +333,7 @@ PDM provides a convenient command group to manage the cache, there are four kind
 
 1. `wheels/` stores the built results of non-wheel distributions and files.
 1. `http/` stores the HTTP response content.
-1. `metadata/` stores package metadata retreived by the resolver.
+1. `metadata/` stores package metadata retrieved by the resolver.
 1. `hashes/` stores the file hashes fetched from the package index or calculated locally.
 
 See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.

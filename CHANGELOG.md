@@ -43,7 +43,7 @@ Release v1.7.1 (2021-07-29)
 ### Bug Fixes
 
 - Accept non-canonical distribution name in the wheel's dist-info directory name. [#529](https://github.com/pdm-project/pdm/issues/529)
-- Prefer requirments with narrower version constraints or allowing prereleases to find matches. [#551](https://github.com/pdm-project/pdm/issues/551)
+- Prefer requirements with narrower version constraints or allowing prereleases to find matches. [#551](https://github.com/pdm-project/pdm/issues/551)
 - Use the underlying real executable path for writing shebangs. [#553](https://github.com/pdm-project/pdm/issues/553)
 - Fix a bug that extra markers cannot be extracted when combined with other markers with "and". [#559](https://github.com/pdm-project/pdm/issues/559)
 - Fix a bug that redacted credentials in source urls get overwritten with the plain text after locking. [#561](https://github.com/pdm-project/pdm/issues/561)
@@ -81,7 +81,7 @@ Release v1.7.0 (2021-07-20)
 
 ### Refactor
 
-- Seperate the build env into two different levels for better caching. [#541](https://github.com/pdm-project/pdm/issues/541)
+- Separate the build env into two different levels for better caching. [#541](https://github.com/pdm-project/pdm/issues/541)
 - Refactor the build part into smaller functions. [#543](https://github.com/pdm-project/pdm/issues/543)
 
 
@@ -139,7 +139,7 @@ Release v1.6.0 (2021-05-31)
 
 - Use a new approach to determine the packages to be installed. This requires a quick resolution step before installation. [#456](https://github.com/pdm-project/pdm/issues/456)
 - `pdm export` no longer produces requirements file applicable for all platforms due to the new approach. [#456](https://github.com/pdm-project/pdm/issues/456)
-- Add structural typing for requirements module. Refactor the requirments module for that purpose. [#433](https://github.com/pdm-project/pdm/issues/433)
+- Add structural typing for requirements module. Refactor the requirements module for that purpose. [#433](https://github.com/pdm-project/pdm/issues/433)
 - Introduce `--no-editable` option to install non-editable versions of all packages. [#443](https://github.com/pdm-project/pdm/issues/443)
 - Introduce `--no-self` option to prevent the project itself from being installed. [#444](https://github.com/pdm-project/pdm/issues/444)
 - Add a default `.gitignore` file in the `__pypackages__` directory. [#446](https://github.com/pdm-project/pdm/issues/446)
@@ -289,7 +289,7 @@ Release v1.5.0b0 (2021-04-03)
 - Add a special value `:all` given to `-s/--section` to refer to all sections under the same species.
   Adjust `add`, `sync`, `install`, `remove` and `update` to support the new `dev-dependencies` groups. Old behavior will be kept the same. [#351](https://github.com/pdm-project/pdm/issues/351)
 - `dev-dependencies` is now a table of dependencies groups, where key is the group name and value is an array of dependencies. These dependencies won't appear in the distribution's metadata. `dev-depedencies` of the old format will turn into `dev` group under `dev-dependencies`. [#351](https://github.com/pdm-project/pdm/issues/351)
-- Move `dev-dependencies`, `includes`, `excludes` and `package-dir` out from `[project]` table to `[tool.pdm]` table. The migration will be done automaticaly if old format is detected. [#351](https://github.com/pdm-project/pdm/issues/351)
+- Move `dev-dependencies`, `includes`, `excludes` and `package-dir` out from `[project]` table to `[tool.pdm]` table. The migration will be done automatically if old format is detected. [#351](https://github.com/pdm-project/pdm/issues/351)
 - Throws an error with meaningful message when no candidate is found for one requirement. [#357](https://github.com/pdm-project/pdm/issues/357)
 - Support `--dry-run` option for `update` command to display packages that need update, install or removal. Add `--top` option to limit to top level packages only. [#358](https://github.com/pdm-project/pdm/issues/358)
 - Full-featured completion scripts for Zsh and Powershell - section selection, package name autocompletion and so on. Windows is a first-class citizen! [#367](https://github.com/pdm-project/pdm/issues/367)
@@ -486,7 +486,7 @@ Release v1.3.0 (2021-02-09)
 
 - Increase the default value of the max rounds of resolution to 1000, make it configurable. [#238](https://github.com/pdm-project/pdm/issues/238)
 - Rewrite the project's `egg-info` directory when dependencies change. So that `pdm list --graph` won't show invalid entries. [#240](https://github.com/pdm-project/pdm/issues/240)
-- When importing requirments from a `requirments.txt` file, build the package to find the name if not given in the URL. [#245](https://github.com/pdm-project/pdm/issues/245)
+- When importing requirements from a `requirements.txt` file, build the package to find the name if not given in the URL. [#245](https://github.com/pdm-project/pdm/issues/245)
 - When initializing the project, prompt user for whether the project is a library, and give empty `name` and `version` if not. [#253](https://github.com/pdm-project/pdm/issues/253)
 
 ### Bug Fixes

@@ -282,7 +282,7 @@ def copytree(src: Path, dst: Path) -> None:
 
 @pytest.fixture()
 def fixture_project(project_no_init):
-    """Initailize a project from a fixture project"""
+    """Initialize a project from a fixture project"""
 
     def func(project_name):
         source = FIXTURES / "projects" / project_name

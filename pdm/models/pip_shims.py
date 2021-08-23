@@ -1,7 +1,7 @@
 # flake8: noqa
 """
 This module provides a middle layer between pdm and pip.
-All pip members are imported here for compatiblity purpose.
+All pip members are imported here for compatibility purpose.
 """
 from __future__ import annotations
 
