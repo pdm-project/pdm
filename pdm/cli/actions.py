@@ -21,6 +21,7 @@ from pdm.cli.utils import (
     format_lockfile,
     format_resolution_impossible,
     frozen_requirement_from_dist,
+    get_dist_location,
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
@@ -29,7 +30,6 @@ from pdm.cli.utils import (
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
-from pdm.installers.manager import format_dist
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -400,10 +400,10 @@ def do_list(
             project.core.ui.echo("".join(reqs))
             return
         rows = [
-            (termui.green(k, bold=True), format_dist(v))
+            (termui.green(k, bold=True), termui.yellow(v.version), get_dist_location(v))
             for k, v in sorted(working_set.items())
         ]
-        project.core.ui.display_columns(rows, ["Package", "Version"])
+        project.core.ui.display_columns(rows, ["Package", "Version", "Location"])
 
 
 def do_build(

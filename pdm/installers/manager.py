@@ -6,20 +6,11 @@ from pdm import termui
 from pdm.exceptions import UninstallError
 from pdm.installers.installers import install_wheel, install_wheel_with_cache
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
-from pdm.utils import is_egg_link
 
 if TYPE_CHECKING:
     from pdm._types import Distribution
     from pdm.models.candidates import Candidate
     from pdm.models.environment import Environment
-
-
-def format_dist(dist: Distribution) -> str:
-    formatter = "{version}{path}"
-    path = ""
-    if is_egg_link(dist):
-        path = f" (-e {dist._path.parent})"  # type: ignore
-    return formatter.format(version=termui.yellow(dist.version), path=path)
 
 
 class InstallManager:

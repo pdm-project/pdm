@@ -167,6 +167,9 @@ class Distribution:
     def requires(self):
         return self.dependencies
 
+    def read_text(self, path):
+        return None
+
 
 class MockWorkingSet(collections.abc.MutableMapping):
     def __init__(self, *args, **kwargs):
