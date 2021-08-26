@@ -1,3 +1,24 @@
+Release v1.8.1 (2021-08-26)
+---------------------------
+
+### Features & Improvements
+
+- Add `-r/--reinstall` option to `sync` command to force re-install the existing dependencies. [#601](https://github.com/pdm-project/pdm/issues/601)
+- Show update hint after every pdm command. [#603](https://github.com/pdm-project/pdm/issues/603)
+- `pdm cache clear` can clear cached installations if not needed any more. [#604](https://github.com/pdm-project/pdm/issues/604)
+
+### Bug Fixes
+
+- Fix the editable install script so that `setuptools` won't see the dependencies under local packages. [#601](https://github.com/pdm-project/pdm/issues/601)
+- Preserve the executable bit when installing wheels. [#606](https://github.com/pdm-project/pdm/issues/606)
+- Write PEP 610 metadata `direct_url.json` when installing wheels. [#607](https://github.com/pdm-project/pdm/issues/607)
+- Fix a bug that `*` fails to be converted as `SpecifierSet`. [#609](https://github.com/pdm-project/pdm/issues/609)
+
+### Refactor
+
+- Build editable packages are into wheels via PEP 660 build backend. Now all installations are unified into wheels. [#612](https://github.com/pdm-project/pdm/issues/612)
+
+
 Release v1.8.0 (2021-08-16)
 ---------------------------
 
