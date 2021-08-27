@@ -238,3 +238,16 @@ For convenience, PDM supports environment variables expansion in the dependency 
   `file:///${PROJECT_ROOT}/artifacts/Flask-1.1.2.tar.gz`.
 
 Don't worry about credential leakage, the environment variables will be expanded when needed and kept untouched in the lock file.
+
+
+## Save disk space by enabling the install cache
+
+When using virtualenv to isolate project dependencies, if you have 100 projects depending on the same package, you will end up with 100 copies of that dependency. With PDM, you can opt in the installation caching so that the dependency will be installed into a centrialized store and be used by multiple projects. To enable it, simply do:
+
+```
+$ pdm config feature.install_cache on
+```
+
+Add `--local` option to enable for the current project only.
+
+This feature will only cache the normal wheel installations, i.e. installing from source won't be cached.

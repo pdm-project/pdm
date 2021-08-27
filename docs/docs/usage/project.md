@@ -335,6 +335,7 @@ PDM provides a convenient command group to manage the cache, there are four kind
 1. `http/` stores the HTTP response content.
 1. `metadata/` stores package metadata retrieved by the resolver.
 1. `hashes/` stores the file hashes fetched from the package index or calculated locally.
+1. `packages/` The centrialized repository for installed wheels.
 
 See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
 Find the usage by the `--help` option of each command.
