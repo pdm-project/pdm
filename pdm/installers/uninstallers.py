@@ -232,6 +232,7 @@ class StashedRemovePaths(BaseRemovePaths):
             if old_path.endswith(".pyc"):
                 # Don't stash cache files, remove them directly
                 os.unlink(old_path)
+                continue
             root = _get_file_root(
                 old_path, os.path.abspath(self.environment.get_paths()["prefix"])
             )
