@@ -175,7 +175,8 @@ def test_parse_poetry_project_metadata(project, is_editable):
         f"{(FIXTURES / 'projects/poetry-demo').as_posix()}", is_editable
     )
     candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == ["requests<3.0,>=2.6"]
+    requests_dep = "requests (<3.0,>=2.6)" if is_editable else "requests<3.0,>=2.6"
+    assert candidate.get_dependencies_from_metadata() == [requests_dep]
     assert candidate.name == "poetry-demo"
     assert candidate.version == "0.1.0"
 
@@ -186,11 +187,9 @@ def test_parse_flit_project_metadata(project, is_editable):
     )
     candidate = Candidate(req, project.environment)
     deps = candidate.get_dependencies_from_metadata()
-    for dep in [
-        "requests>=2.6",
-        'configparser; python_version == "2.7"',
-    ]:
-        assert dep in deps
+    requests_dep = "requests (>=2.6)" if is_editable else "requests>=2.6"
+    assert requests_dep in deps
+    assert 'configparser; python_version == "2.7"' in deps
     assert candidate.name == "pyflit"
     assert candidate.version == "0.1.0"
 
