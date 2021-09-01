@@ -1,3 +1,11 @@
+Release v1.8.2 (2021-09-01)
+---------------------------
+
+### Bug Fixes
+
+- Fix the removal issue of standalone pyc files [#633](https://github.com/pdm-project/pdm/issues/633)
+
+
 Release v1.8.1 (2021-08-26)
 ---------------------------
 
