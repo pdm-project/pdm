@@ -33,7 +33,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (build)
-            opts="--config-setting --dest --help --no-clean --no-sdist --no-wheel --project --verbose"
+            opts="--config-setting --dest --help --no-clean --no-sdist --no-wheel --project --verbose --no-isolation"
             ;;
 
             (cache)

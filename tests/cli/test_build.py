@@ -1,5 +1,9 @@
+import subprocess
+import sys
 import tarfile
 import zipfile
+
+import pytest
 
 from pdm.cli import actions
 
@@ -148,3 +152,29 @@ def test_cli_build_with_config_settings(fixture_project, invoke):
     result = invoke(["build", "-C--plat-name=win_amd64"], obj=project)
     assert result.exit_code == 0
     assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
+
+
+@pytest.mark.parametrize("isolated", (True, False))
+def test_build_with_no_isolation(fixture_project, invoke, isolated):
+    project = fixture_project("demo-failure")
+    lib_path = project.environment.get_paths()["purelib"]
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-I",
+            "--force-reinstall",
+            "idna",
+            "--target",
+            str(lib_path),
+        ],
+        check=True,
+    )
+    invoke(["add", "idna"], obj=project)
+    args = ["build"]
+    if not isolated:
+        args.append("--no-isolation")
+    result = invoke(args, obj=project)
+    assert result.exit_code == int(isolated)

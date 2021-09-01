@@ -1,7 +1,6 @@
 from setuptools import setup
 
-if True:
-    raise RuntimeError("This mimics the build error on unmatched platform")
+import idna
 
 setup(
     name="demo",
