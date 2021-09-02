@@ -228,7 +228,7 @@ Add the following to `.vscode/settings.json`:
 [Enable PEP582 globally](https://pdm.fming.dev/#enable-pep-582-globally),
 and make sure VSCode runs using the same user and shell you enabled PEP582 for.
 
-!!! note "Cannot enable PEP582 globally?"
+??? note "Cannot enable PEP582 globally?"
     If for some reason you cannot enable PEP582 globally, you can still configure each "launch" in each project:
     set the `PYTHONPATH` environment variable in your launch configuration, in `.vscode/launch.json`.
     For example, to debug your `pytest` run:

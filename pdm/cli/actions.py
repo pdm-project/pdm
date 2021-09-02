@@ -412,6 +412,7 @@ def do_build(
     wheel: bool = True,
     dest: str = "dist",
     clean: bool = True,
+    isolated: bool = True,
     config_settings: Mapping[str, str] | None = None,
 ) -> None:
     """Build artifacts for distribution."""
@@ -429,15 +430,15 @@ def do_build(
     with project.core.ui.logging("build"):
         if sdist:
             project.core.ui.echo("Building sdist...")
-            loc = SdistBuilder(project.root, project.environment).build(
-                dest, config_settings
-            )
+            loc = SdistBuilder(
+                project.root, project.environment, isolated=isolated
+            ).build(dest, config_settings)
             project.core.ui.echo(f"Built sdist at {loc}")
         if wheel:
             project.core.ui.echo("Building wheel...")
-            loc = WheelBuilder(project.root, project.environment).build(
-                dest, config_settings
-            )
+            loc = WheelBuilder(
+                project.root, project.environment, isolated=isolated
+            ).build(dest, config_settings)
             project.core.ui.echo(f"Built wheel at {loc}")
 
 

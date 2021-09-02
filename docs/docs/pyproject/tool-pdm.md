@@ -134,6 +134,8 @@ Now, specify the build script path via `build` in the `pyproject.toml`:
 build = "build.py"
 ```
 
+By default, every build is performed in a clean and isolated environment, only build requirements can be seen. If your build has optional requirements that depend on the project environment, you can turn off the environment isolation by `pdm build --no-isolation`.
+
 ## Editable build backend
 
 PDM leverages [PEP 660](https://www.python.org/dev/peps/pep-0660/) to build wheels for editable installation.

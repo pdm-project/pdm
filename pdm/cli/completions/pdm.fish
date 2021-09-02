@@ -68,6 +68,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-sdist -d 'Don\'t
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-wheel -d 'Don\'t build wheels'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # cache
 complete -c pdm -A -n '__fish_seen_subcommand_from cache' -l help -d 'show this help message and exit'

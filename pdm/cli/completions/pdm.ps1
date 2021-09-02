@@ -206,7 +206,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddParams(@(getPyPIPackages), $true)
                 break
             }
-            "build" { $completer.AddOpts(@([Option]::new(@("-d", "--dest", "--no-clean", "--no-sdist", "--no-wheel", "-C", "--config-setting")), $projectOption)) }
+            "build" { $completer.AddOpts(@([Option]::new(@("-d", "--dest", "--no-clean", "--no-sdist", "--no-wheel", "-C", "--config-setting", "--no-isolation")), $projectOption)) }
             "cache" {
                 $subCommand = $commands[1]
                 switch ($subCommand) {

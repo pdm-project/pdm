@@ -37,6 +37,13 @@ class Command(BaseCommand):
             help="Do not clean the target directory",
         )
         parser.add_argument(
+            "--no-isolation",
+            dest="isolated",
+            default=True,
+            action="store_false",
+            help="Do not isolate the build in a clean environment",
+        )
+        parser.add_argument(
             "--config-setting",
             "-C",
             action="append",
@@ -60,9 +67,10 @@ class Command(BaseCommand):
 
         actions.do_build(
             project,
-            options.sdist,
-            options.wheel,
-            options.dest,
-            options.clean,
-            config_settings,
+            sdist=options.sdist,
+            wheel=options.wheel,
+            dest=options.dest,
+            clean=options.clean,
+            isolated=options.isolated,
+            config_settings=config_settings,
         )

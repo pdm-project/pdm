@@ -156,10 +156,16 @@ class EnvBuilder:
             )
         return cls._overlay_envs[key]
 
-    def __init__(self, src_dir: str | Path, environment: Environment) -> None:
+    def __init__(
+        self, src_dir: str | Path, environment: Environment, isolated: bool = True
+    ) -> None:
+        """If isolated is True(default), the builder will set up a *clean* environment.
+        Otherwise, the environment of the host Python will be used.
+        """
         self._env = environment
         self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
+        self.isolated = isolated
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
@@ -196,14 +202,25 @@ class EnvBuilder:
 
     @property
     def _env_vars(self) -> dict[str, str]:
+        from pdm.cli.actions import PEP582_PATH
+
         paths = self._prefix.bin_dirs
         if "PATH" in os.environ:
             paths.append(os.getenv("PATH", ""))
-        return {
-            "PYTHONPATH": self._prefix.site_dir,
-            "PATH": os.pathsep.join(paths),
-            "PYTHONNOUSERSITE": "1",
-        }
+        env = {"PATH": os.pathsep.join(paths)}
+        if self.isolated:
+            env.update(
+                {
+                    "PYTHONPATH": self._prefix.site_dir,
+                    "PYTHONNOUSERSITE": "1",
+                }
+            )
+        else:
+            pythonpath = self._prefix.lib_dirs + [PEP582_PATH]
+            if "PYTHONPATH" in os.environ:
+                pythonpath.append(os.getenv("PYTHONPATH", ""))
+            env.update(PYTHONPATH=os.pathsep.join(pythonpath))
+        return env
 
     def subprocess_runner(
         self,
