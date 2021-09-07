@@ -2,7 +2,7 @@ ci:
   autoupdate_schedule: monthly
 repos:
   - repo: https://github.com/psf/black
-    rev: 21.7b0
+    rev: 21.8b0
     hooks:
       - id: black
         exclude: ^pdm/_vendor
