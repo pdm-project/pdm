@@ -1,3 +1,15 @@
+Release v1.8.3 (2021-09-07)
+---------------------------
+
+### Features & Improvements
+
+- Allow to build in non-isolated environment, to enable optional speedups depending on the environment. [#635](https://github.com/pdm-project/pdm/issues/635)
+
+### Bug Fixes
+
+- Don't copy `*-nspkg.pth` files in `install_cache` mode. It will still work without them. [#623](https://github.com/pdm-project/pdm/issues/623)
+
+
 Release v1.8.2 (2021-09-01)
 ---------------------------
 
