@@ -246,3 +246,10 @@ ignore_python_option = Option(
     action="store_true",
     help="Ignore the Python path saved in the pdm.toml config",
 )
+
+no_isolation_option = Option(
+    "--no-isolation",
+    dest="build_isolation",
+    action="store_false",
+    help="Do not isolate the build in a clean environment",
+)

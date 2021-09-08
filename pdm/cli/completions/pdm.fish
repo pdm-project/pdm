@@ -138,6 +138,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-self -d 'Don\'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # list
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l freeze -d 'Show the installed dependencies in pip\'s requirements.txt format'
@@ -208,6 +209,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l production -d 'Unsel
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l reinstall -d 'Force reinstall existing dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # update
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l dev -d 'Select dev dependencies'

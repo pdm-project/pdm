@@ -86,6 +86,13 @@ class Config(MutableMapping[str, str]):
             "PDM_AUTO_GLOBAL",
             coerce=ensure_boolean,
         ),
+        "build_isolation": ConfigItem(
+            "Isolate build environment from the project environment",
+            True,
+            False,
+            "PDM_BUILD_ISOLATION",
+            ensure_boolean,
+        ),
         "strategy.update": ConfigItem(
             "The default strategy for updating packages", "reuse", False
         ),

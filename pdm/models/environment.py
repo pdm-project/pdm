@@ -57,6 +57,7 @@ class Environment:
         self.auth = make_basic_auth(
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
+        self.build_isolation: bool = project.config["build_isolation"]
 
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""

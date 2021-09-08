@@ -264,7 +264,7 @@ function TabExpansion($line, $lastWord) {
             }
             "install" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--no-lock", "--prod", "--productin", "--no-editable", "--no-self")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--no-lock", "--prod", "--productin", "--no-editable", "--no-self", "--no-isolation")),
                         $sectionOption,
                         $projectOption
                     ))
@@ -337,7 +337,7 @@ function TabExpansion($line, $lastWord) {
             }
             "sync" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "-r", "--reinstall", "--prod", "--productin", "--no-editable", "--no-self")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "-r", "--reinstall", "--prod", "--productin", "--no-editable", "--no-self", "--no-isolation")),
                         $sectionOption,
                         $projectOption
                     ))

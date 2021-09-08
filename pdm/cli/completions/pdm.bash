@@ -65,7 +65,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (install)
-            opts="--dev --global --group --help --no-default --no-editable --no-lock --no-self --production --project --verbose"
+            opts="--dev --global --group --help --no-default --no-editable --no-lock --no-self --production --project --verbose --no-isolation"
             ;;
 
             (list)
@@ -97,7 +97,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --global --group --help --no-clean --no-default --no-editable --no-self --production --project --reinstall --verbose"
+            opts="--clean --dev --dry-run --global --group --help --no-clean --no-default --no-editable --no-self --production --project --reinstall --verbose --no-isolation"
             ;;
 
             (update)

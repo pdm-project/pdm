@@ -170,6 +170,7 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        "--no-isolation[do not isolate the build in a clean environment]"
       )
       ;;
     list)
@@ -277,6 +278,7 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        "--no-isolation[do not isolate the build in a clean environment]"
       )
       ;;
     update)

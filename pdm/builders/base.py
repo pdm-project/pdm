@@ -156,16 +156,14 @@ class EnvBuilder:
             )
         return cls._overlay_envs[key]
 
-    def __init__(
-        self, src_dir: str | Path, environment: Environment, isolated: bool = True
-    ) -> None:
+    def __init__(self, src_dir: str | Path, environment: Environment) -> None:
         """If isolated is True(default), the builder will set up a *clean* environment.
         Otherwise, the environment of the host Python will be used.
         """
         self._env = environment
         self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
-        self.isolated = isolated
+        self.isolated = environment.build_isolation
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
