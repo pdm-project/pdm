@@ -1,9 +1,23 @@
 from __future__ import annotations
 
 import argparse
-from typing import Any, Callable
+import os
+from typing import Any, Callable, Sequence
 
 from click import secho
+
+from pdm._types import Protocol
+
+
+class ActionCallback(Protocol):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None,
+    ) -> None:
+        ...
 
 
 class Option:
@@ -20,6 +34,21 @@ class Option:
 
     def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         group.add_argument(*self.args, **self.kwargs)
+
+
+class CallbackAction(argparse.Action):
+    def __init__(self, *args: Any, callback: ActionCallback, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.callback = callback
+
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ) -> None:
+        return self.callback(parser, namespace, values, option_string=option_string)
 
 
 class ArgumentGroup(Option):
@@ -105,6 +134,26 @@ install_group.add_argument(
     dest="no_self",
     help="Don't install the project itself",
 )
+
+
+def no_isolation_callback(
+    parser: argparse.ArgumentParser,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None,
+) -> None:
+    os.environ["PDM_BUILD_ISOLATION"] = "no"
+
+
+no_isolation_option = Option(
+    "--no-isolation",
+    dest="build_isolation",
+    action=CallbackAction,
+    nargs=0,
+    help="Do not isolate the build in a clean environment",
+    callback=no_isolation_callback,
+)
+install_group.options.append(no_isolation_option)
 
 groups_group = ArgumentGroup("Dependencies selection")
 groups_group.add_argument(
@@ -245,11 +294,4 @@ ignore_python_option = Option(
     "--ignore-python",
     action="store_true",
     help="Ignore the Python path saved in the pdm.toml config",
-)
-
-no_isolation_option = Option(
-    "--no-isolation",
-    dest="build_isolation",
-    action="store_false",
-    help="Do not isolate the build in a clean environment",
 )

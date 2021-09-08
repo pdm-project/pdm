@@ -57,8 +57,6 @@ class Command(BaseCommand):
                     if not isinstance(config_settings[name], list):
                         config_settings[name] = [config_settings[name]]
                     config_settings[name].append(value)
-        if options.build_isolation is not None:
-            project.environment.build_isolation = options.build_isolation
         actions.do_build(
             project,
             sdist=options.sdist,

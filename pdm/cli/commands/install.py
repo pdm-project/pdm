@@ -5,7 +5,7 @@ import click
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import groups_group, install_group, no_isolation_option
+from pdm.cli.options import groups_group, install_group
 from pdm.project import Project
 
 
@@ -15,7 +15,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         groups_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
-        no_isolation_option.add_to_parser(parser)
         parser.add_argument(
             "--no-lock",
             dest="lock",
@@ -42,8 +41,7 @@ class Command(BaseCommand):
                     "Lock file hash doesn't match pyproject.toml, regenerating..."
                 )
                 actions.do_lock(project, strategy="reuse")
-        if options.build_isolation is not None:
-            project.environment.build_isolation = options.build_isolation
+
         actions.do_sync(
             project,
             groups=options.groups,

@@ -163,7 +163,7 @@ class EnvBuilder:
         self._env = environment
         self.executable = self._env.interpreter.executable
         self.src_dir = src_dir
-        self.isolated = environment.build_isolation
+        self.isolated = environment.project.config["build_isolation"]
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
