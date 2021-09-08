@@ -1,9 +1,11 @@
 import os
-from typing import Any, Mapping, Optional
+from pathlib import Path
+from typing import Any, Mapping, Optional, Union
 
 from pep517.wrappers import HookMissing
 
 from pdm.builders.base import EnvBuilder
+from pdm.models.environment import Environment
 
 
 class EditableBuilder(EnvBuilder):
@@ -13,6 +15,14 @@ class EditableBuilder(EnvBuilder):
         "build-backend": "setuptools_pep660",
         "requires": ["setuptools_pep660"],
     }
+
+    def __init__(self, src_dir: Union[str, Path], environment: Environment) -> None:
+        super().__init__(src_dir, environment)
+        if self._hook.build_backend.startswith(
+            "pdm.pep517"
+        ) and environment.interpreter.version_tuple < (3, 6):
+            # pdm.pep517 backend is not available on Python 2, use the fallback backend
+            self.init_build_system(self.FALLBACK_BACKEND)
 
     def prepare_metadata(
         self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
@@ -26,7 +36,6 @@ class EditableBuilder(EnvBuilder):
             )
         except HookMissing:
             self.init_build_system(self.FALLBACK_BACKEND)
-            self.ensure_setup_py()
             return self.prepare_metadata(out_dir, config_settings)
         return os.path.join(out_dir, filename)
 
@@ -45,20 +54,5 @@ class EditableBuilder(EnvBuilder):
             )
         except HookMissing:
             self.init_build_system(self.FALLBACK_BACKEND)
-            self.ensure_setup_py()
             return self.build(out_dir, config_settings, metadata_directory)
         return os.path.join(out_dir, filename)
-
-    def ensure_setup_py(self) -> str:
-        from pdm.pep517.base import Builder
-        from pdm.project.metadata import MutableMetadata
-
-        builder = Builder(self.src_dir)
-        if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
-            try:
-                builder._meta = MutableMetadata(
-                    os.path.join(self.src_dir, "pyproject.toml")
-                )
-            except ValueError:
-                builder._meta = None
-        return builder.ensure_setup_py().as_posix()

@@ -197,6 +197,8 @@ class EnvBuilder:
             python_executable=self.executable,
         )
         self._requires = build_system["requires"]
+        if build_system["build-backend"].startswith("setuptools"):
+            self.ensure_setup_py()
 
     @property
     def _env_vars(self) -> dict[str, str]:
@@ -296,3 +298,17 @@ class EnvBuilder:
         return the absolute path of the built result.
         """
         raise NotImplementedError("Should be implemented in subclass")
+
+    def ensure_setup_py(self) -> str:
+        from pdm.pep517.base import Builder
+        from pdm.project.metadata import MutableMetadata
+
+        builder = Builder(self.src_dir)
+        if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
+            try:
+                builder._meta = MutableMetadata(
+                    os.path.join(self.src_dir, "pyproject.toml")
+                )
+            except ValueError:
+                builder._meta = None
+        return builder.ensure_setup_py().as_posix()
