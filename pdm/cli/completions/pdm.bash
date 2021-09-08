@@ -29,7 +29,7 @@ _pdm_25182a7ef85b840e_complete()
         case "$com" in
 
             (add)
-            opts="--dev --editable --global --group --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --unconstrained --update-eager --update-reuse --verbose"
+            opts="--dev --editable --global --group --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --unconstrained --update-eager --update-reuse --verbose --no-isolation"
             ;;
 
             (build)
@@ -65,7 +65,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (install)
-            opts="--dev --global --group --help --no-default --no-editable --no-lock --no-self --production --project --verbose"
+            opts="--dev --global --group --help --no-default --no-editable --no-lock --no-self --production --project --verbose --no-isolation"
             ;;
 
             (list)
@@ -73,7 +73,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (lock)
-            opts="--global --help --project --verbose"
+            opts="--global --help --project --verbose --no-isolation"
             ;;
 
             (plugin)
@@ -81,7 +81,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (remove)
-            opts="--dev --global --group --help --no-editable --no-self --no-sync --project --verbose"
+            opts="--dev --global --group --help --no-editable --no-self --no-sync --project --verbose --no-isolation"
             ;;
 
             (run)
@@ -97,11 +97,11 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --global --group --help --no-clean --no-default --no-editable --no-self --production --project --reinstall --verbose"
+            opts="--clean --dev --dry-run --global --group --help --no-clean --no-default --no-editable --no-self --production --project --reinstall --verbose --no-isolation"
             ;;
 
             (update)
-            opts="--dev --global --group --help --no-default --no-editable --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --top --unconstrained --update-eager --update-reuse --verbose"
+            opts="--dev --global --group --help --no-default --no-editable --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --top --unconstrained --update-eager --update-reuse --verbose --no-isolation"
             ;;
 
             (use)

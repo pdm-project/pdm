@@ -41,6 +41,7 @@ class Command(BaseCommand):
                     "Lock file hash doesn't match pyproject.toml, regenerating..."
                 )
                 actions.do_lock(project, strategy="reuse")
+
         actions.do_sync(
             project,
             groups=options.groups,

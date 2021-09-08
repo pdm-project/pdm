@@ -58,6 +58,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l unconstrained -d 'Ign
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # build
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l config-setting -d 'Pass options to the backend. options with a value must be specified after "=": "--config-setting=--opt(=value)" or "-C--opt(=value)"'
@@ -138,6 +139,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-self -d 'Don\'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # list
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l freeze -d 'Show the installed dependencies in pip\'s requirements.txt format'
@@ -154,6 +156,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # plugin
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin' -l help -d 'show this help message and exit'
@@ -169,6 +172,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-self -d 'Don\'t
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-sync -d 'Only write pyproject.toml and do not uninstall packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # run
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l global -d 'Use the global project, supply the project root with `-p` option'
@@ -208,6 +212,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l production -d 'Unsel
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l reinstall -d 'Force reinstall existing dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # update
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l dev -d 'Select dev dependencies'
@@ -228,6 +233,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l unconstrained -d '
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d '-v for detailed output and -vv for more detailed'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-isolation -d 'do not isolate the build in a clean environment'
 
 # use
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l first -d 'Select the first matched interpreter'

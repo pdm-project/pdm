@@ -68,6 +68,7 @@ _pdm() {
         "--no-self[Don't install the project itself]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-e+,--editable+}'[Specify editable packages]:packages'
+        "--no-isolation[do not isolate the build in a clean environment]"
         '*:packages:_pdm_pip_packages'
       )
       ;;
@@ -170,6 +171,7 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        "--no-isolation[do not isolate the build in a clean environment]"
       )
       ;;
     list)
@@ -184,6 +186,7 @@ _pdm() {
     lock)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        "--no-isolation[do not isolate the build in a clean environment]"
       )
       ;;
     plugin)
@@ -230,6 +233,7 @@ _pdm() {
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        "--no-isolation[do not isolate the build in a clean environment]"
         "*:packages:_pdm_packages"
       )
       ;;
@@ -277,6 +281,7 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        "--no-isolation[do not isolate the build in a clean environment]"
       )
       ;;
     update)
@@ -297,6 +302,7 @@ _pdm() {
         {-t,--top}'[Only update those list in pyproject.toml]'
         "--dry-run[Show the difference only without modifying the lockfile content]"
         "--outdated[Show the difference only without modifying the lockfile content]"
+        "--no-isolation[do not isolate the build in a clean environment]"
         "*:packages:_pdm_packages"
       )
       ;;
