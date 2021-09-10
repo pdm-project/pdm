@@ -24,7 +24,7 @@ from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.project import Project
 from pdm.project.config import Config
-from pdm.utils import cached_property, get_finder, normalize_name, temp_environ
+from pdm.utils import get_finder, normalize_name, temp_environ
 from tests import FIXTURES
 
 os.environ["CI"] = "1"
@@ -140,10 +140,6 @@ class TestProject(Project):
         self.root_path = Path(root_path or ".")
         self.GLOBAL_PROJECT = self.root_path / ".pdm-home" / "global-project"
         super().__init__(core, root_path, is_global)
-
-    @cached_property
-    def global_config(self):
-        return Config(self.root_path / ".pdm-home" / "config.toml", is_global=True)
 
 
 main.project_class = TestProject
