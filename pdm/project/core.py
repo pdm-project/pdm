@@ -64,7 +64,11 @@ class Project:
         self.core = core
 
         if root_path is None:
-            root_path = find_project_root() if not is_global else self.GLOBAL_PROJECT
+            root_path = (
+                find_project_root(max_depth=self.global_config["project_max_depth"])
+                if not is_global
+                else self.GLOBAL_PROJECT
+            )
         if not is_global and root_path is None and self.global_config["auto_global"]:
             self.core.ui.echo(
                 "Project is not found, fallback to the global project",
@@ -134,7 +138,7 @@ class Project:
     @cached_property
     def global_config(self) -> Config:
         """Read-and-writable configuration dict for global settings"""
-        return Config(Path.home() / ".pdm" / "config.toml", is_global=True)
+        return Config(self.GLOBAL_PROJECT.with_name("config.toml"), is_global=True)
 
     @cached_property
     def project_config(self) -> Config:

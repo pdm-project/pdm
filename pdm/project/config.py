@@ -93,6 +93,13 @@ class Config(MutableMapping[str, str]):
             "PDM_BUILD_ISOLATION",
             ensure_boolean,
         ),
+        "project_max_depth": ConfigItem(
+            "The max depth to search for a project through the parents",
+            5,
+            True,
+            env_var="PDM_PROJECT_MAX_DEPTH",
+            coerce=int,
+        ),
         "strategy.update": ConfigItem(
             "The default strategy for updating packages", "reuse", False
         ),
