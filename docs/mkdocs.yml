@@ -35,6 +35,7 @@ markdown_extensions:
   - pymdownx.highlight:
       linenums: true
   - pymdownx.tabbed
+  - pymdownx.details
   - pymdownx.superfences
   - admonition
   - tables
