@@ -24,7 +24,7 @@ class Command(BaseCommand):
             dest="group",
             help="(DEPRECATED) Alias of `-G/--group`",
             type=deprecated(
-                "`-s/--section` is deprecated in favor of `-G/--groups` "
+                "`-s/--section` is deprecated in favor of `-G/--group` "
                 "and will be removed in the next minor release."
             ),
         )
