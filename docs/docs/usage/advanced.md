@@ -79,12 +79,12 @@ os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
 
 @nox.session
 def tests(session):
-    session.run('pdm', 'install', '-s', 'test', external=True)
+    session.run('pdm', 'install', '-G', 'test', external=True)
     session.run('pytest')
 
 @nox.session
 def lint(session):
-    session.run('pdm', 'install', '-s', 'lint', external=True)
+    session.run('pdm', 'install', '-G', 'lint', external=True)
     session.run('flake8', '--import-order-style', 'google')
 ```
 
@@ -127,7 +127,7 @@ Testing:
 
     - name: Install dependencies
       run: |
-        pdm sync -d -s testing
+        pdm sync -d -G testing
     - name: Run Tests
       run: |
         pdm run -v pytest tests
