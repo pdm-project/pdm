@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -39,6 +40,25 @@ def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
     if is_launcher or " " not in executable and (len(executable) + 3) <= 127:
         return executable.encode("utf-8")
     return shlex.quote(executable).encode("utf-8")
+
+
+def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
+    """Replace the python executable from the shebeng line, which can be in two forms:
+
+    1. #!python_executable
+    2. #!/bin/sh
+       '''exec' '/path to/python' "$0" "$@"
+       ' '''
+    """
+    _complex_shebang_re = rb"^'''exec' ('.+?') \"\$0\""
+    _simple_shebang_re = rb"^#!(.+?)\s*$"
+    match = re.search(_complex_shebang_re, contents, flags=re.M)
+    if match:
+        return contents.replace(match.group(1), new_executable, 1)
+    else:
+        match = re.search(_simple_shebang_re, contents)
+        assert match is not None
+        return contents.replace(match.group(1), new_executable, 1)
 
 
 class Environment:
@@ -134,16 +154,15 @@ class Environment:
         new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
         return shutil.which(command, path=new_path)
 
-    def update_shebangs(self, old_path: str, new_path: str) -> None:
+    def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""
         scripts = self.get_paths()["scripts"]
         for child in Path(scripts).iterdir():
             if not child.is_file() or child.suffix not in (".exe", ".py", ""):
                 continue
             is_launcher = child.suffix == ".exe"
-            old_shebang = _get_shebang_path(old_path, is_launcher)
             new_shebang = _get_shebang_path(new_path, is_launcher)
-            child.write_bytes(child.read_bytes().replace(old_shebang, new_shebang, 1))
+            child.write_bytes(_replace_shebang(child.read_bytes(), new_shebang))
 
     def _download_pip_wheel(self, path: str | Path) -> None:
         dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))

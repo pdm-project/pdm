@@ -505,22 +505,21 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
         )
         selected_python = found_interpreters[int(selection)]
 
-    old_path = project.python.executable if "python.path" in project.config else None
-    new_path = selected_python.executable
+    old_python = project.python if "python.path" in project.config else None
     project.core.ui.echo(
         "Using Python interpreter: {} ({})".format(
-            termui.green(str(new_path)),
+            termui.green(str(selected_python.executable)),
             selected_python.identifier,
         )
     )
     project.python = selected_python
     if (
-        old_path
-        and Path(old_path) != Path(new_path)
+        old_python
+        and Path(old_python.path) != Path(selected_python.path)
         and not project.environment.is_global
     ):
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
-        project.environment.update_shebangs(old_path, new_path)
+        project.environment.update_shebangs(selected_python.executable)
 
 
 def do_import(
