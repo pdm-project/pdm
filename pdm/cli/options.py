@@ -165,7 +165,7 @@ groups_group.add_argument(
     help="(DEPRECATED) alias of `--group`",
     default=[],
     type=deprecated(
-        "`-s/--section` is deprecated in favor of `-G/--groups` "
+        "`-s/--section` is deprecated in favor of `-G/--group` "
         "and will be removed in the next minor release."
     ),
 )
