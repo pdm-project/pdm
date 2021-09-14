@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMappi
 
 import atoml
 from packaging.specifiers import SpecifierSet
+from pip._vendor.pkg_resources import parse_version
 from resolvelib.structs import DirectedGraph
 
 from pdm import termui
@@ -478,8 +479,11 @@ def save_version_specifiers(
                     r.specifier = get_specifier(f"=={resolved[name].version}")
                 elif save_strategy == "compatible":
                     version = str(resolved[name].version)
-                    compatible_version = ".".join((version.split(".") + ["0"])[:2])
-                    r.specifier = get_specifier(f"~={compatible_version}")
+                    parsed = parse_version(version)
+                    if parsed.is_prerelease or parsed.is_devrelease:
+                        r.specifier = get_specifier(f">={version},<{parsed.major + 1}")
+                    else:
+                        r.specifier = get_specifier(f"~={parsed.major}.{parsed.minor}")
 
 
 def check_project_file(project: Project) -> None:
