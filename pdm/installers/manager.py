@@ -16,6 +16,9 @@ if TYPE_CHECKING:
 class InstallManager:
     """The manager that performs the installation and uninstallation actions."""
 
+    # The packages below are needed to load paths and thus should not be cached.
+    NO_CACHE_PACKAGES = ["editables"]
+
     def __init__(
         self, environment: Environment, *, use_install_cache: bool = False
     ) -> None:
@@ -23,7 +26,11 @@ class InstallManager:
         self.use_install_cache = use_install_cache
 
     def install(self, candidate: Candidate) -> None:
-        if self.use_install_cache and candidate.req.is_named:
+        if (
+            self.use_install_cache
+            and candidate.req.is_named
+            and candidate.name not in self.NO_CACHE_PACKAGES
+        ):
             # Only cache wheels from PyPI
             installer = install_wheel_with_cache
         else:
