@@ -1,3 +1,18 @@
+Release v1.8.4 (2021-09-15)
+---------------------------
+
+### Features & Improvements
+
+- Support `--no-isolation` option for `install`, `lock`, `update`, `remove`, `sync` commands. [#640](https://github.com/pdm-project/pdm/issues/640)
+- Make `project_max_depth` configurable and default to `5`. [#643](https://github.com/pdm-project/pdm/issues/643)
+
+### Bug Fixes
+
+- Don't try `pdm-pep517` backend on Python 2.7 when installing self as editable. [#640](https://github.com/pdm-project/pdm/issues/640)
+- Fix a bug that existing shebang can't be replaced correctly. [#651](https://github.com/pdm-project/pdm/issues/651)
+- Fix the version range saving for prerelease versions. [#654](https://github.com/pdm-project/pdm/issues/654)
+
+
 Release v1.8.3 (2021-09-07)
 ---------------------------
 
