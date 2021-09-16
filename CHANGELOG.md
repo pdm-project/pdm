@@ -1,3 +1,11 @@
+Release v1.8.5 (2021-09-16)
+---------------------------
+
+### Bug Fixes
+
+- Fix the error of regex to find the shebang line. [#656](https://github.com/pdm-project/pdm/issues/656)
+
+
 Release v1.8.4 (2021-09-15)
 ---------------------------
 
