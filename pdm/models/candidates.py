@@ -99,6 +99,7 @@ class Candidate:
         if link is None and self.req:
             link = self.ireq.link
         self.link = link
+        self.summary = ""
         self.source_dir: str | None = None
         self.hashes: dict[str, str] | None = None
         self._requires_python: str | None = None
@@ -286,7 +287,6 @@ class Candidate:
             self.req.name = self.name
         if not self.version:
             self.version = result.version  # type: ignore
-        self.requires_python = result.metadata.get("Requires-Python")
         return result
 
     def build(self) -> str:

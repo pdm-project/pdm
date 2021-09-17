@@ -21,14 +21,14 @@ def resolve_requirements(
     tracked_names=None,
 ):
     requirements = []
+    repository.environment.python_requires = PySpecSet(requires_python)
     for line in lines:
         if line.startswith("-e "):
             requirements.append(parse_requirement(line[3:], True))
         else:
             requirements.append(parse_requirement(line))
-    requires_python = PySpecSet(requires_python)
     if not preferred_pins:
-        provider = BaseProvider(repository, requires_python, allow_prereleases)
+        provider = BaseProvider(repository, allow_prereleases)
     else:
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
@@ -37,14 +37,15 @@ def resolve_requirements(
             preferred_pins,
             tracked_names or (),
             repository,
-            requires_python,
             allow_prereleases,
         )
     ui = termui.UI()
     with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
         reporter = SpinnerReporter(spin, requirements)
         resolver = Resolver(provider, reporter)
-        mapping, *_ = resolve(resolver, requirements, requires_python)
+        mapping, *_ = resolve(
+            resolver, requirements, repository.environment.python_requires
+        )
         return mapping
 
 
@@ -107,7 +108,7 @@ def test_resolve_with_extras(project, repository):
     ],
 )
 def test_resolve_local_artifacts(project, repository, requirement_line):
-    result = resolve_requirements(repository, [requirement_line])
+    result = resolve_requirements(repository, [requirement_line], ">=3.6")
     assert result["idna"].version == "2.7"
 
 
@@ -122,7 +123,7 @@ def test_resolve_vcs_and_local_requirements(
     project, repository, line, is_editable, vcs
 ):
     editable = "-e " if is_editable else ""
-    result = resolve_requirements(repository, [editable + line])
+    result = resolve_requirements(repository, [editable + line], ">=3.6")
     assert result["idna"].version == "2.7"
 
 

@@ -40,9 +40,7 @@ class Command(BaseCommand):
             req = parse_requirement(package)
             repository = project.get_repository()
             # reverse the result so that latest is at first.
-            matches = repository.find_candidates(
-                req, project.environment.python_requires, True
-            )
+            matches = repository.find_candidates(req, True)
             latest = next(iter(matches), None)
             if not latest:
                 project.core.ui.echo(

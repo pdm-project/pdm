@@ -6,7 +6,7 @@ import shutil
 import sys
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, Iterable, List, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import pytest
@@ -115,8 +115,8 @@ class TestRepository(BaseRepository):
             self._get_dependencies_from_metadata,
         )
 
-    def get_hashes(self, candidate: Candidate) -> None:
-        candidate.hashes = {}
+    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+        return {}
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         for version, candidate in self._pypi_data.get(requirement.key, {}).items():

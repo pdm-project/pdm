@@ -8,22 +8,21 @@ from resolvelib.resolvers import RequirementInformation
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import Requirement
-from pdm.models.specifiers import PySpecSet
+from pdm.resolver.python import (
+    PythonCandidate,
+    PythonRequirement,
+    find_python_matches,
+    is_python_satisfied_by,
+)
 from pdm.utils import url_without_fragments
 
 
 class BaseProvider(AbstractProvider):
     def __init__(
-        self,
-        repository: BaseRepository,
-        requires_python: PySpecSet,
-        allow_prereleases: bool | None = None,
+        self, repository: BaseRepository, allow_prereleases: bool | None = None
     ) -> None:
         self.repository = repository
-        self.requires_python = requires_python  # Root python_requires value
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.requires_python_collection: dict[str, PySpecSet] = {}
-        self.summary_collection: dict[str, str] = {}
         self.fetched_dependencies: dict[str, list[Requirement]] = {}
 
     def requirement_preference(self, requirement: Requirement) -> tuple:
@@ -61,6 +60,10 @@ class BaseProvider(AbstractProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Iterable[Candidate]:
+        if identifier == "python":
+            return find_python_matches(
+                identifier, requirements, self.repository.environment
+            )
         reqs = sorted(
             requirements[identifier], key=self.requirement_preference, reverse=True
         )
@@ -72,38 +75,32 @@ class BaseProvider(AbstractProvider):
             candidates = [can]
         else:
             candidates = self.repository.find_candidates(
-                reqs[0],
-                self.requires_python,
-                self.allow_prereleases,
+                reqs[0], self.allow_prereleases
             )
         return [
             can
             for can in candidates
-            if all(self.is_satisfied_by(r, can) for r in reqs) and can not in incompat
+            if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
         ]
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
+        if isinstance(requirement, PythonRequirement):
+            return is_python_satisfied_by(requirement, candidate)
         if not requirement.is_named:
             return not candidate.req.is_named and url_without_fragments(
                 candidate.req.url
             ) == url_without_fragments(requirement.url)
-        if not candidate.version:
-            candidate.metadata
-        if getattr(candidate, "_preferred", False) and not candidate._requires_python:
-            candidate.requires_python = str(
-                self.repository.get_dependencies(candidate)[1]
-            )
+        version = candidate.version or candidate.metadata.version
         allow_prereleases = self.allow_prereleases
         if allow_prereleases is None:
             # if not specified, should allow what `find_candidates()` returns
             allow_prereleases = True
-        requires_python = self.requires_python & requirement.requires_python
-        return requirement.specifier.contains(
-            candidate.version, allow_prereleases
-        ) and requires_python.is_subset(candidate.requires_python)
+        return requirement.specifier.contains(version, allow_prereleases)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
-        deps, requires_python, summary = self.repository.get_dependencies(candidate)
+        if isinstance(candidate, PythonCandidate):
+            return []
+        deps, requires_python, _ = self.repository.get_dependencies(candidate)
 
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
@@ -112,21 +109,23 @@ class BaseProvider(AbstractProvider):
             if (
                 dep.requires_python
                 & requires_python
-                & self.requires_python
                 & candidate.req.requires_python
+                & self.repository.environment.python_requires
             ).is_impossible:
                 continue
             dep.requires_python &= candidate.req.requires_python
             valid_deps.append(dep)
-
         candidate_key = self.identify(candidate)
-        self.fetched_dependencies[candidate_key] = valid_deps
-        self.summary_collection[candidate.req.key] = summary
-        self.requires_python_collection[candidate.req.key] = requires_python
+        self.fetched_dependencies[candidate_key] = valid_deps[:]
+        # A candidate contributes to the Python requirements only when:
+        # It isn't an optional dependency, or the requires-python doesn't cover
+        # the req's requires-python.
+        # For example, A v1 requires python>=3.6, it not eligible on a project with
+        # requires-python=">=2.7". But it is eligible if A has environment marker
+        # A1; python_version>='3.8'
+        if not requires_python.is_superset(candidate.req.requires_python):
+            valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))
         return valid_deps
-
-    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
-        return self.repository.get_hashes(candidate)
 
 
 class ReusePinProvider(BaseProvider):
