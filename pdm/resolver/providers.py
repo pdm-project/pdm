@@ -76,11 +76,11 @@ class BaseProvider(AbstractProvider):
                 self.requires_python,
                 self.allow_prereleases,
             )
-        return (
+        return [
             can
             for can in candidates
             if all(self.is_satisfied_by(r, can) for r in reqs) and can not in incompat
-        )
+        ]
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if not requirement.is_named:
@@ -89,8 +89,7 @@ class BaseProvider(AbstractProvider):
             ) == url_without_fragments(requirement.url)
         if not candidate.version:
             candidate.metadata
-        if candidate._requires_python is None:
-            # when data-requires-python is not available, fetch the metadata
+        if getattr(candidate, "_preferred", False) and not candidate._requires_python:
             candidate.requires_python = str(
                 self.repository.get_dependencies(candidate)[1]
             )
