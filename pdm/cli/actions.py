@@ -65,7 +65,7 @@ def do_lock(
             reporter = project.get_reporter(requirements, tracked_names, spin)
             resolver: Resolver = project.core.resolver_class(provider, reporter)
             try:
-                mapping, dependencies, summaries = resolve(
+                mapping, dependencies = resolve(
                     resolver,
                     requirements,
                     project.environment.python_requires,
@@ -86,7 +86,7 @@ def do_lock(
                 ui.echo(format_resolution_impossible(err), err=True)
                 raise
             else:
-                data = format_lockfile(mapping, dependencies, summaries)
+                data = format_lockfile(mapping, dependencies)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
 
     project.write_lockfile(data, write=not dry_run)

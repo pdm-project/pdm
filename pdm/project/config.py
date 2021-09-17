@@ -108,7 +108,7 @@ class Config(MutableMapping[str, str]):
         ),
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",
-            1000,
+            10000,
             env_var="PDM_RESOLVE_MAX_ROUDNS",
             coerce=int,
         ),

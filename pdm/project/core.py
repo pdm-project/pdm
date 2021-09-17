@@ -351,7 +351,6 @@ class Project:
         )
 
         repository = self.get_repository(cls=self.core.repository_class)
-        requires_python = self.environment.python_requires
         allow_prereleases = self.allow_prereleases
         if strategy != "all" and not self.is_lockfile_compatible():
             self.core.ui.echo(
@@ -361,11 +360,11 @@ class Project:
             )
             strategy = "all"
         if not for_install and strategy == "all":
-            return BaseProvider(repository, requires_python, allow_prereleases)
+            return BaseProvider(repository, allow_prereleases)
 
         locked_repository = self.locked_repository
         if for_install:
-            return BaseProvider(locked_repository, requires_python, allow_prereleases)
+            return BaseProvider(locked_repository, allow_prereleases)
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
@@ -373,7 +372,6 @@ class Project:
             locked_repository.all_candidates,
             tracked_names or (),
             repository,
-            requires_python,
             allow_prereleases,
         )
 

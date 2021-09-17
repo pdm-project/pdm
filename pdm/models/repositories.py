@@ -92,24 +92,23 @@ class BaseRepository:
             # the resolver) have the same version.
             self_req = dataclasses.replace(candidate.req, extras=None)
             reqs.append(self_req)
+        # Store the metadata on candidate for caching
+        candidate.requires_python = requires_python
+        candidate.summary = summary
         return reqs, PySpecSet(requires_python), summary
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         raise NotImplementedError
 
     def find_candidates(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = ALLOW_ALL_PYTHON,
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
+        self, requirement: Requirement, allow_prereleases: Optional[bool] = None
     ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
         """
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
-        requires_python = requires_python & requirement.requires_python
+        requires_python = requirement.requires_python & self.environment.python_requires
         cans = sorted(
             self._find_candidates(requirement),
             key=lambda c: (parse_version(c.version), c.link.is_wheel),  # type: ignore
@@ -121,7 +120,7 @@ class BaseRepository:
             if requirement.specifier.contains(  # type: ignore
                 c.version, allow_prereleases  # type: ignore
             )
-            and (allow_all or requires_python.is_subset(c.requires_python))
+            and requires_python.is_subset(c.requires_python)
         ]
 
         if not applicable_cans:
@@ -133,7 +132,7 @@ class BaseRepository:
                 c
                 for c in cans
                 if requirement.specifier.contains(c.version, True)  # type: ignore
-                and (allow_all or requires_python.is_subset(c.requires_python))
+                and requires_python.is_subset(c.requires_python)
             ]
 
             if not applicable_cans:
@@ -201,7 +200,7 @@ class BaseRepository:
         if candidate.req.is_file_or_url:
             matching_candidates: Iterable[Candidate] = [candidate]
         else:
-            matching_candidates = self.find_candidates(req, allow_all=True)
+            matching_candidates = self.find_candidates(req, True)
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session  # type: ignore
             return {
@@ -402,16 +401,12 @@ class LockedRepository(BaseRepository):
         return reqs, python, summary
 
     def find_candidates(
-        self,
-        requirement: Requirement,
-        requires_python: PySpecSet = ALLOW_ALL_PYTHON,
-        allow_prereleases: Optional[bool] = None,
-        allow_all: bool = False,
+        self, requirement: Requirement, allow_prereleases: Optional[bool] = None
     ) -> Iterable[Candidate]:
         for key, info in self.candidate_info.items():
             if key[0] != requirement.identify():
                 continue
-            if not (requires_python & PySpecSet(info[1])).contains(
+            if not PySpecSet(info[1]).contains(
                 str(self.environment.interpreter.version)
             ):
                 continue

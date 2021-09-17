@@ -426,9 +426,7 @@ def format_dependency_graph(
 
 
 def format_lockfile(
-    mapping: dict[str, Candidate],
-    fetched_dependencies: dict[str, list[Requirement]],
-    summary_collection: dict[str, str],
+    mapping: dict[str, Candidate], fetched_dependencies: dict[str, list[Requirement]]
 ) -> dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
@@ -438,7 +436,7 @@ def format_lockfile(
     for k, v in sorted(mapping.items()):
         base = atoml.table()
         base.update(v.as_lockfile_entry())  # type: ignore
-        base.add("summary", summary_collection[strip_extras(k)[0]])
+        base.add("summary", v.summary)
         deps = make_array(sorted(r.as_line() for r in fetched_dependencies[k]), True)
         if len(deps) > 0:
             base.add("dependencies", deps)

@@ -89,6 +89,7 @@ def test_editable_package_override_non_editable(project, working_set):
 
 @pytest.mark.usefixtures("repository", "working_set")
 def test_add_remote_package_url(project, is_dev):
+    project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(
         project,
         is_dev,
@@ -229,6 +230,7 @@ def test_add_package_unconstrained_rewrite_specifier(project):
 
 @pytest.mark.usefixtures("repository", "working_set", "vcs")
 def test_add_cached_vcs_requirement(project, mocker):
+    project.environment.python_requires = PySpecSet(">=3.6")
     url = "git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
     built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
     wheel_cache = project.make_wheel_cache()
