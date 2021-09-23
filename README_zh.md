@@ -161,7 +161,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-如果你使用的是 Bash，可以通过执行`eval $(pdm --pep582)`设置环境变量，现在你可以用你最熟悉的 **Python 解释器** 运行脚本了：
+如果你使用的是 Bash，可以通过执行`eval "$(pdm --pep582)"`设置环境变量，现在你可以用你最熟悉的 **Python 解释器** 运行脚本了：
 
 ```bash
 $ python /home/frostming/workspace/flask_app/app.py

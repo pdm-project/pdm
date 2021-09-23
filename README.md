@@ -165,7 +165,7 @@ if __name__ == '__main__':
     app.run()
 ```
 
-If you are a Bash user, set the environment variable by `eval $(pdm --pep582)`. Now you can run the app directly with your familiar **Python interpreter**:
+If you are a Bash user, set the environment variable by `eval "$(pdm --pep582)"`. Now you can run the app directly with your familiar **Python interpreter**:
 
 ```bash
 $ python /home/frostming/workspace/flask_app/app.py
