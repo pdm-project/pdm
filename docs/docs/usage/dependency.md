@@ -43,8 +43,16 @@ $ pdm add requests
 PDM also allows extra dependency groups by providing `-G/--group <name>` option, and those dependencies will go to
 `[project.optional-dependencies.<name>]` table in the project file, respectively.
 
-After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see
-the resolved result of all dependencies.
+After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see the resolved result of all dependencies.
+
+
+### Add local dependencies
+
+Local packages can be added with their paths:
+
+```console
+$ pdm add ./sub-package
+```
 
 Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs)
 (just like `pip install -e <local project path>` would) using `pdm add -e/--editable <local project path>`.
@@ -58,7 +66,7 @@ e.g. some for testing and others for linting. We usually don't want these depend
 so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
 
 ```console
-$ pdm add -ds test pytest
+$ pdm add -dG test pytest
 ```
 
 This will result in a pyproject.toml as following:
@@ -117,7 +125,7 @@ To update packages in development dependencies:
 # Update all default + dev-dependencies
 $ pdm update -d
 # Update a package in the specified group of dev-dependencies
-$ pdm update -ds test pytest
+$ pdm update -dG test pytest
 ```
 
 ### About update strategy

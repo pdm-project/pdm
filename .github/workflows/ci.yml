@@ -101,7 +101,7 @@ jobs:
       - name: Install Dev Dependencies
         run: |
           pdm config parallel_install true
-          pdm install -v -dstest
+          pdm install -v -dGtest
       - name: Run Tests
         run: pdm run pytest -n auto --cov pdm --cov-config=setup.cfg --cov-report=xml tests
       - name: Upload coverage to Codecov
