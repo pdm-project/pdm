@@ -115,8 +115,8 @@ Testing:
   runs-on: ${{ matrix.os }}
   strategy:
     matrix:
-    python-version: [3.6, 3.7, 3.8, 3.9]
-    os: [ubuntu-latest, macOS-latest, windows-latest]
+      python-version: [3.6, 3.7, 3.8, 3.9]
+      os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:
     - uses: actions/checkout@v1
