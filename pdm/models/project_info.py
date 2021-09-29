@@ -57,7 +57,7 @@ class ProjectInfo:
             "keywords": ", ".join(metadata.keywords or []),
             "homepage": "",
             "project-urls": [
-                ": ".join(parts) for parts in metadata.project_urls.items()
+                ": ".join(parts) for parts in (metadata.project_urls or {}).items()
             ],
         }
 
