@@ -1,4 +1,4 @@
-## Available Configurations
+## Available Configurations for `.pdm.toml`
 
 | Config Item                   | Description                                                               | Default Value                                                             | Available in Project | Env var                  |
 | ----------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ------------------------ |
