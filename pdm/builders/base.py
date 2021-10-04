@@ -264,6 +264,7 @@ class EnvBuilder:
             req_file.close()
             cmd = self._env.pip_command + [
                 "install",
+                "--isolated",
                 "--ignore-installed",
                 "--prefix",
                 path,
