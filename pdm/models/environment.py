@@ -97,7 +97,7 @@ class Environment:
         scripts = "Scripts" if os.name == "nt" else "bin"
         if not pypackages.parent.exists():
             pypackages.parent.mkdir(parents=True)
-            pypackages.parent.joinpath(".gitignore").write_text("*\n!.gitignore\n")
+            pypackages.parent.joinpath(".gitignore").write_text("*\n")
         for subdir in [scripts, "include", "lib"]:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
