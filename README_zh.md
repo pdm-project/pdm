@@ -2,7 +2,7 @@
 
 # PDM - Python Development Master
 
-一个现代的 Python 包管理器，支持 PEP 582。[English version README](README.md)
+一个现代的 Python 包管理器，支持 [PEP 582]。[English version README](README.md)
 
 ![PDM logo](https://raw.githubusercontent.com/pdm-project/pdm/main/docs/docs/assets/logo_big.png)
 
@@ -27,7 +27,7 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 `poetry` 用着非常好，并不想引入一个新的包管理器，那么继续使用它们吧；但如果你发现有些东西这些
 工具不支持，那么你很可能可以在 `pdm` 中找到。
 
-PEP 582 提出下面这种项目的目录结构：
+[PEP 582] 提出下面这种项目的目录结构：
 
 ```
 foo
@@ -43,11 +43,15 @@ foo
 
 ## 主要特性
 
-- PEP 582 本地项目库目录，支持安装与运行命令，完全不需要虚拟环境。
+- [PEP 582] 本地项目库目录，支持安装与运行命令，完全不需要虚拟环境。
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
-- 兼容 PEP 517 的构建后端，用于构建发布包(源码格式与 wheel 格式)
+- 兼容 [PEP 517] 的构建后端，用于构建发布包(源码格式与 wheel 格式)
 - 具备一个完备的插件系统
-- PEP 621 元数据格式
+- [PEP 621] 元数据格式
+
+[PEP 517]: https://www.python.org/dev/peps/pep-0517
+[PEP 582]: https://www.python.org/dev/peps/pep-0582
+[PEP 621]: https://www.python.org/dev/peps/pep-0621
 
 ## 为什么不用虚拟环境?
 
@@ -56,9 +60,9 @@ foo
 然后又用这个工具去创建更多虚拟环境。当某一天你升级了新版本的 Python 你必须一个一个去检查这些
 虚拟环境，没准哪个就用不了了。
 
-然而 PEP 582 提供了一个能把 Python 解释器和项目开发环境解耦的方法。这是一个相对比较新的提案，
+然而 [PEP 582] 提供了一个能把 Python 解释器和项目开发环境解耦的方法。这是一个相对比较新的提案，
 没有很多相关的工具实现它，这其中就有 [pyflow]。但 pyflow 又是用 Rust 写的，不是所有 Python 的社区
-都会用 Rust，这样就没法贡献代码，而且，基于同样的原因，pyflow 并不支持 PEP 517 构建。
+都会用 Rust，这样就没法贡献代码，而且，基于同样的原因，pyflow 并不支持 [PEP 517] 构建。
 
 ## 安装
 
@@ -145,7 +149,7 @@ $ pdm add requests flask
 
 你可以在同一条命令中添加多个依赖。稍等片刻完成之后，你可以查看`pdm.lock`文件看看有哪些依赖以及对应版本。
 
-**在 PEP 582 加持下运行你的脚本**
+**在 [PEP 582] 加持下运行你的脚本**
 
 假设你在`__pypackages__`同级的目录下有一个`app.py`脚本，内容如下（从 Flask 的官网例子复制而来）：
 
@@ -194,7 +198,7 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 ### 1. `__pypackages__` 里都包含什么?
 
-PEP 582 尚处于草案阶段，还需要补充很多细节，比如提案中并未说明可执行程序应该如何存放。PDM 会把 `bin`(可执行程序), `include`(头文件),
+[PEP 582] 尚处于草案阶段，还需要补充很多细节，比如提案中并未说明可执行程序应该如何存放。PDM 会把 `bin`(可执行程序), `include`(头文件),
 以及 `lib` 都放在 `__pypackages__/X.Y` 下面。
 
 ### 2. 如何运行 `__pypackages__` 下的可执行程序?
