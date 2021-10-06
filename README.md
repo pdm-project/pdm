@@ -2,7 +2,7 @@
 
 # PDM - Python Development Master
 
-A modern Python package manager with PEP 582 support. [中文版本说明](README_zh.md)
+A modern Python package manager with [PEP 582] support. [中文版本说明](README_zh.md)
 
 ![PDM logo](https://raw.githubusercontent.com/pdm-project/pdm/main/docs/docs/assets/logo_big.png)
 
@@ -30,7 +30,7 @@ with `Pipenv` or `Poetry` and don't want to introduce another package manager,
 just stick to it. But if you are missing something that is not present in those tools,
 you can probably find some goodness in `pdm`.
 
-PEP 582 proposes a project structure as below:
+[PEP 582] proposes a project structure as below:
 
 ```
 foo
@@ -46,11 +46,15 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 
 ## Highlights of features
 
-- PEP 582 local package installer and runner, no virtualenv involved at all.
+- [PEP 582] local package installer and runner, no virtualenv involved at all.
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
-- A PEP 517 build backend.
+- A [PEP 517] build backend.
 - A full-featured plug-in system.
-- PEP 621 project metadata format.
+- [PEP 621] project metadata format.
+
+[PEP 517]: https://www.python.org/dev/peps/pep-0517
+[PEP 582]: https://www.python.org/dev/peps/pep-0582
+[PEP 621]: https://www.python.org/dev/peps/pep-0621
 
 ## Why not virtualenv?
 
@@ -60,9 +64,9 @@ installs the virtualenv manager using a venv encapsulated Python, and create mor
 which is based on an encapsulated Python. One day a minor release of Python is released and one has to check
 all those venvs and upgrade them if required.
 
-PEP 582, on the other hand, introduces a way to decouple the Python interpreter from project
-environments. It is a relative new proposal and there are not many tools supporting it (one that does
-is [pyflow], but it is written with Rust and thus can't get much help from the big Python community and for the same reason it can't act as a PEP 517 backend).
+[PEP 582], on the other hand, introduces a way to decouple the Python interpreter from project
+environments. It is a relatively new proposal and there are not many tools supporting it (one that does
+is [pyflow], but it is written with Rust and thus can't get much help from the big Python community and for the same reason it can't act as a [PEP 517] backend).
 
 ## Installation
 
@@ -149,7 +153,7 @@ $ pdm add requests flask
 
 You can add multiple dependencies in the same command. After a while, check the `pdm.lock` file to see what is locked for each package.
 
-**Run your script with PEP 582 support**
+**Run your script with [PEP 582] support**
 
 Suppose you have a script `app.py` placed next to the `__pypackages__` directory with the following content(taken from Flask's website):
 
@@ -204,7 +208,7 @@ Tell people you are using PDM in your project by including the markdown code in 
 
 ### 1. What is put in `__pypackages__`?
 
-PEP 582 is a draft proposal which still needs a lot of polishing. For instance, it doesn't mention how to manage
+[PEP 582] is a draft proposal which still needs a lot of polishing. For instance, it doesn't mention how to manage
 CLI executables. PDM makes the decision to put `bin` and `include` together with `lib` under `__pypackages__/X.Y`.
 
 ### 2. How do I run CLI scripts in the local package directory?
