@@ -1,5 +1,7 @@
 ## Available Configurations
 
+The following configuration items can be retrieved and modified by `pdm config` command.
+
 | Config Item                   | Description                                                               | Default Value                                                             | Available in Project | Env var                  |
 | ----------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ------------------------ |
 | `cache_dir`                   | The root directory of cached files                                        | The default cache location on OS                                          | No                   |                          |
