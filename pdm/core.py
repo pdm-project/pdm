@@ -156,7 +156,9 @@ class Core:
                     err=True,
                 )
                 if should_show_tb:
-                    self.ui.echo("Add '-v' to see the detailed traceback", fg="yellow")
+                    self.ui.echo(
+                        "Add '-v' to see the detailed traceback", fg="yellow", err=True
+                    )
                 sys.exit(1)
             else:
                 if options.project.config["check_update"]:

@@ -193,7 +193,7 @@ class UI:
         except Exception:
             if self.verbosity < DETAIL:
                 logger.exception("Error occurs")
-                self.echo(yellow(f"See {file_name} for detailed debug log."))
+                self.echo(yellow(f"See {file_name} for detailed debug log."), err=True)
             raise
         else:
             atexit.register(cleanup)
