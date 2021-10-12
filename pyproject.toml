@@ -13,7 +13,7 @@ dependencies = [
     "atoml>=1.0.3",
     "click>=7",
     "importlib-metadata; python_version < \"3.8\"",
-    "installer~=0.2.3",
+    "installer~=0.3.0",
     "packaging",
     "pdm-pep517>=0.8.3,<0.9",
     "pep517>=0.11.0",
