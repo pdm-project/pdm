@@ -1,3 +1,21 @@
+Release v1.9.0 (2021-10-12)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that `requires-python` is not recognized in candidates evaluation. [#657](https://github.com/pdm-project/pdm/issues/657)
+- Fix the path order when pdm run so that executables in local packages dir are found first. [#678](https://github.com/pdm-project/pdm/issues/678)
+
+### Dependencies
+
+- Update `installer` to `0.3.0`, fixing a bug that broke installation of some packages with unusual wheel files. [#653](https://github.com/pdm-project/pdm/issues/653)
+- Change `packaging` and `typing-extensions` to direct dependencies. [#674](https://github.com/pdm-project/pdm/issues/674)
+
+### Refactor
+
+- `requires-python` now participates in the resolution as a dummy requirement. [#658](https://github.com/pdm-project/pdm/issues/658)
+
+
 Release v1.8.5 (2021-09-16)
 ---------------------------
 
