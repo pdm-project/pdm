@@ -151,7 +151,7 @@ class Environment:
         # Fallback to use shutil.which to find the executable
         this_path = self.get_paths()["scripts"]
         python_root = os.path.dirname(self.interpreter.executable)
-        new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
+        new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
         return shutil.which(command, path=new_path)
 
     def update_shebangs(self, new_path: str) -> None:
