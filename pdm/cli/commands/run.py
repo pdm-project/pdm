@@ -51,7 +51,7 @@ class Command(BaseCommand):
         project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
         python_root = os.path.dirname(project.python.executable)
-        new_path = os.pathsep.join([python_root, this_path, os.getenv("PATH", "")])
+        new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
         os.environ.update(
             {
                 "PYTHONPATH": pythonpath,
