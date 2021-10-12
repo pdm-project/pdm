@@ -187,7 +187,7 @@ def test_parse_flit_project_metadata(project, is_editable):
     )
     candidate = Candidate(req, project.environment)
     deps = candidate.get_dependencies_from_metadata()
-    requests_dep = "requests (>=2.6)" if is_editable else "requests>=2.6"
+    requests_dep = "requests>=2.6"
     assert requests_dep in deps
     assert 'configparser; python_version == "2.7"' in deps
     assert candidate.name == "pyflit"
