@@ -146,7 +146,7 @@ class UI:
                 " ".join(
                     aligner(head, size)
                     for aligner, head, size in zip(aligners, header, sizes)
-                )
+                ).rstrip()
             )
             # Print a separator
             self.echo(" ".join("-" * size for size in sizes))
@@ -155,7 +155,7 @@ class UI:
                 " ".join(
                     aligner(item, size)
                     for aligner, item, size in zip(aligners, row, sizes)
-                )
+                ).rstrip()
             )
 
     @contextlib.contextmanager
