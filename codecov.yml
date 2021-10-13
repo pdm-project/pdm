@@ -1,0 +1,4 @@
+codecov:
+  notify:
+    after_n_builds: 12
+    wait_for_ci: false
