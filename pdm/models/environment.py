@@ -21,7 +21,7 @@ from pdm.models.in_process import (
     get_sys_config_paths,
 )
 from pdm.models.working_set import WorkingSet
-from pdm.utils import cached_property, get_finder, pdm_scheme
+from pdm.utils import cached_property, get_finder, is_venv_python, pdm_scheme
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -218,6 +218,9 @@ class GlobalEnvironment(Environment):
 
     def get_paths(self) -> dict[str, str]:
         paths = get_sys_config_paths(self.interpreter.executable)
+        if is_venv_python(self.interpreter.executable):
+            python_xy = f"python{self.interpreter.identifier}"
+            paths["include"] = os.path.join(paths["data"], "include", "site", python_xy)
         paths["prefix"] = paths["data"]
         paths["headers"] = paths["include"]
         return paths
