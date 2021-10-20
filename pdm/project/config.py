@@ -77,7 +77,10 @@ class Config(MutableMapping[str, str]):
             "The root directory of cached files", appdirs.user_cache_dir("pdm"), True
         ),
         "check_update": ConfigItem(
-            "Check if there is any newer version available", True, True
+            "Check if there is any newer version available",
+            True,
+            True,
+            coerce=ensure_boolean,
         ),
         "auto_global": ConfigItem(
             "Use global package implicitly if no local project is found",
