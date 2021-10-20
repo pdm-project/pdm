@@ -40,6 +40,13 @@ class Command(BaseCommand):
             help="Show the difference only without modifying the lockfile content",
         )
         parser.add_argument(
+            "--no-sync",
+            dest="sync",
+            default=True,
+            action="store_false",
+            help="Only update lock file but do not sync packages",
+        )
+        parser.add_argument(
             "packages", nargs="*", help="If packages are given, only update them"
         )
         parser.set_defaults(dev=None)
@@ -56,6 +63,7 @@ class Command(BaseCommand):
             top=options.top,
             dry_run=options.dry_run,
             packages=options.packages,
+            sync=options.sync,
             no_editable=options.no_editable,
             no_self=options.no_self,
         )
