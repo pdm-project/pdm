@@ -345,7 +345,7 @@ function TabExpansion($line, $lastWord) {
             }
             "update" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--productin", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--productin", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync")),
                         $sectionOption,
                         $projectOption
                     ))

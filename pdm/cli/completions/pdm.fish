@@ -234,6 +234,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-eager -d 'T
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-isolation -d 'do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-sync -d 'Only update lock file but do not sync packages'
 
 # use
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l first -d 'Select the first matched interpreter'

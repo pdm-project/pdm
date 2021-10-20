@@ -216,11 +216,11 @@ class Requirement:
             "marker": get_marker(req.marker),
         }
         if getattr(req, "url", None):
-            link = Link(req.url)
+            link = Link(cast(str, req.url))
             klass = VcsRequirement if link.is_vcs else FileRequirement
             return klass(url=req.url, **kwargs)  # type: ignore
         else:
-            return NamedRequirement(**kwargs)
+            return NamedRequirement(**kwargs)  # type: ignore
 
     def _format_marker(self) -> str:
         if self.marker:

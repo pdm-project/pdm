@@ -295,6 +295,7 @@ _pdm() {
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        "--no-sync[Only update lock file but do not sync packages]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-d,--dev}'[Select dev dependencies]'
         {--prod,--production}"[Unselect dev dependencies]"

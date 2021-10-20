@@ -238,6 +238,7 @@ def do_update(
     top: bool = False,
     dry_run: bool = False,
     packages: Sequence[str] = (),
+    sync: bool = True,
     no_editable: bool = False,
     no_self: bool = False,
 ) -> None:
@@ -294,18 +295,21 @@ def do_update(
         reqs,
         dry_run=dry_run,
     )
-    do_sync(
-        project,
-        groups=groups,
-        dev=install_dev,
-        default=default,
-        clean=False,
-        dry_run=dry_run,
-        requirements=[r for deps in updated_deps.values() for r in deps.values()],
-        tracked_names=list(chain.from_iterable(updated_deps.values())) if top else None,
-        no_editable=no_editable,
-        no_self=no_self,
-    )
+    if sync:
+        do_sync(
+            project,
+            groups=groups,
+            dev=install_dev,
+            default=default,
+            clean=False,
+            dry_run=dry_run,
+            requirements=[r for deps in updated_deps.values() for r in deps.values()],
+            tracked_names=list(chain.from_iterable(updated_deps.values()))
+            if top
+            else None,
+            no_editable=no_editable,
+            no_self=no_self,
+        )
     if unconstrained and not dry_run:
         # Need to update version constraints
         save_version_specifiers(updated_deps, resolved, save)
