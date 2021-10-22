@@ -47,6 +47,9 @@ verify_ssl = true
 name = "pypi"
 ```
 
+By default, or sources are [PEP 503](https://www.python.org/dev/peps/pep-0503/) style "index urls" like pip's `--index-url` and `--extra-url`, however, you can also specify "find links" with
+`type = "find_links"`. See [this answer](https://stackoverflow.com/a/46651848) for the difference between the two types.
+
 !!! note "Difference from changing config value"
     When you want all packages to be fetched from the given index instead of the default one, despite what platform your are on or who is to deploy the app,
     write it in the `[[tool.pdm.source]]`. Otherwise if you would like to change the index temporarily on the current platform (for network reasons), you should use
