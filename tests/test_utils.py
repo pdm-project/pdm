@@ -134,11 +134,11 @@ def test_prod_should_not_be_with_dev(project):
     [
         ([], None, []),
         ([], ["-v"], ["-v"]),
-        ([{"url": "https://pypi.org/"}], None, ["-i", "https://pypi.org/"]),
+        ([{"url": "https://pypi.org/"}], None, ["--index-url", "https://pypi.org/"]),
         (
             [{"url": "https://pypi.org/", "verify_ssl": False}],
             None,
-            ["-i", "https://pypi.org/", "--trusted-host", "pypi.org"],
+            ["--index-url", "https://pypi.org/", "--trusted-host", "pypi.org"],
         ),
         (
             [
@@ -147,7 +147,7 @@ def test_prod_should_not_be_with_dev(project):
             ],
             None,
             [
-                "-i",
+                "--index-url",
                 "https://pypi.org/",
                 "--trusted-host",
                 "pypi.org",
@@ -158,7 +158,17 @@ def test_prod_should_not_be_with_dev(project):
         (
             [{"url": "some_malformed_url", "verify_ssl": False}],
             None,
-            ["-i", "some_malformed_url", "--trusted-host", ""],
+            ["--index-url", "some_malformed_url"],
+        ),
+        (
+            [{"url": "https://find-links.io", "type": "find_links"}],
+            None,
+            ["--find-links", "https://find-links.io"],
+        ),
+        (
+            [{"url": "/path/to/local/packages", "type": "find_links"}],
+            None,
+            ["--find-links", "/path/to/local/packages"],
         ),
     ],
 )

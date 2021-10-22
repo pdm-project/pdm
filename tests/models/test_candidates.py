@@ -294,3 +294,16 @@ def test_legacy_pep345_tag_link(project, index):
     except Exception:
         pass
     assert candidate.requires_python == ">=3,<4"
+
+
+def test_find_candidates_from_find_links(project):
+    repo = project.get_repository()
+    repo.sources = [
+        {
+            "url": "http://fixtures.test/index/demo.html",
+            "verify_ssl": False,
+            "type": "find_links",
+        }
+    ]
+    candidates = list(repo.find_candidates(parse_requirement("demo")))
+    assert len(candidates) == 2

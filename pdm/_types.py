@@ -9,10 +9,11 @@ else:
     from typing_extensions import Literal, Protocol, TypedDict
 
 
-class Source(TypedDict):
+class Source(TypedDict, total=False):
     url: str
     verify_ssl: bool
     name: str
+    type: Union[Literal["index"], Literal["find_links"]]
 
 
 RequirementDict = Union[str, Dict[str, Union[bool, str]]]
