@@ -51,6 +51,8 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
             response.status_code = 200
             response.reason = "OK"
             response.raw = file_path.open("rb")
+            if file_path.suffix == ".html":
+                response.headers["Content-Type"] = "text/html"
         self._opened_files.append(response.raw)
         return response
 
