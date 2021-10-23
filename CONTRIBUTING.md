@@ -53,16 +53,18 @@ $ git lfs install
 $ git lfs pull
 ```
 
-Then, you need to install base dependencies in a venv. Although PDM uses a local package directory to install
-dependencies, venv is still needed to start up PDM for the first time:
+Then, you need to install base dependencies in a venv. Make sure your `pip` is no later than `21.3` to install PDM in
+develop/editable mode.
 
 ```bash
-$ python setup_dev.py
+$ pip install -e .
 ```
 
-Now, all dependencies are installed into the local `__pypackages__` directory, which will be used for development
-after this point. The `pdm` executable located at `__pypackages__/<VERSION>/bin` can be run directly from outside,
-which is installed in editable mode, or you can use `python -m pdm` from inside the venv.
+You are free to create a virtualenv with either `venv` module or `virtualenv` tool for the development. If you are doing
+so, you may also need to set `pdm config use_venv true` after installation is done.
+
+Now, all dependencies are installed into the Python environment you choose, which will be used for development
+after this point.
 
 ### Run tests
 
