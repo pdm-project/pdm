@@ -307,6 +307,7 @@ class Project:
                 url=expand_env_vars_in_auth(s["url"]),
                 verify_ssl=s.get("verify_ssl", True),
                 name=s.get("name", urlparse(s["url"]).hostname),
+                type=s.get("type", "index"),
             )
             for s in sources
         ]
