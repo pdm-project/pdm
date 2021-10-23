@@ -45,7 +45,7 @@ this section.
 
 ## Local development
 
-To make sure the tests suites can run correctly, you need to install [Git LFS](https://git-lfs.github.com/), then
+To make sure the test suites can run correctly, you need to install [Git LFS](https://git-lfs.github.com/), then
 
 ```bash
 $ git lfs install
@@ -53,7 +53,7 @@ $ git lfs install
 $ git lfs pull
 ```
 
-Then, you need to install base dependencies in a venv. Make sure your `pip` is no later than `21.3` to install PDM in
+Then, you need to install base dependencies in a venv. Make sure your `pip` is newer than `21.3` to install PDM in
 develop/editable mode.
 
 ```bash
