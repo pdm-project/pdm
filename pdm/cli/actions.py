@@ -181,6 +181,7 @@ def do_add(
     unconstrained: bool = False,
     no_editable: bool = False,
     no_self: bool = False,
+    dry_run: bool = False,
 ) -> None:
     """Add packages and install"""
     check_project_file(project)
@@ -207,12 +208,13 @@ def do_add(
             req.specifier = get_specifier("")
     group_deps.update(requirements)
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
-    resolved = do_lock(project, strategy, tracked_names, reqs)
+    resolved = do_lock(project, strategy, tracked_names, reqs, dry_run=dry_run)
 
     # Update dependency specifiers and lockfile hash.
     deps_to_update = group_deps if unconstrained else requirements
     save_version_specifiers({group: deps_to_update}, resolved, save)
-    project.add_dependencies(deps_to_update, group, dev)
+    if not dry_run:
+        project.add_dependencies(deps_to_update, group, dev)
     lockfile = project.lockfile
     project.write_lockfile(lockfile, False)
 
@@ -223,6 +225,8 @@ def do_add(
             default=False,
             no_editable=no_editable,
             no_self=no_self,
+            requirements=list(group_deps.values()),
+            dry_run=dry_run,
         )
 
 
@@ -327,6 +331,7 @@ def do_remove(
     packages: Sequence[str] = (),
     no_editable: bool = False,
     no_self: bool = False,
+    dry_run: bool = False,
 ) -> None:
     """Remove packages from working set and pyproject.toml"""
     check_project_file(project)
@@ -356,8 +361,9 @@ def do_remove(
         for i in matched_indexes:
             del deps[i]
 
-    project.write_pyproject()
-    do_lock(project, "reuse")
+    if not dry_run:
+        project.write_pyproject()
+    do_lock(project, "reuse", dry_run=dry_run)
     if sync:
         do_sync(
             project,
@@ -366,6 +372,7 @@ def do_remove(
             clean=True,
             no_editable=no_editable,
             no_self=no_self,
+            dry_run=dry_run,
         )
 
 

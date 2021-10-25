@@ -2,7 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import deprecated, install_group
+from pdm.cli.options import deprecated, dry_run_option, install_group
 from pdm.project import Project
 
 
@@ -11,6 +11,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         install_group.add_to_parser(parser)
+        dry_run_option.add_to_parser(parser)
         parser.add_argument(
             "-d",
             "--dev",
@@ -51,4 +52,5 @@ class Command(BaseCommand):
             packages=options.packages,
             no_editable=options.no_editable,
             no_self=options.no_self,
+            dry_run=options.dry_run,
         )

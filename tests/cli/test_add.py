@@ -245,3 +245,12 @@ def test_add_cached_vcs_requirement(project, mocker):
     assert lockfile_entry["revision"] == "1234567890abcdef"
     downloader.assert_not_called()
     builder.assert_not_called()
+
+
+@pytest.mark.usefixtures("repository")
+def test_add_with_dry_run(project, capsys):
+    actions.do_add(project, dry_run=True, packages=["requests"])
+    out, _ = capsys.readouterr()
+    assert not project.get_dependencies()
+    assert "requests 2.19.1" in out
+    assert "urllib3 1.22" in out
