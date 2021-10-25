@@ -1,3 +1,23 @@
+Release v1.10.0 (2021-10-25)
+----------------------------
+
+### Features & Improvements
+
+- Add `--no-sync` option to `update` command. [#684](https://github.com/pdm-project/pdm/issues/684)
+- Support `find_links` source type. It can be specified via `type` key of `[[tool.pdm.source]]` table. [#694](https://github.com/pdm-project/pdm/issues/694)
+- Add `--dry-run` option to `add`, `install` and `remove` commands. [#698](https://github.com/pdm-project/pdm/issues/698)
+
+### Bug Fixes
+
+- Remove trailing whitespace with terminal output of tables (via `project.core.ui.display_columns`), fixing unnecessary wrapping due to / with empty lines full of spaces in case of long URLs in the last column. [#680](https://github.com/pdm-project/pdm/issues/680)
+- Include files should be installed under venv's base path. [#682](https://github.com/pdm-project/pdm/issues/682)
+- Ensure the value of `check_update` is boolean. [#689](https://github.com/pdm-project/pdm/issues/689)
+
+### Improved Documentation
+
+- Update the contributing guide, remove the usage of `setup_dev.py` in favor of `pip install`. [#676](https://github.com/pdm-project/pdm/issues/676)
+
+
 Release v1.9.0 (2021-10-12)
 ---------------------------
 
