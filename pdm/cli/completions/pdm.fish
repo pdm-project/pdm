@@ -58,7 +58,9 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l unconstrained -d 'Ign
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l verbose -d '-v for detailed output and -vv for more detailed'
-complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-isolation -d 'do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l dry-run -d 'Show the difference only and don\'t perform any action'
+
 
 # build
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l config-setting -d 'Pass options to the backend. options with a value must be specified after "=": "--config-setting=--opt(=value)" or "-C--opt(=value)"'
@@ -140,6 +142,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Un
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-isolation -d 'do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l dry-run -d 'Show the difference only and don\'t perform any action'
+
 
 # list
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l freeze -d 'Show the installed dependencies in pip\'s requirements.txt format'
@@ -173,6 +177,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-sync -d 'Only w
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-isolation -d 'do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l dry-run -d 'Show the difference only and don\'t perform any action'
+
 
 # run
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l global -d 'Use the global project, supply the project root with `-p` option'

@@ -4,6 +4,7 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import (
     deprecated,
+    dry_run_option,
     install_group,
     packages_group,
     save_strategy_group,
@@ -55,6 +56,7 @@ class Command(BaseCommand):
         update_strategy_group.add_to_parser(parser)
         packages_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
+        dry_run_option.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.editables and options.no_editable:
@@ -71,4 +73,5 @@ class Command(BaseCommand):
             unconstrained=options.unconstrained,
             no_editable=options.no_editable,
             no_self=options.no_self,
+            dry_run=options.dry_run,
         )

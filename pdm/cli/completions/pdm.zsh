@@ -69,6 +69,7 @@ _pdm() {
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-e+,--editable+}'[Specify editable packages]:packages'
         "--no-isolation[do not isolate the build in a clean environment]"
+        "--dry-run[Show the difference only without modifying the lockfile content]"
         '*:packages:_pdm_pip_packages'
       )
       ;;
@@ -172,6 +173,7 @@ _pdm() {
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
+        "--dry-run[Show the difference only without modifying the lockfile content]"
       )
       ;;
     list)
@@ -234,6 +236,7 @@ _pdm() {
         '--no-editalbe[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
+        "--dry-run[Show the difference only without modifying the lockfile content]"
         "*:packages:_pdm_packages"
       )
       ;;

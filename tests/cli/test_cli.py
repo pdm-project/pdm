@@ -141,6 +141,14 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
     assert project.is_lockfile_hash_match()
 
 
+def test_install_with_dry_run(project, invoke, repository):
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
+    result = invoke(["install", "--dry-run"], obj=project)
+    project._lockfile = None
+    assert "pytz" not in project.locked_repository.all_candidates
+    assert "pytz 2019.3" in result.output
+
+
 def test_init_command(project_no_init, invoke, mocker):
     mocker.patch(
         "pdm.cli.commands.init.get_user_email_from_git",

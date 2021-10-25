@@ -161,6 +161,18 @@ def test_remove_package(project, working_set, is_dev):
 
 
 @pytest.mark.usefixtures("repository")
+def test_remove_package_with_dry_run(project, working_set, capsys):
+    actions.do_add(project, packages=["requests"])
+    actions.do_remove(project, packages=["requests"], dry_run=True)
+    out, _ = capsys.readouterr()
+    project._lockfile = None
+    locked_candidates = project.locked_repository.all_candidates
+    assert "urllib3" in locked_candidates
+    assert "urllib3" in working_set
+    assert "- urllib3 1.22" in out
+
+
+@pytest.mark.usefixtures("repository")
 def test_remove_package_no_sync(project, working_set):
     actions.do_add(project, packages=["requests", "pytz"])
     actions.do_remove(project, sync=False, packages=["pytz"])

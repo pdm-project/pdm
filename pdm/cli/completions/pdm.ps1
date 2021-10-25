@@ -198,7 +198,7 @@ function TabExpansion($line, $lastWord) {
 
             "add" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation")),
                         $sectionOption,
                         $projectOption,
                         [Option]::new(@("-e", "--editable")).WithValues(@(getPyPIPackages))
@@ -264,7 +264,7 @@ function TabExpansion($line, $lastWord) {
             }
             "install" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--no-lock", "--prod", "--productin", "--no-editable", "--no-self", "--no-isolation")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--productin", "--no-editable", "--no-self", "--no-isolation")),
                         $sectionOption,
                         $projectOption
                     ))
@@ -310,7 +310,7 @@ function TabExpansion($line, $lastWord) {
             "remove" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--dev", "-d", "--no-sync", "--no-editable", "--no-self", "--no-isolation")),
+                        [Option]::new(@("--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self", "--no-isolation")),
                         $projectOption,
                         $sectionOption
                     ))
