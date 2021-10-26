@@ -300,7 +300,7 @@ class Installer:
         args = [req] + [d for d in self.additional_deps if d]
         if self.prerelease:
             args.insert(0, "--pre")
-        pip_cmd = [venv_python, "-m", "pip", "install"] + args
+        pip_cmd = [str(venv_python), "-m", "pip", "install"] + args
         _call_subprocess(pip_cmd)
 
     def _make_bin(self, venv_path: Path) -> Path:
@@ -339,7 +339,7 @@ class Installer:
             script = bin_path / "pdm.exe"
         else:
             script = bin_path / "pdm"
-        subprocess.check_call([script, "--help"])
+        subprocess.check_call([str(script), "--help"])
         print()
         _echo(
             "Successfully installed: {} ({}) at {}".format(
