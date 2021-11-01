@@ -16,8 +16,8 @@ from typing import (
     TypeVar,
 )
 
+from packaging.version import parse as parse_version
 from pip._vendor.html5lib import parse
-from pkg_resources import parse_version
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
