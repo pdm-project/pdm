@@ -251,6 +251,7 @@ def project_no_init(tmp_path, mocker):
     with temp_environ():
         os.environ.pop("VIRTUAL_ENV", None)
         os.environ.pop("PEP582_PACKAGES", None)
+        os.environ.pop("NO_SITE_PACKAGES", None)
         pythonpath = os.environ.pop("PYTHONPATH", "")
         pythonpath = remove_pep582_path_from_pythonpath(pythonpath)
         if pythonpath:

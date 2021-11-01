@@ -59,6 +59,8 @@ class Command(BaseCommand):
                 "PDM_PROJECT_ROOT": str(project.root),
             }
         )
+        if not project_env.is_global:
+            os.environ["NO_SITE_PACKAGES"] = "1"
         if project_env.packages_path:
             os.environ.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env_file:

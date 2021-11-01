@@ -77,10 +77,11 @@ def main():
 
     # Second, add lib directories, ensuring .pth file are processed.
     site.addsitedir(libpath)
-    # Then add the removed path to the tail of the paths
-    known_paths.clear()
-    site.addusersitepackages(known_paths)
-    site.addsitepackages(known_paths)
+    if not os.getenv("NO_SITE_PACKAGES"):
+        # Then add the removed path to the tail of the paths
+        known_paths.clear()
+        site.addusersitepackages(known_paths)
+        site.addsitepackages(known_paths)
 
 
 main()
