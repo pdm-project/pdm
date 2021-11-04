@@ -68,6 +68,8 @@ foo
 
 PDM 需要 Python 3.7 或更高版本。
 
+### 通过安装脚本
+
 像 pip 一样，PDM 也提供了一键安装脚本，用来将 PDM 安装在一个隔离的环境中。
 
 **Linux/Mac 安装命令**
@@ -104,7 +106,7 @@ optional arguments:
 
 你既可以通过直接增加选项，也可以通过设置对应的环境变量来达到这一效果。
 
-## 其他安装方法
+### 其他安装方法
 
 如果你使用的是 MacOS 并且安装了 `homebrew`：
 
@@ -112,7 +114,7 @@ optional arguments:
 $ brew install pdm
 ```
 
-如果你在Windows上使用 [Scoop](https://scoop.sh/), 运行以下命令安装：
+如果你在 Windows 上使用 [Scoop](https://scoop.sh/), 运行以下命令安装：
 
 ```
 PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git

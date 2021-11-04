@@ -72,6 +72,8 @@ is [pyflow], but it is written with Rust and thus can't get much help from the b
 
 PDM requires python version 3.7 or higher.
 
+### Via Install Script
+
 Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
 
 **For Linux/Mac**
@@ -108,7 +110,7 @@ optional arguments:
 
 You can either pass the options after the script or set the env var value.
 
-## Alternative Installation Methods
+### Alternative Installation Methods
 
 If you are on MacOS and using `homebrew`, install it by:
 

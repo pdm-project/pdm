@@ -290,6 +290,10 @@ class Installer:
         else:
             venv_python = venv_path / "bin/python"
 
+        # Re-install the venv pip to ensure it's not DEBUNDLED
+        # See issue/685
+        _call_subprocess([str(venv_python), "-m", "pip", "install", "-IU", "pip"])
+
         if self.version:
             if self.version.upper() == "HEAD":
                 req = f"git+{REPO}.git@main#egg=pdm"
