@@ -436,7 +436,7 @@ def format_lockfile(
     for k, v in sorted(mapping.items()):
         base = atoml.table()
         base.update(v.as_lockfile_entry())  # type: ignore
-        base.add("summary", v.summary)
+        base.add("summary", v.summary or "")
         deps = make_array(sorted(r.as_line() for r in fetched_dependencies[k]), True)
         if len(deps) > 0:
             base.add("dependencies", deps)
