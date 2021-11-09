@@ -1,3 +1,19 @@
+Release v1.10.1 (2021-11-09)
+----------------------------
+
+### Features & Improvements
+
+- Isolate the project environment with system site packages in `pdm run`, but keep them seen when PEP 582 is enabled. [#708](https://github.com/pdm-project/pdm/issues/708)
+
+### Bug Fixes
+
+- Run `pip` with `--isolated` when building wheels. In this way some env vars like `PIP_REQUIRE_VIRTUALENV` can be ignored. [#669](https://github.com/pdm-project/pdm/issues/669)
+- Fix the install script to ensure `pip` is not DEBUNDLED. [#685](https://github.com/pdm-project/pdm/issues/685)
+- Fix a bug that when `summary` is `None`, the lockfile can't be generated. [#719](https://github.com/pdm-project/pdm/issues/719)
+- `${PROJECT_ROOT}` should be written in the URL when relative path is given. [#721](https://github.com/pdm-project/pdm/issues/721)
+- Fix a bug that when project table already exists, `pdm import` can't merge the settings correctly. [#723](https://github.com/pdm-project/pdm/issues/723)
+
+
 Release v1.10.0 (2021-10-25)
 ----------------------------
 
