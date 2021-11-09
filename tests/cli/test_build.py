@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import tarfile
@@ -6,6 +7,7 @@ import zipfile
 import pytest
 
 from pdm.cli import actions
+from pdm.utils import temp_environ
 
 
 def get_tarball_names(path):
@@ -178,3 +180,10 @@ def test_build_with_no_isolation(fixture_project, invoke, isolated):
         args.append("--no-isolation")
     result = invoke(args, obj=project)
     assert result.exit_code == int(isolated)
+
+
+def test_build_ignoring_pip_environment(fixture_project):
+    project = fixture_project("demo-module")
+    with temp_environ():
+        os.environ["PIP_REQUIRE_VIRTUALENV"] = "1"
+        actions.do_build(project)
