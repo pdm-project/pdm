@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMappi
 
 import atoml
 from packaging.specifiers import SpecifierSet
-from pip._vendor.pkg_resources import parse_version
+from packaging.version import parse as parse_version
 from resolvelib.structs import DirectedGraph
 
 from pdm import termui
