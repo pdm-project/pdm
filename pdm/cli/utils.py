@@ -591,7 +591,9 @@ def merge_dictionary(
         elif isinstance(value, dict):
             target[key].update(value)
         elif isinstance(value, list):
-            target[key].extend(atoml.item(v) for v in value)
+            target[key].extend(value)
+        else:
+            target[key] = value
 
 
 def frozen_requirement_from_dist(dist: Distribution) -> str:
