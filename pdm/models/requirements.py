@@ -280,9 +280,10 @@ class FileRequirement(Requirement):
     def _parse_url(self) -> None:
         if not self.url:
             if self.path:
-                self.url = path_to_url(
-                    self.path.as_posix().replace("${PROJECT_ROOT}", ".")
-                )
+                self.url = path_to_url(self.path.resolve().as_posix())
+                if not self.path.is_absolute():
+                    project_root = Path(".").resolve().as_posix().lstrip("/")
+                    self.url = self.url.replace(project_root, "${PROJECT_ROOT}")
         else:
             try:
                 self.path = Path(
