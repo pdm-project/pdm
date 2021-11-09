@@ -52,6 +52,10 @@ REQUIREMENTS = [
         "git+git@github.com:pypa/pip.git#egg=pip",
         "pip @ git+ssh://git@github.com/pypa/pip.git",
     ),
+    (
+        "./tests/fixtures/projects/demo",
+        "demo @ file:///${PROJECT_ROOT}/tests/fixtures/projects/demo",
+    ),
 ]
 
 
