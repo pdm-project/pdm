@@ -120,8 +120,13 @@ class BaseRepository:
             if requirement.specifier.contains(  # type: ignore
                 c.version, allow_prereleases  # type: ignore
             )
-            and requires_python.is_subset(c.requires_python)
         ]
+        if requires_python:
+            applicable_cans = [
+                c
+                for c in applicable_cans
+                if requires_python.is_subset(c.requires_python)
+            ]
 
         if not applicable_cans:
             termui.logger.debug("\tCould not find any matching candidates.")
