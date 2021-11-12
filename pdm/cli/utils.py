@@ -494,7 +494,7 @@ def check_project_file(project: Project) -> None:
 
 
 def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
-    """Find all possible files that can be imported"""
+    """Find all possible files that can be imported, what"""
     for filename in (
         "Pipfile",
         "pyproject.toml",
