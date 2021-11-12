@@ -108,7 +108,7 @@ optional arguments:
   -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
 ```
 
-You can either pass the options after the script or set the env var value.
+You can either pass the options after the script or set the env var value.test
 
 ### Alternative Installation Methods
 
