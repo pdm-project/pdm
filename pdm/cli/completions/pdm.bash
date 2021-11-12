@@ -85,7 +85,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (run)
-            opts="--global --help --list --project --verbose"
+            opts="--global --help --list --project --verbose --site-packages"
             ;;
 
             (search)

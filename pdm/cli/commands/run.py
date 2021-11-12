@@ -13,12 +13,13 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
+from pdm.utils import is_path_relative_to
 
 
 class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
-    OPTIONS = ["env", "env_file", "help"]
+    OPTIONS = ["env", "env_file", "help", "site_packages"]
     TYPES = ["cmd", "shell", "call"]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -27,6 +28,12 @@ class Command(BaseCommand):
             "--list",
             action="store_true",
             help="Show all available scripts defined in pyproject.toml",
+        )
+        parser.add_argument(
+            "-s",
+            "--site-packages",
+            action="store_true",
+            help="Load site-packages from the selected interpreter",
         )
         parser.add_argument("command", nargs="?", help="The command to run")
         parser.add_argument(
@@ -41,6 +48,7 @@ class Command(BaseCommand):
         args: Union[Sequence[str], str],
         chdir: bool = False,
         shell: bool = False,
+        site_packages: bool = False,
         env: Optional[Mapping[str, str]] = None,
         env_file: Optional[str] = None,
     ) -> None:
@@ -59,8 +67,6 @@ class Command(BaseCommand):
                 "PDM_PROJECT_ROOT": str(project.root),
             }
         )
-        if not project_env.is_global:
-            os.environ["NO_SITE_PACKAGES"] = "1"
         if project_env.packages_path:
             os.environ.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env_file:
@@ -89,6 +95,17 @@ class Command(BaseCommand):
             )
         expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
         expanded_args = [os.path.expandvars(arg) for arg in [expanded_command] + args]
+        if (
+            not project.environment.is_global
+            and not site_packages
+            and (
+                command.startswith("python")
+                or is_path_relative_to(expanded_command, this_path)
+            )
+        ):
+            # The executable belongs to the local packages directory.
+            # Don't load system site-packages
+            os.environ["NO_SITE_PACKAGES"] = "1"
         if os.name == "nt" or "CI" in os.environ:
             # In order to make sure pytest is playing well,
             # don't hand over the process under a testing environment.
