@@ -92,6 +92,7 @@ jobs:
       - name: Install current PDM via script
         if: matrix.install-via == 'script'
         run: |
+          python -m pip install click
           python install-pdm.py --version head
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
