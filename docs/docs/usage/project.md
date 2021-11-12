@@ -107,7 +107,7 @@ You can find all available configuration items in [Configuration Page](/configur
 
 If a package is required by many projects on the system, each project has to keep its own copy. This may become a waste of disk space especially for data science and machine learning libraries.
 
-PDM supports *caching* the installations of the same wheel by installing it into a centralized package repository and linking to that installation in different projects. To enabled it, run:
+PDM supports _caching_ the installations of the same wheel by installing it into a centralized package repository and linking to that installation in different projects. To enabled it, run:
 
 ```bash
 $ pdm config feature.install_cache on
@@ -118,7 +118,7 @@ It can be enabled on a project basis, by adding `--local` option to the command.
 The caches are located under `$(pdm config cache_dir)/packages`. One can view the cache usage by `pdm cache info`. But be noted the cached installations are managed automatically -- They get deleted when not linked from any projects. Manually deleting the caches from the disk may break some projects on the system.
 
 !!! note
-    Only the installation of *named requirements* resolved from PyPI can be cached.
+    Only the installation of _named requirements_ resolved from PyPI can be cached.
 
 ## Manage global project
 
@@ -311,6 +311,17 @@ migrate_db = "flask db upgrade"
 ```
 
 Besides, PDM also injects the root path of the project via `PDM_PROJECT_ROOT` environment variable.
+
+### Load site-packages in the running environment
+
+To make sure the running environment is properly isolated from the outer Python interperter,
+site-packages from the selected interpreter WON'T be loaded into `sys.path`, unless any of the following conditions holds:
+
+1. The executable is from `PATH` but not inside the `__pypackages__` folder.
+2. `-s/--site-packages` flag is following `pdm run`.
+3. `site_packages = true` is in either the script table or the global setting key `_`.
+
+Note that site-packages will always be loaded if running with PEP 582 enabled(without the `pdm run` prefix).
 
 ### Show the list of scripts shortcuts
 

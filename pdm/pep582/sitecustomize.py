@@ -77,7 +77,7 @@ def main():
 
     # Second, add lib directories, ensuring .pth file are processed.
     site.addsitedir(libpath)
-    if not os.getenv("NO_SITE_PACKAGES"):
+    if not os.environ.pop("NO_SITE_PACKAGES", None):
         # Then add the removed path to the tail of the paths
         known_paths.clear()
         site.addusersitepackages(known_paths)

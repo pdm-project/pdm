@@ -427,20 +427,21 @@ def path_replace(pattern: str, replace_with: str, dest: str) -> str:
     )
 
 
+def is_path_relative_to(path: str | Path, other: str | Path) -> bool:
+    try:
+        Path(path).relative_to(other)
+    except ValueError:
+        return False
+    return True
+
+
 def is_venv_python(interpreter: str | Path) -> bool:
     """Check if the given interpreter path is from a virtualenv"""
     interpreter = Path(interpreter)
     if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
         return True
     virtual_env = os.getenv("VIRTUAL_ENV")
-    if virtual_env:
-        try:
-            interpreter.relative_to(virtual_env)
-        except ValueError:
-            pass
-        else:
-            return True
-    return False
+    return bool(virtual_env and is_path_relative_to(interpreter, virtual_env))
 
 
 def find_python_in_path(path: str | Path) -> Path | None:

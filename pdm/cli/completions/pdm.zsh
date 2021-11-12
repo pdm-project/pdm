@@ -244,7 +244,7 @@ _pdm() {
       _arguments -s \
         {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
         {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
-        {-s,--site-packages}'[Load site-packages from system interpreter]' \
+        {-s,--site-packages}'[Load site-packages from the selected interpreter]' \
         '(-)1:command:->command' \
         '*:arguments: _normal ' && return 0
       if [[ $state == command ]]; then

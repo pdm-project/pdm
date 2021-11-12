@@ -30,6 +30,7 @@ from pdm.models.requirements import (
 from pdm.models.specifiers import get_specifier
 from pdm.models.working_set import WorkingSet
 from pdm.project import Project
+from pdm.utils import is_path_relative_to
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
@@ -619,13 +620,9 @@ def is_homebrew_installation() -> bool:
 
 
 def is_scoop_installation() -> bool:
-    if os.name != "nt":
-        return False
-    try:
-        Path(sys.prefix).relative_to(Path.home() / "scoop/apps/pdm")
-    except ValueError:
-        return False
-    return True
+    return os.name == "nt" and is_path_relative_to(
+        sys.prefix, Path.home() / "scoop/apps/pdm"
+    )
 
 
 def get_dist_location(dist: Distribution) -> str:

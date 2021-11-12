@@ -185,6 +185,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l global -d 'Use the gl
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l list -d 'Show all available scripts defined in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from run' -l site-packages -d 'Load site-packages from the selected interpreter'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # search
