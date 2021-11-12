@@ -96,7 +96,7 @@ class Command(BaseCommand):
         expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
         expanded_args = [os.path.expandvars(arg) for arg in [expanded_command] + args]
         if (
-            not project.environment.is_global
+            not project_env.is_global
             and not site_packages
             and (
                 command.startswith("python")
@@ -209,6 +209,7 @@ class Command(BaseCommand):
             return self._show_list(project)
         global_env_options = project.scripts.get("_", {}) if project.scripts else {}
         assert isinstance(global_env_options, dict)
+        global_env_options.update(site_packages=options.site_packages)
         if not options.command:
             raise PdmUsageError("No command given")
         if project.scripts and options.command in project.scripts:
