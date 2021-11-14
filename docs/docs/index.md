@@ -215,11 +215,10 @@ run/debug configuration.
 
 ### VSCode
 
-Add the following to `.vscode/settings.json`:
+Add the following two entries to the top-level dict in `.vscode/settings.json`:
 
 ```json
 {
-  ...
   "python.autoComplete.extraPaths": ["__pypackages__/<major.minor>/lib"],
   "python.analysis.extraPaths": ["__pypackages__/<major.minor>/lib"]
 }
