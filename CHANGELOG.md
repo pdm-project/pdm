@@ -1,3 +1,15 @@
+Release v1.10.2 (2021-11-14)
+----------------------------
+
+### Features & Improvements
+
+- Add a new option `-s/--site-packages` to `pdm run` as well as a script config item. When it is set to `True`, site-packages from the selected interpreter will be loaded into the running environment. [#733](https://github.com/pdm-project/pdm/issues/733)
+
+### Bug Fixes
+
+- Now `NO_SITE_PACKAGES` isn't set in `pdm run` if the executable is out of local packages. [#733](https://github.com/pdm-project/pdm/issues/733)
+
+
 Release v1.10.1 (2021-11-09)
 ----------------------------
 
