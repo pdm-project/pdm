@@ -271,7 +271,7 @@ def test_import_another_sitecustomize(project, invoke, capfd):
     env = os.environ.copy()
     paths = env.get("PYTHONPATH")
     this_path = str(project.root)
-    new_paths = [this_path] + (paths or [])
+    new_paths = [this_path] if not paths else [this_path, paths]
     env["PYTHONPATH"] = os.pathsep.join(new_paths)
     project._environment = None
     capfd.readouterr()
