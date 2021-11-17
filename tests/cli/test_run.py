@@ -1,4 +1,3 @@
-import functools
 import os
 import subprocess
 import textwrap
@@ -263,34 +262,21 @@ def test_import_another_sitecustomize(project, invoke, capfd):
     project.meta["requires-python"] = ">=2.7"
     project.write_pyproject()
     # a script for checking another sitecustomize is imported
-    project.root.joinpath("foo.py").write_text(
-        textwrap.dedent(
-            """
-            import sys
-            module = sys.modules.get('another_sitecustomize')
-            if module:
-                print(module.__file__)
-            """
-        )
-    )
+    project.root.joinpath("foo.py").write_text("import os;print(os.getenv('FOO'))")
     # ensure there have at least one sitecustomize can be imported
     # there may have more than one sitecustomize.py in sys.path
-    project.root.joinpath("sitecustomize.py").write_text("# do nothing")
+    project.root.joinpath("sitecustomize.py").write_text(
+        "import os;os.environ['FOO'] = 'foo'"
+    )
     env = os.environ.copy()
-    paths = [str(project.root)]
-    original_paths = env.get("PYTHONPATH", "")
-    if original_paths:
-        paths.insert(0, original_paths)
-    env["PYTHONPATH"] = os.pathsep.join(paths)
-    # invoke pdm commands
-    invoke = functools.partial(invoke, env=env, obj=project)
+    paths = env.get("PYTHONPATH")
+    this_path = str(project.root)
+    new_paths = [this_path] + (paths or [])
+    env["PYTHONPATH"] = os.pathsep.join(new_paths)
     project._environment = None
     capfd.readouterr()
     with cd(project.root):
-        invoke(["run", "python", "foo.py"])
-    # only the first and second sitecustomize module will be imported
-    # as sitecustomize and another_sitecustomize
-    # the first one is pdm.pep582.sitecustomize for sure
-    # the second one maybe not the dummy module injected here
+        result = invoke(["run", "python", "foo.py"], env=env)
+    assert result.exit_code == 0, result.stderr
     out, _ = capfd.readouterr()
-    assert out.strip()
+    assert out.strip() == "foo"
