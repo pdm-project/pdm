@@ -41,7 +41,7 @@ def get_pypackages_path(maxdepth=5):
                 return result
 
 
-def ensure_another_sitecustomize_imported():
+def load_next_sitecustomize_py2():
     import imp
 
     try:
@@ -54,11 +54,25 @@ def ensure_another_sitecustomize_imported():
         pass
 
 
+def load_next_sitecustomize_py3():
+    import importlib.util
+
+    old_module = sys.modules.pop("sitecustomize")
+    spec = importlib.util.find_spec("sitecustomize")
+    if spec is not None:
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    sys.modules["sitecustomize"] = old_module
+
+
 def main():
     self_path = os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
     sys.path[:] = [path for path in sys.path if os.path.normcase(path) != self_path]
 
-    ensure_another_sitecustomize_imported()
+    if sys.version_info[0] == 2:
+        load_next_sitecustomize_py2()
+    else:
+        load_next_sitecustomize_py3()
 
     libpath = get_pypackages_path()
     if not libpath:
