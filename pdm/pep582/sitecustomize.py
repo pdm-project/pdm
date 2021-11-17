@@ -57,12 +57,13 @@ def load_next_sitecustomize_py2():
 def load_next_sitecustomize_py3():
     import importlib.util
 
-    old_module = sys.modules.pop("sitecustomize")
+    old_module = sys.modules.pop("sitecustomize", None)
     spec = importlib.util.find_spec("sitecustomize")
     if spec is not None:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-    sys.modules["sitecustomize"] = old_module
+    if old_module is not None:
+        sys.modules["sitecustomize"] = old_module
 
 
 def main():
