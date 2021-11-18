@@ -369,6 +369,15 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     ).read_text() == requirements_txt.read_text()
 
 
+def test_export_doesnt_include_dep_with_extras(invoke, fixture_project):
+    project = fixture_project("demo-package-has-dep-with-extras")
+    requirements_txt = project.root / "requirements.txt"
+
+    result = invoke(["export", "--without-hashes"], obj=project)
+    assert result.exit_code == 0
+    assert result.output.strip() == requirements_txt.read_text().strip()
+
+
 def test_completion_command(invoke):
     result = invoke(["completion", "bash"])
     assert result.exit_code == 0
