@@ -1,3 +1,13 @@
+Release v1.10.3 (2021-11-18)
+----------------------------
+
+### Bug Fixes
+
+- Use `importlib` to replace `imp` in the `sitecustomize` module for Python 3. [#574](https://github.com/pdm-project/pdm/issues/574)
+- Fix the lib paths under non-isolated build. [#740](https://github.com/pdm-project/pdm/issues/740)
+- Exclude the dependencies with extras in the result of `pdm export`. [#741](https://github.com/pdm-project/pdm/issues/741)
+
+
 Release v1.10.2 (2021-11-14)
 ----------------------------
 
