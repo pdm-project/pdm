@@ -70,7 +70,13 @@ class Command(BaseCommand):
             candidates = resolve_candidates_from_lockfile(
                 project, requirements.values()
             )
-            packages = candidates.values()
+            # Remove candidates with [extras] because the bare candidates are already
+            # included
+            packages = (
+                candidate
+                for candidate in candidates.values()
+                if not candidate.req.extras
+            )
 
         content = FORMATS[options.format].export(
             project, packages, options

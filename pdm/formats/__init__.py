@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from argparse import Namespace
 from pathlib import Path
-from typing import Iterable, Mapping, TypeVar, cast
+from typing import Iterable, Mapping, Union, cast
 
 from pdm._types import Protocol
 from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
@@ -10,7 +10,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.project import Project
 
-_T = TypeVar("_T", Candidate, Requirement)
+ExportItems = Union[Iterable[Candidate], Iterable[Requirement]]
 
 
 class _Format(Protocol):
@@ -26,7 +26,7 @@ class _Format(Protocol):
         ...
 
     def export(
-        self, project: Project, candidates: Iterable[_T], options: Namespace | None
+        self, project: Project, candidates: ExportItems, options: Namespace | None
     ) -> str:
         ...
 
