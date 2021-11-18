@@ -13,7 +13,7 @@
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/pdm-project/pdm)](https://hub.docker.com/r/pdm-project/pdm)
-[![Downloads](https://pepy.tech/badge/pdm)](https://pepy.tech/project/pdm)
+[![](https://tokei.rs/b1/github/pdm-project/pdm)](https://github.com/pdm-project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
