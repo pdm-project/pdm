@@ -82,8 +82,10 @@ def log_subprocessor(
             stdout=outstream.fileno(),
             stderr=subprocess.STDOUT,
         )
-    except subprocess.CalledProcessError:
-        raise BuildError(f"Call command {cmd} return non-zero status.")
+    except subprocess.CalledProcessError as e:
+        raise BuildError(
+            f"Call command {cmd} return non-zero status({e.returncode})."
+        ) from None
     finally:
         outstream.stop()
 
@@ -202,8 +204,6 @@ class EnvBuilder:
 
     @property
     def _env_vars(self) -> dict[str, str]:
-        from pdm.cli.actions import PEP582_PATH
-
         paths = self._prefix.bin_dirs
         if "PATH" in os.environ:
             paths.append(os.getenv("PATH", ""))
@@ -216,10 +216,13 @@ class EnvBuilder:
                 }
             )
         else:
-            pythonpath = self._prefix.lib_dirs + [PEP582_PATH]
+            project_libs = self._env.get_paths()["purelib"]
+            pythonpath = self._prefix.lib_dirs + [project_libs]
             if "PYTHONPATH" in os.environ:
                 pythonpath.append(os.getenv("PYTHONPATH", ""))
-            env.update(PYTHONPATH=os.pathsep.join(pythonpath))
+            env.update(
+                PYTHONPATH=os.pathsep.join(pythonpath),
+            )
         return env
 
     def subprocess_runner(
