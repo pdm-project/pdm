@@ -125,7 +125,10 @@ class BaseProvider(AbstractProvider):
         # For example, A v1 requires python>=3.6, it not eligible on a project with
         # requires-python=">=2.7". But it is eligible if A has environment marker
         # A1; python_version>='3.8'
-        if not requires_python.is_superset(candidate.req.requires_python):
+        new_requires_python = (
+            candidate.req.requires_python & self.repository.environment.python_requires
+        )
+        if not requires_python.is_superset(new_requires_python):
             valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))
         return valid_deps
 

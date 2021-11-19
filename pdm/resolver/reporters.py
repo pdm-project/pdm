@@ -8,7 +8,7 @@ from resolvelib import BaseReporter
 from pdm import termui
 
 if TYPE_CHECKING:
-    from resolvelib.resolvers import State  # type: ignore
+    from resolvelib.resolvers import RequirementInformation, State  # type: ignore
 
     from pdm._vendor import halo
     from pdm.models.candidates import Candidate
@@ -72,8 +72,15 @@ class SpinnerReporter(BaseReporter):
     def backtracking(self, candidate: Candidate) -> None:
         """Called when rejecting a candidate during backtracking."""
         logger.info(f"Candidate rejected: {candidate.name} {candidate.version}")
-        logger.info("Backtracking...")
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
         self.spinner.text = f"Resolving: new pin {candidate.format()}"
+
+    def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
+        conflicts = [
+            f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
+            for req, parent in causes
+        ]
+        logger.info("Conflicts detected: ")
+        logger.info("\n".join(conflicts))
