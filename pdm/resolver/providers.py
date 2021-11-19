@@ -201,8 +201,11 @@ class EagerUpdateProvider(ReusePinProvider):
         resolutions: dict[str, Candidate],
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
+        backtrack_causes: Sequence[RequirementInformation],
     ) -> int:
         # Resolve tracking packages so we have a chance to unpin them first.
         if identifier in self.tracked_names:
             return -1
-        return super().get_preference(identifier, resolutions, candidates, information)
+        return super().get_preference(
+            identifier, resolutions, candidates, information, backtrack_causes
+        )
