@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any, Iterable, Iterator, Mapping, Sequence
 
 from resolvelib import AbstractProvider
 from resolvelib.resolvers import RequirementInformation
@@ -51,6 +51,7 @@ class BaseProvider(AbstractProvider):
         resolutions: dict[str, Candidate],
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
+        backtrack_causes: Sequence[RequirementInformation],
     ) -> int:
         return sum(1 for _ in candidates[identifier])
 
@@ -60,15 +61,16 @@ class BaseProvider(AbstractProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Iterable[Candidate]:
+        incompat = list(incompatibilities[identifier])
         if identifier == "python":
-            return find_python_matches(
+            candidates = find_python_matches(
                 identifier, requirements, self.repository.environment
             )
+            return [c for c in candidates if c not in incompat]
         reqs = sorted(
             requirements[identifier], key=self.requirement_preference, reverse=True
         )
         file_req = next((req for req in reqs if not req.is_named), None)
-        incompat = list(incompatibilities[identifier])
         if file_req:
             can = Candidate(file_req, self.repository.environment)
             can.metadata
