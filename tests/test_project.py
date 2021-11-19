@@ -17,6 +17,8 @@ def test_project_python_with_pyenv_support(project, mocker):
         mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
         mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
         pyenv_python = project.root / "shims/python"
+        if os.name == "nt":
+            pyenv_python = pyenv_python.with_suffix(".bat")
         pyenv_python.parent.mkdir()
         pyenv_python.touch()
         mocker.patch(
