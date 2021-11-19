@@ -483,6 +483,8 @@ def save_version_specifiers(
                         r.specifier = get_specifier(f">={version},<{parsed.major + 1}")
                     else:
                         r.specifier = get_specifier(f"~={parsed.major}.{parsed.minor}")
+                elif save_strategy == "minimum":
+                    r.specifier = get_specifier(f">={resolved[name].version}")
 
 
 def check_project_file(project: Project) -> None:

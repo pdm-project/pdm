@@ -228,6 +228,13 @@ save_strategy_group.add_argument(
     const="exact",
     help="Save exact version specifiers",
 )
+save_strategy_group.add_argument(
+    "--save-minimum",
+    action="store_const",
+    dest="save_strategy",
+    const="minimum",
+    help="Save minimum version specifiers",
+)
 
 update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)
 update_strategy_group.add_argument(
