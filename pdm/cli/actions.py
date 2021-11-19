@@ -84,7 +84,7 @@ def do_lock(
             except ResolutionImpossible as err:
                 spin.fail(f"{termui.Emoji.LOCK} Lock failed")
                 ui.echo(format_resolution_impossible(err), err=True)
-                raise
+                raise ResolutionImpossible("Unable to find a resolution") from None
             else:
                 data = format_lockfile(mapping, dependencies)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")

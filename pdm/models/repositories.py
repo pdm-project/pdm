@@ -120,8 +120,15 @@ class BaseRepository:
             if requirement.specifier.contains(  # type: ignore
                 c.version, allow_prereleases  # type: ignore
             )
-            and requires_python.is_subset(c.requires_python)
         ]
+
+        applicable_cans_python_compatible = [
+            c for c in applicable_cans if requires_python.is_subset(c.requires_python)
+        ]
+        # Evaluate data-requires-python attr and discard incompatible candidates
+        # to reduce the number of candidates to resolve.
+        if applicable_cans_python_compatible:
+            applicable_cans = applicable_cans_python_compatible
 
         if not applicable_cans:
             termui.logger.debug("\tCould not find any matching candidates.")
@@ -132,8 +139,14 @@ class BaseRepository:
                 c
                 for c in cans
                 if requirement.specifier.contains(c.version, True)  # type: ignore
-                and requires_python.is_subset(c.requires_python)
             ]
+            applicable_cans_python_compatible = [
+                c
+                for c in applicable_cans
+                if requires_python.is_subset(c.requires_python)
+            ]
+            if applicable_cans_python_compatible:
+                applicable_cans = applicable_cans_python_compatible
 
             if not applicable_cans:
                 termui.logger.debug(

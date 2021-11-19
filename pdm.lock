@@ -476,7 +476,7 @@ dependencies = [
 
 [[package]]
 name = "resolvelib"
-version = "0.7.1"
+version = "0.8.1"
 summary = "Resolve abstract dependencies into concrete ones"
 
 [[package]]
@@ -488,6 +488,7 @@ dependencies = [
     "colorama<0.5.0,>=0.4.0",
     "commonmark<0.10.0,>=0.9.0",
     "pygments<3.0.0,>=2.6.0",
+    "typing-extensions<4.0.0,>=3.7.4; python_version < \"3.8\"",
 ]
 
 [[package]]
@@ -588,7 +589,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:05fa513132a2421e9eaee529616cdaba9f583f00760f200c406f55674c371d79"
+content_hash = "sha256:d104114bcd1f9e00ce15ecb6cc0947b96dc28b717e8e82cc51f4860940b3c3a5"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -1017,9 +1018,9 @@ content_hash = "sha256:05fa513132a2421e9eaee529616cdaba9f583f00760f200c406f55674
     {file = "requests-2.25.1-py2.py3-none-any.whl", hash = "sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e"},
     {file = "requests-2.25.1.tar.gz", hash = "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"},
 ]
-"resolvelib 0.7.1" = [
-    {file = "resolvelib-0.7.1-py2.py3-none-any.whl", hash = "sha256:4bb1e7ec9b3054c3914cad1e715288b11091756bdb72af49fb8986931715a01a"},
-    {file = "resolvelib-0.7.1.tar.gz", hash = "sha256:c526cda7f080d908846262d86c738231d9bfb556eb02d77167b685d65d85ace9"},
+"resolvelib 0.8.1" = [
+    {file = "resolvelib-0.8.1-py2.py3-none-any.whl", hash = "sha256:d9b7907f055c3b3a2cfc56c914ffd940122915826ff5fb5b1de0c99778f4de98"},
+    {file = "resolvelib-0.8.1.tar.gz", hash = "sha256:c6ea56732e9fb6fca1b2acc2ccc68a0b6b8c566d8f3e78e0443310ede61dbd37"},
 ]
 "rich 10.13.0" = [
     {file = "rich-10.13.0-py3-none-any.whl", hash = "sha256:96d15285b64dbf8154e0717298d2fdfdbbe03da26a392632c23820068f06c3b3"},

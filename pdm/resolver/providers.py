@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any, Iterable, Iterator, Mapping, Sequence
 
 from resolvelib import AbstractProvider
 from resolvelib.resolvers import RequirementInformation
@@ -51,6 +51,7 @@ class BaseProvider(AbstractProvider):
         resolutions: dict[str, Candidate],
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
+        backtrack_causes: Sequence[RequirementInformation],
     ) -> int:
         return sum(1 for _ in candidates[identifier])
 
@@ -60,15 +61,16 @@ class BaseProvider(AbstractProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Iterable[Candidate]:
+        incompat = list(incompatibilities[identifier])
         if identifier == "python":
-            return find_python_matches(
+            candidates = find_python_matches(
                 identifier, requirements, self.repository.environment
             )
+            return [c for c in candidates if c not in incompat]
         reqs = sorted(
             requirements[identifier], key=self.requirement_preference, reverse=True
         )
         file_req = next((req for req in reqs if not req.is_named), None)
-        incompat = list(incompatibilities[identifier])
         if file_req:
             can = Candidate(file_req, self.repository.environment)
             can.metadata
@@ -123,7 +125,10 @@ class BaseProvider(AbstractProvider):
         # For example, A v1 requires python>=3.6, it not eligible on a project with
         # requires-python=">=2.7". But it is eligible if A has environment marker
         # A1; python_version>='3.8'
-        if not requires_python.is_superset(candidate.req.requires_python):
+        new_requires_python = (
+            candidate.req.requires_python & self.repository.environment.python_requires
+        )
+        if not requires_python.is_superset(new_requires_python):
             valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))
         return valid_deps
 
@@ -199,8 +204,11 @@ class EagerUpdateProvider(ReusePinProvider):
         resolutions: dict[str, Candidate],
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
+        backtrack_causes: Sequence[RequirementInformation],
     ) -> int:
         # Resolve tracking packages so we have a chance to unpin them first.
         if identifier in self.tracked_names:
             return -1
-        return super().get_preference(identifier, resolutions, candidates, information)
+        return super().get_preference(
+            identifier, resolutions, candidates, information, backtrack_causes
+        )

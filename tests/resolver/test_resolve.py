@@ -273,3 +273,8 @@ def test_resolve_candidates_to_install(project):
 def test_resolve_prefer_requirement_with_prereleases(project, repository):
     result = resolve_requirements(repository, ["urllib3", "requests>=2.20.0b0"])
     assert result["urllib3"].version == "1.23b0"
+
+
+def test_resolve_with_python_marker(project, repository):
+    result = resolve_requirements(repository, ["demo; python_version>='3.6'"])
+    assert result["demo"].version == "0.0.1"
