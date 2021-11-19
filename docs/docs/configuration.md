@@ -17,7 +17,7 @@ The following configuration items can be retrieved and modified by `pdm config` 
 | `pypi.url`                    | The URL of PyPI mirror                                                    | Read `index-url` in `pip.conf`, or `https://pypi.org/simple` if not found | Yes                  | `PDM_PYPI_URL`           |
 | `pypi.verify_ssl`             | Verify SSL certificate when query PyPI                                    | Read `trusted-hosts` in `pip.conf`, defaults to `True`                    | Yes                  |                          |
 | `pypi.json_api`               | Consult PyPI's JSON API for package metadata                              | `False`                                                                   | Yes                  | `PDM_PYPI_JSON_API`      |
-| `strategy.save`               | Specify how to save versions when a package is added                      | `compatible`(can be: `exact`, `wildcard`)                                 | Yes                  |                          |
+| `strategy.save`               | Specify how to save versions when a package is added                      | `compatible`(can be: `exact`, `wildcard`, `minimum`)                      | Yes                  |                          |
 | `strategy.update`             | The default strategy for updating packages                                | `reuse`(can be : `eager`)                                                 | Yes                  |                          |
 | `strategy.resolve_max_rounds` | Specify the max rounds of resolution process                              | 1000                                                                      | Yes                  | `PDM_RESOLVE_MAX_ROUNDS` |
 
