@@ -29,7 +29,7 @@ _pdm_25182a7ef85b840e_complete()
         case "$com" in
 
             (add)
-            opts="--dev --editable --global --dry-run --group --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --unconstrained --update-eager --update-reuse --verbose --no-isolation"
+            opts="--dev --editable --global --dry-run --group --help --no-editable --no-self --no-sync --project --save-compatible --save-exact --save-wildcard --save-minimum --unconstrained --update-eager --update-reuse --verbose --no-isolation"
             ;;
 
             (build)
@@ -101,7 +101,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (update)
-            opts="--dev --global --group --help --no-default --no-editable --no-sync --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --top --unconstrained --update-eager --update-reuse --verbose --no-isolation"
+            opts="--dev --global --group --help --no-default --no-editable --no-sync --no-self --outdated --production --project --save-compatible --save-exact --save-wildcard --save-minimum --top --unconstrained --update-eager --update-reuse --verbose --no-isolation"
             ;;
 
             (use)
