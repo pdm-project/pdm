@@ -125,6 +125,12 @@ def test_add_package_save_wildcard(project):
     assert project.meta.dependencies[0] == "requests"
 
 
+@pytest.mark.usefixtures("repository")
+def test_add_package_save_minimum(project):
+    actions.do_add(project, sync=False, save="minimum", packages=["requests"])
+    assert project.meta.dependencies[0] == "requests>=2.19.1"
+
+
 def test_add_package_update_reuse(project, repository):
     actions.do_add(project, sync=False, save="wildcard", packages=["requests", "pytz"])
 

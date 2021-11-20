@@ -62,9 +62,10 @@ _pdm() {
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
+        '--save-minimum[Save minimum version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {-e+,--editable+}'[Specify editable packages]:packages'
@@ -170,7 +171,7 @@ _pdm() {
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
         "--no-default[Don\'t include dependencies from the default group]"
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
@@ -233,7 +234,7 @@ _pdm() {
         {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
@@ -282,7 +283,7 @@ _pdm() {
         '--clean[Clean unused packages]'
         "--no-clean[Don't clean unused packages]"
         "--no-default[Don\'t include dependencies from the default group]"
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
       )
@@ -294,9 +295,10 @@ _pdm() {
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
+        '--save-minimum[Save minimum version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-sync[Only update lock file but do not sync packages]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
