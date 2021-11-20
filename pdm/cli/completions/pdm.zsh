@@ -171,7 +171,7 @@ _pdm() {
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-lock[Don't do lock if lockfile is not found or outdated]"
         "--no-default[Don\'t include dependencies from the default group]"
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
@@ -234,7 +234,7 @@ _pdm() {
         {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
-        '--no-editalbe[Install non-editable versions for all packages]'
+        '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
