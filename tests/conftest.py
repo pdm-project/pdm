@@ -250,6 +250,7 @@ def project_no_init(tmp_path, mocker):
     do_use(p, getattr(sys, "_base_executable", sys.executable))
     with temp_environ():
         os.environ.pop("VIRTUAL_ENV", None)
+        os.environ.pop("CONDA_PREFIX", None)
         os.environ.pop("PEP582_PACKAGES", None)
         os.environ.pop("NO_SITE_PACKAGES", None)
         pythonpath = os.environ.pop("PYTHONPATH", "")
