@@ -436,9 +436,7 @@ def is_path_relative_to(path: str | Path, other: str | Path) -> bool:
 
 
 def is_venv_python(interpreter: str | Path) -> bool:
-    """Check if the given interpreter path is from a virtualenv,
-    and return the prefix if found.
-    """
+    """Check if the given interpreter path is from a virtualenv"""
     interpreter = Path(interpreter)
     if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
         return True
@@ -448,9 +446,7 @@ def is_venv_python(interpreter: str | Path) -> bool:
 
 
 def is_conda_python(interpreter: str | Path) -> bool:
-    """Check if the given interpreter path is from a Conda environment,
-    and return the prefix if found.
-    """
+    """Check if the given interpreter path is from a Conda environment"""
     virtual_env = os.getenv("CONDA_PREFIX")
     return bool(virtual_env and is_path_relative_to(Path(interpreter), virtual_env))
 
