@@ -157,19 +157,6 @@ install_group.options.append(no_isolation_option)
 
 groups_group = ArgumentGroup("Dependencies selection")
 groups_group.add_argument(
-    "-s",
-    "--section",
-    dest="groups",
-    metavar="GROUP",
-    action="append",
-    help="(DEPRECATED) alias of `--group`",
-    default=[],
-    type=deprecated(
-        "`-s/--section` is deprecated in favor of `-G/--group` "
-        "and will be removed in the next minor release."
-    ),
-)
-groups_group.add_argument(
     "-G",
     "--group",
     dest="groups",

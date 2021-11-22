@@ -2,7 +2,6 @@ import argparse
 
 from pdm.cli.actions import do_import
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import deprecated
 from pdm.formats import FORMATS
 from pdm.project import Project
 
@@ -19,16 +18,6 @@ class Command(BaseCommand):
             default=False,
             action="store_true",
             help="import packages into dev dependencies",
-        )
-        parser.add_argument(
-            "-s",
-            "--section",
-            dest="group",
-            help="(DEPRECATED) Alias of `-G/--group`",
-            type=deprecated(
-                "`-s/--section` is deprecated in favor of `-G/--group` "
-                "and will be removed in the next minor release."
-            ),
         )
         parser.add_argument(
             "-G", "--group", help="Specify the target dependency group to import into"
