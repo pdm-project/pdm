@@ -38,7 +38,9 @@ class Command(BaseCommand):
         elif options.where:
             project.core.ui.echo(project.root.as_posix())
         elif options.packages:
-            project.core.ui.echo(str(project.environment.packages_path))
+            project.core.ui.echo(
+                str(getattr(project.environment, "packages_path", None))
+            )
         elif options.env:
             project.core.ui.echo(
                 json.dumps(project.environment.marker_environment, indent=2)
@@ -54,7 +56,7 @@ class Command(BaseCommand):
                 (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
                 (
                     termui.cyan("Project Packages:", bold=True),
-                    str(project.environment.packages_path),
+                    str(getattr(project.environment, "packages_path", None)),
                 ),
             ]
             project.core.ui.display_columns(rows)

@@ -8,7 +8,6 @@ import sys
 from typing import Any, Mapping, MutableMapping, Optional, Sequence, Tuple, Union, cast
 
 from pdm import termui
-from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
@@ -52,23 +51,9 @@ class Command(BaseCommand):
         env: Optional[Mapping[str, str]] = None,
         env_file: Optional[str] = None,
     ) -> None:
-        if "PYTHONPATH" in os.environ:
-            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH", "")])
-        else:
-            pythonpath = PEP582_PATH
         project_env = project.environment
-        this_path = project_env.get_paths()["scripts"]
-        python_root = os.path.dirname(project.python.executable)
-        new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
-        os.environ.update(
-            {
-                "PYTHONPATH": pythonpath,
-                "PATH": new_path,
-                "PDM_PROJECT_ROOT": str(project.root),
-            }
-        )
-        if project_env.packages_path:
-            os.environ.update({"PEP582_PACKAGES": str(project_env.packages_path)})
+        os.environ.update(project_env.execution_environ)
+
         if env_file:
             import dotenv
 
@@ -95,8 +80,9 @@ class Command(BaseCommand):
             )
         expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
         expanded_args = [os.path.expandvars(arg) for arg in [expanded_command] + args]
+        this_path = project_env.get_paths()["scripts"]
         if (
-            not project_env.is_global
+            hasattr(project_env, "packages_path")
             and not site_packages
             and (
                 command.startswith("python")

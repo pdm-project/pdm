@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from pdm.models.environment import GlobalEnvironment
 from pdm.utils import cd, temp_environ
 
 
@@ -109,7 +110,7 @@ def test_project_sources_env_var_expansion(project):
 
 def test_global_project(tmp_path, core):
     project = core.create_project(tmp_path, True)
-    assert project.environment.is_global
+    assert isinstance(project.environment, GlobalEnvironment)
 
 
 def test_auto_global_project(tmp_path, core):
@@ -158,7 +159,7 @@ def test_project_auto_detect_venv(project):
         project.root / "test_venv" / scripts / f"python{suffix}"
     ).as_posix()
 
-    assert project.environment.is_global
+    assert isinstance(project.environment, GlobalEnvironment)
 
 
 def test_ignore_saved_python(project):

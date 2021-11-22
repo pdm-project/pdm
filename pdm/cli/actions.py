@@ -31,14 +31,13 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.candidates import Candidate
+from pdm.models.environment import PEP582_PATH
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
 from pdm.utils import normalize_name
-
-PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
 
 def do_lock(
@@ -527,10 +526,10 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
     if (
         old_python
         and Path(old_python.path) != Path(selected_python.path)
-        and not project.environment.is_global
+        and hasattr(project.environment, "update_shebangs")
     ):
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
-        project.environment.update_shebangs(selected_python.executable)
+        project.environment.update_shebangs(selected_python.executable)  # type: ignore
 
 
 def do_import(

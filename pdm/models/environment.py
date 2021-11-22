@@ -23,6 +23,9 @@ from pdm.models.in_process import (
 from pdm.models.working_set import WorkingSet
 from pdm.utils import cached_property, get_finder, is_venv_python, pdm_scheme
 
+PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
+
+
 if TYPE_CHECKING:
     from pdm._types import Source
     from pdm.models.python import PythonInfo
@@ -80,29 +83,13 @@ class Environment:
     def interpreter(self) -> PythonInfo:
         return self._interpreter
 
+    @property
+    def editable_dir(self) -> Path:
+        raise NotImplementedError
+
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
         raise NotImplementedError
-
-    @cached_property
-    def packages_path(self) -> Path:
-        """The local packages path."""
-        pypackages = (
-            self.project.root  # type: ignore
-            / "__pypackages__"
-            / self.interpreter.identifier
-        )
-        if not pypackages.exists() and "-32" in pypackages.name:
-            compatible_packages = pypackages.with_name(pypackages.name[:-3])
-            if compatible_packages.exists():
-                pypackages = compatible_packages
-        scripts = "Scripts" if os.name == "nt" else "bin"
-        if not pypackages.parent.exists():
-            pypackages.parent.mkdir(parents=True)
-            pypackages.parent.joinpath(".gitignore").write_text("*\n!.gitignore\n")
-        for subdir in [scripts, "include", "lib"]:
-            pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
-        return pypackages
 
     @contextmanager
     def get_finder(
@@ -156,16 +143,6 @@ class Environment:
         new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
         return shutil.which(command, path=new_path)
 
-    def update_shebangs(self, new_path: str) -> None:
-        """Update the shebang lines"""
-        scripts = self.get_paths()["scripts"]
-        for child in Path(scripts).iterdir():
-            if not child.is_file() or child.suffix not in (".exe", ".py", ""):
-                continue
-            is_launcher = child.suffix == ".exe"
-            new_shebang = _get_shebang_path(new_path, is_launcher)
-            child.write_bytes(_replace_shebang(child.read_bytes(), new_shebang))
-
     def _download_pip_wheel(self, path: str | Path) -> None:
         dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
         try:
@@ -212,20 +189,78 @@ class Environment:
             self._download_pip_wheel(pip_wheel)
         return [executable, str(pip_wheel / "pip")]
 
+    @cached_property
+    def execution_environ(self) -> dict[str, str]:
+        this_path = self.get_paths()["scripts"]
+        python_root = os.path.dirname(self.interpreter.executable)
+        new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
+
+        if "PYTHONPATH" in os.environ:
+            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH", "")])
+        else:
+            pythonpath = PEP582_PATH
+
+        return {
+            "PYTHONPATH": pythonpath,
+            "PATH": new_path,
+            "PDM_PROJECT_ROOT": str(self.project.root),  # type: ignore
+        }
+
 
 class PEP582Environment(Environment):
+    @property
+    def editable_dir(self) -> Path:
+        return self.packages_path / "src"
 
-    is_global = False
+    @cached_property
+    def packages_path(self) -> Path:
+        """The local packages path."""
+        pypackages = (
+            self.project.root  # type: ignore
+            / "__pypackages__"
+            / self.interpreter.identifier
+        )
+        if not pypackages.exists() and "-32" in pypackages.name:
+            compatible_packages = pypackages.with_name(pypackages.name[:-3])
+            if compatible_packages.exists():
+                pypackages = compatible_packages
+        scripts = "Scripts" if os.name == "nt" else "bin"
+        if not pypackages.parent.exists():
+            pypackages.parent.mkdir(parents=True)
+            pypackages.parent.joinpath(".gitignore").write_text("*\n!.gitignore\n")
+        for subdir in [scripts, "include", "lib"]:
+            pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
+        return pypackages
 
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
         return pdm_scheme(str(self.packages_path))
 
+    def update_shebangs(self, new_path: str) -> None:
+        """Update the shebang lines"""
+        scripts = self.get_paths()["scripts"]
+        for child in Path(scripts).iterdir():
+            if not child.is_file() or child.suffix not in (".exe", ".py", ""):
+                continue
+            is_launcher = child.suffix == ".exe"
+            new_shebang = _get_shebang_path(new_path, is_launcher)
+            child.write_bytes(_replace_shebang(child.read_bytes(), new_shebang))
+
+    @cached_property
+    def execution_environ(self) -> dict[str, str]:
+        environ = super().execution_environ.copy()
+        environ.update({"PEP582_PACKAGES": str(self.packages_path)})
+        return environ
+
 
 class GlobalEnvironment(Environment):
-    """Global environment"""
+    """Non-PEP 582 environment, which may be backed by a virtual environment."""
 
-    is_global = True
+    @property
+    def editable_dir(self) -> Path:
+        if os.getenv("VIRTUAL_ENV"):
+            return Path(os.environ["VIRTUAL_ENV"]) / "src"
+        return Path("src")
 
     def get_paths(self) -> dict[str, str]:
         paths = get_sys_config_paths(self.interpreter.executable)
@@ -235,7 +270,3 @@ class GlobalEnvironment(Environment):
         paths["prefix"] = paths["data"]
         paths["headers"] = paths["include"]
         return paths
-
-    @property
-    def packages_path(self) -> Path | None:  # type: ignore
-        return None

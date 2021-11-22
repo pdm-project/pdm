@@ -197,7 +197,7 @@ class Project:
             )
         )
 
-    def get_environment(self, interpreter) -> Environment:
+    def get_environment(self, interpreter: PythonInfo) -> Environment:
         """Get the environment selected by this project"""
         if self.is_global:
             env = GlobalEnvironment(self, interpreter)
@@ -213,7 +213,7 @@ class Project:
     @property
     def environment(self) -> Environment:
         if not self._environment:
-            self._environment = self.get_environment(self._python)
+            self._environment = self.get_environment(self.python)
         return self._environment
 
     @property
