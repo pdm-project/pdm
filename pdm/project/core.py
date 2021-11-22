@@ -20,7 +20,7 @@ from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
-from pdm.models.environment import Environment, GlobalEnvironment
+from pdm.models.environment import Environment, GlobalEnvironment, PEP582Environment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository, PyPIRepository
 from pdm.models.requirements import Requirement, parse_requirement
@@ -206,7 +206,7 @@ class Project:
         if self.config["use_venv"] and is_venv_python(self.python.executable):
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
-        return Environment(self)
+        return PEP582Environment(self)
 
     @property
     def environment(self) -> Environment:

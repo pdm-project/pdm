@@ -80,7 +80,7 @@ class Environment:
 
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
-        return pdm_scheme(str(self.packages_path))
+        raise NotImplementedError
 
     @cached_property
     def packages_path(self) -> Path:
@@ -209,6 +209,15 @@ class Environment:
         if not pip_wheel.is_file():
             self._download_pip_wheel(pip_wheel)
         return [executable, str(pip_wheel / "pip")]
+
+
+class PEP582Environment(Environment):
+
+    is_global = False
+
+    def get_paths(self) -> dict[str, str]:
+        """Get paths like ``sysconfig.get_paths()`` for installation."""
+        return pdm_scheme(str(self.packages_path))
 
 
 class GlobalEnvironment(Environment):
