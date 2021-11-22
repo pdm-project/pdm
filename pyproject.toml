@@ -4,8 +4,7 @@
 authors = [
     {name = "frostming", email = "mianghong@gmail.com"},
 ]
-dynamic = ["version", "classifiers"]
-version = {use_scm = true}
+dynamic = ["version"]
 requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
@@ -15,7 +14,7 @@ dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
     "installer~=0.3.0",
     "packaging",
-    "pdm-pep517>=0.8.3,<0.9",
+    "pdm-pep517>=0.9,<0.10",
     "pep517>=0.11.0",
     "pip>=20.1",
     "python-dotenv~=0.15",
@@ -50,6 +49,7 @@ includes = ["pdm"]
 source-includes = ["tests"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
+version = {use_scm = true}
 
 [tool.pdm.scripts]
 release = "python tasks/release.py"

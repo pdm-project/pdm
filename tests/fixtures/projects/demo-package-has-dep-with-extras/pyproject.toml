@@ -9,7 +9,6 @@ dependencies = [
     "requests[security]~=2.26",
 ]
 requires-python = ">=3.6"
-dynamic = ["classifiers"]
 license = {text = "MIT"}
 
 [project.urls]
