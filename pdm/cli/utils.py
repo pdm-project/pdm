@@ -534,8 +534,43 @@ def set_env_in_reg(env_name: str, value: str) -> None:
 
 
 def format_resolution_impossible(err: ResolutionImpossible) -> str:
+    from pdm.resolver.python import PythonRequirement
+
     causes: list[RequirementInformation] = err.causes
-    result = ["Unable to find a resolution that satisfies the following requirements:"]
+    if all(isinstance(cause.requirement, PythonRequirement) for cause in causes):
+        project_requires = next(
+            (cause.requirement for cause in causes if cause.parent is None)
+        )
+        conflicting = [
+            cause
+            for cause in causes
+            if cause.parent is not None
+            and not cause.requirement.specifier.is_superset(project_requires.specifier)
+        ]
+        result = [
+            "Unable to find a resolution because the following dependencies don't work "
+            "on all Python versions defined by the project's `requires-python`: "
+            f"{termui.green(str(project_requires.specifier))}"
+        ]
+        for req, parent in conflicting:
+            result.append(f"  {req.as_line()} (from {repr(parent)})")
+        result.append(
+            "To fix this, you can change the value of `requires-python` "
+            "in pyproject.toml."
+        )
+        return "\n".join(result)
+
+    if len(causes) == 1:
+        return (
+            "Unable to find a resolution for "
+            f"{termui.green(causes[0].requirement.as_line())}\n"
+            "Please make sure the package name is correct."
+        )
+
+    result = [
+        f"Unable to find a resolution for {termui.green(causes[0].requirement)} "
+        "because the following requirements conflict:"
+    ]
 
     for req, parent in causes:
         result.append(
@@ -543,9 +578,8 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         )
 
     result.append(
-        "Please make sure the package names are correct. If so, you can either "
-        "loosen the version constraints of these dependencies, or "
-        "set a narrower `requires-python` range in the pyproject.toml."
+        "To fix this, you could try to loosen the dependency version constraints"
+        "in pyproject.toml."
     )
     return "\n".join(result)
 

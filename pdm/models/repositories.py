@@ -294,7 +294,7 @@ class PyPIRepository(BaseRepository):
         if not cans:
             raise CandidateNotFound(
                 f"Unable to find candidates for {requirement.project_name}. There may "
-                "exist some issues with the package index or network condition."
+                "exist some issues with the package name or network condition."
             )
         return cans
 
