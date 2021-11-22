@@ -150,7 +150,6 @@ class Project:
     def python(self) -> PythonInfo:
         if not self._python:
             self._python = self.resolve_interpreter()
-            print("RESOLVE PYTHON", self._python)
         return self._python
 
     @python.setter
@@ -183,7 +182,6 @@ class Project:
 
         # Resolve virtual environments from env-vars
         virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
-        print("FIND", virtual_env)
         if config["use_venv"] and virtual_env:
             return PythonInfo.from_path(
                 os.path.join(virtual_env, scripts, f"python{suffix}")
