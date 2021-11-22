@@ -156,6 +156,8 @@ class Project:
         self._python = value
         self.project_config["python.path"] = value.path
 
+        self._environment = self.get_environment(value)
+
     @property
     def python_executable(self) -> str:
         """For backward compatibility"""
@@ -195,23 +197,23 @@ class Project:
             )
         )
 
-    def get_environment(self) -> Environment:
+    def get_environment(self, interpreter) -> Environment:
         """Get the environment selected by this project"""
         if self.is_global:
-            env = GlobalEnvironment(self)
+            env = GlobalEnvironment(self, interpreter)
             # Rewrite global project's python requires to be
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
         if self.config["use_venv"] and is_venv_python(self.python.executable):
             # Only recognize venv created by python -m venv and virtualenv>20
-            return GlobalEnvironment(self)
-        return PEP582Environment(self)
+            return GlobalEnvironment(self, interpreter)
+        return PEP582Environment(self, interpreter)
 
     @property
     def environment(self) -> Environment:
         if not self._environment:
-            self._environment = self.get_environment()
+            self._environment = self.get_environment(self._python)
         return self._environment
 
     @property

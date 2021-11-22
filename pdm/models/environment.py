@@ -64,19 +64,21 @@ def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
 class Environment:
     """Environment dependent stuff related to the selected Python interpreter."""
 
-    is_global = False
-
-    def __init__(self, project: Project) -> None:
+    def __init__(self, project: Project, interpreter: PythonInfo) -> None:
         """
         :param project: the project instance
         """
         self.python_requires = project.python_requires
         self.project = project
-        self.interpreter: PythonInfo = project.python
+        self._interpreter: PythonInfo = interpreter
         self._essential_installed = False
         self.auth = make_basic_auth(
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
+
+    @property
+    def interpreter(self) -> PythonInfo:
+        return self._interpreter
 
     def get_paths(self) -> dict[str, str]:
         """Get paths like ``sysconfig.get_paths()`` for installation."""
