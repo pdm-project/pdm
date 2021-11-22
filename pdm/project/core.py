@@ -214,10 +214,6 @@ class Project:
             self._environment = self.get_environment()
         return self._environment
 
-    @environment.setter
-    def environment(self, value: Environment) -> None:
-        self._environment = value
-
     @property
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.meta.requires_python)
