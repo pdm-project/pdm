@@ -440,8 +440,30 @@ def is_venv_python(interpreter: str | Path) -> bool:
     interpreter = Path(interpreter)
     if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
         return True
+
     virtual_env = os.getenv("VIRTUAL_ENV")
     return bool(virtual_env and is_path_relative_to(interpreter, virtual_env))
+
+
+def is_conda_python(interpreter: str | Path) -> bool:
+    """Check if the given interpreter path is from a Conda environment"""
+    virtual_env = os.getenv("CONDA_PREFIX")
+    return bool(virtual_env and is_path_relative_to(Path(interpreter), virtual_env))
+
+
+def get_venv_like_prefix(interpreter: str | Path) -> Path | None:
+    """Check if the given interpreter path is from a virtualenv,
+    and return the prefix if found.
+    """
+    interpreter = Path(interpreter)
+    prefix = interpreter.parent.parent
+    if prefix.joinpath("pyvenv.cfg").exists():
+        return prefix
+
+    virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
+    if virtual_env and is_path_relative_to(interpreter, virtual_env):
+        return Path(virtual_env)
+    return None
 
 
 def find_python_in_path(path: str | Path) -> Path | None:

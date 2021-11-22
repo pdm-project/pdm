@@ -26,6 +26,7 @@ from pdm.utils import (
     create_tracked_tempdir,
     expand_env_vars_in_auth,
     get_rev_from_url,
+    get_venv_like_prefix,
     path_replace,
     populate_link,
     url_without_fragments,
@@ -409,10 +410,14 @@ class Candidate:
         elif self.req.editable:
             if self.environment.packages_path:
                 src_dir = self.environment.packages_path / "src"
-            elif os.getenv("VIRTUAL_ENV"):
-                src_dir = Path(os.environ["VIRTUAL_ENV"]) / "src"
             else:
-                src_dir = Path("src")
+                venv_prefix = get_venv_like_prefix(
+                    self.environment.interpreter.executable
+                )
+                if venv_prefix is not None:
+                    src_dir = venv_prefix / "src"
+                else:
+                    src_dir = Path("src")
             if not src_dir.is_dir():
                 src_dir.mkdir()
             ireq.ensure_has_source_dir(str(src_dir))

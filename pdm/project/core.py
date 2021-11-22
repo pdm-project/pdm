@@ -35,6 +35,7 @@ from pdm.utils import (
     find_project_root,
     find_python_in_path,
     get_in_project_venv_python,
+    is_conda_python,
     is_venv_python,
 )
 
@@ -178,7 +179,9 @@ class Project:
         else:
             suffix = ""
             scripts = "bin"
-        virtual_env = os.getenv("VIRTUAL_ENV")
+
+        # Resolve virtual environments from env-vars
+        virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
         if config["use_venv"] and virtual_env:
             return PythonInfo.from_path(
                 os.path.join(virtual_env, scripts, f"python{suffix}")
@@ -203,7 +206,10 @@ class Project:
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
-        if self.config["use_venv"] and is_venv_python(self.python.executable):
+        if self.config["use_venv"] and (
+            is_venv_python(self.python.executable)
+            or is_conda_python(self.python.executable)
+        ):
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
         return Environment(self)
