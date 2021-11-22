@@ -164,7 +164,7 @@ def _add_to_path(target: Path) -> None:
         )
 
 
-def support_ansi() -> False:
+def support_ansi() -> bool:
     if WINDOWS:
         return (
             os.getenv("ANSICON") is not None

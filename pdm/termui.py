@@ -14,7 +14,7 @@ from typing import Any, Callable, Iterator, List, Optional, Sequence, Union
 import click
 from click._compat import strip_ansi
 
-from pdm._vendor import halo
+from pdm._vendor import colorama, halo
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
 
 logger = logging.getLogger(__name__)
@@ -40,14 +40,18 @@ def centerize(text: str, length: int) -> str:
 
 
 def supports_ansi() -> bool:
-    """Check if the current environment supports ANSI colors"""
-    if os.getenv("CI"):
+    if os.getenv("CI") or not hasattr(sys.stdout, "fileno"):
         return False
-    stream = sys.stdout
-    if not hasattr(stream, "fileno"):
-        return False
+    if sys.platform == "win32":
+        return (
+            os.getenv("ANSICON") is not None
+            or os.getenv("WT_SESSION") is not None
+            or "ON" == os.getenv("ConEmuANSI")
+            or "xterm" == os.getenv("Term")
+        )
+
     try:
-        return os.isatty(stream.fileno())  # type: ignore
+        return os.isatty(sys.stdout.fileno())
     except io.UnsupportedOperation:
         return False
 
@@ -95,6 +99,10 @@ class UI:
         self.verbosity = verbosity
         self._indent = ""
         self.supports_ansi = not no_ansi if no_ansi is not None else supports_ansi()
+        if not self.supports_ansi:
+            colorama.init()
+        else:
+            colorama.deinit()
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
