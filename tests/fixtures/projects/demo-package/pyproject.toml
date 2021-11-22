@@ -2,11 +2,6 @@
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
 
-[[tool.pdm.source]]
-url = "https://test.pypi.org/simple"
-verify_ssl = true
-name = "testpypi"
-
 [project]
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
@@ -14,7 +9,6 @@ authors = [
     {name = "frostming", email = "mianghong@gmail.com"},
 ]
 dynamic = ["version"]
-version = { from = "my_package/__init__.py" }
 requires-python = ">=3.5"
 license = {text = "MIT"}
 dependencies = ["flask"]
@@ -26,3 +20,11 @@ readme = "README.md"
 homepage = ""
 
 [project.optional-dependencies]
+
+[tool.pdm]
+version = { from = "my_package/__init__.py" }
+
+[[tool.pdm.source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "testpypi"

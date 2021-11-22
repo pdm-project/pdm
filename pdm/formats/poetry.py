@@ -102,13 +102,11 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from("license")
     def license(self, value: str) -> dict[str, str]:
-        self._data["dynamic"] = ["classifiers"]
         return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
     def requires_python(self, source: dict[str, Any]) -> str:
         python = source.get("dependencies", {}).pop("python", None)
-        self._data["dynamic"] = ["classifiers"]
         return str(_convert_python(python))
 
     @convert_from()

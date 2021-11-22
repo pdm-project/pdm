@@ -4,6 +4,8 @@ build-backend = "pdm.pep517.api"
 
 [project]
 name = "package-b"
-version = {from="bar.py"}
 dependencies = ["django"]
 dynamic = ["version"]
+
+[tool.pdm]
+version = {from="bar.py"}
