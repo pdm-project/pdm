@@ -3,7 +3,6 @@ import argparse
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import (
-    deprecated,
     dry_run_option,
     install_group,
     packages_group,
@@ -24,16 +23,6 @@ class Command(BaseCommand):
             default=False,
             action="store_true",
             help="Add packages into dev dependencies",
-        )
-        parser.add_argument(
-            "-s",
-            "--section",
-            dest="group",
-            help="(DEPRECATED) Alias of `-G/--group`",
-            type=deprecated(
-                "`-s/--section` is deprecated in favor of `-G/--group` "
-                "and will be removed in the next minor release."
-            ),
         )
         parser.add_argument(
             "-G", "--group", help="Specify the target dependency group to add into"
