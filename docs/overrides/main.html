@@ -1,11 +1,20 @@
 {% extends 'base.html' %}
 
 {% block announce %}
-  <a href="https://twitter.com/pdm_project" style="color: currentColor">
-    For updates follow <strong>@PDM</strong> on
-    <span class="twemoji twitter">
+  <span>
+    For updates follow <a href="https://twitter.com/pdm_project" style="color: currentColor"><strong>@PDM</strong> on
+    <span class="twemoji">
       {% include ".icons/fontawesome/brands/twitter.svg" %}
     </span>
-    <strong>Twitter</strong>
-  </a>
+    <strong>Twitter</strong></a>.
+  </span>
+  <span>
+    Consider sponsoring us on
+    <a href="https://github.com/sponsors/pdm-project" style="color: currentColor">
+      <span class="twemoji">
+        {% include ".icons/fontawesome/regular/heart.svg" %}
+      </span>
+      <strong>GitHub</strong>
+    </a>.
+  </span>
 {% endblock %}
