@@ -35,8 +35,7 @@ from pdm.utils import (
     find_project_root,
     find_python_in_path,
     get_in_project_venv_python,
-    is_conda_python,
-    is_venv_python,
+    get_venv_like_prefix,
 )
 
 if TYPE_CHECKING:
@@ -206,10 +205,7 @@ class Project:
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
-        if self.config["use_venv"] and (
-            is_venv_python(self.python.executable)
-            or is_conda_python(self.python.executable)
-        ):
+        if self.config["use_venv"] and get_venv_like_prefix(self.python.executable):
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
         return Environment(self)

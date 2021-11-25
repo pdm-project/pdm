@@ -445,12 +445,6 @@ def is_venv_python(interpreter: str | Path) -> bool:
     return bool(virtual_env and is_path_relative_to(interpreter, virtual_env))
 
 
-def is_conda_python(interpreter: str | Path) -> bool:
-    """Check if the given interpreter path is from a Conda environment"""
-    virtual_env = os.getenv("CONDA_PREFIX")
-    return bool(virtual_env and is_path_relative_to(Path(interpreter), virtual_env))
-
-
 def get_venv_like_prefix(interpreter: str | Path) -> Path | None:
     """Check if the given interpreter path is from a virtualenv,
     and return the prefix if found.
