@@ -290,7 +290,7 @@ def test_invalidate_incompatible_wheel_link(project, index):
 def test_legacy_pep345_tag_link(project, index):
     req = parse_requirement("pep345-legacy")
     candidate = Candidate(req, project.environment)
-    with suppress:
+    with suppress(Exception):
         candidate.prepare()
     assert candidate.requires_python == ">=3,<4"
 
