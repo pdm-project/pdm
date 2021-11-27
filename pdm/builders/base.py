@@ -90,7 +90,7 @@ def log_subprocessor(
         outstream.stop()
 
 
-class _Prefix:
+class _Prefix:  # noqa: SIM119
     def __init__(self, executable: str, shared: str, overlay: str) -> None:
         self.bin_dirs: list[str] = []
         self.lib_dirs: list[str] = []

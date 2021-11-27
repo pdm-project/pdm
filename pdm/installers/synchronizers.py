@@ -308,10 +308,12 @@ class Synchronizer:
 
         for kind in to_do:
             for key in to_do[kind]:
-                if key in self.SEQUENTIAL_PACKAGES:
-                    sequential_jobs.append((kind, key))
-                elif key in self.candidates and self.candidates[key].req.editable:
+                if (
+                    key in self.SEQUENTIAL_PACKAGES
                     # Editable packages are installed sequentially.
+                    or key in self.candidates
+                    and self.candidates[key].req.editable
+                ):
                     sequential_jobs.append((kind, key))
                 else:
                     parallel_jobs.append((kind, key))

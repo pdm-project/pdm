@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from contextlib import suppress
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar, cast
 
 import atoml
@@ -55,19 +56,16 @@ class MetaConverter(metaclass=_MetaConverterMeta):
                 if func._convert_from is None  # type: ignore
                 else source[func._convert_from]  # type: ignore
             )
-            try:
+            with suppress(Unset):
                 self._data[key] = func(self, value)
-            except Unset:
-                pass
 
         # Delete all used fields
         for func in self._converters.values():
             if func._convert_from is None:  # type: ignore
                 continue
-            try:
+            with suppress(KeyError):
                 del source[func._convert_from]  # type: ignore
-            except KeyError:
-                pass
+
         # Add remaining items to the data
         self._data.update(source)
         return self._data, self.settings

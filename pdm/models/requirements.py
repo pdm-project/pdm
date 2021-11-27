@@ -8,6 +8,7 @@ import secrets
 import sys
 import urllib.parse as urlparse
 import warnings
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Sequence, Type, TypeVar, cast
 
@@ -285,7 +286,7 @@ class FileRequirement(Requirement):
                     project_root = Path(".").resolve().as_posix().lstrip("/")
                     self.url = self.url.replace(project_root, "${PROJECT_ROOT}")
         else:
-            try:
+            with suppress(AssertionError):
                 self.path = Path(
                     url_to_path(
                         self.url.replace(
@@ -294,8 +295,6 @@ class FileRequirement(Requirement):
                         )
                     )
                 )
-            except AssertionError:
-                pass
         self._parse_name_from_url()
 
     @property

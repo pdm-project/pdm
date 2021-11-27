@@ -111,42 +111,42 @@ if WINDOWS:
     def _remove_path_windows(target: Path) -> None:
         value = os.path.normcase(target)
 
-        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-            with winreg.OpenKey(
-                root, "Environment", 0, winreg.KEY_ALL_ACCESS
-            ) as env_key:
-                try:
-                    old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
-                    paths = [
-                        os.path.normcase(item) for item in old_value.split(os.pathsep)
-                    ]
-                    if value not in paths:
-                        return
-
-                    new_value = os.pathsep.join(p for p in paths if p != value)
-                    winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
-                except FileNotFoundError:
+        with winreg.ConnectRegistry(
+            None, winreg.HKEY_CURRENT_USER
+        ) as root, winreg.OpenKey(
+            root, "Environment", 0, winreg.KEY_ALL_ACCESS
+        ) as env_key:
+            try:
+                old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
+                paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
+                if value not in paths:
                     return
+
+                new_value = os.pathsep.join(p for p in paths if p != value)
+                winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
+            except FileNotFoundError:
+                return
 
 
 def _add_to_path(target: Path) -> None:
     value = os.path.normcase(target)
 
     if WINDOWS:
-        with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-            with winreg.OpenKey(
-                root, "Environment", 0, winreg.KEY_ALL_ACCESS
-            ) as env_key:
-                try:
-                    old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
-                    if value in [
-                        os.path.normcase(item) for item in old_value.split(os.pathsep)
-                    ]:
-                        return
-                except FileNotFoundError:
-                    old_value, type_ = "", winreg.REG_EXPAND_SZ
-                new_value = os.pathsep.join([old_value, value]) if old_value else value
-                winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
+        with winreg.ConnectRegistry(
+            None, winreg.HKEY_CURRENT_USER
+        ) as root, winreg.OpenKey(
+            root, "Environment", 0, winreg.KEY_ALL_ACCESS
+        ) as env_key:
+            try:
+                old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
+                if value in [
+                    os.path.normcase(item) for item in old_value.split(os.pathsep)
+                ]:
+                    return
+            except FileNotFoundError:
+                old_value, type_ = "", winreg.REG_EXPAND_SZ
+            new_value = os.pathsep.join([old_value, value]) if old_value else value
+            winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
 
         _echo(
             "Post-install: {} is added to PATH env, please restart your terminal "
@@ -169,8 +169,8 @@ def support_ansi() -> bool:
         return (
             os.getenv("ANSICON") is not None
             or os.getenv("WT_SESSION") is not None
-            or "ON" == os.getenv("ConEmuANSI")
-            or "xterm" == os.getenv("Term")
+            or os.getenv("ConEmuANSI") == "ON"
+            or os.getenv("Term") == "xterm"
         )
 
     if not hasattr(sys.stdout, "fileno"):

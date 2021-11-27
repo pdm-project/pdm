@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -60,10 +61,8 @@ class CandidateInfoCache:
         self._write_cache()
 
     def delete(self, candidate: Candidate) -> None:
-        try:
+        with suppress(KeyError):
             del self._cache[self._get_key(candidate)]
-        except KeyError:
-            pass
         self._write_cache()
 
     def clear(self) -> None:

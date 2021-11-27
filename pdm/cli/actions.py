@@ -58,36 +58,35 @@ def do_lock(
         ]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     ui = project.core.ui
-    with ui.logging("lock"):
-        # The context managers are nested to ensure the spinner is stopped before
-        # any message is thrown to the output.
-        with ui.open_spinner(title="Resolving dependencies", spinner="dots") as spin:
-            reporter = project.get_reporter(requirements, tracked_names, spin)
-            resolver: Resolver = project.core.resolver_class(provider, reporter)
-            try:
-                mapping, dependencies = resolve(
-                    resolver,
-                    requirements,
-                    project.environment.python_requires,
-                    resolve_max_rounds,
-                )
-            except ResolutionTooDeep:
-                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
-                ui.echo(
-                    "The dependency resolution exceeds the maximum loop depth of "
-                    f"{resolve_max_rounds}, there may be some circular dependencies "
-                    "in your project. Try to solve them or increase the "
-                    f"{termui.green('`strategy.resolve_max_rounds`')} config.",
-                    err=True,
-                )
-                raise
-            except ResolutionImpossible as err:
-                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
-                ui.echo(format_resolution_impossible(err), err=True)
-                raise ResolutionImpossible("Unable to find a resolution") from None
-            else:
-                data = format_lockfile(mapping, dependencies)
-                spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
+    with ui.logging("lock"), ui.open_spinner(
+        title="Resolving dependencies", spinner="dots"
+    ) as spin:
+        reporter = project.get_reporter(requirements, tracked_names, spin)
+        resolver: Resolver = project.core.resolver_class(provider, reporter)
+        try:
+            mapping, dependencies = resolve(
+                resolver,
+                requirements,
+                project.environment.python_requires,
+                resolve_max_rounds,
+            )
+        except ResolutionTooDeep:
+            spin.fail(f"{termui.Emoji.LOCK} Lock failed")
+            ui.echo(
+                "The dependency resolution exceeds the maximum loop depth of "
+                f"{resolve_max_rounds}, there may be some circular dependencies "
+                "in your project. Try to solve them or increase the "
+                f"{termui.green('`strategy.resolve_max_rounds`')} config.",
+                err=True,
+            )
+            raise
+        except ResolutionImpossible as err:
+            spin.fail(f"{termui.Emoji.LOCK} Lock failed")
+            ui.echo(format_resolution_impossible(err), err=True)
+            raise ResolutionImpossible("Unable to find a resolution") from None
+        else:
+            data = format_lockfile(mapping, dependencies)
+            spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
 
     project.write_lockfile(data, write=not dry_run)
 
@@ -104,17 +103,18 @@ def resolve_candidates_from_lockfile(
         for req in requirements
         if not req.marker or req.marker.evaluate(project.environment.marker_environment)
     ]
-    with ui.logging("install-resolve"):
-        with ui.open_spinner("Resolving packages from lockfile..."):
-            reporter = BaseReporter()
-            provider = project.get_provider(for_install=True)
-            resolver: Resolver = project.core.resolver_class(provider, reporter)
-            mapping, *_ = resolve(
-                resolver,
-                reqs,
-                project.environment.python_requires,
-                resolve_max_rounds,
-            )
+    with ui.logging("install-resolve"), ui.open_spinner(
+        "Resolving packages from lockfile..."
+    ):
+        reporter = BaseReporter()
+        provider = project.get_provider(for_install=True)
+        resolver: Resolver = project.core.resolver_class(provider, reporter)
+        mapping, *_ = resolve(
+            resolver,
+            reqs,
+            project.environment.python_requires,
+            resolve_max_rounds,
+        )
     return mapping
 
 

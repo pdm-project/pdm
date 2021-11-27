@@ -14,7 +14,7 @@ import sys
 import sysconfig
 import tempfile
 import urllib.parse as parse
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from re import Match
 from typing import (
@@ -300,7 +300,7 @@ def atomic_open_for_write(
     filename: str | Path, *, encoding: str = "utf-8"
 ) -> Iterator[TextIO]:
     fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
-    fp = open(fd, "w", encoding=encoding)
+    fp = open(fd, "w", encoding=encoding)  # noqa: SIM115
     try:
         yield fp
     except Exception:
@@ -308,10 +308,8 @@ def atomic_open_for_write(
         raise
     else:
         fp.close()
-        try:
+        with suppress(OSError):
             os.unlink(filename)
-        except OSError:
-            pass
         # The tempfile is created with mode 600, we need to restore the default mode
         # with copyfile() instead of move().
         # See: https://github.com/pdm-project/pdm/issues/542

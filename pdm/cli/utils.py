@@ -6,6 +6,7 @@ import os
 import sys
 from argparse import Action, _ArgumentGroup
 from collections import ChainMap, OrderedDict
+from dataclasses import dataclass
 from json import dumps
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast
@@ -105,15 +106,13 @@ class PdmFormatter(argparse.HelpFormatter):
         return self._join_parts(parts)
 
 
+@dataclass(repr=False, eq=False)
 class Package:
     """An internal class for the convenience of dependency graph building."""
 
-    def __init__(
-        self, name: str, version: str | None, requirements: dict[str, Requirement]
-    ) -> None:
-        self.name = name
-        self.version = version  # if version is None, the dist is not installed.
-        self.requirements = requirements
+    name: str
+    version: str | None
+    requirements: dict[str, Requirement]
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -520,17 +519,18 @@ def set_env_in_reg(env_name: str, value: str) -> None:
 
     value = os.path.normcase(value)
 
-    with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-        with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
-            try:
-                old_value, type_ = winreg.QueryValueEx(env_key, env_name)
-                paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
-                if value in paths:
-                    return
-            except FileNotFoundError:
-                paths, type_ = [], winreg.REG_EXPAND_SZ
-            new_value = os.pathsep.join([value] + paths)
-            winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
+    with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root, winreg.OpenKey(
+        root, "Environment", 0, winreg.KEY_ALL_ACCESS
+    ) as env_key:
+        try:
+            old_value, type_ = winreg.QueryValueEx(env_key, env_name)
+            paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
+            if value in paths:
+                return
+        except FileNotFoundError:
+            paths, type_ = [], winreg.REG_EXPAND_SZ
+        new_value = os.pathsep.join([value] + paths)
+        winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
 
 
 def format_resolution_impossible(err: ResolutionImpossible) -> str:

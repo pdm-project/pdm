@@ -7,6 +7,7 @@ import io
 import logging
 import os
 import sys
+from contextlib import suppress
 from itertools import zip_longest
 from tempfile import mktemp
 from typing import Any, Callable, Iterator, List, Optional, Sequence, Union
@@ -46,8 +47,8 @@ def supports_ansi() -> bool:
         return (
             os.getenv("ANSICON") is not None
             or os.getenv("WT_SESSION") is not None
-            or "ON" == os.getenv("ConEmuANSI")
-            or "xterm" == os.getenv("Term")
+            or os.getenv("ConEmuANSI") == "ON"
+            or os.getenv("Term") == "xterm"
         )
 
     try:
@@ -191,10 +192,8 @@ class UI:
         pip_logger.handlers[:] = [handler]
 
         def cleanup() -> None:
-            try:
+            with suppress(OSError):
                 os.unlink(file_name)
-            except OSError:
-                pass
 
         try:
             yield logger

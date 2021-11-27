@@ -1,4 +1,5 @@
 import shutil
+from contextlib import suppress
 from pathlib import Path
 
 import pytest
@@ -289,10 +290,8 @@ def test_invalidate_incompatible_wheel_link(project, index):
 def test_legacy_pep345_tag_link(project, index):
     req = parse_requirement("pep345-legacy")
     candidate = Candidate(req, project.environment)
-    try:
+    with suppress:
         candidate.prepare()
-    except Exception:
-        pass
     assert candidate.requires_python == ">=3,<4"
 
 

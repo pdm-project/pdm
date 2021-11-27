@@ -4,6 +4,7 @@ import abc
 import glob
 import os
 import shutil
+from contextlib import suppress
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterable, Type, TypeVar, cast
@@ -29,10 +30,8 @@ def renames(old: str, new: str) -> None:
 
     head, tail = os.path.split(old)
     if head and tail:
-        try:
+        with suppress(OSError):
             os.removedirs(head)
-        except OSError:
-            pass
 
 
 def compress_for_rename(paths: Iterable[str]) -> set[str]:
@@ -87,8 +86,7 @@ def _cache_file_from_source(py_file: str) -> Iterable[str]:
         yield py2_cache
     parent, base = os.path.split(py_file)
     cache_dir = os.path.join(parent, "__pycache__")
-    for path in glob.glob(os.path.join(cache_dir, base[:-3] + ".*.pyc")):
-        yield path
+    yield from glob.glob(os.path.join(cache_dir, base[:-3] + ".*.pyc"))
 
 
 def _get_file_root(path: str, base: str) -> str | None:
@@ -184,7 +182,8 @@ class BaseRemovePaths(abc.ABC):
         if path.endswith(".py"):
             self._paths.update(_cache_file_from_source(normalized_path))
         elif path.replace("\\", "/").endswith(".dist-info/REFER_TO"):
-            line = open(path, "rb").readline().decode().strip()
+            with open(path, "rb") as file:
+                line = file.readline().decode().strip()
             if line:
                 self.refer_to = line
 
@@ -210,7 +209,8 @@ class StashedRemovePaths(BaseRemovePaths):
     def _remove_pth(self) -> None:
         if not self._pth_entries:
             return
-        self._saved_pth = open(self._pth_file, "rb").read()
+        with open(self._pth_file, "rb") as file:
+            self._saved_pth = file.read()
         endline = "\r\n" if b"\r\n" in self._saved_pth else "\n"
         lines = self._saved_pth.decode().splitlines()
         for item in self._pth_entries:
@@ -253,10 +253,9 @@ class StashedRemovePaths(BaseRemovePaths):
 
     def commit(self) -> None:
         for tempdir in self._tempdirs.values():
-            try:
+            with suppress(FileNotFoundError):
                 tempdir.cleanup()
-            except FileNotFoundError:
-                pass
+
         self._tempdirs.clear()
         self._stashed.clear()
         self._saved_pth = None
