@@ -21,7 +21,11 @@ from pip._vendor.html5lib import parse
 
 from pdm import termui
 from pdm._types import CandidateInfo, Package, SearchResult, Source
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
+from pdm.exceptions import (
+    CandidateInfoNotFoundError,
+    CandidateNotFoundError,
+    CorruptedCacheError,
+)
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -77,7 +81,7 @@ class BaseRepository:
         for getter in self.dependency_generators():
             try:
                 requirements, requires_python, summary = getter(candidate)
-            except CandidateInfoNotFound:
+            except CandidateInfoNotFoundError:
                 last_ext_info = sys.exc_info()
                 continue
             break
@@ -183,9 +187,9 @@ class BaseRepository:
             result = self._candidate_info_cache.get(candidate)
         except CorruptedCacheError:
             self._candidate_info_cache.clear()
-            raise CandidateInfoNotFound(candidate)
+            raise CandidateInfoNotFoundError(candidate)
         except KeyError:
-            raise CandidateInfoNotFound(candidate)
+            raise CandidateInfoNotFoundError(candidate)
         return result
 
     @cache_result
@@ -245,7 +249,7 @@ class PyPIRepository(BaseRepository):
     def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateInfo:
         if not candidate.name or not candidate.version:
             # Only look for json api for named requirements.
-            raise CandidateInfoNotFound(candidate)
+            raise CandidateInfoNotFoundError(candidate)
         sources = self.get_filtered_sources(candidate.req)
         url_prefixes = [
             proc_url[:-7]  # Strip "/simple".
@@ -275,7 +279,7 @@ class PyPIRepository(BaseRepository):
                     requirement_lines, candidate.req.extras or ()
                 )
                 return requirements, requires_python, summary
-        raise CandidateInfoNotFound(candidate)
+        raise CandidateInfoNotFoundError(candidate)
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         yield self._get_dependencies_from_cache
@@ -292,7 +296,7 @@ class PyPIRepository(BaseRepository):
                 for c in finder.find_all_candidates(requirement.project_name)
             ]
         if not cans:
-            raise CandidateNotFound(
+            raise CandidateNotFoundError(
                 f"Unable to find candidates for {requirement.project_name}. There may "
                 "exist some issues with the package name or network condition."
             )

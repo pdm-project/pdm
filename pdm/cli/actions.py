@@ -27,7 +27,7 @@ from pdm.cli.utils import (
     set_env_in_reg,
     translate_groups,
 )
-from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.exceptions import NoPythonVersionError, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.candidates import Candidate
@@ -499,7 +499,7 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
         dict.fromkeys(filter(version_matcher, project.find_interpreters(python)))
     )
     if not found_interpreters:
-        raise NoPythonVersion("Python interpreter is not found on the system.")
+        raise NoPythonVersionError("Python interpreter is not found on the system.")
     if first or len(found_interpreters) == 1:
         selected_python = found_interpreters[0]
     else:

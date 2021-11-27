@@ -51,7 +51,7 @@ else:
     _T = TypeVar("_T")
     _C = TypeVar("_C")
 
-    class cached_property(Generic[_T]):
+    class cached_property(Generic[_T]):  # noqa: N801
         def __init__(self, func: Callable[[Any], _T]):
             self.func = func
             self.attr_name = func.__name__

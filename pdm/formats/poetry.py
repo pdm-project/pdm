@@ -13,7 +13,7 @@ import tomli
 from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
     MetaConverter,
-    Unset,
+    UnsetError,
     convert_from,
     make_array,
     make_inline_table,
@@ -153,7 +153,7 @@ class PoetryMetaConverter(MetaConverter):
                 [_convert_req(key, req) for key, req in value.items()], True
             ),
         }
-        raise Unset()
+        raise UnsetError()
 
     @convert_from()
     def includes(self, source: dict[str, list[str] | str]) -> list[str]:
@@ -166,17 +166,17 @@ class PoetryMetaConverter(MetaConverter):
             result.append(include)
         result.extend(source.pop("include", []))
         self.settings["includes"] = result
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("exclude")
     def excludes(self, value: list[str]) -> None:
         self.settings["excludes"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("build")
     def build(self, value: str) -> None:
         self.settings["build"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("source")
     def sources(self, value: list[Source]) -> None:
@@ -188,7 +188,7 @@ class PoetryMetaConverter(MetaConverter):
             }
             for item in value
         ]
-        raise Unset()
+        raise UnsetError()
 
 
 def convert(

@@ -8,31 +8,31 @@ if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
 
 
-class PdmException(Exception):
+class PdmError(Exception):
     pass
 
 
-class PdmUsageError(PdmException):
+class PdmUsageError(PdmError):
     pass
 
 
-class RequirementError(PdmException, ValueError):
+class RequirementError(PdmError, ValueError):
     pass
 
 
-class InvalidPyVersion(PdmException, ValueError):
+class InvalidPyVersionError(PdmError, ValueError):
     pass
 
 
-class CorruptedCacheError(PdmException):
+class CorruptedCacheError(PdmError):
     pass
 
 
-class CandidateNotFound(PdmException):
+class CandidateNotFoundError(PdmError):
     pass
 
 
-class CandidateInfoNotFound(PdmException):
+class CandidateInfoNotFoundError(PdmError):
     def __init__(self, candidate: Candidate) -> None:
         message = (
             "No metadata information is available for "
@@ -55,22 +55,22 @@ class ProjectError(PdmUsageError):
     pass
 
 
-class InstallationError(PdmException):
+class InstallationError(PdmError):
     pass
 
 
-class UninstallError(PdmException):
+class UninstallError(PdmError):
     pass
 
 
-class NoConfigError(PdmException, KeyError):
+class NoConfigError(PdmError, KeyError):
     def __init__(self, key: str) -> None:
         super().__init__("No such config item: {}".format(key))
 
 
-class NoPythonVersion(PdmException):
+class NoPythonVersionError(PdmError):
     pass
 
 
-class BuildError(PdmException, RuntimeError):
+class BuildError(PdmError, RuntimeError):
     pass

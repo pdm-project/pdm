@@ -5,7 +5,7 @@ from json import loads
 import pytest
 
 from pdm.cli import actions
-from pdm.exceptions import InvalidPyVersion, PdmException, PdmUsageError
+from pdm.exceptions import InvalidPyVersionError, PdmError, PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 
@@ -184,7 +184,7 @@ def test_remove_package_no_sync(project, working_set):
 @pytest.mark.usefixtures("repository", "working_set")
 def test_remove_package_not_exist(project):
     actions.do_add(project, packages=["requests", "pytz"])
-    with pytest.raises(PdmException):
+    with pytest.raises(PdmError):
         actions.do_remove(project, sync=False, packages=["django"])
 
 
@@ -248,7 +248,7 @@ def test_project_no_init_error(project_no_init):
         actions.do_update,
     ):
         with pytest.raises(
-            PdmException, match="The pyproject.toml has not been initialized yet"
+            PdmError, match="The pyproject.toml has not been initialized yet"
         ):
             handler(project_no_init)
 
@@ -307,7 +307,7 @@ def test_freeze_dependencies_list(project, capsys, mocker):
 
 
 def test_list_reverse_without_graph_flag(project):
-    with pytest.raises(PdmException):
+    with pytest.raises(PdmError):
         actions.do_list(project, reverse=True)
 
 
@@ -321,7 +321,7 @@ def test_list_reverse_dependency_graph(project, capsys):
 
 
 def test_list_json_without_graph_flag(project):
-    with pytest.raises(PdmException):
+    with pytest.raises(PdmError):
         actions.do_list(project, json=True)
 
 
@@ -569,5 +569,5 @@ echo hello
     shim_path = project.root.joinpath("python_shim.sh")
     shim_path.write_text(wrapper_script)
     shim_path.chmod(0o755)
-    with pytest.raises(InvalidPyVersion):
+    with pytest.raises(InvalidPyVersionError):
         actions.do_use(project, shim_path.as_posix())

@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
-from pdm.exceptions import BuildError, CandidateNotFound
+from pdm.exceptions import BuildError, CandidateNotFoundError
 from pdm.models import pip_shims
 from pdm.models.requirements import (
     FileRequirement,
@@ -235,7 +235,7 @@ class Candidate:
                 with allow_all_wheels(allow_all):
                     self.link = populate_link(finder, ireq, False)
                 if not self.link:
-                    raise CandidateNotFound("No candidate is found for %s", self)
+                    raise CandidateNotFoundError("No candidate is found for %s", self)
             if allow_all and not self.req.editable:
                 cached = self._get_cached_wheel()
                 if cached:

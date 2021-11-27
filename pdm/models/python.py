@@ -9,7 +9,7 @@ from packaging.version import Version
 from pythonfinder import InvalidPythonVersion
 from pythonfinder.models.python import PythonVersion
 
-from pdm.exceptions import InvalidPyVersion
+from pdm.exceptions import InvalidPyVersionError
 from pdm.models.in_process import get_architecture, get_underlying_executable
 from pdm.utils import cached_property
 
@@ -37,7 +37,7 @@ class PythonInfo:
         try:
             return cls.from_python_version(PythonVersion.from_path(str(path)))
         except InvalidPythonVersion as e:
-            raise InvalidPyVersion(str(e)) from e
+            raise InvalidPyVersionError(str(e)) from e
 
     def __hash__(self) -> int:
         return hash(os.path.normcase(self.executable))

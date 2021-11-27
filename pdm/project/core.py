@@ -16,7 +16,7 @@ from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
 from pdm import termui
 from pdm._types import Source
-from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.exceptions import NoPythonVersionError, PdmUsageError, ProjectError
 from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
@@ -191,7 +191,7 @@ class Project:
                 self.python = py_version
                 return py_version
 
-        raise NoPythonVersion(
+        raise NoPythonVersionError(
             "No Python that satisfies {} is found on the system.".format(
                 self.python_requires
             )

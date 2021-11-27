@@ -17,7 +17,7 @@ from pip._vendor import requests
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
 from pdm.core import Core
-from pdm.exceptions import CandidateInfoNotFound
+from pdm.exceptions import CandidateInfoNotFoundError
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
@@ -105,7 +105,7 @@ class TestRepository(BaseRepository):
         try:
             pypi_data = self._pypi_data[candidate.req.key][candidate.version]
         except KeyError:
-            raise CandidateInfoNotFound(candidate)
+            raise CandidateInfoNotFoundError(candidate)
         deps = pypi_data.get("dependencies", [])
         deps = filter_requirements_with_extras(deps, candidate.req.extras or ())
         return deps, pypi_data.get("requires_python", ""), ""

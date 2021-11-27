@@ -1,7 +1,7 @@
 import pytest
 
 from pdm.cli import actions
-from pdm.exceptions import PdmException
+from pdm.exceptions import PdmError
 from pdm.models.requirements import parse_requirement
 from tests.conftest import Distribution
 
@@ -34,7 +34,7 @@ def test_sync_packages_with_all_dev(project, working_set):
 
 def test_sync_no_lockfile(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    with pytest.raises(PdmException):
+    with pytest.raises(PdmError):
         actions.do_sync(project)
 
 

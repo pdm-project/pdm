@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import click
 
 from pdm._types import Source
-from pdm.exceptions import PdmException
+from pdm.exceptions import PdmError
 from pdm.models.pip_shims import MultiDomainBasicAuth
 
 try:
@@ -29,7 +29,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         self, netloc: str
     ) -> Tuple[Optional[str], Optional[str], bool]:
         if not self._real_prompting:
-            raise PdmException(
+            raise PdmError(
                 f"The credentials for {netloc} are incorrect. "
                 "Please run the command with `-v` option."
             )

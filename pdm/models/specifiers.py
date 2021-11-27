@@ -5,7 +5,7 @@ from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
-from pdm.exceptions import InvalidPyVersion
+from pdm.exceptions import InvalidPyVersionError
 from pdm.models.versions import Version
 
 
@@ -35,7 +35,7 @@ def _normalize_op_specifier(op: str, version_str: str) -> Tuple[str, Version]:
             if op == "<=":
                 op = "<"
         elif op != "!=":
-            raise InvalidPyVersion(f"Unsupported version specifier: {op}{version}")
+            raise InvalidPyVersionError(f"Unsupported version specifier: {op}{version}")
 
     if op != "~=" and not (op == "!=" and version.is_wildcard):
         # Don't complete with .0 for ~=3.5 and !=3.4.*:
@@ -110,7 +110,9 @@ class PySpecSet(SpecifierSet):
                 if new_lower > lower_bound:
                     lower_bound = new_lower
             else:
-                raise InvalidPyVersion(f"Unsupported version specifier: {op}{version}")
+                raise InvalidPyVersionError(
+                    f"Unsupported version specifier: {op}{version}"
+                )
         self._rearrange(lower_bound, upper_bound, excludes)
 
     @classmethod

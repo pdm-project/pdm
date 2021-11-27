@@ -19,7 +19,7 @@ def convert_from(field: str = None, name: str = None) -> Callable[[_T], _T]:
     return wrapper
 
 
-class Unset(Exception):
+class UnsetError(Exception):
     pass
 
 
@@ -57,7 +57,7 @@ class MetaConverter(metaclass=_MetaConverterMeta):
             )
             try:
                 self._data[key] = func(self, value)
-            except Unset:
+            except UnsetError:
                 pass
 
         # Delete all used fields

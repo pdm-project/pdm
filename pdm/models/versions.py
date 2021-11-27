@@ -2,7 +2,7 @@ import re
 from typing import Any, Tuple, Union, cast, overload
 
 from pdm._types import Literal
-from pdm.exceptions import InvalidPyVersion
+from pdm.exceptions import InvalidPyVersionError
 
 VersionBit = Union[int, Literal["*"]]
 
@@ -28,7 +28,7 @@ class Version:
                     ],
                 )
             except ValueError:
-                raise InvalidPyVersion(
+                raise InvalidPyVersionError(
                     f"{version_str}: Prereleases or postreleases are not supported "
                     "for python version specifers."
                 )

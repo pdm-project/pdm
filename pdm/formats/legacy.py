@@ -9,7 +9,7 @@ import tomli
 from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
     MetaConverter,
-    Unset,
+    UnsetError,
     convert_from,
     make_array,
     make_inline_table,
@@ -65,17 +65,17 @@ class LegacyMetaConverter(MetaConverter):
     @convert_from("source")
     def sources(self, value: List[Source]) -> None:
         self.settings["source"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("homepage")
     def homepage(self, value: str) -> None:
         self._data.setdefault("urls", {})["homepage"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("project_urls")
     def urls(self, value: str) -> None:
         self._data.setdefault("urls", {}).update(value)
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("dependencies")
     def dependencies(self, value: Dict[str, str]) -> List[str]:
@@ -101,7 +101,7 @@ class LegacyMetaConverter(MetaConverter):
                 True,
             )
         }
-        raise Unset()
+        raise UnsetError()
 
     @convert_from(name="optional-dependencies")
     def optional_dependencies(self, source: Dict[str, Any]) -> Dict[str, List[str]]:
@@ -137,17 +137,17 @@ class LegacyMetaConverter(MetaConverter):
     @convert_from("includes")
     def includes(self, value: List[str]) -> None:
         self.settings["includes"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("excludes")
     def excludes(self, value: List[str]) -> None:
         self.settings["excludes"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("build")
     def build(self, value: str) -> None:
         self.settings["build"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("entry_points", name="entry-points")
     def entry_points(
@@ -158,12 +158,12 @@ class LegacyMetaConverter(MetaConverter):
     @convert_from("scripts")
     def run_scripts(self, value: str) -> None:
         self.settings["scripts"] = value
-        raise Unset()
+        raise UnsetError()
 
     @convert_from("allow_prereleases")
     def allow_prereleases(self, value: bool) -> None:
         self.settings["allow_prereleases"] = value
-        raise Unset()
+        raise UnsetError()
 
 
 def convert(

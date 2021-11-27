@@ -9,7 +9,7 @@ import tomli
 
 from pdm.formats.base import (
     MetaConverter,
-    Unset,
+    UnsetError,
     array_of_inline_tables,
     convert_from,
     make_array,
@@ -137,7 +137,7 @@ class FlitMetaConverter(MetaConverter):
     def includes(self, value: Dict[str, List[str]]) -> None:
         self.settings["excludes"] = value.get("exclude")
         self.settings["includes"] = value.get("include")
-        raise Unset()
+        raise UnsetError()
 
 
 def convert(

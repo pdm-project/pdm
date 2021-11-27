@@ -27,12 +27,12 @@ def get_abbr_impl():
 
 def get_flag(var, fallback, expected=True, warn=True):
     """Use a fallback value for determining SOABI flags if the needed config
-    var is unset or unavailable."""
+    var is UnsetError or unavailable."""
     val = get_config_var(var)
     if val is None:
         if warn:
             warnings.warn(
-                "Config variable '{0}' is unset, Python ABI tag may "
+                "Config variable '{0}' is UnsetError, Python ABI tag may "
                 "be incorrect".format(var),
                 RuntimeWarning,
                 2,

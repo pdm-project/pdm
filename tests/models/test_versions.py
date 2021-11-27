@@ -1,10 +1,10 @@
 import pytest
 
-from pdm.models.versions import InvalidPyVersion, Version
+from pdm.models.versions import InvalidPyVersionError, Version
 
 
 def test_unsupported_prerelease_version():
-    with pytest.raises(InvalidPyVersion):
+    with pytest.raises(InvalidPyVersionError):
         Version("3.9.0a4")
 
 
