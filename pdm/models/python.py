@@ -29,11 +29,11 @@ class PythonInfo:
         self.executable = Path(executable).as_posix()
 
     @classmethod
-    def from_python_version(cls, py_version: PythonVersion) -> "PythonInfo":
+    def from_python_version(cls, py_version: PythonVersion) -> PythonInfo:
         return cls(path=py_version.executable, version=py_version.version)
 
     @classmethod
-    def from_path(cls, path: str | Path) -> "PythonInfo":
+    def from_path(cls, path: str | Path) -> PythonInfo:
         try:
             return cls.from_python_version(PythonVersion.from_path(str(path)))
         except InvalidPythonVersion as e:

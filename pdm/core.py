@@ -7,7 +7,7 @@ import os
 import pkgutil
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, Type, cast
+from typing import Any, cast
 
 import click
 from resolvelib import Resolver
@@ -49,8 +49,8 @@ class Core:
         self.install_manager_class = InstallManager
 
         self.ui = termui.UI()
-        self.parser: Optional[argparse.ArgumentParser] = None
-        self.subparsers: Optional[argparse._SubParsersAction] = None
+        self.parser: argparse.ArgumentParser | None = None
+        self.subparsers: argparse._SubParsersAction | None = None
 
     def init_parser(self) -> None:
         self.parser = argparse.ArgumentParser(
@@ -86,9 +86,7 @@ class Core:
     def __call__(self, *args: Any, **kwargs: Any) -> None:
         return self.main(*args, **kwargs)
 
-    def ensure_project(
-        self, options: argparse.Namespace, obj: Optional[Project]
-    ) -> None:
+    def ensure_project(self, options: argparse.Namespace, obj: Project | None) -> None:
         if obj is not None:
             options.project = obj
         if getattr(options, "project", None) is None:
@@ -114,9 +112,9 @@ class Core:
 
     def main(
         self,
-        args: List[str] = None,
+        args: list[str] = None,
         prog_name: str = None,
-        obj: Optional[Project] = None,
+        obj: Project | None = None,
         **extra: Any,
     ) -> None:
         """The main entry function"""
@@ -165,7 +163,7 @@ class Core:
                     check_update(options.project)
 
     def register_command(
-        self, command: Type[BaseCommand], name: Optional[str] = None
+        self, command: type[BaseCommand], name: str | None = None
     ) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
@@ -195,6 +193,6 @@ class Core:
             plugin.load()(self)
 
 
-def main(args: Optional[List[str]] = None) -> None:
+def main(args: list[str] | None = None) -> None:
     """The CLI entry function"""
     return Core().main(args)

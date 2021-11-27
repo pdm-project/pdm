@@ -9,7 +9,7 @@ import os
 import sys
 from itertools import zip_longest
 from tempfile import mktemp
-from typing import Any, Callable, Iterator, List, Optional, Sequence, Union
+from typing import Any, Callable, Iterator, Sequence
 
 import click
 from click._compat import strip_ansi
@@ -78,7 +78,7 @@ class DummySpinner:
     def start(self, text: str) -> None:
         click.echo(text)
 
-    def stop_and_persist(self, symbol: str = " ", text: Optional[str] = None) -> None:
+    def stop_and_persist(self, symbol: str = " ", text: str | None = None) -> None:
         click.echo(symbol + " " + (text or ""))
 
     succeed = fail = start
@@ -95,7 +95,7 @@ class DummySpinner:
 class UI:
     """Terminal UI object"""
 
-    def __init__(self, verbosity: int = NORMAL, no_ansi: Optional[bool] = None) -> None:
+    def __init__(self, verbosity: int = NORMAL, no_ansi: bool | None = None) -> None:
         self.verbosity = verbosity
         self._indent = ""
         self.supports_ansi = not no_ansi if no_ansi is not None else supports_ansi()
@@ -120,7 +120,7 @@ class UI:
             )
 
     def display_columns(
-        self, rows: Sequence[Sequence[str]], header: Optional[List[str]] = None
+        self, rows: Sequence[Sequence[str]], header: list[str] | None = None
     ) -> None:
         """Print rows in aligned columns.
 
@@ -211,7 +211,7 @@ class UI:
 
     def open_spinner(
         self, title: str, spinner: str = "dots"
-    ) -> Union[DummySpinner, halo.Halo]:
+    ) -> DummySpinner | halo.Halo:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()

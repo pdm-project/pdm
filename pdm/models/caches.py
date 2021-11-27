@@ -82,7 +82,7 @@ class HashCache(pip_shims.SafeFileCache):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.session: requests.Session | None = None
-        super(HashCache, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_hash(self, link: pip_shims.Link) -> str:
         # If there is no link hash (i.e., md5, sha256, etc.), we don't want

@@ -49,10 +49,10 @@ class InstallCommand(_InstallCommand):
 
 def get_package_finder(
     install_cmd: InstallCommand,
-    options: Optional[Values] = None,
-    python_version: Optional[Tuple[int, ...]] = None,
-    python_abi_tag: Optional[str] = None,
-    ignore_requires_python: Optional[bool] = None,
+    options: Values | None = None,
+    python_version: tuple[int, ...] | None = None,
+    python_abi_tag: str | None = None,
+    ignore_requires_python: bool | None = None,
 ) -> PackageFinder:
     """Shim for compatibility to generate package finders.
 
