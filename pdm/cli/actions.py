@@ -20,7 +20,6 @@ from pdm.cli.utils import (
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
-    frozen_requirement_from_dist,
     get_dist_location,
     merge_dictionary,
     save_version_specifiers,
@@ -401,13 +400,16 @@ def do_list(
         if json:
             raise PdmUsageError("--json must be used with --graph")
         if freeze:
-            reqs = [
-                frozen_requirement_from_dist(dist)
-                for dist in sorted(
-                    working_set.values(), key=lambda d: d.metadata["Name"]
-                )
-            ]
-            project.core.ui.echo("".join(reqs))
+            reqs = sorted(
+                (
+                    Requirement.from_dist(dist).as_line()
+                    for dist in sorted(
+                        working_set.values(), key=lambda d: d.metadata["Name"]
+                    )
+                ),
+                key=lambda x: x.lower(),
+            )
+            project.core.ui.echo("\n".join(reqs))
             return
         rows = [
             (termui.green(k, bold=True), termui.yellow(v.version), get_dist_location(v))

@@ -633,20 +633,6 @@ def merge_dictionary(
             target[key] = value
 
 
-def frozen_requirement_from_dist(dist: Distribution) -> str:
-    """Get the requirement line from a distribution"""
-    from pip._vendor.pkg_resources import distributions_from_metadata
-
-    from pdm.models.pip_shims import FrozenRequirement
-
-    dist_path = str(dist._path)  # type: ignore
-    try:
-        pkg_dist = next(distributions_from_metadata(dist_path))
-    except StopIteration:
-        raise TypeError(f"Not a valid distribution metadata: {dist_path}")
-    return str(FrozenRequirement.from_dist(pkg_dist))
-
-
 def is_pipx_installation() -> bool:
     return sys.prefix.split(os.sep)[-3:-1] == ["pipx", "venvs"]
 
