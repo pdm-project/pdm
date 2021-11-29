@@ -21,7 +21,11 @@ from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.repositories import BaseRepository
-from pdm.models.requirements import Requirement, filter_requirements_with_extras
+from pdm.models.requirements import (
+    Requirement,
+    filter_requirements_with_extras,
+    parse_requirement,
+)
 from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import get_finder, normalize_name, temp_environ
@@ -159,7 +163,7 @@ class Distribution:
         return self.metadata["Name"]
 
     def as_req(self):
-        return f"{self.key}=={self.version}\n"
+        return parse_requirement(f"{self.key}=={self.version}")
 
     @property
     def requires(self):

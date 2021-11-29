@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import json
 import os
 import re
 import secrets
@@ -156,6 +157,30 @@ class Requirement:
         if version:
             kwargs["specifier"] = get_specifier(version)
         return cls(**kwargs)
+
+    @classmethod
+    def from_dist(cls, dist: Distribution) -> "Requirement":
+        direct_url_json = dist.read_text("direct_url.json")
+        if direct_url_json is not None:
+            direct_url = json.loads(direct_url_json)
+            data = {
+                "name": dist.metadata["Name"],
+                "url": direct_url.get("url"),
+                "editable": direct_url.get("dir_info", {}).get("editable"),
+                "subdirectory": direct_url.get("subdirectory"),
+            }
+            if "vcs_info" in direct_url:
+                vcs_info = direct_url["vcs_info"]
+                data.update(
+                    url=f"{vcs_info['vcs']}+{direct_url['url']}",
+                    ref=vcs_info.get("requested_revision"),
+                    revision=vcs_info.get("commit_id"),
+                )
+                return VcsRequirement.create(**data)
+            return FileRequirement.create(**data)
+        return NamedRequirement.create(
+            name=dist.metadata["Name"], version=f"=={dist.version}"
+        )
 
     @classmethod
     def from_req_dict(cls, name: str, req_dict: RequirementDict) -> "Requirement":

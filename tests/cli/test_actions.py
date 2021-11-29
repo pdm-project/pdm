@@ -298,7 +298,8 @@ def test_freeze_dependencies_list(project, capsys, mocker):
     actions.do_add(project, packages=["requests"])
     capsys.readouterr()
     mocker.patch(
-        "pdm.cli.actions.frozen_requirement_from_dist", side_effect=lambda d: d.as_req()
+        "pdm.models.requirements.Requirement.from_dist",
+        side_effect=lambda d: d.as_req(),
     )
     actions.do_list(project, freeze=True)
     content, _ = capsys.readouterr()
