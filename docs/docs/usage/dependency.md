@@ -6,8 +6,8 @@ The following examples are run on Ubuntu 18.04, a few changes must be done if yo
 ## Initialize a project
 
 ```console
-$ mkdir pdm-test && cd pdm-test
-$ pdm init
+mkdir pdm-test && cd pdm-test
+pdm init
 ```
 
 Answer several questions asked by PDM and a `pyproject.toml` will be created for you in the project root:
@@ -34,7 +34,7 @@ For details of the meaning of each field in `pyproject.toml`, please refer to [P
 ## Add dependencies
 
 ```console
-$ pdm add requests
+pdm add requests
 ```
 
 `pdm add` can be followed by one or several dependencies, and the dependency specification is described in
@@ -45,13 +45,12 @@ PDM also allows extra dependency groups by providing `-G/--group <name>` option,
 
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see the resolved result of all dependencies.
 
-
 ### Add local dependencies
 
 Local packages can be added with their paths:
 
 ```console
-$ pdm add ./sub-package
+pdm add ./sub-package
 ```
 
 Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs)
@@ -66,7 +65,7 @@ e.g. some for testing and others for linting. We usually don't want these depend
 so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
 
 ```console
-$ pdm add -dG test pytest
+pdm add -dG test pytest
 ```
 
 This will result in a pyproject.toml as following:
@@ -96,25 +95,25 @@ for the dependency):
 To update all dependencies in the lock file:
 
 ```console
-$ pdm update
+pdm update
 ```
 
 To update the specified package(s):
 
 ```console
-$ pdm update requests
+pdm update requests
 ```
 
 To update multiple groups of dependencies:
 
 ```console
-$ pdm update -G security -G http
+pdm update -G security -G http
 ```
 
 To update a given package in the specified group:
 
 ```console
-$ pdm update -G security cryptography
+pdm update -G security cryptography
 ```
 
 If the group is not given, PDM will search for the requirement in the default dependencies set and raises an error if none is found.
@@ -123,9 +122,9 @@ To update packages in development dependencies:
 
 ```console
 # Update all default + dev-dependencies
-$ pdm update -d
+pdm update -d
 # Update a package in the specified group of dev-dependencies
-$ pdm update -dG test pytest
+pdm update -dG test pytest
 ```
 
 ### About update strategy
@@ -143,11 +142,11 @@ To remove existing dependencies from project file and the library directory:
 
 ```console
 # Remove requests from the default dependencies
-$ pdm remove requests
+pdm remove requests
 # Remove h11 from the 'web' group of optional-dependencies
-$ pdm remove -G web h11
+pdm remove -G web h11
 # Remove pytest-cov from the `test` group of dev-dependencies
-$ pdm remove -dG test pytest-cov
+pdm remove -dG test pytest-cov
 ```
 
 ## Install the packages pinned in lock file
@@ -175,16 +174,16 @@ dev1 = ["pytest"]
 dev2 = ["mkdocs"]
 ```
 
-| Command                         | What it does                                                             | Comments                  |
-| ------------------------------- | ------------------------------------------------------------------------ | ------------------------- |
-| `pdm install`                   | install prod and dev deps (no optional)                                  |                           |
-| `pdm install -G extra1`         | install prod deps, dev deps, and "extra1" optional group               |                           |
-| `pdm install -G dev1`           | install prod deps and only "dev1" dev group                            |                           |
-| `pdm install -G:all`            | install prod deps, dev deps and "extra1", "extra2" optional groups     |                           |
+| Command                         | What it does                                                         | Comments                  |
+| ------------------------------- | -------------------------------------------------------------------- | ------------------------- |
+| `pdm install`                   | install prod and dev deps (no optional)                              |                           |
+| `pdm install -G extra1`         | install prod deps, dev deps, and "extra1" optional group             |                           |
+| `pdm install -G dev1`           | install prod deps and only "dev1" dev group                          |                           |
+| `pdm install -G:all`            | install prod deps, dev deps and "extra1", "extra2" optional groups   |                           |
 | `pdm install -G extra1 -G dev1` | install prod deps, "extra1" optional group and only "dev1" dev group |                           |
-| `pdm install --prod`            | install prod only                                                        |                           |
-| `pdm install --prod -G extra1`  | install prod deps and "extra1" optional                                  |                           |
-| `pdm install --prod -G dev1`    | Fail, `--prod` can't be given with dev dependencies                      | Leave the `--prod` option |
+| `pdm install --prod`            | install prod only                                                    |                           |
+| `pdm install --prod -G extra1`  | install prod deps and "extra1" optional                              |                           |
+| `pdm install --prod -G dev1`    | Fail, `--prod` can't be given with dev dependencies                  | Leave the `--prod` option |
 
 **All** development dependencies are included as long as `--prod` is not passed and `-G` doesn't specify any dev groups.
 
@@ -195,7 +194,7 @@ Besides, if you don't want the root project to be installed, add `--no-self` opt
 Similar to `pip list`, you can list all packages installed in the packages directory:
 
 ```console
-$ pdm list
+pdm list
 ```
 
 Or show a dependency graph by:
@@ -220,7 +219,7 @@ bump2version 1.0.0
 You can specify a PyPI mirror URL by following commands:
 
 ```console
-$ pdm config pypi.url https://test.pypi.org/simple
+pdm config pypi.url https://test.pypi.org/simple
 ```
 
 By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback
@@ -247,13 +246,12 @@ For convenience, PDM supports environment variables expansion in the dependency 
 
 Don't worry about credential leakage, the environment variables will be expanded when needed and kept untouched in the lock file.
 
-
 ## Save disk space by enabling the install cache
 
 When using virtualenv to isolate project dependencies, if you have 100 projects depending on the same package, you will end up with 100 copies of that dependency. With PDM, you can opt in the installation caching so that the dependency will be installed into a centrialized store and be used by multiple projects. To enable it, simply do:
 
 ```
-$ pdm config feature.install_cache on
+pdm config feature.install_cache on
 ```
 
 Add `--local` option to enable for the current project only.

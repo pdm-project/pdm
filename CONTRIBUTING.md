@@ -17,14 +17,14 @@ this section.
 1. First, fork this project to your own namespace using the fork button at the top right of the repository page.
 2. Clone the **upstream** repository to local:
    ```bash
-   $ git clone https://github.com/pdm-project/pdm.git
+   git clone https://github.com/pdm-project/pdm.git
    # Or if you prefer SSH clone:
-   $ git clone git@github.com:pdm-project/pdm.git
+   git clone git@github.com:pdm-project/pdm.git
    ```
 3. Add the fork as a new remote:
    ```bash
-   $ git remote add fork https://github.com/yourname/pdm.git
-   $ git fetch fork
+   git remote add fork https://github.com/yourname/pdm.git
+   git fetch fork
    ```
    where `fork` is the remote name of the fork repository.
 
@@ -35,9 +35,9 @@ this section.
    To update main branch to date:
 
    ```bash
-   $ git pull origin main
+   git pull origin main
    # In rare cases that your local main branch diverges from the remote main:
-   $ git fetch origin && git reset --hard main
+   git fetch origin && git reset --hard main
    ```
 
 2. Create a new branch based on the up-to-date main branch for new patches.
@@ -48,16 +48,17 @@ this section.
 To make sure the test suites can run correctly, you need to install [Git LFS](https://git-lfs.github.com/), then
 
 ```bash
-$ git lfs install
+git lfs install
 # If you have already cloned the repository, execute the below command as well.
-$ git lfs pull
+git lfs pull
 ```
 
 Then, you need to install base dependencies in a venv. Make sure your `pip` is newer than `21.3` to install PDM in
 develop/editable mode.
 
 ```bash
-$ pip install -e .
+python -m pip install -U "pip>=21.3"
+python -m pip install -e .
 ```
 
 You are free to create a virtualenv with either `venv` module or `virtualenv` tool for the development. If you are doing
@@ -69,7 +70,7 @@ after this point.
 ### Run tests
 
 ```bash
-$ pdm run test
+pdm run test
 ```
 
 The test suite is still simple and needs expansion! Please help write more test cases.
@@ -79,8 +80,8 @@ The test suite is still simple and needs expansion! Please help write more test 
 PDM uses `pre-commit` for linting. Install `pre-commit` first, then:
 
 ```bash
-$ pre-commit install
-$ pdm run lint
+pre-commit install
+pdm run lint
 ```
 
 PDM uses `black` for code style and `isort` for sorting import statements. If you are not following them,
@@ -109,5 +110,5 @@ mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See e
 If you make some changes to the `docs/` and you want to preview the build result, simply do:
 
 ```bash
-$ pdm run doc
+pdm run doc
 ```

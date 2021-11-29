@@ -115,26 +115,26 @@ You can either pass the options after the script or set the env var value.
 If you are on MacOS and using `homebrew`, install it by:
 
 ```bash
-$ brew install pdm
+brew install pdm
 ```
 
 If you are on Windows and using [Scoop](https://scoop.sh/), install it by:
 
 ```
-PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
-PS> scoop install pdm
+scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+scoop install pdm
 ```
 
 Otherwise, it is recommended to install `pdm` in an isolated environment with `pipx`:
 
 ```bash
-$ pipx install pdm
+pipx install pdm
 ```
 
 Or you can install it under a user site:
 
 ```bash
-$ pip install --user pdm
+pip install --user pdm
 ```
 
 ## Quickstart
@@ -142,7 +142,7 @@ $ pip install --user pdm
 **Initialize a new PDM project**
 
 ```bash
-$ pdm init
+pdm init
 ```
 
 Answer the questions following the guide, and a PDM project with a `pyproject.toml` file will be ready to use.
@@ -150,7 +150,7 @@ Answer the questions following the guide, and a PDM project with a `pyproject.to
 **Install dependencies into the `__pypackages__` directory**
 
 ```bash
-$ pdm add requests flask
+pdm add requests flask
 ```
 
 You can add multiple dependencies in the same command. After a while, check the `pdm.lock` file to see what is locked for each package.
@@ -189,7 +189,7 @@ If you are curious about how this works, check [this doc section](https://pdm.fm
 ## Docker image
 
 ```console
-$ docker pull frostming/pdm
+docker pull frostming/pdm
 ```
 
 ## Badges

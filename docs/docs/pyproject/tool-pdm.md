@@ -20,7 +20,7 @@ doc = ["mkdocs"]
 To install all of them:
 
 ```bash
-$ pdm install
+pdm install
 ```
 
 For more CLI usage, please refer to [Manage Dependencies](/usage/dependency/)

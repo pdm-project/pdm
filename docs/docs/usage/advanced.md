@@ -37,13 +37,13 @@ config should be set as the above example to make PDM work properly.
 To get rid of these constraints, there is a Tox plugin [tox-pdm](https://github.com/pdm-project/tox-pdm) which can ease the usage. You can install it by
 
 ```console
-$ pip install tox-pdm
+pip install tox-pdm
 ```
 
 Or,
 
 ```console
-$ pdm add --dev tox-pdm
+pdm add --dev tox-pdm
 ```
 
 And you can make the `tox.ini` much tidier as following, :

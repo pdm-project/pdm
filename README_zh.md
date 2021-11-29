@@ -111,26 +111,26 @@ optional arguments:
 如果你使用的是 MacOS 并且安装了 `homebrew`：
 
 ```bash
-$ brew install pdm
+brew install pdm
 ```
 
 如果你在 Windows 上使用 [Scoop](https://scoop.sh/), 运行以下命令安装：
 
 ```
-PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
-PS> scoop install pdm
+scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+scoop install pdm
 ```
 
 否则，强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。
 
 ```bash
-$ pipx install pdm
+pipx install pdm
 ```
 
 或者你可以将它安装在用户目录下:
 
 ```bash
-$ pip install --user pdm
+pip install --user pdm
 ```
 
 ## 快速上手
@@ -138,7 +138,7 @@ $ pip install --user pdm
 **初始化一个新的 PDM 项目**
 
 ```bash
-$ pdm init
+pdm init
 ```
 
 按照指引回答提示的问题，一个 PDM 项目和对应的`pyproject.toml`文件就创建好了。
@@ -146,7 +146,7 @@ $ pdm init
 **把依赖安装到 `__pypackages__` 文件夹中**
 
 ```bash
-$ pdm add requests flask
+pdm add requests flask
 ```
 
 你可以在同一条命令中添加多个依赖。稍等片刻完成之后，你可以查看`pdm.lock`文件看看有哪些依赖以及对应版本。

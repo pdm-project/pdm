@@ -35,13 +35,13 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
 === "Linux/Mac"
 
     ```bash
-    $ curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python -
+    curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python -
     ```
 
 === "Windows"
 
     ```powershell
-    PS> (Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
+    (Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
     ```
 
 The installer will install PDM into the user site and the location depends on the system:
@@ -72,27 +72,27 @@ You can either pass the options after the script or set the env var value.
 === "Homebrew"
 
     ```bash
-    $ brew install pdm
+    brew install pdm
     ```
 
 === "Scoop"
 
     ```
-    PS> scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
-    PS> scoop install pdm
+    scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
+    scoop install pdm
     ```
 
 === "pipx"
 
     ```bash
-    $ pipx install pdm
+    pipx install pdm
     ```
 
     Install the head version of GitHub repository.
     Make sure you have installed [Git LFS](https://git-lfs.github.com/) on your system.
 
     ```bash
-    $ pipx install git+https://github.com/pdm-project/pdm.git@main#egg=pdm
+    pipx install git+https://github.com/pdm-project/pdm.git@main#egg=pdm
     ```
 
     See also: <https://pypa.github.io/pipx/>
@@ -100,7 +100,7 @@ You can either pass the options after the script or set the env var value.
 === "pip"
 
     ```console
-    $ pip install --user pdm
+    pip install --user pdm
     ```
 
 ### Enable PEP 582 globally
@@ -122,7 +122,7 @@ You may want to write a line in your `.bash_profile`(or similar profiles) to mak
 For example, in bash you can do this:
 
 ```bash
-$ pdm --pep582 >> ~/.bash_profile
+pdm --pep582 >> ~/.bash_profile
 ```
 
 Once again, Don't forget to restart the terminal session to take effect.
@@ -147,21 +147,21 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
 === "Bash"
 
     ```bash
-    $ pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+    pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
     ```
 
 === "Zsh"
 
     ```bash
     # Make sure ~/.zfunc is added to fpath, before compinit.
-    $ pdm completion zsh > ~/.zfunc/_pdm
+    pdm completion zsh > ~/.zfunc/_pdm
     ```
 
     Oh-My-Zsh:
 
     ```bash
-    $ mkdir $ZSH_CUSTOM/plugins/pdm
-    $ pdm completion zsh > $ZSH_CUSTOM/plugins/pdm/_pdm
+    mkdir $ZSH_CUSTOM/plugins/pdm
+    pdm completion zsh > $ZSH_CUSTOM/plugins/pdm/_pdm
     ```
 
     Then make sure pdm plugin is enabled in ~/.zshrc
@@ -169,22 +169,22 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
 === "Fish"
 
     ```bash
-    $ pdm completion fish > ~/.config/fish/completions/pdm.fish
+    pdm completion fish > ~/.config/fish/completions/pdm.fish
     ```
 
 === "Powershell"
 
     ```ps1
     # Create a directory to store completion scripts
-    PS > mkdir $PROFILE\..\Completions
-    PS > echo @'
+    mkdir $PROFILE\..\Completions
+    echo @'
     Get-ChildItem "$PROFILE\..\Completions\" | ForEach-Object {
         . $_.FullName
     }
     '@ | Out-File -Append -Encoding utf8 $PROFILE
     # Generate script
-    PS > Set-ExecutionPolicy Unrestricted -Scope CurrentUser
-    PS > pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
+    Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+    pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
     ```
 
 ## Unicode and ANSI supports

@@ -71,25 +71,25 @@ show configurations.
 Show the current configurations:
 
 ```console
-$ pdm config
+pdm config
 ```
 
 Get one single configuration:
 
 ```console
-$ pdm config pypi.url
+pdm config pypi.url
 ```
 
 Change a configuration value and store in home configuration:
 
 ```console
-$ pdm config pypi.url "https://test.pypi.org/simple"
+pdm config pypi.url "https://test.pypi.org/simple"
 ```
 
 By default, the configuration are changed globally, if you want to make the config seen by this project only, add a `--local` flag:
 
 ```console
-$ pdm config --local pypi.url "https://test.pypi.org/simple"
+pdm config --local pypi.url "https://test.pypi.org/simple"
 ```
 
 Any local configurations will be stored in `.pdm.toml` under the project root directory.
@@ -110,7 +110,7 @@ If a package is required by many projects on the system, each project has to kee
 PDM supports _caching_ the installations of the same wheel by installing it into a centralized package repository and linking to that installation in different projects. To enabled it, run:
 
 ```bash
-$ pdm config feature.install_cache on
+pdm config feature.install_cache on
 ```
 
 It can be enabled on a project basis, by adding `--local` option to the command.
@@ -171,8 +171,8 @@ You can also export `pdm.lock` to other formats, to ease the CI flow or image bu
 only `requirements.txt` and `setup.py` format is supported:
 
 ```console
-$ pdm export -o requirements.txt
-$ pdm export -f setuppy -o setup.py
+pdm export -o requirements.txt
+pdm export -f setuppy -o setup.py
 ```
 
 ## Hide the credentials from pyproject.toml
@@ -209,7 +209,7 @@ PDM provides several methods to achieve this:
 With PDM, you can run arbitrary scripts or commands with local packages loaded:
 
 ```bash
-$ pdm run flask run -p 54321
+pdm run flask run -p 54321
 ```
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.

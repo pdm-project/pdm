@@ -138,7 +138,7 @@ Fortunately, it becomes even easier with PDM and PEP 582. First, you should enab
 [corresponding part of this doc](index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
 
 ```bash
-$ pdm install
+pdm install
 ```
 
 After that, all the dependencies are available with a compatible Python interpreter, including the plugin itself, in editable mode. That means any change
@@ -179,19 +179,19 @@ As plugins are loaded via entry points, they can be activated with no more steps
 Assume your plugin is published as `pdm-hello`, and if you installed `pdm` via `pipx`:
 
 ```bash
-$ pipx inject pdm pdm-hello
+pipx inject pdm pdm-hello
 ```
 
 Or if you installed `pdm` via `homebrew`:
 
 ```bash
-$ $(brew --prefix pdm)/libexec/bin/python -m pip install pdm-hello
+$(brew --prefix pdm)/libexec/bin/python -m pip install pdm-hello
 ```
 
 Otherwise, if you installed `pdm` with normal `pip install`:
 
 ```bash
-$ pip install --user pdm-hello
+pip install --user pdm-hello
 ```
 
 The main principle is you must install the plugin in the same site-package directory as `pdm`.
