@@ -174,7 +174,7 @@ class Candidate:
                 )
             return _filter_none(
                 {
-                    "url": url_without_fragments(req.url),
+                    "url": url_without_fragments(req.repo),
                     "vcs_info": _filter_none(
                         {
                             "vcs": req.vcs,
