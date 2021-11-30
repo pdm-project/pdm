@@ -1,3 +1,25 @@
+Release v1.11.0 (2021-11-30)
+----------------------------
+
+### Features & Improvements
+
+- Move `version` from `[project]` table to `[tool.pdm]` table, delete `classifiers` from `dynamic`, and warn usage about the deprecated usages. [#748](https://github.com/pdm-project/pdm/issues/748)
+- Add support for Conda environments in addition to Python virtual environments. [#749](https://github.com/pdm-project/pdm/issues/749)
+- Add support for saving only the lower bound `x >= VERSION` when adding dependencies. [#752](https://github.com/pdm-project/pdm/issues/752)
+- Improve the error message when resolution fails. [#754](https://github.com/pdm-project/pdm/issues/754)
+
+### Bug Fixes
+
+- Switch to self-implemented `pdm list --freeze` to fix a bug due to Pip's API change. [#533](https://github.com/pdm-project/pdm/issues/533)
+- Fix an infinite loop issue when resolving candidates with incompatible `requires-python`. [#744](https://github.com/pdm-project/pdm/issues/744)
+- Fix the python finder to support pyenv-win. [#745](https://github.com/pdm-project/pdm/issues/745)
+- Fix the ANSI color output for Windows cmd and Powershell terminals. [#753](https://github.com/pdm-project/pdm/issues/753)
+
+### Removals and Deprecations
+
+- Remove `-s/--section` option from all previously supported commands. Use `-G/--group` instead. [#756](https://github.com/pdm-project/pdm/issues/756)
+
+
 Release v1.10.3 (2021-11-18)
 ----------------------------
 
