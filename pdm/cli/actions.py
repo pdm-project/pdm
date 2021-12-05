@@ -473,7 +473,6 @@ def do_init(
             "urls": {"homepage": ""},
             "dependencies": make_array([], True),
             "requires-python": "" if python_requires == "*" else python_requires,
-            "dynamic": ["classifiers"],
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }
