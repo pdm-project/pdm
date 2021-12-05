@@ -211,7 +211,7 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
     )
     req = parse_requirement(line, is_editable)
     candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == ["django"]
+    assert candidate.get_dependencies_from_metadata() == ["django", "editables"]
     assert candidate.version == "0.1.0"
 
 
