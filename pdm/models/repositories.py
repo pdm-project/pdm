@@ -219,7 +219,8 @@ class BaseRepository:
             return {
                 c.link.filename: self._hash_cache.get_hash(c.link)  # type: ignore
                 for c in matching_candidates
-            }
+                if not c.link or c.link.is_vcs
+            } or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
