@@ -496,11 +496,18 @@ def do_use(project: Project, python: str = "", first: bool = False) -> None:
     if python:
         python = python.strip()
 
-    found_interpreters = list(
-        dict.fromkeys(filter(version_matcher, project.find_interpreters(python)))
-    )
+    found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
+    matching_interperters = list(filter(version_matcher, found_interpreters))
     if not found_interpreters:
         raise NoPythonVersion("Python interpreter is not found on the system.")
+    if not matching_interperters:
+        project.core.ui.echo("Interpreters found but not matching:", err=True)
+        for py in found_interpreters:
+            project.core.ui.echo(f"  - {py.executable} ({py.identifier})", err=True)
+        raise NoPythonVersion(
+            "No python is found meeting the requirement "
+            f"{termui.green('python' + str(project.python_requires))}"
+        )
     if first or len(found_interpreters) == 1:
         selected_python = found_interpreters[0]
     else:
