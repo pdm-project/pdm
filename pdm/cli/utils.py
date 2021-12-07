@@ -537,6 +537,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     from pdm.resolver.python import PythonRequirement
 
     causes: list[RequirementInformation] = err.causes
+    info_lines: set[str] = set()
     if all(isinstance(cause.requirement, PythonRequirement) for cause in causes):
         project_requires = next(
             (cause.requirement for cause in causes if cause.parent is None)
@@ -553,7 +554,8 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
             f"{termui.green(str(project_requires.specifier))}"
         ]
         for req, parent in conflicting:
-            result.append(f"  {req.as_line()} (from {repr(parent)})")
+            info_lines.add(f"  {req.as_line()} (from {repr(parent)})")
+        result.extend(sorted(info_lines))
         result.append(
             "To fix this, you can change the value of `requires-python` "
             "in pyproject.toml."
@@ -571,12 +573,11 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         f"Unable to find a resolution for {termui.green(causes[0].requirement)} "
         "because the following requirements conflict:"
     ]
-
     for req, parent in causes:
-        result.append(
+        info_lines.add(
             f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
         )
-
+    result.extend(sorted(info_lines))
     result.append(
         "To fix this, you could try to loosen the dependency version constraints"
         "in pyproject.toml."
