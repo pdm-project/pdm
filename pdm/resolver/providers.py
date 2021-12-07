@@ -52,8 +52,16 @@ class BaseProvider(AbstractProvider):
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
-    ) -> int:
-        return sum(1 for _ in candidates[identifier])
+    ) -> tuple[int, ...]:
+        is_backtrack_cause = int(
+            bool(backtrack_causes)
+            and backtrack_causes[0].requirement.identify() == identifier
+        )
+        required_by = sum(
+            0 if info.parent is None else 1 for info in information[identifier]
+        )  # top-level requirements are resolved first
+        num_candidates = sum(1 for _ in candidates[identifier])
+        return (-is_backtrack_cause, required_by, num_candidates)
 
     def find_matches(
         self,
@@ -205,10 +213,8 @@ class EagerUpdateProvider(ReusePinProvider):
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
-    ) -> int:
+    ) -> tuple[int, ...]:
         # Resolve tracking packages so we have a chance to unpin them first.
-        if identifier in self.tracked_names:
-            return -1
-        return super().get_preference(
+        return (-int(identifier in self.traced_names),) + super().get_preference(
             identifier, resolutions, candidates, information, backtrack_causes
         )
