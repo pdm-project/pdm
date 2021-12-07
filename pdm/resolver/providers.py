@@ -215,6 +215,6 @@ class EagerUpdateProvider(ReusePinProvider):
         backtrack_causes: Sequence[RequirementInformation],
     ) -> tuple[int, ...]:
         # Resolve tracking packages so we have a chance to unpin them first.
-        return (-int(identifier in self.traced_names),) + super().get_preference(
+        return (-int(identifier in self.tracked_names),) + super().get_preference(
             identifier, resolutions, candidates, information, backtrack_causes
         )
