@@ -1,3 +1,21 @@
+Release v1.11.1 (2021-12-08)
+----------------------------
+
+### Features & Improvements
+
+- Support `--pre/--prelease` option for `pdm add` and `pdm update`. It will allow prereleases to be pinned. [#774](https://github.com/pdm-project/pdm/issues/774)
+- Improve the error message when python is found but not meeting the python requirement. [#777](https://github.com/pdm-project/pdm/issues/777)
+
+### Bug Fixes
+
+- Fix a bug that `git+https` candidates cannot be resolved. [#771](https://github.com/pdm-project/pdm/issues/771)
+- Fix an infinite resolution loop by resolving the top-level packages first. Also deduplicate the lines from the same requirement in the error output. [#776](https://github.com/pdm-project/pdm/issues/776)
+
+### Miscellany
+
+- Fix the install script to use a zipapp of virtualenv when it isn't installed. [#780](https://github.com/pdm-project/pdm/issues/780)
+
+
 Release v1.11.0 (2021-11-30)
 ----------------------------
 
