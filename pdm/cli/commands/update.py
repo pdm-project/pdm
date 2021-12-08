@@ -66,4 +66,5 @@ class Command(BaseCommand):
             sync=options.sync,
             no_editable=options.no_editable,
             no_self=options.no_self,
+            prerelease=options.prerelease,
         )

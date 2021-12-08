@@ -63,4 +63,5 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             dry_run=options.dry_run,
+            prerelease=options.prerelease,
         )

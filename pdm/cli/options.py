@@ -291,7 +291,11 @@ ignore_python_option = Option(
 )
 
 prerelease_option = Option(
-    "--pre", "--prerelease", action="store_true", help="Allow prereleases to be pinned"
+    "--pre",
+    "--prerelease",
+    action="store_true",
+    dest="prerelease",
+    help="Allow prereleases to be pinned",
 )
 unconstrained_option = Option(
     "-u",
