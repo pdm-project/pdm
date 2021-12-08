@@ -64,7 +64,7 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                click.style("Python Development Master(PDM)", bold=True), self.version
+                click.style("Python Development Master (PDM)", bold=True), self.version
             ),
             help="show the version and exit",
         )
