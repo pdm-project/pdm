@@ -80,6 +80,7 @@ class Requirement:
     extras: Sequence[str] | None = None
     specifier: SpecifierSet | None = None
     editable: bool = False
+    prerelease: bool = False
 
     def __post_init__(self) -> None:
         self.requires_python = (

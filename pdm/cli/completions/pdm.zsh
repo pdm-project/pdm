@@ -68,6 +68,7 @@ _pdm() {
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
+        {--pre,--prerelease}'[Allow prereleases to be pinned]'
         {-e+,--editable+}'[Specify editable packages]:packages'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
@@ -302,6 +303,7 @@ _pdm() {
         "--no-self[Don't install the project itself]"
         "--no-sync[Only update lock file but do not sync packages]"
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
+        {--pre,--prerelease}'[Allow prereleases to be pinned]'
         {-d,--dev}'[Select dev dependencies]'
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-default[Don\'t include dependencies from the default group]"

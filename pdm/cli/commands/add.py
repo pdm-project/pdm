@@ -6,7 +6,9 @@ from pdm.cli.options import (
     dry_run_option,
     install_group,
     packages_group,
+    prerelease_option,
     save_strategy_group,
+    unconstrained_option,
     update_strategy_group,
 )
 from pdm.exceptions import PdmUsageError
@@ -15,6 +17,16 @@ from pdm.project import Project
 
 class Command(BaseCommand):
     """Add package(s) to pyproject.toml and install them"""
+
+    arguments = BaseCommand.arguments + [
+        save_strategy_group,
+        update_strategy_group,
+        prerelease_option,
+        unconstrained_option,
+        packages_group,
+        install_group,
+        dry_run_option,
+    ]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -28,24 +40,12 @@ class Command(BaseCommand):
             "-G", "--group", help="Specify the target dependency group to add into"
         )
         parser.add_argument(
-            "-u",
-            "--unconstrained",
-            action="store_true",
-            default=False,
-            help="Ignore the version constraint of pinned packages",
-        )
-        parser.add_argument(
             "--no-sync",
             dest="sync",
             default=True,
             action="store_false",
             help="Only write pyproject.toml and do not sync the working set",
         )
-        save_strategy_group.add_to_parser(parser)
-        update_strategy_group.add_to_parser(parser)
-        packages_group.add_to_parser(parser)
-        install_group.add_to_parser(parser)
-        dry_run_option.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.editables and options.no_editable:

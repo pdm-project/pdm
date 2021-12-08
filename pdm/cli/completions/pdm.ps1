@@ -198,7 +198,7 @@ function TabExpansion($line, $lastWord) {
 
             "add" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation", "--pre", "--prerelease")),
                         $sectionOption,
                         $projectOption,
                         [Option]::new(@("-e", "--editable")).WithValues(@(getPyPIPackages))
@@ -345,7 +345,7 @@ function TabExpansion($line, $lastWord) {
             }
             "update" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync", "--pre", "--prerelease")),
                         $sectionOption,
                         $projectOption
                     ))

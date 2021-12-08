@@ -35,9 +35,9 @@ class BaseProvider(AbstractProvider):
         editable = requirement.editable
         is_file = requirement.is_file_or_url
         is_prerelease = (
-            bool(requirement.specifier.prereleases)
-            if requirement.specifier is not None
-            else False
+            requirement.prerelease
+            or requirement.specifier is not None
+            and bool(requirement.specifier.prereleases)
         )
         specifier_parts = len(requirement.specifier) if requirement.specifier else 0
         return (editable, is_file, is_prerelease, specifier_parts)
@@ -84,8 +84,9 @@ class BaseProvider(AbstractProvider):
             can.metadata
             candidates = [can]
         else:
+            req = reqs[0]
             candidates = self.repository.find_candidates(
-                reqs[0], self.allow_prereleases
+                req, req.prerelease or self.allow_prereleases
             )
         return [
             can
