@@ -260,3 +260,10 @@ def test_add_with_dry_run(project, capsys):
     assert not project.get_dependencies()
     assert "requests 2.19.1" in out
     assert "urllib3 1.22" in out
+
+
+@pytest.mark.usefixtures("repository")
+def test_add_with_prerelease(project, working_set):
+    actions.do_add(project, packages=["urllib3"], prerelease=True)
+    assert working_set["urllib3"].version == "1.23b0"
+    assert project.meta.dependencies[0] == "urllib3<2,>=1.23b0"
