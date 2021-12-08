@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import atexit
 import dataclasses
 import io
 import json
@@ -15,8 +14,6 @@ import urllib.request
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Sequence
-
-from pip import __file__ as pip_location
 
 if sys.version_info < (3, 7):
     sys.exit("Python 3.7 or above is required to install PDM.")
@@ -254,23 +251,19 @@ class Installer:
             try:
                 import virtualenv
             except ModuleNotFoundError:
-                tmpdir = TemporaryDirectory()
-                atexit.register(tmpdir.cleanup)
-
-                _call_subprocess(
-                    [
-                        sys.executable,
-                        os.path.dirname(pip_location),
-                        "install",
-                        "virtualenv",
-                        "-t",
-                        tmpdir.name,
-                    ]
+                python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+                url = (
+                    "https://bootstrap.pypa.io/virtualenv/"
+                    f"{python_version}/virtualenv.pyz"
                 )
-                sys.path.insert(0, tmpdir.name)
-                import virtualenv
-
-            virtualenv.cli_run([str(venv_path)])
+                with TemporaryDirectory(prefix="pdm-installer-") as tempdir:
+                    virtualenv_zip = Path(tempdir) / "virtualenv.pyz"
+                    urllib.request.urlretrieve(url, virtualenv_zip)
+                    _call_subprocess(
+                        [sys.executable, str(virtualenv_zip), str(venv_path)]
+                    )
+            else:
+                virtualenv.cli_run([str(venv_path)])
         else:
             venv.create(venv_path, clear=False, with_pip=True)
 
