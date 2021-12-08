@@ -289,3 +289,18 @@ ignore_python_option = Option(
     action="store_true",
     help="Ignore the Python path saved in the pdm.toml config",
 )
+
+prerelease_option = Option(
+    "--pre",
+    "--prerelease",
+    action="store_true",
+    dest="prerelease",
+    help="Allow prereleases to be pinned",
+)
+unconstrained_option = Option(
+    "-u",
+    "--unconstrained",
+    action="store_true",
+    default=False,
+    help="Ignore the version constraint of packages",
+)

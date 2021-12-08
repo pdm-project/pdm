@@ -181,6 +181,7 @@ def do_add(
     no_editable: bool = False,
     no_self: bool = False,
     dry_run: bool = False,
+    prerelease: bool = False,
 ) -> None:
     """Add packages and install"""
     check_project_file(project)
@@ -194,6 +195,7 @@ def do_add(
         parse_requirement(line) for line in packages
     ]:
         key = r.identify()
+        r.prerelease = prerelease
         tracked_names.add(key)
         requirements[key] = r
     project.core.ui.echo(
@@ -244,6 +246,7 @@ def do_update(
     sync: bool = True,
     no_editable: bool = False,
     no_self: bool = False,
+    prerelease: bool = False,
 ) -> None:
     """Update specified packages or all packages"""
     check_project_file(project)
@@ -256,6 +259,8 @@ def do_update(
     updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
     install_dev = True if dev is None else dev
     if not packages:
+        if prerelease:
+            raise PdmUsageError("--prerelease must be used with packages given")
         groups = translate_groups(project, default, install_dev, groups or ())
         for group in groups:
             updated_deps[group] = all_dependencies[group]
@@ -277,6 +282,7 @@ def do_update(
                         termui.green(name, bold=True), group, "dev-" if dev else ""
                     )
                 )
+            dependencies[matched_name].prerelease = prerelease
             updated_deps[group][matched_name] = dependencies[matched_name]
         project.core.ui.echo(
             "Updating packages: {}.".format(

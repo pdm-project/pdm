@@ -29,128 +29,6 @@ def test_remove_both_normal_and_editable_packages(project, is_dev):
     assert "demo" not in project.locked_repository.all_candidates
 
 
-@pytest.mark.usefixtures("working_set")
-def test_update_all_packages(project, repository, capsys):
-    actions.do_add(project, packages=["requests", "pytz"])
-    repository.add_candidate("pytz", "2019.6")
-    repository.add_candidate("chardet", "3.0.5")
-    repository.add_candidate("requests", "2.20.0")
-    repository.add_dependencies(
-        "requests",
-        "2.20.0",
-        [
-            "certifi>=2017.4.17",
-            "chardet<3.1.0,>=3.0.2",
-            "idna<2.8,>=2.5",
-            "urllib3<1.24,>=1.21.1",
-        ],
-    )
-    actions.do_update(project)
-    locked_candidates = project.locked_repository.all_candidates
-    assert locked_candidates["requests"].version == "2.20.0"
-    assert locked_candidates["chardet"].version == "3.0.5"
-    assert locked_candidates["pytz"].version == "2019.6"
-    out, _ = capsys.readouterr()
-    assert "3 to update" in out, out
-
-    actions.do_sync(project)
-    out, _ = capsys.readouterr()
-    assert "All packages are synced to date" in out
-
-
-@pytest.mark.usefixtures("working_set")
-def test_update_dry_run(project, repository, capsys):
-    actions.do_add(project, packages=["requests", "pytz"])
-    repository.add_candidate("pytz", "2019.6")
-    repository.add_candidate("chardet", "3.0.5")
-    repository.add_candidate("requests", "2.20.0")
-    repository.add_dependencies(
-        "requests",
-        "2.20.0",
-        [
-            "certifi>=2017.4.17",
-            "chardet<3.1.0,>=3.0.2",
-            "idna<2.8,>=2.5",
-            "urllib3<1.24,>=1.21.1",
-        ],
-    )
-    actions.do_update(project, dry_run=True)
-    project.lockfile = None
-    locked_candidates = project.locked_repository.all_candidates
-    assert locked_candidates["requests"].version == "2.19.1"
-    assert locked_candidates["chardet"].version == "3.0.4"
-    assert locked_candidates["pytz"].version == "2019.3"
-    out, _ = capsys.readouterr()
-    assert "requests 2.19.1 -> 2.20.0" in out
-
-
-@pytest.mark.usefixtures("working_set")
-def test_update_top_packages_dry_run(project, repository, capsys):
-    actions.do_add(project, packages=["requests", "pytz"])
-    repository.add_candidate("pytz", "2019.6")
-    repository.add_candidate("chardet", "3.0.5")
-    repository.add_candidate("requests", "2.20.0")
-    repository.add_dependencies(
-        "requests",
-        "2.20.0",
-        [
-            "certifi>=2017.4.17",
-            "chardet<3.1.0,>=3.0.2",
-            "idna<2.8,>=2.5",
-            "urllib3<1.24,>=1.21.1",
-        ],
-    )
-    actions.do_update(project, top=True, dry_run=True)
-    out, _ = capsys.readouterr()
-    assert "requests 2.19.1 -> 2.20.0" in out
-    assert "- chardet 3.0.4 -> 3.0.5" not in out
-
-
-@pytest.mark.usefixtures("working_set")
-def test_update_specified_packages(project, repository):
-    actions.do_add(project, sync=False, packages=["requests", "pytz"])
-    repository.add_candidate("pytz", "2019.6")
-    repository.add_candidate("chardet", "3.0.5")
-    repository.add_candidate("requests", "2.20.0")
-    repository.add_dependencies(
-        "requests",
-        "2.20.0",
-        [
-            "certifi>=2017.4.17",
-            "chardet<3.1.0,>=3.0.2",
-            "idna<2.8,>=2.5",
-            "urllib3<1.24,>=1.21.1",
-        ],
-    )
-    actions.do_update(project, packages=["requests"])
-    locked_candidates = project.locked_repository.all_candidates
-    assert locked_candidates["requests"].version == "2.20.0"
-    assert locked_candidates["chardet"].version == "3.0.4"
-
-
-@pytest.mark.usefixtures("working_set")
-def test_update_specified_packages_eager_mode(project, repository):
-    actions.do_add(project, sync=False, packages=["requests", "pytz"])
-    repository.add_candidate("pytz", "2019.6")
-    repository.add_candidate("chardet", "3.0.5")
-    repository.add_candidate("requests", "2.20.0")
-    repository.add_dependencies(
-        "requests",
-        "2.20.0",
-        [
-            "certifi>=2017.4.17",
-            "chardet<3.1.0,>=3.0.2",
-            "idna<2.8,>=2.5",
-            "urllib3<1.24,>=1.21.1",
-        ],
-    )
-    actions.do_update(project, strategy="eager", packages=["requests"])
-    locked_candidates = project.locked_repository.all_candidates
-    assert locked_candidates["requests"].version == "2.20.0"
-    assert locked_candidates["chardet"].version == "3.0.5"
-    assert locked_candidates["pytz"].version == "2019.3"
-
-
 @pytest.mark.usefixtures("repository")
 def test_remove_package(project, working_set, is_dev):
     actions.do_add(project, dev=is_dev, packages=["requests", "pytz"])
@@ -208,16 +86,6 @@ def test_add_remove_no_package(project):
 
     with pytest.raises(PdmUsageError):
         actions.do_remove(project, packages=())
-
-
-@pytest.mark.usefixtures("repository", "working_set")
-def test_update_with_package_and_groups_argument(project):
-    actions.do_add(project, packages=["requests", "pytz"])
-    with pytest.raises(PdmUsageError):
-        actions.do_update(project, groups=("default", "dev"), packages=("requests",))
-
-    with pytest.raises(PdmUsageError):
-        actions.do_update(project, default=False, packages=("requests",))
 
 
 @pytest.mark.usefixtures("repository")
@@ -518,28 +386,6 @@ def test_list_json_with_circular_reverse(project, capsys, repository):
         },
     ]
     assert expected == loads(content)
-
-
-@pytest.mark.usefixtures("repository", "working_set")
-def test_update_packages_with_top(project):
-    actions.do_add(project, packages=("requests",))
-    with pytest.raises(PdmUsageError):
-        actions.do_update(project, packages=("requests",), top=True)
-
-
-@pytest.mark.usefixtures("working_set")
-def test_update_ignore_constraints(project, repository):
-    actions.do_add(project, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz~=2019.3"]
-    repository.add_candidate("pytz", "2020.2")
-
-    actions.do_update(project, unconstrained=False, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz~=2019.3"]
-    assert project.locked_repository.all_candidates["pytz"].version == "2019.3"
-
-    actions.do_update(project, unconstrained=True, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz~=2020.2"]
-    assert project.locked_repository.all_candidates["pytz"].version == "2020.2"
 
 
 def test_init_validate_python_requires(project_no_init):

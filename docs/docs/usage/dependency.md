@@ -90,6 +90,10 @@ for the dependency):
 - `exact`: Save the exact version specifier: `==2.21.0`.
 - `wildcard`: Don't constrain version and leave the specifier to be wildcard: `*`.
 
+### Add prereleases
+
+One can give `--pre/--prerelease` option to `pdm add` so that prereleases are allowed to be pinned for the given packages.
+
 ## Update existing dependencies
 
 To update all dependencies in the lock file:
@@ -135,6 +139,12 @@ which is given by `--update-<strategy>` option:
 - `reuse`: Keep all locked dependencies except for those given in the command line.
 - `eager`: Try to lock a newer version of the packages in command line and their recursive sub-dependencies
   and keep other dependencies as they are.
+
+### Update packages to the versions that break the version specifiers
+
+One can give `-u/--unconstrained` to tell PDM to ignore the version specifiers in the `pyproject.toml`.
+This works similarly to the `yarn upgrade -L/--latest` command. Besides, `pdm update` also supports the
+`--pre/--prerelease` option.
 
 ## Remove existing dependencies
 

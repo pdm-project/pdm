@@ -5,7 +5,9 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import (
     groups_group,
     install_group,
+    prerelease_option,
     save_strategy_group,
+    unconstrained_option,
     update_strategy_group,
 )
 from pdm.project import Project
@@ -14,18 +16,16 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Update package(s) in pyproject.toml"""
 
+    arguments = BaseCommand.arguments + [
+        groups_group,
+        install_group,
+        save_strategy_group,
+        update_strategy_group,
+        prerelease_option,
+        unconstrained_option,
+    ]
+
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        groups_group.add_to_parser(parser)
-        save_strategy_group.add_to_parser(parser)
-        update_strategy_group.add_to_parser(parser)
-        install_group.add_to_parser(parser)
-        parser.add_argument(
-            "-u",
-            "--unconstrained",
-            action="store_true",
-            default=False,
-            help="Ignore the version constraint of packages",
-        )
         parser.add_argument(
             "-t",
             "--top",
@@ -66,4 +66,5 @@ class Command(BaseCommand):
             sync=options.sync,
             no_editable=options.no_editable,
             no_self=options.no_self,
+            prerelease=options.prerelease,
         )
