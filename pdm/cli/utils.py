@@ -579,7 +579,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         )
     result.extend(sorted(info_lines))
     result.append(
-        "To fix this, you could try to loosen the dependency version constraints"
+        "To fix this, you could try to loosen the dependency version constraints "
         "in pyproject.toml."
     )
     return "\n".join(result)
