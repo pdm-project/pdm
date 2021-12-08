@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator, Mapping, Sequence
+from typing import TYPE_CHECKING
 
 from resolvelib import AbstractProvider
-from resolvelib.resolvers import RequirementInformation
 
 from pdm.models.candidates import Candidate
-from pdm.models.repositories import BaseRepository
-from pdm.models.requirements import Requirement
 from pdm.resolver.python import (
     PythonCandidate,
     PythonRequirement,
@@ -15,6 +12,15 @@ from pdm.resolver.python import (
     is_python_satisfied_by,
 )
 from pdm.utils import url_without_fragments
+
+if TYPE_CHECKING:
+    from typing import Any, Iterable, Iterator, Mapping, Sequence
+
+    from resolvelib.resolvers import RequirementInformation
+
+    from pdm._types import Comparable
+    from pdm.models.repositories import BaseRepository
+    from pdm.models.requirements import Requirement
 
 
 class BaseProvider(AbstractProvider):
@@ -24,6 +30,7 @@ class BaseProvider(AbstractProvider):
         self.repository = repository
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[str, list[Requirement]] = {}
+        self._known_depth: dict[str, int] = {}
 
     def requirement_preference(self, requirement: Requirement) -> tuple:
         """Return the preference of a requirement to find candidates.
@@ -52,16 +59,41 @@ class BaseProvider(AbstractProvider):
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
-    ) -> tuple[int, ...]:
-        is_backtrack_cause = int(
-            bool(backtrack_causes)
-            and backtrack_causes[0].requirement.identify() == identifier
+    ) -> Comparable:
+        is_top = any(parent is None for _, parent in information[identifier])
+        is_backtrack_cause = any(
+            requirement.identify() == identifier
+            or parent
+            and parent.identify() == identifier
+            for requirement, parent in backtrack_causes
         )
-        required_by = sum(
-            0 if info.parent is None else 1 for info in information[identifier]
-        )  # top-level requirements are resolved first
-        num_candidates = sum(1 for _ in candidates[identifier])
-        return (-is_backtrack_cause, required_by, num_candidates)
+        if is_top:
+            dep_depth = 1
+        else:
+            parent_depths = (
+                self._known_depth[parent.identify()] if parent is not None else 0
+                for _, parent in information[identifier]
+            )
+            dep_depth = min(parent_depths) + 1
+        self._known_depth[identifier] = dep_depth
+        operators = [
+            spec.operator
+            for req, _ in information[identifier]
+            if req.specifier is not None
+            for spec in req.specifier
+        ]
+        is_python = identifier == "python"
+        is_pinned = any(op[:2] == "==" for op in operators)
+        is_free = bool(operators)
+        return (
+            not is_python,
+            not is_top,
+            not is_pinned,
+            not is_backtrack_cause,
+            dep_depth,
+            is_free,
+            identifier,
+        )
 
     def find_matches(
         self,
@@ -214,8 +246,8 @@ class EagerUpdateProvider(ReusePinProvider):
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
-    ) -> tuple[int, ...]:
+    ) -> Comparable:
         # Resolve tracking packages so we have a chance to unpin them first.
-        return (-int(identifier in self.tracked_names),) + super().get_preference(
+        return (identifier not in self.tracked_names,) + super().get_preference(
             identifier, resolutions, candidates, information, backtrack_causes
         )
