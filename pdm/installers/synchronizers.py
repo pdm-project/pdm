@@ -12,7 +12,7 @@ from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
-from pdm.models.requirements import strip_extras
+from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.utils import is_editable
 
 
@@ -59,6 +59,17 @@ class DummyExecutor:
         return
 
 
+def editables_candidate(environment: Environment) -> Candidate | None:
+    """Return a candidate for `editables` package"""
+    with environment.get_finder() as finder:
+        best_match = finder.find_best_candidate("editables")
+        if best_match.best_candidate is None:
+            return None
+        return Candidate.from_installation_candidate(
+            best_match.best_candidate, parse_requirement("editables"), environment
+        )
+
+
 class Synchronizer:
     """Synchronize the working set with given installation candidates"""
 
@@ -94,6 +105,16 @@ class Synchronizer:
         if self.no_editable:
             for candidate in candidates.values():
                 candidate.req.editable = None  # type: ignore
+        elif (
+            self.install_self
+            and getattr(self.environment.project.meta, "editable_backend", "editables")
+            == "editables"
+            and "editables" not in candidates
+        ):
+            # Install `editables` as well as required by self project
+            editables = editables_candidate(environment)
+            if editables is not None:
+                candidates["editables"] = editables
         self.candidates = candidates
         self._manager: InstallManager | None = None
 
