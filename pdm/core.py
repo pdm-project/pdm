@@ -57,7 +57,6 @@ class Core:
             prog="pdm",
             description="PDM - Python Development Master",
             formatter_class=PdmFormatter,
-            usage="pdm [OPTIONS] [COMMANDS] ...",
         )
         self.parser.is_root = True  # type: ignore
         self.parser.add_argument(
@@ -65,7 +64,7 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                click.style("pdm", bold=True), self.version
+                click.style("Python Development Master (PDM)", bold=True), self.version
             ),
             help="show the version and exit",
         )

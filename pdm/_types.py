@@ -1,5 +1,5 @@
 import sys
-from typing import Dict, List, NamedTuple, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Tuple, Union
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import Distribution
@@ -24,6 +24,11 @@ class Package(NamedTuple):
     name: str
     version: str
     summary: str
+
+
+class Comparable(Protocol):
+    def __lt__(self, __other: Any) -> bool:
+        ...
 
 
 SearchResult = List[Package]
