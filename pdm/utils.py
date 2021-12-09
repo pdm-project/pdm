@@ -515,17 +515,17 @@ def is_editable(dist: Distribution) -> bool:
 
 def pdm_scheme(base: str) -> dict[str, str]:
     """Return a PEP 582 style install scheme"""
-    if "pdm" not in sysconfig._INSTALL_SCHEMES:  # type: ignore
+    if "pep582" not in sysconfig._INSTALL_SCHEMES:  # type: ignore
         bin_prefix = "Scripts" if os.name == "nt" else "bin"
-        sysconfig._INSTALL_SCHEMES["pdm"] = {  # type: ignore
-            "stdlib": "{base}/lib",
-            "platstdlib": "{base}/lib",
-            "purelib": "{base}/lib",
-            "platlib": "{base}/lib",
-            "include": "{base}/include",
-            "scripts": "{base}/%s" % bin_prefix,
-            "data": "{base}",
-            "prefix": "{base}",
-            "headers": "{base}/include",
+        sysconfig._INSTALL_SCHEMES["pep582"] = {  # type: ignore
+            "stdlib": "{pep582_base}/lib",
+            "platstdlib": "{pep582_base}/lib",
+            "purelib": "{pep582_base}/lib",
+            "platlib": "{pep582_base}/lib",
+            "include": "{pep582_base}/include",
+            "scripts": "{pep582_base}/%s" % bin_prefix,
+            "data": "{pep582_base}",
+            "prefix": "{pep582_base}",
+            "headers": "{pep582_base}/include",
         }
-    return sysconfig.get_paths("pdm", vars={"base": base}, expand=True)
+    return sysconfig.get_paths("pep582", vars={"pep582_base": base}, expand=True)

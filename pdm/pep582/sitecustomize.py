@@ -66,6 +66,34 @@ def load_next_sitecustomize_py3():
         sys.modules["sitecustomize"] = old_module
 
 
+def patch_sysconfig(libpath):
+    """This is a hack to make sure that the sysconfig.get_paths()
+    returns PEP 582 scheme.
+    """
+    import sysconfig
+
+    bin_prefix = "Scripts" if os.name == "nt" else "bin"
+    pep582_base = os.path.dirname(libpath)
+    pep582_scheme = {  # type: ignore
+        "stdlib": "{pep582_base}/lib",
+        "platstdlib": "{pep582_base}/lib",
+        "purelib": "{pep582_base}/lib",
+        "platlib": "{pep582_base}/lib",
+        "include": "{pep582_base}/include",
+        "scripts": "{pep582_base}/%s" % bin_prefix,
+        "data": "{pep582_base}",
+        "prefix": "{pep582_base}",
+        "headers": "{pep582_base}/include",
+    }
+    # This returns a global variable, just update it in place.
+    sysconfig.get_config_vars()["pep582_base"] = pep582_base
+    sysconfig.get_paths.__defaults__ = ("pep582",) + sysconfig.get_paths.__defaults__[
+        1:
+    ]
+    sysconfig.get_path.__defaults__ = ("pep582",) + sysconfig.get_path.__defaults__[1:]
+    sysconfig._INSTALL_SCHEMES["pep582"] = pep582_scheme
+
+
 def main():
     self_path = os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
     sys.path[:] = [path for path in sys.path if os.path.normcase(path) != self_path]
@@ -97,6 +125,8 @@ def main():
         known_paths.clear()
         site.addusersitepackages(known_paths)
         site.addsitepackages(known_paths)
+    if "PEP582_PACKAGES" in os.environ:
+        patch_sysconfig(libpath)
 
 
 main()

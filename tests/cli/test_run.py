@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import textwrap
@@ -280,3 +281,19 @@ def test_import_another_sitecustomize(project, invoke, capfd):
     assert result.exit_code == 0, result.stderr
     out, _ = capfd.readouterr()
     assert out.strip() == "foo"
+
+
+def test_run_with_patched_sysconfig(project, invoke, capfd):
+    project.root.joinpath("script.py").write_text(
+        """\
+import sysconfig
+import json
+print(json.dumps(sysconfig.get_paths()))
+"""
+    )
+    capfd.readouterr()
+    with cd(project.root):
+        result = invoke(["run", "python", "script.py"], obj=project)
+    assert result.exit_code == 0
+    out = json.loads(capfd.readouterr()[0])
+    assert "__pypackages__" in out["purelib"]
