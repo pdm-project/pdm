@@ -284,7 +284,7 @@ dependencies = [
 
 [[package]]
 name = "pip"
-version = "21.1.1"
+version = "21.3.1"
 requires_python = ">=3.6"
 summary = "The PyPA recommended tool for installing Python packages."
 
@@ -839,9 +839,9 @@ content_hash = "sha256:efaf4f1c93672afa492ee3b03b6a0a00da7da5b4dbdeb2408c9ffec1e
     {file = "pep517-0.11.0-py2.py3-none-any.whl", hash = "sha256:3fa6b85b9def7ba4de99fb7f96fe3f02e2d630df8aa2720a5cf3b183f087a738"},
     {file = "pep517-0.11.0.tar.gz", hash = "sha256:e1ba5dffa3a131387979a68ff3e391ac7d645be409216b961bc2efe6468ab0b2"},
 ]
-"pip 21.1.1" = [
-    {file = "pip-21.1.1-py3-none-any.whl", hash = "sha256:11d095ed5c15265fc5c15cc40a45188675c239fb0f9913b673a33e54ff7d45f0"},
-    {file = "pip-21.1.1.tar.gz", hash = "sha256:51ad01ddcd8de923533b01a870e7b987c2eb4d83b50b89e1bf102723ff9fed8b"},
+"pip 21.3.1" = [
+    {file = "pip-21.3.1-py3-none-any.whl", hash = "sha256:deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d"},
+    {file = "pip-21.3.1.tar.gz", hash = "sha256:fd11ba3d0fdb4c07fbc5ecbba0b1b719809420f25038f8ee3cd913d3faa3033a"},
 ]
 "pluggy 0.13.1" = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
