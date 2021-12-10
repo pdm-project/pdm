@@ -1,3 +1,16 @@
+Release v1.11.2 (2021-12-10)
+----------------------------
+
+### Bug Fixes
+
+- Fix the resolution order to reduce the loop number to find a conflict. [#781](https://github.com/pdm-project/pdm/issues/781)
+- Patch the functions in `sysconfig` to return the PEP 582 scheme in `pdm run`. [#784](https://github.com/pdm-project/pdm/issues/784)
+
+### Dependencies
+
+- Remove the upper bound of version constraints for most dependencies, except for some zero-versioned ones. [#787](https://github.com/pdm-project/pdm/issues/787)
+
+
 Release v1.11.1 (2021-12-08)
 ----------------------------
 
