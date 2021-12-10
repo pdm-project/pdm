@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, MutableMapping, Optional, TypeVar
 
-import appdirs
 import atoml
 import click
+import platformdirs
 
 from pdm import termui
 from pdm.exceptions import NoConfigError
@@ -74,7 +74,9 @@ class Config(MutableMapping[str, str]):
     pypi_url, verify_ssl = get_pypi_source()
     _config_map: Dict[str, ConfigItem] = {
         "cache_dir": ConfigItem(
-            "The root directory of cached files", appdirs.user_cache_dir("pdm"), True
+            "The root directory of cached files",
+            platformdirs.user_cache_dir("pdm"),
+            True,
         ),
         "check_update": ConfigItem(
             "Check if there is any newer version available",

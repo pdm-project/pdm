@@ -5,11 +5,6 @@ requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "apipkg: namespace control and lazy-import mechanism"
 
 [[package]]
-name = "appdirs"
-version = "1.4.4"
-summary = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-
-[[package]]
 name = "arpeggio"
 version = "1.10.2"
 summary = "Packrat parser interpreter"
@@ -289,6 +284,12 @@ requires_python = ">=3.6"
 summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
+name = "platformdirs"
+version = "2.4.0"
+requires_python = ">=3.6"
+summary = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+
+[[package]]
 name = "pluggy"
 version = "0.13.1"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -557,16 +558,12 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:efaf4f1c93672afa492ee3b03b6a0a00da7da5b4dbdeb2408c9ffec1ee6b4275"
+content_hash = "sha256:2b4d0ccd7dc6ce2178d98e60daad157b03f8706290b3fbbb635955cd8f1e256f"
 
 [metadata.files]
 "apipkg 1.5" = [
     {file = "apipkg-1.5-py2.py3-none-any.whl", hash = "sha256:58587dd4dc3daefad0487f6d9ae32b4542b185e1c36db6993290e7c41ca2b47c"},
     {file = "apipkg-1.5.tar.gz", hash = "sha256:37228cda29411948b422fae072f57e31d3396d2ee1c9783775980ee9c9990af6"},
-]
-"appdirs 1.4.4" = [
-    {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
-    {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
 ]
 "arpeggio 1.10.2" = [
     {file = "Arpeggio-1.10.2-py2.py3-none-any.whl", hash = "sha256:fed68a1cb7f529cbd4d725597cc811b7506885fcdef17d4cdcf564341a1e210b"},
@@ -842,6 +839,10 @@ content_hash = "sha256:efaf4f1c93672afa492ee3b03b6a0a00da7da5b4dbdeb2408c9ffec1e
 "pip 21.3.1" = [
     {file = "pip-21.3.1-py3-none-any.whl", hash = "sha256:deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d"},
     {file = "pip-21.3.1.tar.gz", hash = "sha256:fd11ba3d0fdb4c07fbc5ecbba0b1b719809420f25038f8ee3cd913d3faa3033a"},
+]
+"platformdirs 2.4.0" = [
+    {file = "platformdirs-2.4.0-py3-none-any.whl", hash = "sha256:8868bbe3c3c80d42f20156f22e7131d2fb321f5bc86a2a345375c6481a67021d"},
+    {file = "platformdirs-2.4.0.tar.gz", hash = "sha256:367a5e80b3d04d2428ffa76d33f124cf11e8fff2acdaa9b43d545f5c7d661ef2"},
 ]
 "pluggy 0.13.1" = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},

@@ -8,7 +8,6 @@ dynamic = ["version"]
 requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
-    "appdirs",
     "atoml>=1.0.3",
     "click>=7",
     "importlib-metadata; python_version < \"3.8\"",
@@ -17,13 +16,14 @@ dependencies = [
     "pdm-pep517>=0.9,<0.10",
     "pep517>=0.11.0",
     "pip>=20.1",
-    "python-dotenv~=0.15",
+    "platformdirs",
+    "python-dotenv>=0.15",
     "pythonfinder",
     "resolvelib>=0.8,<0.9",
-    "shellingham<2.0.0,>=1.3.2",
-    "tomli>=1.1.0,<2.0.0",
+    "shellingham>=1.3.2",
+    "tomli>=1.1.0",
     "typing-extensions; python_version < \"3.8\"",
-    "wheel<1.0.0,>=0.36.2",
+    "wheel>=0.36.2",
 ]
 name = "pdm"
 description = "Python Development Master"
