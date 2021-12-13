@@ -18,4 +18,4 @@ jobs:
       - name: Install Pipenv
         run: pip install -U pipenv click
       - name: Run Benchmark script
-        run: python3 tasks/benchmark/main.py
+        run: python3 tasks/benchmarks/main.py
