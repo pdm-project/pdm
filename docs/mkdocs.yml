@@ -11,8 +11,8 @@ theme:
   font:
     text: Open Sans
     code: Fira Code
-  logo: assets/logo.png
-  favicon: assets/logo.png
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
   custom_dir: overrides
 
 nav:
