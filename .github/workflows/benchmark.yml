@@ -1,0 +1,21 @@
+name: Run Benchmark
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pdm-project/setup-pdm@main
+        with:
+          python-version: 3.9
+      - name: Bootstrap poetry
+        run: |
+          curl -sL https://install.python-poetry.org | python - -y
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install Pipenv
+        run: pip install -U pipenv click
+      - name: Run Benchmark script
+        run: python3 tasks/benchmark/main.py

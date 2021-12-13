@@ -1,0 +1,6 @@
+[packages]
+requests = { git = "https://github.com/psf/requests.git", ref = "v2.25.0" }
+pandas = ">=1.2.5,<2"
+
+[dev-packages]
+pytest = "~=5.2"

@@ -62,6 +62,7 @@ test = "pytest tests/"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
 complete = {call = "tasks.complete:main"}
+benchmark = "python tasks/benchmarks/main.py"
 
 [tool.pdm.dev-dependencies]
 test = [

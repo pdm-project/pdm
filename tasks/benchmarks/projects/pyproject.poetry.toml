@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "poetry-test"
+version = "0.1.0"
+description = "Poetry benchmark test project"
+authors = ["John@somebody.com"]
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+requests = { git = "https://github.com/psf/requests.git", tag = "v2.25.0" }
+pandas = "^1.2.5"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
