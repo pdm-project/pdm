@@ -8,9 +8,12 @@ from utils import Executor, benchmark, project
 def run_pipenv(executor: Executor):
     cache_dir = executor.project_file.with_name(".cache")
     os.environ["PIPENV_CACHE_DIR"] = str(cache_dir)
-    executor.measure("Lock dependencies", ["lock"])
+    executor.measure("Lock dependencies without cache", ["lock"])
+    executor.measure("Lock dependencies with cache", ["lock"])
     executor.measure("Install dependencies", ["install"])
-    executor.measure("Add dependencies", ["install", "--keep-outdated", "click"])
+    executor.measure(
+        "Add dependencies with cache", ["install", "--keep-outdated", "click"]
+    )
     shutil.rmtree(cache_dir)
     executor.measure(
         "Add dependencies without cache", ["install", "--keep-outdated", "pytz"]
@@ -21,7 +24,8 @@ def run_pipenv(executor: Executor):
 def run_poetry(executor: Executor):
     cache_dir = executor.project_file.with_name(".cache")
     executor.run(["config", "--local", "cache-dir", str(cache_dir)])
-    executor.measure("Lock dependencies", ["lock"])
+    executor.measure("Lock dependencies without cache", ["lock"])
+    executor.measure("Lock dependencies with cache", ["lock"])
     executor.measure("Install dependencies", ["install"])
     executor.measure("Add dependencies", ["add", "click"])
     shutil.rmtree(cache_dir)
@@ -32,7 +36,8 @@ def run_poetry(executor: Executor):
 def run_pdm(executor: Executor):
     cache_dir = executor.project_file.with_name(".cache")
     executor.run(["config", "cache_dir", str(cache_dir)])
-    executor.measure("Lock dependencies", ["lock"])
+    executor.measure("Lock dependencies without cache", ["lock"])
+    executor.measure("Lock dependencies with cache", ["lock"])
     executor.measure("Install dependencies", ["install"])
     executor.measure("Add dependencies", ["add", "click"])
     shutil.rmtree(cache_dir)
