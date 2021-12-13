@@ -24,6 +24,7 @@ def run_pipenv(executor: Executor):
 def run_poetry(executor: Executor):
     cache_dir = executor.project_file.with_name(".cache")
     executor.run(["config", "--local", "cache-dir", str(cache_dir)])
+    executor.run(["config", "--local", "virtualenvs.in-project", "true"])
     executor.measure("Lock dependencies without cache", ["lock"])
     executor.measure("Lock dependencies with cache", ["lock"])
     executor.measure("Install dependencies", ["install"])
@@ -35,6 +36,7 @@ def run_poetry(executor: Executor):
 @project(os.getenv("PDM", "pdm"), "pyproject.pdm.toml")
 def run_pdm(executor: Executor):
     cache_dir = executor.project_file.with_name(".cache")
+    os.environ["PIPENV_VENV_IN_PROJECT"] = "1"
     executor.run(["config", "cache_dir", str(cache_dir)])
     executor.measure("Lock dependencies without cache", ["lock"])
     executor.measure("Lock dependencies with cache", ["lock"])

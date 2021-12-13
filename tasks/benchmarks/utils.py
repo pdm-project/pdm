@@ -2,6 +2,7 @@ import contextlib
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from time import monotonic
@@ -23,13 +24,18 @@ class Executor:
         shutil.copy2(self._backup_file, self.project_file)
 
     def run(self, args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            [self.cmd, *args],
-            check=True,
-            capture_output=True,
-            cwd=self.project_file.parent.as_posix(),
-            **kwargs,
-        )
+        try:
+            return subprocess.run(
+                [self.cmd, *args],
+                check=True,
+                capture_output=True,
+                cwd=self.project_file.parent.as_posix(),
+                **kwargs,
+            )
+        except subprocess.CalledProcessError as e:
+            click.secho(e.stdout.decode(), fg="yellow", err=True)
+            click.secho(e.stderr.decode(), fg="red", err=True)
+            sys.exit(1)
 
     def measure(
         self, text: str, args: Sequence[str], **kwargs: Any
@@ -37,7 +43,7 @@ class Executor:
         time_start = monotonic()
         proc = self.run(args, **kwargs)
         time_cost = monotonic() - time_start
-        click.echo(f"  {click.style(text + ':', fg='yellow')}\t\t{time_cost:.2f}s")
+        click.echo(f"  {click.style(text + ':', fg='yellow'):>32s} {time_cost:.2f}s")
         return proc
 
 
