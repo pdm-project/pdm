@@ -247,7 +247,9 @@ class Installer:
 
         try:
             import venv
-        except ModuleNotFoundError:
+
+            venv.create(venv_path, clear=False, with_pip=True)
+        except (ModuleNotFoundError, subprocess.CalledProcessError):
             try:
                 import virtualenv
             except ModuleNotFoundError:
@@ -264,8 +266,6 @@ class Installer:
                     )
             else:
                 virtualenv.cli_run([str(venv_path)])
-        else:
-            venv.create(venv_path, clear=False, with_pip=True)
 
         return venv_path
 

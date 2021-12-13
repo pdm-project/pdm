@@ -49,9 +49,9 @@ foo
 - 具备一个完备的插件系统
 - [PEP 621] 元数据格式
 
-[PEP 517]: https://www.python.org/dev/peps/pep-0517
-[PEP 582]: https://www.python.org/dev/peps/pep-0582
-[PEP 621]: https://www.python.org/dev/peps/pep-0621
+[pep 517]: https://www.python.org/dev/peps/pep-0517
+[pep 582]: https://www.python.org/dev/peps/pep-0582
+[pep 621]: https://www.python.org/dev/peps/pep-0621
 
 ## 为什么不用虚拟环境?
 
@@ -75,7 +75,7 @@ PDM 需要 Python 3.7 或更高版本。
 **Linux/Mac 安装命令**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python -
+curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 ```
 
 **Windows 安装命令**

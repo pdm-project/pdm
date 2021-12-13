@@ -79,7 +79,7 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
 **For Linux/Mac**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python -
+curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
 ```
 
 **For Windows**
