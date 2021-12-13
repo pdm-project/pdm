@@ -43,7 +43,7 @@ class Executor:
         time_start = monotonic()
         proc = self.run(args, **kwargs)
         time_cost = monotonic() - time_start
-        click.echo(f"  {click.style(text + ':', fg='yellow'):>32s} {time_cost:.2f}s")
+        click.echo(f"  {click.style(text + ':', fg='yellow'):>42s} {time_cost:.2f}s")
         return proc
 
 
