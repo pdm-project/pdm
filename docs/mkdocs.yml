@@ -28,8 +28,8 @@ nav:
   - Plugins:
       - plugin.md
   - Development:
-      - contributing.md
-      - changelog.md
+      - dev/contributing.md
+      - dev/changelog.md
 
 markdown_extensions:
   - pymdownx.highlight:
