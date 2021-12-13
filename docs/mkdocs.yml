@@ -30,6 +30,7 @@ nav:
   - Development:
       - dev/contributing.md
       - dev/changelog.md
+      - dev/benchmark.md
 
 markdown_extensions:
   - pymdownx.highlight:
