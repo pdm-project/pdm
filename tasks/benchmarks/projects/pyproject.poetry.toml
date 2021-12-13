@@ -1,0 +1,7 @@
+[tool.poetry.dependencies]
+python = "^3.7"
+requests = { git = "https://github.com/psf/requests.git", tag = "v2.25.0" }
+pandas = "^1.2.5"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"

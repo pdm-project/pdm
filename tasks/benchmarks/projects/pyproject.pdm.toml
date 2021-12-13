@@ -1,0 +1,11 @@
+[project]
+requires-python = ">=3.7"
+dependencies = [
+    "requests @ git+https://github.com/psf/requests.git@v2.25.0",
+    "pandas>=1.2.5,<2"
+]
+
+[tool.poetry.dev-dependencies]
+test = [
+    "pytest~=5.2"
+]
