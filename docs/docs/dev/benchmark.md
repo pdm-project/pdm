@@ -12,7 +12,7 @@ pdm run benchmark
 
 GitHub Actions Ubuntu 21.04 virtual environment(2C8G).
 
-### Base dependencie set
+### Base dependency set
 
 (The format varies on different tools.)
 
