@@ -70,6 +70,7 @@ def patch_sysconfig(libpath):
     """This is a hack to make sure that the sysconfig.get_paths()
     returns PEP 582 scheme.
     """
+    import functools
     import sysconfig
 
     bin_prefix = "Scripts" if os.name == "nt" else "bin"
@@ -85,12 +86,22 @@ def patch_sysconfig(libpath):
         "prefix": "{pep582_base}",
         "headers": "{pep582_base}/include",
     }
+
+    def patch_pep582(get_paths):
+        @functools.wraps(get_paths)
+        def wrapper(scheme=None, vars=None, expand=True):
+            default_scheme = get_paths.__defaults__[0]
+            if not vars and scheme is None:
+                scheme = "pep582"
+            else:
+                scheme = scheme or default_scheme
+            return get_paths(scheme, vars, expand)
+
+        return wrapper
+
     # This returns a global variable, just update it in place.
     sysconfig.get_config_vars()["pep582_base"] = pep582_base
-    sysconfig.get_paths.__defaults__ = ("pep582",) + sysconfig.get_paths.__defaults__[
-        1:
-    ]
-    sysconfig.get_path.__defaults__ = ("pep582",) + sysconfig.get_path.__defaults__[1:]
+    sysconfig.get_paths = patch_pep582(sysconfig.get_paths)
     sysconfig._INSTALL_SCHEMES["pep582"] = pep582_scheme
 
 
