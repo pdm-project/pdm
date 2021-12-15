@@ -13,7 +13,6 @@ A modern Python package manager with [PEP 582] support. [中文版本说明](REA
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
 [![codecov](https://codecov.io/gh/pdm-project/pdm/branch/main/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
-[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/frostming/pdm)](https://hub.docker.com/r/frostming/pdm)
 [![](https://tokei.rs/b1/github/pdm-project/pdm)](https://github.com/pdm-project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
@@ -188,12 +187,6 @@ Ta-da! You are running an app with its dependencies installed in an isolated pla
 For Windows users, please refer to [the doc](https://pdm.fming.dev/#enable-pep-582-globally) about how to make it work.
 
 If you are curious about how this works, check [this doc section](https://pdm.fming.dev/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
-
-## Docker image
-
-```console
-docker pull frostming/pdm
-```
 
 ## Badges
 

@@ -129,19 +129,6 @@ pdm --pep582 >> ~/.bash_profile
 
 Once again, Don't forget to restart the terminal session to take effect.
 
-### Use the docker image
-
-PDM also provides a docker image to ease your deployment flow, to use it, write a Dockerfile with following content:
-
-```Dockerfile
-FROM frostming/pdm
-
-COPY . /app
-
-# -- Replace with the correct path to your app's main executable
-CMD ["pdm", "run", "python", "main.py"]
-```
-
 ## Shell Completion
 
 PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. Here are some common locations for each shell:
