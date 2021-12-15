@@ -1,3 +1,20 @@
+Release v1.11.3 (2021-12-15)
+----------------------------
+
+### Features & Improvements
+
+- Change the default version save strategy to `minimum`, without upper bounds. [#787](https://github.com/pdm-project/pdm/issues/787)
+
+### Bug Fixes
+
+- Fix the patching of sysconfig in PEP 582 initialization script. [#796](https://github.com/pdm-project/pdm/issues/796)
+
+### Miscellany
+
+- Fix an installation failure of the bootstrap script on MacOS Catalina. [#793](https://github.com/pdm-project/pdm/issues/793)
+- Add a basic benchmarking script. [#794](https://github.com/pdm-project/pdm/issues/794)
+
+
 Release v1.11.2 (2021-12-10)
 ----------------------------
 
