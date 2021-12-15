@@ -52,9 +52,9 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 - A full-featured plug-in system.
 - [PEP 621] project metadata format.
 
-[PEP 517]: https://www.python.org/dev/peps/pep-0517
-[PEP 582]: https://www.python.org/dev/peps/pep-0582
-[PEP 621]: https://www.python.org/dev/peps/pep-0621
+[pep 517]: https://www.python.org/dev/peps/pep-0517
+[pep 582]: https://www.python.org/dev/peps/pep-0582
+[pep 621]: https://www.python.org/dev/peps/pep-0621
 
 ## Why not virtualenv?
 
@@ -87,6 +87,9 @@ curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py 
 ```powershell
 (Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
 ```
+
+For security reasons, you should verify the checksum.
+The sha256 checksum is: `70ac95c53830ff41d700051c9caebd83b2b85b5d6066e8f853006f9f07293ff0`
 
 The installer will install PDM into the user site and the location depends on the system:
 

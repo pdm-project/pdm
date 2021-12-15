@@ -44,6 +44,9 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
     (Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
     ```
 
+For security reasons, you should verify the checksum.
+The sha256 checksum is: `70ac95c53830ff41d700051c9caebd83b2b85b5d6066e8f853006f9f07293ff0`
+
 The installer will install PDM into the user site and the location depends on the system:
 
 - `$HOME/.local/bin` for Unix
@@ -65,7 +68,6 @@ optional arguments:
 ```
 
 You can either pass the options after the script or set the env var value.
-
 
 ### Other installation methods
 

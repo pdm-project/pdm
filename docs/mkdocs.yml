@@ -35,9 +35,10 @@ nav:
 markdown_extensions:
   - pymdownx.highlight:
       linenums: true
-  - pymdownx.tabbed
-  - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
   - admonition
   - tables
   - toc:
