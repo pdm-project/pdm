@@ -278,3 +278,16 @@ def test_resolve_prefer_requirement_with_prereleases(project, repository):
 def test_resolve_with_python_marker(project, repository):
     result = resolve_requirements(repository, ["demo; python_version>='3.6'"])
     assert result["demo"].version == "0.0.1"
+
+
+def test_resolve_file_req_with_prerelease(project, repository, vcs):
+    result = resolve_requirements(
+        repository,
+        [
+            "using-demo==0.1.0",
+            "demo @ git+https://github.com/test-root/demo-prerelease.git",
+        ],
+        ">=3.6",
+        allow_prereleases=False,
+    )
+    assert result["demo"].version == "0.0.2b0"
