@@ -76,6 +76,9 @@ class BaseProvider(AbstractProvider):
             )
             dep_depth = min(parent_depths) + 1
         self._known_depth[identifier] = dep_depth
+        is_file_or_url = any(
+            not requirement.is_named for requirement, _ in information[identifier]
+        )
         operators = [
             spec.operator
             for req, _ in information[identifier]
@@ -88,6 +91,7 @@ class BaseProvider(AbstractProvider):
         return (
             not is_python,
             not is_top,
+            not is_file_or_url,
             not is_pinned,
             not is_backtrack_cause,
             dep_depth,
@@ -134,10 +138,11 @@ class BaseProvider(AbstractProvider):
                 candidate.req.url
             ) == url_without_fragments(requirement.url)
         version = candidate.version or candidate.metadata.version
-        allow_prereleases = self.allow_prereleases
-        if allow_prereleases is None:
-            # if not specified, should allow what `find_candidates()` returns
-            allow_prereleases = True
+        # Allow prereleases if: 1) it is not specified in the tool settings or
+        # 2) the candidate doesn't come from PyPI index.
+        allow_prereleases = (
+            self.allow_prereleases in (True, None) or not candidate.req.is_named
+        )
         return requirement.specifier.contains(version, allow_prereleases)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
@@ -248,6 +253,7 @@ class EagerUpdateProvider(ReusePinProvider):
         backtrack_causes: Sequence[RequirementInformation],
     ) -> Comparable:
         # Resolve tracking packages so we have a chance to unpin them first.
-        return (identifier not in self.tracked_names,) + super().get_preference(
+        (python, *others) = super().get_preference(
             identifier, resolutions, candidates, information, backtrack_causes
         )
+        return (python, identifier not in self.tracked_names, *others)
