@@ -26,7 +26,66 @@ pytest~=5.2   # a package with many child dependencies
 
 (The time elapse is not averaged over multiple runs. One may expect some differences between runs.)
 
-![benchmark bar chart](/assets/benchmark.png)
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+<figure class="highcharts-figure">
+    <div id="container"></div>
+</figure>
+
+<script>
+Highcharts.chart('container', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Benchmark'
+    },
+    xAxis: {
+        categories: [
+            'Lock',
+            'Lock+cache',
+            'Install',
+            'Add',
+            'Add+cache'
+        ],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Time (s)'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f}s</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [{
+        name: 'Pipenv',
+        data: [46.43, 55.81, 25.16, 84.44, 83.33]
+
+    }, {
+        name: 'Poetry',
+        data: [76.95, 39.08, 17.82, 37.24, 43.90]
+
+    }, {
+        name: 'PDM',
+        data: [27.56, 21.91, 12.16, 37.26, 26.84]
+
+    }]
+});
+</script>
 
 ```
 Running benchmark: pipenv, version 2021.11.23
