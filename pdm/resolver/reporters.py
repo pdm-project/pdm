@@ -55,7 +55,13 @@ class SpinnerReporter(BaseReporter):
         if state.mapping:
             column_width = max(map(len, state.mapping.keys()))
             for k, can in state.mapping.items():
-                logger.info(f"  {k.rjust(column_width)} {can.version}")
+                if not can.req.is_named:
+                    can_info = can.req.url
+                    if can.req.is_vcs:
+                        can_info = f"{can_info}@{can.revision}"
+                else:
+                    can_info = can.version
+                logger.info(f"  {k.rjust(column_width)} {can_info}")
 
     def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:
         """Called when adding a new requirement into the resolve criteria.
