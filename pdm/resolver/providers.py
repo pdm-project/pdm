@@ -256,4 +256,4 @@ class EagerUpdateProvider(ReusePinProvider):
         (python, *others) = super().get_preference(
             identifier, resolutions, candidates, information, backtrack_causes
         )
-        return python, identifier not in self.tracked_names, *others
+        return (python, identifier not in self.tracked_names, *others)
