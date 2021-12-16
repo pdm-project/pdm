@@ -355,6 +355,7 @@ class Project:
 
         repository = self.get_repository(cls=self.core.repository_class)
         allow_prereleases = self.allow_prereleases
+        overrides = self.tool_settings.get("overrides", {})
         if strategy != "all" and not self.is_lockfile_compatible():
             self.core.ui.echo(
                 "Updating the whole lock file as it is not compatible with PDM",
@@ -363,11 +364,11 @@ class Project:
             )
             strategy = "all"
         if not for_install and strategy == "all":
-            return BaseProvider(repository, allow_prereleases)
+            return BaseProvider(repository, allow_prereleases, overrides)
 
         locked_repository = self.locked_repository
         if for_install:
-            return BaseProvider(locked_repository, allow_prereleases)
+            return BaseProvider(locked_repository, allow_prereleases, overrides)
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
@@ -376,6 +377,7 @@ class Project:
             tracked_names or (),
             repository,
             allow_prereleases,
+            overrides,
         )
 
     def get_reporter(
@@ -430,6 +432,7 @@ class Project:
             "dev-dependencies": self.tool_settings.get("dev-dependencies", {}),
             "optional-dependencies": self.meta.get("optional-dependencies", {}),
             "requires-python": self.meta.get("requires-python", ""),
+            "overrides": self.tool_settings.get("overrides", {}),
         }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)

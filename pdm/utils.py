@@ -529,3 +529,8 @@ def pdm_scheme(base: str) -> dict[str, str]:
             "headers": "{pep582_base}/include",
         }
     return sysconfig.get_paths("pep582", vars={"pep582_base": base}, expand=True)
+
+
+def is_url(url: str) -> bool:
+    """Check if the given string is a URL"""
+    return bool(parse.urlparse(url).scheme)

@@ -565,13 +565,14 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     if len(causes) == 1:
         return (
             "Unable to find a resolution for "
-            f"{termui.green(causes[0].requirement.as_line())}\n"
+            f"{termui.green(causes[0].requirement.identify())}\n"
             "Please make sure the package name is correct."
         )
 
     result = [
-        f"Unable to find a resolution for {termui.green(causes[0].requirement)} "
-        "because the following requirements conflict:"
+        f"Unable to find a resolution for "
+        f"{termui.green(causes[0].requirement.identify())} because of the following "
+        "conflicts:"
     ]
     for req, parent in causes:
         info_lines.add(
@@ -579,8 +580,8 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         )
     result.extend(sorted(info_lines))
     result.append(
-        "To fix this, you could try to loosen the dependency version constraints "
-        "in pyproject.toml."
+        "To fix this, you could loosen the dependency version constraints in "
+        "pyproject.toml. See https://bit.ly/3yJftux for more details."
     )
     return "\n".join(result)
 

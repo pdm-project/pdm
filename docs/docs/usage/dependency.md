@@ -244,6 +244,35 @@ Include the following setting in `pyproject.toml` to enable:
 allow_prereleases = true
 ```
 
+## Solve the locking failure
+
+If PDM is not able to find a resolution to satisfy the requirements, it will raise an error. For example,
+
+```bash
+pdm django==3.1.4 "asgiref<3"
+...
+🔒 Lock failed
+Unable to find a resolution for asgiref because of the following conflicts:
+  asgiref<3 (from project)
+  asgiref<4,>=3.2.10 (from <Candidate django 3.1.4 from https://pypi.org/simple/django/>)
+To fix this, you could loosen the dependency version constraints in pyproject.toml. If that is not possible, you could also override the resolved version in [tool.pdm.overrides] table.
+```
+
+You can either change to a lower version of `django` or remove the upper bound of `asgiref`. But if it is not eligible for your project,
+you can tell PDM to forcely resolve `asgiref` to a specific version by adding the following lines to `pyproject.toml`:
+
+```toml
+[tool.pdm.overrides]
+asgiref = "3.2.10"
+```
+Each entry of that table is a package name with the wanted version. The value can also be a URL to a file or a VCS repository like `git+https://...`.
+On reading this, PDM will pin `asgiref@3.2.10` in the lock file no matter whether there is any other resolution available.
+
+!!! NOTE
+    By using `[tool.pdm.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be
+    used if there is no valid resolution for your requirements and you know the specific version works.
+    Most of the time, you can just add any transient constraints to the `dependencies` array.
+
 ## Environment variables expansion
 
 For convenience, PDM supports environment variables expansion in the dependency specification under some circumstances:
