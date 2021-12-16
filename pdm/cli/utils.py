@@ -581,8 +581,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     result.extend(sorted(info_lines))
     result.append(
         "To fix this, you could loosen the dependency version constraints in "
-        "pyproject.toml. If that is not possible, you could also override the resolved "
-        f"version in {termui.green('[tool.pdm.overrides]')} table."
+        "pyproject.toml. See https://bit.ly/3yJftux for more details."
     )
     return "\n".join(result)
 
