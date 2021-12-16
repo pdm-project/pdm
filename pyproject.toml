@@ -76,6 +76,7 @@ doc = [
     "mkdocs<2.0.0,>=1.1",
     "mkdocs-material~=7.3",
     "markdown-include<1.0.0,>=0.5.1",
+    "mkdocstrings",
 ]
 workflow = [
     "parver<1.0.0,>=0.3.1",

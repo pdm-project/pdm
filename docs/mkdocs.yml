@@ -15,6 +15,10 @@ theme:
   favicon: assets/logo.svg
   custom_dir: overrides
 
+plugins:
+  - search
+  - mkdocstrings
+
 nav:
   - Home: index.md
   - Usage:
@@ -26,7 +30,8 @@ nav:
       - pyproject/tool-pdm.md
   - Configuration: configuration.md
   - Plugins:
-      - plugin.md
+      - plugin/write.md
+      - plugin/reference.md
   - Development:
       - dev/contributing.md
       - dev/changelog.md

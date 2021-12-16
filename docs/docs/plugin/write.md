@@ -62,7 +62,7 @@ class HelloCommand(BaseCommand):
 ```
 
 !!! note
-    The default options are loaded first, then `add_arguments()` is called.
+The default options are loaded first, then `add_arguments()` is called.
 
 ### Register the command to the core object
 
@@ -118,15 +118,9 @@ where `ConfigItem` class takes 4 parameters, in the following order:
 
 ### Other plugin points
 
-Besides of commands and configurations, PDM provides some other plugin abilities
-which are not covered in the above example:
-
-- `core.project_class`: change the class of project object
-- `core.repository_class`: change the class of repository object, which controls how to look for candidates and metadata of a package
-- `core.resolver_class`: change the resolver class, to control the resolution process
-- `core.synchronizer_class`: change the synchronizer_class, to control the installation process
-- `core.install_manager_class`: change the install_manager_class, to control the installation process
-- `core.parser`: add arguments to the **root** argument parser
+Besides of commands and configurations, the `core` object exposes some other methods and attributes to override.
+PDM also provides some signals you can listen to.
+Please read the [API reference](reference.md) for more details.
 
 ### Tips about developing a PDM plugin.
 
@@ -135,7 +129,7 @@ by `pip install -e .` or `python setup.py develop` in the **traditional** Python
 as there is no such `setup.py` in a PDM project, how can we do that?
 
 Fortunately, it becomes even easier with PDM and PEP 582. First, you should enable PEP 582 globally following the
-[corresponding part of this doc](index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
+[corresponding part of this doc](../index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
 
 ```bash
 pdm install
@@ -175,30 +169,19 @@ setup(
 ## Activate the plugin
 
 As plugins are loaded via entry points, they can be activated with no more steps than just installing the plugin.
+For convenience, PDM provides a `plugin` command group to manage plugins.
 
-Assume your plugin is published as `pdm-hello`, and if you installed `pdm` via `pipx`:
-
-```bash
-pipx inject pdm pdm-hello
-```
-
-Or if you installed `pdm` via `homebrew`:
+Assume your plugin is published as `pdm-hello`:
 
 ```bash
-$(brew --prefix pdm)/libexec/bin/python -m pip install pdm-hello
+pdm plugin add pdm-hello
 ```
 
-Otherwise, if you installed `pdm` with normal `pip install`:
-
-```bash
-pip install --user pdm-hello
-```
-
-The main principle is you must install the plugin in the same site-package directory as `pdm`.
-
-Now type in `pdm --help` in the terminal, you will see the new added `hello` command and use it:
+Now type `pdm --help` in the terminal, you will see the new added `hello` command and use it:
 
 ```bash
 $ pdm hello Jack
 Hello, Jack
 ```
+
+See more plugin management subcommands by typing `pdm plugin --help` in the terminal.
