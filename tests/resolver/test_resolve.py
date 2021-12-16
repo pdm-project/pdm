@@ -1,56 +1,48 @@
 import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
-from pdm import termui
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import resolve
-from pdm.resolver.providers import BaseProvider, EagerUpdateProvider, ReusePinProvider
+from pdm.resolver import resolve as _resolve
 from pdm.resolver.reporters import SpinnerReporter
 from tests import FIXTURES
 
 
-def resolve_requirements(
-    repository,
-    lines,
-    requires_python="",
-    allow_prereleases=None,
-    strategy="all",
-    preferred_pins=None,
-    tracked_names=None,
-):
-    requirements = []
-    repository.environment.python_requires = PySpecSet(requires_python)
-    for line in lines:
-        if line.startswith("-e "):
-            requirements.append(parse_requirement(line[3:], True))
-        else:
-            requirements.append(parse_requirement(line))
-    if not preferred_pins:
-        provider = BaseProvider(repository, allow_prereleases)
-    else:
-        provider_class = (
-            ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
-        )
-        provider = provider_class(
-            preferred_pins,
-            tracked_names or (),
-            repository,
-            allow_prereleases,
-        )
-    ui = termui.UI()
-    with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
-        reporter = SpinnerReporter(spin, requirements)
-        resolver = Resolver(provider, reporter)
-        mapping, *_ = resolve(
-            resolver, requirements, repository.environment.python_requires
-        )
-        return mapping
+@pytest.fixture()
+def resolve(project, repository):
+    def resolve_func(
+        lines,
+        requires_python="",
+        allow_prereleases=None,
+        strategy="all",
+        tracked_names=None,
+    ):
+        repository.environment.python_requires = PySpecSet(requires_python)
+        if allow_prereleases is not None:
+            project.tool_settings["allow_prereleases"] = allow_prereleases
+        requirements = []
+        for line in lines:
+            if line.startswith("-e "):
+                requirements.append(parse_requirement(line[3:], True))
+            else:
+                requirements.append(parse_requirement(line))
+        provider = project.get_provider(strategy, tracked_names)
+
+        ui = project.core.ui
+        with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
+            reporter = SpinnerReporter(spin, requirements)
+            resolver = Resolver(provider, reporter)
+            mapping, *_ = _resolve(
+                resolver, requirements, repository.environment.python_requires
+            )
+            return mapping
+
+    return resolve_func
 
 
-def test_resolve_named_requirement(project, repository):
-    result = resolve_requirements(repository, ["requests"])
+def test_resolve_named_requirement(resolve):
+    result = resolve(["requests"])
 
     assert result["requests"].version == "2.19.1"
     assert result["urllib3"].version == "1.22"
@@ -59,44 +51,43 @@ def test_resolve_named_requirement(project, repository):
     assert result["idna"].version == "2.7"
 
 
-def test_resolve_requires_python(project, repository):
-    result = resolve_requirements(repository, ["django"])
+def test_resolve_requires_python(resolve):
+    result = resolve(["django"])
     assert result["django"].version == "1.11.8"
     assert "sqlparse" not in result
 
-    result = resolve_requirements(repository, ["django"], ">=3.6")
+    result = resolve(["django"], ">=3.6")
     assert result["django"].version == "2.2.9"
     assert "sqlparse" in result
 
-    result = resolve_requirements(repository, ["django; python_version>='3.7'"])
+    result = resolve(["django; python_version>='3.7'"])
     assert result["django"].version == "2.2.9"
     assert "sqlparse" in result
 
 
-def test_resolve_allow_prereleases(project, repository):
+def test_resolve_allow_prereleases(resolve, repository):
     repository.add_candidate("foo", "1.0.0")
     repository.add_candidate("foo", "1.1.0-alpha")
     repository.add_candidate("bar", "1.0.0-beta")
 
-    result = resolve_requirements(repository, ["foo"])
+    result = resolve(["foo"])
     assert result["foo"].version == "1.0.0"
 
-    result = resolve_requirements(repository, ["foo"], allow_prereleases=True)
+    result = resolve(["foo"], allow_prereleases=True)
     assert result["foo"].version == "1.1.0-alpha"
 
-    result = resolve_requirements(repository, ["foo==1.1.0-alpha"])
+    result = resolve(["foo==1.1.0-alpha"])
     assert result["foo"].version == "1.1.0-alpha"
 
-    result = resolve_requirements(repository, ["bar"])
+    result = resolve(["bar"])
     assert result["bar"].version == "1.0.0-beta"
 
     with pytest.raises(Exception):
-        resolve_requirements(repository, ["bar"], allow_prereleases=False)
+        resolve(["bar"], allow_prereleases=False)
 
 
-def test_resolve_with_extras(project, repository):
-
-    result = resolve_requirements(repository, ["requests[socks]"])
+def test_resolve_with_extras(resolve):
+    result = resolve(["requests[socks]"])
     assert result["pysocks"].version == "1.5.6"
 
 
@@ -107,8 +98,8 @@ def test_resolve_with_extras(project, repository):
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}",
     ],
 )
-def test_resolve_local_artifacts(project, repository, requirement_line):
-    result = resolve_requirements(repository, [requirement_line], ">=3.6")
+def test_resolve_local_artifacts(resolve, requirement_line):
+    result = resolve([requirement_line], ">=3.6")
     assert result["idna"].version == "2.7"
 
 
@@ -119,25 +110,23 @@ def test_resolve_local_artifacts(project, repository, requirement_line):
         "git+https://github.com/test-root/demo.git#egg=demo",
     ],
 )
-def test_resolve_vcs_and_local_requirements(
-    project, repository, line, is_editable, vcs
-):
+def test_resolve_vcs_and_local_requirements(resolve, line, is_editable, vcs):
     editable = "-e " if is_editable else ""
-    result = resolve_requirements(repository, [editable + line], ">=3.6")
+    result = resolve([editable + line], ">=3.6")
     assert result["idna"].version == "2.7"
 
 
-def test_resolve_local_and_named_requirement(project, repository, vcs):
+def test_resolve_local_and_named_requirement(resolve, vcs):
     requirements = ["demo", "git+https://github.com/test-root/demo.git#egg=demo"]
-    result = resolve_requirements(repository, requirements, ">=3.6")
+    result = resolve(requirements, ">=3.6")
     assert result["demo"].req.is_vcs
 
     requirements = ["git+https://github.com/test-root/demo.git#egg=demo", "demo"]
-    result = resolve_requirements(repository, requirements, ">=3.6")
+    result = resolve(requirements, ">=3.6")
     assert result["demo"].req.is_vcs
 
 
-def test_resolving_auto_avoid_conflicts(project, repository):
+def test_resolving_auto_avoid_conflicts(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo", "0.2.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho<2.0"])
@@ -147,13 +136,13 @@ def test_resolving_auto_avoid_conflicts(project, repository):
     repository.add_candidate("hoho", "2.1")
     repository.add_candidate("hoho", "1.5")
 
-    result = resolve_requirements(repository, ["foo", "bar"])
+    result = resolve(["foo", "bar"])
     assert result["foo"].version == "0.1.0"
     assert result["bar"].version == "0.1.0"
     assert result["hoho"].version == "1.5"
 
 
-def test_resolve_conflicting_dependencies(project, repository):
+def test_resolve_conflicting_dependencies(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
     repository.add_candidate("bar", "0.1.0")
@@ -161,68 +150,80 @@ def test_resolve_conflicting_dependencies(project, repository):
     repository.add_candidate("hoho", "2.1")
     repository.add_candidate("hoho", "1.5")
     with pytest.raises(ResolutionImpossible):
-        resolve_requirements(repository, ["foo", "bar"])
+        resolve(["foo", "bar"])
 
 
-def test_resolve_no_available_versions(project, repository):
+def test_resolve_conflicting_dependencies_with_overrides(project, resolve, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
+    repository.add_candidate("bar", "0.1.0")
+    repository.add_dependencies("bar", "0.1.0", ["hoho~=1.1"])
+    repository.add_candidate("hoho", "2.1")
+    repository.add_candidate("hoho", "1.5")
+    project.tool_settings["overrides"] = {"hoho": "2.1"}
+    result = resolve(["foo", "bar"])
+    assert result["hoho"].version == "2.1"
+
+
+def test_resolve_no_available_versions(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     with pytest.raises(ResolutionImpossible):
-        resolve_requirements(repository, ["foo>=0.2.0"])
+        resolve(["foo>=0.2.0"])
 
 
-def test_exclude_incompatible_requirements(project, repository):
+def test_exclude_incompatible_requirements(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["bar; python_version < '3'"])
-    result = resolve_requirements(repository, ["foo"], ">=3.6")
+    result = resolve(["foo"], ">=3.6")
     assert "bar" not in result
 
 
-def test_union_markers_from_different_parents(project, repository):
+def test_union_markers_from_different_parents(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["bar; python_version < '3'"])
     repository.add_candidate("bar", "0.1.0")
-    result = resolve_requirements(repository, ["foo", "bar"], ">=3.6")
+    result = resolve(["foo", "bar"], ">=3.6")
     assert not result["bar"].requires_python
 
 
-def test_requirements_from_different_groups(project, repository):
+def test_requirements_from_different_groups(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo", "0.2.0")
     requirements = ["foo", "foo<0.2.0"]
-    result = resolve_requirements(repository, requirements)
+    result = resolve(requirements)
     assert result["foo"].version == "0.1.0"
 
 
-def test_resolve_two_extras_from_the_same_package(project, repository):
+def test_resolve_two_extras_from_the_same_package(resolve):
     # Case borrowed from pypa/pip#7096
     line = (FIXTURES / "projects/demo_extras").as_posix() + "[extra1,extra2]"
-    result = resolve_requirements(repository, [line])
+    result = resolve([line])
     assert "pysocks" in result
     assert "pyopenssl" in result
 
 
-def test_resolve_package_with_dummy_upbound(project, repository):
+def test_resolve_package_with_dummy_upbound(resolve, repository):
     repository.add_candidate("foo", "0.1.0", ">=3.5,<4.0")
-    result = resolve_requirements(repository, ["foo"], ">=3.5")
+    result = resolve(["foo"], ">=3.5")
     assert "foo" in result
 
 
-def test_resolve_dependency_with_extra_marker(project, repository):
+def test_resolve_dependency_with_extra_marker(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["pytz; extra=='tz' or extra=='all'"])
-    result = resolve_requirements(repository, ["foo"])
+    result = resolve(["foo"])
     assert "pytz" not in result
 
-    result = resolve_requirements(repository, ["foo[tz]"])
+    result = resolve(["foo[tz]"])
     assert "pytz" in result
 
 
-def test_resolve_circular_dependencies(project, repository):
+def test_resolve_circular_dependencies(resolve, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foobar"])
     repository.add_candidate("foobar", "0.2.0")
     repository.add_dependencies("foobar", "0.2.0", ["foo"])
-    result = resolve_requirements(repository, ["foo"])
+    result = resolve(["foo"])
     assert result["foo"].version == "0.1.0"
     assert result["foobar"].version == "0.2.0"
 
@@ -270,19 +271,18 @@ def test_resolve_candidates_to_install(project):
     assert result["backports"].version == "2.2.0"
 
 
-def test_resolve_prefer_requirement_with_prereleases(project, repository):
-    result = resolve_requirements(repository, ["urllib3", "requests>=2.20.0b0"])
+def test_resolve_prefer_requirement_with_prereleases(resolve):
+    result = resolve(["urllib3", "requests>=2.20.0b0"])
     assert result["urllib3"].version == "1.23b0"
 
 
-def test_resolve_with_python_marker(project, repository):
-    result = resolve_requirements(repository, ["demo; python_version>='3.6'"])
+def test_resolve_with_python_marker(resolve):
+    result = resolve(["demo; python_version>='3.6'"])
     assert result["demo"].version == "0.0.1"
 
 
-def test_resolve_file_req_with_prerelease(project, repository, vcs):
-    result = resolve_requirements(
-        repository,
+def test_resolve_file_req_with_prerelease(resolve, vcs):
+    result = resolve(
         [
             "using-demo==0.1.0",
             "demo @ git+https://github.com/test-root/demo-prerelease.git",

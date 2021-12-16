@@ -5,13 +5,14 @@ from typing import TYPE_CHECKING
 from resolvelib import AbstractProvider
 
 from pdm.models.candidates import Candidate
+from pdm.models.requirements import parse_requirement
 from pdm.resolver.python import (
     PythonCandidate,
     PythonRequirement,
     find_python_matches,
     is_python_satisfied_by,
 )
-from pdm.utils import url_without_fragments
+from pdm.utils import is_url, url_without_fragments
 
 if TYPE_CHECKING:
     from typing import Any, Iterable, Iterator, Mapping, Sequence
@@ -25,11 +26,15 @@ if TYPE_CHECKING:
 
 class BaseProvider(AbstractProvider):
     def __init__(
-        self, repository: BaseRepository, allow_prereleases: bool | None = None
+        self,
+        repository: BaseRepository,
+        allow_prereleases: bool | None = None,
+        overrides: dict[str, str] = None,
     ) -> None:
         self.repository = repository
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[str, list[Requirement]] = {}
+        self.overrides = overrides or {}
         self._known_depth: dict[str, int] = {}
 
     def requirement_preference(self, requirement: Requirement) -> tuple:
@@ -99,6 +104,15 @@ class BaseProvider(AbstractProvider):
             identifier,
         )
 
+    def get_override_candidates(self, identifier: str) -> Iterable[Candidate]:
+        requested = self.overrides[identifier]
+        if is_url(requested):
+            requested = f"{identifier} @ {requested}"
+        else:
+            requested = f"{identifier}=={requested}"
+        req = parse_requirement(requested)
+        return self.repository.find_candidates(req, self.allow_prereleases)
+
     def find_matches(
         self,
         identifier: str,
@@ -111,6 +125,8 @@ class BaseProvider(AbstractProvider):
                 identifier, requirements, self.repository.environment
             )
             return [c for c in candidates if c not in incompat]
+        elif identifier in self.overrides:
+            return self.get_override_candidates(identifier)
         reqs = sorted(
             requirements[identifier], key=self.requirement_preference, reverse=True
         )
@@ -133,6 +149,8 @@ class BaseProvider(AbstractProvider):
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if isinstance(requirement, PythonRequirement):
             return is_python_satisfied_by(requirement, candidate)
+        elif candidate.identify() in self.overrides:
+            return True
         if not requirement.is_named:
             return not candidate.req.is_named and url_without_fragments(
                 candidate.req.url
@@ -190,9 +208,10 @@ class ReusePinProvider(BaseProvider):
         self,
         preferred_pins: dict[str, Candidate],
         tracked_names: Iterable[str],
-        *args: Any
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
