@@ -9,6 +9,7 @@ requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
     "atoml>=1.0.3",
+    "blinker",
     "click>=7",
     "importlib-metadata; python_version < \"3.8\"",
     "installer~=0.3.0",

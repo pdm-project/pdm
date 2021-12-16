@@ -28,6 +28,11 @@ requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "Classes Without Boilerplate"
 
 [[package]]
+name = "blinker"
+version = "1.4"
+summary = "Fast, simple object-to-object and broadcast signaling"
+
+[[package]]
 name = "cached-property"
 version = "1.5.2"
 summary = "A decorator for caching properties in classes."
@@ -558,7 +563,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:2b4d0ccd7dc6ce2178d98e60daad157b03f8706290b3fbbb635955cd8f1e256f"
+content_hash = "sha256:0040a15f39677e73c42a944f61f449e735fa7953a41ded1e7f0fdae2d9a38bad"
 
 [metadata.files]
 "apipkg 1.5" = [
@@ -580,6 +585,9 @@ content_hash = "sha256:2b4d0ccd7dc6ce2178d98e60daad157b03f8706290b3fbbb635955cd8
 "attrs 21.2.0" = [
     {file = "attrs-21.2.0-py2.py3-none-any.whl", hash = "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1"},
     {file = "attrs-21.2.0.tar.gz", hash = "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"},
+]
+"blinker 1.4" = [
+    {file = "blinker-1.4.tar.gz", hash = "sha256:471aee25f3992bd325afa3772f1063dbdbbca947a041b8b89466dc00d606f8b6"},
 ]
 "cached-property 1.5.2" = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
