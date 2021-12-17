@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import datetime
+import hashlib
+import json
 import os
 import shutil
+import sys
 import textwrap
 from argparse import Namespace
 from collections import defaultdict
@@ -749,6 +753,29 @@ def migrate_pyproject(project: Project) -> None:
     )
 
 
+def get_latest_version(project: Project) -> str:
+    """Get the latest version of PDM from PyPI, cache for 7 days"""
+    from pdm.utils import get_finder
+
+    cache_key = hashlib.sha224(sys.executable.encode()).hexdigest()
+    cache_file = project.cache("self-check") / cache_key
+    if cache_file.exists():
+        state = json.loads(cache_file.read_text())
+    else:
+        state = {}
+    current_time = datetime.datetime.utcnow().timestamp()
+    if (
+        state.get("last-check")
+        and current_time - state["last-check"] < 60 * 60 * 24 * 7
+    ):
+        return cast(str, state["latest-version"])
+    candidate = get_finder([]).find_best_candidate("pdm")
+    latest_version = str(candidate.best_candidate.version)
+    state.update({"latest-version": latest_version, "last-check": current_time})
+    cache_file.write_text(json.dumps(state))
+    return latest_version
+
+
 def check_update(project: Project) -> None:
     """Check if there is a new version of PDM available"""
     import sys
@@ -761,14 +788,11 @@ def check_update(project: Project) -> None:
         is_pipx_installation,
         is_scoop_installation,
     )
-    from pdm.utils import get_finder
 
     this_version = parse_version(project.core.version)
-    candidate = get_finder([]).find_best_candidate("pdm")
-    if not candidate.best_candidate or candidate.best_candidate.version <= this_version:
+    latest_version = parse_version(get_latest_version(project))
+    if this_version >= latest_version:
         return
-
-    latest_version = candidate.best_candidate.version
     if is_pipx_installation():  # pragma: no cover
         install_command = "$ pipx upgrade pdm"
     elif is_scoop_installation():  # pragma: no cover
