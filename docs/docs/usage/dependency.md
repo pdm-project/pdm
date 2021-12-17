@@ -261,6 +261,8 @@ To fix this, you could loosen the dependency version constraints in pyproject.to
 You can either change to a lower version of `django` or remove the upper bound of `asgiref`. But if it is not eligible for your project,
 you can tell PDM to forcely resolve `asgiref` to a specific version by adding the following lines to `pyproject.toml`:
 
+_New in version 1.12.0_
+
 ```toml
 [tool.pdm.overrides]
 asgiref = "3.2.10"

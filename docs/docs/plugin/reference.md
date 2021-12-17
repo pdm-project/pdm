@@ -9,6 +9,8 @@
 
 ## Signals
 
+_New in version 1.12.0_
+
 ::: pdm.signals
     rendering:
       heading_level: 3
