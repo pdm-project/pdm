@@ -17,6 +17,8 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
 - A PEP 517 build backend.
 - PEP 621 project metadata.
+- Flexible yet powerful plug-in system.
+- Centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 ## Installation
 
