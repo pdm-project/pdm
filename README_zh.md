@@ -45,12 +45,14 @@ foo
 - [PEP 582] 本地项目库目录，支持安装与运行命令，完全不需要虚拟环境。
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
 - 兼容 [PEP 517] 的构建后端，用于构建发布包(源码格式与 wheel 格式)
-- 具备一个完备的插件系统
+- 灵活且强大的插件系统
 - [PEP 621] 元数据格式
+- 像 [pnpm] 一样的中心化安装缓存，节省磁盘空间
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
 [pep 582]: https://www.python.org/dev/peps/pep-0582
 [pep 621]: https://www.python.org/dev/peps/pep-0621
+[pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
 ## 为什么不用虚拟环境?
 

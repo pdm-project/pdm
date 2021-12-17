@@ -48,12 +48,14 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 - [PEP 582] local package installer and runner, no virtualenv involved at all.
 - Simple and relatively fast dependency resolver, mainly for large binary distributions.
 - A [PEP 517] build backend.
-- A full-featured plug-in system.
+- A flexible yet powerful plug-in system.
 - [PEP 621] project metadata format.
+- Opted-in centralized installation cache like [pnpm].
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
 [pep 582]: https://www.python.org/dev/peps/pep-0582
 [pep 621]: https://www.python.org/dev/peps/pep-0621
+[pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
 ## Why not virtualenv?
 

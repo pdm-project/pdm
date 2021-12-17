@@ -18,7 +18,7 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 - A PEP 517 build backend.
 - PEP 621 project metadata.
 - Flexible yet powerful plug-in system.
-- Centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
+- Opted-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 ## Installation
 
