@@ -7,6 +7,7 @@ on:
     paths:
       - "*.md"
       - docs/**
+      - .github/workflows/doc.yml
       - "!pdm/**"
 
 jobs:
@@ -19,11 +20,12 @@ jobs:
         with:
           python-version: 3.9
           architecture: "x64"
-      - name: Build pages
+      - name: Install Dependencies
         run: |
-          pip install -U pip wheel
-          pip install mkdocs mkdocs-material markdown-include
-          cd docs && mkdocs build
+          pip install -U .
+          pdm install -G doc
+      - name: Build Documentation
+        run: cd docs && pdm run mkdocs build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
