@@ -37,7 +37,8 @@ $ pdm build
 - Built pdm_test-0.0.0-py3-none-any.whl
 ```
 
-The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine). Available options can be found by
+The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine) or using the
+[pdm-publish](https://github.com/branchvincent/pdm-publish) plugin. Available options can be found by
 typing `pdm build --help`.
 
 ## Show the current Python environment
@@ -142,7 +143,7 @@ project path via `-p/--project <path>` option.
 ## Working with a virtualenv
 
 Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
-by the configuration item `use_venv`. When it is set to `True` PDM will use the virtualenv if:
+by the configuration item `use_venv`. When it is set to `True`, PDM will use the virtualenv if:
 
 - a virtualenv is already activated.
 - any of `venv`, `.venv`, `env` is a valid virtualenv folder.
@@ -314,7 +315,7 @@ Besides, PDM also injects the root path of the project via `PDM_PROJECT_ROOT` en
 
 ### Load site-packages in the running environment
 
-To make sure the running environment is properly isolated from the outer Python interperter,
+To make sure the running environment is properly isolated from the outer Python interpreter,
 site-packages from the selected interpreter WON'T be loaded into `sys.path`, unless any of the following conditions holds:
 
 1. The executable is from `PATH` but not inside the `__pypackages__` folder.

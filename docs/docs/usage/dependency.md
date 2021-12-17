@@ -75,7 +75,7 @@ This will result in a pyproject.toml as following:
 test = ["pytest"]
 ```
 
-For backward-compatibility, if `-G/--group` is not given, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
+For backward-compatibility, if only `-d` or `--dev` is specified, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
     The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
@@ -86,7 +86,8 @@ If the package is given without a version specifier like `pdm add requests`. PDM
 specifier is saved for the dependency, which is given by `--save-<strategy>`(Assume `2.21.0` is the latest version that can be found
 for the dependency):
 
-- `compatible`: Save the compatible version specifier: `>=2.21.0,<3.0.0`(default).
+- `minimum`: Save the minimum version specifier: `>=2.21.0` (default).
+- `compatible`: Save the compatible version specifier: `>=2.21.0,<3.0.0`.
 - `exact`: Save the exact version specifier: `==2.21.0`.
 - `wildcard`: Don't constrain version and leave the specifier to be wildcard: `*`.
 
@@ -136,7 +137,7 @@ pdm update -dG test pytest
 Similarly, PDM also provides 2 different behaviors of updating dependencies and sub-dependencies，
 which is given by `--update-<strategy>` option:
 
-- `reuse`: Keep all locked dependencies except for those given in the command line.
+- `reuse`: Keep all locked dependencies except for those given in the command line (default).
 - `eager`: Try to lock a newer version of the packages in command line and their recursive sub-dependencies
   and keep other dependencies as they are.
 
@@ -259,7 +260,7 @@ To fix this, you could loosen the dependency version constraints in pyproject.to
 ```
 
 You can either change to a lower version of `django` or remove the upper bound of `asgiref`. But if it is not eligible for your project,
-you can tell PDM to forcely resolve `asgiref` to a specific version by adding the following lines to `pyproject.toml`:
+you can tell PDM to forcedly resolve `asgiref` to a specific version by adding the following lines to `pyproject.toml`:
 
 _New in version 1.12.0_
 
@@ -286,15 +287,3 @@ For convenience, PDM supports environment variables expansion in the dependency 
   `file:///${PROJECT_ROOT}/artifacts/Flask-1.1.2.tar.gz`.
 
 Don't worry about credential leakage, the environment variables will be expanded when needed and kept untouched in the lock file.
-
-## Save disk space by enabling the install cache
-
-When using virtualenv to isolate project dependencies, if you have 100 projects depending on the same package, you will end up with 100 copies of that dependency. With PDM, you can opt in the installation caching so that the dependency will be installed into a centrialized store and be used by multiple projects. To enable it, simply do:
-
-```
-pdm config feature.install_cache on
-```
-
-Add `--local` option to enable for the current project only.
-
-This feature will only cache the normal wheel installations, i.e. installing from source won't be cached.
