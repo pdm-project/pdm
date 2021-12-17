@@ -109,7 +109,7 @@ class Config(MutableMapping[str, str]):
             "The default strategy for updating packages", "reuse", False
         ),
         "strategy.save": ConfigItem(
-            "Specify how to save versions when a package is added", "mininum", False
+            "Specify how to save versions when a package is added", "minimum", False
         ),
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",

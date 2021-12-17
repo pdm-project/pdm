@@ -9,6 +9,7 @@ requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
     "atoml>=1.0.3",
+    "blinker",
     "click>=7",
     "importlib-metadata; python_version < \"3.8\"",
     "installer~=0.3.0",
@@ -74,6 +75,7 @@ test = [
 doc = [
     "mkdocs<2.0.0,>=1.1",
     "mkdocs-material~=7.3",
+    "mkdocstrings~=0.16",
     "markdown-include<1.0.0,>=0.5.1",
 ]
 workflow = [

@@ -36,17 +36,17 @@ COMMANDS_MODULE_PATH: str = importlib.import_module(
 class Core:
     """A high level object that manages all classes and configurations"""
 
+    project_class = Project
+    repository_class = PyPIRepository
+    resolver_class = Resolver
+    synchronizer_class = Synchronizer
+    install_manager_class = InstallManager
+
     def __init__(self) -> None:
         try:
             self.version = importlib_metadata.version(__name__.split(".")[0])
         except importlib_metadata.PackageNotFoundError:
             self.version = "UNKNOWN"
-
-        self.project_class = Project
-        self.repository_class = PyPIRepository
-        self.resolver_class = Resolver
-        self.synchronizer_class = Synchronizer
-        self.install_manager_class = InstallManager
 
         self.ui = termui.UI()
         self.parser: Optional[argparse.ArgumentParser] = None
@@ -109,6 +109,15 @@ class Core:
     def create_project(
         self, root_path: str | Path | None = None, is_global: bool = False
     ) -> Project:
+        """Create a new project object
+
+        Args:
+            root_path (PathLike): The path to the project root directory
+            is_global (bool): Whether the project is a global project
+
+        Returns:
+            The project object
+        """
         return self.project_class(self, root_path, is_global)
 
     def main(
@@ -168,24 +177,35 @@ class Core:
     ) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
+
+        Args:
+            command (Type[pdm.cli.commands.base.BaseCommand]):
+                The command class to register
+            name (str): The name of the subcommand, if not given, `command.name`
+                is used
         """
         assert self.subparsers
         command.register_to(self.subparsers, name)
 
     @staticmethod
     def add_config(name: str, config_item: ConfigItem) -> None:
-        """Add a config item to the configuration class"""
+        """Add a config item to the configuration class.
+
+        Args:
+            name (str): The name of the config item
+            config_item (pdm.project.config.ConfigItem): The config item to add
+        """
         Config.add_config(name, config_item)
 
     def load_plugins(self) -> None:
         """Import and load plugins under `pdm.plugin` namespace
         A plugin is a callable that accepts the core object as the only argument.
 
-        :Example:
-
-        def my_plugin(core: pdm.core.Core) -> None:
-            ...
-
+        Example:
+            ```python
+            def my_plugin(core: pdm.core.Core) -> None:
+                ...
+            ```
         """
         entry_points = importlib_metadata.entry_points()
         for plugin in itertools.chain(

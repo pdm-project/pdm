@@ -14,7 +14,7 @@ import click
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
 
-from pdm import termui
+from pdm import signals, termui
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
@@ -63,6 +63,7 @@ def do_lock(
         with ui.open_spinner(title="Resolving dependencies", spinner="dots") as spin:
             reporter = project.get_reporter(requirements, tracked_names, spin)
             resolver: Resolver = project.core.resolver_class(provider, reporter)
+            signals.pre_lock.send(project, requirements=requirements, dry_run=dry_run)
             try:
                 mapping, dependencies = resolve(
                     resolver,
@@ -87,6 +88,7 @@ def do_lock(
             else:
                 data = format_lockfile(mapping, dependencies)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
+            signals.post_lock.send(project, resolution=mapping, dry_run=dry_run)
 
     project.write_lockfile(data, write=not dry_run)
 
@@ -165,7 +167,9 @@ def do_sync(
         use_install_cache=project.config["feature.install_cache"],
         reinstall=reinstall,
     )
+    signals.pre_install.send(project, candidates=candidates, dry_run=dry_run)
     handler.synchronize()
+    signals.post_install.send(project, candidates=candidates, dry_run=dry_run)
 
 
 def do_add(
@@ -489,6 +493,7 @@ def do_init(
         project._pyproject["project"] = data["project"]  # type: ignore
         project._pyproject["build-system"] = data["build-system"]  # type: ignore
     project.write_pyproject()
+    signals.post_init.send(project)
 
 
 def do_use(project: Project, python: str = "", first: bool = False) -> None:
