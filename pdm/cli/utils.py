@@ -10,7 +10,7 @@ from json import dumps
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast
 
-import atoml
+import tomlkit
 from packaging.specifiers import SpecifierSet
 from packaging.version import parse as parse_version
 from resolvelib.structs import DirectedGraph
@@ -432,10 +432,10 @@ def format_lockfile(
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
-    packages = atoml.aot()
-    file_hashes = atoml.table()
+    packages = tomlkit.aot()
+    file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
-        base = atoml.table()
+        base = tomlkit.table()
         base.update(v.as_lockfile_entry())  # type: ignore
         base.add("summary", v.summary or "")
         deps = make_array(sorted(r.as_line() for r in fetched_dependencies[k]), True)
@@ -446,15 +446,15 @@ def format_lockfile(
             key = f"{strip_extras(k)[0]} {v.version}"
             if key in file_hashes:
                 continue
-            array = atoml.array().multiline(True)
+            array = tomlkit.array().multiline(True)
             for filename, hash_value in v.hashes.items():
                 inline = make_inline_table({"file": filename, "hash": hash_value})
                 array.append(inline)  # type: ignore
             if array:
                 file_hashes.add(key, array)
-    doc = atoml.document()
+    doc = tomlkit.document()
     doc.add("package", packages)  # type: ignore
-    metadata = atoml.table()
+    metadata = tomlkit.table()
     metadata.add("files", file_hashes)
     doc.add("metadata", metadata)  # type: ignore
     return cast(dict, doc)

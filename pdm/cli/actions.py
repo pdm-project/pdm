@@ -13,8 +13,8 @@ from itertools import chain
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence, cast
 
-import atoml
 import click
+import tomlkit
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
 
@@ -583,18 +583,18 @@ def do_import(
     if options is None:
         options = Namespace(dev=False, group=None)
     project_data, settings = FORMATS[key].convert(project, filename, options)
-    pyproject = project.pyproject or atoml.document()
+    pyproject = project.pyproject or tomlkit.document()
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:  # type: ignore
-        pyproject.setdefault("tool", {})["pdm"] = atoml.table()
+        pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
 
     if "project" not in pyproject:
-        pyproject.add("project", atoml.table())  # type: ignore
+        pyproject.add("project", tomlkit.table())  # type: ignore
         pyproject["project"].add(  # type: ignore
-            atoml.comment("PEP 621 project metadata")
+            tomlkit.comment("PEP 621 project metadata")
         )
         pyproject["project"].add(  # type: ignore
-            atoml.comment("See https://www.python.org/dev/peps/pep-0621/")
+            tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
         )
 
     merge_dictionary(pyproject["project"], project_data)  # type: ignore
@@ -721,7 +721,7 @@ def migrate_pyproject(project: Project) -> None:
             updated_fields.append("dev-dependencies")
         if updated_fields:
             if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
-                pyproject.setdefault("tool", {})["pdm"] = atoml.table()
+                pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
             pyproject["tool"]["pdm"].update(settings)
             project.pyproject = pyproject
             project.write_pyproject()
