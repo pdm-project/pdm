@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Type, cast
 from urllib.parse import urlparse
 
-import atoml
+import tomlkit
 from pythonfinder import Finder
 from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
 
@@ -96,7 +96,7 @@ class Project:
     @property
     def pyproject(self) -> dict | None:
         if not self._pyproject and self.pyproject_file.exists():
-            data = atoml.parse(self.pyproject_file.read_text("utf-8"))
+            data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
             self._pyproject = cast(dict, data)
         return self._pyproject
 
@@ -116,7 +116,7 @@ class Project:
         if not self._lockfile:
             if not self.lockfile_file.is_file():
                 raise ProjectError("Lock file does not exist.")
-            data = atoml.parse(self.lockfile_file.read_text("utf-8"))
+            data = tomlkit.parse(self.lockfile_file.read_text("utf-8"))
             self._lockfile = cast(dict, data)
         return self._lockfile
 
@@ -398,7 +398,7 @@ class Project:
         return SpinnerReporter(spinner or termui.DummySpinner(), requirements)
 
     def get_lock_metadata(self) -> dict[str, Any]:
-        content_hash = atoml.string("sha256:" + self.get_content_hash("sha256"))
+        content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
         return {"lock_version": self.LOCKFILE_VERSION, "content_hash": content_hash}
 
@@ -409,7 +409,7 @@ class Project:
 
         if write:
             with atomic_open_for_write(self.lockfile_file) as fp:
-                atoml.dump(toml_data, fp)  # type: ignore
+                tomlkit.dump(toml_data, fp)  # type: ignore
             if show_message:
                 self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
             self._lockfile = None
@@ -503,7 +503,7 @@ class Project:
         with atomic_open_for_write(
             self.pyproject_file.as_posix(), encoding="utf-8"
         ) as f:
-            atoml.dump(self.pyproject, f)  # type: ignore
+            tomlkit.dump(self.pyproject, f)  # type: ignore
         if show_message:
             self.core.ui.echo(
                 f"Changes are written to {termui.green('pyproject.toml')}."
@@ -513,7 +513,7 @@ class Project:
     @property
     def meta(self) -> Metadata:
         if not self.pyproject:
-            self.pyproject = {"project": atoml.table()}
+            self.pyproject = {"project": tomlkit.table()}
         project_meta = self.pyproject["project"]
         meta_version = project_meta.get("version")
         updated = False

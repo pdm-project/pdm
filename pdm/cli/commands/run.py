@@ -125,7 +125,7 @@ class Command(BaseCommand):
             value = script
             options = {}
         else:
-            script = dict(script)  # to remove the effect of atoml's container type.
+            script = dict(script)  # to remove the effect of tomlkit's container type.
             for key in self.TYPES:
                 if key in script:
                     kind = key
