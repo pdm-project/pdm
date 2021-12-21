@@ -19,7 +19,7 @@ def test_help_option(invoke):
 def test_lock_command(project, invoke, mocker):
     m = mocker.patch.object(actions, "do_lock")
     invoke(["lock"], obj=project)
-    m.assert_called_with(project)
+    m.assert_called_with(project, refresh=False)
 
 
 def test_install_command(project, invoke, mocker):
@@ -389,6 +389,18 @@ def test_lock_legacy_project(invoke, fixture_project, repository):
     result = invoke(["lock"], obj=project)
     assert result.exit_code == 0
     assert "urllib3" in project.locked_repository.all_candidates
+
+
+def test_lock_refresh(invoke, project, repository):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    assert project.is_lockfile_hash_match()
+    project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
+    assert not project.is_lockfile_hash_match()
+    result = invoke(["lock", "--refresh"], obj=project)
+    assert result.exit_code == 0
+    assert project.is_lockfile_hash_match()
 
 
 def test_show_update_hint(invoke, project):
