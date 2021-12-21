@@ -1,124 +1,15 @@
-import os
-import sys
-from json import loads
+import json
 
 import pytest
 
 from pdm.cli import actions
-from pdm.exceptions import InvalidPyVersion, PdmException, PdmUsageError
-from pdm.models.requirements import parse_requirement
-from pdm.models.specifiers import PySpecSet
+from pdm.exceptions import PdmException
 
 
-@pytest.mark.usefixtures("repository", "working_set", "vcs")
-def test_remove_both_normal_and_editable_packages(project, is_dev):
-    project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, is_dev, packages=["demo"])
-    actions.do_add(
-        project,
-        is_dev,
-        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
-    )
-    group = (
-        project.tool_settings["dev-dependencies"]["dev"]
-        if is_dev
-        else project.meta["dependencies"]
-    )
-    actions.do_remove(project, is_dev, packages=["demo"])
-    assert not group
-    assert "demo" not in project.locked_repository.all_candidates
-
-
-@pytest.mark.usefixtures("repository")
-def test_remove_package(project, working_set, is_dev):
-    actions.do_add(project, dev=is_dev, packages=["requests", "pytz"])
-    actions.do_remove(project, dev=is_dev, packages=["pytz"])
-    locked_candidates = project.locked_repository.all_candidates
-    assert "pytz" not in locked_candidates
-    assert "pytz" not in working_set
-
-
-@pytest.mark.usefixtures("repository")
-def test_remove_package_with_dry_run(project, working_set, capsys):
-    actions.do_add(project, packages=["requests"])
-    actions.do_remove(project, packages=["requests"], dry_run=True)
-    out, _ = capsys.readouterr()
-    project._lockfile = None
-    locked_candidates = project.locked_repository.all_candidates
-    assert "urllib3" in locked_candidates
-    assert "urllib3" in working_set
-    assert "- urllib3 1.22" in out
-
-
-@pytest.mark.usefixtures("repository")
-def test_remove_package_no_sync(project, working_set):
-    actions.do_add(project, packages=["requests", "pytz"])
-    actions.do_remove(project, sync=False, packages=["pytz"])
-    locked_candidates = project.locked_repository.all_candidates
-    assert "pytz" not in locked_candidates
-    assert "pytz" in working_set
-
-
-@pytest.mark.usefixtures("repository", "working_set")
-def test_remove_package_not_exist(project):
-    actions.do_add(project, packages=["requests", "pytz"])
-    with pytest.raises(PdmException):
-        actions.do_remove(project, sync=False, packages=["django"])
-
-
-@pytest.mark.usefixtures("repository")
-def test_remove_package_exist_in_multi_groups(project, working_set):
-    actions.do_add(project, packages=["requests"])
-    actions.do_add(project, dev=True, packages=["urllib3"])
-    actions.do_remove(project, dev=True, packages=["urllib3"])
-    assert all(
-        "urllib3" not in line
-        for line in project.tool_settings["dev-dependencies"]["dev"]
-    )
-    assert "urllib3" in working_set
-    assert "requests" in working_set
-
-
-@pytest.mark.usefixtures("repository")
-def test_add_remove_no_package(project):
-    with pytest.raises(PdmUsageError):
-        actions.do_add(project, packages=())
-
-    with pytest.raises(PdmUsageError):
-        actions.do_remove(project, packages=())
-
-
-@pytest.mark.usefixtures("repository")
-def test_lock_dependencies(project):
-    project.add_dependencies({"requests": parse_requirement("requests")})
-    actions.do_lock(project)
-    assert project.lockfile_file.exists()
-    locked = project.locked_repository.all_candidates
-    for package in ("requests", "idna", "chardet", "certifi"):
-        assert package in locked
-
-
-def test_build_distributions(tmp_path, core):
-    project = core.create_project()
-    actions.do_build(project, dest=tmp_path.as_posix())
-    wheel = next(tmp_path.glob("*.whl"))
-    assert wheel.name.startswith("pdm-")
-    tarball = next(tmp_path.glob("*.tar.gz"))
-    assert tarball.exists()
-
-
-def test_project_no_init_error(project_no_init):
-
-    for handler in (
-        actions.do_add,
-        actions.do_list,
-        actions.do_lock,
-        actions.do_update,
-    ):
-        with pytest.raises(
-            PdmException, match="The pyproject.toml has not been initialized yet"
-        ):
-            handler(project_no_init)
+def test_list_command(project, invoke, mocker):
+    do_list = mocker.patch.object(actions, "do_list")
+    invoke(["list"], obj=project)
+    do_list.assert_called_once()
 
 
 @pytest.mark.usefixtures("repository", "working_set")
@@ -233,7 +124,7 @@ def test_list_json(project, capsys):
             ],
         }
     ]
-    assert expected == loads(content)
+    assert expected == json.loads(content)
 
 
 @pytest.mark.usefixtures("repository", "working_set")
@@ -297,7 +188,7 @@ def test_list_json_reverse(project, capsys):
         },
     ]
 
-    assert expected == loads(content)
+    assert expected == json.loads(content)
 
 
 @pytest.mark.usefixtures("working_set")
@@ -341,7 +232,7 @@ def test_list_json_with_circular_forward(project, capsys, repository):
             ],
         },
     ]
-    assert expected == loads(content)
+    assert expected == json.loads(content)
 
 
 @pytest.mark.usefixtures("working_set")
@@ -385,36 +276,4 @@ def test_list_json_with_circular_reverse(project, capsys, repository):
             ],
         },
     ]
-    assert expected == loads(content)
-
-
-def test_init_validate_python_requires(project_no_init):
-    with pytest.raises(ValueError):
-        actions.do_init(project_no_init, python_requires="3.7")
-
-
-@pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")
-def test_use_wrapper_python(project):
-    wrapper_script = """#!/bin/bash
-exec "{}" "$@"
-""".format(
-        sys.executable
-    )
-    shim_path = project.root.joinpath("python_shim.sh")
-    shim_path.write_text(wrapper_script)
-    shim_path.chmod(0o755)
-
-    actions.do_use(project, shim_path.as_posix())
-    assert project.python.executable == sys.executable
-
-
-@pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")
-def test_use_invalid_wrapper_python(project):
-    wrapper_script = """#!/bin/bash
-echo hello
-"""
-    shim_path = project.root.joinpath("python_shim.sh")
-    shim_path.write_text(wrapper_script)
-    shim_path.chmod(0o755)
-    with pytest.raises(InvalidPyVersion):
-        actions.do_use(project, shim_path.as_posix())
+    assert expected == json.loads(content)

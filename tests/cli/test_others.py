@@ -1,14 +1,50 @@
 import os
-import shutil
-import sys
-from pathlib import Path
 
 import pytest
 
 from pdm.cli import actions
+from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
-from pdm.utils import cd, temp_environ
+from pdm.utils import cd
 from tests import FIXTURES
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_dependencies(project):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    actions.do_lock(project)
+    assert project.lockfile_file.exists()
+    locked = project.locked_repository.all_candidates
+    for package in ("requests", "idna", "chardet", "certifi"):
+        assert package in locked
+
+
+def test_build_distributions(tmp_path, core):
+    project = core.create_project()
+    actions.do_build(project, dest=tmp_path.as_posix())
+    wheel = next(tmp_path.glob("*.whl"))
+    assert wheel.name.startswith("pdm-")
+    tarball = next(tmp_path.glob("*.tar.gz"))
+    assert tarball.exists()
+
+
+def test_project_no_init_error(project_no_init):
+
+    for handler in (
+        actions.do_add,
+        actions.do_list,
+        actions.do_lock,
+        actions.do_update,
+    ):
+        with pytest.raises(
+            PdmException, match="The pyproject.toml has not been initialized yet"
+        ):
+            handler(project_no_init)
+
+
+def test_init_validate_python_requires(project_no_init):
+    with pytest.raises(ValueError):
+        actions.do_init(project_no_init, python_requires="3.7")
 
 
 def test_help_option(invoke):
@@ -20,55 +56,6 @@ def test_lock_command(project, invoke, mocker):
     m = mocker.patch.object(actions, "do_lock")
     invoke(["lock"], obj=project)
     m.assert_called_with(project, refresh=False)
-
-
-def test_install_command(project, invoke, mocker):
-    do_lock = mocker.patch.object(actions, "do_lock")
-    do_sync = mocker.patch.object(actions, "do_sync")
-    invoke(["install"], obj=project)
-    do_lock.assert_called_once()
-    do_sync.assert_called_once()
-
-
-def test_sync_command(project, invoke, mocker):
-    do_sync = mocker.patch.object(actions, "do_sync")
-    invoke(["sync"], obj=project)
-    do_sync.assert_called_once()
-
-
-def test_update_command(project, invoke, mocker):
-    do_update = mocker.patch.object(actions, "do_update")
-    invoke(["update"], obj=project)
-    do_update.assert_called_once()
-
-
-def test_remove_command(project, invoke, mocker):
-    do_remove = mocker.patch.object(actions, "do_remove")
-    invoke(["remove", "demo"], obj=project)
-    do_remove.assert_called_once()
-
-
-def test_add_command(project, invoke, mocker):
-    do_add = mocker.patch.object(actions, "do_add")
-    invoke(["add", "requests"], obj=project)
-    do_add.assert_called_once()
-
-
-def test_build_command(project, invoke, mocker):
-    do_build = mocker.patch.object(actions, "do_build")
-    invoke(["build"], obj=project)
-    do_build.assert_called_once()
-
-
-def test_build_global_project_forbidden(invoke):
-    result = invoke(["build", "-g"])
-    assert result.exit_code != 0
-
-
-def test_list_command(project, invoke, mocker):
-    do_list = mocker.patch.object(actions, "do_list")
-    invoke(["list"], obj=project)
-    do_list.assert_called_once()
 
 
 def test_info_command(project, invoke):
@@ -104,49 +91,6 @@ def test_uncaught_error(invoke, mocker):
 
     result = invoke(["list", "-v"])
     assert isinstance(result.exception, RuntimeError)
-
-
-def test_use_command(project, invoke):
-    python_path = Path(shutil.which("python")).as_posix()
-    result = invoke(["use", "-f", "python"], obj=project)
-    assert result.exit_code == 0
-    config_content = project.root.joinpath(".pdm.toml").read_text()
-    assert python_path in config_content
-
-    result = invoke(["use", "-f", python_path], obj=project)
-    assert result.exit_code == 0
-
-    project.meta["requires-python"] = ">=3.6"
-    project.write_pyproject()
-    result = invoke(["use", "2.7"], obj=project)
-    assert result.exit_code == 1
-
-
-def test_use_python_by_version(project, invoke):
-    python_version = ".".join(map(str, sys.version_info[:2]))
-    result = invoke(["use", "-f", python_version], obj=project)
-    assert result.exit_code == 0
-
-
-def test_install_with_lockfile(project, invoke, working_set, repository):
-    result = invoke(["lock", "-v"], obj=project)
-    assert result.exit_code == 0
-    result = invoke(["install"], obj=project)
-    assert "Lock file" not in result.output
-
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
-    result = invoke(["install"], obj=project)
-    assert "Lock file hash doesn't match" in result.output
-    assert "pytz" in project.locked_repository.all_candidates
-    assert project.is_lockfile_hash_match()
-
-
-def test_install_with_dry_run(project, invoke, repository):
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
-    result = invoke(["install", "--dry-run"], obj=project)
-    project._lockfile = None
-    assert "pytz" not in project.locked_repository.all_candidates
-    assert "pytz 2019.3" in result.output
 
 
 def test_init_command(project_no_init, invoke, mocker):
@@ -259,21 +203,18 @@ def test_config_del_command(project, invoke):
 
 
 def test_config_env_var_shadowing(project, invoke):
-    with temp_environ():
-        os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
-        result = invoke(["config", "pypi.url"], obj=project)
-        assert result.output.strip() == "https://example.org/simple"
+    os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
+    result = invoke(["config", "pypi.url"], obj=project)
+    assert result.output.strip() == "https://example.org/simple"
 
-        result = invoke(
-            ["config", "pypi.url", "https://test.pypi.org/pypi"], obj=project
-        )
-        assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
-        result = invoke(["config", "pypi.url"], obj=project)
-        assert result.output.strip() == "https://example.org/simple"
+    result = invoke(["config", "pypi.url", "https://test.pypi.org/pypi"], obj=project)
+    assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
+    result = invoke(["config", "pypi.url"], obj=project)
+    assert result.output.strip() == "https://example.org/simple"
 
-        del os.environ["PDM_PYPI_URL"]
-        result = invoke(["config", "pypi.url"], obj=project)
-        assert result.output.strip() == "https://test.pypi.org/pypi"
+    del os.environ["PDM_PYPI_URL"]
+    result = invoke(["config", "pypi.url"], obj=project)
+    assert result.output.strip() == "https://test.pypi.org/pypi"
 
 
 def test_config_project_global_precedence(project, invoke):

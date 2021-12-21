@@ -264,7 +264,7 @@ function TabExpansion($line, $lastWord) {
             }
             "install" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "--check")),
                         $sectionOption,
                         $projectOption
                     ))

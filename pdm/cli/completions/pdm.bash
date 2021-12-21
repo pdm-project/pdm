@@ -65,7 +65,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (install)
-            opts="--dev --dry-run --global --group --help --no-default --no-editable --no-isolation --no-lock --no-self --production --project --verbose"
+            opts="--check --dev --dry-run --global --group --help --no-default --no-editable --no-isolation --no-lock --no-self --production --project --verbose"
             ;;
 
             (list)
