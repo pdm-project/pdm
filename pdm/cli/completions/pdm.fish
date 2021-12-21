@@ -159,6 +159,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'Do not isolate the build in a clean environment'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # plugin

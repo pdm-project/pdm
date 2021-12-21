@@ -50,9 +50,13 @@ def do_lock(
     tracked_names: Iterable[str] | None = None,
     requirements: list[Requirement] | None = None,
     dry_run: bool = False,
+    refresh: bool = False,
 ) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
     check_project_file(project)
+    if refresh:
+        project.write_lockfile(project.lockfile)
+        return project.lockfile
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
     if not requirements:

@@ -190,7 +190,8 @@ _pdm() {
     lock)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        "--no-isolation[do not isolate the build in a clean environment]"
+        "--no-isolation[Do not isolate the build in a clean environment]"
+        "--refresh[Don't update pinned versions, only refresh the lock file]"
       )
       ;;
     plugin)

@@ -281,7 +281,7 @@ function TabExpansion($line, $lastWord) {
             "lock" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--no-isolation")),
+                        [Option]::new(@("--global", "-g", "--no-isolation", "--refresh")),
                         $projectOption
                     ))
                 break

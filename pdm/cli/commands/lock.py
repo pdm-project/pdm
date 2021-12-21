@@ -9,8 +9,14 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Resolve and lock dependencies"""
 
+    arguments = BaseCommand.arguments + [no_isolation_option]
+
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        no_isolation_option.add_to_parser(parser)
+        parser.add_argument(
+            "--refresh",
+            action="store_true",
+            help="Don't update pinned versions, only refresh the lock file",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        actions.do_lock(project)
+        actions.do_lock(project, refresh=options.refresh)
