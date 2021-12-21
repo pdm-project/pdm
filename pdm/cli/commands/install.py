@@ -33,7 +33,7 @@ class Command(BaseCommand):
         if not project.meta and click._compat.isatty(sys.stdout):
             actions.ask_for_import(project)
 
-        strategy = actions.check_lockfile(project)
+        strategy = actions.check_lockfile(project, False)
         if strategy:
             if options.check:
                 project.core.ui.echo(
@@ -42,7 +42,7 @@ class Command(BaseCommand):
                 sys.exit(1)
             if options.lock:
                 project.core.ui.echo("Updating the lock file...", fg="green", err=True)
-                actions.do_lock(project, strategy=strategy)
+                actions.do_lock(project, strategy=strategy, dry_run=options.dry_run)
 
         actions.do_sync(
             project,

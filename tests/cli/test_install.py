@@ -1,7 +1,6 @@
 import pytest
 
 from pdm.cli import actions
-from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
 from tests.conftest import Distribution
 
@@ -32,10 +31,10 @@ def test_sync_packages_with_all_dev(project, working_set):
     assert "pyopenssl" in working_set
 
 
-def test_sync_no_lockfile(project):
+def test_sync_no_lockfile(project, invoke):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    with pytest.raises(PdmException):
-        actions.do_sync(project)
+    result = invoke(["sync"], obj=project)
+    assert result.exit_code == 1
 
 
 @pytest.mark.usefixtures("repository")
@@ -144,3 +143,49 @@ def test_sync_with_index_change(project, index):
     # Mimic the CDN inconsistences of PyPI simple index. See issues/596.
     del index["future-fstrings"]
     actions.do_sync(project, no_self=True)
+
+
+def test_install_command(project, invoke, mocker):
+    do_lock = mocker.patch.object(actions, "do_lock")
+    do_sync = mocker.patch.object(actions, "do_sync")
+    invoke(["install"], obj=project)
+    do_lock.assert_called_once()
+    do_sync.assert_called_once()
+
+
+def test_sync_command(project, invoke, mocker):
+    invoke(["lock"], obj=project)
+    do_sync = mocker.patch.object(actions, "do_sync")
+    invoke(["sync"], obj=project)
+    do_sync.assert_called_once()
+
+
+def test_install_with_lockfile(project, invoke, working_set, repository):
+    result = invoke(["lock", "-v"], obj=project)
+    assert result.exit_code == 0
+    result = invoke(["install"], obj=project)
+    assert "Lock file" not in result.stderr
+
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
+    result = invoke(["install"], obj=project)
+    assert "Lock file hash doesn't match" in result.stderr
+    assert "pytz" in project.locked_repository.all_candidates
+    assert project.is_lockfile_hash_match()
+
+
+def test_install_with_dry_run(project, invoke, repository):
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
+    result = invoke(["install", "--dry-run"], obj=project)
+    project._lockfile = None
+    assert "pytz" not in project.locked_repository.all_candidates
+    assert "pytz 2019.3" in result.output
+
+
+def test_install_check(invoke, project, repository):
+    result = invoke(["install", "--check"], obj=project)
+    assert result.exit_code == 1
+
+    result = invoke(["add", "requests", "--no-sync"], obj=project)
+    project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
+    result = invoke(["install", "--check"], obj=project)
+    assert result.exit_code == 1

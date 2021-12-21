@@ -11,6 +11,12 @@ def test_update_packages_with_top(project):
         actions.do_update(project, packages=("requests",), top=True)
 
 
+def test_update_command(project, invoke, mocker):
+    do_update = mocker.patch.object(actions, "do_update")
+    invoke(["update"], obj=project)
+    do_update.assert_called_once()
+
+
 @pytest.mark.usefixtures("working_set")
 def test_update_ignore_constraints(project, repository):
     actions.do_add(project, packages=("pytz",))

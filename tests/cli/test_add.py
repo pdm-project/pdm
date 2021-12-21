@@ -25,6 +25,12 @@ def test_add_package(project, working_set, is_dev):
         assert package in working_set
 
 
+def test_add_command(project, invoke, mocker):
+    do_add = mocker.patch.object(actions, "do_add")
+    invoke(["add", "requests"], obj=project)
+    do_add.assert_called_once()
+
+
 @pytest.mark.usefixtures("repository")
 def test_add_package_to_custom_group(project, working_set):
     actions.do_add(project, group="test", packages=["requests"])

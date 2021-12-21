@@ -20,6 +20,17 @@ def get_wheel_names(path):
         return zf.namelist()
 
 
+def test_build_command(project, invoke, mocker):
+    do_build = mocker.patch.object(actions, "do_build")
+    invoke(["build"], obj=project)
+    do_build.assert_called_once()
+
+
+def test_build_global_project_forbidden(invoke):
+    result = invoke(["build", "-g"])
+    assert result.exit_code != 0
+
+
 def test_build_single_module(fixture_project):
     project = fixture_project("demo-module")
     assert project.meta.version == "0.1.0"
