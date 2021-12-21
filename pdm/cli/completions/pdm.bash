@@ -73,7 +73,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (lock)
-            opts="--global --help --no-isolation --project --verbose"
+            opts="--global --help --no-isolation --project --refresh --verbose"
             ;;
 
             (plugin)
