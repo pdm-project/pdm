@@ -21,12 +21,12 @@ class Command(BaseCommand):
             dest="lock",
             action="store_false",
             default=True,
-            help="Don't do lock if lockfile is not found or outdated.",
+            help="Don't do lock if the lock file is not found or outdated",
         )
         parser.add_argument(
             "--check",
             action="store_true",
-            help="Check if lockfile is up to date and fail otherwise.",
+            help="Check if the lock file is up to date and fail otherwise",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

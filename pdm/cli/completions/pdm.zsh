@@ -170,12 +170,13 @@ _pdm() {
         {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
-        "--no-lock[Don't do lock if lockfile is not found or outdated]"
+        "--no-lock[Don't do lock if lock file is not found or outdated]"
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
-        "--dry-run[Show the difference only without modifying the lockfile content]"
+        "--dry-run[Show the difference only without modifying the lock file content]"
+        "--check[Check if the lock file is up to date and fail otherwise]"
       )
       ;;
     list)
