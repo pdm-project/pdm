@@ -22,6 +22,7 @@ class Command(BaseCommand):
         install_group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        actions.check_lockfile(project)
         actions.do_sync(
             project,
             groups=options.groups,

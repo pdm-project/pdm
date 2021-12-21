@@ -127,6 +127,27 @@ def resolve_candidates_from_lockfile(
     return mapping
 
 
+def check_lockfile(project: Project) -> str | None:
+    """Check if the lock file exists and is up to date. Return the update strategy."""
+    if not project.lockfile_file.exists():
+        raise ProjectError("Lock file does not exist, nothing to install")
+    elif not project.is_lockfile_compatible():
+        project.core.ui.echo(
+            "Lock file version is not compatible with PDM, installation may fail",
+            fg="yellow",
+            err=True,
+        )
+        return "all"
+    elif not project.is_lockfile_hash_match():
+        project.core.ui.echo(
+            "Lock file hash doesn't match pyproject.toml, packages may be outdated",
+            fg="yellow",
+            err=True,
+        )
+        return "reuse"
+    return None
+
+
 def do_sync(
     project: Project,
     *,
@@ -143,19 +164,6 @@ def do_sync(
 ) -> None:
     """Synchronize project"""
     if requirements is None:
-        if not project.lockfile_file.exists():
-            raise ProjectError("Lock file does not exist, nothing to sync")
-        elif not project.is_lockfile_compatible():
-            project.core.ui.echo(
-                "Lock file version is not compatible with PDM, "
-                "install may fail, please regenerate the pdm.lock",
-                err=True,
-            )
-        elif not project.is_lockfile_hash_match():
-            project.core.ui.echo(
-                "Lock file hash doesn't match pyproject.toml, packages may be outdated",
-                err=True,
-            )
         groups = translate_groups(project, default, dev, groups or ())
         requirements = []
         for group in groups:

@@ -23,25 +23,26 @@ class Command(BaseCommand):
             default=True,
             help="Don't do lock if lockfile is not found or outdated.",
         )
+        parser.add_argument(
+            "--check",
+            action="store_true",
+            help="Check if lockfile is up to date and fail otherwise.",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if not project.meta and click._compat.isatty(sys.stdout):
             actions.ask_for_import(project)
 
-        if options.lock:
-            if not (
-                project.lockfile_file.exists() and project.is_lockfile_compatible()
-            ):
+        strategy = actions.check_lockfile(project)
+        if strategy:
+            if options.check:
                 project.core.ui.echo(
-                    "Lock file does not exist or is incompatible, "
-                    "trying to generate one..."
+                    "Please run `pdm lock` to update the lock file", err=True
                 )
-                actions.do_lock(project, strategy="all", dry_run=options.dry_run)
-            elif not project.is_lockfile_hash_match():
-                project.core.ui.echo(
-                    "Lock file hash doesn't match pyproject.toml, regenerating..."
-                )
-                actions.do_lock(project, strategy="reuse", dry_run=options.dry_run)
+                sys.exit(1)
+            if options.lock:
+                project.core.ui.echo("Updating the lock file...", fg="green", err=True)
+                actions.do_lock(project, strategy=strategy)
 
         actions.do_sync(
             project,
