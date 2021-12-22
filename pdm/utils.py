@@ -534,3 +534,20 @@ def pdm_scheme(base: str) -> dict[str, str]:
 def is_url(url: str) -> bool:
     """Check if the given string is a URL"""
     return bool(parse.urlparse(url).scheme)
+
+
+@functools.lru_cache()
+def fs_supports_symlink() -> bool:
+    if not hasattr(os, "symlink"):
+        return False
+    if sys.platform == "win32":
+        with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
+            temp_dir = os.path.dirname(tmp_file.name)
+            dest = os.path.join(temp_dir, "{}-{}".format(tmp_file.name, "b"))
+            try:
+                os.symlink(tmp_file.name, dest)
+                return False
+            except (OSError, NotImplementedError):
+                return False
+    else:
+        return True
