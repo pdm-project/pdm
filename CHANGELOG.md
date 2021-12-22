@@ -1,3 +1,32 @@
+Release v1.12.0 (2021-12-22)
+----------------------------
+
+### Features & Improvements
+
+- Add `lock --refresh` to update the hash stored with the lock file without updating the pinned versions. [#642](https://github.com/pdm-project/pdm/issues/642)
+- Support resolution overriding in the `[tool.pdm.overrides]` table. [#790](https://github.com/pdm-project/pdm/issues/790)
+- Add support for signals for basic operations, now including `post_init`, `pre_lock`, `post_lock`, `pre_install` and `post_install`. [#798](https://github.com/pdm-project/pdm/issues/798)
+- Add `install --check` to check if the lock file is up to date. [#810](https://github.com/pdm-project/pdm/issues/810)
+- Use symlinks to cache installed packages when it is supported by the file system. [#814](https://github.com/pdm-project/pdm/issues/814)
+
+### Bug Fixes
+
+- Fix a bug that candidates from urls are rejected by the `allow_prereleases` setting.
+  Now non-named requirements are resolved earlier than pinned requirements. [#799](https://github.com/pdm-project/pdm/issues/799)
+
+### Improved Documentation
+
+- Add a new doc page: **API reference**. [#802](https://github.com/pdm-project/pdm/issues/802)
+
+### Dependencies
+
+- Switch back from `atoml` to `tomlkit` as the style-preserving TOML parser. The latter has supported TOML v1.0.0. [#809](https://github.com/pdm-project/pdm/issues/809)
+
+### Miscellany
+
+- Cache the latest version of PDM for one week to reduce the request frequency. [#800](https://github.com/pdm-project/pdm/issues/800)
+
+
 Release v1.11.3 (2021-12-15)
 ----------------------------
 
