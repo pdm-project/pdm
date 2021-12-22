@@ -7,6 +7,7 @@ from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link
 from pdm.models.requirements import parse_requirement
+from pdm.utils import fs_supports_symlink
 
 
 def test_install_wheel_with_inconsistent_dist_info(project):
@@ -103,6 +104,7 @@ def test_uninstall_with_console_scripts(project, use_install_cache):
 
 
 def test_install_wheel_with_cache(project, invoke):
+    supports_symlink = fs_supports_symlink()
     req = parse_requirement("future-fstrings")
     candidate = Candidate(
         req,
@@ -115,8 +117,12 @@ def test_install_wheel_with_cache(project, invoke):
     installer.install(candidate)
 
     lib_path = project.environment.get_paths()["purelib"]
-    assert os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
-    assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    if supports_symlink:
+        assert os.path.islink(os.path.join(lib_path, "future_fstrings.py"))
+        assert os.path.islink(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    else:
+        assert os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
+        assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
 
     cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
     assert cache_path.is_dir()
@@ -125,8 +131,12 @@ def test_install_wheel_with_cache(project, invoke):
 
     dist = project.environment.get_working_set()["future-fstrings"]
     installer.uninstall(dist)
-    assert not os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
-    assert not os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    if supports_symlink:
+        assert not os.path.exists(os.path.join(lib_path, "future_fstrings.py"))
+        assert not os.path.exists(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    else:
+        assert not os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
+        assert not os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     assert not dist.read_text("direct_url.json")
     assert not cache_path.exists()
 
