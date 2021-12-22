@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import json
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
 from pip._vendor.packaging.specifiers import SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
 from pdm.models.versions import Version
+
+MAX_VERSIONS_FILE = Path(__file__).with_name("python_max_versions.json")
 
 
 @lru_cache()
@@ -46,29 +50,11 @@ def _normalize_op_specifier(op: str, version_str: str) -> Tuple[str, Version]:
 class PySpecSet(SpecifierSet):
     """A custom SpecifierSet that supports merging with logic operators (&, |)."""
 
-    # TODO: fetch from python.org and cache
     PY_MAX_MINOR_VERSION = {
-        Version("2"): 7,
-        Version("2.0"): 1,
-        Version("2.1"): 3,
-        Version("2.2"): 3,
-        Version("2.3"): 7,
-        Version("2.4"): 6,
-        Version("2.5"): 6,
-        Version("2.6"): 9,
-        Version("2.7"): 18,
-        Version("3.0"): 1,
-        Version("3.1"): 5,
-        Version("3.2"): 6,
-        Version("3.3"): 7,
-        Version("3.4"): 10,
-        Version("3.5"): 10,
-        Version("3.6"): 13,
-        Version("3.7"): 10,
-        Version("3.8"): 8,
-        Version("3.9"): 2,
+        Version(key): value
+        for key, value in json.loads(MAX_VERSIONS_FILE.read_text()).items()
     }
-    MAX_MAJOR_VERSION = Version("4")
+    MAX_MAJOR_VERSION = max(PY_MAX_MINOR_VERSION)[:1].bump()
 
     def __init__(self, version_str: str = "", analyze: bool = True) -> None:
         if version_str == "*":
@@ -356,7 +342,7 @@ class PySpecSet(SpecifierSet):
         if other._upper_bound >= self.MAX_MAJOR_VERSION:
             # XXX: narrow down the upper bound to ``MAX_MAJOR_VERSION``
             # So that `>=3.6,<4.0` is considered a superset of `>=3.7`, see issues/66
-            other._upper_bound = self.MAX_MAJOR_VERSION.complete(0)
+            other._upper_bound = self.MAX_MAJOR_VERSION
         lower, upper, excludes = self._merge_bounds_and_excludes(
             other._lower_bound, other._upper_bound, self._excludes
         )
