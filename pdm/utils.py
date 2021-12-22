@@ -546,7 +546,7 @@ def fs_supports_symlink() -> bool:
             dest = os.path.join(temp_dir, "{}-{}".format(tmp_file.name, "b"))
             try:
                 os.symlink(tmp_file.name, dest)
-                return False
+                return True
             except (OSError, NotImplementedError):
                 return False
     else:
