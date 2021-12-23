@@ -73,7 +73,11 @@ class InstallDestination(SchemeDictionaryDestination):
         if self.symlink_to:
             # Create symlinks to the cached location
             for child in Path(self.symlink_to).iterdir():
-                if child.name.endswith(".dist-info"):
+                if (
+                    child.name.endswith(".dist-info")
+                    or child.suffix == ".pyc"
+                    or child.name == "__pycache__"
+                ):
                     continue
                 target = Path(self.scheme_dict[scheme], child.name)
                 target.symlink_to(child)
