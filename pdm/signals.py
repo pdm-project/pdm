@@ -36,7 +36,7 @@ post_lock: NamedSignal = pdm_signals.signal("post_lock")
 
 Args:
     project (Project): The project object
-    requirements (dict[str, Candidates]): The locked candidates
+    resolution (dict[str, Candidate]): The resolved candidates
     dry_run (bool): If true, won't perform any actions
 """
 pre_install: NamedSignal = pdm_signals.signal("pre_install")
