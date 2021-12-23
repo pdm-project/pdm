@@ -8,7 +8,7 @@ on:
       - "*.md"
       - docs/**
       - .github/workflows/doc.yml
-      - "!pdm/**"
+      - "pdm/**"
 
 jobs:
   build-doc:
