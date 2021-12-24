@@ -1,3 +1,11 @@
+Release v1.12.1 (2021-12-24)
+----------------------------
+
+### Bug Fixes
+
+- Don't symlink pycaches to the target place. [#817](https://github.com/pdm-project/pdm/issues/817)
+
+
 Release v1.12.0 (2021-12-22)
 ----------------------------
 
