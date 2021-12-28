@@ -6,8 +6,18 @@ edit_uri: edit/main/docs/docs
 theme:
   name: material
   palette:
-    primary: deep purple
-    accent: teal
+    - scheme: default
+      primary: deep purple
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
   font:
     text: Open Sans
     code: Fira Code
