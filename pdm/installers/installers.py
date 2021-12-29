@@ -29,9 +29,23 @@ if TYPE_CHECKING:
 
 
 @lru_cache()
-def _is_namespace_package(root: str, files: frozenset[str]) -> bool:
-    if "__init__.py" not in files:
-        return any(f.endswith(".py") for f in files)  # PEP 420 style
+def _is_python_package(root: str) -> bool:
+    for child in Path(root).iterdir():
+        if child.is_file():
+            if child.suffix in (".py", ".pyc", ".pyo", ".pyd"):
+                return True
+        else:
+            if child.joinpath("__init__.py").exists():
+                return True
+    return False
+
+
+@lru_cache()
+def _is_namespace_package(root: str) -> bool:
+    if not _is_python_package(root):
+        return False
+    if not os.path.exists(os.path.join(root, "__init__.py")):  # PEP 420 style
+        return True
     int_py_lines = [
         line.strip()
         for line in Path(root, "__init__.py").open(encoding="utf-8")
@@ -66,7 +80,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             continue
         relpath = os.path.relpath(root, source)
         destination_root = os.path.join(destination, relpath)
-        if not is_top and not _is_namespace_package(root, frozenset(files)):
+        if not is_top and not _is_namespace_package(root):
             # A package, create link for the parent dir and don't proceed
             # for child directories
             if os.path.exists(destination_root):
