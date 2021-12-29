@@ -29,13 +29,13 @@ if TYPE_CHECKING:
 
 
 @lru_cache()
-def _is_python_package(root: str) -> bool:
+def _is_python_package(root: str | Path) -> bool:
     for child in Path(root).iterdir():
         if child.is_file():
             if child.suffix in (".py", ".pyc", ".pyo", ".pyd"):
                 return True
         else:
-            if child.joinpath("__init__.py").exists():
+            if _is_python_package(child):
                 return True
     return False
 
