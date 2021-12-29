@@ -39,7 +39,7 @@ class LoggerWrapper(threading.Thread):
 
         # create the pipe and reader
         self.fd_read, self.fd_write = os.pipe()
-        self.reader = os.fdopen(self.fd_read)
+        self.reader = os.fdopen(self.fd_read, encoding="UTF-8")
 
         self.start()
 
