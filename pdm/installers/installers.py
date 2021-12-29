@@ -77,6 +77,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
         )
         bn = os.path.basename(root)
         if bn == "__pycache__" or bn.endswith(".dist-info"):
+            dirs[:] = []
             continue
         relpath = os.path.relpath(root, source)
         destination_root = os.path.join(destination, relpath)
