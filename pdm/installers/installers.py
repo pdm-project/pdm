@@ -4,6 +4,7 @@ import io
 import json
 import os
 import stat
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -16,7 +17,6 @@ from installer.sources import WheelFile as _WheelFile
 from installer.utils import parse_entrypoints
 
 from pdm.installers.packages import CachedPackage
-from pdm.models.environment import Environment
 from pdm.termui import logger
 from pdm.utils import cached_property, fs_supports_symlink
 
@@ -24,6 +24,86 @@ if TYPE_CHECKING:
     from typing import Any, BinaryIO, Callable, Iterable
 
     from installer.destinations import Scheme
+
+    from pdm.models.environment import Environment
+
+
+@lru_cache()
+def _is_python_package(root: str | Path) -> bool:
+    for child in Path(root).iterdir():
+        if (
+            child.is_file()
+            and child.suffix in (".py", ".pyc", ".pyo", ".pyd")
+            or child.is_dir()
+            and _is_python_package(child)
+        ):
+            return True
+    return False
+
+
+@lru_cache()
+def _is_namespace_package(root: str) -> bool:
+    if not _is_python_package(root):
+        return False
+    if not os.path.exists(os.path.join(root, "__init__.py")):  # PEP 420 style
+        return True
+    int_py_lines = [
+        line.strip()
+        for line in Path(root, "__init__.py").open(encoding="utf-8")
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    namespace_identifiers = [
+        # pkg_resources style
+        "__import__('pkg_resources').declare_namespace(__name__)",
+        # pkgutil style
+        "__path__ = __import__('pkgutil').extend_path(__path__, __name__)",
+    ]
+    checker = namespace_identifiers[:]
+    checker.extend(item.replace("'", '"') for item in namespace_identifiers)
+    return any(line in checker for line in int_py_lines)
+
+
+def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]:
+    """Create symlinks recursively from source to destination.
+    Caveats: This don't work for pkgutil or pkg_resources namespace packages.
+    package  <-- link
+        __init__.py
+    namespace_package  <-- mkdir
+        foo.py  <-- link
+        bar.py  <-- link
+    """
+    is_top = True
+    for root, dirs, files in os.walk(source):
+        bn = os.path.basename(root)
+        if bn == "__pycache__" or bn.endswith(".dist-info"):
+            dirs[:] = []
+            continue
+        relpath = os.path.relpath(root, source)
+        destination_root = os.path.join(destination, relpath)
+        if is_top:
+            is_top = False
+        elif not _is_namespace_package(root):
+            # A package, create link for the parent dir and don't proceed
+            # for child directories
+            if os.path.exists(destination_root):
+                os.remove(destination_root)
+            os.symlink(root, destination_root, True)
+            yield relpath
+            dirs[:] = []
+            continue
+        # Otherwise, the directory is likely a namespace package,
+        # mkdir and create links for all files inside.
+        if not os.path.exists(destination_root):
+            os.makedirs(destination_root)
+        for f in files:
+            if f.endswith(".pyc"):
+                continue
+            source_path = os.path.join(root, f)
+            destination_path = os.path.join(destination_root, f)
+            if os.path.exists(destination_path):
+                os.remove(destination_path)
+            os.symlink(source_path, destination_path, False)
+            yield os.path.join(relpath, f)
 
 
 class WheelFile(_WheelFile):
@@ -72,16 +152,10 @@ class InstallDestination(SchemeDictionaryDestination):
     ) -> None:
         if self.symlink_to:
             # Create symlinks to the cached location
-            for child in Path(self.symlink_to).iterdir():
-                if (
-                    child.name.endswith(".dist-info")
-                    or child.suffix == ".pyc"
-                    or child.name == "__pycache__"
-                ):
-                    continue
-                target = Path(self.scheme_dict[scheme], child.name)
-                target.symlink_to(child)
-                records.append(RecordEntry(target.name, None, None))
+            for relpath in _create_symlinks_recursively(
+                self.symlink_to, self.scheme_dict[scheme]
+            ):
+                records.append(RecordEntry(relpath.replace("\\", "/"), None, None))
         return super().finalize_installation(scheme, record_file_path, records)
 
 

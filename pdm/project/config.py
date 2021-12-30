@@ -152,6 +152,10 @@ class Config(MutableMapping[str, str]):
             False,
             coerce=ensure_boolean,
         ),
+        "feature.install_cache_method": ConfigItem(
+            "`symlink` or `pth` to create links to the cached installation",
+            "symlink",
+        ),
     }
     del pypi_url, verify_ssl
 
