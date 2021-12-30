@@ -189,7 +189,10 @@ def install_wheel_with_cache(
     package_cache = CachedPackage(cache_path)
     interpreter = environment.interpreter.executable
     script_kind = _get_kind(environment)
-    supports_symlink = fs_supports_symlink()
+    supports_symlink = (
+        environment.project.config["feature.install_cache_method"] == "symlink"
+        and fs_supports_symlink()
+    )
     if not cache_path.is_dir():
         logger.debug("Installing wheel into cached location %s", cache_path)
         cache_path.mkdir(exist_ok=True)
@@ -221,7 +224,8 @@ def install_wheel_with_cache(
     additional_files: Iterable[tuple[Scheme | None, str, io.BytesIO]] | None = None
     lib_path = package_cache.scheme()["purelib"]
     if not supports_symlink:
-        filename = wheel_stem.split("-")[0] + ".pth"
+        # HACK: Prefix with aaa_ to make it processed as early as possible
+        filename = "aaa_" + wheel_stem.split("-")[0] + ".pth"
         additional_files = [(None, filename, io.BytesIO(f"{lib_path}\n".encode()))]
 
     destination = InstallDestination(
