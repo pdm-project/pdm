@@ -31,12 +31,13 @@ if TYPE_CHECKING:
 @lru_cache()
 def _is_python_package(root: str | Path) -> bool:
     for child in Path(root).iterdir():
-        if child.is_file():
-            if child.suffix in (".py", ".pyc", ".pyo", ".pyd"):
-                return True
-        else:
-            if _is_python_package(child):
-                return True
+        if (
+            child.is_file()
+            and child.suffix in (".py", ".pyc", ".pyo", ".pyd")
+            or child.is_dir()
+            and _is_python_package(child)
+        ):
+            return True
     return False
 
 
@@ -71,17 +72,17 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
         foo.py  <-- link
         bar.py  <-- link
     """
+    is_top = True
     for root, dirs, files in os.walk(source):
-        is_top = os.path.normcase(os.path.realpath(source)) == os.path.normcase(
-            os.path.realpath(root)
-        )
         bn = os.path.basename(root)
         if bn == "__pycache__" or bn.endswith(".dist-info"):
             dirs[:] = []
             continue
         relpath = os.path.relpath(root, source)
         destination_root = os.path.join(destination, relpath)
-        if not is_top and not _is_namespace_package(root):
+        if is_top:
+            is_top = False
+        elif not _is_namespace_package(root):
             # A package, create link for the parent dir and don't proceed
             # for child directories
             if os.path.exists(destination_root):
