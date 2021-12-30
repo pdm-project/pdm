@@ -1,3 +1,17 @@
+Release v1.12.2 (2021-12-30)
+----------------------------
+
+### Features & Improvements
+
+- Allow changing the installation linking method by `feature.install_cache_method` config. [#822](https://github.com/pdm-project/pdm/issues/822)
+
+### Bug Fixes
+
+- Fix a bug that namespace packages can't be symlinked to the cache due to existing links. [#820](https://github.com/pdm-project/pdm/issues/820)
+- Make PDM generated pth files processed as early as possible. [#821](https://github.com/pdm-project/pdm/issues/821)
+- Fix a UnicodeDecodeError for subprocess logger under Windows/GBK. [#823](https://github.com/pdm-project/pdm/issues/823)
+
+
 Release v1.12.1 (2021-12-24)
 ----------------------------
 
