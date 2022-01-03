@@ -13,7 +13,7 @@ class Command(BaseCommand):
             "-l",
             "--local",
             action="store_true",
-            help="Set config in the project's local configuration filie",
+            help="Set config in the project's local configuration file",
         )
         parser.add_argument(
             "-d", "--delete", action="store_true", help="Unset a configuration key"

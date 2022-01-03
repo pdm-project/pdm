@@ -116,7 +116,7 @@ _pdm() {
     config)
       _arguments -s  \
          {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
-         {-l,--local}"[Set config in the project's local configuration filie]" \
+         {-l,--local}"[Set config in the project's local configuration file]" \
          {-d,--delete}'[Unset a configuration key]' \
          '1:key:->keys' \
          '2:value:_files' && return 0
