@@ -85,7 +85,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from completion' -l help -d 'show 
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l delete -d 'Unset a configuration key'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l help -d 'show this help message and exit'
-complete -c pdm -A -n '__fish_seen_subcommand_from config' -l local -d 'Set config in the project\'s local configuration filie'
+complete -c pdm -A -n '__fish_seen_subcommand_from config' -l local -d 'Set config in the project\'s local configuration file'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l verbose -d '-v for detailed output and -vv for more detailed'
 
