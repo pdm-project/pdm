@@ -182,7 +182,7 @@ class UI:
         file_name = mktemp(".log", f"pdm-{type_}-")
 
         if self.verbosity >= DETAIL:
-            handler = logging.StreamHandler()
+            handler: logging.Handler = logging.StreamHandler()
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
         handler.setLevel(logging.DEBUG)

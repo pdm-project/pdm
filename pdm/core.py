@@ -91,7 +91,7 @@ class Core:
         if obj is not None:
             options.project = obj
         if getattr(options, "project", None) is None:
-            global_project = getattr(options, "global_project", None)
+            global_project = bool(getattr(options, "global_project", None))
 
             default_root = (
                 None
