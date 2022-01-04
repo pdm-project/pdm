@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
+from packaging.utils import canonicalize_name
+
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.exceptions import BuildError, CandidateNotFound
@@ -355,7 +357,7 @@ class Candidate:
     def as_lockfile_entry(self) -> dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""
         result = {
-            "name": self.name,
+            "name": canonicalize_name(self.name),
             "version": str(self.version),
             "extras": sorted(self.req.extras or ()),
             "requires_python": str(self.requires_python),
