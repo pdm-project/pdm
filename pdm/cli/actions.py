@@ -768,7 +768,7 @@ def migrate_pyproject(project: Project) -> None:
     )
 
 
-def get_latest_version(project: Project) -> str:
+def get_latest_version(project: Project) -> str | None:
     """Get the latest version of PDM from PyPI, cache for 7 days"""
     from pdm.utils import get_finder
 
@@ -785,6 +785,8 @@ def get_latest_version(project: Project) -> str:
     ):
         return cast(str, state["latest-version"])
     candidate = get_finder([]).find_best_candidate("pdm")
+    if not candidate.best_candidate:
+        return None
     latest_version = str(candidate.best_candidate.version)
     state.update({"latest-version": latest_version, "last-check": current_time})
     cache_file.write_text(json.dumps(state))
@@ -804,9 +806,11 @@ def check_update(project: Project) -> None:
         is_scoop_installation,
     )
 
-    this_version = parse_version(project.core.version)
-    latest_version = parse_version(get_latest_version(project))
-    if this_version >= latest_version:
+    this_version = project.core.version
+    latest_version = get_latest_version(project)
+    if latest_version is None or parse_version(this_version) >= parse_version(
+        latest_version
+    ):
         return
     if is_pipx_installation():  # pragma: no cover
         install_command = "$ pipx upgrade pdm"
@@ -820,8 +824,8 @@ def check_update(project: Project) -> None:
     disable_command = "$ pdm config check_update false"
 
     message = [
-        termui.blue(f"\nPDM {termui.cyan(str(this_version))}"),
-        termui.blue(f" is installed, while {termui.cyan(str(latest_version))}"),
+        termui.blue(f"\nPDM {termui.cyan(this_version)}"),
+        termui.blue(f" is installed, while {termui.cyan(latest_version)}"),
         termui.blue(" is available.\n"),
         termui.blue(f"Please run {termui.green(install_command, bold=True)}"),
         termui.blue(" to upgrade.\n"),
