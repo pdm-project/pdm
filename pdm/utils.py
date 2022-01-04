@@ -26,6 +26,7 @@ from typing import (
     Iterator,
     TextIO,
     TypeVar,
+    cast,
     no_type_check,
     overload,
 )
@@ -375,7 +376,7 @@ def populate_link(
         candidate = finder.find_requirement(ireq, upgrade)
         if not candidate:
             return None
-        link = getattr(candidate, "link", candidate)
+        link = cast(Link, getattr(candidate, "link", candidate))
         ireq.link = link
     return ireq.link
 
