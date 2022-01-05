@@ -11,9 +11,10 @@ You can configure a `tox.ini` like the following to integrate your testing with 
 [tox]
 env_list = py{36,37,38},lint
 isolated_build = true
-passenv = PDM_IGNORE_SAVED_PYTHON=1
 
 [testenv]
+setenv =
+    PDM_IGNORE_SAVED_PYTHON="1"
 deps = pdm
 commands =
     pdm install --dev
