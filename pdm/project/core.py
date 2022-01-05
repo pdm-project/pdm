@@ -164,14 +164,14 @@ class Project:
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
         config = self.config
-        if self.project_config.get("python.path") and not os.getenv(
-            "PDM_IGNORE_SAVED_PYTHON"
-        ):
-            saved_path = self.project_config["python.path"]
+        if config.get("python.path") and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
+            saved_path = config["python.path"]
             try:
-                return PythonInfo.from_path(saved_path)
+                python = PythonInfo.from_path(saved_path)
+                if self.python_requires.contains(str(python.version)):
+                    return python
             except (ValueError, FileNotFoundError):
-                del self.project_config["python.path"]
+                self.project_config.pop("python.path", None)
         if os.name == "nt":
             suffix = ".exe"
             scripts = "Scripts"
