@@ -125,7 +125,7 @@ function getPyPIPackages() {
 }
 
 function getPdmPackages() {
-    & $PDM_PYTHON -c "import os, re, toml
+    & $PDM_PYTHON -c "import os, re, tomli
 PACKAGE_REGEX = re.compile(r'^[A-Za-z][A-Za-z0-9._-]*')
 def get_packages(lines):
     return [PACKAGE_REGEX.match(line).group() for line in lines]

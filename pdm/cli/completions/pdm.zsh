@@ -352,7 +352,7 @@ _pdm_groups() {
 
 _get_packages_with_python() {
   command ${PDM_PYTHON} - << EOF
-import os, re, toml
+import os, re, tomli
 PACKAGE_REGEX = re.compile(r'^[A-Za-z][A-Za-z0-9._-]*')
 def get_packages(lines):
     return [PACKAGE_REGEX.match(line).group() for line in lines]
