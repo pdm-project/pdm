@@ -204,11 +204,13 @@ def test_global_python_path_config(project_no_init):
     project_no_init.global_config["python.path"] = sys.executable
     # Recreate the project to clean cached properties
     p = project_no_init.core.create_project(project_no_init.root)
-    assert p.python.executable == sys.executable
+    assert os.path.normcase(p.python.executable) == os.path.normcase(sys.executable)
     assert "python.path" not in p.project_config
 
 
 def test_set_non_exist_python_path(project_no_init):
     project_no_init.project_config["python.path"] = "non-exist-python"
     project_no_init._python = None
-    assert project_no_init.python.executable == sys.executable
+    assert os.path.normcase(project_no_init.python.executable) == os.path.normcase(
+        sys.executable
+    )
