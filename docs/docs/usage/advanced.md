@@ -53,12 +53,12 @@ And you can make the `tox.ini` much tidier as following, :
 env_list = py{36,37,38},lint
 
 [testenv]
-sections = dev
+groups = dev
 commands =
     pytest tests
 
 [testenv:lint]
-sections = lint
+groups = lint
 commands =
     flake8 src/
 ```
@@ -115,7 +115,7 @@ Testing:
   runs-on: ${{ matrix.os }}
   strategy:
     matrix:
-      python-version: [3.7, 3.8, 3.9, 3.10]
+      python-version: [3.7, 3.8, 3.9, "3.10"]
       os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:
