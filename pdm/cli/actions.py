@@ -327,7 +327,7 @@ def do_update(
         reqs,
         dry_run=dry_run,
     )
-    if sync:
+    if sync or dry_run:
         do_sync(
             project,
             groups=groups,
