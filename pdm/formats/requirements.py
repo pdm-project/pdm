@@ -128,7 +128,9 @@ def export(
     lines = []
     for candidate in sorted(candidates, key=lambda x: x.identify()):
         if isinstance(candidate, Candidate):
-            req = dataclasses.replace(candidate.req, specifier=f"=={candidate.version}")
+            req = dataclasses.replace(
+                candidate.req, specifier=f"=={candidate.version}", marker=None
+            )
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
