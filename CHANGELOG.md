@@ -1,3 +1,18 @@
+Release v1.12.3 (2022-01-07)
+----------------------------
+
+### Features & Improvements
+
+- Support setting Python path in global configuration. [#842](https://github.com/pdm-project/pdm/issues/842)
+
+### Bug Fixes
+
+- Lowercase the package names in the lock file make it more stable. [#836](https://github.com/pdm-project/pdm/issues/836)
+- Show the packages to be updated in dry run mode of `pdm update` even if `--no-sync` is passed. [#837](https://github.com/pdm-project/pdm/issues/837)
+- Improve the robustness of update check code. [#841](https://github.com/pdm-project/pdm/issues/841)
+- Fix a bug that export result has environment markers that don't apply for all requirements. [#843](https://github.com/pdm-project/pdm/issues/843)
+
+
 Release v1.12.2 (2021-12-30)
 ----------------------------
 
