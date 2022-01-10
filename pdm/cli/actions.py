@@ -33,6 +33,7 @@ from pdm.cli.utils import (
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -515,44 +516,66 @@ def do_init(
     signals.post_init.send(project)
 
 
-def do_use(project: Project, python: str = "", first: bool = False) -> None:
+def do_use(
+    project: Project,
+    python: str = "",
+    first: bool = False,
+    ignore_remembered: bool = False,
+) -> None:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
+    if python:
+        python = python.strip()
 
     def version_matcher(py_version: PythonInfo) -> bool:
         return project.python_requires.contains(str(py_version.version))
 
-    if python:
-        python = python.strip()
-
-    found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
-    matching_interperters = list(filter(version_matcher, found_interpreters))
-    if not found_interpreters:
-        raise NoPythonVersion("Python interpreter is not found on the system.")
-    if not matching_interperters:
-        project.core.ui.echo("Interpreters found but not matching:", err=True)
-        for py in found_interpreters:
-            project.core.ui.echo(f"  - {py.executable} ({py.identifier})", err=True)
-        raise NoPythonVersion(
-            "No python is found meeting the requirement "
-            f"{termui.green('python' + str(project.python_requires))}"
-        )
-    if first or len(found_interpreters) == 1:
-        selected_python = found_interpreters[0]
-    else:
-        project.core.ui.echo("Please enter the Python interpreter to use")
-        for i, py_version in enumerate(found_interpreters):
-            project.core.ui.echo(
-                f"{i}. {termui.green(py_version.executable)} ({py_version.identifier})"
+    use_cache: JSONFileCache[str, str] = JSONFileCache(
+        project.cache_dir / "use_cache.json"
+    )
+    selected_python: PythonInfo | None = None
+    if python and not ignore_remembered:
+        if use_cache.has_key(python):
+            cached_python = PythonInfo.from_path(use_cache.get(python))
+            if version_matcher(cached_python):
+                project.core.ui.echo(
+                    "Using the last selection, add '-i' to ignore it.",
+                    fg="yellow",
+                    err=True,
+                )
+                selected_python = cached_python
+    if selected_python is None:
+        found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
+        matching_interperters = list(filter(version_matcher, found_interpreters))
+        if not found_interpreters:
+            raise NoPythonVersion("Python interpreter is not found on the system.")
+        if not matching_interperters:
+            project.core.ui.echo("Interpreters found but not matching:", err=True)
+            for py in found_interpreters:
+                project.core.ui.echo(f"  - {py.executable} ({py.identifier})", err=True)
+            raise NoPythonVersion(
+                "No python is found meeting the requirement "
+                f"{termui.green('python' + str(project.python_requires))}"
             )
-        selection = click.prompt(
-            "Please select:",
-            type=click.Choice([str(i) for i in range(len(found_interpreters))]),
-            default="0",
-            show_choices=False,
-        )
-        selected_python = found_interpreters[int(selection)]
+        if first or len(found_interpreters) == 1:
+            selected_python = found_interpreters[0]
+        else:
+            project.core.ui.echo("Please enter the Python interpreter to use")
+            for i, py_version in enumerate(found_interpreters):
+                project.core.ui.echo(
+                    f"{i}. {termui.green(py_version.executable)} "
+                    f"({py_version.identifier})"
+                )
+            selection = click.prompt(
+                "Please select:",
+                type=click.Choice([str(i) for i in range(len(found_interpreters))]),
+                default="0",
+                show_choices=False,
+            )
+            selected_python = found_interpreters[int(selection)]
+        if python:
+            use_cache.set(python, selected_python.path)
 
     old_python = project.python if "python.path" in project.config else None
     project.core.ui.echo(

@@ -7,6 +7,7 @@ import pytest
 
 from pdm.cli import actions
 from pdm.exceptions import InvalidPyVersion
+from pdm.models.caches import JSONFileCache
 
 
 def test_use_command(project, invoke):
@@ -56,3 +57,17 @@ echo hello
     shim_path.chmod(0o755)
     with pytest.raises(InvalidPyVersion):
         actions.do_use(project, shim_path.as_posix())
+
+
+def test_use_remember_last_selection(project, mocker):
+    cache = JSONFileCache(project.cache_dir / "use_cache.json")
+    cache.clear()
+    actions.do_use(project, first=True)
+    cache._read_cache()
+    assert not cache._cache
+    actions.do_use(project, "3", first=True)
+    cache._read_cache()
+    assert cache.has_key("3")
+    mocker.patch.object(project, "find_interpreters")
+    actions.do_use(project, "3")
+    project.find_interpreters.assert_not_called()

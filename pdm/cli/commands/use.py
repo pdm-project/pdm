@@ -16,8 +16,16 @@ class Command(BaseCommand):
             help="Select the first matched interpreter",
         )
         parser.add_argument(
+            "-i",
+            "--ignore-remembered",
+            action="store_true",
+            help="Ignore the remembered selection",
+        )
+        parser.add_argument(
             "python", nargs="?", help="Specify the Python version or path", default=""
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        actions.do_use(project, options.python, options.first)
+        actions.do_use(
+            project, options.python, options.first, options.ignore_remembered
+        )

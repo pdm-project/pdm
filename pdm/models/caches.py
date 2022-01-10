@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import CorruptedCacheError
@@ -14,13 +14,16 @@ from pdm.utils import open_file
 if TYPE_CHECKING:
     from pip._vendor import requests
 
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
-class CandidateInfoCache:
-    """Cache manager to hold (dependencies, requires_python, summary) info."""
+
+class JSONFileCache(Generic[KT, VT]):
+    """A file cache that stores key-value pairs in a json file."""
 
     def __init__(self, cache_file: Path) -> None:
         self.cache_file = cache_file
-        self._cache: dict[str, CandidateInfo] = {}
+        self._cache: dict[str, VT] = {}
         self._read_cache()
 
     def _read_cache(self) -> None:
@@ -37,31 +40,25 @@ class CandidateInfoCache:
         with self.cache_file.open("w") as fp:
             json.dump(self._cache, fp)
 
-    @staticmethod
-    def _get_key(candidate: Candidate) -> str:
-        # Name and version are set when dependencies are resolved,
-        # so use them for cache key. Local directories won't be cached.
-        if not candidate.name or not candidate.version:
-            raise KeyError
-        extras = (
-            "[{}]".format(",".join(sorted(candidate.req.extras)))
-            if candidate.req.extras
-            else ""
-        )
-        return f"{candidate.name}{extras}-{candidate.version}"
+    def has_key(self, obj: KT) -> bool:
+        return self._get_key(obj) in self._cache
 
-    def get(self, candidate: Candidate) -> CandidateInfo:
-        key = self._get_key(candidate)
+    @classmethod
+    def _get_key(cls, obj: KT) -> str:
+        return str(obj)
+
+    def get(self, obj: KT) -> VT:
+        key = self._get_key(obj)
         return self._cache[key]
 
-    def set(self, candidate: Candidate, value: CandidateInfo) -> None:
-        key = self._get_key(candidate)
+    def set(self, obj: KT, value: VT) -> None:
+        key = self._get_key(obj)
         self._cache[key] = value
         self._write_cache()
 
-    def delete(self, candidate: Candidate) -> None:
+    def delete(self, obj: KT) -> None:
         try:
-            del self._cache[self._get_key(candidate)]
+            del self._cache[self._get_key(obj)]
         except KeyError:
             pass
         self._write_cache()
@@ -69,6 +66,23 @@ class CandidateInfoCache:
     def clear(self) -> None:
         self._cache.clear()
         self._write_cache()
+
+
+class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
+    """A cache manager that stores the
+    candidate -> (dependencies, requires_python, summary) mapping.
+    """
+
+    @classmethod
+    def _get_key(cls, obj: Candidate) -> str:
+        # Name and version are set when dependencies are resolved,
+        # so use them for cache key. Local directories won't be cached.
+        if not obj.name or not obj.version:
+            raise KeyError
+        extras = (
+            "[{}]".format(",".join(sorted(obj.req.extras))) if obj.req.extras else ""
+        )
+        return f"{obj.name}{extras}-{obj.version}"
 
 
 class HashCache(pip_shims.SafeFileCache):

@@ -250,6 +250,7 @@ def project_no_init(tmp_path, mocker):
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     old_config_map = Config._config_map.copy()
+    tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     do_use(p, getattr(sys, "_base_executable", sys.executable))
     with temp_environ():

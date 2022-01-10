@@ -105,7 +105,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (use)
-            opts="--first --global --help --project --verbose"
+            opts="--first --global --help --ignore-remembered --project --verbose"
             ;;
 
         esac
