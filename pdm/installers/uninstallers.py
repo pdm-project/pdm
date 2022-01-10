@@ -69,10 +69,10 @@ def compress_for_rename(paths: Iterable[str]) -> set[str]:
 
     collected = set(map(case_map.__getitem__, remaining)) | wildcards
     shortened: set[str] = set()
+    # Filter out any paths that are sub paths of another path in the path collection.
     for path in sorted(collected, key=len):
-        if any(is_path_relative_to(path, p) for p in shortened):
-            continue
-        shortened.add(path)
+        if not any(is_path_relative_to(path, p) for p in shortened):
+            shortened.add(path)
     return shortened
 
 
