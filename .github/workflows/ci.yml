@@ -34,6 +34,10 @@ jobs:
             os: ubuntu-latest
             arch: x64
             install-via: script
+          - python-version: 3.11.0-alpha - 3.11.0
+            os: ubuntu-latest
+            arch: x64
+            install-via: pip
 
     steps:
       - uses: actions/checkout@v2
