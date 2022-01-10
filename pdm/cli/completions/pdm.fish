@@ -249,5 +249,6 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d '-v for
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l first -d 'Select the first matched interpreter'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l help -d 'show this help message and exit'
+complete -c pdm -A -n '__fish_seen_subcommand_from use' -l ignore-remembered -d 'Ignore the remembered selection'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l verbose -d '-v for detailed output and -vv for more detailed'

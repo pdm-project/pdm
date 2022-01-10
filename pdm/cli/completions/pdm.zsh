@@ -319,6 +319,7 @@ _pdm() {
     use)
       arguments+=(
         {-f,--first}'[Select the first matched interpreter]'
+        {-i,--ignore-remembered}'[Ignore the remembered selection]'
         '*:python:_files'
       )
       ;;

@@ -355,7 +355,7 @@ function TabExpansion($line, $lastWord) {
             "use" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "-f", "--first")),
+                        [Option]::new(@("--global", "-g", "-f", "--first", "-i", "--ignore-remembered")),
                         $projectOption
                     ))
                 break
