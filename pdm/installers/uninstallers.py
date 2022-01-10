@@ -13,7 +13,7 @@ from pdm._types import Distribution
 from pdm.exceptions import UninstallError
 from pdm.installers.packages import CachedPackage
 from pdm.models.environment import Environment
-from pdm.utils import is_egg_link
+from pdm.utils import is_egg_link, is_path_relative_to
 
 _T = TypeVar("_T", bound="BaseRemovePaths")
 
@@ -41,7 +41,7 @@ def compress_for_rename(paths: Iterable[str]) -> set[str]:
     This set may include directories when the original sequence of paths
     included every file on disk.
     """
-    case_map = {os.path.normcase(p): p for p in paths}
+    case_map = {os.path.normcase(p): p for p in paths if os.path.exists(p)}
     remaining = set(case_map)
     unchecked = sorted({os.path.split(p)[0] for p in case_map.values()}, key=len)
     wildcards: set[str] = set()
@@ -67,7 +67,13 @@ def compress_for_rename(paths: Iterable[str]) -> set[str]:
             remaining.difference_update(all_files)
             wildcards.add(root + os.sep)
 
-    return set(map(case_map.__getitem__, remaining)) | wildcards
+    collected = set(map(case_map.__getitem__, remaining)) | wildcards
+    shortened: set[str] = set()
+    for path in sorted(collected, key=len):
+        if any(is_path_relative_to(path, p) for p in shortened):
+            continue
+        shortened.add(path)
+    return shortened
 
 
 def _script_names(script_name: str, is_gui: bool) -> Iterable[str]:
@@ -220,7 +226,8 @@ class StashedRemovePaths(BaseRemovePaths):
             f.write((endline.join(lines) + endline).encode("utf8"))
 
     def _stash_files(self) -> None:
-        paths_to_rename = compress_for_rename(self._paths)
+        paths_to_rename = sorted(compress_for_rename(self._paths))
+        prefix = os.path.abspath(self.environment.get_paths()["prefix"])
 
         for old_path in paths_to_rename:
             if not os.path.exists(old_path):
@@ -233,9 +240,7 @@ class StashedRemovePaths(BaseRemovePaths):
                 # Don't stash cache files, remove them directly
                 os.unlink(old_path)
                 continue
-            root = _get_file_root(
-                old_path, os.path.abspath(self.environment.get_paths()["prefix"])
-            )
+            root = _get_file_root(old_path, prefix)
             if root is None:
                 termui.logger.debug(
                     "File path %s is not under packages root, skip", old_path

@@ -8,6 +8,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link
 from pdm.models.requirements import parse_requirement
 from pdm.utils import fs_supports_symlink
+from tests import FIXTURES
 
 
 def test_install_wheel_with_inconsistent_dist_info(project):
@@ -181,3 +182,22 @@ def test_install_wheel_with_data_scripts(project, use_install_cache):
     dist = project.environment.get_working_set()["jmespath"]
     installer.uninstall(dist)
     assert not os.path.exists(bin_path)
+
+
+def test_compress_file_list_for_rename():
+    from pdm.installers.uninstallers import compress_for_rename
+
+    project_root = str(FIXTURES / "projects")
+
+    paths = {
+        "test-removal/subdir",
+        "test-removal/subdir/__init__.py",
+        "test-removal/__init__.py",
+        "test-removal/bar.py",
+        "test-removal/foo.py",
+        "test-removal/non_exist.py",
+    }
+    abs_paths = {os.path.join(project_root, path) for path in paths}
+    assert sorted(compress_for_rename(abs_paths)) == [
+        os.path.join(project_root, "test-removal" + os.sep)
+    ]
