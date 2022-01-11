@@ -1,3 +1,17 @@
+Release v1.12.4 (2022-01-11)
+----------------------------
+
+### Features & Improvements
+
+- Remember the last selection in `use` command to save the human effort.
+  And introduce an `-i` option to ignored that remembered value. [#846](https://github.com/pdm-project/pdm/issues/846)
+
+### Bug Fixes
+
+- Fix a bug of uninstall crash when the package has directories in `RECORD`. [#847](https://github.com/pdm-project/pdm/issues/847)
+- Fix the `ModuleNotFoundError` during uninstall when the modules required are removed. [#850](https://github.com/pdm-project/pdm/issues/850)
+
+
 Release v1.12.3 (2022-01-07)
 ----------------------------
 
