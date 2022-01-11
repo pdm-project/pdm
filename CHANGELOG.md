@@ -1,3 +1,11 @@
+Release v1.12.5 (2022-01-11)
+----------------------------
+
+### Bug Fixes
+
+- Fix a resolution error that dots in the package name are normalized to `-` unexpectedly. [#853](https://github.com/pdm-project/pdm/issues/853)
+
+
 Release v1.12.4 (2022-01-11)
 ----------------------------
 
