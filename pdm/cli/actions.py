@@ -531,6 +531,8 @@ def do_use(
     def version_matcher(py_version: PythonInfo) -> bool:
         return project.python_requires.contains(str(py_version.version))
 
+    if not project.cache_dir.exists():
+        project.cache_dir.mkdir(parents=True)
     use_cache: JSONFileCache[str, str] = JSONFileCache(
         project.cache_dir / "use_cache.json"
     )
