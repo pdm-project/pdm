@@ -1,3 +1,11 @@
+Release v1.12.6 (2022-01-12)
+----------------------------
+
+### Bug Fixes
+
+- Fix a bug that cache dir isn't created. [#843](https://github.com/pdm-project/pdm/issues/843)
+
+
 Release v1.12.5 (2022-01-11)
 ----------------------------
 
