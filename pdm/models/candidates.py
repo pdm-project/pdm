@@ -195,16 +195,24 @@ class Candidate:
                         "subdirectory": req.subdirectory,
                     }
                 )
+            url = expand_env_vars_in_auth(
+                req.url.replace(
+                    "${PROJECT_ROOT}",
+                    self.environment.project.root.as_posix().lstrip(  # type: ignore
+                        "/"
+                    ),
+                )
+            )
             with self.environment.get_finder() as finder:
                 hash_cache = self.environment.project.make_hash_cache()
                 hash_cache.session = finder.session  # type: ignore
                 return _filter_none(
                     {
-                        "url": url_without_fragments(req.url),
+                        "url": url_without_fragments(url),
                         "archive_info": {
-                            "hash": hash_cache.get_hash(
-                                pip_shims.Link(req.url)
-                            ).replace(":", "=")
+                            "hash": hash_cache.get_hash(pip_shims.Link(url)).replace(
+                                ":", "="
+                            )
                         },
                         "subdirectory": req.subdirectory,
                     }
