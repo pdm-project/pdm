@@ -71,19 +71,18 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pytest-xdist<2.0.0,>=1.31.0"
+    "pytest-xdist>=1.31.0"
 ]
 doc = [
-    "mkdocs<2.0.0,>=1.1",
-    "mkdocs-material~=7.3",
-    "mkdocstrings~=0.16",
-    "markdown-include<1.0.0,>=0.5.1",
+    "mkdocs>=1.1",
+    "mkdocs-material>=7.3",
+    "mkdocstrings>=0.16",
+    "markdown-include>=0.5.1",
 ]
 workflow = [
-    "parver<1.0.0,>=0.3.1",
+    "parver>=0.3.1",
     "towncrier<20.0.0,>=19.2.0",
     "vendoring; python_version ~= \"3.8\"",
-    "mypy~=0.812",
     "pycomplete~=0.3"
 ]
 
