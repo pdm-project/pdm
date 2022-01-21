@@ -207,7 +207,7 @@ filterwarnings = [
   "ignore::DeprecationWarning"
 ]
 markers = [
-    "network: Tests that requires network to be available",
+    "network: Tests that require network",
     "integration: Run with all Python versions"
 ]
 addopts = "-ra"
