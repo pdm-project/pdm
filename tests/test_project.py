@@ -5,37 +5,36 @@ from pathlib import Path
 
 import pytest
 
-from pdm.utils import cd, temp_environ
+from pdm.utils import cd
 
 
 def test_project_python_with_pyenv_support(project, mocker):
 
     del project.project_config["python.path"]
     project._python = None
-    with temp_environ():
-        os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
-        mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
-        mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
-        pyenv_python = project.root / "shims/python"
-        if os.name == "nt":
-            pyenv_python = pyenv_python.with_suffix(".bat")
-        pyenv_python.parent.mkdir()
-        pyenv_python.touch()
-        mocker.patch(
-            "pythonfinder.models.python.get_python_version",
-            return_value="3.8.0",
-        )
-        mocker.patch(
-            "pdm.models.python.get_underlying_executable", return_value=sys.executable
-        )
-        assert Path(project.python.path) == pyenv_python
-        assert project.python.executable == Path(sys.executable).as_posix()
+    os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+    mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
+    mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
+    pyenv_python = project.root / "shims/python"
+    if os.name == "nt":
+        pyenv_python = pyenv_python.with_suffix(".bat")
+    pyenv_python.parent.mkdir()
+    pyenv_python.touch()
+    mocker.patch(
+        "pythonfinder.models.python.get_python_version",
+        return_value="3.8.0",
+    )
+    mocker.patch(
+        "pdm.models.python.get_underlying_executable", return_value=sys.executable
+    )
+    assert Path(project.python.path) == pyenv_python
+    assert project.python.executable == Path(sys.executable).as_posix()
 
-        # Clean cache
-        project._python = None
+    # Clean cache
+    project._python = None
 
-        project.project_config["python.use_pyenv"] = False
-        assert Path(project.python.path) != pyenv_python
+    project.project_config["python.use_pyenv"] = False
+    assert Path(project.python.path) != pyenv_python
 
 
 def test_project_config_items(project):
@@ -167,13 +166,12 @@ def test_ignore_saved_python(project):
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
-    with temp_environ():
-        os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
-        assert Path(project.python.executable) != project.project_config["python.path"]
-        assert (
-            Path(project.python.executable)
-            == project.root / "venv" / scripts / f"python{suffix}"
-        )
+    os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+    assert Path(project.python.executable) != project.project_config["python.path"]
+    assert (
+        Path(project.python.executable)
+        == project.root / "venv" / scripts / f"python{suffix}"
+    )
 
 
 def test_select_dependencies(project):

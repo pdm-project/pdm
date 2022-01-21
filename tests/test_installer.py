@@ -10,6 +10,8 @@ from pdm.models.requirements import parse_requirement
 from pdm.utils import fs_supports_symlink
 from tests import FIXTURES
 
+pytestmark = pytest.mark.usefixtures("local_finder")
+
 
 def test_install_wheel_with_inconsistent_dist_info(project):
     req = parse_requirement("pyfunctional")

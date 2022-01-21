@@ -19,6 +19,7 @@ def test_lock_dependencies(project):
         assert package in locked
 
 
+@pytest.mark.usefixtures("project_no_init", "local_finder")
 def test_build_distributions(tmp_path, core):
     project = core.create_project()
     actions.do_build(project, dest=tmp_path.as_posix())
@@ -251,14 +252,14 @@ def test_import_requirement_no_overwrite(project, invoke, tmp_path):
     assert list(project.get_dependencies("web")) == ["flask", "flask-login"]
 
 
-@pytest.mark.pypi
-def test_search_package(project, invoke):
-    result = invoke(["search", "requests"], obj=project)
+@pytest.mark.network
+def test_search_package(invoke):
+    result = invoke(["search", "requests"])
     assert result.exit_code == 0
     assert len(result.output.splitlines()) > 0
 
 
-@pytest.mark.pypi
+@pytest.mark.network
 def test_show_package_on_pypi(invoke):
     result = invoke(["show", "ipython"])
     assert result.exit_code == 0
@@ -344,6 +345,7 @@ def test_lock_refresh(invoke, project, repository):
     assert project.is_lockfile_hash_match()
 
 
+@pytest.mark.network
 def test_show_update_hint(invoke, project):
     prev_version = project.core.version
     try:

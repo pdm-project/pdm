@@ -128,8 +128,8 @@ def test_sync_with_index_change(project, index):
     <html>
     <body>
         <h1>future-fstrings</h1>
-        <a href="http://fixtures.test/artifacts/future_fstrings-1.2.0.tar.gz\
-#sha256=6cf41cbe97c398ab5a81168ce0dbb8ad95862d3caf23c21e4430627b90844089">
+        <a href="http://fixtures.test/artifacts/future_fstrings-1.2.0-py2.py3-none-any\
+.whl#sha256=90e49598b553d8746c4dc7d9442e0359d038c3039d802c91c0a55505da318c63">
         future_fstrings-1.2.0.tar.gz
         </a>
     </body>
@@ -138,7 +138,7 @@ def test_sync_with_index_change(project, index):
     actions.do_lock(project)
     file_hashes = project.lockfile["metadata"]["files"]["future-fstrings 1.2.0"]
     assert [e["hash"] for e in file_hashes] == [
-        "sha256:6cf41cbe97c398ab5a81168ce0dbb8ad95862d3caf23c21e4430627b90844089"
+        "sha256:90e49598b553d8746c4dc7d9442e0359d038c3039d802c91c0a55505da318c63"
     ]
     # Mimic the CDN inconsistences of PyPI simple index. See issues/596.
     del index["future-fstrings"]

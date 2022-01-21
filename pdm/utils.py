@@ -332,16 +332,6 @@ def cd(path: str | Path) -> Iterator:
 
 
 @contextmanager
-def temp_environ() -> Iterator:
-    environ = os.environ.copy()
-    try:
-        yield
-    finally:
-        os.environ.clear()
-        os.environ.update(environ)
-
-
-@contextmanager
 def open_file(url: str, session: Session | None = None) -> Iterator[BinaryIO]:
     if url.startswith("file://"):
         local_path = url_to_path(url)

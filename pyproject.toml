@@ -207,7 +207,7 @@ filterwarnings = [
   "ignore::DeprecationWarning"
 ]
 markers = [
-    "pypi: Tests that connect to the real PyPI",
+    "network: Tests that requires network to be available",
     "integration: Run with all Python versions"
 ]
 addopts = "-ra"

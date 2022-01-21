@@ -10,6 +10,7 @@ from pdm.models.requirements import parse_requirement
 from tests import FIXTURES
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_local_directory_metadata(project, is_editable):
     requirement_line = f"{(FIXTURES / 'projects/demo').as_posix()}"
     req = parse_requirement(requirement_line, is_editable)
@@ -22,7 +23,7 @@ def test_parse_local_directory_metadata(project, is_editable):
     assert candidate.version == "0.0.1"
 
 
-@pytest.mark.usefixtures("vcs")
+@pytest.mark.usefixtures("vcs", "local_finder")
 def test_parse_vcs_metadata(project, is_editable):
     requirement_line = "git+https://github.com/test-root/demo.git@master#egg=demo"
     req = parse_requirement(requirement_line, is_editable)
@@ -41,6 +42,7 @@ def test_parse_vcs_metadata(project, is_editable):
         assert lockfile["revision"] == "1234567890abcdef"
 
 
+@pytest.mark.usefixtures("local_finder")
 @pytest.mark.parametrize(
     "requirement_line",
     [
@@ -59,6 +61,7 @@ def test_parse_artifact_metadata(requirement_line, project):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_metadata_with_extras(project):
     req = parse_requirement(
         f"demo[tests,security] @ file://"
@@ -74,6 +77,7 @@ def test_parse_metadata_with_extras(project):
     ]
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_remote_link_metadata(project):
     req = parse_requirement(
         "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
@@ -88,6 +92,7 @@ def test_parse_remote_link_metadata(project):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_extras_warning(project, recwarn):
     req = parse_requirement(
         "demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
@@ -104,6 +109,7 @@ def test_extras_warning(project, recwarn):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_abnormal_specifiers(project):
     req = parse_requirement(
         "http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"
@@ -112,6 +118,7 @@ def test_parse_abnormal_specifiers(project):
     assert candidate.get_dependencies_from_metadata()
 
 
+@pytest.mark.usefixtures("local_finder")
 @pytest.mark.parametrize(
     "req_str",
     [
@@ -140,6 +147,7 @@ def test_expand_project_root_in_url(req_str, core):
         assert "${PROJECT_ROOT}" in lockfile_entry["url"]
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_project_file_on_build_error(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
     candidate = Candidate(req, project.environment)
@@ -151,6 +159,7 @@ def test_parse_project_file_on_build_error(project):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_project_file_on_build_error_with_extras(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
     req.extras = ("security", "tests")
@@ -162,6 +171,7 @@ def test_parse_project_file_on_build_error_with_extras(project):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_project_file_on_build_error_no_dep(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure-no-dep').as_posix()}")
     candidate = Candidate(req, project.environment)
@@ -170,6 +180,7 @@ def test_parse_project_file_on_build_error_no_dep(project):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_poetry_project_metadata(project, is_editable):
     req = parse_requirement(
         f"{(FIXTURES / 'projects/poetry-demo').as_posix()}", is_editable
@@ -181,6 +192,7 @@ def test_parse_poetry_project_metadata(project, is_editable):
     assert candidate.version == "0.1.0"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_parse_flit_project_metadata(project, is_editable):
     req = parse_requirement(
         f"{(FIXTURES / 'projects/flit-demo').as_posix()}", is_editable
@@ -194,7 +206,7 @@ def test_parse_flit_project_metadata(project, is_editable):
     assert candidate.version == "0.1.0"
 
 
-@pytest.mark.usefixtures("vcs")
+@pytest.mark.usefixtures("vcs", "local_finder")
 def test_vcs_candidate_in_subdirectory(project, is_editable):
     line = (
         "git+https://github.com/test-root/demo-parent-package.git"
@@ -218,6 +230,7 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
     assert candidate.version == "0.1.0"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_sdist_candidate_with_wheel_cache(project, mocker):
     file_link = Link(path_to_url((FIXTURES / "artifacts/demo-0.0.1.tar.gz").as_posix()))
     built_path = (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix()
@@ -240,7 +253,7 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     assert Path(candidate.wheel) == Path(cache_path) / Path(built_path).name
 
 
-@pytest.mark.usefixtures("vcs")
+@pytest.mark.usefixtures("vcs", "local_finder")
 def test_cache_vcs_immutable_revision(project):
     req = parse_requirement("git+https://github.com/test-root/demo.git@master#egg=demo")
     candidate = Candidate(req, project.environment)
@@ -264,6 +277,7 @@ def test_cache_vcs_immutable_revision(project):
     assert candidate.revision == "1234567890abcdef"
 
 
+@pytest.mark.usefixtures("local_finder")
 def test_cache_egg_info_sdist(project):
     req = parse_requirement("demo @ http://fixtures.test/artifacts/demo-0.0.1.tar.gz")
     candidate = Candidate(req, project.environment)
