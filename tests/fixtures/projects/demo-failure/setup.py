@@ -1,6 +1,6 @@
 from setuptools import setup
 
-import idna
+import first
 
 setup(
     name="demo",

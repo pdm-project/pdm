@@ -1,13 +1,12 @@
 import os
-import subprocess
-import sys
 import tarfile
 import zipfile
 
 import pytest
 
 from pdm.cli import actions
-from pdm.utils import temp_environ
+
+pytestmark = pytest.mark.usefixtures("local_finder")
 
 
 def get_tarball_names(path):
@@ -170,22 +169,9 @@ def test_cli_build_with_config_settings(fixture_project, invoke):
 @pytest.mark.parametrize("isolated", (True, False))
 def test_build_with_no_isolation(fixture_project, invoke, isolated):
     project = fixture_project("demo-failure")
-    lib_path = project.environment.get_paths()["purelib"]
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "-I",
-            "--force-reinstall",
-            "idna",
-            "--target",
-            str(lib_path),
-        ],
-        check=True,
-    )
-    invoke(["add", "idna"], obj=project)
+    project.pyproject = {"project": {"name": "demo", "version": "0.1.0"}}
+    project.write_pyproject()
+    invoke(["add", "first"], obj=project)
     args = ["build"]
     if not isolated:
         args.append("--no-isolation")
@@ -195,6 +181,5 @@ def test_build_with_no_isolation(fixture_project, invoke, isolated):
 
 def test_build_ignoring_pip_environment(fixture_project):
     project = fixture_project("demo-module")
-    with temp_environ():
-        os.environ["PIP_REQUIRE_VIRTUALENV"] = "1"
-        actions.do_build(project)
+    os.environ["PIP_REQUIRE_VIRTUALENV"] = "1"
+    actions.do_build(project)

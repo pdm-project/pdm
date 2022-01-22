@@ -5,20 +5,15 @@ import textwrap
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-import pytest
-
 from pdm.cli.actions import PEP582_PATH
-from pdm.utils import cd, temp_environ
+from pdm.utils import cd
 
 
-@pytest.mark.pypi
-def test_pep582_launcher_for_python_interpreter(project, invoke):
-    project.meta["requires-python"] = ">=3.6"
-    project.write_pyproject()
+def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
     project.root.joinpath("main.py").write_text(
-        "import requests\nprint(requests.__version__)\n"
+        "import first;print(first.first([0, False, 1, 2]))\n"
     )
-    result = invoke(["add", "requests==2.24.0"], obj=project)
+    result = invoke(["add", "first"], obj=project)
     assert result.exit_code == 0, result.stderr
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
@@ -26,7 +21,7 @@ def test_pep582_launcher_for_python_interpreter(project, invoke):
         [project.python.executable, str(project.root.joinpath("main.py"))],
         env=env,
     )
-    assert output.decode().strip() == "2.24.0"
+    assert output.decode().strip() == "1"
 
 
 def test_auto_isolate_site_packages(project, invoke):
@@ -167,7 +162,7 @@ def test_run_expand_env_vars(project, invoke, capfd):
     }
     project.write_pyproject()
     capfd.readouterr()
-    with cd(project.root), temp_environ():
+    with cd(project.root):
         os.environ["FOO"] = "bar"
         invoke(["run", "test_cmd"], obj=project)
         assert capfd.readouterr()[0].strip() == "1"
@@ -243,20 +238,20 @@ def test_run_show_list_of_scripts(project, invoke):
     assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
 
 
-def test_run_with_another_project_root(project, invoke, capfd):
+def test_run_with_another_project_root(project, local_finder, invoke, capfd):
     project.meta["requires-python"] = ">=3.6"
     project.write_pyproject()
-    invoke(["add", "requests==2.24.0"], obj=project)
+    invoke(["add", "first"], obj=project)
     with TemporaryDirectory(prefix="pytest-run-") as tmp_dir:
         Path(tmp_dir).joinpath("main.py").write_text(
-            "import requests\nprint(requests.__version__)\n"
+            "import first;print(first.first([0, False, 1, 2]))\n"
         )
         capfd.readouterr()
         with cd(tmp_dir):
             ret = invoke(["run", "-p", str(project.root), "python", "main.py"])
             assert ret.exit_code == 0
             out, _ = capfd.readouterr()
-            assert out.strip() == "2.24.0"
+            assert out.strip() == "1"
 
 
 def test_import_another_sitecustomize(project, invoke, capfd):

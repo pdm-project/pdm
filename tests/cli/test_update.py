@@ -164,6 +164,7 @@ def test_update_with_package_and_groups_argument(project):
         actions.do_update(project, default=False, packages=("requests",))
 
 
+@pytest.mark.usefixtures("repository", "working_set")
 def test_update_with_prerelease_without_package_argument(project):
     actions.do_add(project, packages=["requests"])
     with pytest.raises(

@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import sys
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
@@ -28,11 +29,20 @@ from pdm.models.requirements import (
 )
 from pdm.project import Project
 from pdm.project.config import Config
-from pdm.utils import get_finder, normalize_name, temp_environ
+from pdm.utils import get_finder, normalize_name
 from tests import FIXTURES
 
 os.environ["CI"] = "1"
-main = Core()
+
+
+@contextmanager
+def temp_environ():
+    environ = os.environ.copy()
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(environ)
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -148,9 +158,6 @@ class TestProject(Project):
         super().__init__(core, root_path, is_global)
 
 
-main.project_class = TestProject
-
-
 class Distribution:
     def __init__(self, key, version, editable=False):
         self.version = version
@@ -243,12 +250,19 @@ def remove_pep582_path_from_pythonpath(pythonpath):
     return os.pathsep.join(paths)
 
 
+@pytest.fixture(scope="session")
+def core():
+    main = Core()
+    main.project_class = TestProject
+    return main
+
+
 @pytest.fixture()
-def project_no_init(tmp_path, mocker):
-    p = main.create_project(tmp_path)
+def project_no_init(tmp_path, mocker, core):
+    p = core.create_project(tmp_path)
+    mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
-    mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     old_config_map = Config._config_map.copy()
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
@@ -265,6 +279,13 @@ def project_no_init(tmp_path, mocker):
         yield p
     # Restore the config items
     Config._config_map = old_config_map
+
+
+@pytest.fixture()
+def local_finder(project_no_init, mocker):
+    return_value = ["--no-index", "--find-links", str(FIXTURES / "artifacts")]
+    mocker.patch("pdm.utils.prepare_pip_source_args", return_value=return_value)
+    mocker.patch("pdm.builders.base.prepare_pip_source_args", return_value=return_value)
 
 
 @pytest.fixture()
@@ -299,7 +320,7 @@ def fixture_project(project_no_init):
 
 
 @pytest.fixture()
-def repository(project, mocker):
+def repository(project, mocker, local_finder):
     rv = TestRepository([], project.environment)
     mocker.patch.object(project, "get_repository", return_value=rv)
     return rv
@@ -329,12 +350,12 @@ def is_dev(request):
 
 
 @pytest.fixture()
-def invoke():
+def invoke(core):
     runner = CliRunner(mix_stderr=False)
 
     def caller(args, strict=False, **kwargs):
         result = runner.invoke(
-            main, args, catch_exceptions=not strict, prog_name="pdm", **kwargs
+            core, args, catch_exceptions=not strict, prog_name="pdm", **kwargs
         )
         if strict and result.exit_code != 0:
             raise RuntimeError(
@@ -343,11 +364,6 @@ def invoke():
         return result
 
     return caller
-
-
-@pytest.fixture()
-def core():
-    return main
 
 
 @pytest.fixture()
