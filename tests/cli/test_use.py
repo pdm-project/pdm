@@ -11,8 +11,9 @@ from pdm.models.caches import JSONFileCache
 
 
 def test_use_command(project, invoke):
-    python_path = Path(shutil.which("python")).as_posix()
-    result = invoke(["use", "-f", "python"], obj=project)
+    python = "python" if os.name == "nt" else "python3"
+    python_path = Path(shutil.which(python)).as_posix()
+    result = invoke(["use", "-f", python], obj=project)
     assert result.exit_code == 0
     config_content = project.root.joinpath(".pdm.toml").read_text()
     assert python_path in config_content

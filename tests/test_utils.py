@@ -50,6 +50,7 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
+@pytest.mark.path
 def test_find_python_in_path(tmp_path):
 
     assert (

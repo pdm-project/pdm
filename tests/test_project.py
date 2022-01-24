@@ -206,6 +206,7 @@ def test_global_python_path_config(project_no_init):
     assert "python.path" not in p.project_config
 
 
+@pytest.mark.path
 def test_set_non_exist_python_path(project_no_init):
     project_no_init.project_config["python.path"] = "non-exist-python"
     project_no_init._python = None
