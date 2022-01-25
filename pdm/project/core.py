@@ -514,44 +514,8 @@ class Project:
     def meta(self) -> Metadata:
         if not self.pyproject:
             self.pyproject = {"project": tomlkit.table()}
-        project_meta = self.pyproject["project"]
-        meta_version = project_meta.get("version")
-        updated = False
-        # Move version to tool table
-        if isinstance(meta_version, dict):
-            if "version" in self.tool_settings:
-                self.core.ui.echo(
-                    "WARNING: Removing dynamic `version` from [project] table",
-                    fg="yellow",
-                    err=True,
-                )
-            else:
-                self.core.ui.echo(
-                    "WARNING: Moving dynamic `version` from [project] to [tool.pdm]",
-                    fg="yellow",
-                    err=True,
-                )
-                self.tool_settings["version"] = meta_version
-            del project_meta["version"]
-            updated = True
-        # Delete classifiers from dynamic
-        dynamic_fields = project_meta.get("dynamic", [])
-        if "classifiers" in dynamic_fields:
-            self.core.ui.echo(
-                "WARNING: Dynamic `classifiers` is no longer supported, "
-                "please supply all classifiers manually",
-                fg="yellow",
-                err=True,
-            )
-            dynamic_fields.remove("classifiers")
-            if not dynamic_fields:
-                del project_meta["dynamic"]
-            updated = True
-        if updated:
-            self.write_pyproject(False)
         m = Metadata(self.pyproject_file, False)
         m._metadata = self.pyproject.get("project", {})
-        m._tool_settings = self.tool_settings
         return m
 
     def init_global_project(self) -> None:
