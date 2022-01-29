@@ -211,7 +211,12 @@ class Command(BaseCommand):
         assert isinstance(global_env_options, dict)
         global_env_options.update(site_packages=options.site_packages)
         if not options.command:
-            raise PdmUsageError("No command given")
+            project.core.ui.echo(
+                "No command is given, default to the Python REPL.",
+                fg="yellow",
+                err=True,
+            )
+            options.command = "python"
         if project.scripts and options.command in project.scripts:
             self._run_script(project, options.command, options.args, global_env_options)
         else:
