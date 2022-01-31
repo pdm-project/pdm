@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import os
 import re
 import sys
@@ -35,9 +36,9 @@ from pdm.utils import (
 )
 
 if sys.version_info >= (3, 8):
-    from importlib.metadata import Distribution, PathDistribution, version
+    from importlib.metadata import Distribution, PathDistribution
 else:
-    from importlib_metadata import Distribution, PathDistribution, version
+    from importlib_metadata import Distribution, PathDistribution
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -255,7 +256,7 @@ class Candidate:
             self._populate_source_dir(ireq)
             if not self.link.is_existing_dir():
                 assert ireq.source_dir
-                if tuple(map(int, version("pip").split("."))) >= (22, 0):
+                if "verbosity" in inspect.getfullargspec(pip_shims.unpack_url).args:
                     unpack_url = partial(pip_shims.unpack_url, verbosity=0)
                 else:
                     unpack_url = partial(pip_shims.unpack_url)
