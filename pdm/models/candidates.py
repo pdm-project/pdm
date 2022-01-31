@@ -258,6 +258,7 @@ class Candidate:
                     self.link,
                     ireq.source_dir,
                     downloader,
+                    verbosity=0,
                     hashes=ireq.hashes(False),
                 )
                 if self.link.is_wheel:
