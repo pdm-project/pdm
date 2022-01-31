@@ -577,7 +577,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:c844a17ad1f6f94f2c957bcf78a041e16a40a9bfb5fbde42803989b083a6edad"
+content_hash = "sha256:0329f6b2d1ec46722aaeca43e18cb1c207cda3e786b4e067dc2da7af526756e4"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
