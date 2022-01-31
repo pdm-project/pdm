@@ -1,3 +1,24 @@
+Release v1.12.7 (2022-01-31)
+----------------------------
+
+### Features & Improvements
+
+- If no command is given to `pdm run`, it will run the Python REPL. [#856](https://github.com/pdm-project/pdm/issues/856)
+
+### Bug Fixes
+
+- Fix the hash calculation when generating `direct_url.json` for a local pre-built wheel. [#861](https://github.com/pdm-project/pdm/issues/861)
+- PDM no longer migrates project meta silently. [#867](https://github.com/pdm-project/pdm/issues/867)
+
+### Dependencies
+
+- Pin `pip<22.0`. [#874](https://github.com/pdm-project/pdm/issues/874)
+
+### Miscellany
+
+- Reduce the number of tests that require network, and mark the rest with `network` marker. [#858](https://github.com/pdm-project/pdm/issues/858)
+
+
 Release v1.12.6 (2022-01-12)
 ----------------------------
 
