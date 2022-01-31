@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
@@ -34,9 +35,9 @@ from pdm.utils import (
 )
 
 if sys.version_info >= (3, 8):
-    from importlib.metadata import Distribution, PathDistribution
+    from importlib.metadata import Distribution, PathDistribution, version
 else:
-    from importlib_metadata import Distribution, PathDistribution
+    from importlib_metadata import Distribution, PathDistribution, version
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -254,11 +255,14 @@ class Candidate:
             self._populate_source_dir(ireq)
             if not self.link.is_existing_dir():
                 assert ireq.source_dir
-                downloaded = pip_shims.unpack_url(
+                if tuple(map(int, version("pip").split("."))) >= (22, 0):
+                    unpack_url = partial(pip_shims.unpack_url, verbosity=0)
+                else:
+                    unpack_url = partial(pip_shims.unpack_url)
+                downloaded = unpack_url(
                     self.link,
                     ireq.source_dir,
                     downloader,
-                    verbosity=0,
                     hashes=ireq.hashes(False),
                 )
                 if self.link.is_wheel:
