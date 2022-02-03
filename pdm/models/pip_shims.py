@@ -42,6 +42,10 @@ if TYPE_CHECKING:
     from optparse import Values
 
 
+if "verbosity" in inspect.getfullargspec(unpack_url).args:
+    unpack_url = partial(unpack_url, verbosity=0)
+
+
 class InstallCommand(_InstallCommand):
     def __init__(self) -> None:
         super().__init__(name="InstallCommand", summary="Install packages.")
@@ -80,10 +84,3 @@ def get_package_finder(
 
     build_kwargs["ignore_requires_python"] = ignore_requires_python
     return install_cmd._build_package_finder(**build_kwargs)  # type: ignore
-
-
-unpack_url = (
-    partial(unpack_url, verbosity=0)
-    if "verbosity" in inspect.getfullargspec(unpack_url).args
-    else partial(unpack_url, verbosity=0)
-)
