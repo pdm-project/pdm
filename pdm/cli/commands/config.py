@@ -44,14 +44,12 @@ class Command(BaseCommand):
         with ui.indent("  "):
             for key in sorted(project.global_config):
                 try:
-                    project.global_config._config_map[key]
+                    global_config_item = project.global_config._config_map[key]
                 except KeyError:
                     # ignoring removed plugin keys
                     continue
                 ui.echo(
-                    termui.yellow(
-                        "# " + project.global_config._config_map[key].description
-                    ),
+                    termui.yellow("# " + global_config_item.description),
                     verbosity=termui.DETAIL,
                 )
                 ui.echo(f"{termui.cyan(key)} = {project.global_config[key]}")
@@ -63,14 +61,12 @@ class Command(BaseCommand):
         with ui.indent("  "):
             for key in sorted(project.project_config):
                 try:
-                    project.project_config._config_map[key]
+                    project_config_item = project.project_config._config_map[key]
                 except KeyError:
                     # ignoring removed plugin keys
                     continue
                 ui.echo(
-                    termui.yellow(
-                        "# " + project.project_config._config_map[key].description
-                    ),
+                    termui.yellow("# " + project_config_item.description),
                     verbosity=termui.DETAIL,
                 )
                 ui.echo(f"{termui.cyan(key)} = {project.project_config[key]}")
