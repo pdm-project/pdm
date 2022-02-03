@@ -211,7 +211,14 @@ class Core:
         for plugin in itertools.chain(
             entry_points.get("pdm", []), entry_points.get("pdm.plugin", [])
         ):
-            plugin.load()(self)
+            try:
+                plugin.load()(self)
+            except Exception as e:
+                self.ui.echo(
+                    f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
+                    fg="red",
+                    err=True,
+                )
 
 
 def main(args: Optional[List[str]] = None) -> None:
