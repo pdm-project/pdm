@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import atexit
 import inspect
+from functools import partial
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from pip._internal.cache import WheelCache
@@ -79,3 +80,10 @@ def get_package_finder(
 
     build_kwargs["ignore_requires_python"] = ignore_requires_python
     return install_cmd._build_package_finder(**build_kwargs)  # type: ignore
+
+
+unpack_url = (
+    partial(unpack_url, verbosity=0)
+    if "verbosity" in inspect.getfullargspec(unpack_url).args
+    else partial(unpack_url, verbosity=0)
+)

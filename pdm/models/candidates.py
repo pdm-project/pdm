@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import inspect
 import os
 import re
 import sys
-from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
@@ -256,11 +254,7 @@ class Candidate:
             self._populate_source_dir(ireq)
             if not self.link.is_existing_dir():
                 assert ireq.source_dir
-                if "verbosity" in inspect.getfullargspec(pip_shims.unpack_url).args:
-                    unpack_url = partial(pip_shims.unpack_url, verbosity=0)
-                else:
-                    unpack_url = partial(pip_shims.unpack_url)
-                downloaded = unpack_url(
+                downloaded = pip_shims.unpack_url(
                     self.link,
                     ireq.source_dir,
                     downloader,
