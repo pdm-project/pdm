@@ -77,7 +77,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
 
 
 class MockVersionControl(versioncontrol.VersionControl):
-    def obtain(self, dest, url):
+    def obtain(self, dest, url, verbosity=0):
         url, _ = self.get_url_rev_options(url)
         path = os.path.splitext(os.path.basename(urlparse(str(url)).path))[0]
         mocked_path = FIXTURES / "projects" / path
