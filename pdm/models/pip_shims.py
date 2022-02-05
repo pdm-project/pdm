@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import atexit
 import inspect
+from functools import partial
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
 from pip._internal.cache import WheelCache
@@ -39,6 +40,10 @@ from pip._internal.vcs.versioncontrol import VcsSupport
 
 if TYPE_CHECKING:
     from optparse import Values
+
+
+if "verbosity" in inspect.getfullargspec(unpack_url).args:
+    unpack_url = partial(unpack_url, verbosity=0)
 
 
 class InstallCommand(_InstallCommand):
