@@ -56,6 +56,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
     ):
         file_path = self.base_path / urlparse(request.url).path.lstrip("/")
         response = requests.models.Response()
+        response.url = request.url
         response.request = request
         if not file_path.exists():
             response.status_code = 404
