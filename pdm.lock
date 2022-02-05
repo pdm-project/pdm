@@ -287,8 +287,8 @@ dependencies = [
 
 [[package]]
 name = "pip"
-version = "21.3.1"
-requires_python = ">=3.6"
+version = "22.0.3"
+requires_python = ">=3.7"
 summary = "The PyPA recommended tool for installing Python packages."
 
 [[package]]
@@ -577,7 +577,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:0329f6b2d1ec46722aaeca43e18cb1c207cda3e786b4e067dc2da7af526756e4"
+content_hash = "sha256:c844a17ad1f6f94f2c957bcf78a041e16a40a9bfb5fbde42803989b083a6edad"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -829,9 +829,9 @@ content_hash = "sha256:0329f6b2d1ec46722aaeca43e18cb1c207cda3e786b4e067dc2da7af5
     {file = "pep517-0.11.0-py2.py3-none-any.whl", hash = "sha256:3fa6b85b9def7ba4de99fb7f96fe3f02e2d630df8aa2720a5cf3b183f087a738"},
     {file = "pep517-0.11.0.tar.gz", hash = "sha256:e1ba5dffa3a131387979a68ff3e391ac7d645be409216b961bc2efe6468ab0b2"},
 ]
-"pip 21.3.1" = [
-    {file = "pip-21.3.1-py3-none-any.whl", hash = "sha256:deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d"},
-    {file = "pip-21.3.1.tar.gz", hash = "sha256:fd11ba3d0fdb4c07fbc5ecbba0b1b719809420f25038f8ee3cd913d3faa3033a"},
+"pip 22.0.3" = [
+    {file = "pip-22.0.3-py3-none-any.whl", hash = "sha256:c146f331f0805c77017c6bb9740cec4a49a0d4582d0c3cc8244b057f83eca359"},
+    {file = "pip-22.0.3.tar.gz", hash = "sha256:f29d589df8c8ab99c060e68ad294c4a9ed896624f6368c5349d70aa581b333d0"},
 ]
 "platformdirs 2.4.0" = [
     {file = "platformdirs-2.4.0-py3-none-any.whl", hash = "sha256:8868bbe3c3c80d42f20156f22e7131d2fb321f5bc86a2a345375c6481a67021d"},
