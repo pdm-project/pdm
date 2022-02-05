@@ -195,9 +195,6 @@ class Config(MutableMapping[str, str]):
             tomlkit.dump(toml_data, fp)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
-        # check if keys are valid
-        if key in (self._data.keys() - self._config_map.keys()):
-            return
         config = self._config_map[key]
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
@@ -234,7 +231,7 @@ class Config(MutableMapping[str, str]):
         return len(self._data)
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self._data)
+        return filter(lambda x: x in self._config_map, self._data)
 
     def __delitem__(self, key: str) -> None:
         self._data.pop(key, None)
