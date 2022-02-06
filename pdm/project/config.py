@@ -195,7 +195,8 @@ class Config(MutableMapping[str, str]):
             tomlkit.dump(toml_data, fp)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
-        env_var = self._config_map[key].env_var
+        config = self._config_map[key]
+        env_var = config.env_var
         if env_var is not None and env_var in os.environ:
             result = os.environ[env_var]
         else:
@@ -203,7 +204,7 @@ class Config(MutableMapping[str, str]):
                 result = self._data[key]
             except KeyError:
                 raise NoConfigError(key) from None
-        return self._config_map[key].coerce(result)
+        return config.coerce(result)
 
     def __setitem__(self, key: str, value: Any) -> None:
         if key not in self._config_map:
@@ -230,7 +231,7 @@ class Config(MutableMapping[str, str]):
         return len(self._data)
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self._data)
+        return filter(lambda x: x in self._config_map, self._data)
 
     def __delitem__(self, key: str) -> None:
         self._data.pop(key, None)
