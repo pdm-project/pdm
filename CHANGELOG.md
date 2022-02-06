@@ -1,3 +1,16 @@
+Release v1.12.8 (2022-02-06)
+----------------------------
+
+### Features & Improvements
+
+- Print the error and continue if a plugin fails to load. [#878](https://github.com/pdm-project/pdm/issues/878)
+
+### Bug Fixes
+
+- PDM now ignores configuration of uninstalled plugins. [#872](https://github.com/pdm-project/pdm/issues/872)
+- Fix the compatibility issue with `pip>=22.0`. [#875](https://github.com/pdm-project/pdm/issues/875)
+
+
 Release v1.12.7 (2022-01-31)
 ----------------------------
 
