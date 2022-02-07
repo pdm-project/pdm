@@ -22,7 +22,7 @@ def get_pypackages_path(maxdepth=5):
         return os.path.join(os.getenv("PEP582_PACKAGES"), "lib")
     find_paths = [os.getcwd()]
     version = bare_version = ".".join(map(str, sys.version_info[:2]))
-    if os.name == "nt" and sys.maxsize <= 2 ** 32:
+    if os.name == "nt" and sys.maxsize <= 2**32:
         version += "-32"
 
     if getattr(sys, "argv", None):

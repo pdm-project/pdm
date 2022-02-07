@@ -138,7 +138,7 @@ def test_project_use_venv(project):
 def test_project_packages_path(project):
     packages_path = project.environment.packages_path
     version = ".".join(map(str, sys.version_info[:2]))
-    if os.name == "nt" and sys.maxsize <= 2 ** 32:
+    if os.name == "nt" and sys.maxsize <= 2**32:
         assert packages_path.name == version + "-32"
     else:
         assert packages_path.name == version
