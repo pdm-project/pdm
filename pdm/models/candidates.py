@@ -341,7 +341,7 @@ class Candidate:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         return filter_requirements_with_extras(
-            self.metadata.requires or [], extras  # type: ignore
+            self.req.project_name, self.metadata.requires or [], extras  # type: ignore
         )
 
     @property

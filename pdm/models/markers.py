@@ -2,7 +2,7 @@ import copy
 import itertools
 import operator
 from functools import reduce
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Set, Tuple, Union
 
 from pip._vendor.packaging.markers import Marker as PackageMarker
 
@@ -52,60 +52,60 @@ def get_marker(marker: Union[PackageMarker, Marker, None]) -> Optional[Marker]:
     return Marker(str(marker)) if marker else None
 
 
-def split_marker_extras(
-    marker: PackageMarker,
-) -> Tuple[List[str], Optional[PackageMarker]]:
+def split_marker_extras(marker: str) -> Tuple[Set[str], str]:
     """An element can be stripped from the marker only if all parts are connected
     with `and` operator. The rest part are returned as a string or `None` if all are
     stripped.
-
-    :param marker: the input marker string
-    :returns: an iterable of (op, value) pairs together with the stripped part.
     """
 
-    def extract_extras(submarker: Union[tuple, list]) -> List[str]:
+    def extract_extras(submarker: Union[tuple, list]) -> Set[str]:
         if isinstance(submarker, tuple):
             if submarker[0].value == "extra":
                 if submarker[1].value == "==":
-                    return [submarker[2].value]
+                    return {submarker[2].value}
                 elif submarker[1].value == "in":
-                    return [v.strip() for v in submarker[2].value.split(",")]
+                    return {v.strip() for v in submarker[2].value.split(",")}
                 else:
-                    return []
+                    return set()
             else:
-                return []
+                return set()
         else:
             if "and" in submarker:
-                return []
+                return set()
             pure_extras = [extract_extras(m) for m in submarker if m != "or"]
             if all(pure_extras):
-                return list(itertools.chain.from_iterable(pure_extras))
-            return []
+                return set(itertools.chain.from_iterable(pure_extras))
+            return set()
 
-    submarkers = marker._markers
+    if not marker:
+        return set(), marker
+    new_marker = PackageMarker(marker)
+    submarkers = PackageMarker(marker)._markers
     if "or" in submarkers:
         extras = extract_extras(submarkers)
         if extras:
-            return extras, None
-        return [], marker
+            return extras, ""
+        return set(), marker
 
-    extras = []
+    extras = set()
     submarkers_no_extras: List[Union[tuple, list]] = []
+    # Below this point the submarkers are connected with 'and'
     for submarker in submarkers:
         if submarker == "and":
             continue
         new_extras = extract_extras(submarker)
         if new_extras:
             if extras:
-                return [], marker
-            extras.extend(new_extras)
+                # extras are not allowed to appear in more than one parts
+                return set(), marker
+            extras.update(new_extras)
         else:
             submarkers_no_extras.append(submarker)
 
     if not submarkers_no_extras:
-        return extras, None
-    marker._markers = join_list_with(submarkers_no_extras, "and")
-    return extras, marker
+        return extras, ""
+    new_marker._markers = join_list_with(submarkers_no_extras, "and")
+    return extras, str(new_marker)
 
 
 def _only_contains_python_keys(markers: List[Any]) -> bool:

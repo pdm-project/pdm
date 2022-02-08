@@ -3,18 +3,7 @@ from __future__ import annotations
 import dataclasses
 import sys
 from functools import lru_cache, wraps
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
 from packaging.version import parse as parse_version
 from pip._vendor.html5lib import parse
@@ -53,7 +42,7 @@ def cache_result(
 class BaseRepository:
     """A Repository acts as the source of packages and metadata."""
 
-    def __init__(self, sources: List[Source], environment: Environment) -> None:
+    def __init__(self, sources: list[Source], environment: Environment) -> None:
         """
         :param sources: a list of sources to download packages from.
         :param environment: the bound environment instance.
@@ -63,13 +52,13 @@ class BaseRepository:
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
 
-    def get_filtered_sources(self, req: Requirement) -> List[Source]:
+    def get_filtered_sources(self, req: Requirement) -> list[Source]:
         """Get matching sources based on the index attribute."""
         return self.sources
 
     def get_dependencies(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet, str]:
+    ) -> tuple[list[Requirement], PySpecSet, str]:
         """Get (dependencies, python_specifier, summary) of the candidate."""
         requires_python, summary = "", ""
         requirements: list[str] = []
@@ -86,13 +75,14 @@ class BaseRepository:
                 raise last_ext_info[1].with_traceback(last_ext_info[2])  # type: ignore
         reqs = [parse_requirement(line) for line in requirements]
         if candidate.req.extras:
-            # HACK: If this candidate has extras, add the original candidate
-            # (same pinned version, no extras) as its dependency. This ensures
-            # the same package with different extras (treated as distinct by
-            # the resolver) have the same version.
-            self_req = dataclasses.replace(candidate.req, extras=None)
+            # XXX: If the requirement has extras, add the original candidate
+            # (without extras) as its dependency. This ensures the same package with
+            # different extras resolve to the same version.
+            self_req = dataclasses.replace(
+                candidate.req, extras=None, marker=None, specifier=get_specifier("")
+            )
             reqs.append(self_req)
-        # Store the metadata on candidate for caching
+        # Store the metadata on the candidate for caching
         candidate.requires_python = requires_python
         candidate.summary = summary
         return reqs, PySpecSet(requires_python), summary
@@ -101,7 +91,7 @@ class BaseRepository:
         raise NotImplementedError
 
     def find_candidates(
-        self, requirement: Requirement, allow_prereleases: Optional[bool] = None
+        self, requirement: Requirement, allow_prereleases: bool | None = None
     ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
@@ -155,7 +145,7 @@ class BaseRepository:
                 )
 
         def print_candidates(
-            title: str, candidates: List[Candidate], max_lines: int = 10
+            title: str, candidates: list[Candidate], max_lines: int = 10
         ) -> None:
             termui.logger.debug("\t" + title)
             logged_lines = set()
@@ -195,7 +185,7 @@ class BaseRepository:
         summary = candidate.metadata.metadata["Summary"]
         return deps, requires_python, summary
 
-    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
         """Get hashes of all possible installable candidates
         of a given package version.
         """
@@ -273,7 +263,9 @@ class PyPIRepository(BaseRepository):
                 except KeyError:
                     requirement_lines = info["requires"] or []
                 requirements = filter_requirements_with_extras(
-                    requirement_lines, candidate.req.extras or ()
+                    cast(str, candidate.req.project_name),
+                    requirement_lines,
+                    candidate.req.extras or (),
                 )
                 return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
@@ -347,17 +339,17 @@ class LockedRepository(BaseRepository):
     def __init__(
         self,
         lockfile: Mapping[str, Any],
-        sources: List[Source],
+        sources: list[Source],
         environment: Environment,
     ) -> None:
         super().__init__(sources, environment)
-        self.packages: Dict[tuple, Candidate] = {}
-        self.file_hashes: Dict[Tuple[str, str], Dict[str, str]] = {}
-        self.candidate_info: Dict[tuple, CandidateInfo] = {}
+        self.packages: dict[tuple, Candidate] = {}
+        self.file_hashes: dict[tuple[str, str], dict[str, str]] = {}
+        self.candidate_info: dict[tuple, CandidateInfo] = {}
         self._read_lockfile(lockfile)
 
     @property
-    def all_candidates(self) -> Dict[str, Candidate]:
+    def all_candidates(self) -> dict[str, Candidate]:
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
@@ -404,7 +396,7 @@ class LockedRepository(BaseRepository):
 
     def get_dependencies(
         self, candidate: Candidate
-    ) -> Tuple[List[Requirement], PySpecSet, str]:
+    ) -> tuple[list[Requirement], PySpecSet, str]:
         reqs, python, summary = super().get_dependencies(candidate)
         reqs = [
             req
@@ -415,7 +407,7 @@ class LockedRepository(BaseRepository):
         return reqs, python, summary
 
     def find_candidates(
-        self, requirement: Requirement, allow_prereleases: Optional[bool] = None
+        self, requirement: Requirement, allow_prereleases: bool | None = None
     ) -> Iterable[Candidate]:
         for key, info in self.candidate_info.items():
             if key[0] != requirement.identify():
@@ -429,7 +421,7 @@ class LockedRepository(BaseRepository):
             can.req = requirement
             yield can
 
-    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
         assert candidate.name
         return self.file_hashes.get(
             (normalize_name(candidate.name), candidate.version or "")

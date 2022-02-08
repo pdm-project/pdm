@@ -19,7 +19,7 @@ from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
 
 from pdm._types import RequirementDict
-from pdm.exceptions import ExtrasError, RequirementError
+from pdm.exceptions import ExtrasWarning, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_extras
 from pdm.models.pip_shims import (
     InstallRequirement,
@@ -438,25 +438,29 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirement_lines: list[str],
-    extras: Sequence[str],
+    project_name: str, requirement_lines: list[str], extras: Sequence[str]
 ) -> list[str]:
+    """Filter the requirements with extras.
+    If extras are given, return those with matching extra markers.
+    Otherwise, return those without extra markers.
+    """
     result: list[str] = []
-    extras_in_meta: list[str] = []
+    extras_in_meta: set[str] = set()
     for req in requirement_lines:
         _r = parse_requirement(req)
-        if not _r.marker:
-            result.append(req)
+        if _r.marker:
+            elements, rest = split_marker_extras(str(_r.marker))
+            if elements:
+                extras_in_meta.update(elements)
+                _r.marker = Marker(rest) if rest else None
         else:
-            elements, rest = split_marker_extras(_r.marker)
-            extras_in_meta.extend(elements)
-            _r.marker = Marker(str(rest)) if rest else None
-            if not elements or set(extras) & set(elements):
-                result.append(_r.as_line())
+            elements = set()
+        if extras and not elements.isdisjoint(extras) or not (extras or elements):
+            result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
     if extras_not_found:
-        warnings.warn(ExtrasError(extras_not_found))
+        warnings.warn(ExtrasWarning(project_name, extras_not_found))
 
     return result
 

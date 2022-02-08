@@ -87,7 +87,7 @@ extras = ["toml"]
 requires_python = ">=3.6"
 summary = "Code coverage measurement for Python"
 dependencies = [
-    "coverage>=5.2.1",
+    "coverage",
     "tomli",
 ]
 
@@ -516,7 +516,7 @@ summary = "A lil' TOML parser"
 
 [[package]]
 name = "tomlkit"
-version = "0.8.0"
+version = "0.9.2"
 requires_python = ">=3.6,<4.0"
 summary = "Style preserving TOML library"
 
@@ -971,9 +971,9 @@ content_hash = "sha256:c844a17ad1f6f94f2c957bcf78a041e16a40a9bfb5fbde42803989b08
     {file = "tomli-2.0.0-py3-none-any.whl", hash = "sha256:b5bde28da1fed24b9bd1d4d2b8cba62300bfb4ec9a6187a957e8ddb9434c5224"},
     {file = "tomli-2.0.0.tar.gz", hash = "sha256:c292c34f58502a1eb2bbb9f5bbc9a5ebc37bee10ffb8c2d6bbdfa8eb13cc14e1"},
 ]
-"tomlkit 0.8.0" = [
-    {file = "tomlkit-0.8.0-py3-none-any.whl", hash = "sha256:b824e3466f1d475b2b5f1c392954c6cb7ea04d64354ff7300dc7c14257dc85db"},
-    {file = "tomlkit-0.8.0.tar.gz", hash = "sha256:29e84a855712dfe0e88a48f6d05c21118dbafb283bb2eed614d46f80deb8e9a1"},
+"tomlkit 0.9.2" = [
+    {file = "tomlkit-0.9.2-py3-none-any.whl", hash = "sha256:daf4f9c5f2fbf6b861d6adfc51940b98dee36c13e1d88749a6dc9fb280fff304"},
+    {file = "tomlkit-0.9.2.tar.gz", hash = "sha256:ebd982d61446af95a1e082b103e250cb9e6d152eae2581d4a07d31a70b34ab0f"},
 ]
 "towncrier 19.9.0" = [
     {file = "towncrier-19.9.0-py2.py3-none-any.whl", hash = "sha256:8726035bc95b1146640bf49ce8693465b54e37a791697e3119ab43dbe30a577a"},
