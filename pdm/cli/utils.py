@@ -142,7 +142,9 @@ def build_dependency_graph(
         if dist:
             requirements = (
                 parse_requirement(r)
-                for r in filter_requirements_with_extras(dist.requires or [], extras)
+                for r in filter_requirements_with_extras(
+                    dist.name, dist.requires or [], extras  # type: ignore
+                )
             )
             for req in requirements:
                 if not req.marker or req.marker.evaluate(marker_env):

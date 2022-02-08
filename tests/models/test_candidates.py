@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from pdm.exceptions import ExtrasError
+from pdm.exceptions import ExtrasWarning
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link, path_to_url
 from pdm.models.requirements import parse_requirement
@@ -70,8 +70,6 @@ def test_parse_metadata_with_extras(project):
     candidate = Candidate(req, project.environment)
     assert candidate.ireq.is_wheel
     assert sorted(candidate.get_dependencies_from_metadata()) == [
-        'chardet; os_name == "nt"',
-        "idna",
         "pytest",
         'requests; python_version >= "3.6"',
     ]
@@ -99,12 +97,9 @@ def test_extras_warning(project, recwarn):
     )
     candidate = Candidate(req, project.environment)
     assert candidate.ireq.is_wheel
-    assert candidate.get_dependencies_from_metadata() == [
-        "idna",
-        'chardet; os_name == "nt"',
-    ]
-    warning = recwarn.pop(ExtrasError)
-    assert str(warning.message) == "Extras not found: ('foo',)"
+    assert candidate.get_dependencies_from_metadata() == []
+    warning = recwarn.pop(ExtrasWarning)
+    assert str(warning.message) == "Extras not found for demo: [foo]"
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
 
@@ -186,7 +181,7 @@ def test_parse_poetry_project_metadata(project, is_editable):
         f"{(FIXTURES / 'projects/poetry-demo').as_posix()}", is_editable
     )
     candidate = Candidate(req, project.environment)
-    requests_dep = "requests (<3.0,>=2.6)" if is_editable else "requests<3.0,>=2.6"
+    requests_dep = "requests<3.0,>=2.6"
     assert candidate.get_dependencies_from_metadata() == [requests_dep]
     assert candidate.name == "poetry-demo"
     assert candidate.version == "0.1.0"

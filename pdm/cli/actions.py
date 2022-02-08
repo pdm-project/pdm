@@ -500,7 +500,7 @@ def do_init(
             "description": "",
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
             "license": make_inline_table({"text": license}),
-            "urls": {"homepage": ""},
+            "urls": {"Homepage": ""},
             "dependencies": make_array([], True),
             "requires-python": "" if python_requires == "*" else python_requires,
         },

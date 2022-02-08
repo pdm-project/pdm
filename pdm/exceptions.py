@@ -42,13 +42,10 @@ class CandidateInfoNotFound(PdmException):
         super().__init__(message)
 
 
-class ExtrasError(UserWarning):
-    def __init__(self, extras: List[str]) -> None:
-        super().__init__()
+class ExtrasWarning(UserWarning):
+    def __init__(self, project_name: str, extras: List[str]) -> None:
+        super().__init__(f"Extras not found for {project_name}: [{','.join(extras)}]")
         self.extras = tuple(extras)
-
-    def __str__(self) -> str:
-        return f"Extras not found: {self.extras}"
 
 
 class ProjectError(PdmUsageError):

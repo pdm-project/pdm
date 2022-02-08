@@ -122,7 +122,9 @@ class TestRepository(BaseRepository):
         except KeyError:
             raise CandidateInfoNotFound(candidate)
         deps = pypi_data.get("dependencies", [])
-        deps = filter_requirements_with_extras(deps, candidate.req.extras or ())
+        deps = filter_requirements_with_extras(
+            candidate.req.name, deps, candidate.req.extras or ()
+        )
         return deps, pypi_data.get("requires_python", ""), ""
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -165,13 +167,10 @@ class Distribution:
         self.link_file = "editable" if editable else None
         self.dependencies = []
         self.metadata = {"Name": key}
-
-    @property
-    def key(self):
-        return self.metadata["Name"]
+        self.name = key
 
     def as_req(self):
-        return parse_requirement(f"{self.key}=={self.version}")
+        return parse_requirement(f"{self.name}=={self.version}")
 
     @property
     def requires(self):
@@ -186,7 +185,7 @@ class MockWorkingSet(collections.abc.MutableMapping):
         self._data = {}
 
     def add_distribution(self, dist):
-        self._data[dist.key] = dist
+        self._data[dist.name] = dist
 
     def __getitem__(self, key):
         return self._data[key]
@@ -218,7 +217,7 @@ def working_set(mocker, repository):
         rv.add_distribution(dist)
 
     def uninstall(dist):
-        del rv[dist.key]
+        del rv[dist.name]
 
     install_manager = mocker.MagicMock()
     install_manager.install.side_effect = install
