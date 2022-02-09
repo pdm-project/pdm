@@ -246,6 +246,18 @@ and make sure VSCode runs using the same user and shell you enabled PEP582 for.
     "env": {"PYTHONPATH": "src:__pypackages__/<major.minor>/lib"}
     ```
 
+### Neovim
+
+If using [neovim-lsp](https://github.com/neovim/nvim-lspconfig) with
+[pyright](https://github.com/Microsoft/pyright) and want your
+**__pypackages__** directory to be added to the path, you can add this to your
+project's `pyproject.toml`.
+
+```toml
+[tool.pyright]
+extraPaths = ["__pypackages__/<major.minor>/lib/"]
+```
+
 #### Task Provider
 
 In addition, there is a [VSCode Task Provider extension][pdm task provider] available for download.
