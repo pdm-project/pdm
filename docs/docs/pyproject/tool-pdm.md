@@ -1,4 +1,4 @@
-# PDM tool settings
+# PDM Tool Settings
 
 There are also some useful settings to control the packaging behavior of PDM. They should be shipped with `pyproject.toml`, defined in `[tool.pdm]` table.
 
