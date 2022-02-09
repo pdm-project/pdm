@@ -1,7 +1,9 @@
 import argparse
 
+from pdm import signals
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.commands.run import run_script_if_present
 from pdm.cli.options import no_isolation_option, project_option, verbose_option
 from pdm.project import Project
 
@@ -65,3 +67,7 @@ class Command(BaseCommand):
             clean=options.clean,
             config_settings=config_settings,
         )
+
+
+signals.pre_build.connect(run_script_if_present("pre_build"), weak=False)
+signals.post_build.connect(run_script_if_present("post_build"), weak=False)

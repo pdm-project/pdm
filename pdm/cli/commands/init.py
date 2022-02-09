@@ -2,9 +2,10 @@ import argparse
 
 import click
 
-from pdm import termui
+from pdm import signals, termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.commands.run import run_script_if_present
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git
 
@@ -68,3 +69,6 @@ class Command(BaseCommand):
         actions.do_init(project, name, version, license, author, email, python_requires)
         if not non_interactive:
             actions.ask_for_import(project)
+
+
+signals.post_init.connect(run_script_if_present("post_init"), weak=False)

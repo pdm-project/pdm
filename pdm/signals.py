@@ -55,3 +55,19 @@ Args:
     candidates (dict[str, Candidate]): The candidates installed
     dry_run (bool): If true, won't perform any actions
 """
+pre_build: NamedSignal = pdm_signals.signal("pre_build")
+"""Called before a project is built.
+
+Args:
+    project (Project): The project object
+    dest (str): The destination location
+    config_settings (dict[str, str]|None): Additional config settings passed via args
+"""
+post_build: NamedSignal = pdm_signals.signal("post_build")
+"""Called after a project is built.
+
+Args:
+    project (Project): The project object
+    artifacts (Sequence[str]): The locations of built artifacts
+    config_settings (dict[str, str]|None): Additional config settings passed via args
+"""
