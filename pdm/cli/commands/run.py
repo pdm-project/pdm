@@ -6,9 +6,10 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Any, Callable, Mapping, NamedTuple, Sequence, TypedDict, cast
+from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 
 from pdm import termui
+from pdm._types import TypedDict
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import check_project_file
