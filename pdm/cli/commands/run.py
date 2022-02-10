@@ -6,7 +6,7 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
+from typing import Any, Callable, Mapping, NamedTuple, Sequence, TypedDict, cast
 
 from pdm import termui
 from pdm.cli.actions import PEP582_PATH
@@ -17,11 +17,18 @@ from pdm.project import Project
 from pdm.utils import is_path_relative_to
 
 
+class TaskOptions(TypedDict, total=False):
+    env: Mapping[str, str]
+    env_file: str | None
+    help: str
+    site_packages: bool
+
+
 class Task(NamedTuple):
     kind: str
     name: str
     args: str | Sequence[str]
-    options: dict[str, Any]
+    options: TaskOptions
 
     def __str__(self) -> str:
         return f"<task {termui.cyan(self.name)}>"
@@ -30,13 +37,12 @@ class Task(NamedTuple):
 class TaskRunner:
     """The task runner for pdm project"""
 
-    OPTIONS = ["env", "env_file", "help", "site_packages"]
     TYPES = ["cmd", "shell", "call"]
 
     def __init__(self, project: Project) -> None:
         self.project = project
         global_options = cast(
-            "dict[str, str | bool]",
+            TaskOptions,
             self.project.scripts.get("_", {}) if self.project.scripts else {},
         )
         self.global_options = global_options.copy()
@@ -64,11 +70,12 @@ class TaskRunner:
                     f"Script type must be one of ({', '.join(self.TYPES)})"
                 )
             options = script.copy()
-        if any(key not in self.OPTIONS for key in options):
+        unknown_options = set(options) - TaskOptions.__optional_keys__  # type: ignore
+        if unknown_options:
             raise PdmUsageError(
-                f"pdm scripts only accept options: ({', '.join(self.OPTIONS)})"
+                f"Unknown options for task {script_name}: {', '.join(unknown_options)}"
             )
-        return Task(kind, script_name, value, options)
+        return Task(kind, script_name, value, cast(TaskOptions, options))
 
     def _run_process(
         self,
@@ -150,6 +157,7 @@ class TaskRunner:
     def _run_task(self, task: Task, args: Sequence[str] = ()) -> int:
         kind, _, value, options = task
         options.pop("help", None)
+        shell = False
         if kind == "cmd":
             if not isinstance(value, list):
                 value = shlex.split(str(value))
@@ -157,7 +165,7 @@ class TaskRunner:
         elif kind == "shell":
             assert isinstance(value, str)
             args = " ".join([value] + list(args))  # type: ignore
-            options["shell"] = True
+            shell = True
         elif kind == "call":
             assert isinstance(value, str)
             module, _, func = value.partition(":")
@@ -175,17 +183,16 @@ class TaskRunner:
                 f"sys.exit({short_name}.{func})",
             ] + list(args)
         if "env" in self.global_options:
-            options["env"] = {
-                **cast(Mapping[str, str], self.global_options["env"]),
-                **options.get("env", {}),
-            }
+            options["env"] = {**self.global_options["env"], **options.get("env", {})}
         options["env_file"] = options.get(
             "env_file", self.global_options.get("env_file")
         )
         self.project.core.ui.echo(
             f"Running {task}: {termui.green(str(args))}", err=True
         )
-        return self._run_process(args, chdir=True, **options)
+        return self._run_process(
+            args, chdir=True, shell=shell, **options  # type: ignore
+        )
 
     def run(self, command: str, args: Sequence[str]) -> int:
         task = self._get_task(command)
@@ -256,7 +263,7 @@ class Command(BaseCommand):
         runner = TaskRunner(project)
         if options.list:
             return runner.show_list()
-        runner.global_options.update(site_packages=options.site_packages)
+        runner.global_options.update({"site_packages": options.site_packages})
         if not options.command:
             project.core.ui.echo(
                 "No command is given, default to the Python REPL.",
