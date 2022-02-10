@@ -39,6 +39,7 @@ class TaskRunner:
     """The task runner for pdm project"""
 
     TYPES = ["cmd", "shell", "call"]
+    OPTIONS = ["env", "env_file", "help", "site_packages"]
 
     def __init__(self, project: Project) -> None:
         self.project = project
@@ -71,7 +72,7 @@ class TaskRunner:
                     f"Script type must be one of ({', '.join(self.TYPES)})"
                 )
             options = script.copy()
-        unknown_options = set(options) - TaskOptions.__optional_keys__  # type: ignore
+        unknown_options = set(options) - set(self.OPTIONS)
         if unknown_options:
             raise PdmUsageError(
                 f"Unknown options for task {script_name}: {', '.join(unknown_options)}"
