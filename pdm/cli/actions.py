@@ -468,6 +468,8 @@ def do_build(
         dest = project.root.joinpath(dest).as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
+    signals.pre_build.send(project, dest=dest, config_settings=config_settings)
+    artifacts: list[str] = []
     with project.core.ui.logging("build"):
         if sdist:
             project.core.ui.echo("Building sdist...")
@@ -475,12 +477,17 @@ def do_build(
                 dest, config_settings
             )
             project.core.ui.echo(f"Built sdist at {loc}")
+            artifacts.append(loc)
         if wheel:
             project.core.ui.echo("Building wheel...")
             loc = WheelBuilder(project.root, project.environment).build(
                 dest, config_settings
             )
             project.core.ui.echo(f"Built wheel at {loc}")
+            artifacts.append(loc)
+    signals.post_build.send(
+        project, artifacts=artifacts, config_settings=config_settings
+    )
 
 
 def do_init(

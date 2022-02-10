@@ -3,8 +3,10 @@ import sys
 
 import click
 
+from pdm import signals
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.commands.run import run_script_if_present
 from pdm.cli.options import dry_run_option, groups_group, install_group
 from pdm.project import Project
 
@@ -53,3 +55,7 @@ class Command(BaseCommand):
             no_self=options.no_self,
             dry_run=options.dry_run,
         )
+
+
+signals.pre_install.connect(run_script_if_present("pre_install"), weak=False)
+signals.post_install.connect(run_script_if_present("post_install"), weak=False)

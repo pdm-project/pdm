@@ -1,4 +1,4 @@
-# Manage dependencies
+# Manage Dependencies
 
 PDM provides a bunch of handful commands to help manage your project and dependencies.
 The following examples are run on Ubuntu 18.04, a few changes must be done if you are using Windows.

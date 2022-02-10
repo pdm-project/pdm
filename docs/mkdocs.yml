@@ -32,9 +32,10 @@ plugins:
 nav:
   - Home: index.md
   - Usage:
-      - Manage Dependencies: usage/dependency.md
-      - Manage Project: usage/project.md
-      - Advanced Usage: usage/advanced.md
+      - usage/dependency.md
+      - usage/project.md
+      - usage/scripts.md
+      - usage/advanced.md
   - Writing pyproject.toml:
       - pyproject/pep621.md
       - pyproject/tool-pdm.md

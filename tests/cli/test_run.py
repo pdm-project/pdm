@@ -292,3 +292,44 @@ print(json.dumps(sysconfig.get_paths()))
     assert result.exit_code == 0
     out = json.loads(capfd.readouterr()[0])
     assert "__pypackages__" in out["purelib"]
+
+
+def test_pre_and_post_hooks(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "pre_install": "python -c \"print('PRE INSTALL CALLED')\"",
+        "post_install": "python -c \"print('POST INSTALL CALLED')\"",
+    }
+    project.write_pyproject()
+    invoke(["install"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "PRE INSTALL CALLED" in out
+    assert "POST INSTALL CALLED" in out
+
+
+def test_pre_script_fail_fast(project, invoke, capfd, mocker):
+    project.tool_settings["scripts"] = {
+        "pre_install": "python -c \"print('PRE INSTALL CALLED'); exit(1)\"",
+        "post_install": "python -c \"print('POST INSTALL CALLED')\"",
+    }
+    project.write_pyproject()
+    synchronize = mocker.patch("pdm.installers.synchronizers.Synchronizer.synchronize")
+    result = invoke(["install"], obj=project)
+    assert result.exit_code == 1
+    out, _ = capfd.readouterr()
+    assert "PRE INSTALL CALLED" in out
+    assert "POST INSTALL CALLED" not in out
+    synchronize.assert_not_called()
+
+
+def test_pre_and_post_scripts(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "pre_test": "python -c \"print('PRE test CALLED')\"",
+        "test": "python -c \"print('IN test CALLED')\"",
+        "post_test": "python -c \"print('POST test CALLED')\"",
+    }
+    project.write_pyproject()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "PRE test CALLED" in out
+    assert "IN test CALLED" in out
+    assert "POST test CALLED" in out

@@ -133,7 +133,7 @@ class Project:
 
     @property
     def scripts(self) -> dict[str, str | dict[str, str]]:
-        return self.tool_settings.get("scripts")  # type: ignore
+        return self.tool_settings.get("scripts", {})  # type: ignore
 
     @cached_property
     def global_config(self) -> Config:
