@@ -80,7 +80,8 @@ class BaseProvider(AbstractProvider):
                 for _, parent in information[identifier]
             )
             dep_depth = min(parent_depths) + 1
-        self._known_depth[identifier] = dep_depth
+        # Use the REAL identifier as it may be updated after candidate preparation.
+        self._known_depth[self.identify(next(candidates[identifier]))] = dep_depth
         is_file_or_url = any(
             not requirement.is_named for requirement, _ in information[identifier]
         )
@@ -181,8 +182,7 @@ class BaseProvider(AbstractProvider):
                 continue
             dep.requires_python &= candidate.req.requires_python
             valid_deps.append(dep)
-        candidate_key = self.identify(candidate)
-        self.fetched_dependencies[candidate_key] = valid_deps[:]
+        self.fetched_dependencies[self.identify(candidate)] = valid_deps[:]
         # A candidate contributes to the Python requirements only when:
         # It isn't an optional dependency, or the requires-python doesn't cover
         # the req's requires-python.

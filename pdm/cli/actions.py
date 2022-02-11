@@ -224,7 +224,7 @@ def do_add(
         requirements[key] = r
     project.core.ui.echo(
         f"Adding packages to {group} {'dev-' if dev else ''}dependencies: "
-        + ", ".join(termui.green(key or "", bold=True) for key in requirements)
+        + ", ".join(termui.green(r.as_line(), bold=True) for r in requirements.values())
     )
     all_dependencies = project.all_dependencies
     group_deps = all_dependencies.setdefault(group, {})

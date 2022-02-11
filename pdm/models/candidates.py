@@ -398,6 +398,29 @@ class Candidate:
             f"{termui.yellow(str(self.version))}"
         )
 
+    def should_cache(self) -> bool:
+        """Determine whether to cache the dependencies and built wheel."""
+        if self.req.is_vcs and not self.req.editable:
+            if not self.ireq.source_dir:
+                # If the candidate isn't prepared, we can't cache it
+                return False
+            vcs = pip_shims.VcsSupport()
+            assert self.link
+            vcs_backend = vcs.get_backend_for_scheme(self.link.scheme)
+            return bool(
+                vcs_backend
+                and vcs_backend.is_immutable_rev_checkout(
+                    self.link.url, self.ireq.source_dir
+                )
+            )
+        elif self.req.is_named:
+            return True
+        elif self.link and not self.link.is_existing_dir():
+            base, _ = self.link.splitext()
+            # Cache if the link contains egg-info like 'foo-1.0'
+            return _egg_info_re.search(base) is not None
+        return False
+
     def _get_cached_wheel(self) -> pip_shims.Link | None:
         wheel_cache = self.environment.project.make_wheel_cache()
         supported_tags = pip_shims.get_supported(self.environment.interpreter.for_tag())
@@ -442,22 +465,9 @@ class Candidate:
         )
 
     def _get_wheel_dir(self) -> str:
-        should_cache = False
-        wheel_cache = self.environment.project.make_wheel_cache()
         assert self.link
-        if self.link.is_vcs and not self.req.editable:
-            vcs = pip_shims.VcsSupport()
-            vcs_backend = vcs.get_backend_for_scheme(self.link.scheme)
-            if vcs_backend and vcs_backend.is_immutable_rev_checkout(
-                self.link.url, cast(str, self.ireq.source_dir)
-            ):
-                should_cache = True
-        elif not self.link.is_existing_dir():
-            base, _ = self.link.splitext()
-            if _egg_info_re.search(base) is not None:
-                # Determine whether the string looks like an egg_info.
-                should_cache = True
-        if should_cache:
+        if self.should_cache():
+            wheel_cache = self.environment.project.make_wheel_cache()
             return wheel_cache.get_path_for_link(self.link)
         else:
             return create_tracked_tempdir(prefix="pdm-wheel-")
