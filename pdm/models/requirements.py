@@ -225,11 +225,14 @@ class Requirement:
 
     def as_ireq(self, **kwargs: Any) -> InstallRequirement:
         line_for_req = self.as_line()
-        if self.editable:
-            line_for_req = line_for_req[3:].strip()
-            ireq = install_req_from_editable(line_for_req, **kwargs)
-        else:
-            ireq = install_req_from_line(line_for_req, **kwargs)
+        try:
+            if self.editable:
+                line_for_req = line_for_req[3:].strip()
+                ireq = install_req_from_editable(line_for_req, **kwargs)
+            else:
+                ireq = install_req_from_line(line_for_req, **kwargs)
+        except Exception as e:
+            raise RequirementError(e)
         ireq.req = self  # type: ignore
         return ireq
 

@@ -33,7 +33,8 @@ def cache_result(
     @wraps(func)
     def wrapper(self: T, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
-        self._candidate_info_cache.set(candidate, result)
+        if candidate.should_cache():
+            self._candidate_info_cache.set(candidate, result)
         return result
 
     return wrapper
@@ -169,6 +170,8 @@ class BaseRepository:
         return applicable_cans
 
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
+        if not candidate.should_cache():
+            raise CandidateInfoNotFound(candidate)
         try:
             result = self._candidate_info_cache.get(candidate)
         except CorruptedCacheError:

@@ -116,6 +116,12 @@ def test_resolve_vcs_and_local_requirements(resolve, line, is_editable, vcs):
     assert result["idna"].version == "2.7"
 
 
+def test_resolve_vcs_without_explicit_name(resolve, vcs):
+    requirement = "git+https://github.com/test-root/demo.git"
+    result = resolve([requirement], ">=3.6")
+    assert result["idna"].version == "2.7"
+
+
 def test_resolve_local_and_named_requirement(resolve, vcs):
     requirements = ["demo", "git+https://github.com/test-root/demo.git#egg=demo"]
     result = resolve(requirements, ">=3.6")
