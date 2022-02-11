@@ -267,6 +267,7 @@ _New in version 1.12.0_
 ```toml
 [tool.pdm.overrides]
 asgiref = "3.2.10"
+pytz = "file:///${PROJECT_ROOT}/pytz-2020.9-py3-none-any.whl"
 ```
 Each entry of that table is a package name with the wanted version. The value can also be a URL to a file or a VCS repository like `git+https://...`.
 On reading this, PDM will pin `asgiref@3.2.10` in the lock file no matter whether there is any other resolution available.

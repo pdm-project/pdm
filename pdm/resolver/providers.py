@@ -37,7 +37,7 @@ class BaseProvider(AbstractProvider):
         self.overrides = overrides or {}
         self._known_depth: dict[str, int] = {}
 
-    def requirement_preference(self, requirement: Requirement) -> tuple:
+    def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
 
         - Editable requirements are preferered.
@@ -45,14 +45,14 @@ class BaseProvider(AbstractProvider):
         - The one with narrower specifierset is preferred.
         """
         editable = requirement.editable
-        is_file = requirement.is_file_or_url
+        is_named = requirement.is_named
         is_prerelease = (
             requirement.prerelease
             or requirement.specifier is not None
             and bool(requirement.specifier.prereleases)
         )
         specifier_parts = len(requirement.specifier) if requirement.specifier else 0
-        return (editable, is_file, is_prerelease, specifier_parts)
+        return (not editable, is_named, not is_prerelease, -specifier_parts)
 
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
         return requirement_or_candidate.identify()
@@ -112,7 +112,17 @@ class BaseProvider(AbstractProvider):
         else:
             requested = f"{identifier}=={requested}"
         req = parse_requirement(requested)
-        return self.repository.find_candidates(req, self.allow_prereleases)
+        return self._find_candidates(req)
+
+    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+        if not requirement.is_named:
+            can = Candidate(requirement, self.repository.environment)
+            can.metadata
+            return [can]
+        else:
+            return self.repository.find_candidates(
+                requirement, requirement.prerelease or self.allow_prereleases
+            )
 
     def find_matches(
         self,
@@ -128,19 +138,8 @@ class BaseProvider(AbstractProvider):
             return [c for c in candidates if c not in incompat]
         elif identifier in self.overrides:
             return self.get_override_candidates(identifier)
-        reqs = sorted(
-            requirements[identifier], key=self.requirement_preference, reverse=True
-        )
-        file_req = next((req for req in reqs if not req.is_named), None)
-        if file_req:
-            can = Candidate(file_req, self.repository.environment)
-            can.metadata
-            candidates = [can]
-        else:
-            req = reqs[0]
-            candidates = self.repository.find_candidates(
-                req, req.prerelease or self.allow_prereleases
-            )
+        reqs = sorted(requirements[identifier], key=self.requirement_preference)
+        candidates = self._find_candidates(reqs[0])
         return [
             can
             for can in candidates
