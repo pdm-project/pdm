@@ -144,8 +144,8 @@ By default, every build is performed in a clean and isolated environment, only b
 PDM leverages [PEP 660](https://www.python.org/dev/peps/pep-0660/) to build wheels for editable installation.
 One can choose how to generate the wheel out of the two methods:
 
-- `editables`: (Default)Create proxy modules under the packages path.
-- `path`: The legacy method used by setuptools that create .pth files under the packages path.
+- `path`: (Default)The legacy method used by setuptools that create .pth files under the packages path.
+- `editables`: Create proxy modules under the packages path. Since the proxy module is looked for at runtime, it may not work with some static analysis tools.
 
 Read the PEP for the difference of the two methods and how they work.
 
