@@ -137,7 +137,19 @@ Now, specify the build script path via `build` in the `pyproject.toml`:
 build = "build.py"
 ```
 
+If you run `pdm build`(or any other build frontends such as [build](https://pypi.org/project/build)), PDM will build a platform-specific wheel file as well as a sdist.
+
 By default, every build is performed in a clean and isolated environment, only build requirements can be seen. If your build has optional requirements that depend on the project environment, you can turn off the environment isolation by `pdm build --no-isolation` or setting config `build_isolation` to falsey value.
+
+### Override the "Is-Purelib" value
+
+Sometimes you may want to build platform-specific wheels but don't have a build script(the binaries may be built or fetched by other tools). In this case
+you can set the `is-purelib` value in the `pyproject.toml` to `false`:
+
+```toml
+[tool.pdm]
+is-purelib = false
+```
 
 ## Editable build backend
 
