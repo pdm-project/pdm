@@ -261,7 +261,7 @@ can be run natively as [VSCode Tasks][vscode tasks].
 
 If using [neovim-lsp](https://github.com/neovim/nvim-lspconfig) with
 [pyright](https://github.com/Microsoft/pyright) and want your
-**__pypackages__** directory to be added to the path, you can add this to your
+`__pypackages__` directory to be added to the path, you can add this to your
 project's `pyproject.toml`.
 
 ```toml
