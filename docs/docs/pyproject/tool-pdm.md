@@ -111,11 +111,11 @@ As specified in [PEP 420](https://www.python.org/dev/peps/pep-0420), a directory
 2. There exist normal packages and/or other namespace packages under `<package>/*`, and
 3. `<package>` is explicitly listed in `includes`
 
-## Build C extensions
+## Build Platform-specific Wheels
 
-Currently, building C extensions still relies on `setuptools`. You should write a python script which contains
-a function named `build` and accepts the parameter dictionary of `setup()` as the only argument.
-Update the dictionary with your `ext_modules` settings in the function.
+You may want to build platform-specific wheels if it contains binaries. Currently, building C extensions still relies on `setuptools`. 
+You should write a python script with a function named `build` which accepts the ``kwargs`` of `setup()` as the argument.
+Then, update the dictionary with your `ext_modules` settings in the function.
 
 Here is an example taken from `MarkupSafe`:
 
