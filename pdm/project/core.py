@@ -36,6 +36,7 @@ from pdm.utils import (
     find_python_in_path,
     get_in_project_venv_python,
     get_venv_like_prefix,
+    normalize_name,
 )
 
 if TYPE_CHECKING:
@@ -355,7 +356,10 @@ class Project:
 
         repository = self.get_repository(cls=self.core.repository_class)
         allow_prereleases = self.allow_prereleases
-        overrides = self.tool_settings.get("overrides", {})
+        overrides = {
+            normalize_name(k): v
+            for k, v in self.tool_settings.get("overrides", {}).items()
+        }
         if strategy != "all" and not self.is_lockfile_compatible():
             self.core.ui.echo(
                 "Updating the whole lock file as it is not compatible with PDM",

@@ -159,14 +159,17 @@ def test_resolve_conflicting_dependencies(resolve, repository):
         resolve(["foo", "bar"])
 
 
-def test_resolve_conflicting_dependencies_with_overrides(project, resolve, repository):
+@pytest.mark.parametrize("overrides", ["2.1", ">=1.8", "==2.1"])
+def test_resolve_conflicting_dependencies_with_overrides(
+    project, resolve, repository, overrides
+):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
     repository.add_candidate("bar", "0.1.0")
     repository.add_dependencies("bar", "0.1.0", ["hoho~=1.1"])
     repository.add_candidate("hoho", "2.1")
     repository.add_candidate("hoho", "1.5")
-    project.tool_settings["overrides"] = {"hoho": "2.1"}
+    project.tool_settings["overrides"] = {"hoho": overrides}
     result = resolve(["foo", "bar"])
     assert result["hoho"].version == "2.1"
 

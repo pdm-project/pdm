@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from resolvelib import AbstractProvider
 
 from pdm.models.candidates import Candidate
@@ -108,11 +109,15 @@ class BaseProvider(AbstractProvider):
     def get_override_candidates(self, identifier: str) -> Iterable[Candidate]:
         requested = self.overrides[identifier]
         if is_url(requested):
-            requested = f"{identifier} @ {requested}"
+            req = f"{identifier} @ {requested}"
         else:
-            requested = f"{identifier}=={requested}"
-        req = parse_requirement(requested)
-        return self._find_candidates(req)
+            try:
+                SpecifierSet(requested)
+            except InvalidSpecifier:  # handle bare versions
+                req = f"{identifier}=={requested}"
+            else:
+                req = f"{identifier}{requested}"
+        return self._find_candidates(parse_requirement(req))
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named:
