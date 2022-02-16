@@ -240,8 +240,7 @@ def do_add(
     save_version_specifiers({group: deps_to_update}, resolved, save)
     if not dry_run:
         project.add_dependencies(deps_to_update, group, dev)
-    lockfile = project.lockfile
-    project.write_lockfile(lockfile, False)
+        project.write_lockfile(project.lockfile, False)
 
     if sync:
         do_sync(
