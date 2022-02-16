@@ -508,10 +508,11 @@ def do_init(
             "license": make_inline_table({"text": license}),
             "urls": {"Homepage": ""},
             "dependencies": make_array([], True),
-            "requires-python": "" if python_requires == "*" else python_requires,
         },
         "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
     }
+    if python_requires and python_requires != "*":
+        data["project"]["requires-python"] = python_requires  # type: ignore
     get_specifier(python_requires)
     if not project.pyproject:
         project._pyproject = data
