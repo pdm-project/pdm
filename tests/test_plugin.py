@@ -38,12 +38,14 @@ def make_entry_point(plugin):
     return ret
 
 
-def test_plugin_new_command(invoke, mocker, project):
+def test_plugin_new_command(invoke, mocker, project, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
         return_value={"pdm": [make_entry_point(new_command)]},
     )
+    core.init_parser()
+    core.load_plugins()
     result = invoke(["--help"], obj=project)
     assert "hello" in result.output
 
@@ -54,12 +56,14 @@ def test_plugin_new_command(invoke, mocker, project):
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_plugin_replace_command(invoke, mocker, project):
+def test_plugin_replace_command(invoke, mocker, project, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
         return_value={"pdm": [make_entry_point(replace_command)]},
     )
+    core.init_parser()
+    core.load_plugins()
 
     result = invoke(["info"], obj=project)
     assert result.output.strip() == "Hello world"
@@ -68,7 +72,7 @@ def test_plugin_replace_command(invoke, mocker, project):
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_load_multiple_plugings(invoke, mocker, project):
+def test_load_multiple_plugings(invoke, mocker, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
@@ -76,6 +80,8 @@ def test_load_multiple_plugings(invoke, mocker, project):
             "pdm": [make_entry_point(new_command), make_entry_point(add_new_config)]
         },
     )
+    core.init_parser()
+    core.load_plugins()
 
     result = invoke(["hello"])
     assert result.output.strip() == "Hello world"
@@ -84,7 +90,7 @@ def test_load_multiple_plugings(invoke, mocker, project):
     assert result.output.strip() == "bar"
 
 
-def test_old_entry_point_compatibility(invoke, mocker, project):
+def test_old_entry_point_compatibility(invoke, mocker, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
@@ -93,6 +99,8 @@ def test_old_entry_point_compatibility(invoke, mocker, project):
             "pdm.plugin": [make_entry_point(add_new_config)],
         },
     )
+    core.init_parser()
+    core.load_plugins()
 
     result = invoke(["hello"])
     assert result.output.strip() == "Hello world"

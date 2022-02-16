@@ -155,10 +155,10 @@ class TestRepository(BaseRepository):
 
 
 class TestProject(Project):
-    def __init__(self, core, root_path, is_global):
+    def __init__(self, core, root_path, is_global, global_config):
         self.root_path = Path(root_path or ".")
         self.GLOBAL_PROJECT = self.root_path / ".pdm-home" / "global-project"
-        super().__init__(core, root_path, is_global)
+        super().__init__(core, root_path, is_global, global_config)
 
 
 class Distribution:
@@ -250,11 +250,14 @@ def remove_pep582_path_from_pythonpath(pythonpath):
     return os.pathsep.join(paths)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def core():
+    old_config_map = Config._config_map.copy()
     main = Core()
     main.project_class = TestProject
-    return main
+    yield main
+    # Restore the config items
+    Config._config_map = old_config_map
 
 
 @pytest.fixture()
@@ -262,7 +265,6 @@ def project_no_init(tmp_path, mocker, core):
     p = core.create_project(tmp_path)
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
-    old_config_map = Config._config_map.copy()
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     do_use(p, getattr(sys, "_base_executable", sys.executable))
@@ -276,8 +278,6 @@ def project_no_init(tmp_path, mocker, core):
         if pythonpath:
             os.environ["PYTHONPATH"] = pythonpath
         yield p
-    # Restore the config items
-    Config._config_map = old_config_map
 
 
 @pytest.fixture()
