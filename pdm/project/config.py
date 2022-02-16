@@ -180,7 +180,7 @@ class Config(MutableMapping[str, str]):
             self._data.update(self.get_defaults())
 
         self.is_global = is_global
-        self._config_file = config_file
+        self._config_file = config_file.resolve()
         self._file_data = load_config(self._config_file)
         self.deprecated = {
             v.replace: k for k, v in self._config_map.items() if v.replace

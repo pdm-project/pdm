@@ -98,3 +98,16 @@ def test_rename_deprected_config(tmp_path, invoke):
             tmp_path.joinpath(".pdm.toml").read_text().strip()
             == "[python]\nuse_venv = true"
         )
+
+
+def test_specify_config_file(tmp_path, invoke):
+    tmp_path.joinpath("global_config.toml").write_text("project_max_depth = 9\n")
+    with cd(tmp_path):
+        result = invoke(["-c", "global_config.toml", "config", "project_max_depth"])
+        assert result.exit_code == 0
+        assert result.output.strip() == "9"
+
+        os.environ["PDM_CONFIG_FILE"] = "global_config.toml"
+        result = invoke(["config", "project_max_depth"])
+        assert result.exit_code == 0
+        assert result.output.strip() == "9"

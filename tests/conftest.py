@@ -155,10 +155,10 @@ class TestRepository(BaseRepository):
 
 
 class TestProject(Project):
-    def __init__(self, core, root_path, is_global):
+    def __init__(self, core, root_path, is_global, global_config):
         self.root_path = Path(root_path or ".")
         self.GLOBAL_PROJECT = self.root_path / ".pdm-home" / "global-project"
-        super().__init__(core, root_path, is_global)
+        super().__init__(core, root_path, is_global, global_config)
 
 
 class Distribution:

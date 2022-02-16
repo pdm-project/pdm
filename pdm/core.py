@@ -36,6 +36,9 @@ COMMANDS_MODULE_PATH: str = importlib.import_module(
 class Core:
     """A high level object that manages all classes and configurations"""
 
+    parser: argparse.ArgumentParser
+    subparsers: argparse._SubParsersAction
+
     project_class = Project
     repository_class = PyPIRepository
     resolver_class = Resolver
@@ -49,8 +52,8 @@ class Core:
             self.version = "UNKNOWN"
 
         self.ui = termui.UI()
-        self.parser: Optional[argparse.ArgumentParser] = None
-        self.subparsers: Optional[argparse._SubParsersAction] = None
+        self.init_parser()
+        self.load_plugins()
 
     def init_parser(self) -> None:
         self.parser = argparse.ArgumentParser(
@@ -67,6 +70,11 @@ class Core:
                 click.style("Python Development Master (PDM)", bold=True), self.version
             ),
             help="show the version and exit",
+        )
+        self.parser.add_argument(
+            "-c",
+            "--config",
+            help="Specify another config file path(env var: PDM_CONFIG_FILE)",
         )
         self.parser._positionals.title = "Commands"
         verbose_option.add_to_parser(self.parser)
@@ -101,22 +109,27 @@ class Core:
             project = self.create_project(
                 getattr(options, "project_path", None) or default_root,  # type: ignore
                 is_global=global_project,
+                global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
             options.project = project
 
     def create_project(
-        self, root_path: str | Path | None = None, is_global: bool = False
+        self,
+        root_path: str | Path | None = None,
+        is_global: bool = False,
+        global_config: str | None = None,
     ) -> Project:
         """Create a new project object
 
         Args:
             root_path (PathLike): The path to the project root directory
             is_global (bool): Whether the project is a global project
+            global_config (str): The path to the global config file
 
         Returns:
             The project object
         """
-        return self.project_class(self, root_path, is_global)
+        return self.project_class(self, root_path, is_global, global_config)
 
     def main(
         self,
@@ -128,10 +141,6 @@ class Core:
         """The main entry function"""
         from pdm.models.pip_shims import global_tempdir_manager
 
-        self.init_parser()
-        self.load_plugins()
-        assert self.parser
-        assert self.subparsers
         options = self.parser.parse_args(args or None)
         self.ui.set_verbosity(options.verbose)
         if options.ignore_python:

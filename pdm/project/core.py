@@ -56,13 +56,21 @@ class Project:
     GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
-        self, core: Core, root_path: str | Path | None, is_global: bool = False
+        self,
+        core: Core,
+        root_path: str | Path | None,
+        is_global: bool = False,
+        global_config: str | Path | None = None,
     ) -> None:
         self._pyproject: dict | None = None
         self._lockfile: dict | None = None
         self._environment: Environment | None = None
         self._python: PythonInfo | None = None
         self.core = core
+
+        if global_config is None:
+            global_config = self.GLOBAL_PROJECT.with_name("config.toml")
+        self.global_config = Config(Path(global_config), is_global=True)
 
         if root_path is None:
             root_path = (
@@ -135,11 +143,6 @@ class Project:
     @property
     def scripts(self) -> dict[str, str | dict[str, str]]:
         return self.tool_settings.get("scripts", {})  # type: ignore
-
-    @cached_property
-    def global_config(self) -> Config:
-        """Read-and-writable configuration dict for global settings"""
-        return Config(self.GLOBAL_PROJECT.with_name("config.toml"), is_global=True)
 
     @cached_property
     def project_config(self) -> Config:
