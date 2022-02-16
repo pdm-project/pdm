@@ -184,7 +184,7 @@ def do_sync(
         dry_run,
         no_editable=no_editable,
         install_self=not no_self and "default" in groups and bool(project.meta.name),
-        use_install_cache=project.config["feature.install_cache"],
+        use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
     )
     signals.pre_install.send(project, candidates=candidates, dry_run=dry_run)

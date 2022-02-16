@@ -209,6 +209,7 @@ filterwarnings = [
 markers = [
     "network: Tests that require network",
     "integration: Run with all Python versions",
-    "path: Tests that compare with the system paths"
+    "path: Tests that compare with the system paths",
+    "deprecated: Tests about deprecated features",
 ]
 addopts = "-ra"

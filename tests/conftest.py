@@ -260,7 +260,6 @@ def core():
 @pytest.fixture()
 def project_no_init(tmp_path, mocker, core):
     p = core.create_project(tmp_path)
-    mocker.patch("pdm.project.core.Config.HOME_CONFIG", tmp_path)
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     old_config_map = Config._config_map.copy()

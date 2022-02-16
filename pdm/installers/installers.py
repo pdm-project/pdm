@@ -190,7 +190,7 @@ def install_wheel_with_cache(
     interpreter = environment.interpreter.executable
     script_kind = _get_kind(environment)
     supports_symlink = (
-        environment.project.config["feature.install_cache_method"] == "symlink"
+        environment.project.config["install.cache_method"] == "symlink"
         and fs_supports_symlink()
     )
     if not cache_path.is_dir():

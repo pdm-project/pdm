@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from pdm.cli import actions
@@ -154,76 +152,6 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         "me@example.org",
         f">={python_version}",
     )
-
-
-def test_config_command(project, invoke):
-    result = invoke(["config"], obj=project)
-    assert result.exit_code == 0
-    assert "python.use_pyenv = True" in result.output
-
-    result = invoke(["config", "-v"], obj=project)
-    assert result.exit_code == 0
-    assert "Use the pyenv interpreter" in result.output
-
-
-def test_config_get_command(project, invoke):
-    result = invoke(["config", "python.use_pyenv"], obj=project)
-    assert result.exit_code == 0
-    assert result.output.strip() == "True"
-
-    result = invoke(["config", "foo.bar"], obj=project)
-    assert result.exit_code != 0
-
-
-def test_config_set_command(project, invoke):
-    result = invoke(["config", "python.use_pyenv", "false"], obj=project)
-    assert result.exit_code == 0
-    result = invoke(["config", "python.use_pyenv"], obj=project)
-    assert result.output.strip() == "False"
-
-    result = invoke(["config", "foo.bar"], obj=project)
-    assert result.exit_code != 0
-
-    result = invoke(["config", "-l", "cache_dir", "/path/to/bar"], obj=project)
-    assert result.exit_code != 0
-
-
-def test_config_del_command(project, invoke):
-
-    result = invoke(["config", "-l", "python.use_pyenv", "false"], obj=project)
-    assert result.exit_code == 0
-
-    result = invoke(["config", "python.use_pyenv"], obj=project)
-    assert result.output.strip() == "False"
-
-    result = invoke(["config", "-ld", "python.use_pyenv"], obj=project)
-    assert result.exit_code == 0
-
-    result = invoke(["config", "python.use_pyenv"], obj=project)
-    assert result.output.strip() == "True"
-
-
-def test_config_env_var_shadowing(project, invoke):
-    os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
-    result = invoke(["config", "pypi.url"], obj=project)
-    assert result.output.strip() == "https://example.org/simple"
-
-    result = invoke(["config", "pypi.url", "https://test.pypi.org/pypi"], obj=project)
-    assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
-    result = invoke(["config", "pypi.url"], obj=project)
-    assert result.output.strip() == "https://example.org/simple"
-
-    del os.environ["PDM_PYPI_URL"]
-    result = invoke(["config", "pypi.url"], obj=project)
-    assert result.output.strip() == "https://test.pypi.org/pypi"
-
-
-def test_config_project_global_precedence(project, invoke):
-    invoke(["config", "python.path", "/path/to/foo"], obj=project)
-    invoke(["config", "-l", "python.path", "/path/to/bar"], obj=project)
-
-    result = invoke(["config", "python.path"], obj=project)
-    assert result.output.strip() == "/path/to/bar"
 
 
 @pytest.mark.parametrize(
