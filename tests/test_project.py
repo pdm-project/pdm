@@ -126,7 +126,7 @@ def test_project_use_venv(project):
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
 
-    project.project_config["use_venv"] = True
+    project.project_config["python.use_venv"] = True
     env = project.environment
     assert (
         Path(env.interpreter.executable)
@@ -151,7 +151,7 @@ def test_project_auto_detect_venv(project):
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
 
-    project.project_config["use_venv"] = True
+    project.project_config["python.use_venv"] = True
     project._python = None
     project.project_config["python.path"] = (
         project.root / "test_venv" / scripts / f"python{suffix}"
@@ -161,7 +161,7 @@ def test_project_auto_detect_venv(project):
 
 
 def test_ignore_saved_python(project):
-    project.project_config["use_venv"] = True
+    project.project_config["python.use_venv"] = True
     project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""

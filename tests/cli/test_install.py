@@ -81,7 +81,7 @@ def test_sync_only_different(project, working_set, capsys):
 
 @pytest.mark.usefixtures("repository")
 def test_sync_in_sequential_mode(project, working_set, capsys):
-    project.project_config["parallel_install"] = False
+    project.project_config["install.parallel"] = False
     actions.do_add(project, packages=["requests"])
     out, _ = capsys.readouterr()
     assert "6 to add" in out

@@ -91,7 +91,7 @@ class Synchronizer:
         self.use_install_cache = use_install_cache
         self.reinstall = reinstall
 
-        self.parallel = environment.project.config["parallel_install"]
+        self.parallel = environment.project.config["install.parallel"]
         locked_repository = environment.project.locked_repository
         self.all_candidate_keys = list(locked_repository.all_candidates)
         self.working_set = environment.get_working_set()

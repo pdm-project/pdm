@@ -182,7 +182,7 @@ class Project:
 
         # Resolve virtual environments from env-vars
         virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
-        if config["use_venv"] and virtual_env:
+        if config["python.use_venv"] and virtual_env:
             return PythonInfo.from_path(
                 os.path.join(virtual_env, scripts, f"python{suffix}")
             )
@@ -206,7 +206,9 @@ class Project:
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
-        if self.config["use_venv"] and get_venv_like_prefix(self.python.executable):
+        if self.config["python.use_venv"] and get_venv_like_prefix(
+            self.python.executable
+        ):
             # Only recognize venv created by python -m venv and virtualenv>20
             return GlobalEnvironment(self)
         return Environment(self)
@@ -581,7 +583,7 @@ dependencies = ["pip", "setuptools", "wheel"]
                     yield PythonInfo.from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
                     yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
-            if config.get("use_venv"):
+            if config.get("python.use_venv"):
                 python = get_in_project_venv_python(self.root)
                 if python:
                     yield PythonInfo.from_path(python)
