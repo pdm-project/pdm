@@ -13,7 +13,7 @@ import click
 from resolvelib import Resolver
 
 from pdm import termui
-from pdm.cli.actions import check_update, migrate_pyproject, print_pep582_command
+from pdm.cli.actions import check_update, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter
@@ -103,8 +103,6 @@ class Core:
                 is_global=global_project,
             )
             options.project = project
-
-        migrate_pyproject(options.project)
 
     def create_project(
         self, root_path: str | Path | None = None, is_global: bool = False

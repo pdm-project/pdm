@@ -748,58 +748,6 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
     ui.echo(result)
 
 
-def migrate_pyproject(project: Project) -> None:
-    """Migrate the legacy pyproject format to PEP 621"""
-
-    if project.pyproject and "project" in project.pyproject:
-        pyproject = project.pyproject
-        settings = {}
-        updated_fields = []
-        for field in ("includes", "excludes", "build", "package-dir"):
-            if field in pyproject["project"]:
-                updated_fields.append(field)
-                settings[field] = pyproject["project"].pop(field)
-        if "dev-dependencies" in pyproject["project"]:
-            if pyproject["project"]["dev-dependencies"]:
-                settings["dev-dependencies"] = {
-                    "dev": pyproject["project"]["dev-dependencies"]
-                }
-            del pyproject["project"]["dev-dependencies"]
-            updated_fields.append("dev-dependencies")
-        if updated_fields:
-            if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
-                pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
-            pyproject["tool"]["pdm"].update(settings)
-            project.pyproject = pyproject
-            project.write_pyproject()
-            project.core.ui.echo(
-                f"{termui.yellow('[AUTO-MIGRATION]')} These fields are moved from "
-                f"[project] to [tool.pdm] table: {updated_fields}",
-                err=True,
-            )
-        return
-
-    if not project.pyproject_file.exists() or not FORMATS["legacy"].check_fingerprint(
-        project, project.pyproject_file
-    ):
-        return
-
-    project.core.ui.echo(
-        f"{termui.yellow('[AUTO-MIGRATION]')} Legacy pdm 0.x metadata detected, "
-        "migrating to PEP 621...",
-        err=True,
-    )
-    do_import(project, str(project.pyproject_file), "legacy")
-    project.core.ui.echo(
-        termui.green("pyproject.toml")
-        + termui.yellow(
-            " has been migrated to PEP 621 successfully. "
-            "Now you can safely delete the legacy metadata under [tool.pdm] table."
-        ),
-        err=True,
-    )
-
-
 def get_latest_version(project: Project) -> str | None:
     """Get the latest version of PDM from PyPI, cache for 7 days"""
     from pdm.utils import get_finder

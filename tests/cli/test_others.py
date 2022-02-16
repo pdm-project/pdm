@@ -326,13 +326,6 @@ def test_completion_command(invoke):
     assert "(completion)" in result.output
 
 
-def test_lock_legacy_project(invoke, fixture_project, repository):
-    project = fixture_project("demo-legacy")
-    result = invoke(["lock"], obj=project)
-    assert result.exit_code == 0
-    assert "urllib3" in project.locked_repository.all_candidates
-
-
 def test_lock_refresh(invoke, project, repository):
     project.add_dependencies({"requests": parse_requirement("requests")})
     result = invoke(["lock"], obj=project)
