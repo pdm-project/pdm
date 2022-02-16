@@ -56,15 +56,12 @@ class Command(BaseCommand):
 
     def _show_config(self, config: Config, ui: termui.UI) -> None:
         for key in sorted(config):
-            global_config_item = config._config_map[key]
+            config_item = config._config_map[key]
             deprecated = ""
-            if (
-                global_config_item.replace
-                and global_config_item.replace in config._data
-            ):
-                deprecated = termui.red(f"(deprecating: {global_config_item.replace})")
+            if config_item.replace and config_item.replace in config._data:
+                deprecated = termui.red(f"(deprecating: {config_item.replace})")
             ui.echo(
-                termui.yellow("# " + global_config_item.description),
+                termui.yellow("# " + config_item.description),
                 verbosity=termui.DETAIL,
             )
             ui.echo(f"{termui.cyan(key)}{deprecated} = {config[key]}")

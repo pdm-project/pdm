@@ -130,12 +130,12 @@ class Config(MutableMapping[str, str]):
             "Cache wheel installation and only put symlinks in the library root",
             False,
             coerce=ensure_boolean,
-            replace="install.cache",
+            replace="feature.install_cache",
         ),
         "install.cache_method": ConfigItem(
             "`symlink` or `pth` to create links to the cached installation",
             "symlink",
-            replace="install.cache_method",
+            replace="feature.install_cache_method",
         ),
         "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
         "python.use_pyenv": ConfigItem(
@@ -214,8 +214,8 @@ class Config(MutableMapping[str, str]):
         else:
             if config_key in self._data:
                 result = self._data[config_key]
-            elif key != config_key:
-                result = self._data[key]
+            elif config.replace:
+                result = self._data[config.replace]
             else:
                 raise NoConfigError(key) from None
         return config.coerce(result)
