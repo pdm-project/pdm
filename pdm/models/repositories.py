@@ -92,7 +92,10 @@ class BaseRepository:
         raise NotImplementedError
 
     def find_candidates(
-        self, requirement: Requirement, allow_prereleases: bool | None = None
+        self,
+        requirement: Requirement,
+        allow_prereleases: bool | None = None,
+        ignore_requires_python: bool = False,
     ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
@@ -114,7 +117,9 @@ class BaseRepository:
         ]
 
         applicable_cans_python_compatible = [
-            c for c in applicable_cans if requires_python.is_subset(c.requires_python)
+            c
+            for c in applicable_cans
+            if ignore_requires_python or requires_python.is_subset(c.requires_python)
         ]
         # Evaluate data-requires-python attr and discard incompatible candidates
         # to reduce the number of candidates to resolve.
@@ -134,7 +139,8 @@ class BaseRepository:
             applicable_cans_python_compatible = [
                 c
                 for c in applicable_cans
-                if requires_python.is_subset(c.requires_python)
+                if ignore_requires_python
+                or requires_python.is_subset(c.requires_python)
             ]
             if applicable_cans_python_compatible:
                 applicable_cans = applicable_cans_python_compatible
@@ -410,7 +416,10 @@ class LockedRepository(BaseRepository):
         return reqs, python, summary
 
     def find_candidates(
-        self, requirement: Requirement, allow_prereleases: bool | None = None
+        self,
+        requirement: Requirement,
+        allow_prereleases: bool | None = None,
+        ignore_requires_python: bool = False,
     ) -> Iterable[Candidate]:
         for key, info in self.candidate_info.items():
             if key[0] != requirement.identify():

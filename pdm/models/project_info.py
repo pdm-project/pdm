@@ -72,6 +72,7 @@ class ProjectInfo:
         if self.installed_version:
             yield (termui.green("Installed version:"), self.installed_version)
         yield termui.cyan("Summary:"), self._parsed.get("summary", "")
+        yield termui.cyan("Requires Python:"), self._parsed["requires-python"]
         yield termui.cyan("Author:"), self._parsed.get("author", "")
         yield termui.cyan("Author email:"), self._parsed.get("email", "")
         yield termui.cyan("License:"), self._parsed.get("license", "")
