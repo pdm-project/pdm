@@ -11,8 +11,9 @@ def test_basic_integration(python_version, core, tmp_path, invoke):
     project = core.create_project(tmp_path)
     project.root.joinpath("foo.py").write_text("import django\n")
     additional_args = ["--no-self"] if python_version == "2.7" else []
-    invoke(["init"], input="\ny\n\n\n\n\n\n\n", obj=project, strict=True)
     invoke(["use", "-f", python_version], obj=project, strict=True)
+    invoke(["init", "-n"], obj=project, strict=True)
+    project.meta["name"] = "test-project"
     project._environment = None
     invoke(["add", "django", "-v"] + additional_args, obj=project, strict=True)
     with cd(project.root):
