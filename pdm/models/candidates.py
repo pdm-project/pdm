@@ -337,8 +337,8 @@ class PreparedCandidate:
         :param allow_all: If true, don't validate the wheel tag nor hashes
         """
         ireq = self.ireq
-        if ireq.is_wheel:
-            if self.wheel and self._wheel_compatible(self.wheel, allow_all):
+        if self.wheel:
+            if self._wheel_compatible(self.wheel, allow_all):
                 return
         elif ireq.source_dir:
             return
