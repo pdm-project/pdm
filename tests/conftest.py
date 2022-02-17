@@ -141,7 +141,6 @@ class TestRepository(BaseRepository):
         for version, candidate in self._pypi_data.get(requirement.key, {}).items():
             c = Candidate(
                 requirement,
-                self.environment,
                 name=requirement.project_name,
                 version=version,
             )

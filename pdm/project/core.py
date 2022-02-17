@@ -428,9 +428,7 @@ class Project:
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         req = parse_requirement(pip_shims.path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
-        return Candidate(
-            req, self.environment, name=self.meta.name, version=self.meta.version
-        )
+        return Candidate(req, name=self.meta.name, version=self.meta.version)
 
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies groups. Otherwise lock file is

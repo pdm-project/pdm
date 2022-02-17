@@ -33,7 +33,8 @@ def cache_result(
     @wraps(func)
     def wrapper(self: T, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
-        if candidate.should_cache():
+        prepared = candidate.prepared
+        if prepared and prepared.should_cache():
             self._candidate_info_cache.set(candidate, result)
         return result
 
@@ -176,8 +177,6 @@ class BaseRepository:
         return applicable_cans
 
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
-        if not candidate.should_cache():
-            raise CandidateInfoNotFound(candidate)
         try:
             result = self._candidate_info_cache.get(candidate)
         except CorruptedCacheError:
@@ -189,9 +188,10 @@ class BaseRepository:
 
     @cache_result
     def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateInfo:
-        deps = candidate.get_dependencies_from_metadata()
+        prepared = candidate.prepare(self.environment)
+        deps = prepared.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
-        summary = candidate.metadata.metadata["Summary"]
+        summary = prepared.metadata.metadata["Summary"]
         return deps, requires_python, summary
 
     def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
@@ -290,7 +290,7 @@ class PyPIRepository(BaseRepository):
         sources = self.get_filtered_sources(requirement)
         with self.environment.get_finder(sources, True) as finder, allow_all_wheels():
             cans = [
-                Candidate.from_installation_candidate(c, requirement, self.environment)
+                Candidate.from_installation_candidate(c, requirement)
                 for c in finder.find_all_candidates(requirement.project_name)
             ]
         if not cans:
@@ -373,7 +373,7 @@ class LockedRepository(BaseRepository):
                 if k not in ("dependencies", "requires_python", "summary")
             }
             req = Requirement.from_req_dict(package_name, req_dict)
-            can = Candidate(req, self.environment, name=package_name, version=version)
+            can = Candidate(req, name=package_name, version=version)
             can_id = self._identify_candidate(can)
             self.packages[can_id] = can
             candidate_info: CandidateInfo = (

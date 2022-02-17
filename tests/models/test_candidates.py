@@ -14,8 +14,8 @@ from tests import FIXTURES
 def test_parse_local_directory_metadata(project, is_editable):
     requirement_line = f"{(FIXTURES / 'projects/demo').as_posix()}"
     req = parse_requirement(requirement_line, is_editable)
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == [
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
     ]
@@ -27,14 +27,14 @@ def test_parse_local_directory_metadata(project, is_editable):
 def test_parse_vcs_metadata(project, is_editable):
     requirement_line = "git+https://github.com/test-root/demo.git@master#egg=demo"
     req = parse_requirement(requirement_line, is_editable)
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == [
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
     ]
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
-    lockfile = candidate.as_lockfile_entry()
+    lockfile = candidate.as_lockfile_entry(project.root)
     assert lockfile["ref"] == "master"
     if is_editable:
         assert "revision" not in lockfile
@@ -52,8 +52,8 @@ def test_parse_vcs_metadata(project, is_editable):
 )
 def test_parse_artifact_metadata(requirement_line, project):
     req = parse_requirement(requirement_line)
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == [
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
     ]
@@ -67,9 +67,10 @@ def test_parse_metadata_with_extras(project):
         f"demo[tests,security] @ file://"
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
     )
-    candidate = Candidate(req, project.environment)
-    assert candidate.ireq.is_wheel
-    assert sorted(candidate.get_dependencies_from_metadata()) == [
+    candidate = Candidate(req)
+    prepared = candidate.prepare(project.environment)
+    assert prepared.ireq.is_wheel
+    assert sorted(prepared.get_dependencies_from_metadata()) == [
         "pytest",
         'requests; python_version >= "3.6"',
     ]
@@ -80,9 +81,10 @@ def test_parse_remote_link_metadata(project):
     req = parse_requirement(
         "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
-    candidate = Candidate(req, project.environment)
-    assert candidate.ireq.is_wheel
-    assert candidate.get_dependencies_from_metadata() == [
+    candidate = Candidate(req)
+    prepared = candidate.prepare(project.environment)
+    assert prepared.ireq.is_wheel
+    assert prepared.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
     ]
@@ -95,9 +97,10 @@ def test_extras_warning(project, recwarn):
     req = parse_requirement(
         "demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     )
-    candidate = Candidate(req, project.environment)
-    assert candidate.ireq.is_wheel
-    assert candidate.get_dependencies_from_metadata() == []
+    candidate = Candidate(req)
+    prepared = candidate.prepare(project.environment)
+    assert prepared.ireq.is_wheel
+    assert prepared.get_dependencies_from_metadata() == []
     warning = recwarn.pop(ExtrasWarning)
     assert str(warning.message) == "Extras not found for demo: [foo]"
     assert candidate.name == "demo"
@@ -109,8 +112,8 @@ def test_parse_abnormal_specifiers(project):
     req = parse_requirement(
         "http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"
     )
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata()
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata()
 
 
 @pytest.mark.usefixtures("local_finder")
@@ -130,12 +133,12 @@ def test_expand_project_root_in_url(req_str, core):
         req = parse_requirement(req_str[3:], True)
     else:
         req = parse_requirement(req_str)
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == [
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
     ]
-    lockfile_entry = candidate.as_lockfile_entry()
+    lockfile_entry = candidate.as_lockfile_entry(project.root)
     if "path" in lockfile_entry:
         assert lockfile_entry["path"].startswith("./")
     else:
@@ -145,8 +148,10 @@ def test_expand_project_root_in_url(req_str, core):
 @pytest.mark.usefixtures("local_finder")
 def test_parse_project_file_on_build_error(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
-    candidate = Candidate(req, project.environment)
-    assert sorted(candidate.get_dependencies_from_metadata()) == [
+    candidate = Candidate(req)
+    assert sorted(
+        candidate.prepare(project.environment).get_dependencies_from_metadata()
+    ) == [
         'chardet; os_name == "nt"',
         "idna",
     ]
@@ -158,8 +163,8 @@ def test_parse_project_file_on_build_error(project):
 def test_parse_project_file_on_build_error_with_extras(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure').as_posix()}")
     req.extras = ("security", "tests")
-    candidate = Candidate(req, project.environment)
-    deps = candidate.get_dependencies_from_metadata()
+    candidate = Candidate(req)
+    deps = candidate.prepare(project.environment).get_dependencies_from_metadata()
     assert 'requests; python_version >= "3.6"' in deps
     assert "pytest" in deps
     assert candidate.name == "demo"
@@ -169,8 +174,8 @@ def test_parse_project_file_on_build_error_with_extras(project):
 @pytest.mark.usefixtures("local_finder")
 def test_parse_project_file_on_build_error_no_dep(project):
     req = parse_requirement(f"{(FIXTURES / 'projects/demo-failure-no-dep').as_posix()}")
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == []
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == []
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
 
@@ -180,9 +185,11 @@ def test_parse_poetry_project_metadata(project, is_editable):
     req = parse_requirement(
         f"{(FIXTURES / 'projects/poetry-demo').as_posix()}", is_editable
     )
-    candidate = Candidate(req, project.environment)
+    candidate = Candidate(req)
     requests_dep = "requests<3.0,>=2.6"
-    assert candidate.get_dependencies_from_metadata() == [requests_dep]
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
+        requests_dep
+    ]
     assert candidate.name == "poetry-demo"
     assert candidate.version == "0.1.0"
 
@@ -192,8 +199,8 @@ def test_parse_flit_project_metadata(project, is_editable):
     req = parse_requirement(
         f"{(FIXTURES / 'projects/flit-demo').as_posix()}", is_editable
     )
-    candidate = Candidate(req, project.environment)
-    deps = candidate.get_dependencies_from_metadata()
+    candidate = Candidate(req)
+    deps = candidate.prepare(project.environment).get_dependencies_from_metadata()
     requests_dep = "requests>=2.6"
     assert requests_dep in deps
     assert 'configparser; python_version == "2.7"' in deps
@@ -208,8 +215,10 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
         "@master#egg=package-a&subdirectory=package-a"
     )
     req = parse_requirement(line, is_editable)
-    candidate = Candidate(req, project.environment)
-    assert candidate.get_dependencies_from_metadata() == ["flask"]
+    candidate = Candidate(req)
+    assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
+        "flask"
+    ]
     assert candidate.version == "0.1.0"
 
     line = (
@@ -217,11 +226,14 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
         "@master#egg=package-b&subdirectory=package-b"
     )
     req = parse_requirement(line, is_editable)
-    candidate = Candidate(req, project.environment)
+    candidate = Candidate(req)
     expected_deps = ["django"]
     if is_editable:
         expected_deps.append("editables")
-    assert candidate.get_dependencies_from_metadata() == expected_deps
+    assert (
+        candidate.prepare(project.environment).get_dependencies_from_metadata()
+        == expected_deps
+    )
     assert candidate.version == "0.1.0"
 
 
@@ -235,76 +247,70 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
         Path(cache_path).mkdir(parents=True)
     shutil.copy2(built_path, cache_path)
     req = parse_requirement(file_link.url)
-    candidate = Candidate(req, project.environment)
     downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
-    candidate.prepare(True)
+    prepared = Candidate(req).prepare(project.environment)
     downloader.assert_not_called()
-    assert Path(candidate.wheel) == Path(cache_path) / Path(built_path).name
+    assert Path(prepared.wheel) == Path(cache_path) / Path(built_path).name
 
-    candidate.wheel = None
+    prepared.wheel = None
     builder = mocker.patch("pdm.builders.WheelBuilder.build")
-    candidate.build()
+    wheel = prepared.build()
     builder.assert_not_called()
-    assert Path(candidate.wheel) == Path(cache_path) / Path(built_path).name
+    assert Path(wheel) == Path(cache_path) / Path(built_path).name
 
 
 @pytest.mark.usefixtures("vcs", "local_finder")
 def test_cache_vcs_immutable_revision(project):
     req = parse_requirement("git+https://github.com/test-root/demo.git@master#egg=demo")
-    candidate = Candidate(req, project.environment)
-    wheel = candidate.build()
+    candidate = Candidate(req)
+    wheel = candidate.prepare(project.environment).build()
     with pytest.raises(ValueError):
         Path(wheel).relative_to(project.cache_dir)
-    assert candidate.revision == "1234567890abcdef"
+    assert candidate.get_revision() == "1234567890abcdef"
 
     req = parse_requirement(
         "git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
     )
-    candidate = Candidate(req, project.environment)
-    wheel = candidate.build()
+    candidate = Candidate(req)
+    wheel = candidate.prepare(project.environment).build()
     assert Path(wheel).relative_to(project.cache_dir)
-    assert candidate.revision == "1234567890abcdef"
+    assert candidate.get_revision() == "1234567890abcdef"
 
     # test the revision can be got correctly after cached
-    candidate = Candidate(req, project.environment)
-    wheel = candidate.prepare(True)
-    assert not candidate.source_dir
-    assert candidate.revision == "1234567890abcdef"
+    prepared = Candidate(req).prepare(project.environment)
+    assert not prepared.ireq.source_dir
+    assert prepared.revision == "1234567890abcdef"
 
 
 @pytest.mark.usefixtures("local_finder")
 def test_cache_egg_info_sdist(project):
     req = parse_requirement("demo @ http://fixtures.test/artifacts/demo-0.0.1.tar.gz")
-    candidate = Candidate(req, project.environment)
-    wheel = candidate.build()
+    candidate = Candidate(req)
+    wheel = candidate.prepare(project.environment).build()
     assert Path(wheel).relative_to(project.cache_dir)
 
 
 def test_invalidate_incompatible_wheel_link(project, index):
     req = parse_requirement("demo")
-    candidate = Candidate(req, project.environment, name="demo", version="0.0.1")
-    candidate.prepare(True)
+    prepared = Candidate(req, name="demo", version="0.0.1").prepare(project.environment)
     assert (
-        Path(candidate.wheel).name
-        == candidate.link.filename
+        Path(prepared.wheel).name
+        == prepared.ireq.link.filename
         == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
     )
 
-    candidate.prepare()
+    prepared.obtain(False)
     assert (
-        Path(candidate.wheel).name
-        == candidate.link.filename
+        Path(prepared.wheel).name
+        == prepared.ireq.link.filename
         == "demo-0.0.1-py2.py3-none-any.whl"
     )
 
 
 def test_legacy_pep345_tag_link(project, index):
     req = parse_requirement("pep345-legacy")
-    candidate = Candidate(req, project.environment)
-    try:
-        candidate.prepare()
-    except Exception:
-        pass
+    repo = project.get_repository()
+    candidate = next(iter(repo.find_candidates(req)))
     assert candidate.requires_python == ">=3,<4"
 
 

@@ -102,7 +102,7 @@ class Synchronizer:
                 candidate.req.editable = None  # type: ignore
         elif (
             self.install_self
-            and getattr(self.environment.project.meta, "editable_backend", "editables")
+            and getattr(self.environment.project.meta, "editable_backend", "path")
             == "editables"
             and "editables" not in candidates
         ):

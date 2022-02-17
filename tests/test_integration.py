@@ -11,10 +11,11 @@ def test_basic_integration(python_version, core, tmp_path, invoke):
     project = core.create_project(tmp_path)
     project.root.joinpath("foo.py").write_text("import django\n")
     additional_args = ["--no-self"] if python_version == "2.7" else []
-    invoke(["init"], input="\ny\n\n\n\n\n\n>=2.7\n", obj=project, strict=True)
     invoke(["use", "-f", python_version], obj=project, strict=True)
+    invoke(["init", "-n"], obj=project, strict=True)
+    project.meta["name"] = "test-project"
     project._environment = None
-    invoke(["add", "django"] + additional_args, obj=project, strict=True)
+    invoke(["add", "django", "-v"] + additional_args, obj=project, strict=True)
     with cd(project.root):
         invoke(["run", "python", "foo.py"], obj=project, strict=True)
         if python_version != "2.7":
@@ -27,6 +28,7 @@ def test_basic_integration(python_version, core, tmp_path, invoke):
 
 
 def test_actual_list_freeze(project, local_finder, invoke):
+    invoke(["config", "-l", "install.parallel", "false"], obj=project, strict=True)
     invoke(["add", "first"], obj=project, strict=True)
     r = invoke(["list", "--freeze"], obj=project)
     assert "first==2.0.2" in r.output

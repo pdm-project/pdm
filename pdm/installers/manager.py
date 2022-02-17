@@ -35,7 +35,8 @@ class InstallManager:
             installer = install_wheel_with_cache
         else:
             installer = install_wheel
-        installer(candidate.build(), self.environment, candidate.direct_url())
+        prepared = candidate.prepare(self.environment)
+        installer(prepared.build(), self.environment, prepared.direct_url())
 
     def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:
         """Get the path collection to be removed from the disk"""
