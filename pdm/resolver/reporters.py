@@ -58,7 +58,7 @@ class SpinnerReporter(BaseReporter):
                 if not can.req.is_named:
                     can_info = can.req.url
                     if can.req.is_vcs:
-                        can_info = f"{can_info}@{can.revision}"
+                        can_info = f"{can_info}@{can.get_revision()}"
                 else:
                     can_info = can.version
                 logger.info(f"  {k.rjust(column_width)} {can_info}")

@@ -17,7 +17,6 @@ def test_install_wheel_with_inconsistent_dist_info(project):
     req = parse_requirement("pyfunctional")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link("http://fixtures.test/artifacts/PyFunctional-1.4.3-py3-none-any.whl"),
     )
     installer = InstallManager(project.environment)
@@ -29,7 +28,6 @@ def test_install_with_file_existing(project):
     req = parse_requirement("demo")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
     (project.environment.packages_path / "lib/demo.py").touch()
@@ -41,7 +39,6 @@ def test_uninstall_commit_rollback(project):
     req = parse_requirement("demo")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
     installer = InstallManager(project.environment)
@@ -63,7 +60,6 @@ def test_rollback_after_commit(project, caplog):
     req = parse_requirement("demo")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
     installer = InstallManager(project.environment)
@@ -92,7 +88,6 @@ def test_uninstall_with_console_scripts(project, use_install_cache):
     req = parse_requirement("celery")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link("http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl"),
     )
     installer = InstallManager(project.environment, use_install_cache=use_install_cache)
@@ -111,7 +106,6 @@ def test_install_wheel_with_cache(project, invoke):
     req = parse_requirement("future-fstrings")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link(
             "http://fixtures.test/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl"
         ),
@@ -149,10 +143,7 @@ def test_url_requirement_is_not_cached(project):
         "future-fstrings @ http://fixtures.test/artifacts/"
         "future_fstrings-1.2.0-py2.py3-none-any.whl"
     )
-    candidate = Candidate(
-        req,
-        project.environment,
-    )
+    candidate = Candidate(req)
     installer = InstallManager(project.environment, use_install_cache=True)
     installer.install(candidate)
     cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
@@ -169,7 +160,6 @@ def test_install_wheel_with_data_scripts(project, use_install_cache):
     req = parse_requirement("jmespath")
     candidate = Candidate(
         req,
-        project.environment,
         link=Link(
             "http://fixtures.test/artifacts/jmespath-0.10.0-py2.py3-none-any.whl"
         ),

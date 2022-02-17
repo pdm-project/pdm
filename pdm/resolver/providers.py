@@ -121,8 +121,8 @@ class BaseProvider(AbstractProvider):
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named:
-            can = Candidate(requirement, self.repository.environment)
-            can.metadata
+            can = Candidate(requirement)
+            can.prepare(self.repository.environment)
             return [can]
         else:
             return self.repository.find_candidates(
@@ -137,9 +137,7 @@ class BaseProvider(AbstractProvider):
     ) -> Iterable[Candidate]:
         incompat = list(incompatibilities[identifier])
         if identifier == "python":
-            candidates = find_python_matches(
-                identifier, requirements, self.repository.environment
-            )
+            candidates = find_python_matches(identifier, requirements)
             return [c for c in candidates if c not in incompat]
         elif identifier in self.overrides:
             return self.get_override_candidates(identifier)

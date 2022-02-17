@@ -82,7 +82,6 @@ class Candidate:
     def __init__(
         self,
         req: Requirement,
-        environment: Environment,
         name: str | None = None,
         version: str | None = None,
         link: pip_shims.Link | None = None,
@@ -95,45 +94,24 @@ class Candidate:
         :param link: the file link of the candidate.
         """
         self.req = req
-        self.environment = environment
         self.name = name or self.req.project_name
         self.version = version or self.req.version
-        if link is None and self.req:
-            link = self.ireq.link
         self.link = link
         self.summary = ""
-        self.source_dir: str | None = None
         self.hashes: dict[str, str] | None = None
-        self._requires_python: str | None = None
 
-        self.wheel: str | None = None
-        self._metadata_dir: str | None = None
+        self._requires_python: str | None = None
+        self._prepared: PreparedCandidate | None = None
 
     def __hash__(self) -> int:
         return hash((self.name, self.version))
 
-    @cached_property
-    def ireq(self) -> pip_shims.InstallRequirement:
-        rv = self.req.as_ireq()
-        if rv.link:
-            rv.link = pip_shims.Link(
-                expand_env_vars_in_auth(
-                    rv.link.url.replace(
-                        "${PROJECT_ROOT}",
-                        self.environment.project.root.as_posix().lstrip(  # type: ignore
-                            "/"
-                        ),
-                    )
-                )
-            )
-            if rv.source_dir:
-                rv.source_dir = os.path.normpath(os.path.abspath(rv.link.file_path))
-            if rv.local_file_path:
-                rv.local_file_path = rv.link.file_path
-        return rv
-
     def identify(self) -> str:
         return self.req.identify()
+
+    @property
+    def prepared(self) -> PreparedCandidate | None:
+        return self._prepared
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Candidate):
@@ -142,12 +120,127 @@ class Candidate:
             return self.name == other.name and self.version == other.version
         return self.name == other.name and self.link == other.link
 
-    @cached_property
-    def revision(self) -> str:
+    def get_revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
         if self.req.revision:  # type: ignore
             return self.req.revision  # type: ignore
+        assert self._prepared
+        return self._prepared.revision
+
+    def __repr__(self) -> str:
+        source = getattr(self.link, "comes_from", "unknown")
+        return f"<Candidate {self.name} {self.version} from {source}>"
+
+    @classmethod
+    def from_installation_candidate(
+        cls, candidate: pip_shims.InstallationCandidate, req: Requirement
+    ) -> Candidate:
+        """Build a candidate from pip's InstallationCandidate."""
+        return cls(
+            req,
+            name=candidate.name,
+            version=str(candidate.version),
+            link=candidate.link,
+        )
+
+    @property
+    def requires_python(self) -> str:
+        """The Python version constraint of the candidate."""
+        if self._requires_python is not None:
+            return self._requires_python
+        if self.link:
+            requires_python = self.link.requires_python
+            if requires_python and requires_python.isdigit():
+                requires_python = f">={requires_python},<{int(requires_python) + 1}"
+            self._requires_python = requires_python
+        return self._requires_python or ""
+
+    @requires_python.setter
+    def requires_python(self, value: str) -> None:
+        self._requires_python = value
+
+    @no_type_check
+    def as_lockfile_entry(self, project_root: Path) -> dict[str, Any]:
+        """Build a lockfile entry dictionary for the candidate."""
+        root_path = project_root.as_posix()
+        result = {
+            "name": normalize_name(self.name),
+            "version": str(self.version),
+            "extras": sorted(self.req.extras or ()),
+            "requires_python": str(self.requires_python),
+            "editable": self.req.editable,
+        }
+        if self.req.is_vcs:
+            result.update(
+                {
+                    self.req.vcs: self.req.repo,
+                    "ref": self.req.ref,
+                }
+            )
+            if not self.req.editable:
+                result.update(revision=self.get_revision())
+        elif not self.req.is_named:
+            if self.req.is_file_or_url and self.req.is_local_dir:
+                result.update(path=path_replace(root_path, ".", self.req.str_path))
+            else:
+                result.update(
+                    url=path_replace(
+                        root_path.lstrip("/"), "${PROJECT_ROOT}", self.req.url
+                    )
+                )
+        return {k: v for k, v in result.items() if v}
+
+    def format(self) -> str:
+        """Format for output."""
+        return (
+            f"{termui.green(self.name, bold=True)} "
+            f"{termui.yellow(str(self.version))}"
+        )
+
+    def prepare(self, environment: Environment) -> PreparedCandidate:
+        """Prepare the candidate for installation."""
+        if self._prepared is None:
+            self._prepared = PreparedCandidate(self, environment)
+        return self._prepared
+
+
+class PreparedCandidate:
+    """A candidate that has been prepared for installation.
+    The metadata and built wheel are available.
+    """
+
+    def __init__(self, candidate: Candidate, environment: Environment) -> None:
+        self.candidate = candidate
+        self.environment = environment
+        self.wheel: str | None = None
+        self.req = candidate.req
+
+        self._metadata_dir: str | None = None
+        self._metadata = self.prepare_metadata()
+
+    @cached_property
+    def ireq(self) -> pip_shims.InstallRequirement:
+        rv, project = self.req.as_ireq(), self.environment.project
+        if rv.link:
+            rv.original_link = rv.link = pip_shims.Link(
+                expand_env_vars_in_auth(
+                    rv.link.url.replace(
+                        "${PROJECT_ROOT}",
+                        project.root.as_posix().lstrip("/"),  # type: ignore
+                    )
+                )
+            )
+            if rv.source_dir:
+                rv.source_dir = os.path.normpath(os.path.abspath(rv.link.file_path))
+            if rv.local_file_path:
+                rv.local_file_path = rv.link.file_path
+        elif self.candidate.link:
+            rv.link = rv.original_link = self.candidate.link
+        return rv
+
+    @cached_property
+    def revision(self) -> str:
         if not (self.ireq.source_dir and os.path.exists(self.ireq.source_dir)):
             # It happens because the cached wheel is hit and the source code isn't
             # pulled to local. In this case the link url must contain the full commit
@@ -220,122 +313,110 @@ class Candidate:
         else:
             return None
 
-    def prepare(self, allow_all: bool = False) -> None:
-        """Fetch the link of the candidate and unpack to local if necessary.
-
-        :param allow_all: If true, don't validate the wheel tag nor hashes
-        """
-        if (
-            self.source_dir
-            or self.wheel
-            and self._wheel_compatible(self.wheel, allow_all)
-        ):
-            return
-        ireq = self.ireq
-        if not allow_all and self.hashes:
-            ireq.hash_options = convert_hashes(self.hashes)
-        with self.environment.get_finder(ignore_requires_python=True) as finder:
-            if (
-                not self.link
-                or self.link.is_wheel
-                and not self._wheel_compatible(self.link.filename, allow_all)
-            ):
-                self.link = ireq.link = None
-                with allow_all_wheels(allow_all):
-                    self.link = populate_link(finder, ireq, False)
-                if not self.link:
-                    raise CandidateNotFound("No candidate is found for %s", self)
-            if allow_all and not self.req.editable:
-                cached = self._get_cached_wheel()
-                if cached:
-                    self.wheel = cached.file_path
-                    return
-            downloader = pip_shims.Downloader(finder.session, "off")  # type: ignore
-            self._populate_source_dir(ireq)
-            if not self.link.is_existing_dir():
-                assert ireq.source_dir
-                downloaded = pip_shims.unpack_url(
-                    self.link,
-                    ireq.source_dir,
-                    downloader,
-                    hashes=ireq.hashes(False),
-                )
-                if self.link.is_wheel:
-                    assert downloaded
-                    self.wheel = downloaded.path
-                    return
-            self.source_dir = ireq.unpacked_source_directory
-
-    @cached_property
-    def metadata(self) -> Distribution:
-        """Get the metadata of the candidate.
-        Will call the prepare_metadata_* hooks behind the scene
-        """
-        self.prepare(True)
-        metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
-        if self.wheel:
-            self._metadata_dir = _get_wheel_metadata_from_wheel(
-                self.wheel, metadir_parent
-            )
-            result: Distribution = PathDistribution(Path(self._metadata_dir))
-        else:
-            assert self.source_dir
-            builder = EditableBuilder if self.req.editable else WheelBuilder
-            try:
-                self._metadata_dir = builder(
-                    self.source_dir, self.environment
-                ).prepare_metadata(metadir_parent)
-            except BuildError:
-                termui.logger.warn(
-                    "Failed to build package, try parsing project files."
-                )
-                result = parse_metadata_from_source(self.source_dir)
-            else:
-                result = PathDistribution(Path(self._metadata_dir))
-        if not self.name:
-            self.name = str(result.metadata["Name"])  # type: ignore
-            self.req.name = self.name
-        if not self.version:
-            self.version = result.version  # type: ignore
-        return result
-
     def build(self) -> str:
         """Call PEP 517 build hook to build the candidate into a wheel"""
-        self.prepare()
-        if self.wheel:
+        if self.wheel and self._wheel_compatible(self.wheel):
             return self.wheel
+        self.obtain(allow_all=False)
         cached = self._get_cached_wheel()
         if cached:
             self.wheel = cached.file_path
             return self.wheel  # type: ignore
-        assert self.source_dir, "Source directory isn't ready yet"
+        assert self.ireq.source_dir, "Source directory isn't ready yet"
         builder_cls = EditableBuilder if self.req.editable else WheelBuilder
-        builder = builder_cls(self.source_dir, self.environment)
+        builder = builder_cls(self.ireq.unpacked_source_directory, self.environment)
         build_dir = self._get_wheel_dir()
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
         self.wheel = builder.build(build_dir, metadata_directory=self._metadata_dir)
         return self.wheel
 
-    def __repr__(self) -> str:
-        source = getattr(self.link, "comes_from", "unknown")
-        return f"<Candidate {self.name} {self.version} from {source}>"
+    def obtain(self, allow_all: bool = False) -> None:
+        """Fetch the link of the candidate and unpack to local if necessary.
 
-    @classmethod
-    def from_installation_candidate(
-        cls,
-        candidate: pip_shims.InstallationCandidate,
-        req: Requirement,
-        environment: Environment,
-    ) -> Candidate:
-        """Build a candidate from pip's InstallationCandidate."""
-        return cls(
-            req,
-            environment,
-            name=candidate.name,
-            version=str(candidate.version),
-            link=candidate.link,
-        )
+        :param allow_all: If true, don't validate the wheel tag nor hashes
+        """
+        ireq = self.ireq
+        if ireq.is_wheel:
+            if self.wheel and self._wheel_compatible(self.wheel, allow_all):
+                return
+        elif ireq.source_dir:
+            return
+
+        if not allow_all and self.candidate.hashes:
+            ireq.hash_options = convert_hashes(self.candidate.hashes)
+        with self.environment.get_finder(ignore_requires_python=True) as finder:
+            if (
+                not ireq.link
+                or ireq.link.is_wheel
+                and not self._wheel_compatible(ireq.link.filename, allow_all)
+            ):
+                ireq.link = None
+                with allow_all_wheels(allow_all):
+                    ireq.link = populate_link(finder, ireq, False)
+                if not ireq.link:
+                    raise CandidateNotFound("No candidate is found for %s", self)
+                if not ireq.original_link:
+                    ireq.original_link = ireq.link
+            if allow_all and not self.req.editable:
+                cached = self._get_cached_wheel()
+                if cached:
+                    self.wheel = cached.file_path
+                    return
+            downloader = pip_shims.Downloader(finder.session, "off")  # type: ignore
+            self._populate_source_dir()
+            if not ireq.link.is_existing_dir():
+                assert ireq.source_dir
+                downloaded = pip_shims.unpack_url(
+                    ireq.link,
+                    ireq.source_dir,
+                    downloader,
+                    hashes=ireq.hashes(False),
+                )
+                if ireq.link.is_wheel:
+                    assert downloaded
+                    self.wheel = downloaded.path
+                    return
+
+    def prepare_metadata(self) -> Distribution:
+        """Prepare the metadata for the candidate.
+        Will call the prepare_metadata_* hooks behind the scene
+        """
+        self.obtain(allow_all=True)
+        metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
+        result: Distribution
+        if self.wheel:
+            self._metadata_dir = _get_wheel_metadata_from_wheel(
+                self.wheel, metadir_parent
+            )
+            result = PathDistribution(Path(self._metadata_dir))
+        else:
+            source_dir = self.ireq.unpacked_source_directory
+            builder = EditableBuilder if self.req.editable else WheelBuilder
+            try:
+                self._metadata_dir = builder(
+                    source_dir, self.environment
+                ).prepare_metadata(metadir_parent)
+            except BuildError:
+                termui.logger.warn(
+                    "Failed to build package, try parsing project files."
+                )
+                result = parse_metadata_from_source(source_dir)
+            else:
+                result = PathDistribution(Path(self._metadata_dir))
+        if not self.candidate.name:
+            self.req.name = self.candidate.name = cast(str, result.metadata["Name"])
+        if not self.candidate.version:
+            self.candidate.version = result.version
+        if not self.candidate.requires_python:
+            self.candidate.requires_python = cast(
+                str, result.metadata.get("Requires-Python", "")
+            )
+        return result
+
+    @property
+    def metadata(self) -> Distribution:
+        return self._metadata
 
     def get_dependencies_from_metadata(self) -> list[str]:
         """Get the dependencies of a candidate from metadata."""
@@ -344,79 +425,24 @@ class Candidate:
             self.req.project_name, self.metadata.requires or [], extras  # type: ignore
         )
 
-    @property
-    def requires_python(self) -> str:
-        """The Python version constraint of the candidate."""
-        if self._requires_python is not None:
-            return self._requires_python
-        assert self.link
-        requires_python = self.link.requires_python
-        if requires_python and requires_python.isdigit():
-            requires_python = f">={requires_python},<{int(requires_python) + 1}"
-            self._requires_python = requires_python
-        return requires_python or ""
-
-    @requires_python.setter
-    def requires_python(self, value: str) -> None:
-        self._requires_python = value
-
-    @no_type_check
-    def as_lockfile_entry(self) -> dict[str, Any]:
-        """Build a lockfile entry dictionary for the candidate."""
-        result = {
-            "name": normalize_name(self.name),
-            "version": str(self.version),
-            "extras": sorted(self.req.extras or ()),
-            "requires_python": str(self.requires_python),
-            "editable": self.req.editable,
-        }
-        project_root = self.environment.project.root.as_posix()
-        if self.req.is_vcs:
-            result.update(
-                {
-                    self.req.vcs: self.req.repo,
-                    "ref": self.req.ref,
-                }
-            )
-            if not self.req.editable:
-                result.update(revision=self.revision)
-        elif not self.req.is_named:
-            if self.req.is_file_or_url and self.req.is_local_dir:
-                result.update(path=path_replace(project_root, ".", self.req.str_path))
-            else:
-                result.update(
-                    url=path_replace(
-                        project_root.lstrip("/"), "${PROJECT_ROOT}", self.req.url
-                    )
-                )
-        return {k: v for k, v in result.items() if v}
-
-    def format(self) -> str:
-        """Format for output."""
-        return (
-            f"{termui.green(self.name, bold=True)} "
-            f"{termui.yellow(str(self.version))}"
-        )
-
     def should_cache(self) -> bool:
         """Determine whether to cache the dependencies and built wheel."""
+        link, source_dir = self.ireq.original_link, self.ireq.source_dir
         if self.req.is_vcs and not self.req.editable:
-            if not self.ireq.source_dir:
+            if not source_dir:
                 # If the candidate isn't prepared, we can't cache it
                 return False
             vcs = pip_shims.VcsSupport()
-            assert self.link
-            vcs_backend = vcs.get_backend_for_scheme(self.link.scheme)
+            assert link
+            vcs_backend = vcs.get_backend_for_scheme(link.scheme)
             return bool(
                 vcs_backend
-                and vcs_backend.is_immutable_rev_checkout(
-                    self.link.url, self.ireq.source_dir
-                )
+                and vcs_backend.is_immutable_rev_checkout(link.url, source_dir)
             )
         elif self.req.is_named:
             return True
-        elif self.link and not self.link.is_existing_dir():
-            base, _ = self.link.splitext()
+        elif link and not link.is_existing_dir():
+            base, _ = link.splitext()
             # Cache if the link contains egg-info like 'foo-1.0'
             return _egg_info_re.search(base) is not None
         return False
@@ -424,21 +450,20 @@ class Candidate:
     def _get_cached_wheel(self) -> pip_shims.Link | None:
         wheel_cache = self.environment.project.make_wheel_cache()
         supported_tags = pip_shims.get_supported(self.environment.interpreter.for_tag())
-        assert self.link
+        assert self.ireq.original_link
         cache_entry = wheel_cache.get_cache_entry(
-            self.link,
-            self.req.project_name,  # type: ignore
-            supported_tags,
+            self.ireq.original_link, cast(str, self.req.project_name), supported_tags
         )
         if cache_entry is not None:
             termui.logger.debug("Using cached wheel link: %s", cache_entry.link)
             return cache_entry.link
         return None
 
-    def _populate_source_dir(self, ireq: pip_shims.InstallRequirement) -> None:
-        assert self.link
-        if self.link.is_existing_dir():
-            ireq.source_dir = self.link.file_path
+    def _populate_source_dir(self) -> None:
+        ireq = self.ireq
+        assert ireq.original_link
+        if ireq.original_link.is_existing_dir():
+            ireq.source_dir = ireq.original_link.file_path
         elif self.req.editable:
             if self.environment.packages_path:
                 src_dir = self.environment.packages_path / "src"
@@ -456,7 +481,7 @@ class Candidate:
         elif not ireq.source_dir:
             ireq.source_dir = create_tracked_tempdir(prefix="pdm-build-")
 
-    def _wheel_compatible(self, wheel_file: str, allow_all: bool) -> bool:
+    def _wheel_compatible(self, wheel_file: str, allow_all: bool = False) -> bool:
         if allow_all:
             return True
         supported_tags = pip_shims.get_supported(self.environment.interpreter.for_tag())
@@ -465,9 +490,9 @@ class Candidate:
         )
 
     def _get_wheel_dir(self) -> str:
-        assert self.link
+        assert self.ireq.original_link
         if self.should_cache():
             wheel_cache = self.environment.project.make_wheel_cache()
-            return wheel_cache.get_path_for_link(self.link)
+            return wheel_cache.get_path_for_link(self.ireq.original_link)
         else:
             return create_tracked_tempdir(prefix="pdm-wheel-")

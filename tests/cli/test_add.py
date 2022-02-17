@@ -72,7 +72,10 @@ def test_add_editable_package(project, working_set, is_dev):
     assert "demo" in group[0]
     assert "-e git+https://github.com/test-root/demo.git#egg=demo" in group[1]
     locked_candidates = project.locked_repository.all_candidates
-    assert locked_candidates["demo"].revision == "1234567890abcdef"
+    assert (
+        locked_candidates["demo"].prepare(project.environment).revision
+        == "1234567890abcdef"
+    )
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
 

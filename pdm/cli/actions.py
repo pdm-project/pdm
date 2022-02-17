@@ -95,7 +95,7 @@ def do_lock(
                 ui.echo(format_resolution_impossible(err), err=True)
                 raise ResolutionImpossible("Unable to find a resolution") from None
             else:
-                data = format_lockfile(mapping, dependencies)
+                data = format_lockfile(project, mapping, dependencies)
                 spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
             signals.post_lock.send(project, resolution=mapping, dry_run=dry_run)
 

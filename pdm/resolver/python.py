@@ -6,7 +6,6 @@ from typing import Iterable, Iterator, Mapping, cast
 
 from pdm import termui
 from pdm.models.candidates import Candidate
-from pdm.models.environment import Environment
 from pdm.models.requirements import NamedRequirement, Requirement
 from pdm.models.specifiers import PySpecSet
 
@@ -24,14 +23,13 @@ class PythonRequirement(NamedRequirement):
     def from_pyspec_set(cls, spec: PySpecSet) -> "PythonRequirement":
         return cls(name="python", specifier=spec)
 
-    def as_candidate(self, environment: Environment) -> PythonCandidate:
-        return PythonCandidate(self, environment)
+    def as_candidate(self) -> PythonCandidate:
+        return PythonCandidate(self)
 
 
 def find_python_matches(
     identifier: str,
     requirements: Mapping[str, Iterator[Requirement]],
-    environment: Environment,
 ) -> Iterable[Candidate]:
     """All requires-python except for the first one(must come from the project)
     must be superset of the first one.
@@ -40,7 +38,7 @@ def find_python_matches(
     project_req = next(python_reqs)
     python_specs = cast(Iterator[PySpecSet], (req.specifier for req in python_reqs))
     if all(spec.is_superset(project_req.specifier or "") for spec in python_specs):
-        return [project_req.as_candidate(environment)]
+        return [project_req.as_candidate()]
     else:
         # There is a conflict, no match is found.
         return []

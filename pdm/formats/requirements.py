@@ -53,7 +53,7 @@ def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
     else:
         if not ireq.req:
             req = parse_requirement("dummy @" + ireq.link.url)  # type: ignore
-            req.name = Candidate(req, environment).metadata.metadata["Name"]
+            req.name = Candidate(req).prepare(environment).metadata.metadata["Name"]
             ireq.req = req  # type: ignore
 
         line = _requirement_to_str_lowercase_name(cast(PRequirement, ireq.req))
