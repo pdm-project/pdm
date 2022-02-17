@@ -299,7 +299,14 @@ def test_invalidate_incompatible_wheel_link(project, index):
         == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
     )
 
+    print(
+        "Before obtain:", prepared.wheel, prepared._is_wheel_compatible(prepared.wheel)
+    )
     prepared.obtain(False)
+    print(
+        "After obtain:", prepared.wheel, prepared._is_wheel_compatible(prepared.wheel)
+    )
+
     assert (
         Path(prepared.wheel).name
         == prepared.ireq.link.filename
