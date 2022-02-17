@@ -315,9 +315,9 @@ class PreparedCandidate:
 
     def build(self) -> str:
         """Call PEP 517 build hook to build the candidate into a wheel"""
-        if self.wheel and self._wheel_compatible(self.wheel):
-            return self.wheel
         self.obtain(allow_all=False)
+        if self.wheel:
+            return self.wheel
         cached = self._get_cached_wheel()
         if cached:
             self.wheel = cached.file_path
