@@ -27,7 +27,11 @@ theme:
 
 plugins:
   - search
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            docstring_style: google
 
 nav:
   - Home: index.md

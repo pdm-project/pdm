@@ -1,3 +1,38 @@
+Release v1.13.0 (2022-02-17)
+----------------------------
+
+### Features & Improvements
+
+- Support `pre_*` and `post_*` scripts for task composition. Pre- and Post- scripts for `init`, `build`, `install` and `lock` will be run if present. [#789](https://github.com/pdm-project/pdm/issues/789)
+- Support `--config/-c` option to specify another global configuration file. [#883](https://github.com/pdm-project/pdm/issues/883)
+- Packages with extras require no longer inherit the dependencies from the same package without extras. It is because the package without extras are returned as one of the dependencies. This change won't break the existing lock files nor dependency cache. [#892](https://github.com/pdm-project/pdm/issues/892)
+- Support version ranges in `[tool.pdm.overrides]` table. [#909](https://github.com/pdm-project/pdm/issues/909)
+- Rename config `use_venv` to `python.use_venv`;
+  rename config `feature.install_cache` to `install.cache`;
+  rename config `feature.install_cache_method` to `install.cache_method`;
+  rename config `parallel_install` to `install.parallel`. [#914](https://github.com/pdm-project/pdm/issues/914)
+
+### Bug Fixes
+
+- Fix a bug that file URLs or VCS URLs don't work in `[tool.pdm.overrides]` table. [#861](https://github.com/pdm-project/pdm/issues/861)
+- Fix a bug of identifier mismatch for URL requirements without an explicit name. [#901](https://github.com/pdm-project/pdm/issues/901)
+- No `requires-python` should be produced if ANY(`*`) is given. [#917](https://github.com/pdm-project/pdm/issues/917)
+- Fix a bug that `pdm.lock` gets created when `--dry-run` is passed to `pdm add`. [#918](https://github.com/pdm-project/pdm/issues/918)
+
+### Improved Documentation
+
+- The default editable backend becomes `path`. [#904](https://github.com/pdm-project/pdm/issues/904)
+
+### Removals and Deprecations
+
+- Stop auto-migrating projects from PDM 0.x format. [#912](https://github.com/pdm-project/pdm/issues/912)
+
+### Refactor
+
+- Rename `ExtrasError` to `ExtrasWarning` for better understanding. Improve the warning message. [#892](https://github.com/pdm-project/pdm/issues/892)
+- Extract the environment related code from `Candidate` into a new class `PreparedCandidate`. [#920](https://github.com/pdm-project/pdm/issues/920)
+
+
 Release v1.12.8 (2022-02-06)
 ----------------------------
 

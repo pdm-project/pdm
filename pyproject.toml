@@ -76,12 +76,12 @@ test = [
 doc = [
     "mkdocs>=1.1",
     "mkdocs-material>=7.3",
-    "mkdocstrings>=0.16",
+    "mkdocstrings[python]>=0.18",
     "markdown-include>=0.5.1",
 ]
 workflow = [
     "parver>=0.3.1",
-    "towncrier<20.0.0,>=19.2.0",
+    "towncrier>=20",
     "vendoring; python_version ~= \"3.8\"",
     "pycomplete~=0.3"
 ]

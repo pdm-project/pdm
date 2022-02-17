@@ -1,3 +1,7 @@
+{% if top_line %}
+{{ top_line }}
+{{ top_underline * ((top_line)|length)}}
+{% endif %}
 {% for section in sections %}
 {% if sections[section] %}
 {% for category, val in definitions.items() if category in sections[section] and category != 'trivial' %}
