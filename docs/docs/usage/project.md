@@ -115,7 +115,7 @@ If a package is required by many projects on the system, each project has to kee
 PDM supports _caching_ the installations of the same wheel by installing it into a centralized package repository and linking to that installation in different projects. To enabled it, run:
 
 ```bash
-pdm config feature.install_cache on
+pdm config install.cache on
 ```
 
 It can be enabled on a project basis, by adding `--local` option to the command.
@@ -147,12 +147,12 @@ project path via `-p/--project <path>` option.
 ## Working with a virtualenv
 
 Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
-by the configuration item `use_venv`. When it is set to `True`, PDM will use the virtualenv if:
+by the configuration item `python.use_venv`. When it is set to `True`, PDM will use the virtualenv if:
 
 - a virtualenv is already activated.
 - any of `venv`, `.venv`, `env` is a valid virtualenv folder.
 
-Besides, when `use-venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
+Besides, when `python.use_venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
 
 For enhanced virtualenv support such as virtualenv management and auto-creation, please go for [pdm-venv](https://github.com/pdm-project/pdm-venv),
 which can be installed as a plugin.
