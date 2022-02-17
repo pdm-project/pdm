@@ -16,6 +16,10 @@ on:
       - "*.md"
       - Dockerfile
 
+concurrency:
+  group: ${{ github.event.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   Testing:
     runs-on: ${{ matrix.os }}
