@@ -206,7 +206,9 @@ def allow_all_wheels(enable: bool = True) -> Iterator:
     PipWheel.support_index_min = _wheel_support_index_min
     if has_find_most_preferred_tag:
         PipWheel.find_most_preferred_tag = _find_most_preferred_tag
+    print("Monkey patching wheel", _wheel_supported)
     yield
+    print("Restoring wheel monkey patching", original_wheel_supported)
     PipWheel.supported = original_wheel_supported
     PipWheel.support_index_min = original_support_index_min
     if has_find_most_preferred_tag:

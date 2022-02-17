@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from pdm.exceptions import ExtrasWarning
-from pdm.models import pip_shims
 from pdm.models.candidates import Candidate
 from pdm.models.pip_shims import Link, path_to_url
 from pdm.models.requirements import parse_requirement
@@ -300,22 +299,7 @@ def test_invalidate_incompatible_wheel_link(project, index):
         == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
     )
 
-    print(
-        "Before obtain:",
-        prepared.wheel,
-        prepared.ireq.link.filename,
-        prepared._wheel_compatible(prepared.wheel, False),
-        pip_shims.PipWheel.supported,
-    )
     prepared.obtain(False)
-    print(
-        "After obtain:",
-        prepared.wheel,
-        prepared.ireq.link.filename,
-        prepared._wheel_compatible(prepared.wheel, False),
-        pip_shims.PipWheel.supported,
-    )
-
     assert (
         Path(prepared.wheel).name
         == prepared.ireq.link.filename
