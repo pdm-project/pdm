@@ -1,3 +1,11 @@
+Release v1.13.0.post0 (2022-02-18)
+----------------------------------
+
+### Bug Fixes
+
+- Fix a bug that incompatible platform-specific wheels are installed. [#921](https://github.com/pdm-project/pdm/issues/921)
+
+
 Release v1.13.0 (2022-02-18)
 ----------------------------
 
