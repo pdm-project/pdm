@@ -44,9 +44,11 @@ def release(dry_run=False, commit=True, pre=None, major=False, minor=False, patc
     new_version = bump_version(pre, major, minor, patch)
     click.secho(f"Bump version to: {new_version}", fg="yellow")
     if dry_run:
-        subprocess.check_call(["towncrier", "--version", new_version, "--draft"])
+        subprocess.check_call(
+            ["towncrier", "build", "--version", new_version, "--draft"]
+        )
     else:
-        subprocess.check_call(["towncrier", "--yes", "--version", new_version])
+        subprocess.check_call(["towncrier", "build", "--yes", "--version", new_version])
         subprocess.check_call(["git", "add", "."])
         if commit:
             subprocess.check_call(["git", "commit", "-m", f"Release {new_version}"])
