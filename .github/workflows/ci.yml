@@ -102,7 +102,6 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
         run: |
-          pdm config install.parallel true
           pdm install -v -dGtest
       - name: Run Tests
         run: pdm run pytest -n auto --cov pdm --cov-config=setup.cfg --cov-report=xml tests

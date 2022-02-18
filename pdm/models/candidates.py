@@ -217,7 +217,7 @@ class PreparedCandidate:
         self.req = candidate.req
 
         self._metadata_dir: str | None = None
-        self._metadata = self.prepare_metadata()
+        self._metadata: Distribution | None = None
 
     @cached_property
     def ireq(self) -> pip_shims.InstallRequirement:
@@ -417,6 +417,8 @@ class PreparedCandidate:
 
     @property
     def metadata(self) -> Distribution:
+        if self._metadata is None:
+            self._metadata = self.prepare_metadata()
         return self._metadata
 
     def get_dependencies_from_metadata(self) -> list[str]:
