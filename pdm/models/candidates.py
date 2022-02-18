@@ -351,7 +351,7 @@ class PreparedCandidate:
                 or ireq.link.is_wheel
                 and not self._wheel_compatible(ireq.link.filename, allow_all)
             ):
-                ireq.link = None
+                ireq.link = self.wheel = None  # reset the incompatible wheel
                 with allow_all_wheels(allow_all):
                     ireq.link = populate_link(finder, ireq, False)
                 if not ireq.link:
