@@ -328,6 +328,7 @@ class PreparedCandidate:
         build_dir = self._get_wheel_dir()
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
+        termui.logger.debug("Building wheel for %s", self.ireq.link)
         self.wheel = builder.build(build_dir, metadata_directory=self._metadata_dir)
         return self.wheel
 

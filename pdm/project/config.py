@@ -122,7 +122,7 @@ class Config(MutableMapping[str, str]):
         "install.parallel": ConfigItem(
             "Whether to perform installation and uninstallation in parallel",
             True,
-            env_var="PDML_INSTALL_PARALLE",
+            env_var="PDM_INSTALL_PARALLEL",
             coerce=ensure_boolean,
             replace="parallel_install",
         ),
