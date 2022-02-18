@@ -31,7 +31,6 @@ description = "Python Development Master"
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Topic :: Software Development :: Build Tools",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
@@ -41,9 +40,10 @@ classifiers = [
 ]
 
 [project.urls]
-homepage = "https://pdm.fming.dev"
+Homepage = "https://pdm.fming.dev"
 Repository = "https://github.com/pdm-project/pdm"
 Documentation = "https://pdm.fming.dev"
+Changelog = "https://pdm.fming.dev/dev/changelog/"
 
 [project.optional-dependencies]
 
@@ -52,19 +52,19 @@ pdm = "pdm.core:main"
 
 [tool.pdm]
 includes = ["pdm"]
-source-includes = ["tests"]
+source-includes = ["tests", "CHANGELOG.md", "LICENSE", "README.md"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
 version = {use_scm = true}
 
 [tool.pdm.scripts]
+pre_release = "python tasks/max_versions.py"
 release = "python tasks/release.py"
 test = "pytest tests/"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
-complete = {call = "tasks.complete:main"}
+complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
 benchmark = "python tasks/benchmarks/main.py"
-max_version = "python tasks/max_versions.py"
 
 [tool.pdm.dev-dependencies]
 test = [
