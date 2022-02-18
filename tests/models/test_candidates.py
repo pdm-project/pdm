@@ -249,6 +249,7 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     req = parse_requirement(file_link.url)
     downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
     prepared = Candidate(req).prepare(project.environment)
+    prepared.prepare_metadata()
     downloader.assert_not_called()
     assert Path(prepared.wheel) == Path(cache_path) / Path(built_path).name
 
@@ -293,6 +294,7 @@ def test_cache_egg_info_sdist(project):
 def test_invalidate_incompatible_wheel_link(project, index):
     req = parse_requirement("demo")
     prepared = Candidate(req, name="demo", version="0.0.1").prepare(project.environment)
+    prepared.obtain(True)
     assert (
         Path(prepared.wheel).name
         == prepared.ireq.link.filename
