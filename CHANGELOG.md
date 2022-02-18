@@ -1,3 +1,13 @@
+Release v1.13.0 (2022-02-18)
+----------------------------
+
+### Bug Fixes
+
+- Fix a bug that bad pip cache dir value breaks PDM's check update function. [#922](https://github.com/pdm-project/pdm/issues/922)
+- Fix a race condition in parallel installation by changing metadata to a lazy property.
+  This fixes a bug that incompatible wheels are installed unexpectedly. [#924](https://github.com/pdm-project/pdm/issues/924)
+
+
 Release v1.13.0.post0 (2022-02-18)
 ----------------------------------
 
