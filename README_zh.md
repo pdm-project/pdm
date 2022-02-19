@@ -11,7 +11,7 @@
 [![Discord](https://img.shields.io/discord/824472774965329931?label=discord&logo=discord&style=for-the-badge)](https://discord.gg/Phn8smztpv)
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
-![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)
+[![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)](https://pypi.org/project/pdm)
 [![](https://tokei.rs/b1/github/pdm-project/pdm)](https://github.com/pdm-project/pdm)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
