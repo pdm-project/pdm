@@ -47,13 +47,16 @@ After that, dependencies and sub-dependencies will be resolved properly and inst
 
 ### Add local dependencies
 
-Local packages can be added with their paths:
+Local packages can be added with their paths. The path can be a file or a directory:
 
 ```console
 pdm add ./sub-package
+pdm add ./first-1.0.0-py2.py3-none-any.whl
 ```
 
-Local packages can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs)
+The paths MUST start with a `.`, otherwise it will be recognized as a normal named requirement.
+
+In addition, **a local directory** can also be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs)
 (just like `pip install -e <local project path>` would) using `pdm add -e/--editable <local project path>`.
 
 ### Add development only dependencies
