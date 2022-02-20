@@ -1,3 +1,11 @@
+Release v1.13.2 (2022-02-20)
+----------------------------
+
+### Bug Fixes
+
+- Fix a regression issue that prereleases can't be installed if the version specifier of the requirement doesn't imply that. [#920](https://github.com/pdm-project/pdm/issues/920)
+
+
 Release v1.13.1 (2022-02-18)
 ----------------------------
 
