@@ -26,19 +26,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-alpha - 3.11.0"]
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        python-version: ["3.11.0-alpha - 3.11.0"]
+        os: [ubuntu-latest]
         arch: [x64]
         install-via: [pip]
-        include:
-          - python-version: 3.9
-            os: windows-latest
-            arch: x86
-            install-via: pip
-          - python-version: 3.9
-            os: ubuntu-latest
-            arch: x64
-            install-via: script
+        # include:
+        #   - python-version: 3.9
+        #     os: windows-latest
+        #     arch: x86
+        #     install-via: pip
+        #   - python-version: 3.9
+        #     os: ubuntu-latest
+        #     arch: x64
+        #     install-via: script
     continue-on-error: ${{ startsWith(matrix.python-version, '3.11') }}
     steps:
       - uses: actions/checkout@v2
@@ -82,10 +82,6 @@ jobs:
         run: |
           echo "::set-output name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
           echo "::set-output name=PIP_CACHE::$(pip cache dir)"
-      - name: Fix Ubuntu Env
-        run: |
-          echo "LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1" >> $GITHUB_ENV
-        if: runner.os == 'Linux'
       - name: Cache PIP
         uses: actions/cache@v2
         with:
@@ -102,7 +98,9 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
         run: |
+          pdm use -f python
           pdm install -v -dGtest
+          pdm info
       - name: Run Tests
         run: pdm run pytest -n auto --cov pdm --cov-config=setup.cfg --cov-report=xml tests
       - name: Upload coverage to Codecov
