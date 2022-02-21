@@ -82,7 +82,7 @@ doc = [
 workflow = [
     "parver>=0.3.1",
     "towncrier>=20",
-    "vendoring; python_version ~= \"3.8\"",
+    "vendoring; python_version >= \"3.8\"",
     "pycomplete~=0.3"
 ]
 

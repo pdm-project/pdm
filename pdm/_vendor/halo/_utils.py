@@ -3,7 +3,6 @@
 """
 import codecs
 import platform
-import six
 try:
     from shutil import get_terminal_size
 except ImportError:
@@ -87,10 +86,7 @@ def is_text_type(text):
     bool
         Whether parameter is a string or not
     """
-    if isinstance(text, six.text_type) or isinstance(text, six.string_types):
-        return True
-
-    return False
+    return isinstance(text, str)
 
 
 def decode_utf_8_text(text):
