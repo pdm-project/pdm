@@ -16,7 +16,7 @@ def test_use_command(project, invoke):
     result = invoke(["use", "-f", python], obj=project)
     assert result.exit_code == 0
     config_content = project.root.joinpath(".pdm.toml").read_text()
-    assert python_path in config_content
+    assert python_path.replace("\\", "\\\\") in config_content
 
     result = invoke(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
