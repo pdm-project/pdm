@@ -163,7 +163,7 @@ class EnvBuilder:
         Otherwise, the environment of the host Python will be used.
         """
         self._env = environment
-        self.executable = self._env.interpreter.executable
+        self.executable = self._env.interpreter.executable.as_posix()
         self.src_dir = src_dir
         self.isolated = environment.project.config["build_isolation"]
         logger.debug("Preparing isolated env for PEP 517 build...")

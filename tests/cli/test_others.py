@@ -63,7 +63,7 @@ def test_info_command(project, invoke):
     assert project.root.as_posix() in result.output
 
     result = invoke(["info", "--python"], obj=project)
-    assert result.output.strip() == project.python.executable
+    assert result.output.strip() == str(project.python.executable)
 
     result = invoke(["info", "--where"], obj=project)
     assert result.output.strip() == project.root.as_posix()

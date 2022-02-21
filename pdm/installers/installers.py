@@ -170,7 +170,7 @@ def install_wheel(
         }
     destination = InstallDestination(
         scheme_dict=environment.get_paths(),
-        interpreter=environment.interpreter.executable,
+        interpreter=str(environment.interpreter.executable),
         script_kind=_get_kind(environment),
     )
     _install_wheel(
@@ -187,7 +187,7 @@ def install_wheel_with_cache(
     wheel_stem = Path(wheel).stem
     cache_path = environment.project.cache("packages") / wheel_stem
     package_cache = CachedPackage(cache_path)
-    interpreter = environment.interpreter.executable
+    interpreter = str(environment.interpreter.executable)
     script_kind = _get_kind(environment)
     supports_symlink = (
         environment.project.config["install.cache_method"] == "symlink"

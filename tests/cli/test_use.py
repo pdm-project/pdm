@@ -45,7 +45,7 @@ exec "{}" "$@"
     shim_path.chmod(0o755)
 
     actions.do_use(project, shim_path.as_posix())
-    assert project.python.executable == sys.executable
+    assert project.python.executable == Path(sys.executable)
 
 
 @pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")

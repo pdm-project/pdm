@@ -4,6 +4,7 @@ import venv
 from pathlib import Path
 
 import pytest
+from packaging.version import parse
 
 from pdm.utils import cd
 
@@ -13,7 +14,6 @@ def test_project_python_with_pyenv_support(project, mocker):
     del project.project_config["python.path"]
     project._python = None
     os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
-    mocker.patch("pdm.project.core.PYENV_INSTALLED", True)
     mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
     pyenv_python = project.root / "shims/python"
     if os.name == "nt":
@@ -21,14 +21,14 @@ def test_project_python_with_pyenv_support(project, mocker):
     pyenv_python.parent.mkdir()
     pyenv_python.touch()
     mocker.patch(
-        "pythonfinder.models.python.get_python_version",
-        return_value="3.8.0",
+        "findpython.python.PythonVersion._get_version",
+        return_value=parse("3.8.0"),
     )
     mocker.patch(
-        "pdm.models.python.get_underlying_executable", return_value=sys.executable
+        "findpython.python.PythonVersion._get_interpreter", return_value=sys.executable
     )
     assert Path(project.python.path) == pyenv_python
-    assert project.python.executable == Path(sys.executable).as_posix()
+    assert project.python.executable == Path(sys.executable)
 
     # Clean cache
     project._python = None
@@ -129,7 +129,7 @@ def test_project_use_venv(project):
     project.project_config["python.use_venv"] = True
     env = project.environment
     assert (
-        Path(env.interpreter.executable)
+        env.interpreter.executable
         == project.root / "venv" / scripts / f"python{suffix}"
     )
     assert env.is_global
@@ -167,10 +167,9 @@ def test_ignore_saved_python(project):
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
     os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
-    assert Path(project.python.executable) != project.project_config["python.path"]
+    assert project.python.executable != project.project_config["python.path"]
     assert (
-        Path(project.python.executable)
-        == project.root / "venv" / scripts / f"python{suffix}"
+        project.python.executable == project.root / "venv" / scripts / f"python{suffix}"
     )
 
 
@@ -202,7 +201,7 @@ def test_global_python_path_config(project_no_init):
     project_no_init.global_config["python.path"] = sys.executable
     # Recreate the project to clean cached properties
     p = project_no_init.core.create_project(project_no_init.root)
-    assert os.path.normcase(p.python.executable) == os.path.normcase(sys.executable)
+    assert p.python.executable == Path(sys.executable)
     assert "python.path" not in p.project_config
 
 
@@ -210,6 +209,4 @@ def test_global_python_path_config(project_no_init):
 def test_set_non_exist_python_path(project_no_init):
     project_no_init.project_config["python.path"] = "non-exist-python"
     project_no_init._python = None
-    assert os.path.normcase(project_no_init.python.executable) == os.path.normcase(
-        sys.executable
-    )
+    assert project_no_init.python.executable == Path(sys.executable)

@@ -18,7 +18,7 @@ def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
     output = subprocess.check_output(
-        [project.python.executable, str(project.root.joinpath("main.py"))],
+        [str(project.python.executable), str(project.root.joinpath("main.py"))],
         env=env,
     )
     assert output.decode().strip() == "1"
@@ -27,7 +27,9 @@ def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
 def test_auto_isolate_site_packages(project, invoke):
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
-    proc = subprocess.run([project.python.executable, "-c", "import click"], env=env)
+    proc = subprocess.run(
+        [str(project.python.executable), "-c", "import click"], env=env
+    )
     assert proc.returncode == 0
 
     result = invoke(["run", "python", "-c", "import click"], obj=project)

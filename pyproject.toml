@@ -10,6 +10,7 @@ license = {text = "MIT"}
 dependencies = [
     "blinker",
     "click>=7",
+    "findpython",
     "importlib-metadata; python_version < \"3.8\"",
     "installer~=0.3.0",
     "packaging",
@@ -18,7 +19,6 @@ dependencies = [
     "pip>=20.1",
     "platformdirs",
     "python-dotenv>=0.15",
-    "pythonfinder",
     "resolvelib>=0.8,<0.9",
     "shellingham>=1.3.2",
     "tomli>=1.1.0",

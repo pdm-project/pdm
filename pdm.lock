@@ -98,6 +98,15 @@ requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "execnet: rapid multi-Python deployment"
 
 [[package]]
+name = "findpython"
+version = "0.1.1"
+requires_python = ">=3.7"
+summary = "A utility to find python versions on your system"
+dependencies = [
+    "packaging>=20",
+]
+
+[[package]]
 name = "ghp-import"
 version = "2.0.2"
 summary = "Copy your docs directly to the gh-pages branch."
@@ -457,19 +466,6 @@ version = "0.17.1"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
 
 [[package]]
-name = "pythonfinder"
-version = "1.2.6"
-requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-summary = "A cross-platform python discovery tool to help locate python on any system."
-dependencies = [
-    "attrs",
-    "cached-property",
-    "click",
-    "packaging",
-    "six",
-]
-
-[[package]]
 name = "pytkdocs"
 version = "0.15.0"
 requires_python = ">=3.6.2"
@@ -618,7 +614,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:b55f0759b18852d3a85bc5ead3d0f7397c2e7bddb3cc712eb5d9fbc29602bc92"
+content_hash = "sha256:cec9278904f8982994ac8e0b4af5634bd28828ce4d6791938016ff6e1efb9c2d"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -719,6 +715,10 @@ content_hash = "sha256:b55f0759b18852d3a85bc5ead3d0f7397c2e7bddb3cc712eb5d9fbc29
 "execnet 1.9.0" = [
     {file = "execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
     {file = "execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
+]
+"findpython 0.1.1" = [
+    {file = "findpython-0.1.1-py3-none-any.whl", hash = "sha256:9eadc269949fcc17a1f120cde9aa9a1580c2f4d6187840475167d5db000aa2b9"},
+    {file = "findpython-0.1.1.tar.gz", hash = "sha256:bc64ecfeb03f92950af40da41c2447eda5c8ed22b35b0f901304f90eb4e8b02d"},
 ]
 "ghp-import 2.0.2" = [
     {file = "ghp_import-2.0.2-py3-none-any.whl", hash = "sha256:5f8962b30b20652cdffa9c5a9812f7de6bcb56ec475acac579807719bf242c46"},
@@ -944,10 +944,6 @@ content_hash = "sha256:b55f0759b18852d3a85bc5ead3d0f7397c2e7bddb3cc712eb5d9fbc29
 "python-dotenv 0.17.1" = [
     {file = "python_dotenv-0.17.1-py2.py3-none-any.whl", hash = "sha256:00aa34e92d992e9f8383730816359647f358f4a3be1ba45e5a5cefd27ee91544"},
     {file = "python-dotenv-0.17.1.tar.gz", hash = "sha256:b1ae5e9643d5ed987fc57cc2583021e38db531946518130777734f9589b3141f"},
-]
-"pythonfinder 1.2.6" = [
-    {file = "pythonfinder-1.2.6-py2.py3-none-any.whl", hash = "sha256:3712d0d63307b93c4dcb11cac2c391b16fe9b8c6c67dfcf48f4c0777c6d509e8"},
-    {file = "pythonfinder-1.2.6.tar.gz", hash = "sha256:21ffb77b152ae14c5c7d9b1c98c6df0a1a34d4b3e050da39f561224e7664a5f4"},
 ]
 "pytkdocs 0.15.0" = [
     {file = "pytkdocs-0.15.0-py3-none-any.whl", hash = "sha256:d6b2aec34448ec89acb8c1c25062cc1e70c6b26395d46fc7ee753b7e5a4e736a"},

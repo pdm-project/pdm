@@ -34,9 +34,9 @@ class Command(BaseCommand):
         check_project_file(project)
         interpreter = project.python
         if options.python:
-            project.core.ui.echo(interpreter.executable)
+            project.core.ui.echo(str(interpreter.executable))
         elif options.where:
-            project.core.ui.echo(project.root.as_posix())
+            project.core.ui.echo(str(project.root))
         elif options.packages:
             project.core.ui.echo(str(project.environment.packages_path))
         elif options.env:
@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 (termui.cyan("PDM version:", bold=True), project.core.version),
                 (
                     termui.cyan("Python Interpreter:", bold=True),
-                    interpreter.executable + f" ({interpreter.identifier})",
+                    f"{interpreter.executable} ({interpreter.identifier})",
                 ),
                 (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
                 (
