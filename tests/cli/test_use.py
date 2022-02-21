@@ -12,7 +12,7 @@ from pdm.models.caches import JSONFileCache
 
 def test_use_command(project, invoke):
     python = "python" if os.name == "nt" else "python3"
-    python_path = Path(shutil.which(python)).as_posix()
+    python_path = shutil.which(python)
     result = invoke(["use", "-f", python], obj=project)
     assert result.exit_code == 0
     config_content = project.root.joinpath(".pdm.toml").read_text()

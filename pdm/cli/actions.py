@@ -535,7 +535,7 @@ def do_use(
         python = python.strip()
 
     def version_matcher(py_version: PythonInfo) -> bool:
-        return project.python_requires.contains(str(py_version.version))
+        return project.python_requires.contains(str(py_version.version), True)
 
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)

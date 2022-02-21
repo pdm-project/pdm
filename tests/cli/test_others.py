@@ -66,7 +66,7 @@ def test_info_command(project, invoke):
     assert result.output.strip() == str(project.python.executable)
 
     result = invoke(["info", "--where"], obj=project)
-    assert result.output.strip() == project.root.as_posix()
+    assert result.output.strip() == str(project.root)
 
     result = invoke(["info", "--env"], obj=project)
     assert result.exit_code == 0
@@ -80,7 +80,7 @@ def test_info_global_project(invoke, tmp_path):
 
 def test_global_project_other_location(invoke, project):
     result = invoke(["info", "-g", "-p", project.root.as_posix(), "--where"])
-    assert result.stdout.strip() == project.root.as_posix()
+    assert result.stdout.strip() == str(project.root)
 
 
 def test_uncaught_error(invoke, mocker):
