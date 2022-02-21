@@ -193,7 +193,7 @@ class Project:
             )
 
         for py_version in self.find_interpreters():
-            if self.python_requires.contains(str(py_version.version)):
+            if self.python_requires.contains(str(py_version.version), True):
                 self.python = py_version
                 return py_version
 
