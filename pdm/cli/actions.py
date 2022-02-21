@@ -10,7 +10,6 @@ import textwrap
 from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
-from pathlib import Path
 from typing import Iterable, Mapping, Sequence, cast
 
 import click
@@ -536,7 +535,7 @@ def do_use(
         python = python.strip()
 
     def version_matcher(py_version: PythonInfo) -> bool:
-        return project.python_requires.contains(str(py_version.version))
+        return project.python_requires.contains(str(py_version.version), True)
 
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)
@@ -584,7 +583,7 @@ def do_use(
             )
             selected_python = found_interpreters[int(selection)]
         if python:
-            use_cache.set(python, selected_python.path)
+            use_cache.set(python, selected_python.path.as_posix())
 
     old_python = project.python if "python.path" in project.config else None
     project.core.ui.echo(
@@ -596,11 +595,11 @@ def do_use(
     project.python = selected_python
     if (
         old_python
-        and Path(old_python.path) != Path(selected_python.path)
+        and old_python.path != selected_python.path
         and not project.environment.is_global
     ):
         project.core.ui.echo(termui.cyan("Updating executable scripts..."))
-        project.environment.update_shebangs(selected_python.executable)
+        project.environment.update_shebangs(selected_python.executable.as_posix())
 
 
 def do_import(

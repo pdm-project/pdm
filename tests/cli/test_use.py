@@ -12,11 +12,11 @@ from pdm.models.caches import JSONFileCache
 
 def test_use_command(project, invoke):
     python = "python" if os.name == "nt" else "python3"
-    python_path = Path(shutil.which(python)).as_posix()
+    python_path = shutil.which(python)
     result = invoke(["use", "-f", python], obj=project)
     assert result.exit_code == 0
     config_content = project.root.joinpath(".pdm.toml").read_text()
-    assert python_path in config_content
+    assert python_path.replace("\\", "\\\\") in config_content
 
     result = invoke(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
@@ -45,7 +45,7 @@ exec "{}" "$@"
     shim_path.chmod(0o755)
 
     actions.do_use(project, shim_path.as_posix())
-    assert project.python.executable == sys.executable
+    assert project.python.executable == Path(sys.executable)
 
 
 @pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")

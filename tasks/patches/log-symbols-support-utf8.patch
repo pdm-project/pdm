@@ -12,7 +12,7 @@ index b7047fc..3ed2ef0 100644
 +import sys
  
  from enum import Enum
- from pdm._vendor.colorama import init, deinit, Fore
+ from colorama import init, deinit, Fore
 @@ -30,13 +33,17 @@ def is_supported():
      boolean
          Whether operating system supports main symbols or not

@@ -1,33 +1,51 @@
 diff --git a/pdm/_vendor/halo/_utils.py b/pdm/_vendor/halo/_utils.py
-index 14a0d62..c8ddeaf 100644
+index 14a0d62..c0b5522 100644
 --- a/pdm/_vendor/halo/_utils.py
 +++ b/pdm/_vendor/halo/_utils.py
-@@ -9,11 +9,8 @@ try:
+@@ -3,17 +3,13 @@
+ """
+ import codecs
+ import platform
+-import six
+ try:
+     from shutil import get_terminal_size
  except ImportError:
      from backports.shutil_get_terminal_size import get_terminal_size
  
--from pdm._vendor.colorama import init
- from pdm._vendor.termcolor import colored
+-from colorama import init
+ from termcolor import colored
  
 -init(autoreset=True)
 -
  
  def is_supported():
      """Check whether operating system supports main symbols or not.
+@@ -90,10 +86,7 @@ def is_text_type(text):
+     bool
+         Whether parameter is a string or not
+     """
+-    if isinstance(text, six.text_type) or isinstance(text, six.string_types):
+-        return True
+-
+-    return False
++    return isinstance(text, str)
+ 
+ 
+ def decode_utf_8_text(text):
 diff --git a/pdm/_vendor/halo/halo.py b/pdm/_vendor/halo/halo.py
 index 9bd32bb..4842d3c 100644
 --- a/pdm/_vendor/halo/halo.py
 +++ b/pdm/_vendor/halo/halo.py
 @@ -12,7 +12,7 @@ import time
  
- import pdm._vendor.halo.cursor as cursor
+ import halo.cursor as cursor
  
--from pdm._vendor.log_symbols.symbols import LogSymbols
-+from pdm._vendor.log_symbols.symbols import LogSymbols, is_supported
- from pdm._vendor.spinners.spinners import Spinners
+-from log_symbols.symbols import LogSymbols
++from log_symbols.symbols import LogSymbols, is_supported
+ from spinners.spinners import Spinners
  
- from pdm._vendor.halo._utils import (
-@@ -20,7 +20,6 @@ from pdm._vendor.halo._utils import (
+ from halo._utils import (
+@@ -20,7 +20,6 @@ from halo._utils import (
      decode_utf_8_text,
      get_environment,
      get_terminal_columns,

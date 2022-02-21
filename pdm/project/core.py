@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Type, cast
 from urllib.parse import urlparse
 
 import tomlkit
-from pythonfinder import Finder
-from pythonfinder.environment import PYENV_INSTALLED, PYENV_ROOT
+from findpython import Finder
 
 from pdm import termui
 from pdm._types import Source
@@ -45,6 +44,9 @@ if TYPE_CHECKING:
     from pdm._vendor import halo
     from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
+
+
+PYENV_ROOT = os.path.expanduser(os.getenv("PYENV_ROOT", "~/.pyenv"))
 
 
 class Project:
@@ -163,7 +165,7 @@ class Project:
     @property
     def python_executable(self) -> str:
         """For backward compatibility"""
-        return self.python.executable
+        return str(self.python.executable)
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
@@ -172,7 +174,7 @@ class Project:
             saved_path = config["python.path"]
             try:
                 python = PythonInfo.from_path(saved_path)
-                if self.python_requires.contains(str(python.version)):
+                if self.python_requires.contains(str(python.version), True):
                     return python
             except (ValueError, FileNotFoundError):
                 self.project_config.pop("python.path", None)
@@ -191,7 +193,7 @@ class Project:
             )
 
         for py_version in self.find_interpreters():
-            if self.python_requires.contains(str(py_version.version)):
+            if self.python_requires.contains(str(py_version.version), True):
                 self.python = py_version
                 return py_version
 
@@ -576,7 +578,7 @@ dependencies = ["pip", "setuptools", "wheel"]
         python: str | Path | None = None
 
         if not python_spec:
-            if config.get("python.use_pyenv", True) and PYENV_INSTALLED:
+            if config.get("python.use_pyenv", True) and os.path.exists(PYENV_ROOT):
                 pyenv_shim = os.path.join(PYENV_ROOT, "shims", "python3")
                 if os.name == "nt":
                     pyenv_shim += ".bat"
@@ -604,9 +606,9 @@ dependencies = ["pip", "setuptools", "wheel"]
                         yield PythonInfo.from_path(python)
                 return
             args = [int(v) for v in python_spec.split(".") if v != ""]
-        finder = Finder()
-        for entry in finder.find_all_python_versions(*args):
-            yield PythonInfo.from_python_version(entry.py_version)
+        finder = Finder(resolve_symlinks=True)
+        for entry in finder.find_all(*args):
+            yield PythonInfo(entry)
         if not python_spec:
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)

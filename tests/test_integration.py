@@ -14,6 +14,10 @@ def test_basic_integration(python_version, core, tmp_path, invoke):
     invoke(["use", "-f", python_version], obj=project, strict=True)
     invoke(["init", "-n"], obj=project, strict=True)
     project.meta["name"] = "test-project"
+    project.meta[
+        "requires-python"
+    ] = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"
+    project.write_pyproject()
     project._environment = None
     invoke(["add", "django", "-v"] + additional_args, obj=project, strict=True)
     with cd(project.root):

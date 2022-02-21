@@ -117,7 +117,7 @@ class Environment:
             sources = self.project.sources
 
         python_version = self.interpreter.version_tuple
-        python_abi_tag = get_python_abi_tag(self.interpreter.executable)
+        python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
         finder = get_finder(
             sources,
             self.project.cache_dir.as_posix(),
@@ -138,7 +138,7 @@ class Environment:
     @cached_property
     def marker_environment(self) -> dict[str, str]:
         """Get environment for marker evaluation"""
-        return get_pep508_environment(self.interpreter.executable)
+        return get_pep508_environment(str(self.interpreter.executable))
 
     def which(self, command: str) -> str | None:
         """Get the full path of the given executable against this environment."""
@@ -147,7 +147,7 @@ class Environment:
             version = python[6:]
             this_version = self.interpreter.version
             if not version or str(this_version).startswith(version):
-                return self.interpreter.executable
+                return str(self.interpreter.executable)
         # Fallback to use shutil.which to find the executable
         this_path = self.get_paths()["scripts"]
         python_root = os.path.dirname(self.interpreter.executable)
@@ -194,7 +194,7 @@ class Environment:
         from pip import __file__ as pip_location
 
         python_major = self.interpreter.major
-        executable = self.interpreter.executable
+        executable = str(self.interpreter.executable)
         proc = subprocess.run(
             [executable, "-Esm", "pip", "--version"], capture_output=True
         )
@@ -217,7 +217,7 @@ class GlobalEnvironment(Environment):
     is_global = True
 
     def get_paths(self) -> dict[str, str]:
-        paths = get_sys_config_paths(self.interpreter.executable)
+        paths = get_sys_config_paths(str(self.interpreter.executable))
         if is_venv_python(self.interpreter.executable):
             python_xy = f"python{self.interpreter.identifier}"
             paths["include"] = os.path.join(paths["data"], "include", "site", python_xy)
