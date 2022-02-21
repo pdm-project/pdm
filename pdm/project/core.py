@@ -174,7 +174,7 @@ class Project:
             saved_path = config["python.path"]
             try:
                 python = PythonInfo.from_path(saved_path)
-                if self.python_requires.contains(str(python.version)):
+                if self.python_requires.contains(str(python.version), True):
                     return python
             except (ValueError, FileNotFoundError):
                 self.project_config.pop("python.path", None)

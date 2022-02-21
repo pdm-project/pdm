@@ -425,7 +425,7 @@ class LockedRepository(BaseRepository):
             if key[0] != requirement.identify():
                 continue
             if not PySpecSet(info[1]).contains(
-                str(self.environment.interpreter.version)
+                str(self.environment.interpreter.version), True
             ):
                 continue
             can = self.packages[key]
