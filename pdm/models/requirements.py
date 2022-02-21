@@ -356,7 +356,7 @@ class FileRequirement(Requirement):
             name, extras = strip_extras(egg_info)
             self.name = name
             self.extras = extras
-        if not self.name:
+        if not self.name and not self.is_vcs:
             filename = os.path.basename(url_without_fragments(self.url))
             if filename.endswith(".whl"):
                 self.name, self.version = parse_name_version_from_wheel(filename)
