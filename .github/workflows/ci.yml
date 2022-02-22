@@ -101,7 +101,7 @@ jobs:
           pdm install -v -dGtest
           pdm info
       - name: Run Tests
-        run: pdm run pytest -n auto --cov pdm --cov-config=setup.cfg --cov-report=xml tests
+        run: pdm run pytest -vv tests
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
