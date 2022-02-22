@@ -26,19 +26,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-alpha - 3.11.0"]
-        # os: [ubuntu-latest, windows-latest, macos-latest]
-        # arch: [x64]
-        # install-via: [pip]
+        python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-alpha - 3.11.0"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        install-via: [pip]
         include:
           - python-version: 3.9
-            os: windows-latest
-            arch: x86
-            install-via: pip
-          # - python-version: 3.9
-          #   os: ubuntu-latest
-          #   arch: x64
-          #   install-via: script
+            os: ubuntu-latest
+            install-via: script
     continue-on-error: ${{ startsWith(matrix.python-version, '3.11') }}
     steps:
       - uses: actions/checkout@v2
@@ -48,35 +42,29 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 2.7
-          architecture: ${{ matrix.arch }}
       - name: Set Python 3.6
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
-          architecture: ${{ matrix.arch }}
       - name: Set Python 3.7
         uses: actions/setup-python@v2
         if: matrix.python-version != '3.7'
         with:
           python-version: 3.7
-          architecture: ${{ matrix.arch }}
       - name: Set Python 3.8
         uses: actions/setup-python@v2
         if: matrix.python-version != '3.8'
         with:
           python-version: 3.8
-          architecture: ${{ matrix.arch }}
       - name: Set Python 3.9
         uses: actions/setup-python@v2
         if: matrix.python-version != '3.9'
         with:
           python-version: 3.9
-          architecture: ${{ matrix.arch }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.arch }}
       - name: Set Variables
         id: set_variables
         run: |
@@ -100,20 +88,11 @@ jobs:
         run: |
           pdm install -v -dGtest
           pdm info
-      # - name: Run Tests
-      #   run: pdm run pytest -vv tests
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v1
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     file: ./coverage.xml
-      #     flags: unittests
-      - run: |
-          pip install -U "findpython @ git+https://github.com/frostming/findpython.git@fix/python-matching"
-          findpython --version
-          findpython -av 3.9
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
-      #     sudo: false
+      - name: Run Tests
+        run: pdm run pytest -vv tests
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: unittests
