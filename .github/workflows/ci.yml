@@ -108,12 +108,8 @@ jobs:
       #     token: ${{ secrets.CODECOV_TOKEN }}
       #     file: ./coverage.xml
       #     flags: unittests
-      - run: |
-          echo "pdm use -f 3.9"
-          pdm use -f 3.9
-          echo "pdm init -n"
-          pdm init -n
-          echo "pdm add -v django"
-          pdm add -v django
-          echo "pdm run django-admin -h"
-          pdm run django-admin -h
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          sudo: false
