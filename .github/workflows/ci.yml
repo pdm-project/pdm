@@ -109,7 +109,8 @@ jobs:
       #     file: ./coverage.xml
       #     flags: unittests
       - run: |
-          pip install -U "findpython @ git+https://github.com/frostming/findpython.git@f92e207"
+          pip install -U "findpython @ git+https://github.com/frostming/findpython.git@fix/python-matching"
+          findpython --version
           findpython -av 3.9
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
