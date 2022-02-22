@@ -108,5 +108,9 @@ jobs:
       #     token: ${{ secrets.CODECOV_TOKEN }}
       #     file: ./coverage.xml
       #     flags: unittests
-      - run: |
-          findpython -v -a 3.9
+      # - run: findpython -av 3.9
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          sudo: false
