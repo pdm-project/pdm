@@ -29,10 +29,16 @@ jobs:
         python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-alpha - 3.11.0"]
         os: [ubuntu-latest, windows-latest, macos-latest]
         install-via: [pip]
+        arch: [x64]
         include:
           - python-version: 3.9
             os: ubuntu-latest
             install-via: script
+            arch: x64
+          - python-version: 3.9
+            os: windows-latest
+            install-via: pip
+            arch: x86
     continue-on-error: ${{ startsWith(matrix.python-version, '3.11') }}
     steps:
       - uses: actions/checkout@v2
@@ -42,29 +48,35 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 2.7
+          architecture: ${{ matrix.arch }}
       - name: Set Python 3.6
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
+          architecture: ${{ matrix.arch }}
       - name: Set Python 3.7
         uses: actions/setup-python@v2
         if: matrix.python-version != '3.7'
         with:
           python-version: 3.7
+          architecture: ${{ matrix.arch }}
       - name: Set Python 3.8
         uses: actions/setup-python@v2
         if: matrix.python-version != '3.8'
         with:
           python-version: 3.8
+          architecture: ${{ matrix.arch }}
       - name: Set Python 3.9
         uses: actions/setup-python@v2
         if: matrix.python-version != '3.9'
         with:
           python-version: 3.9
+          architecture: ${{ matrix.arch }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.arch }}
       - name: Set Variables
         id: set_variables
         run: |
@@ -89,7 +101,7 @@ jobs:
           pdm install -v -dGtest
           pdm info
       - name: Run Tests
-        run: pdm run pytest -vv tests
+        run: pdm run pytest -n auto --cov=pdm --cov-config=setup.cfg --cov-report=xml tests
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
