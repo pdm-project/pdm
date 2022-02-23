@@ -99,7 +99,7 @@ summary = "execnet: rapid multi-Python deployment"
 
 [[package]]
 name = "findpython"
-version = "0.1.2"
+version = "0.1.3"
 requires_python = ">=3.7"
 summary = "A utility to find python versions on your system"
 dependencies = [
@@ -716,9 +716,9 @@ content_hash = "sha256:10013526fea19dec4436180b0eb53cb826f87db9c52540aab6a8dc7cd
     {file = "execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
     {file = "execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
 ]
-"findpython 0.1.2" = [
-    {file = "findpython-0.1.2-py3-none-any.whl", hash = "sha256:973666f27f67bc2a3c1a2c2df2acafe4f890a5255cea023b2a68823bb9520a6e"},
-    {file = "findpython-0.1.2.tar.gz", hash = "sha256:2eebd61f5e50ac6a74ed7773cf41f23cd80be402ca94556001cff27d3948bbd2"},
+"findpython 0.1.3" = [
+    {file = "findpython-0.1.3-py3-none-any.whl", hash = "sha256:ec64268d4120173bf713761ae15335c811102debfd1c96d2ef782b85c2380a26"},
+    {file = "findpython-0.1.3.tar.gz", hash = "sha256:b55a416b9fcf2d28721bfbea1ceb2a6cb67a00f99ec4b94a76da22c7a2002870"},
 ]
 "ghp-import 2.0.2" = [
     {file = "ghp_import-2.0.2-py3-none-any.whl", hash = "sha256:5f8962b30b20652cdffa9c5a9812f7de6bcb56ec475acac579807719bf242c46"},
