@@ -765,6 +765,7 @@ def get_latest_version(project: Project) -> str | None:
         return cast(str, state["latest-version"])
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)
+    print(project.cache_dir, os.path.isabs(str(project.cache_dir)))
     candidate = get_finder([], project.cache_dir.as_posix()).find_best_candidate("pdm")
     if not candidate.best_candidate:
         return None
