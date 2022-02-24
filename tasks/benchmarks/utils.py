@@ -33,6 +33,7 @@ class Executor:
                 **kwargs,
             )
         except subprocess.CalledProcessError as e:
+            click.secho(f"Run command {e.cmd} failed", fg="yellow", err=True)
             click.secho(e.stdout.decode(), fg="yellow", err=True)
             click.secho(e.stderr.decode(), fg="red", err=True)
             sys.exit(1)

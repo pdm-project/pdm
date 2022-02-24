@@ -36,7 +36,6 @@ def run_poetry(executor: Executor):
 @project(os.getenv("PDM", "pdm"), "pyproject.pdm.toml")
 def run_pdm(executor: Executor):
     cache_dir = executor.project_file.with_name(".cache")
-    os.environ["PIPENV_VENV_IN_PROJECT"] = "1"
     executor.run(["config", "cache_dir", str(cache_dir)])
     executor.measure("Lock dependencies without cache", ["lock"])
     executor.measure("Lock dependencies with cache", ["lock"])
@@ -48,9 +47,9 @@ def run_pdm(executor: Executor):
 
 
 def main():
+    benchmark(run_pdm)
     benchmark(run_pipenv)
     benchmark(run_poetry)
-    benchmark(run_pdm)
 
 
 if __name__ == "__main__":
