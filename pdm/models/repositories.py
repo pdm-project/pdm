@@ -430,6 +430,7 @@ class LockedRepository(BaseRepository):
                 continue
             can = self.packages[key]
             can.requires_python = info[1]
+            can.prepare(self.environment)
             can.req = requirement
             yield can
 

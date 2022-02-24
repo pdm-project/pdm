@@ -19,7 +19,6 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_metadata_from_source,
 )
-from pdm.models.specifiers import get_specifier
 from pdm.utils import (
     allow_all_wheels,
     cached_property,
@@ -216,15 +215,13 @@ class PreparedCandidate:
         self.environment = environment
         self.wheel: str | None = None
         self.req = candidate.req
+        self.ireq = self.get_ireq()
 
         self._metadata_dir: str | None = None
         self._metadata: Distribution | None = None
 
-    @cached_property
-    def ireq(self) -> pip_shims.InstallRequirement:
+    def get_ireq(self) -> pip_shims.InstallRequirement:
         rv, project = self.req.as_ireq(), self.environment.project
-        if self.candidate.version and rv.req:
-            rv.req.specifier = get_specifier(f"=={self.candidate.version}")
         if rv.link:
             rv.original_link = rv.link = pip_shims.Link(
                 expand_env_vars_in_auth(
