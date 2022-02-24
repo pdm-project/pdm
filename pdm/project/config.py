@@ -263,6 +263,8 @@ class Config(MutableMapping[str, str]):
         config = self._config_map[config_key]
         self._data.pop(config_key, None)
         self._file_data.pop(config_key, None)
+        if self.is_global and config.should_show():
+            self._data[config_key] = config.default
         if config.replace:
             self._data.pop(config.replace, None)
             self._file_data.pop(config.replace, None)
