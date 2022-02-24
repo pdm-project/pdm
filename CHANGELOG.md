@@ -1,3 +1,17 @@
+Release v1.13.3 (2022-02-24)
+----------------------------
+
+### Bug Fixes
+
+- Fix a bug that VCS repo name are parsed as the package name. [#928](https://github.com/pdm-project/pdm/issues/928)
+- Support prerelease versions for global projects. [#932](https://github.com/pdm-project/pdm/issues/932)
+- Fix a bug that VCS revision in the lock file isn't respected when installing. [#933](https://github.com/pdm-project/pdm/issues/933)
+
+### Dependencies
+
+- Switch from `pythonfinder` to `findpython` as the Python version finder. [#930](https://github.com/pdm-project/pdm/issues/930)
+
+
 Release v1.13.2 (2022-02-20)
 ----------------------------
 
