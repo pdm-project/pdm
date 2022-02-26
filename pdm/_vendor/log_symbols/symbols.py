@@ -6,9 +6,8 @@ import os
 import sys
 
 from enum import Enum
-from pdm._vendor.colorama import init, deinit, Fore
+from pdm._vendor.colorama import Fore
 
-init(autoreset=True)
 
 _MAIN = {
     'info': 'ℹ',
@@ -68,5 +67,3 @@ class LogSymbols(Enum): # pylint: disable=too-few-public-methods
     SUCCESS = Fore.GREEN + _SYMBOLS['success'] + Fore.RESET
     WARNING = Fore.YELLOW + _SYMBOLS['warning'] + Fore.RESET
     ERROR = Fore.RED + _SYMBOLS['error'] + Fore.RESET
-
-deinit()
