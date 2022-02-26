@@ -167,7 +167,7 @@ def support_ansi() -> bool:
             os.getenv("ANSICON") is not None
             or os.getenv("WT_SESSION") is not None
             or "ON" == os.getenv("ConEmuANSI")
-            or "xterm" == os.getenv("Term")
+            or os.getenv("Term").startswith('xterm')
         )
 
     if not hasattr(sys.stdout, "fileno"):
