@@ -1,5 +1,4 @@
 import os
-
 from pkgutil import extend_path
 
 __path__ = extend_path(__path__, __name__)  # type: ignore
@@ -20,6 +19,7 @@ __all__ = (
 )
 
 os.system("")
+
 
 def _fix_pkg_resources() -> None:
     import importlib
