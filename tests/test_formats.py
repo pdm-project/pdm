@@ -61,7 +61,7 @@ def test_convert_poetry(project):
     }
     assert result["name"] == "poetry"
     assert result["version"] == "1.0.0"
-    assert result["license"] == {"text": "MIT"}
+    assert result["license-expression"] == "MIT"
     assert "repository" in result["urls"]
     assert result["requires-python"] == ">=2.7,<4.0,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
     assert 'cleo<1.0.0,>=0.7.6; python_version ~= "2.7"' in result["dependencies"]
@@ -125,7 +125,7 @@ def test_convert_legacy_format(project):
 
     assert result["name"] == "demo-package"
     assert result["authors"][0] == {"name": "frostming", "email": "mianghong@gmail.com"}
-    assert result["license"] == {"text": "MIT"}
+    assert result["license-expression"] == "MIT"
     assert sorted(result["dynamic"]) == ["classifiers", "version"]
     assert result["dependencies"] == ["flask"]
     assert not result.get("dev-dependencies", {}).get("dev")

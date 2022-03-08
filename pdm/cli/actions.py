@@ -31,7 +31,7 @@ from pdm.cli.utils import (
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
-from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+from pdm.formats.base import array_of_inline_tables, make_array
 from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
@@ -504,11 +504,14 @@ def do_init(
             "version": version,
             "description": "",
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
-            "license": make_inline_table({"text": license}),
+            "license-expression": license,
             "urls": {"Homepage": ""},
             "dependencies": make_array([], True),
         },
-        "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
+        "build-system": {
+            "requires": ["pdm-pep517>=0.12.0"],
+            "build-backend": "pdm.pep517.api",
+        },
     }
     if python_requires and python_requires != "*":
         data["project"]["requires-python"] = python_requires  # type: ignore
@@ -566,18 +569,18 @@ def do_use(
                 "No python is found meeting the requirement "
                 f"{termui.green('python' + str(project.python_requires))}"
             )
-        if first or len(found_interpreters) == 1:
-            selected_python = found_interpreters[0]
+        if first or len(matching_interperters) == 1:
+            selected_python = matching_interperters[0]
         else:
             project.core.ui.echo("Please enter the Python interpreter to use")
-            for i, py_version in enumerate(found_interpreters):
+            for i, py_version in enumerate(matching_interperters):
                 project.core.ui.echo(
-                    f"{i}. {termui.green(py_version.executable)} "
+                    f"{i}. {termui.green(str(py_version.executable))} "
                     f"({py_version.identifier})"
                 )
             selection = click.prompt(
                 "Please select:",
-                type=click.Choice([str(i) for i in range(len(found_interpreters))]),
+                type=click.Choice([str(i) for i in range(len(matching_interperters))]),
                 default="0",
                 show_choices=False,
             )

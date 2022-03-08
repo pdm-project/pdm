@@ -6,7 +6,7 @@ authors = [
 ]
 dynamic = ["version"]
 requires-python = ">=3.7"
-license = {text = "MIT"}
+license-expression = "MIT"
 dependencies = [
     "blinker",
     "click>=7",
@@ -14,7 +14,7 @@ dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
     "installer~=0.3.0",
     "packaging",
-    "pdm-pep517>=0.9,<0.12",
+    "pdm-pep517>=0.9,<1",
     "pep517>=0.11.0",
     "pip>=20.1",
     "platformdirs",
@@ -150,7 +150,7 @@ underlines = "-~^"
   showcontent = true
 
 [build-system]
-requires = ["pdm-pep517>=0.3.0"]
+requires = ["pdm-pep517>=0.12.0"]
 build-backend = "pdm.pep517.api"
 
 [tool.isort]
