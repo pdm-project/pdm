@@ -228,8 +228,6 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
     req = parse_requirement(line, is_editable)
     candidate = Candidate(req)
     expected_deps = ["django"]
-    if is_editable:
-        expected_deps.append("editables")
     assert (
         candidate.prepare(project.environment).get_dependencies_from_metadata()
         == expected_deps
