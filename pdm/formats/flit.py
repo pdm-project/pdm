@@ -13,7 +13,6 @@ from pdm.formats.base import (
     array_of_inline_tables,
     convert_from,
     make_array,
-    make_inline_table,
 )
 from pdm.project import Project
 from pdm.utils import cd
@@ -109,7 +108,7 @@ class FlitMetaConverter(MetaConverter):
         if "maintainer" in metadata:
             self._data["maintainers"] = _get_author(metadata, "maintainer")
         if "license" in metadata:
-            self._data["license"] = make_inline_table({"text": metadata.pop("license")})
+            self._data["license-expression"] = metadata.pop("license")
             self._data["dynamic"] = ["classifiers"]
         if "urls" in metadata:
             self._data["urls"] = metadata.pop("urls")

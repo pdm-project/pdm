@@ -10,7 +10,7 @@ authors = [
 ]
 dynamic = ["version"]
 requires-python = ">=3.5"
-license = {text = "MIT"}
+license-expression = "MIT"
 dependencies = ["flask"]
 description = ""
 name = "demo-package"
