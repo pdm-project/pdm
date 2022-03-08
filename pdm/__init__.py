@@ -19,6 +19,10 @@ __all__ = (
     "Core",
 )
 
+# This is a fix for Issue 939 ansi colors don't work correctly with Windows Terminal.
+# Apparently Python doesn't initialize correctly for Windows Terminal to support ANSI
+# escape codes. The call below forces that initialization.
+# Ref: https://bugs.python.org/issue40134
 os.system("")
 
 def _fix_pkg_resources() -> None:
