@@ -112,7 +112,9 @@ class TaskRunner:
             import dotenv
 
             project.core.ui.echo(
-                f"Loading .env file: {termui.green(env_file)}", err=True
+                f"Loading .env file: {termui.green(env_file)}",
+                err=True,
+                verbosity=termui.DETAIL,
             )
             process_env.update(
                 dotenv.dotenv_values(project.root / env_file, encoding="utf-8")
@@ -190,7 +192,9 @@ class TaskRunner:
             "env_file", self.global_options.get("env_file")
         )
         self.project.core.ui.echo(
-            f"Running {task}: {termui.green(str(args))}", err=True
+            f"Running {task}: {termui.green(str(args))}",
+            err=True,
+            verbosity=termui.DETAIL,
         )
         return self._run_process(
             args, chdir=True, shell=shell, **options  # type: ignore
