@@ -1,5 +1,4 @@
 import os
-
 from pkgutil import extend_path
 
 __path__ = extend_path(__path__, __name__)  # type: ignore
@@ -24,6 +23,7 @@ __all__ = (
 # escape codes. The call below forces that initialization.
 # Ref: https://bugs.python.org/issue40134
 os.system("")
+
 
 def _fix_pkg_resources() -> None:
     import importlib
