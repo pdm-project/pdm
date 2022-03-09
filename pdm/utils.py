@@ -254,13 +254,13 @@ def get_user_email_from_git() -> tuple[str, str]:
         return "", ""
     try:
         username = subprocess.check_output(
-            [git, "config", "user.name"], text=True
+            [git, "config", "user.name"], text=True, encoding="utf-8"
         ).strip()
     except subprocess.CalledProcessError:
         username = ""
     try:
         email = subprocess.check_output(
-            [git, "config", "user.email"], text=True
+            [git, "config", "user.email"], text=True, encoding="utf-8"
         ).strip()
     except subprocess.CalledProcessError:
         email = ""
