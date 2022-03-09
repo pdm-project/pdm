@@ -1,3 +1,18 @@
+Release v1.13.4 (2022-03-09)
+----------------------------
+
+### Features & Improvements
+
+- Update the dependency `pdm-pep517` to support PEP 639. [#959](https://github.com/pdm-project/pdm/issues/959)
+
+### Bug Fixes
+
+- Filter out the unmatched python versions when listing the available versions. [#941](https://github.com/pdm-project/pdm/issues/941)
+- Fix a bug displaying the available python versions. [#943](https://github.com/pdm-project/pdm/issues/943)
+- Fix a bug under non-UTF8 console encoding. [#960](https://github.com/pdm-project/pdm/issues/960)
+- Fix a bug that data files are not copied to the destination when using installation cache. [#961](https://github.com/pdm-project/pdm/issues/961)
+
+
 Release v1.13.3 (2022-02-24)
 ----------------------------
 
