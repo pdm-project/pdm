@@ -198,7 +198,8 @@ __pypackages__/
 
 ### PyCharm
 
-Mark `__pypackages__/<major.minor>/lib` as Sources Root.
+Mark `__pypackages__/<major.minor>/lib` as [Sources Root](https://www.jetbrains.com/help/pycharm/configuring-project-structure.html#mark-dir-project-view).
+Then, select as [Python interpreter](https://www.jetbrains.com/help/pycharm/configuring-python-interpreter.html#interpreter) a Python installation with the same `<major.minor>` version.
 
 Additionally, if you want to use tools from the environment (e.g. `pytest`), you have to add the
 `__pypackages__/<major.minor>/bin` directory to the `PATH` variable in the corresponding
