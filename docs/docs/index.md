@@ -247,6 +247,20 @@ and make sure VSCode runs using the same user and shell you enabled PEP582 for.
     "env": {"PYTHONPATH": "src:__pypackages__/<major.minor>/lib"}
     ```
 
+??? note "Using Pylance/Pyright?"
+    If you have configured `"python.analysis.diagnosticMode": "workspace"`,
+    and you see a ton of errors/warnings as a result.
+    you may need to create `pyrightconfig.json` in the workspace directory, and fill in the following fields:
+
+    ```json
+    {
+        "exclude": ["__pypackages__"]
+    }
+    ```
+
+    Then restart the language server or VS Code and you're good to go.
+    In the future ([microsoft/pylance-release#1150](https://github.com/microsoft/pylance-release/issues/1150)), maybe the problem will be solved.
+
 #### Task Provider
 
 In addition, there is a [VSCode Task Provider extension][pdm task provider] available for download.
