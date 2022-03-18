@@ -368,7 +368,7 @@ class PreparedCandidate:
             self._populate_source_dir()
             if not ireq.link.is_existing_dir():
                 assert ireq.source_dir
-                downloaded = pip_shims.unpack_url(
+                downloaded = pip_shims.unpack_url(  # type: ignore
                     ireq.link,
                     ireq.source_dir,
                     downloader,
