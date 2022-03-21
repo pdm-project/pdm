@@ -31,14 +31,12 @@ def get_sys_config_paths(
         ]
         return json.loads(subprocess.check_output(args))
     else:
-        os_name = os.name
-        scheme = "posix_prefix" if os_name == "posix" else os.name
         env.update(SYSCONFIG_VARS=json.dumps(vars))
         args = [
             executable,
             "-Esc",
             "import os,sysconfig,json;print(json.dumps(sysconfig."
-            f"get_paths({scheme!r}, vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
+            "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
         ]
         return json.loads(subprocess.check_output(args, env=env))
 
