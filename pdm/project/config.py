@@ -94,7 +94,7 @@ class Config(MutableMapping[str, str]):
             ensure_boolean,
         ),
         "global_project.fallback": ConfigItem(
-            "Use global package implicitly if no local project is found",
+            "Use the global project implicitly if no local project is found",
             False,
             True,
             coerce=ensure_boolean,
@@ -103,6 +103,7 @@ class Config(MutableMapping[str, str]):
         "global_project.path": ConfigItem(
             "The path to the global project",
             os.path.expanduser("~/.pdm/global-project"),
+            True,
         ),
         "project_max_depth": ConfigItem(
             "The max depth to search for a project through the parents",
