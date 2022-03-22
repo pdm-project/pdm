@@ -217,8 +217,13 @@ class GlobalEnvironment(Environment):
     is_global = True
 
     def get_paths(self) -> dict[str, str]:
-        paths = get_sys_config_paths(str(self.interpreter.executable))
-        if is_venv_python(self.interpreter.executable):
+        is_venv = is_venv_python(self.interpreter.executable)
+        paths = get_sys_config_paths(
+            str(self.interpreter.executable),
+            user_site=not is_venv
+            and self.project.global_config["global_project.user_site"],
+        )
+        if is_venv:
             python_xy = f"python{self.interpreter.identifier}"
             paths["include"] = os.path.join(paths["data"], "include", "site", python_xy)
         paths["prefix"] = paths["data"]

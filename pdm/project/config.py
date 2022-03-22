@@ -105,6 +105,9 @@ class Config(MutableMapping[str, str]):
             os.path.expanduser("~/.pdm/global-project"),
             True,
         ),
+        "global_project.user_site": ConfigItem(
+            "Whether to install to user site", False, True, coerce=ensure_boolean
+        ),
         "project_max_depth": ConfigItem(
             "The max depth to search for a project through the parents",
             5,
