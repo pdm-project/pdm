@@ -18,27 +18,18 @@ def get_python_abi_tag(executable: str) -> str:
 
 
 def get_sys_config_paths(
-    executable: str, vars: Optional[Dict[str, str]] = None
+    executable: str, vars: Optional[Dict[str, str]] = None, user_site: bool = False
 ) -> Dict[str, str]:
     """Return the sys_config.get_paths() result for the python interpreter"""
     env = os.environ.copy()
     env.pop("__PYVENV_LAUNCHER__", None)
-    if not vars:
-        args = [
-            executable,
-            "-Esc",
-            "import sysconfig,json;print(json.dumps(sysconfig.get_paths()))",
-        ]
-        return json.loads(subprocess.check_output(args))
-    else:
-        env.update(SYSCONFIG_VARS=json.dumps(vars))
-        args = [
-            executable,
-            "-Esc",
-            "import os,sysconfig,json;print(json.dumps(sysconfig."
-            "get_paths(vars=json.loads(os.getenv('SYSCONFIG_VARS')))))",
-        ]
-        return json.loads(subprocess.check_output(args, env=env))
+    if vars is not None:
+        env["_SYSCONFIG_VARS"] = json.dumps(vars)
+    cmd = [executable, "-Es", str(FOLDER_PATH / "sysconfig_get_paths.py")]
+    if user_site:
+        cmd.append("--user")
+
+    return json.loads(subprocess.check_output(cmd, env=env))
 
 
 def get_pep508_environment(executable: str) -> Dict[str, str]:
