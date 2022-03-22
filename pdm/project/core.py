@@ -50,12 +50,18 @@ PYENV_ROOT = os.path.expanduser(os.getenv("PYENV_ROOT", "~/.pyenv"))
 
 
 class Project:
-    """Core project class"""
+    """Core project class.
+
+    Args:
+        core: The core instance.
+        root_path: The root path of the project.
+        is_global: Whether the project is global.
+        global_config: The path to the global config file.
+    """
 
     PYPROJECT_FILENAME = "pyproject.toml"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
     LOCKFILE_VERSION = "3.1"
-    GLOBAL_PROJECT = Path.home() / ".pdm" / "global-project"
 
     def __init__(
         self,
@@ -71,22 +77,27 @@ class Project:
         self.core = core
 
         if global_config is None:
-            global_config = self.GLOBAL_PROJECT.with_name("config.toml")
+            global_config = Path.home() / ".pdm/config.toml"
         self.global_config = Config(Path(global_config), is_global=True)
+        global_project = Path(self.global_config["global_project.path"])
 
         if root_path is None:
             root_path = (
                 find_project_root(max_depth=self.global_config["project_max_depth"])
                 if not is_global
-                else self.GLOBAL_PROJECT
+                else global_project
             )
-        if not is_global and root_path is None and self.global_config["auto_global"]:
+        if (
+            not is_global
+            and root_path is None
+            and self.global_config["global_project.fallback"]
+        ):
             self.core.ui.echo(
                 "Project is not found, fallback to the global project",
                 fg="yellow",
                 err=True,
             )
-            root_path = self.GLOBAL_PROJECT
+            root_path = global_project
             is_global = True
 
         self.root = Path(root_path or "").absolute()
