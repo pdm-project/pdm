@@ -261,6 +261,18 @@ and make sure VSCode runs using the same user and shell you enabled PEP582 for.
     Then restart the language server or VS Code and you're good to go.
     In the future ([microsoft/pylance-release#1150](https://github.com/microsoft/pylance-release/issues/1150)), maybe the problem will be solved.
 
+??? note "Using Jupyter Notebook?"
+    If you wish to use pdm to install jupyter notebook and use it in vscode in conjunction with the python extension:
+
+    1. Use `pdm add notebook` or so to install notebook
+    2. Add a `.env` file inside of your project director with contents like the following:
+
+    ```
+    PYTHONPATH=/your-workspace-path/__pypackages__/<major>.<minor>/lib
+    ```
+
+    > [Reference Issue](https://github.com/pdm-project/pdm/issues/848)
+
 #### Task Provider
 
 In addition, there is a [VSCode Task Provider extension][pdm task provider] available for download.
