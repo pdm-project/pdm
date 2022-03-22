@@ -136,7 +136,7 @@ and it doesn't support build features. The idea is taken from Haskell's [stack](
 
 However, unlike `stack`, by default, PDM won't use global project automatically if a local project is not found.
 Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
-But PDM also leave the decision to users, just set the config `auto_global` to `true`.
+But PDM also leave the decision to users, just set the config `global_project.fallback` to `true`.
 
 If you want global project to track another project file other than `~/.pdm/global-project`, you can provide the
 project path via `-p/--project <path>` option.

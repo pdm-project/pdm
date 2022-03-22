@@ -86,19 +86,24 @@ class Config(MutableMapping[str, str]):
             True,
             coerce=ensure_boolean,
         ),
-        "auto_global": ConfigItem(
-            "Use global package implicitly if no local project is found",
-            False,
-            True,
-            "PDM_AUTO_GLOBAL",
-            coerce=ensure_boolean,
-        ),
         "build_isolation": ConfigItem(
             "Isolate build environment from the project environment",
             True,
             False,
             "PDM_BUILD_ISOLATION",
             ensure_boolean,
+        ),
+        "global_project.fallback": ConfigItem(
+            "Use the global project implicitly if no local project is found",
+            False,
+            True,
+            coerce=ensure_boolean,
+            replace="auto_global",
+        ),
+        "global_project.path": ConfigItem(
+            "The path to the global project",
+            os.path.expanduser("~/.pdm/global-project"),
+            True,
         ),
         "project_max_depth": ConfigItem(
             "The max depth to search for a project through the parents",

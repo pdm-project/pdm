@@ -85,6 +85,7 @@ def test_deprecated_config_name(project, invoke):
 
 
 @pytest.mark.deprecated
+@pytest.mark.usefixtures("project")
 def test_rename_deprected_config(tmp_path, invoke):
     tmp_path.joinpath(".pdm.toml").write_text("use_venv = true\n")
     with cd(tmp_path):

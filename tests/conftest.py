@@ -27,7 +27,6 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_requirement,
 )
-from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import get_finder, normalize_name
 from tests import FIXTURES
@@ -153,13 +152,6 @@ class TestRepository(BaseRepository):
         self._pypi_data = json.loads(json_file.read_text())
 
 
-class TestProject(Project):
-    def __init__(self, core, root_path, is_global, global_config):
-        self.root_path = Path(root_path or ".")
-        self.GLOBAL_PROJECT = self.root_path / ".pdm-home" / "global-project"
-        super().__init__(core, root_path, is_global, global_config)
-
-
 class Distribution:
     def __init__(self, key, version, editable=False):
         self.version = version
@@ -253,7 +245,6 @@ def remove_pep582_path_from_pythonpath(pythonpath):
 def core():
     old_config_map = Config._config_map.copy()
     main = Core()
-    main.project_class = TestProject
     yield main
     # Restore the config items
     Config._config_map = old_config_map
@@ -261,7 +252,16 @@ def core():
 
 @pytest.fixture()
 def project_no_init(tmp_path, mocker, core):
-    p = core.create_project(tmp_path)
+    test_home = tmp_path / ".pdm-home"
+    test_home.mkdir(parents=True)
+    test_home.joinpath("config.toml").write_text(
+        '[global_project]\npath = "{}"\n'.format(
+            test_home.joinpath("global-project").as_posix()
+        )
+    )
+    p = core.create_project(
+        tmp_path, global_config=test_home.joinpath("config.toml").as_posix()
+    )
     mocker.patch("pdm.utils.get_finder", get_local_finder)
     mocker.patch("pdm.models.environment.get_finder", get_local_finder)
     tmp_path.joinpath("caches").mkdir(parents=True)

@@ -113,9 +113,11 @@ def test_global_project(tmp_path, core):
 
 def test_auto_global_project(tmp_path, core):
     tmp_path.joinpath(".pdm-home").mkdir()
-    (tmp_path / ".pdm-home/config.toml").write_text("auto_global = true\n")
+    (tmp_path / ".pdm-home/config.toml").write_text(
+        "[global_project]\nfallback = true\n"
+    )
     with cd(tmp_path):
-        project = core.create_project()
+        project = core.create_project(global_config=tmp_path / ".pdm-home/config.toml")
     assert project.is_global
 
 
@@ -196,11 +198,13 @@ def test_select_dependencies(project):
     ]
 
 
-def test_global_python_path_config(project_no_init):
-    project_no_init.root.joinpath(".pdm.toml").unlink()
+def test_global_python_path_config(project_no_init, tmp_path):
+    tmp_path.joinpath(".pdm.toml").unlink()
     project_no_init.global_config["python.path"] = sys.executable
     # Recreate the project to clean cached properties
-    p = project_no_init.core.create_project(project_no_init.root)
+    p = project_no_init.core.create_project(
+        project_no_init.root, global_config=tmp_path / ".pdm-home/config.toml"
+    )
     assert p.python.executable == Path(sys.executable)
     assert "python.path" not in p.project_config
 
