@@ -1,3 +1,19 @@
+Release v1.13.5 (2022-03-23)
+----------------------------
+
+### Features & Improvements
+
+- Users can change the install destination of global project to the user site(`~/.local`) with `global_project.user_site` config. [#885](https://github.com/pdm-project/pdm/issues/885)
+- Make the path to the global project configurable. Rename the configuration `auto_global` to `global_project.fallback` and deprecate the old name. [#986](https://github.com/pdm-project/pdm/issues/986)
+
+### Bug Fixes
+
+- Fix the compatibility when fetching license information in `show` command. [#966](https://github.com/pdm-project/pdm/issues/966)
+- Don't follow symlinks for the paths in the requirement strings. [#976](https://github.com/pdm-project/pdm/issues/976)
+- Use the default install scheme when installing build requirements. [#983](https://github.com/pdm-project/pdm/issues/983)
+- Fix a bug that `_.site_packages` is overriden by default option value. [#985](https://github.com/pdm-project/pdm/issues/985)
+
+
 Release v1.13.4 (2022-03-09)
 ----------------------------
 
