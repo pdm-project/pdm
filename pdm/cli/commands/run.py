@@ -269,7 +269,8 @@ class Command(BaseCommand):
         runner = TaskRunner(project)
         if options.list:
             return runner.show_list()
-        runner.global_options.update({"site_packages": options.site_packages})
+        if options.site_packages:
+            runner.global_options.update({"site_packages": options.site_packages})
         if not options.command:
             project.core.ui.echo(
                 "No command is given, default to the Python REPL.",
