@@ -20,12 +20,12 @@ from pdm.models.in_process import (
     get_python_abi_tag,
     get_sys_config_paths,
 )
+from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
 from pdm.utils import cached_property, get_finder, is_venv_python, pdm_scheme
 
 if TYPE_CHECKING:
     from pdm._types import Source
-    from pdm.models.python import PythonInfo
     from pdm.project import Project
 
 
@@ -64,6 +64,7 @@ def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
 class Environment:
     """Environment dependent stuff related to the selected Python interpreter."""
 
+    interpreter: PythonInfo
     is_global = False
 
     def __init__(self, project: Project) -> None:
@@ -72,8 +73,7 @@ class Environment:
         """
         self.python_requires = project.python_requires
         self.project = project
-        self.interpreter: PythonInfo = project.python
-        self._essential_installed = False
+        self.interpreter = project.python
         self.auth = make_basic_auth(
             self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
         )
@@ -233,3 +233,21 @@ class GlobalEnvironment(Environment):
     @property
     def packages_path(self) -> Path | None:  # type: ignore
         return None
+
+
+class BareEnvironment(Environment):
+    """Bare environment that does not depend on project files."""
+
+    def __init__(self, project: Project) -> None:
+        self.python_requires = project.python_requires
+        self.project = project
+        self.interpreter = PythonInfo.from_path(sys.executable)
+        self.auth = make_basic_auth(
+            self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
+        )
+
+    def get_working_set(self) -> WorkingSet:
+        if self.project.project_config.config_file.exists():
+            return super().get_working_set()
+        else:
+            return WorkingSet([])

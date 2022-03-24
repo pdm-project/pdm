@@ -8,7 +8,7 @@ from pdm import termui
 from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.models.environment import WorkingSet
+from pdm.models.environment import BareEnvironment, WorkingSet
 from pdm.project import Project
 from pdm.utils import normalize_name
 
@@ -64,13 +64,10 @@ class Command(BaseCommand):
         parser.add_argument("query", help="Query string to search")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        project.environment = BareEnvironment(project)
         result = project.get_repository().search(options.query)
         terminal_width = None
         if sys.stdout.isatty():
             terminal_width = get_terminal_size()[0]
-        print_results(
-            project.core.ui,
-            result,
-            project.environment.get_working_set(),
-            terminal_width,
-        )
+        working_set = project.environment.get_working_set()
+        print_results(project.core.ui, result, working_set, terminal_width)
