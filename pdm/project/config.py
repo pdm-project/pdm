@@ -188,8 +188,8 @@ class Config(MutableMapping[str, str]):
             self._data.update(self.get_defaults())
 
         self.is_global = is_global
-        self._config_file = config_file.resolve()
-        self._file_data = load_config(self._config_file)
+        self.config_file = config_file.resolve()
+        self._file_data = load_config(self.config_file)
         self.deprecated = {
             v.replace: k for k, v in self._config_map.items() if v.replace
         }
@@ -197,7 +197,7 @@ class Config(MutableMapping[str, str]):
 
     def _save_config(self) -> None:
         """Save the changed to config file."""
-        self._config_file.parent.mkdir(parents=True, exist_ok=True)
+        self.config_file.parent.mkdir(parents=True, exist_ok=True)
         toml_data: Dict[str, Any] = {}
         for key, value in self._file_data.items():
             *parts, last = key.split(".")
@@ -208,7 +208,7 @@ class Config(MutableMapping[str, str]):
                 temp = temp[part]
             temp[last] = value
 
-        with self._config_file.open("w", encoding="utf-8") as fp:
+        with self.config_file.open("w", encoding="utf-8") as fp:
             tomlkit.dump(toml_data, fp)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:

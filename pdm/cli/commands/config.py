@@ -68,13 +68,13 @@ class Command(BaseCommand):
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
         ui = project.core.ui
-        ui.echo("Home configuration ({}):".format(project.global_config._config_file))
+        ui.echo("Home configuration ({}):".format(project.global_config.config_file))
         with ui.indent("  "):
             self._show_config(project.global_config, ui)
 
         ui.echo()
         ui.echo(
-            "Project configuration ({}):".format(project.project_config._config_file)
+            "Project configuration ({}):".format(project.project_config.config_file)
         )
         with ui.indent("  "):
             self._show_config(project.project_config, ui)

@@ -181,10 +181,13 @@ def test_import_requirement_no_overwrite(project, invoke, tmp_path):
 
 
 @pytest.mark.network
-def test_search_package(invoke):
-    result = invoke(["search", "requests"])
+def test_search_package(invoke, tmp_path):
+    with cd(tmp_path):
+        result = invoke(["search", "requests"])
     assert result.exit_code == 0
     assert len(result.output.splitlines()) > 0
+    assert not tmp_path.joinpath("__pypackages__").exists()
+    assert not tmp_path.joinpath(".pdm.toml").exists()
 
 
 @pytest.mark.network
