@@ -291,7 +291,7 @@ def format_reverse_package(
 def package_is_project(package: Package, project: Project) -> bool:
     return (
         not project.environment.is_global
-        and bool(project.meta.name)
+        and bool(project.name)
         and package.name == project.meta.project_name.lower()
     )
 

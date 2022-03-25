@@ -134,6 +134,10 @@ class Project:
         return data.setdefault("tool", {}).setdefault("pdm", {})
 
     @property
+    def name(self) -> str | None:
+        return self.meta.get("name")
+
+    @property
     def lockfile(self) -> dict:
         if not self._lockfile:
             if not self.lockfile_file.is_file():

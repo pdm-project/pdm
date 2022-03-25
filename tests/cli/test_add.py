@@ -224,7 +224,7 @@ def test_add_dependency_from_multiple_parents(project, working_set, mocker):
 def test_add_packages_without_self(project, working_set):
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(project, packages=["requests"], no_self=True)
-    assert project.meta.name not in working_set
+    assert project.name not in working_set
 
 
 @pytest.mark.usefixtures("repository", "working_set")

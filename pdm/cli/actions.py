@@ -182,7 +182,7 @@ def do_sync(
         clean,
         dry_run,
         no_editable=no_editable,
-        install_self=not no_self and "default" in groups and bool(project.meta.name),
+        install_self=not no_self and "default" in groups and bool(project.name),
         use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
     )

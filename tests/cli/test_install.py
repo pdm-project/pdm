@@ -75,7 +75,7 @@ def test_sync_only_different(project, working_set, capsys):
     assert "3 to add" in out, out
     assert "1 to update" in out
     assert "foo" in working_set
-    assert "test-project" in working_set
+    assert "test-project" in working_set, list(working_set)
     assert working_set["chardet"].version == "3.0.4"
 
 
@@ -115,7 +115,7 @@ def test_sync_without_self(project, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")})
     actions.do_lock(project)
     actions.do_sync(project, no_self=True)
-    assert project.meta.name not in working_set
+    assert project.name not in working_set, list(working_set)
 
 
 def test_sync_with_index_change(project, index):

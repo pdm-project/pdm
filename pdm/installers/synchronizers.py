@@ -134,10 +134,10 @@ class Synchronizer:
 
     @property
     def self_key(self) -> Optional[str]:
-        meta = self.environment.project.meta
-        if meta.name:
-            return meta.project_name.lower()
-        return None
+        name = self.environment.project.name
+        if name:
+            return self.environment.project.meta.project_name.lower()
+        return name
 
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
