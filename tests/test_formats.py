@@ -152,3 +152,17 @@ def test_import_requirements_with_group(project):
     assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
     assert not result.get("dependencies")
     assert not result.get("dev-dependencies", {}).get("dev")
+
+
+def test_export_expand_env_vars_in_source(project, monkeypatch):
+    monkeypatch.setenv("USER", "foo")
+    monkeypatch.setenv("PASSWORD", "bar")
+    project.tool_settings["source"] = [
+        {"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}
+    ]
+    project.write_pyproject()
+    result = requirements.export(project, [], None)
+    assert (
+        result.strip().splitlines()[-1]
+        == "--index-url https://foo:bar@test.pypi.org/simple"
+    )

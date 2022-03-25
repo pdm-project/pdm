@@ -15,7 +15,7 @@ from pdm.models.environment import Environment
 from pdm.models.pip_shims import InstallRequirement, PackageFinder, parse_requirements
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
-from pdm.utils import get_finder
+from pdm.utils import expand_env_vars_in_auth, get_finder
 
 
 def _requirement_to_str_lowercase_name(requirement: PRequirement) -> str:
@@ -141,10 +141,10 @@ def export(
         lines.append("\n")
     sources = project.tool_settings.get("source", [])
     for source in sources:
-        url = source["url"]
+        url = expand_env_vars_in_auth(source["url"])
         prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"
         lines.append(f"{prefix} {url}\n")
-        if not source["verify_ssl"]:
+        if not source.get("verify_ssl", True):
             host = urllib.parse.urlparse(url).hostname
             lines.append(f"--trusted-host {host}\n")
     return "".join(lines)
