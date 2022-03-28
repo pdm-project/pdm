@@ -1,3 +1,13 @@
+Release v1.13.6 (2022-03-28)
+----------------------------
+
+### Bug Fixes
+
+- Default the optional `license` field to "None". [#991](https://github.com/pdm-project/pdm/issues/991)
+- Don't create project files in `pdm search` command. [#993](https://github.com/pdm-project/pdm/issues/993)
+- Fix a bug that the env vars in source urls in exported result are not expanded. [#997](https://github.com/pdm-project/pdm/issues/997)
+
+
 Release v1.13.5 (2022-03-23)
 ----------------------------
 
