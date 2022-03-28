@@ -300,3 +300,13 @@ def test_resolve_file_req_with_prerelease(resolve, vcs):
         allow_prereleases=False,
     )
     assert result["demo"].version == "0.0.2b0"
+
+
+def test_resolve_extra_requirements_no_break_constraints(resolve, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["chardet; extra=='chardet'"])
+    repository.add_candidate("foo", "0.2.0")
+    repository.add_dependencies("foo", "0.2.0", ["chardet; extra=='chardet'"])
+    result = resolve(["foo[chardet]<0.2.0"])
+    assert "chardet" in result
+    assert result["foo"].version == "0.1.0"

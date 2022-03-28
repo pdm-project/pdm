@@ -80,9 +80,7 @@ class BaseRepository:
             # XXX: If the requirement has extras, add the original candidate
             # (without extras) as its dependency. This ensures the same package with
             # different extras resolve to the same version.
-            self_req = dataclasses.replace(
-                candidate.req, extras=None, marker=None, specifier=get_specifier("")
-            )
+            self_req = dataclasses.replace(candidate.req, extras=None, marker=None)
             reqs.append(self_req)
         # Store the metadata on the candidate for caching
         candidate.requires_python = requires_python
