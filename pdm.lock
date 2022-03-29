@@ -87,7 +87,7 @@ extras = ["toml"]
 requires_python = ">=3.6"
 summary = "Code coverage measurement for Python"
 dependencies = [
-    "coverage",
+    "coverage>=5.2.1",
     "tomli",
 ]
 
@@ -151,8 +151,8 @@ summary = "iniconfig: brain-dead simple config-ini parsing"
 
 [[package]]
 name = "installer"
-version = "0.3.0"
-requires_python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+version = "0.5.1"
+requires_python = ">=3.7"
 summary = "A library for installing Python wheels."
 
 [[package]]
@@ -294,8 +294,8 @@ extras = ["python"]
 requires_python = ">=3.7"
 summary = "Automatic documentation from sources, for MkDocs."
 dependencies = [
-    "mkdocstrings",
     "mkdocstrings-python>=0.5.2",
+    "mkdocstrings>=0.18",
 ]
 
 [[package]]
@@ -517,7 +517,6 @@ dependencies = [
     "colorama<0.5.0,>=0.4.0",
     "commonmark<0.10.0,>=0.9.0",
     "pygments<3.0.0,>=2.6.0",
-    "typing-extensions<4.0.0,>=3.7.4; python_version < \"3.8\"",
 ]
 
 [[package]]
@@ -614,7 +613,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:8d50dba871f6a1dc5777d6afb58f65b4a26f8c8d111b7c8234354c7b861048f5"
+content_hash = "sha256:119ba5eb4b9898489263b165b80865dfd57826376ad4a3e4115aad619fb7c44b"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -744,9 +743,9 @@ content_hash = "sha256:8d50dba871f6a1dc5777d6afb58f65b4a26f8c8d111b7c8234354c7b8
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
-"installer 0.3.0" = [
-    {file = "installer-0.3.0-py2.py3-none-any.whl", hash = "sha256:d613bf6e535a01c6cb2179a96ae154dc2dbbf80f77e1622233b9ccbbf2f65161"},
-    {file = "installer-0.3.0.tar.gz", hash = "sha256:e7dc5ec8b737fe3fa7c1872a6ebe120d7abc7cf780aa39af669c382a0fcb6de7"},
+"installer 0.5.1" = [
+    {file = "installer-0.5.1-py3-none-any.whl", hash = "sha256:1d6c8d916ed82771945b9c813699e6f57424ded970c9d8bf16bbc23e1e826ed3"},
+    {file = "installer-0.5.1.tar.gz", hash = "sha256:f970995ec2bb815e2fdaf7977b26b2091e1e386f0f42eafd5ac811953dc5d445"},
 ]
 "jinja2 3.0.3" = [
     {file = "Jinja2-3.0.3-py3-none-any.whl", hash = "sha256:077ce6014f7b40d03b47d1f1ca4b0fc8328a692bd284016f806ed0eaca390ad8"},
