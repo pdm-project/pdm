@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 import io
+import itertools
 import json
 import os
-import stat
+import zipfile
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Iterator
 
-from installer import __version__
-from installer._core import _determine_scheme, _process_WHEEL_file
+from installer._core import _determine_scheme, _process_WHEEL_file, install
 from installer.destinations import SchemeDictionaryDestination
 from installer.exceptions import InvalidWheelSource
 from installer.records import RecordEntry
 from installer.sources import WheelFile as _WheelFile
-from installer.utils import parse_entrypoints
 
 from pdm.installers.packages import CachedPackage
 from pdm.termui import logger
@@ -24,6 +23,7 @@ if TYPE_CHECKING:
     from typing import Any, BinaryIO, Callable, Iterable
 
     from installer.destinations import Scheme
+    from installer.sources import WheelContentElement
 
     from pdm.models.environment import Environment
 
@@ -107,6 +107,11 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
 
 
 class WheelFile(_WheelFile):
+    def __init__(self, f: zipfile.ZipFile) -> None:
+        super().__init__(f)
+        self.exclude: Callable[[WheelFile, WheelContentElement], bool] | None = None
+        self.additional_contents: Iterable[WheelContentElement] = []
+
     @cached_property
     def dist_info_dir(self) -> str:
         namelist = self._zipfile.namelist()
@@ -122,6 +127,13 @@ class WheelFile(_WheelFile):
                 f"The wheel doesn't contain metadata {canonical_name!r}"
             )
 
+    def get_contents(self) -> Iterator[WheelContentElement]:
+        for element in super().get_contents():
+            if self.exclude and self.exclude(self, element):
+                continue
+            yield element
+        yield from self.additional_contents
+
 
 class InstallDestination(SchemeDictionaryDestination):
     def __init__(
@@ -129,33 +141,30 @@ class InstallDestination(SchemeDictionaryDestination):
     ) -> None:
         super().__init__(*args, **kwargs)
         self.symlink_to = symlink_to
-        self.root_scheme = cast("Scheme", "purelib")
 
     def write_to_fs(
-        self, scheme: Scheme, path: str | Path, stream: BinaryIO
+        self, scheme: Scheme, path: str | Path, stream: BinaryIO, is_executable: bool
     ) -> RecordEntry:
         target_path = os.path.join(self.scheme_dict[scheme], path)
         if os.path.exists(target_path):
             os.unlink(target_path)
-        record_path = os.path.relpath(
-            target_path, self.scheme_dict[self.root_scheme]
-        ).replace("\\", "/")
-        record = super().write_to_fs(scheme, path, stream)
-        record.path = record_path
-        return record
+        return super().write_to_fs(scheme, path, stream, is_executable)
 
     def finalize_installation(
         self,
         scheme: Scheme,
         record_file_path: str | Path,
-        records: list[RecordEntry],
+        records: Iterable[tuple[Scheme, RecordEntry]],
     ) -> None:
         if self.symlink_to:
             # Create symlinks to the cached location
             for relpath in _create_symlinks_recursively(
                 self.symlink_to, self.scheme_dict[scheme]
             ):
-                records.append(RecordEntry(relpath.replace("\\", "/"), None, None))
+                records = itertools.chain(
+                    records,
+                    [(scheme, RecordEntry(relpath.replace("\\", "/"), None, None))],
+                )
         return super().finalize_installation(scheme, record_file_path, records)
 
 
@@ -210,7 +219,9 @@ def install_wheel_with_cache(
             direct_url, indent=2
         ).encode()
 
-    def skip_files(scheme: Scheme, path: str) -> bool:
+    def skip_files(source: WheelFile, element: WheelContentElement) -> bool:
+        root_scheme = _process_WHEEL_file(source)
+        scheme, path = _determine_scheme(element[0][0], source, root_scheme)
         return not (
             scheme not in ("purelib", "platlib")
             or path.split("/")[0].endswith(".dist-info")
@@ -221,12 +232,15 @@ def install_wheel_with_cache(
             and not path.endswith("-nspkg.pth")
         )
 
-    additional_files: Iterable[tuple[Scheme | None, str, io.BytesIO]] | None = None
+    additional_contents: list[WheelContentElement] = []
     lib_path = package_cache.scheme()["purelib"]
     if not supports_symlink:
         # HACK: Prefix with aaa_ to make it processed as early as possible
         filename = "aaa_" + wheel_stem.split("-")[0] + ".pth"
-        additional_files = [(None, filename, io.BytesIO(f"{lib_path}\n".encode()))]
+        stream = io.BytesIO(f"{lib_path}\n".encode())
+        additional_contents.append(
+            ((filename, "", str(len(stream.getvalue()))), stream, False)
+        )
 
     destination = InstallDestination(
         scheme_dict=environment.get_paths(),
@@ -239,7 +253,7 @@ def install_wheel_with_cache(
         wheel=wheel,
         destination=destination,
         excludes=skip_files,
-        additional_files=additional_files,
+        additional_contents=additional_contents,
         additional_metadata=additional_metadata,
     )
     package_cache.add_referrer(dist_info_dir)
@@ -248,8 +262,8 @@ def install_wheel_with_cache(
 def _install_wheel(
     wheel: str,
     destination: InstallDestination,
-    excludes: Callable[[Scheme, str], bool] | None = None,
-    additional_files: Iterable[tuple[Scheme | None, str, BinaryIO]] | None = None,
+    excludes: Callable[[WheelFile, WheelContentElement], bool] | None = None,
+    additional_contents: Iterable[WheelContentElement] | None = None,
     additional_metadata: dict[str, bytes] | None = None,
 ) -> str:
     """A lower level installation method that is copied from installer
@@ -259,87 +273,11 @@ def _install_wheel(
     """
     with WheelFile.open(wheel) as source:
         root_scheme = _process_WHEEL_file(source)
-        destination.root_scheme = root_scheme
-
-        # RECORD handling
-        record_file_path = os.path.join(source.dist_info_dir, "RECORD")
-        written_records = []
-
-        # console-scripts and gui-scripts are copied anyway.
-        if "entry_points.txt" in source.dist_info_filenames:
-            entrypoints_text = source.read_dist_info("entry_points.txt")
-            for name, module, attr, section in parse_entrypoints(entrypoints_text):
-                record = destination.write_script(
-                    name=name,
-                    module=module,
-                    attr=attr,
-                    section=section,
-                )
-                written_records.append(record)
-
-        for record_elements, stream in source.get_contents():
-            source_record = RecordEntry.from_elements(*record_elements)
-            path = source_record.path
-            if os.path.normcase(path) == os.path.normcase(record_file_path):
-                continue
-            # Figure out where to write this file.
-            scheme, destination_path = _determine_scheme(
-                path=path,
-                source=source,
-                root_scheme=root_scheme,
-            )
-            if excludes is not None and excludes(scheme, path):
-                continue
-            record = destination.write_file(
-                scheme=scheme,
-                path=destination_path,
-                stream=stream,
-            )
-            # add executable bit if necessary
-            target_path = os.path.join(
-                destination.scheme_dict[scheme], destination_path
-            )
-            file_mode = stat.S_IMODE(source._zipfile.getinfo(path).external_attr >> 16)
-            if file_mode & 0o111:
-                new_mode = os.stat(target_path).st_mode
-                new_mode |= (new_mode & 0o444) >> 2
-                os.chmod(target_path, new_mode)
-            written_records.append(record)
-
-        # Write additional files
-        if additional_files:
-            for scheme, path, stream in additional_files:
-                record = destination.write_file(
-                    scheme=scheme or root_scheme,
-                    path=path,
-                    stream=stream,
-                )
-            written_records.append(record)
-
-        # Write all the installation-specific metadata
-        metadata = {
-            "INSTALLER": f"installer {__version__}".encode(),
-        }
-        if additional_metadata:
-            metadata.update(additional_metadata)
-        for filename, contents in metadata.items():
-            path = os.path.join(source.dist_info_dir, filename)
-
-            with io.BytesIO(contents) as other_stream:
-                record = destination.write_file(
-                    scheme=root_scheme,
-                    path=path,
-                    stream=other_stream,
-                )
-            written_records.append(record)
-
-        written_records.append(RecordEntry(record_file_path, None, None))
-        destination.finalize_installation(
-            scheme=root_scheme,
-            record_file_path=record_file_path,
-            records=written_records,
-        )
-        return os.path.join(destination.scheme_dict[root_scheme], source.dist_info_dir)
+        source.exclude = excludes
+        if additional_contents:
+            source.additional_contents = additional_contents
+        install(source, destination, additional_metadata=additional_metadata or {})
+    return os.path.join(destination.scheme_dict[root_scheme], source.dist_info_dir)
 
 
 def _get_kind(environment: Environment) -> str:
