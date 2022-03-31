@@ -28,7 +28,7 @@ def _get_user_scheme():
     return "posix_user"
 
 
-def get_paths(kind=None, vars=None):
+def get_paths(kind="default", vars=None):
     if kind == "user" and not running_under_virtualenv():
         scheme = _get_user_scheme()
         if scheme not in sysconfig._INSTALL_SCHEMES:
@@ -38,6 +38,11 @@ def get_paths(kind=None, vars=None):
             )
         return sysconfig.get_paths(scheme, vars=vars)
     else:
+        if hasattr(sysconfig, "get_default_scheme"):
+            scheme = sysconfig.get_default_scheme()
+            if scheme == "osx_framework_library" and kind == "prefix":
+                scheme = "posix_prefix"
+            return sysconfig.get_paths(scheme, vars=vars)
         return sysconfig.get_paths(vars=vars)
 
 
@@ -45,8 +50,7 @@ def main():
     vars = kind = None
     if "_SYSCONFIG_VARS" in os.environ:
         vars = json.loads(os.environ["_SYSCONFIG_VARS"])
-    if len(sys.argv) > 1 and sys.argv[1] == "--user":
-        kind = "user"
+    kind = sys.argv[1] if len(sys.argv) > 1 else "default"
     print(json.dumps(get_paths(kind, vars)))
 
 
