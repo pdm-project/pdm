@@ -220,8 +220,9 @@ class GlobalEnvironment(Environment):
         is_venv = is_venv_python(self.interpreter.executable)
         paths = get_sys_config_paths(
             str(self.interpreter.executable),
-            user_site=not is_venv
-            and self.project.global_config["global_project.user_site"],
+            kind="user"
+            if not is_venv and self.project.global_config["global_project.user_site"]
+            else "default",
         )
         if is_venv:
             python_xy = f"python{self.interpreter.identifier}"

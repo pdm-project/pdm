@@ -18,16 +18,14 @@ def get_python_abi_tag(executable: str) -> str:
 
 
 def get_sys_config_paths(
-    executable: str, vars: Optional[Dict[str, str]] = None, user_site: bool = False
+    executable: str, vars: Optional[Dict[str, str]] = None, kind: str = "default"
 ) -> Dict[str, str]:
     """Return the sys_config.get_paths() result for the python interpreter"""
     env = os.environ.copy()
     env.pop("__PYVENV_LAUNCHER__", None)
     if vars is not None:
         env["_SYSCONFIG_VARS"] = json.dumps(vars)
-    cmd = [executable, "-Es", str(FOLDER_PATH / "sysconfig_get_paths.py")]
-    if user_site:
-        cmd.append("--user")
+    cmd = [executable, "-Es", str(FOLDER_PATH / "sysconfig_get_paths.py"), kind]
 
     return json.loads(subprocess.check_output(cmd, env=env))
 

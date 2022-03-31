@@ -96,7 +96,7 @@ class _Prefix:
         self.lib_dirs: list[str] = []
         for path in (overlay, shared):
             paths = get_sys_config_paths(
-                executable, vars={"base": path, "platbase": path}
+                executable, vars={"base": path, "platbase": path}, kind="prefix"
             )
             self.bin_dirs.append(paths["scripts"])
             self.lib_dirs.extend([paths["platlib"], paths["purelib"]])
