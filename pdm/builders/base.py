@@ -100,7 +100,7 @@ class _Prefix:
             )
             self.bin_dirs.append(paths["scripts"])
             self.lib_dirs.extend([paths["platlib"], paths["purelib"]])
-        self.site_dir = os.path.join(path, "site")
+        self.site_dir = os.path.join(overlay, "site")
         if not os.path.isdir(self.site_dir):
             os.makedirs(self.site_dir)
         with open(os.path.join(self.site_dir, "sitecustomize.py"), "w") as fp:
