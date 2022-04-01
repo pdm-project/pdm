@@ -505,7 +505,6 @@ def do_init(
             "description": "",
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
             "license-expression": license,
-            "urls": {"Homepage": ""},
             "dependencies": make_array([], True),
         },
         "build-system": {
