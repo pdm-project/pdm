@@ -226,7 +226,9 @@ class ReusePinProvider(BaseProvider):
         if identifier not in self.tracked_names and identifier in self.preferred_pins:
             pin = self.preferred_pins[identifier]
             incompat = list(incompatibilities[identifier])
-            pin.req = next(requirements[identifier])
+            demanded_req = next(requirements[identifier], None)
+            if demanded_req and demanded_req.is_named:
+                pin.req = demanded_req
             pin._preferred = True
             if pin not in incompat and all(
                 self.is_satisfied_by(r, pin) for r in requirements[identifier]
