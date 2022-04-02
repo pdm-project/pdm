@@ -6,7 +6,7 @@ authors = [
 ]
 dynamic = ["version"]
 requires-python = ">=3.7"
-license-expression = "MIT"
+license.text = "MIT"
 dependencies = [
     "blinker",
     "click>=7",
