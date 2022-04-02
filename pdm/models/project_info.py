@@ -51,7 +51,9 @@ class ProjectInfo:
             "summary": str(metadata.description),
             "author": str(metadata.author),
             "email": str(metadata.author_email),
-            "license": str(metadata.get("license-expression", metadata.get("license"))),
+            "license": str(
+                metadata.get("license-expression", getattr(metadata, "license", ""))
+            ),
             "requires-python": str(metadata.requires_python),
             "platform": "",
             "keywords": ", ".join(metadata.keywords or []),
