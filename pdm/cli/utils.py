@@ -661,7 +661,7 @@ def get_dist_location(dist: Distribution) -> str:
     direct_url_data = json.loads(direct_url)
     url = cast(str, direct_url_data["url"])
     if url.startswith("file:"):
-        path = url_to_path(url)
+        path = url_to_path(url).replace("/${PROJECT_ROOT}", ".")
         editable = direct_url_data.get("dir_info", {}).get("editable", False)
         return f"{'-e ' if editable else ''}{path}"
     return ""

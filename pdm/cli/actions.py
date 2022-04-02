@@ -430,7 +430,12 @@ def do_list(
         if freeze:
             reqs = sorted(
                 (
-                    Requirement.from_dist(dist).as_line()
+                    Requirement.from_dist(dist)
+                    .as_line()
+                    .replace(
+                        "${PROJECT_ROOT}",
+                        project.root.absolute().as_posix().lstrip("/"),
+                    )
                     for dist in sorted(
                         working_set.values(), key=lambda d: d.metadata["Name"]
                     )
