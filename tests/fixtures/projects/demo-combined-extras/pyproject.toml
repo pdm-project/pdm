@@ -11,9 +11,6 @@ dependencies = ["urllib3"]
 description = ""
 name = "demo-package-extra"
 
-[project.urls]
-homepage = ""
-
 [project.optional-dependencies]
 be = ["idna"]
 te = ["chardet"]

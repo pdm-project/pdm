@@ -11,9 +11,6 @@ dependencies = [
 requires-python = ">=3.6"
 license = {text = "MIT"}
 
-[project.urls]
-homepage = ""
-
 [build-system]
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"

@@ -96,6 +96,25 @@ def test_editable_package_override_non_editable(project, working_set):
     assert working_set["demo"].link_file
 
 
+@pytest.mark.usefixtures("repository", "vcs")
+def test_non_editable_no_override_editable(project, working_set, is_editable):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    actions.do_add(
+        project,
+        editables=[
+            "git+https://github.com/test-root/demo.git#egg=demo",
+            "git+https://github.com/test-root/demo-module.git#egg=demo-module",
+        ],
+    )
+    actions.do_add(
+        project,
+        packages=["git+https://github.com/test-root/demo.git#egg=demo"],
+        no_editable=not is_editable,
+    )
+    assert working_set["demo-module"].link_file
+    assert bool(working_set["demo"].link_file) is is_editable
+
+
 @pytest.mark.usefixtures("repository", "working_set")
 def test_add_remote_package_url(project, is_dev):
     project.environment.python_requires = PySpecSet(">=3.6")

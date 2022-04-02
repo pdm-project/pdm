@@ -16,9 +16,6 @@ description = ""
 name = "demo-package"
 readme = "README.md"
 
-[project.urls]
-homepage = ""
-
 [project.optional-dependencies]
 
 [tool.pdm]

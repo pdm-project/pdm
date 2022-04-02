@@ -15,9 +15,6 @@ dependencies = []
 description = ""
 name = "demo-module"
 
-[project.urls]
-homepage = ""
-
 [project.optional-dependencies]
 
 [tool.pdm]

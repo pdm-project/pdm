@@ -4,7 +4,7 @@ import functools
 import multiprocessing
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Collection, Dict, List, Optional, Tuple, Union
 
 from pdm import termui
 from pdm._types import Distribution
@@ -66,7 +66,19 @@ def editables_candidate(environment: Environment) -> Candidate | None:
 
 
 class Synchronizer:
-    """Synchronize the working set with given installation candidates"""
+    """Synchronize the working set with given installation candidates
+
+    :param candidates: a dict of candidates to be installed
+    :param environment: the environment associated with the project
+    :param clean: clean unneeded packages
+    :param dry_run: only prints summary but do not install or uninstall
+    :param retry_times: retry times when installation failed
+    :param install_self: whether to install self project
+    :param no_editable: if True, override all editable installations,
+        if a list, override editables with the given names
+    :param use_install_cache: whether to use install cache
+    :param reinstall: whether to reinstall all packages
+    """
 
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
 
@@ -78,7 +90,7 @@ class Synchronizer:
         dry_run: bool = False,
         retry_times: int = 1,
         install_self: bool = False,
-        no_editable: bool = False,
+        no_editable: bool | Collection[str] = False,
         use_install_cache: bool = False,
         reinstall: bool = False,
     ) -> None:
@@ -97,19 +109,25 @@ class Synchronizer:
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
 
-        if self.no_editable:
-            for candidate in candidates.values():
-                candidate.req.editable = None  # type: ignore
-        elif (
-            self.install_self
-            and getattr(self.environment.project.meta, "editable_backend", "path")
-            == "editables"
-            and "editables" not in candidates
-        ):
-            # Install `editables` as well as required by self project
-            editables = editables_candidate(environment)
-            if editables is not None:
-                candidates["editables"] = editables
+        if isinstance(self.no_editable, Collection):
+            keys = self.no_editable
+        elif self.no_editable:
+            keys = candidates.keys()
+        else:
+            keys = []
+            if (
+                self.install_self
+                and getattr(self.environment.project.meta, "editable_backend", "path")
+                == "editables"
+                and "editables" not in candidates
+            ):
+                # Install `editables` as well as required by self project
+                editables = editables_candidate(environment)
+                if editables is not None:
+                    candidates["editables"] = editables
+        for key in keys:
+            if key in candidates:
+                candidates[key].req.editable = False
         self.candidates = candidates
         self._manager: InstallManager | None = None
 
@@ -139,6 +157,15 @@ class Synchronizer:
             return self.environment.project.meta.project_name.lower()
         return name
 
+    def _should_update(self, dist: Distribution, can: Candidate) -> bool:
+        """Check if the candidate should be updated"""
+        if self.reinstall or can.req.editable:  # Always update if incoming is editable
+            return True
+        if is_editable(dist):  # only update editable if no_editable is True
+            return bool(self.no_editable)
+        else:
+            return dist.version != can.version
+
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
@@ -150,12 +177,7 @@ class Synchronizer:
                 continue
             if key in candidates:
                 can = candidates.pop(key)
-                if (
-                    can.req.editable
-                    or self.reinstall
-                    or is_editable(dist)
-                    or (dist.version != can.version)
-                ):
+                if self._should_update(dist, can):
                     to_update.append(key)
             elif (
                 key not in self.all_candidate_keys

@@ -125,8 +125,7 @@ class Candidate:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
         if self.req.revision:  # type: ignore
             return self.req.revision  # type: ignore
-        assert self._prepared
-        return self._prepared.revision
+        return self._prepared.revision if self._prepared else "unknown"
 
     def __repr__(self) -> str:
         source = getattr(self.link, "comes_from", "unknown")

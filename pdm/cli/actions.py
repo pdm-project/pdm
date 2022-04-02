@@ -10,7 +10,7 @@ import textwrap
 from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
-from typing import Iterable, Mapping, Sequence, cast
+from typing import Collection, Iterable, Mapping, Sequence, cast
 
 import click
 import tomlkit
@@ -154,14 +154,14 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
 def do_sync(
     project: Project,
     *,
-    groups: Sequence[str] = (),
+    groups: Collection[str] = (),
     dev: bool = True,
     default: bool = True,
     dry_run: bool = False,
     clean: bool = False,
     requirements: list[Requirement] | None = None,
-    tracked_names: Sequence[str] | None = None,
-    no_editable: bool = False,
+    tracked_names: Collection[str] | None = None,
+    no_editable: bool | Collection[str] = False,
     no_self: bool = False,
     reinstall: bool = False,
 ) -> None:
@@ -198,8 +198,8 @@ def do_add(
     sync: bool = True,
     save: str = "compatible",
     strategy: str = "reuse",
-    editables: Iterable[str] = (),
-    packages: Iterable[str] = (),
+    editables: Collection[str] = (),
+    packages: Collection[str] = (),
     unconstrained: bool = False,
     no_editable: bool = False,
     no_self: bool = False,
@@ -210,6 +210,8 @@ def do_add(
     check_project_file(project)
     if not editables and not packages:
         raise PdmUsageError("Must specify at least one package or editable package.")
+    if editables and no_editable:
+        raise PdmUsageError("Cannot use --no-editable with editable packages given.")
     if not group:
         group = "dev" if dev else "default"
     tracked_names: set[str] = set()
@@ -246,7 +248,7 @@ def do_add(
             project,
             groups=(group,),
             default=False,
-            no_editable=no_editable,
+            no_editable=no_editable and tracked_names,
             no_self=no_self,
             requirements=list(group_deps.values()),
             dry_run=dry_run,
@@ -264,7 +266,7 @@ def do_update(
     unconstrained: bool = False,
     top: bool = False,
     dry_run: bool = False,
-    packages: Sequence[str] = (),
+    packages: Collection[str] = (),
     sync: bool = True,
     no_editable: bool = False,
     no_self: bool = False,
@@ -355,7 +357,7 @@ def do_remove(
     dev: bool = False,
     group: str | None = None,
     sync: bool = True,
-    packages: Sequence[str] = (),
+    packages: Collection[str] = (),
     no_editable: bool = False,
     no_self: bool = False,
     dry_run: bool = False,
