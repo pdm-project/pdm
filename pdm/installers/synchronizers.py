@@ -139,6 +139,15 @@ class Synchronizer:
             return self.environment.project.meta.project_name.lower()
         return name
 
+    def _should_update(self, dist: Distribution, can: Candidate) -> bool:
+        """Check if the candidate should be updated"""
+        if self.reinstall or can.req.editable:  # Always update if incoming is editable
+            return True
+        if is_editable(dist):  # only update editable if no_editable is True
+            return self.no_editable
+        else:
+            return dist.version != can.version
+
     def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
@@ -150,12 +159,7 @@ class Synchronizer:
                 continue
             if key in candidates:
                 can = candidates.pop(key)
-                if (
-                    can.req.editable
-                    or self.reinstall
-                    or is_editable(dist)
-                    or (dist.version != can.version)
-                ):
+                if self._should_update(dist, can):
                     to_update.append(key)
             elif (
                 key not in self.all_candidate_keys
