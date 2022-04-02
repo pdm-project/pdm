@@ -45,16 +45,13 @@ class ProjectInfo:
         }
 
     def _parse_self(self, metadata: Metadata) -> dict[str, Any]:
-        license_expression = getattr(metadata, "license_expression", None)
-        if license_expression is None:
-            license_expression = getattr(metadata, "license", "")
         return {
             "name": str(metadata.name),
             "version": str(metadata.version),
             "summary": str(metadata.description),
             "author": str(metadata.author),
             "email": str(metadata.author_email),
-            "license": str(license_expression),
+            "license": str(metadata.get("license-expression", metadata.get("license"))),
             "requires-python": str(metadata.requires_python),
             "platform": "",
             "keywords": ", ".join(metadata.keywords or []),
