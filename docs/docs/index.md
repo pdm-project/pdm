@@ -107,6 +107,28 @@ You can either pass the options after the script or set the env var value.
     pip install --user pdm
     ```
 
+=== "inside project"
+
+    By copying the [Pyprojectx](https://pyprojectx.github.io/) wrapper scripts to a project, you can install PDM as
+    (npm-style) dev dependency inside that project. This allows different projects/branches to use different PDM versions.
+
+    To [initialize a new or existing project](https://pyprojectx.github.io/usage/#initialize-a-new-or-existing-project),
+    cd into the project folder and:
+
+    === "Linux/Mac"
+    
+        ```
+        curl -LO https://github.com/pyprojectx/pyprojectx/releases/latest/download/wrappers.zip && unzip wrappers.zip && rm -f wrappers.zip
+        ./pw --init pdm
+        ```
+    
+    === "Windows"
+    
+        ```powershell
+        Invoke-WebRequest https://github.com/pyprojectx/pyprojectx/releases/latest/download/wrappers.zip -OutFile wrappers.zip; Expand-Archive -Path wrappers.zip -DestinationPath .; Remove-Item -Path wrappers.zip
+        .\pw --init pdm
+        ```
+
 ### Enable PEP 582 globally
 
 To make the Python interpreters aware of PEP 582 packages, one need to add the `pdm/pep582/sitecustomize.py`
