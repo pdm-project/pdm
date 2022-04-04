@@ -31,7 +31,7 @@ from pdm.cli.utils import (
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
-from pdm.formats.base import array_of_inline_tables, make_array
+from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
@@ -511,7 +511,7 @@ def do_init(
             "version": version,
             "description": "",
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
-            "license-expression": license,
+            "license": make_inline_table({"text": license}),
             "dependencies": make_array([], True),
         },
         "build-system": {
