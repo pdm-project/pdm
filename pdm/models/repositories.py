@@ -399,7 +399,7 @@ class LockedRepository(BaseRepository):
         return self.candidate_info[self._identify_candidate(candidate)]
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
-        return (self._get_dependencies_from_cache, self._get_dependencies_from_lockfile)
+        return (self._get_dependencies_from_lockfile,)
 
     def get_dependencies(
         self, candidate: Candidate
