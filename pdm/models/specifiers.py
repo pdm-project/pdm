@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from functools import lru_cache
+from operator import attrgetter
 from pathlib import Path
 from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
@@ -401,7 +402,7 @@ class PySpecSet(SpecifierSet):
         result = []
         excludes = []
         full_excludes = []
-        for spec in sorted(self, key=lambda spec: spec.version):
+        for spec in sorted(self, key=attrgetter("version")):
             op, version = spec.operator, spec.version
             if len(version.split(".")) < 3:
                 key = "python_version"
