@@ -8,7 +8,16 @@ from argparse import Action, _ArgumentGroup
 from collections import ChainMap, OrderedDict
 from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    cast,
+    no_type_check,
+)
 
 import tomlkit
 from packaging.specifiers import SpecifierSet
@@ -516,6 +525,7 @@ def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
                 yield key, project_file
 
 
+@no_type_check
 def set_env_in_reg(env_name: str, value: str) -> None:
     """Manipulate the WinReg, and add value to the
     environment variable if exists or create new.
