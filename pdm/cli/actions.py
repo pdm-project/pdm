@@ -55,8 +55,22 @@ def do_lock(
     """Performs the locking process and update lockfile."""
     check_project_file(project)
     if refresh:
-        project.write_lockfile(project.lockfile)
-        return project.lockfile
+        locked_repo = project.locked_repository
+        repo = project.get_repository()
+        mapping: dict[str, Candidate] = {}
+        dependencies: dict[str, list[Requirement]] = {}
+        with project.core.ui.open_spinner("Re-calculating hashes..."):
+            for key, candidate in locked_repo.packages.items():
+                reqs, python_requires, summary = locked_repo.candidate_info[key]
+                candidate.hashes = repo.get_hashes(candidate)
+                candidate.summary = summary
+                candidate.requires_python = python_requires
+                ident = cast(str, key[0])
+                mapping[ident] = candidate
+                dependencies[ident] = list(map(parse_requirement, reqs))
+            lockfile = format_lockfile(project, mapping, dependencies)
+        project.write_lockfile(lockfile)
+        return mapping
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
     if not requirements:
