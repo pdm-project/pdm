@@ -293,6 +293,16 @@ and make sure VSCode runs using the same user and shell you enabled PEP582 for.
     PYTHONPATH=/your-workspace-path/__pypackages__/<major>.<minor>/lib
     ```
 
+    If the above still doesn't work, it's most likely because the environment variable is not properly loaded when the Notebook starts. There are two workarounds.
+    
+    1. Run `code .` in Terminal. It will open a new VSCode window in the current directory with the path set correctly. Use the Jupyter Notebook in the new window
+    2. If you prefer not to open a new window, run the following at the beginning of your Jupyter Notebook to explicitly set the path:
+
+    ```
+    import sys
+    sys.path.append('/your-workspace-path/__pypackages__/<major>.<minor>/lib')
+    ```
+
     > [Reference Issue](https://github.com/pdm-project/pdm/issues/848)
 
 #### Task Provider
