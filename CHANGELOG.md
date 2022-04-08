@@ -1,3 +1,28 @@
+Release v1.14.0 (2022-04-08)
+----------------------------
+
+### Features & Improvements
+
+- Editable installations won't be overridden unless `--no-editable` is passed.
+  `pdm add --no-editable` will now override the `editable` mode of the given packages. [#1011](https://github.com/pdm-project/pdm/issues/1011)
+- Re-calculate the file hashes when running `pdm lock --refresh`. [#1019](https://github.com/pdm-project/pdm/issues/1019)
+
+### Bug Fixes
+
+- Fix a bug that requirement with extras isn't resolved to the version as specified by the range. [#1001](https://github.com/pdm-project/pdm/issues/1001)
+- Replace the `${PROJECT_ROOT}` in the output of `pdm list`. [#1004](https://github.com/pdm-project/pdm/issues/1004)
+- Further fix the python path issue of MacOS system installed Python. [#1023](https://github.com/pdm-project/pdm/issues/1023)
+- Fix the install path issue on Python 3.10 installed from homebrew. [#996](https://github.com/pdm-project/pdm/issues/996)
+
+### Improved Documentation
+
+- Document how to install PDM inside a project with Pyprojectx. [#1004](https://github.com/pdm-project/pdm/issues/1004)
+
+### Dependencies
+
+- Support `installer 0.5.x`. [#1002](https://github.com/pdm-project/pdm/issues/1002)
+
+
 Release v1.13.6 (2022-03-28)
 ----------------------------
 
