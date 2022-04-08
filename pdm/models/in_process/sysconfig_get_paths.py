@@ -38,16 +38,17 @@ def get_paths(kind="default", vars=None):
             )
         return sysconfig.get_paths(scheme, vars=vars)
     else:
-        if hasattr(sysconfig, "get_default_scheme"):
-            scheme = sysconfig.get_default_scheme()
-            if scheme == "osx_framework_library" and kind == "prefix":
-                scheme = "posix_prefix"
-            return sysconfig.get_paths(scheme, vars=vars)
+        if (
+            sys.platform == "darwin"
+            and "osx_framework_library" in sysconfig._INSTALL_SCHEMES
+            and kind == "prefix"
+        ):
+            return sysconfig.get_paths("posix_prefix", vars=vars)
         return sysconfig.get_paths(vars=vars)
 
 
 def main():
-    vars = kind = None
+    vars = None
     if "_SYSCONFIG_VARS" in os.environ:
         vars = json.loads(os.environ["_SYSCONFIG_VARS"])
     kind = sys.argv[1] if len(sys.argv) > 1 else "default"
