@@ -148,7 +148,7 @@ You may want to write a line in your `.bash_profile`(or similar profiles) to mak
 For example, in bash you can do this:
 
 ```bash
-eval "$(pdm --pep582)" >> ~/.bash_profile
+pdm --pep582 >> ~/.bash_profile
 ```
 
 Once again, Don't forget to restart the terminal session to take effect.
