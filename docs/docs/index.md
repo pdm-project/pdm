@@ -141,10 +141,10 @@ to restart the terminal session to take effect.
 
 #### For Mac and Linux users
 
-The command to change the environment variables can be produced by `pdm --pep582 [<SHELL>]`. If `<SHELL>`
-isn't given, PDM will pick one based on some guesses.
+The command to change the environment variables can be printed by `pdm --pep582 [<SHELL>]`. If `<SHELL>`
+isn't given, PDM will pick one based on some guesses. You can run `eval "$(pdm --pep582)"` to execute the command.
 
-You may want to write a line in your `.bash_profile`(or similar profiles) to make it effective when login.
+You may want to write a line in your `.bash_profile`(or similar profiles) to make it effective when logging in.
 For example, in bash you can do this:
 
 ```bash
