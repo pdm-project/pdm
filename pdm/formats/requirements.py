@@ -5,9 +5,7 @@ import hashlib
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Mapping, cast
-
-from pip._vendor.packaging.requirements import Requirement as PRequirement
+from typing import Any, Mapping
 
 from pdm.formats.base import make_array
 from pdm.models.candidates import Candidate
@@ -18,8 +16,9 @@ from pdm.project import Project
 from pdm.utils import expand_env_vars_in_auth, get_finder
 
 
-def _requirement_to_str_lowercase_name(requirement: PRequirement) -> str:
+def _requirement_to_str_lowercase_name(requirement: InstallRequirement) -> str:
     """Formats a packaging.requirements.Requirement with a lowercase name."""
+    assert requirement.name
     parts = [requirement.name.lower()]
 
     if requirement.extras:
@@ -28,11 +27,12 @@ def _requirement_to_str_lowercase_name(requirement: PRequirement) -> str:
     if requirement.specifier:
         parts.append(str(requirement.specifier))
 
-    if requirement.url:
-        parts.append("@ {0}".format(requirement.url))
-
-    if requirement.marker:
-        parts.append("; {0}".format(requirement.marker))
+    if requirement.link:
+        parts.append("@ {0}".format(requirement.link.url_without_fragment))
+        if requirement.link.subdirectory_fragment:
+            parts.append(
+                "#subdirectory={0}".format(requirement.link.subdirectory_fragment)
+            )
 
     return "".join(parts)
 
@@ -56,9 +56,8 @@ def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
             req.name = Candidate(req).prepare(environment).metadata.metadata["Name"]
             ireq.req = req  # type: ignore
 
-        line = _requirement_to_str_lowercase_name(cast(PRequirement, ireq.req))
-    assert ireq.req
-    if not ireq.req.marker and ireq.markers:
+        line = _requirement_to_str_lowercase_name(ireq)
+    if ireq.markers:
         line = f"{line}; {ireq.markers}"
 
     return line

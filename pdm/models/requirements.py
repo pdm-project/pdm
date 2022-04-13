@@ -190,7 +190,7 @@ class Requirement:
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = cast(str, req_dict.pop(vcs, None))
-                url = vcs + "+" + repo
+                url = f"{vcs}+{repo}"
                 return VcsRequirement.create(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
             return FileRequirement.create(name=name, **req_dict)
@@ -396,7 +396,7 @@ class VcsRequirement(FileRequirement):
         project_name = f"{self.project_name}" if self.project_name else ""
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
         marker = self._format_marker()
-        url = url_without_fragments(self.url)
+        url = self.url
         if self.revision and not self.editable:
             url += f"@{self.revision}"
         elif self.ref:
