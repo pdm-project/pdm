@@ -32,6 +32,10 @@ def test_convert_requirements_file(project, is_dev):
     assert "webassets==2.0" in group
     assert 'whoosh==2.7.4; sys_platform == "win32"' in group
     assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
+    assert (
+        "pep508-package@ git+https://github.com/techalchemy/test-project.git"
+        "@master#subdirectory=parent_folder/pep508-package" in group
+    )
 
 
 def test_convert_requirements_file_without_name(project, vcs):
