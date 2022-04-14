@@ -527,7 +527,6 @@ def do_init(
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
             "license": make_inline_table({"text": license}),
             "dependencies": make_array([], True),
-            "readme": "README.md",
         },
         "build-system": {
             "requires": ["pdm-pep517>=0.12.0"],
