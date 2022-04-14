@@ -594,7 +594,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             yield PythonInfo.from_path(path)
         except InvalidPyVersion:
             self.core.ui.echo(
-                f"This interpreter {path!r} is corrupted, skip.",
+                f"This interpreter {str(path)!r} is corrupted, skip.",
                 fg="yellow",
                 err=True,
             )
