@@ -15,7 +15,12 @@ from findpython import Finder
 
 from pdm import termui
 from pdm._types import Source
-from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.exceptions import (
+    InvalidPyVersion,
+    NoPythonVersion,
+    PdmUsageError,
+    ProjectError,
+)
 from pdm.models import pip_shims
 from pdm.models.caches import CandidateInfoCache, HashCache
 from pdm.models.candidates import Candidate
@@ -581,6 +586,19 @@ dependencies = ["pip", "setuptools", "wheel"]
     def make_hash_cache(self) -> HashCache:
         return HashCache(directory=self.cache("hashes").as_posix())
 
+    def _yield_python_info_from_path(self, path: str | Path) -> Iterable[PythonInfo]:
+        """
+        Helper method to not yield corrupted python info.
+        """
+        try:
+            yield PythonInfo.from_path(path)
+        except InvalidPyVersion:
+            self.core.ui.echo(
+                f"This interpreter {path!r} is corrupted, skip.",
+                fg="yellow",
+                err=True,
+            )
+
     def find_interpreters(self, python_spec: str | None = None) -> Iterable[PythonInfo]:
         """Return an iterable of interpreter paths that matches the given specifier,
         which can be:
@@ -598,27 +616,29 @@ dependencies = ["pip", "setuptools", "wheel"]
                 if os.name == "nt":
                     pyenv_shim += ".bat"
                 if os.path.exists(pyenv_shim):
-                    yield PythonInfo.from_path(pyenv_shim)
+                    yield from self._yield_python_info_from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
-                    yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
+                    yield from self._yield_python_info_from_path(
+                        pyenv_shim.replace("python3", "python")
+                    )
             if config.get("python.use_venv"):
                 python = get_in_project_venv_python(self.root)
                 if python:
-                    yield PythonInfo.from_path(python)
+                    yield from self._yield_python_info_from_path(python)
             python = shutil.which("python")
             if python:
-                yield PythonInfo.from_path(python)
+                yield from self._yield_python_info_from_path(python)
             args = []
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
                 if Path(python_spec).exists():
                     python = find_python_in_path(python_spec)
                     if python:
-                        yield PythonInfo.from_path(python)
+                        yield from self._yield_python_info_from_path(python)
                 else:
                     python = shutil.which(python_spec)
                     if python:
-                        yield PythonInfo.from_path(python)
+                        yield from self._yield_python_info_from_path(python)
                 return
             args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = Finder(resolve_symlinks=True)
@@ -626,4 +646,4 @@ dependencies = ["pip", "setuptools", "wheel"]
             yield PythonInfo(entry)
         if not python_spec:
             this_python = getattr(sys, "_base_executable", sys.executable)
-            yield PythonInfo.from_path(this_python)
+            yield from self._yield_python_info_from_path(this_python)
