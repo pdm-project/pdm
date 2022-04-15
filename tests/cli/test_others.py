@@ -98,17 +98,17 @@ def test_init_command(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
-    result = invoke(["init"], input="\n\n\n\n\n\n", obj=project_no_init)
-    assert result.exit_code == 0
+    invoke(["init"], input="\n\n\n\n\n\n", strict=True, obj=project_no_init)
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
         project_no_init,
-        "",
-        "",
-        "MIT",
-        "Testing",
-        "me@example.org",
-        f">={python_version}",
+        name="",
+        version="",
+        description="",
+        license="MIT",
+        author="Testing",
+        email="me@example.org",
+        python_requires=f">={python_version}",
     )
 
 
@@ -119,18 +119,21 @@ def test_init_command_library(project_no_init, invoke, mocker):
     )
     do_init = mocker.patch.object(actions, "do_init")
     result = invoke(
-        ["init"], input="\ny\ntest-project\n\n\n\n\n\n", obj=project_no_init
+        ["init"],
+        input="\ny\ntest-project\n\nTest Project\n\n\n\n\n",
+        obj=project_no_init,
     )
     assert result.exit_code == 0
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
         project_no_init,
-        "test-project",
-        "0.1.0",
-        "MIT",
-        "Testing",
-        "me@example.org",
-        f">={python_version}",
+        name="test-project",
+        version="0.1.0",
+        description="Test Project",
+        license="MIT",
+        author="Testing",
+        email="me@example.org",
+        python_requires=f">={python_version}",
     )
 
 
@@ -145,12 +148,13 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
         project_no_init,
-        "",
-        "",
-        "MIT",
-        "Testing",
-        "me@example.org",
-        f">={python_version}",
+        name="",
+        version="",
+        description="",
+        license="MIT",
+        author="Testing",
+        email="me@example.org",
+        python_requires=f">={python_version}",
     )
 
 

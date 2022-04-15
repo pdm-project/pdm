@@ -513,6 +513,7 @@ def do_init(
     project: Project,
     name: str = "",
     version: str = "",
+    description: str = "",
     license: str = "MIT",
     author: str = "",
     email: str = "",
@@ -539,7 +540,7 @@ def do_init(
         readme = next(project.root.glob("README*"), None)
         if readme is None:
             readme = project.root.joinpath("README.md")
-            readme.write_text(f"# {name}\n")
+            readme.write_text(f"# {name}\n\n{description}\n")
         data["project"]["readme"] = readme.name  # type: ignore
     get_specifier(python_requires)
     if not project.pyproject:
