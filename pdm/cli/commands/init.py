@@ -13,9 +13,15 @@ from pdm.utils import get_user_email_from_git
 class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
-    @staticmethod
-    def ask(question: str, default: str, use_default: bool = False) -> str:
-        if use_default:
+    def __init__(self, parser: argparse.ArgumentParser) -> None:
+        super().__init__(parser)
+        self.interactive = True
+
+    def set_interactive(self, value: bool) -> None:
+        self.interactive = value
+
+    def ask(self, question: str, default: str) -> str:
+        if not self.interactive:
             return default
         return click.prompt(question, default=default)
 
@@ -39,35 +45,44 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
             )
-        non_interactive = options.non_interactive
-        if non_interactive:
-            actions.do_use(project, "3", True)
-        else:
+        self.set_interactive(not options.non_interactive)
+
+        if self.interactive:
             actions.do_use(project)
+        else:
+            actions.do_use(project, "3", True)
         is_library = (
-            False
-            if non_interactive
-            else click.confirm(
-                "Is the project a library that will be uploaded to PyPI?",
-            )
+            click.confirm("Is the project a library that will be uploaded to PyPI?")
+            if self.interactive
+            else False
         )
         if is_library:
-            name = self.ask("Project name", project.root.name, non_interactive)
-            version = self.ask("Project version", "0.1.0", non_interactive)
+            name = self.ask("Project name", project.root.name)
+            version = self.ask("Project version", "0.1.0")
+            description = self.ask("Project description", "")
         else:
-            name, version = "", ""
-        license = self.ask("License(SPDX name)", "MIT", non_interactive)
+            name, version, description = "", "", ""
+        license = self.ask("License(SPDX name)", "MIT")
 
         git_user, git_email = get_user_email_from_git()
-        author = self.ask("Author name", git_user, non_interactive)
-        email = self.ask("Author email", git_email, non_interactive)
+        author = self.ask("Author name", git_user)
+        email = self.ask("Author email", git_email)
         python_version = f"{project.python.major}.{project.python.minor}"
         python_requires = self.ask(
-            "Python requires('*' to allow any)", f">={python_version}", non_interactive
+            "Python requires('*' to allow any)", f">={python_version}"
         )
 
-        actions.do_init(project, name, version, license, author, email, python_requires)
-        if not non_interactive:
+        actions.do_init(
+            project,
+            name=name,
+            version=version,
+            description=description,
+            license=license,
+            author=author,
+            email=email,
+            python_requires=python_requires,
+        )
+        if self.interactive:
             actions.ask_for_import(project)
 
 
