@@ -524,7 +524,7 @@ def do_init(
         "project": {
             "name": name,
             "version": version,
-            "description": "",
+            "description": description,
             "authors": array_of_inline_tables([{"name": author, "email": email}]),
             "license": make_inline_table({"text": license}),
             "dependencies": make_array([], True),
