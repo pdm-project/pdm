@@ -535,6 +535,12 @@ def do_init(
     }
     if python_requires and python_requires != "*":
         data["project"]["requires-python"] = python_requires  # type: ignore
+    if name and version:
+        readme = next(project.root.glob("README*"), None)
+        if readme is None:
+            readme = project.root.joinpath("README.md")
+            readme.write_text(f"# {name}\n")
+        data["project"]["readme"] = readme.name  # type: ignore
     get_specifier(python_requires)
     if not project.pyproject:
         project._pyproject = data
