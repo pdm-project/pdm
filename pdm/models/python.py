@@ -7,24 +7,20 @@ from typing import Any
 from findpython import PythonVersion
 from packaging.version import Version
 
-from pdm.exceptions import InvalidPyVersion
-
 
 class PythonInfo:
     """
     A convenient helper class that holds all information of a Python interepreter.
     """
 
-    def __init__(self, py_version: PythonVersion) -> None:
+    def __init__(self, py_version: PythonVersion, valid: bool) -> None:
         self._py_ver = py_version
+        self.valid = valid
 
     @classmethod
     def from_path(cls, path: str | Path) -> "PythonInfo":
         py_ver = PythonVersion(Path(path))
-        if py_ver.executable.exists() and py_ver.is_valid():
-            return cls(py_ver)
-        else:
-            raise InvalidPyVersion(f"Invalid Python interpreter: {path}")
+        return cls(py_ver, valid=py_ver.executable.exists() and py_ver.is_valid())
 
     def __hash__(self) -> int:
         return hash(self._py_ver)
