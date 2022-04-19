@@ -3,18 +3,18 @@ name: Tests
 on:
   pull_request:
     paths-ignore:
-      - "docs/**"
-      - "news/**"
-      - "*.md"
+      - 'docs/**'
+      - 'news/**'
+      - '*.md'
       - Dockerfile
       - tasks/benchmarks/**
   push:
     branches:
       - main
     paths-ignore:
-      - "docs/**"
-      - "news/**"
-      - "*.md"
+      - 'docs/**'
+      - 'news/**'
+      - '*.md'
       - Dockerfile
       - tasks/benchmarks/**
 
@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11.0-alpha - 3.11.0"]
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11.0-alpha - 3.11.0']
         os: [ubuntu-latest, windows-latest, macos-latest]
         install-via: [pip]
         arch: [x64]
@@ -100,6 +100,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
         run: |
+          findpython -a
           pdm install -v -dGtest
           pdm info
       - name: Run Tests
