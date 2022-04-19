@@ -70,6 +70,7 @@ def _convert_req(name: str, req_dict: RequirementDict) -> str:
         return Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
     assert isinstance(req_dict, dict)
     req_dict = dict(req_dict)
+    req_dict.pop("optional", None)  # Ignore the 'optional' key
     if "version" in req_dict:
         req_dict["version"] = _convert_specifier(str(req_dict["version"]))
     markers: list[Marker] = []
