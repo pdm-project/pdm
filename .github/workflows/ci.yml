@@ -100,7 +100,6 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
         run: |
-          findpython -a
           pdm install -v -dGtest
           pdm info
       - name: Run Tests
