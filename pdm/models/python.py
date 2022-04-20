@@ -13,7 +13,7 @@ class PythonInfo:
     A convenient helper class that holds all information of a Python interepreter.
     """
 
-    def __init__(self, py_version: PythonVersion, valid: bool) -> None:
+    def __init__(self, py_version: PythonVersion, valid: bool = True) -> None:
         self._py_ver = py_version
         self.valid = valid
 
