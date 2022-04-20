@@ -29,7 +29,12 @@ from pdm.cli.utils import (
     set_env_in_reg,
     translate_groups,
 )
-from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.exceptions import (
+    InvalidPyVersion,
+    NoPythonVersion,
+    PdmUsageError,
+    ProjectError,
+)
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.caches import JSONFileCache
@@ -575,14 +580,22 @@ def do_use(
     selected_python: PythonInfo | None = None
     if python and not ignore_remembered:
         if use_cache.has_key(python):
-            cached_python = PythonInfo.from_path(use_cache.get(python))
-            if version_matcher(cached_python):
+            path = use_cache.get(python)
+            cached_python = PythonInfo.from_path(path)
+            if not cached_python.valid:
+                project.core.ui.echo(
+                    f"The last selection is corrupted. {path!r}",
+                    fg="red",
+                    err=True,
+                )
+            elif version_matcher(cached_python):
                 project.core.ui.echo(
                     "Using the last selection, add '-i' to ignore it.",
                     fg="yellow",
                     err=True,
                 )
                 selected_python = cached_python
+
     if selected_python is None:
         found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
         matching_interperters = list(filter(version_matcher, found_interpreters))
@@ -614,6 +627,10 @@ def do_use(
             selected_python = found_interpreters[int(selection)]
         if python:
             use_cache.set(python, selected_python.path.as_posix())
+
+    if not selected_python.valid:
+        path = str(selected_python.executable)
+        raise InvalidPyVersion(f"Invalid Python interpreter: {path}")
 
     old_python = project.python if "python.path" in project.config else None
     project.core.ui.echo(

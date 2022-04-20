@@ -623,7 +623,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = Finder(resolve_symlinks=True)
         for entry in finder.find_all(*args):
-            yield PythonInfo(entry)
+            yield PythonInfo(entry, valid=True)
         if not python_spec:
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)
