@@ -1,3 +1,21 @@
+Release v1.14.1 (2022-04-21)
+----------------------------
+
+### Features & Improvements
+
+- Ask for description when doing `pdm init` and create default README for libraries. [#1041](https://github.com/pdm-project/pdm/issues/1041)
+
+### Bug Fixes
+
+- Fix a bug of missing subdirectory fragment when importing from a `requirements.txt`. [#1036](https://github.com/pdm-project/pdm/issues/1036)
+- Fix use_cache.json with corrupted python causes `pdm use` error. [#1039](https://github.com/pdm-project/pdm/issues/1039)
+- Ignore the `optional` key when converting from Poetry's dependency entries. [#1042](https://github.com/pdm-project/pdm/issues/1042)
+
+### Improved Documentation
+
+- Clarify documentation on enabling PEP582 globally. [#1033](https://github.com/pdm-project/pdm/issues/1033)
+
+
 Release v1.14.0 (2022-04-08)
 ----------------------------
 
