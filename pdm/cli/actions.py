@@ -624,7 +624,7 @@ def do_use(
                 default="0",
                 show_choices=False,
             )
-            selected_python = found_interpreters[int(selection)]
+            selected_python = matching_interperters[int(selection)]
         if python:
             use_cache.set(python, selected_python.path.as_posix())
 

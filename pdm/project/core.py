@@ -187,12 +187,12 @@ class Project:
         config = self.config
         if config.get("python.path") and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
             saved_path = config["python.path"]
-            try:
-                python = PythonInfo.from_path(saved_path)
-                if self.python_requires.contains(str(python.version), True):
-                    return python
-            except (ValueError, FileNotFoundError):
-                self.project_config.pop("python.path", None)
+            python = PythonInfo.from_path(saved_path)
+            if python.valid and self.python_requires.contains(
+                str(python.version), True
+            ):
+                return python
+            self.project_config.pop("python.path", None)
         if os.name == "nt":
             suffix = ".exe"
             scripts = "Scripts"
@@ -203,12 +203,16 @@ class Project:
         # Resolve virtual environments from env-vars
         virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
         if config["python.use_venv"] and virtual_env:
-            return PythonInfo.from_path(
+            python = PythonInfo.from_path(
                 os.path.join(virtual_env, scripts, f"python{suffix}")
             )
+            if python.valid:
+                return python
 
         for py_version in self.find_interpreters():
-            if self.python_requires.contains(str(py_version.version), True):
+            if py_version.valid and self.python_requires.contains(
+                str(py_version.version), True
+            ):
                 self.python = py_version
                 return py_version
 
@@ -623,7 +627,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = Finder(resolve_symlinks=True)
         for entry in finder.find_all(*args):
-            yield PythonInfo(entry, valid=True)
+            yield PythonInfo(entry)
         if not python_spec:
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)
