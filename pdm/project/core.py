@@ -512,13 +512,15 @@ class Project:
         to_group: str = "default",
         dev: bool = False,
         show_message: bool = True,
+        replace_editable: bool = False,
     ) -> None:
         deps = self.get_pyproject_dependencies(to_group, dev).multiline(  # type: ignore
             True
         )
         for _, dep in requirements.items():
             matched_index = next(
-                (i for i, r in enumerate(deps) if dep.matches(r)), None
+                (i for i, r in enumerate(deps) if dep.matches(r, not replace_editable)),
+                None,
             )
             if matched_index is None:
                 deps.append(dep.as_line())
