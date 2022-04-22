@@ -113,6 +113,18 @@ def test_non_editable_no_override_editable(project, working_set, is_editable):
     )
     assert working_set["demo-module"].link_file
     assert bool(working_set["demo"].link_file) is is_editable
+    dependencies = project.get_pyproject_dependencies("default")
+    if is_editable:
+        assert dependencies == [
+            "-e git+https://github.com/test-root/demo.git#egg=demo",
+            "-e git+https://github.com/test-root/demo-module.git#egg=demo-module",
+            "demo @ git+https://github.com/test-root/demo.git",
+        ]
+    else:
+        assert dependencies == [
+            "demo @ git+https://github.com/test-root/demo.git",
+            "-e git+https://github.com/test-root/demo-module.git#egg=demo-module",
+        ]
 
 
 @pytest.mark.usefixtures("repository", "working_set")

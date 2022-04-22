@@ -259,7 +259,9 @@ def do_add(
     deps_to_update = group_deps if unconstrained else requirements
     save_version_specifiers({group: deps_to_update}, resolved, save)
     if not dry_run:
-        project.add_dependencies(deps_to_update, group, dev)
+        project.add_dependencies(
+            deps_to_update, group, dev, replace_editable=no_editable
+        )
         project.write_lockfile(project.lockfile, False)
 
     if sync:
