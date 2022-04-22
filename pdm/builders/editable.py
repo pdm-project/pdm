@@ -6,6 +6,7 @@ from pep517.wrappers import HookMissing
 
 from pdm.builders.base import EnvBuilder
 from pdm.models.environment import Environment
+from pdm.termui import logger
 
 
 class EditableBuilder(EnvBuilder):
@@ -53,6 +54,10 @@ class EditableBuilder(EnvBuilder):
                 out_dir, config_settings, metadata_directory
             )
         except HookMissing:
+            logger.warning(
+                "The build backend doesn't support PEP 660, falling back to "
+                "setuptools-pep660"
+            )
             self.init_build_system(self.FALLBACK_BACKEND)
             return self.build(out_dir, config_settings, metadata_directory)
         return os.path.join(out_dir, filename)
