@@ -5,6 +5,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import (
     dry_run_option,
     install_group,
+    lockfile_option,
     packages_group,
     prerelease_option,
     save_strategy_group,
@@ -19,6 +20,7 @@ class Command(BaseCommand):
     """Add package(s) to pyproject.toml and install them"""
 
     arguments = BaseCommand.arguments + [
+        lockfile_option,
         save_strategy_group,
         update_strategy_group,
         prerelease_option,

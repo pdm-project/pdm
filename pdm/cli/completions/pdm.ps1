@@ -198,7 +198,7 @@ function TabExpansion($line, $lastWord) {
 
             "add" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation", "--pre", "--prerelease")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation", "--pre", "--prerelease", "-L", "--lockfile")),
                         $sectionOption,
                         $projectOption,
                         [Option]::new(@("-e", "--editable")).WithValues(@(getPyPIPackages))
@@ -230,7 +230,7 @@ function TabExpansion($line, $lastWord) {
             }
             "export" {
                 $completer.AddOpts(@(
-                        [Option]::new(@("--dev", "--output", "--global", "--no-default", "--prod", "--production", "-g", "-d", "-o", "--without-hashes")),
+                        [Option]::new(@("--dev", "--output", "--global", "--no-default", "--prod", "--production", "-g", "-d", "-o", "--without-hashes", "-L", "--lockfile")),
                         $formatOption,
                         $sectionOption,
                         $projectOption
@@ -264,7 +264,7 @@ function TabExpansion($line, $lastWord) {
             }
             "install" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "--check")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "--check", "-L", "--lockfile")),
                         $sectionOption,
                         $projectOption
                     ))
@@ -281,7 +281,7 @@ function TabExpansion($line, $lastWord) {
             "lock" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--no-isolation", "--refresh")),
+                        [Option]::new(@("--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile")),
                         $projectOption
                     ))
                 break
@@ -310,7 +310,7 @@ function TabExpansion($line, $lastWord) {
             "remove" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self", "--no-isolation")),
+                        [Option]::new(@("--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
                         $projectOption,
                         $sectionOption
                     ))
@@ -337,7 +337,7 @@ function TabExpansion($line, $lastWord) {
             }
             "sync" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
                         $sectionOption,
                         $projectOption
                     ))
@@ -345,7 +345,7 @@ function TabExpansion($line, $lastWord) {
             }
             "update" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync", "--pre", "--prerelease")),
+                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync", "--pre", "--prerelease", "-L", "--lockfile")),
                         $sectionOption,
                         $projectOption
                     ))

@@ -7,7 +7,7 @@ from pdm import signals
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.run import run_script_if_present
-from pdm.cli.options import dry_run_option, groups_group, install_group
+from pdm.cli.options import dry_run_option, groups_group, install_group, lockfile_option
 from pdm.project import Project
 
 
@@ -18,6 +18,7 @@ class Command(BaseCommand):
         groups_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
+        lockfile_option.add_to_parser(parser)
         parser.add_argument(
             "--no-lock",
             dest="lock",

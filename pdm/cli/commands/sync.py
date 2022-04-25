@@ -2,7 +2,13 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import clean_group, dry_run_option, groups_group, install_group
+from pdm.cli.options import (
+    clean_group,
+    dry_run_option,
+    groups_group,
+    install_group,
+    lockfile_option,
+)
 from pdm.project import Project
 
 
@@ -12,6 +18,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         groups_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
+        lockfile_option.add_to_parser(parser)
         parser.add_argument(
             "-r",
             "--reinstall",
