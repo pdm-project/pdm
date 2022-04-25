@@ -112,6 +112,8 @@ class Core:
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
             options.project = project
+        if getattr(options, "lockfile", None):
+            options.project.lockfile_file = options.lockfile
 
     def create_project(
         self,

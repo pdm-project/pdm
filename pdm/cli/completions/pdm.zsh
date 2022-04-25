@@ -59,6 +59,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-d,--dev}'[Add packages into dev dependencies]'
         {-G,--group}'[Specify the target dependency group to add into]:group:_pdm_groups'
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         '--no-sync[Only write pyproject.toml and do not sync the working set]'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
@@ -136,6 +137,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements setuppy)"
         "--without-hashes[Don't include artifact hashes]"
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {-o+,--output+}"[Write output to the given file, or print to stdout if not given]:output file:_files"
         {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
@@ -170,6 +172,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-lock[Don't do lock if lock file is not found or outdated]"
         "--no-default[Don\'t include dependencies from the default group]"
@@ -192,6 +195,7 @@ _pdm() {
     lock)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         "--no-isolation[Do not isolate the build in a clean environment]"
         "--refresh[Don't update pinned versions, only refresh the lock file]"
       )
@@ -237,6 +241,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
@@ -281,6 +286,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
         '--dry-run[Only prints actions without actually running them]'
         {-r,--reinstall}"[Force reinstall existing dependencies]"
@@ -296,6 +302,7 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'

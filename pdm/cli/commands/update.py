@@ -5,6 +5,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import (
     groups_group,
     install_group,
+    lockfile_option,
     prerelease_option,
     save_strategy_group,
     unconstrained_option,
@@ -19,6 +20,7 @@ class Command(BaseCommand):
     arguments = BaseCommand.arguments + [
         groups_group,
         install_group,
+        lockfile_option,
         save_strategy_group,
         update_strategy_group,
         prerelease_option,

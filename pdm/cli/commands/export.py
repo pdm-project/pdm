@@ -6,7 +6,7 @@ from typing import Iterable
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import groups_group
+from pdm.cli.options import groups_group, lockfile_option
 from pdm.cli.utils import translate_groups
 from pdm.formats import FORMATS
 from pdm.models.candidates import Candidate
@@ -18,6 +18,7 @@ class Command(BaseCommand):
     """Export the locked packages set to other formats"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        lockfile_option.add_to_parser(parser)
         parser.add_argument(
             "-f",
             "--format",

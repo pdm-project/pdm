@@ -112,6 +112,13 @@ dry_run_option = Option(
     help="Show the difference only and don't perform any action",
 )
 
+lockfile_option = Option(
+    "-L",
+    "--lockfile",
+    default=os.getenv("PDM_LOCKFILE"),
+    help="Specify another lockfile path, or use `PDM_LOCKFILE` env variable. "
+    "Default: pdm.lock",
+)
 
 pep582_option = Option(
     "--pep582",

@@ -103,6 +103,7 @@ class Project:
         self.root = Path(root_path or "").absolute()
         self.is_global = is_global
         self.init_global_project()
+        self._lockfile_file = self.root / "pdm.lock"
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"
@@ -113,7 +114,12 @@ class Project:
 
     @property
     def lockfile_file(self) -> Path:
-        return self.root / "pdm.lock"
+        return self._lockfile_file
+
+    @lockfile_file.setter
+    def lockfile_file(self, path: str) -> None:
+        self._lockfile_file = Path(path).absolute()
+        self._lockfile = None
 
     @property
     def pyproject(self) -> dict | None:
