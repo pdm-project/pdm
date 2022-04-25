@@ -171,6 +171,10 @@ There are two similar commands to do this job with a slight difference:
 - `pdm sync` installs dependencies in the lock file and will error out if it doesn't exist.
   Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
 
+## Specify the lockfile to use
+
+You can specify another lockfile than the default `pdm.lock` by using the `-L/--lockfilie <filepath>` option or the `PDM_LOCKFILE` environment variable.
+
 ### Select a subset of dependencies with CLI options
 
 Say we have a project with following dependencies:
