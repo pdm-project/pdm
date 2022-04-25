@@ -285,6 +285,10 @@ class Installer:
 
         # Re-install the venv pip to ensure it's not DEBUNDLED
         # See issue/685
+        try:
+            _call_subprocess([str(venv_python), "-m", "ensurepip"])
+        except SystemExit:
+            pass
         _call_subprocess([str(venv_python), "-m", "pip", "install", "-IU", "pip"])
 
         if self.version:
