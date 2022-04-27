@@ -4,18 +4,18 @@ import sys
 import sysconfig
 
 
-def _running_under_venv() -> bool:
+def _running_under_venv():
     """This handles PEP 405 compliant virtual environments."""
     return sys.prefix != getattr(sys, "base_prefix", sys.prefix)
 
 
-def _running_under_regular_virtualenv() -> bool:
+def _running_under_regular_virtualenv():
     """This handles virtual environments created with pypa's virtualenv."""
     # pypa/virtualenv case
     return hasattr(sys, "real_prefix")
 
 
-def running_under_virtualenv() -> bool:
+def running_under_virtualenv():
     """Return True if we're running inside a virtualenv, False otherwise."""
     return _running_under_venv() or _running_under_regular_virtualenv()
 
@@ -33,8 +33,8 @@ def get_paths(kind="default", vars=None):
         scheme = _get_user_scheme()
         if scheme not in sysconfig._INSTALL_SCHEMES:
             raise ValueError(
-                f"{scheme} is not a valid scheme on the system,"
-                "or user site may be disabled."
+                "{} is not a valid scheme on the system, "
+                "or user site may be disabled.".format(scheme)
             )
         return sysconfig.get_paths(scheme, vars=vars)
     else:
