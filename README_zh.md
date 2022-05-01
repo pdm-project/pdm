@@ -125,7 +125,7 @@ scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
 scoop install pdm
 ```
 
-否则，强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是坠吼的。
+否则，强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是最好的。
 
 ```bash
 pipx install pdm
