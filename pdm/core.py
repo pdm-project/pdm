@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
-import click
 from resolvelib import Resolver
 
 from pdm import termui
@@ -67,7 +66,8 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                click.style("Python Development Master (PDM)", bold=True), self.version
+                termui.style("Python Development Master (PDM)", style="bold"),
+                self.version,
             ),
             help="show the version and exit",
         )

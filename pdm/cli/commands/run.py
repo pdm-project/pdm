@@ -232,7 +232,7 @@ class TaskRunner:
             assert task is not None
             result.append(
                 (
-                    termui.green(name),
+                    f"[green]{name}[/]",
                     task.kind,
                     str(task.args),
                     task.options.get("help", ""),

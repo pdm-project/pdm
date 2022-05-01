@@ -108,7 +108,7 @@ class ClearCommand(BaseCommand):
         packages = files = 0
         with project.core.ui.open_spinner(
             f"Clearing {options.type or 'all'} caches..."
-        ) as spinner:
+        ):
             for type_ in types:
                 if type_ == "packages":
                     packages += self._clear_packages(project.cache(type_))
@@ -123,7 +123,7 @@ class ClearCommand(BaseCommand):
                 text = "No files need to be removed"
             else:
                 text = f"{' and '.join(message)} are removed"
-            spinner.succeed(text)
+        project.core.ui.echo(text)
 
 
 class RemoveCommand(BaseCommand):
@@ -164,7 +164,7 @@ class InfoCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         with project.core.ui.open_spinner("Calculating cache files"):
             output = [
-                f"{termui.cyan('Cache Root')}: {project.cache_dir}, "
+                f"[cyan]Cache Root[/]: {project.cache_dir}, "
                 f"Total size: {format_size(directory_size(str(project.cache_dir)))}"
             ]
             for name, description in [
@@ -177,7 +177,7 @@ class InfoCommand(BaseCommand):
                 cache_location = project.cache(name)
                 files = list(find_files(cache_location.as_posix(), "*"))
                 size = directory_size(cache_location.as_posix())
-                output.append(f"  {termui.cyan(description)}: {cache_location}")
+                output.append(f"  [cyan]{description}[/]: {cache_location}")
                 output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
 
         project.core.ui.echo("\n".join(output))

@@ -1,15 +1,16 @@
 from typing import List, Optional, Tuple
 
-import click
-
 from pdm._types import Source
 from pdm.exceptions import PdmException
 from pdm.models.pip_shims import MultiDomainBasicAuth
+from pdm.termui import UI
 
 try:
     import keyring
 except ModuleNotFoundError:
     keyring = None  # type: ignore
+
+ui = UI()
 
 
 class PdmBasicAuth(MultiDomainBasicAuth):
@@ -37,13 +38,13 @@ class PdmBasicAuth(MultiDomainBasicAuth):
 
     def _should_save_password_to_keyring(self) -> bool:
         if keyring is None:
-            click.secho(
+            ui.echo(
                 "The provided credentials will not be saved into your system.\n"
                 "You can enable this by installing keyring:\n"
                 "    pipx inject pdm keyring\n"
                 "or: pip install --user keyring",
                 err=True,
-                fg="yellow",
+                style="yellow",
             )
         return super()._should_save_password_to_keyring()
 

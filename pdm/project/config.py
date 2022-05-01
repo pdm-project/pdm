@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, MutableMapping, Optional, Set, TypeVar
 
-import click
 import platformdirs
 import tomlkit
 
@@ -12,6 +11,7 @@ from pdm.exceptions import NoConfigError
 from pdm.utils import get_pypi_source
 
 T = TypeVar("T")
+ui = termui.UI()
 
 
 def load_config(file_path: Path) -> Dict[str, Any]:
@@ -241,7 +241,7 @@ class Config(MutableMapping[str, str]):
         value = config.coerce(value)
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
-            click.echo(
+            ui.echo(
                 termui.yellow(
                     "WARNING: the config is shadowed by env var '{}', "
                     "the value set won't take effect.".format(env_var)
@@ -279,7 +279,7 @@ class Config(MutableMapping[str, str]):
 
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
-            click.echo(
+            ui.echo(
                 termui.yellow(
                     "WARNING: the config is shadowed by env var '{}', "
                     "set value won't take effect.".format(env_var)

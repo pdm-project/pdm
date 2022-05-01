@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 class PdmFormatter(argparse.HelpFormatter):
     def start_section(self, heading: str | None) -> None:
         return super().start_section(
-            termui.yellow(heading.title() if heading else heading, bold=True)
+            termui.yellow(heading.title() if heading else "", bold=True)
         )
 
     def _format_usage(
@@ -215,18 +215,20 @@ def format_package(
     """
     result = []
     version = (
-        termui.red("[ not installed ]")
+        "[red][ not installed ][/]"
         if not package.version
-        else termui.red(package.version)
+        else f"[red]{package.version}[/]"
         if required
         and required not in ("Any", "This project")
         and not SpecifierSet(required).contains(package.version)
-        else termui.yellow(package.version)
+        else f"[yellow]{package.version}[/]"
     )
+    # escape deps with extras
+    name = package.name.replace("[", r"\[") if "[" in package.name else package.name
     if package.name in visited:
-        version = termui.red("[circular]")
+        version = r"[red]\[circular][/]"
     required = f"[ required: {required} ]" if required else "[ Not required ]"
-    result.append(f"{termui.green(package.name, bold=True)} {version} {required}\n")
+    result.append(f"[bold green]{name}[/] {version} {required}\n")
     if package.name in visited:
         return "".join(result)
     children = sorted(graph.iter_children(package), key=lambda p: p.name)
@@ -255,14 +257,14 @@ def format_reverse_package(
 ) -> str:
     """Format one package for output reverse dependency graph."""
     version = (
-        termui.red("[ not installed ]")
+        "[red][ not installed ][/]"
         if not package.version
-        else termui.yellow(package.version)
+        else f"[yellow]{package.version}[/]"
     )
     if package.name in visited:
-        version = termui.red("[circular]")
+        version = r"[red]\[circular][/]"
     requires = (
-        f"[ requires: {termui.red(requires)} ]"
+        f"[ requires: [red]{requires}[/] ]"
         if requires not in ("Any", "")
         and child
         and child.version
@@ -271,7 +273,9 @@ def format_reverse_package(
         if not requires
         else f"[ requires: {requires} ]"
     )
-    result = [f"{termui.green(package.name, bold=True)} {version} {requires}\n"]
+    name = package.name.replace("[", r"\[") if "[" in package.name else package.name
+    result = [f"[bold green]{name}[/] {version} {requires}\n"]
+
     if package.name in visited:
         return "".join(result)
     parents: list[Package] = sorted(
@@ -584,9 +588,9 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         )
 
     result = [
-        f"Unable to find a resolution for "
-        f"{termui.green(causes[0].requirement.identify())} because of the following "
-        "conflicts:"
+        "Unable to find a resolution for "
+        f"{termui.green(causes[0].requirement.identify())} "
+        "because of the following conflicts:"
     ]
     for req, parent in causes:
         info_lines.add(

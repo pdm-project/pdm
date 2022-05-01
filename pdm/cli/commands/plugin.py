@@ -6,8 +6,6 @@ import shlex
 import subprocess
 import sys
 
-import click
-
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
@@ -22,6 +20,8 @@ else:
     import importlib_metadata
 
 from pip import __file__ as pip_location
+
+ui = termui.UI()
 
 
 def _all_plugins() -> list[str]:
@@ -103,16 +103,18 @@ class AddCommand(BaseCommand):
         project.core.ui.echo(
             f"Running pip command: {pip_args}", verbosity=termui.DETAIL
         )
-        with project.core.ui.open_spinner(
-            f"Installing plugins: {options.packages}"
-        ) as spinner:
-            try:
+        try:
+            with project.core.ui.open_spinner(
+                f"Installing plugins: {options.packages}"
+            ):
                 run_pip(pip_args)
-            except subprocess.CalledProcessError as e:
-                spinner.fail("Installation failed: \n" + e.output.decode("utf8"))
-                sys.exit(1)
-            else:
-                spinner.succeed("Installation succeeds.")
+        except subprocess.CalledProcessError as e:
+            project.core.ui.echo(
+                "Installation failed: \n" + e.output.decode("utf8"), err=True
+            )
+            sys.exit(1)
+        else:
+            project.core.ui.echo("Installation succeeds.")
 
 
 class RemoveCommand(BaseCommand):
@@ -170,7 +172,7 @@ class RemoveCommand(BaseCommand):
             sys.exit(1)
         if not (
             options.yes
-            or click.confirm(f"Will remove: {packages_to_remove}, continue?")
+            or termui.confirm(f"Will remove: {packages_to_remove}, continue?")
         ):
             return
         pip_args = (
@@ -180,13 +182,13 @@ class RemoveCommand(BaseCommand):
         project.core.ui.echo(
             f"Running pip command: {pip_args}", verbosity=termui.DETAIL
         )
-        with project.core.ui.open_spinner(
-            f"Uninstalling plugins: {valid_packages}"
-        ) as spinner:
-            try:
+        try:
+            with project.core.ui.open_spinner(
+                f"Uninstalling plugins: {valid_packages}"
+            ):
                 run_pip(pip_args)
-            except subprocess.CalledProcessError as e:
-                spinner.fail("Uninstallation failed: \n" + e.output.decode("utf8"))
-                sys.exit(1)
-            else:
-                spinner.succeed("Uninstallation succeeds.")
+        except subprocess.CalledProcessError as e:
+            ui.echo("Uninstallation failed: \n" + e.output.decode("utf8"), err=True)
+            sys.exit(1)
+        else:
+            ui.echo("Uninstallation succeeds.")

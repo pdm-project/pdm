@@ -7,36 +7,27 @@ import io
 import logging
 import os
 import sys
-from itertools import zip_longest
 from tempfile import mktemp
-from typing import Any, Callable, Iterator, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Sequence, Type, Union
 
-import click
-from click._compat import strip_ansi
+from rich.box import ROUNDED
+from rich.console import Console
+from rich.live import Live
+from rich.progress import Progress, SpinnerColumn
+from rich.prompt import Confirm, IntPrompt, Prompt
+from rich.table import Table
+from rich.text import Text
 
-from pdm._vendor import colorama, halo
+from pdm._vendor import colorama
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
+
+if TYPE_CHECKING:
+    from rich.status import Status
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
-
-
-def ljust(text: str, length: int) -> str:
-    """Like str.ljust() but ignore all ANSI controlling characters."""
-    return text + " " * (length - len(strip_ansi(text)))
-
-
-def rjust(text: str, length: int) -> str:
-    """Like str.rjust() but ignore all ANSI controlling characters."""
-    return " " * (length - len(strip_ansi(text))) + text
-
-
-def centerize(text: str, length: int) -> str:
-    """Centerize the text while ignoring ANSI controlling characters."""
-    space_num = length - len(strip_ansi(text))
-    left_space = space_num // 2
-    return " " * left_space + text + " " * (space_num - left_space)
 
 
 def supports_ansi() -> bool:
@@ -49,20 +40,59 @@ def supports_ansi() -> bool:
             or "ON" == os.getenv("ConEmuANSI")
             or "xterm" == os.getenv("Term")
         )
-
     try:
         return os.isatty(sys.stdout.fileno())
     except io.UnsupportedOperation:
         return False
 
 
+_console = Console(force_terminal=supports_ansi(), highlight=False)
+_err_console = Console(force_terminal=supports_ansi(), stderr=True)
+
+
+def style(
+    text: str,
+    *args: str,
+    err: bool = False,
+    style: str = None,
+    bold: bool = False,
+    **kwargs: Union[str, bool],
+) -> str:
+    # check for bold since mimicking click.secho
+    if bold:
+        style = f"{style} bold"
+
+    console = _err_console if err else _console
+
+    with console.capture() as capture:
+        console.print(text, *args, end="", style=style, **kwargs)
+    return capture.get()
+
+
 # Export some style shortcut helpers
-green = functools.partial(click.style, fg="green")
-red = functools.partial(click.style, fg="red")
-yellow = functools.partial(click.style, fg="yellow")
-cyan = functools.partial(click.style, fg="cyan")
-blue = functools.partial(click.style, fg="blue")
-bold = functools.partial(click.style, bold=True)
+green = functools.partial(style, style="green")
+red = functools.partial(style, style="red")
+yellow = functools.partial(style, style="yellow")
+cyan = functools.partial(style, style="cyan")
+blue = functools.partial(style, style="blue")
+bold = functools.partial(style, style="bold")
+
+
+def confirm(*args: str, **kwargs: Any) -> str:
+    return Confirm.ask(*args, **kwargs)
+
+
+def ask(
+    *args: str, prompt_type: Union[Type[str], Type[int]] = None, **kwargs: Any
+) -> str:
+
+    if not prompt_type or prompt_type == str:
+        return Prompt.ask(*args, **kwargs)
+    elif prompt_type == int:
+        return str(IntPrompt.ask(*args, **kwargs))
+    else:
+        raise ValueError(f"unsupported {prompt_type}")
+
 
 # Verbosity levels
 NORMAL = 0
@@ -76,10 +106,13 @@ class DummySpinner:
     """
 
     def start(self, text: str) -> None:
-        click.echo(text)
+        _console.print(text)
 
     def stop_and_persist(self, symbol: str = " ", text: Optional[str] = None) -> None:
-        click.echo(symbol + " " + (text or ""))
+        _console.print(symbol + " " + (text or ""))
+
+    def update(self, text: str) -> None:
+        self.text = text
 
     succeed = fail = start
 
@@ -103,6 +136,8 @@ class UI:
             colorama.init()
         else:
             colorama.deinit()
+        self._console = Console(force_terminal=self.supports_ansi)
+        self._err_console = Console(force_terminal=self.supports_ansi, stderr=True)
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
@@ -112,12 +147,21 @@ class UI:
         message: str = "",
         err: bool = False,
         verbosity: int = NORMAL,
+        fg: str = None,
         **kwargs: Any,
     ) -> None:
         if self.verbosity >= verbosity:
-            click.secho(
-                self._indent + str(message), err=err, color=self.supports_ansi, **kwargs
-            )
+            # TODO: Remove this once all termui.<color>
+            # and termui.style calls are removed
+            # try to catch text already formatted with ANSI
+            if isinstance(message, str) and "[0m" in message:
+                message = Text.from_ansi(self._indent + message)
+            else:
+                message = Text.from_markup(self._indent + str(message))
+
+            console = _err_console if err else _console
+
+            console.print(message, style=fg, **kwargs)
 
     def display_columns(
         self, rows: Sequence[Sequence[str]], header: Optional[List[str]] = None
@@ -128,43 +172,18 @@ class UI:
         :param header: a list of header strings.
         """
 
-        def get_aligner(align: str) -> Callable:
-            if align == ">":
-                return rjust
-            if align == "^":
-                return centerize
-            else:
-                return ljust
-
-        sizes = list(
-            map(
-                lambda column: max(map(lambda x: len(strip_ansi(x)), column)),
-                zip_longest(header or [], *rows, fillvalue=""),
-            )
-        )
-
-        aligners = [ljust] * len(sizes)
         if header:
-            aligners = []
-            for i, head in enumerate(header):
-                aligners.append(get_aligner(head[0]))
-                if head[0] in (">", "^", "<"):
-                    header[i] = head[1:]
-            self.echo(
-                " ".join(
-                    aligner(head, size)
-                    for aligner, head, size in zip(aligners, header, sizes)
-                ).rstrip()
-            )
-            # Print a separator
-            self.echo(" ".join("-" * size for size in sizes))
+            table = Table(box=ROUNDED)
+            for item in header:
+                table.add_column(item)
+        else:
+            table = Table.grid(padding=(0, 1))
+            for _ in rows[0]:
+                table.add_column()
         for row in rows:
-            self.echo(
-                " ".join(
-                    aligner(item, size)
-                    for aligner, item, size in zip(aligners, row, sizes)
-                ).rstrip()
-            )
+            table.add_row(*row)
+
+        _console.print(table)
 
     @contextlib.contextmanager
     def indent(self, prefix: str) -> Iterator[None]:
@@ -211,14 +230,28 @@ class UI:
 
     def open_spinner(
         self, title: str, spinner: str = "dots"
-    ) -> Union[DummySpinner, halo.Halo]:
+    ) -> Union[DummySpinner, Status]:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not self.supports_ansi:
             return DummySpinner()
         else:
-            return halo.Halo(  # type: ignore
-                title, spinner=spinner, indent=self._indent
+            return self._console.status(
+                title, spinner=spinner, spinner_style="bold cyan"
             )
+
+    def live_progress(self, progress: Progress, console: Console = None) -> Live:
+        return Live(
+            progress,
+            refresh_per_second=10,
+            console=(console if console else self._console),
+        )
+
+    def make_progress(self) -> Progress:
+        return Progress(
+            " ",
+            SpinnerColumn(speed=1, style="bold cyan"),
+            "{task.description}",
+        )
 
 
 class Emoji:

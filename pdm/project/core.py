@@ -40,8 +40,8 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
+    from rich.status import Status
 
-    from pdm._vendor import halo
     from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
 
@@ -420,7 +420,7 @@ class Project:
         self,
         requirements: list[Requirement],
         tracked_names: Iterable[str] | None = None,
-        spinner: halo.Halo | termui.DummySpinner | None = None,
+        spinner: Status | termui.DummySpinner | None = None,
     ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 

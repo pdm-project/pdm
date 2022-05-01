@@ -1,9 +1,7 @@
 import argparse
 import sys
 
-import click
-
-from pdm import signals
+from pdm import signals, termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.run import run_script_if_present
@@ -33,7 +31,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        if not project.meta and click._compat.isatty(sys.stdout):
+        if not project.meta and termui.supports_ansi():
             actions.ask_for_import(project)
 
         strategy = actions.check_lockfile(project, False)

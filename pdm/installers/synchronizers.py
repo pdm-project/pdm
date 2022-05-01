@@ -4,7 +4,17 @@ import functools
 import multiprocessing
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import Any, Callable, Collection, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Collection,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from pdm import termui
 from pdm._types import Distribution
@@ -14,6 +24,10 @@ from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.utils import is_editable
+
+if TYPE_CHECKING:
+    from rich.live import Live
+    from rich.progress import Progress
 
 
 class DummyFuture:
@@ -199,67 +213,84 @@ class Synchronizer:
             sorted(to_remove) if self.clean else [],
         )
 
-    def install_candidate(self, key: str) -> Candidate:
+    def install_candidate(self, key: str, progress: Progress, live: Live) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
-        with self.ui.open_spinner(f"Installing {can.format()}...") as spinner:
-            try:
-                self.manager.install(can)
-            except Exception:
-                spinner.fail(f"Install {can.format()} failed")
-                raise
-            else:
-                spinner.succeed(f"Install {can.format()} successful")
 
+        try:
+            job = progress.add_task(f"Installing {can.format()}...", total=1)
+            self.manager.install(can)
+            progress.update(job, completed=1, visible=False)
+        except Exception:
+            live.console.print(
+                f"  [red]:heavy_multiplication_x:[/] Install {can.format()} failed"
+            )
+            raise
+        else:
+            live.console.print(
+                f"  [green]:heavy_check_mark:[/] Install {can.format()} successful"
+            )
         return can
 
-    def update_candidate(self, key: str) -> Tuple[Distribution, Candidate]:
+    def update_candidate(
+        self, key: str, progress: Progress, live: Live
+    ) -> Tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[strip_extras(key)[0]]
         dist_version = dist.version
-        with self.ui.open_spinner(
-            f"Updating {termui.green(key, bold=True)} {termui.yellow(dist.version)} "
-            f"-> {termui.yellow(can.version)}..."
-        ) as spinner:
-            try:
-                self.manager.uninstall(dist)
-                self.manager.install(can)
-            except Exception:
-                spinner.fail(
-                    f"Update {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist_version)} -> "
-                    f"{termui.yellow(can.version)} failed"
-                )
-                raise
-            else:
-                spinner.succeed(
-                    f"Update {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist_version)} -> "
-                    f"{termui.yellow(can.version)} successful"
-                )
+        try:
+            job = progress.add_task(
+                f"Updating [bold green]{key}[/] "
+                f"[yellow]{dist_version}[/] "
+                f"-> [yellow]{can.version}[/]...",
+                total=1,
+            )
+            self.manager.uninstall(dist)
+            self.manager.install(can)
+            progress.update(job, completed=1, visible=False)
+
+        except Exception:
+            live.console.print(
+                f"  [red]:heavy_multiplication_x:[/] Update [bold green]{key}[/] "
+                f"[yellow]{dist_version}[/] "
+                f"-> [yellow]{can.version}[/]...",
+            )
+            raise
+        else:
+            live.console.print(
+                f"  [green]:heavy_check_mark:[/] Update [bold green]{key}[/] "
+                f"[yellow]{dist_version}[/] "
+                f"-> [yellow]{can.version}[/]..."
+            )
+
         return dist, can
 
-    def remove_distribution(self, key: str) -> Distribution:
+    def remove_distribution(
+        self, key: str, progress: Progress, live: Live
+    ) -> Distribution:
         """Remove distributions with given names."""
         dist = self.working_set[key]
         dist_version = dist.version
-        with self.ui.open_spinner(
-            f"Removing {termui.green(key, bold=True)} {termui.yellow(dist.version)}..."
-        ) as spinner:
-            try:
-                self.manager.uninstall(dist)
-            except Exception:
-                spinner.fail(
-                    f"Remove {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist_version)} failed"
-                )
-                raise
-            else:
-                spinner.succeed(
-                    f"Remove {termui.green(key, bold=True)} "
-                    f"{termui.yellow(dist_version)} successful"
-                )
+
+        try:
+            job = progress.add_task(
+                f"Removing [bold green]{key}[/] " f"[yellow]{dist_version}[/]...",
+                total=1,
+            )
+            self.manager.uninstall(dist)
+            progress.update(job, completed=1, visible=False)
+        except Exception:
+            live.console.print(
+                f"  [red]:heavy_multiplication_x:[/] Remove [bold green]{key}[/] "
+                f"[yellow]{dist_version}[/] failed",
+            )
+            raise
+        else:
+            live.console.print(
+                f"  [green]:heavy_check_mark:[/] Remove [bold green]{key}[/] "
+                f"[yellow]{dist_version}[/] successful"
+            )
         return dist
 
     def _show_headline(self, packages: Dict[str, List[str]]) -> None:
@@ -349,16 +380,20 @@ class Synchronizer:
                     + traceback.format_exception(*exc_info)
                 )
 
-        with self.ui.logging("install"):
-            with self.ui.indent("  "):
+        # get rich progess and live handler to deal with multiple spinners
+        progress = self.ui.make_progress()
+        with self.ui.live_progress(progress) as live:
+            with self.ui.logging("install"):
                 for job in sequential_jobs:
                     kind, key = job
-                    handlers[kind](key)
+                    handlers[kind](key, progress, live)
                 for i in range(self.retry_times + 1):
                     with self.create_executor() as executor:
                         for job in parallel_jobs:
                             kind, key = job
-                            future = executor.submit(handlers[kind], key)
+                            future = executor.submit(
+                                handlers[kind], key, progress, live
+                            )
                             future.add_done_callback(
                                 functools.partial(update_progress, kind=kind, key=key)
                             )
@@ -366,11 +401,11 @@ class Synchronizer:
                         break
                     parallel_jobs, failed_jobs = failed_jobs, []
                     errors.clear()
-                    self.ui.echo("Retry failed jobs")
+                    live.console.print("Retry failed jobs")
 
             if errors:
-                self.ui.echo(termui.red("\nERRORS:"))
-                self.ui.echo("".join(errors), err=True)
+                live.console.print(termui.red("\nERRORS:"))
+                live.console.print("".join(errors))
                 raise InstallationError("Some package operations are not complete yet")
 
             if self.install_self:
@@ -381,11 +416,10 @@ class Synchronizer:
                 assert self_key
                 self.candidates[self_key] = self_candidate
                 word = "a" if self.no_editable else "an editable"
-                self.ui.echo(f"Installing the project as {word} package...")
-                with self.ui.indent("  "):
-                    if self_key in self.working_set:
-                        self.update_candidate(self_key)
-                    else:
-                        self.install_candidate(self_key)
+                live.console.print(f"Installing the project as {word} package...")
+                if self_key in self.working_set:
+                    self.update_candidate(self_key, progress, live)
+                else:
+                    self.install_candidate(self_key, progress, live)
 
-            self.ui.echo(f"\n{termui.Emoji.SUCC} All complete!")
+            live.console.print(f"\n{termui.Emoji.SUCC} All complete!")

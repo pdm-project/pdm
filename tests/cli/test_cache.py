@@ -125,7 +125,6 @@ def test_cache_remove_no_pattern(project, invoke):
 def test_cache_info(project, invoke):
     result = invoke(["cache", "info"], obj=project)
     assert result.exit_code == 0
-
     lines = result.output.splitlines()
     assert "Files: 4" in lines[4]
     assert "Files: 4" in lines[6]

@@ -9,8 +9,8 @@ from pdm import termui
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, State  # type: ignore
+    from rich.status import Status
 
-    from pdm._vendor import halo
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
 
@@ -24,7 +24,7 @@ def log_title(title: str) -> None:
 
 class SpinnerReporter(BaseReporter):
     def __init__(
-        self, spinner: halo.Halo | termui.DummySpinner, requirements: List[Requirement]
+        self, spinner: Status | termui.DummySpinner, requirements: List[Requirement]
     ) -> None:
         self.spinner = spinner
         self.requirements = requirements
@@ -81,7 +81,7 @@ class SpinnerReporter(BaseReporter):
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
-        self.spinner.text = f"Resolving: new pin {candidate.format()}"
+        self.spinner.update(f"Resolving: new pin {candidate.format()}")
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
         conflicts = [

@@ -12,7 +12,6 @@ from collections import defaultdict
 from itertools import chain
 from typing import Collection, Iterable, Mapping, Sequence, cast
 
-import click
 import tomlkit
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
@@ -87,34 +86,36 @@ def do_lock(
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
-        with ui.open_spinner(title="Resolving dependencies", spinner="dots") as spin:
-            reporter = project.get_reporter(requirements, tracked_names, spin)
-            resolver: Resolver = project.core.resolver_class(provider, reporter)
-            signals.pre_lock.send(project, requirements=requirements, dry_run=dry_run)
-            try:
+        try:
+            with ui.open_spinner(title="Resolving dependencies") as spin:
+                reporter = project.get_reporter(requirements, tracked_names, spin)
+                resolver: Resolver = project.core.resolver_class(provider, reporter)
+                signals.pre_lock.send(
+                    project, requirements=requirements, dry_run=dry_run
+                )
                 mapping, dependencies = resolve(
                     resolver,
                     requirements,
                     project.environment.python_requires,
                     resolve_max_rounds,
                 )
-            except ResolutionTooDeep:
-                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
-                ui.echo(
-                    "The dependency resolution exceeds the maximum loop depth of "
-                    f"{resolve_max_rounds}, there may be some circular dependencies "
-                    "in your project. Try to solve them or increase the "
-                    f"{termui.green('`strategy.resolve_max_rounds`')} config.",
-                    err=True,
-                )
-                raise
-            except ResolutionImpossible as err:
-                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
-                ui.echo(format_resolution_impossible(err), err=True)
-                raise ResolutionImpossible("Unable to find a resolution") from None
-            else:
-                data = format_lockfile(project, mapping, dependencies)
-                spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
+        except ResolutionTooDeep:
+            ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
+            ui.echo(
+                "The dependency resolution exceeds the maximum loop depth of "
+                f"{resolve_max_rounds}, there may be some circular dependencies "
+                "in your project. Try to solve them or increase the "
+                f"{termui.green('`strategy.resolve_max_rounds`')} config.",
+                err=True,
+            )
+            raise
+        except ResolutionImpossible as err:
+            ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
+            ui.echo(format_resolution_impossible(err), err=True)
+            raise ResolutionImpossible("Unable to find a resolution") from None
+        else:
+            data = format_lockfile(project, mapping, dependencies)
+            ui.echo(f"{termui.Emoji.LOCK} Lock successful")
             signals.post_lock.send(project, resolution=mapping, dry_run=dry_run)
 
     project.write_lockfile(data, write=not dry_run)
@@ -468,7 +469,7 @@ def do_list(
             project.core.ui.echo("\n".join(reqs))
             return
         rows = [
-            (termui.green(k, bold=True), termui.yellow(v.version), get_dist_location(v))
+            (f"[b green]{k}[/]", f"[yellow]{v.version}[/]", get_dist_location(v))
             for k, v in sorted(working_set.items())
         ]
         project.core.ui.display_columns(rows, ["Package", "Version", "Location"])
@@ -620,10 +621,11 @@ def do_use(
                     f"{i}. {termui.green(str(py_version.executable))} "
                     f"({py_version.identifier})"
                 )
-            selection = click.prompt(
-                "Please select:",
-                type=click.Choice([str(i) for i in range(len(matching_interperters))]),
+            selection = termui.ask(
+                "Please select",
                 default="0",
+                prompt_type=int,
+                choices=[str(i) for i in range(len(matching_interperters))],
                 show_choices=False,
             )
             selected_python = matching_interperters[int(selection)]
@@ -718,10 +720,11 @@ def ask_for_import(project: Project) -> None:
             termui.yellow("don't do anything, I will import later."),
         )
     )
-    choice = click.prompt(
-        "Please select:",
-        type=click.Choice([str(i) for i in range(len(importable_files) + 1)]),
-        show_default=False,
+    choice = termui.ask(
+        "Please select",
+        prompt_type=int,
+        choices=[str(i) for i in range(len(importable_files) + 1)],
+        show_choices=False,
     )
     if int(choice) == len(importable_files):
         return
