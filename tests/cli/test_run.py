@@ -231,13 +231,16 @@ def test_run_show_list_of_scripts(project, invoke):
     }
     project.write_pyproject()
     result = invoke(["run", "--list"], obj=project)
-    result_lines = result.output.splitlines()[2:]
-    assert result_lines[0].strip() == "test_cmd    cmd   flask db upgrade"
+    result_lines = result.output.splitlines()[3:]
+    assert result_lines[0][1:-1].strip() == "test_cmd    │ cmd   │ flask db upgrade │"
     assert (
-        result_lines[1].strip()
-        == "test_script call  test_script:main call a python function"
+        result_lines[1][1:-1].strip()
+        == "test_script │ call  │ test_script:main │ call a python function"
     )
-    assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
+    assert (
+        result_lines[2][1:-1].strip()
+        == "test_shell  │ shell │ echo $FOO        │ shell command"
+    )
 
 
 def test_run_with_another_project_root(project, local_finder, invoke, capfd):
