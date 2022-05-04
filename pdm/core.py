@@ -58,7 +58,7 @@ class Core:
     def init_parser(self) -> None:
         self.parser = argparse.ArgumentParser(
             prog="pdm",
-            description="PDM - Python Development Master",
+            description="PDM - Python Development Manager",
             formatter_class=PdmFormatter,
         )
         self.parser.is_root = True  # type: ignore
@@ -67,7 +67,7 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                click.style("Python Development Master (PDM)", bold=True), self.version
+                click.style("Python Development Manager (PDM)", bold=True), self.version
             ),
             help="show the version and exit",
         )

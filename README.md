@@ -1,6 +1,6 @@
 <div align="center">
 
-# PDM - Python Development Master
+# PDM - Python Development Manager
 
 A modern Python package manager with [PEP 582] support. [中文版本说明](README_zh.md)
 

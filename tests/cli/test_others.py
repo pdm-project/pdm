@@ -38,7 +38,7 @@ def test_init_validate_python_requires(project_no_init):
 
 def test_help_option(invoke):
     result = invoke(["--help"])
-    assert "PDM - Python Development Master" in result.output
+    assert "PDM - Python Development Manager" in result.output
 
 
 def test_info_command(project, invoke):

@@ -27,7 +27,7 @@ dependencies = [
     "wheel>=0.36.2",
 ]
 name = "pdm"
-description = "Python Development Master"
+description = "Python Development Manager"
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
