@@ -152,19 +152,19 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
     if not project.lockfile_file.exists():
         if raise_not_exist:
             raise ProjectError("Lock file does not exist, nothing to install")
-        project.core.ui.echo("Lock file does not exist", fg="yellow", err=True)
+        project.core.ui.echo("Lock file does not exist", style="yellow", err=True)
         return "all"
     elif not project.is_lockfile_compatible():
         project.core.ui.echo(
             "Lock file version is not compatible with PDM, installation may fail",
-            fg="yellow",
+            style="yellow",
             err=True,
         )
         return "all"
     elif not project.is_lockfile_hash_match():
         project.core.ui.echo(
             "Lock file hash doesn't match pyproject.toml, packages may be outdated",
-            fg="yellow",
+            style="yellow",
             err=True,
         )
         return "reuse"
@@ -588,13 +588,13 @@ def do_use(
             if not cached_python.valid:
                 project.core.ui.echo(
                     f"The last selection is corrupted. {path!r}",
-                    fg="red",
+                    style="red",
                     err=True,
                 )
             elif version_matcher(cached_python):
                 project.core.ui.echo(
                     "Using the last selection, add '-i' to ignore it.",
-                    fg="yellow",
+                    style="yellow",
                     err=True,
                 )
                 selected_python = cached_python

@@ -94,7 +94,7 @@ class Project:
         ):
             self.core.ui.echo(
                 "Project is not found, fallback to the global project",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             root_path = global_project
@@ -269,7 +269,7 @@ class Project:
                     f"The {group} group exists in both [optional-dependencies] "
                     "and [dev-dependencies], the former is taken.",
                     err=True,
-                    fg="yellow",
+                    style="yellow",
                 )
             if group in optional_dependencies:
                 deps = optional_dependencies[group]
@@ -395,7 +395,7 @@ class Project:
         if strategy != "all" and not self.is_lockfile_compatible():
             self.core.ui.echo(
                 "Updating the whole lock file as it is not compatible with PDM",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             strategy = "all"

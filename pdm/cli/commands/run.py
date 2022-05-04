@@ -274,7 +274,7 @@ class Command(BaseCommand):
         if not options.command:
             project.core.ui.echo(
                 "No command is given, default to the Python REPL.",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             options.command = "python"

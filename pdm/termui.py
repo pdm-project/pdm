@@ -147,7 +147,6 @@ class UI:
         message: str = "",
         err: bool = False,
         verbosity: int = NORMAL,
-        fg: str = None,
         **kwargs: Any,
     ) -> None:
         if self.verbosity >= verbosity:
@@ -161,7 +160,7 @@ class UI:
 
             console = _err_console if err else _console
 
-            console.print(message, style=fg, **kwargs)
+            console.print(message, **kwargs)
 
     def display_columns(
         self, rows: Sequence[Sequence[str]], header: Optional[List[str]] = None

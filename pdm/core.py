@@ -174,7 +174,9 @@ class Core:
                 )
                 if should_show_tb:
                     self.ui.echo(
-                        "Add '-v' to see the detailed traceback", fg="yellow", err=True
+                        "Add '-v' to see the detailed traceback",
+                        style="yellow",
+                        err=True,
                     )
                 sys.exit(1)
             else:
@@ -225,7 +227,7 @@ class Core:
             except Exception as e:
                 self.ui.echo(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
-                    fg="red",
+                    style="red",
                     err=True,
                 )
 

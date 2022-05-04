@@ -42,7 +42,9 @@ class Command(BaseCommand):
                 )
                 sys.exit(1)
             if options.lock:
-                project.core.ui.echo("Updating the lock file...", fg="green", err=True)
+                project.core.ui.echo(
+                    "Updating the lock file...", style="green", err=True
+                )
                 actions.do_lock(project, strategy=strategy, dry_run=options.dry_run)
 
         actions.do_sync(

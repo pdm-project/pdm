@@ -37,7 +37,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{project.project_config.deprecated[options.key]}",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             options.key = project.project_config.deprecated[options.key]
@@ -49,7 +49,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
         config[options.key] = options.value
@@ -85,7 +85,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
         del config[options.key]

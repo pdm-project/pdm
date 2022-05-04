@@ -631,7 +631,7 @@ def translate_groups(
     invalid_groups = groups_set - set(project.iter_groups())
     if invalid_groups:
         project.core.ui.echo(
-            f"Ignoring non-existing groups: {invalid_groups}", fg="yellow", err=True
+            f"Ignoring non-existing groups: {invalid_groups}", style="yellow", err=True
         )
         groups_set -= invalid_groups
     return sorted(groups_set)
