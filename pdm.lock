@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "ghp-import"
-version = "2.0.2"
+version = "2.1.0"
 summary = "Copy your docs directly to the gh-pages branch."
 dependencies = [
     "python-dateutil>=2.8.1",
@@ -166,8 +166,8 @@ summary = "A library for installing Python wheels."
 
 [[package]]
 name = "jinja2"
-version = "3.0.3"
-requires_python = ">=3.6"
+version = "3.1.2"
+requires_python = ">=3.7"
 summary = "A very fast and expressive template engine."
 dependencies = [
     "MarkupSafe>=2.0",
@@ -186,7 +186,7 @@ dependencies = [
 
 [[package]]
 name = "markdown"
-version = "3.3.5"
+version = "3.3.6"
 requires_python = ">=3.6"
 summary = "Python implementation of Markdown."
 dependencies = [
@@ -215,16 +215,16 @@ summary = "A deep merge function for 🐍."
 
 [[package]]
 name = "mkdocs"
-version = "1.2.4"
+version = "1.3.0"
 requires_python = ">=3.6"
 summary = "Project documentation with Markdown."
 dependencies = [
-    "Jinja2>=2.10.1",
+    "Jinja2>=2.10.2",
     "Markdown>=3.2.1",
     "PyYAML>=3.10",
     "click>=3.3",
     "ghp-import>=1.0",
-    "importlib-metadata>=3.10",
+    "importlib-metadata>=4.3",
     "mergedeep>=1.3.4",
     "packaging>=20.5",
     "pyyaml-env-tag>=0.1",
@@ -243,16 +243,16 @@ dependencies = [
 
 [[package]]
 name = "mkdocs-material"
-version = "8.2.7"
-requires_python = ">=3.6"
-summary = "A Material Design theme for MkDocs"
+version = "8.2.13"
+requires_python = ">=3.7"
+summary = "Documentation that simply works"
 dependencies = [
-    "jinja2<3.1,>=2.11.1",
+    "jinja2>=2.11.1",
     "markdown>=3.2",
-    "mkdocs-material-extensions>=1.0",
-    "mkdocs>=1.2.3",
-    "pygments>=2.10",
-    "pymdown-extensions>=9.0",
+    "mkdocs-material-extensions>=1.0.3",
+    "mkdocs>=1.3.0",
+    "pygments>=2.12",
+    "pymdown-extensions>=9.4",
 ]
 
 [[package]]
@@ -329,7 +329,7 @@ dependencies = [
 
 [[package]]
 name = "pdm-pep517"
-version = "0.12.3"
+version = "0.12.4"
 requires_python = ">=3.7"
 summary = "A PEP 517 backend for PDM that supports PEP 621 metadata"
 
@@ -378,17 +378,17 @@ summary = "A Python library to generate static completion scripts for your CLI a
 
 [[package]]
 name = "pygments"
-version = "2.11.2"
-requires_python = ">=3.5"
+version = "2.12.0"
+requires_python = ">=3.6"
 summary = "Pygments is a syntax highlighting package written in Python."
 
 [[package]]
 name = "pymdown-extensions"
-version = "9.3"
+version = "9.4"
 requires_python = ">=3.7"
 summary = "Extension pack for Python Markdown."
 dependencies = [
-    "Markdown>=3.2",
+    "markdown>=3.2",
 ]
 
 [[package]]
@@ -624,7 +624,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:3a7108625aa755ca385a3945d73fb6151e25785d326877adc2f6e34b4fae392f"
+content_hash = "sha256:a2f21f7baaff50d9e850000b3f4b95879ec459352a755fb834e4b97d8e46bfda"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -724,9 +724,9 @@ content_hash = "sha256:3a7108625aa755ca385a3945d73fb6151e25785d326877adc2f6e34b4
     {file = "findpython-0.1.6-py3-none-any.whl", hash = "sha256:79ec09965019b73c83f49df0de9a056d2055abf694f3813966a4841e80cf734e"},
     {file = "findpython-0.1.6.tar.gz", hash = "sha256:9fd6185cdcb96baa7109308447efb493b2c7f1a8f569e128af14d726b2a69e18"},
 ]
-"ghp-import 2.0.2" = [
-    {file = "ghp_import-2.0.2-py3-none-any.whl", hash = "sha256:5f8962b30b20652cdffa9c5a9812f7de6bcb56ec475acac579807719bf242c46"},
-    {file = "ghp-import-2.0.2.tar.gz", hash = "sha256:947b3771f11be850c852c64b561c600fdddf794bab363060854c1ee7ad05e071"},
+"ghp-import 2.1.0" = [
+    {file = "ghp_import-2.1.0-py3-none-any.whl", hash = "sha256:8337dd7b50877f163d4c0289bc1f1c7f127550241988d568c1db512c4324a619"},
+    {file = "ghp-import-2.1.0.tar.gz", hash = "sha256:9c535c4c61193c2df8871222567d7fd7e5014d835f97dc7b7439069e2413d343"},
 ]
 "griffe 0.18.0" = [
     {file = "griffe-0.18.0-py3-none-any.whl", hash = "sha256:578e52513851f4652eb57543364df1675a755536b0ba8548cbb96dd07962b115"},
@@ -756,17 +756,17 @@ content_hash = "sha256:3a7108625aa755ca385a3945d73fb6151e25785d326877adc2f6e34b4
     {file = "installer-0.5.1-py3-none-any.whl", hash = "sha256:1d6c8d916ed82771945b9c813699e6f57424ded970c9d8bf16bbc23e1e826ed3"},
     {file = "installer-0.5.1.tar.gz", hash = "sha256:f970995ec2bb815e2fdaf7977b26b2091e1e386f0f42eafd5ac811953dc5d445"},
 ]
-"jinja2 3.0.3" = [
-    {file = "Jinja2-3.0.3-py3-none-any.whl", hash = "sha256:077ce6014f7b40d03b47d1f1ca4b0fc8328a692bd284016f806ed0eaca390ad8"},
-    {file = "Jinja2-3.0.3.tar.gz", hash = "sha256:611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7"},
+"jinja2 3.1.2" = [
+    {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
+    {file = "Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
 ]
 "jsonschema 4.4.0" = [
     {file = "jsonschema-4.4.0-py3-none-any.whl", hash = "sha256:77281a1f71684953ee8b3d488371b162419767973789272434bbc3f29d9c8823"},
     {file = "jsonschema-4.4.0.tar.gz", hash = "sha256:636694eb41b3535ed608fe04129f26542b59ed99808b4f688aa32dcf55317a83"},
 ]
-"markdown 3.3.5" = [
-    {file = "Markdown-3.3.5-py3-none-any.whl", hash = "sha256:0d2d09f75cb8d1ffc6770c65c61770b23a61708101f47bda416a002a0edbc480"},
-    {file = "Markdown-3.3.5.tar.gz", hash = "sha256:26e9546bfbcde5fcd072bd8f612c9c1b6e2677cb8aadbdf65206674f46dde069"},
+"markdown 3.3.6" = [
+    {file = "Markdown-3.3.6-py3-none-any.whl", hash = "sha256:9923332318f843411e9932237530df53162e29dc7a4e2b91e35764583c46c9a3"},
+    {file = "Markdown-3.3.6.tar.gz", hash = "sha256:76df8ae32294ec39dcf89340382882dfa12975f87f45c3ed1ecdb1e8cefc7006"},
 ]
 "markdown-include 0.6.0" = [
     {file = "markdown-include-0.6.0.tar.gz", hash = "sha256:6f5d680e36f7780c7f0f61dca53ca581bd50d1b56137ddcd6353efafa0c3e4a2"},
@@ -817,17 +817,17 @@ content_hash = "sha256:3a7108625aa755ca385a3945d73fb6151e25785d326877adc2f6e34b4
     {file = "mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307"},
     {file = "mergedeep-1.3.4.tar.gz", hash = "sha256:0096d52e9dad9939c3d975a774666af186eda617e6ca84df4c94dec30004f2a8"},
 ]
-"mkdocs 1.2.4" = [
-    {file = "mkdocs-1.2.4-py3-none-any.whl", hash = "sha256:f108e7ab5a7ed3e30826dbf82f37638f0d90d11161644616cc4f01a1e2ab3940"},
-    {file = "mkdocs-1.2.4.tar.gz", hash = "sha256:8e7970a26183487fe2a1041940c6fd03aa0dbe5549e50c3e7194f565cb3c678a"},
+"mkdocs 1.3.0" = [
+    {file = "mkdocs-1.3.0-py3-none-any.whl", hash = "sha256:26bd2b03d739ac57a3e6eed0b7bcc86168703b719c27b99ad6ca91dc439aacde"},
+    {file = "mkdocs-1.3.0.tar.gz", hash = "sha256:b504405b04da38795fec9b2e5e28f6aa3a73bb0960cb6d5d27ead28952bd35ea"},
 ]
 "mkdocs-autorefs 0.4.1" = [
     {file = "mkdocs_autorefs-0.4.1-py3-none-any.whl", hash = "sha256:a2248a9501b29dc0cc8ba4c09f4f47ff121945f6ce33d760f145d6f89d313f5b"},
     {file = "mkdocs-autorefs-0.4.1.tar.gz", hash = "sha256:70748a7bd025f9ecd6d6feeba8ba63f8e891a1af55f48e366d6d6e78493aba84"},
 ]
-"mkdocs-material 8.2.7" = [
-    {file = "mkdocs_material-8.2.7-py2.py3-none-any.whl", hash = "sha256:20c13aa0a54841e1f1c080edb0e3573407884e4abea51ee25573061189bec83e"},
-    {file = "mkdocs-material-8.2.7.tar.gz", hash = "sha256:3314d94ccc11481b1a3aa4f7babb4fb2bc47daa2fa8ace2463665952116f409b"},
+"mkdocs-material 8.2.13" = [
+    {file = "mkdocs_material-8.2.13-py2.py3-none-any.whl", hash = "sha256:2666f1d7d6a8dc28dda1e777f77add12799e66bd00250de99914a33525763816"},
+    {file = "mkdocs-material-8.2.13.tar.gz", hash = "sha256:505408fe001d668543236f5db5a88771460ad83ef7b58826630cc1f8b7e63099"},
 ]
 "mkdocs-material-extensions 1.0.3" = [
     {file = "mkdocs_material_extensions-1.0.3-py3-none-any.whl", hash = "sha256:a82b70e533ce060b2a5d9eb2bc2e1be201cf61f901f93704b4acf6e3d5983a44"},
@@ -853,9 +853,9 @@ content_hash = "sha256:3a7108625aa755ca385a3945d73fb6151e25785d326877adc2f6e34b4
     {file = "parver-0.3.1-py2.py3-none-any.whl", hash = "sha256:41a548c51b006a2f2522b54293cbfd2514bffa10774ece8430c9964a20cbd8b4"},
     {file = "parver-0.3.1.tar.gz", hash = "sha256:c902e0653bcce927cc156a7fd9b3a51924cbce3bf3d0bfd49fc282bfd0c5dfd3"},
 ]
-"pdm-pep517 0.12.3" = [
-    {file = "pdm_pep517-0.12.3-py3-none-any.whl", hash = "sha256:c03760e32eeca43da01ffa6c6911cd8c9acb5f232dff1454dd470f4533b80b60"},
-    {file = "pdm-pep517-0.12.3.tar.gz", hash = "sha256:117bfb1619b86beb34fe009b8d41acacf790d1fc5240ccc11f6cada151d46887"},
+"pdm-pep517 0.12.4" = [
+    {file = "pdm_pep517-0.12.4-py3-none-any.whl", hash = "sha256:8c7983417552df882cbc3a3b92ac5f876d81d71bf1331e39aac226a126396b3b"},
+    {file = "pdm-pep517-0.12.4.tar.gz", hash = "sha256:e918b7b3850f42cbbf5a6b71e75d43c3dca0be624c25e59dfda5bb6224a20e7c"},
 ]
 "pep517 0.12.0" = [
     {file = "pep517-0.12.0-py2.py3-none-any.whl", hash = "sha256:dd884c326898e2c6e11f9e0b64940606a93eb10ea022a2e067959f3a110cf161"},
@@ -881,13 +881,13 @@ content_hash = "sha256:3a7108625aa755ca385a3945d73fb6151e25785d326877adc2f6e34b4
     {file = "pycomplete-0.3.2-py3-none-any.whl", hash = "sha256:ebeb40dfd453c21ee4b02af9efd0c0134d595aef9fa2e29b207dc9c0932c3f21"},
     {file = "pycomplete-0.3.2.tar.gz", hash = "sha256:671bfba70b6f2eecedad6b6daabac2aa3f1573cd790cc56ccd48b8067f584391"},
 ]
-"pygments 2.11.2" = [
-    {file = "Pygments-2.11.2-py3-none-any.whl", hash = "sha256:44238f1b60a76d78fc8ca0528ee429702aae011c265fe6a8dd8b63049ae41c65"},
-    {file = "Pygments-2.11.2.tar.gz", hash = "sha256:4e426f72023d88d03b2fa258de560726ce890ff3b630f88c21cbb8b2503b8c6a"},
+"pygments 2.12.0" = [
+    {file = "Pygments-2.12.0-py3-none-any.whl", hash = "sha256:dc9c10fb40944260f6ed4c688ece0cd2048414940f1cea51b8b226318411c519"},
+    {file = "Pygments-2.12.0.tar.gz", hash = "sha256:5eb116118f9612ff1ee89ac96437bb6b49e8f04d8a13b514ba26f620208e26eb"},
 ]
-"pymdown-extensions 9.3" = [
-    {file = "pymdown_extensions-9.3-py3-none-any.whl", hash = "sha256:b37461a181c1c8103cfe1660081726a0361a8294cbfda88e5b02cefe976f0546"},
-    {file = "pymdown-extensions-9.3.tar.gz", hash = "sha256:a80553b243d3ed2d6c27723bcd64ca9887e560e6f4808baa96f36e93061eaf90"},
+"pymdown-extensions 9.4" = [
+    {file = "pymdown_extensions-9.4-py3-none-any.whl", hash = "sha256:5b7432456bf555ce2b0ab3c2439401084cda8110f24f6b3ecef952b8313dfa1b"},
+    {file = "pymdown_extensions-9.4.tar.gz", hash = "sha256:1baa22a60550f731630474cad28feb0405c8101f1a7ddc3ec0ed86ee510bcc43"},
 ]
 "pyparsing 3.0.8" = [
     {file = "pyparsing-3.0.8-py3-none-any.whl", hash = "sha256:ef7b523f6356f763771559412c0d7134753f037822dad1b16945b7b846f7ad06"},
