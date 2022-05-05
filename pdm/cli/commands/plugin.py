@@ -21,8 +21,6 @@ else:
 
 from pip import __file__ as pip_location
 
-ui = termui.UI()
-
 
 def _all_plugins() -> list[str]:
     result: set[str] = set()
@@ -188,7 +186,9 @@ class RemoveCommand(BaseCommand):
             ):
                 run_pip(pip_args)
         except subprocess.CalledProcessError as e:
-            ui.echo("Uninstallation failed: \n" + e.output.decode("utf8"), err=True)
+            project.core.ui.echo(
+                "Uninstallation failed: \n" + e.output.decode("utf8"), err=True
+            )
             sys.exit(1)
         else:
-            ui.echo("Uninstallation succeeds.")
+            project.core.ui.echo("Uninstallation succeeds.")
