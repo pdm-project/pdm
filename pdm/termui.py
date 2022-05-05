@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import atexit
 import contextlib
-import functools
 import io
 import logging
 import os
@@ -16,7 +15,6 @@ from rich.live import Live
 from rich.progress import Progress, SpinnerColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
-from rich.text import Text
 
 from pdm._vendor import colorama
 from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
@@ -53,29 +51,19 @@ _err_console = Console(force_terminal=supports_ansi(), stderr=True)
 def style(
     text: str,
     *args: str,
-    err: bool = False,
     style: str = None,
-    bold: bool = False,
-    **kwargs: Union[str, bool],
+    **kwargs: Any,
 ) -> str:
-    # check for bold since mimicking click.secho
-    if bold:
-        style = f"{style} bold"
+    """return text with ansi codes using rich console
 
-    console = _err_console if err else _console
+    :param text: message with rich markup, defaults to "".
+    :param style: rich style to apply to whole string
+    :return: string containing ansi codes
+    """
 
-    with console.capture() as capture:
-        console.print(text, *args, end="", style=style, **kwargs)
+    with _console.capture() as capture:
+        _console.print(text, *args, end="", style=style, **kwargs)
     return capture.get()
-
-
-# Export some style shortcut helpers
-green = functools.partial(style, style="green")
-red = functools.partial(style, style="red")
-yellow = functools.partial(style, style="yellow")
-cyan = functools.partial(style, style="cyan")
-blue = functools.partial(style, style="blue")
-bold = functools.partial(style, style="bold")
 
 
 def confirm(*args: str, **kwargs: Any) -> str:
@@ -85,7 +73,12 @@ def confirm(*args: str, **kwargs: Any) -> str:
 def ask(
     *args: str, prompt_type: Union[Type[str], Type[int]] = None, **kwargs: Any
 ) -> str:
+    """prompt user and return reponse
 
+    :prompt_type: which rich prompt to use, defaults to str.
+    :raises ValueError: unsupported prompt type
+    :return: str of user's selection
+    """
     if not prompt_type or prompt_type == str:
         return Prompt.ask(*args, **kwargs)
     elif prompt_type == int:
@@ -149,14 +142,13 @@ class UI:
         verbosity: int = NORMAL,
         **kwargs: Any,
     ) -> None:
+        """print message using rich console
+
+        :param message: message with rich markup, defaults to "".
+        :param err: if true print to stderr, defaults to False.
+        :param verbosity: verbosity level, defaults to NORMAL.
+        """
         if self.verbosity >= verbosity:
-            # TODO: Remove this once all termui.<color>
-            # and termui.style calls are removed
-            # try to catch text already formatted with ANSI
-            if isinstance(message, str) and "[0m" in message:
-                message = Text.from_ansi(self._indent + message)
-            else:
-                message = Text.from_markup(self._indent + str(message))
 
             console = _err_console if err else _console
 
@@ -219,7 +211,9 @@ class UI:
         except Exception:
             if self.verbosity < DETAIL:
                 logger.exception("Error occurs")
-                self.echo(yellow(f"See {file_name} for detailed debug log."), err=True)
+                self.echo(
+                    f"See {file_name} for detailed debug log.", style="yellow", err=True
+                )
             raise
         else:
             atexit.register(cleanup)
@@ -239,6 +233,7 @@ class UI:
             )
 
     def live_progress(self, progress: Progress, console: Console = None) -> Live:
+        """open a live instance"""
         return Live(
             progress,
             refresh_per_second=10,
@@ -246,6 +241,7 @@ class UI:
         )
 
     def make_progress(self) -> Progress:
+        """create a progress instance for indented spinners"""
         return Progress(
             " ",
             SpinnerColumn(speed=1, style="bold cyan"),

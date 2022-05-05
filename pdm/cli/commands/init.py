@@ -35,14 +35,10 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
             project.core.ui.echo(
-                "{}".format(
-                    termui.cyan("pyproject.toml already exists, update it now.")
-                )
+                "pyproject.toml already exists, update it now.", style="cyan"
             )
         else:
-            project.core.ui.echo(
-                "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
-            )
+            project.core.ui.echo("Creating a pyproject.toml for PDM...", style="cyan")
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:

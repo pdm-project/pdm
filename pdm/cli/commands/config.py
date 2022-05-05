@@ -59,12 +59,13 @@ class Command(BaseCommand):
             config_item = config._config_map[key]
             deprecated = ""
             if config_item.replace and config_item.replace in config._data:
-                deprecated = termui.red(f"(deprecating: {config_item.replace})")
+                deprecated = f"[red](deprecating: {config_item.replace})[/]"
             ui.echo(
-                termui.yellow("# " + config_item.description),
+                f"# {config_item.description}",
+                style="yellow",
                 verbosity=termui.DETAIL,
             )
-            ui.echo(f"{termui.cyan(key)}{deprecated} = {config[key]}")
+            ui.echo(f"[cyan]{key}[/]{deprecated} = {config[key]}")
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
         ui = project.core.ui

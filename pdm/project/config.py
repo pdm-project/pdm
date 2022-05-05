@@ -242,10 +242,9 @@ class Config(MutableMapping[str, str]):
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
             ui.echo(
-                termui.yellow(
-                    "WARNING: the config is shadowed by env var '{}', "
-                    "the value set won't take effect.".format(env_var)
-                )
+                "WARNING: the config is shadowed by env var '{}', "
+                "the value set won't take effect.".format(env_var),
+                style="yellow",
             )
         self._data[config_key] = value
         self._file_data[config_key] = value
@@ -280,9 +279,8 @@ class Config(MutableMapping[str, str]):
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
             ui.echo(
-                termui.yellow(
-                    "WARNING: the config is shadowed by env var '{}', "
-                    "set value won't take effect.".format(env_var)
-                )
+                "WARNING: the config is shadowed by env var '{}', "
+                "set value won't take effect.".format(env_var),
+                style="yellow",
             )
         self._save_config()

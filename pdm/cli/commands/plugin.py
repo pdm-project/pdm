@@ -72,7 +72,7 @@ class ListCommand(BaseCommand):
         for plugin in plugins:
             metadata = importlib_metadata.metadata(plugin)
             echo(
-                f"{termui.green(metadata['Name'])} {termui.yellow(metadata['Version'])}"
+                f"[green]{metadata['Name']}[/] [yellow]{metadata['Version']}[/]",
             )
             if metadata["Summary"]:
                 echo(f"    {metadata['Summary']}")

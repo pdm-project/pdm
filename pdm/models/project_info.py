@@ -4,7 +4,6 @@ import itertools
 import sys
 from typing import Any, Iterator
 
-from pdm import termui
 from pdm.pep517.metadata import Metadata
 
 if sys.version_info >= (3, 8):
@@ -68,22 +67,22 @@ class ProjectInfo:
         return self._parsed[key]
 
     def generate_rows(self) -> Iterator[tuple[str, str]]:
-        yield termui.cyan("Name:"), self._parsed["name"]
-        yield termui.cyan("Latest version:"), self._parsed["version"]
+        yield "[b cyan]Name[/]:", self._parsed["name"]
+        yield "[b cyan]Latest version[/]:", self._parsed["version"]
         if self.latest_stable_version:
-            yield (termui.cyan("Latest stable version:"), self.latest_stable_version)
+            yield ("[b cyan]Latest stable version[/]:", self.latest_stable_version)
         if self.installed_version:
-            yield (termui.green("Installed version:"), self.installed_version)
-        yield termui.cyan("Summary:"), self._parsed.get("summary", "")
-        yield termui.cyan("Requires Python:"), self._parsed["requires-python"]
-        yield termui.cyan("Author:"), self._parsed.get("author", "")
-        yield termui.cyan("Author email:"), self._parsed.get("email", "")
-        yield termui.cyan("License:"), self._parsed.get("license", "")
-        yield termui.cyan("Homepage:"), self._parsed.get("homepage", "")
+            yield ("[b cyan]Installed version[/]:", self.installed_version)
+        yield "[b cyan]Summary[/]:", self._parsed.get("summary", "")
+        yield "[b cyan]Requires Python:", self._parsed["requires-python"]
+        yield "[b cyan]Author[/]:", self._parsed.get("author", "")
+        yield "[b cyan]Author email[/]:", self._parsed.get("email", "")
+        yield "[b cyan]License[/]:", self._parsed.get("license", "")
+        yield "[b cyan]Homepage[/]:", self._parsed.get("homepage", "")
         yield from itertools.zip_longest(
-            (termui.cyan("Project URLs:"),),
+            ("[b cyan]Project URLs[/]:",),
             self._parsed.get("project-urls", []),
             fillvalue="",
         )
-        yield termui.cyan("Platform:"), self._parsed.get("platform", "")
-        yield termui.cyan("Keywords:"), self._parsed.get("keywords", "")
+        yield "[b cyan]Platform[/]:", self._parsed.get("platform", "")
+        yield "[b cyan]Keywords[/]:", self._parsed.get("keywords", "")

@@ -298,12 +298,12 @@ class Synchronizer:
         if not any((add, update, remove)):
             self.ui.echo("All packages are synced to date, nothing to do.\n")
             return
-        results = [termui.bold("Synchronizing working set with lock file:")]
+        results = ["[bold]Synchronizing working set with lock file[/]:"]
         results.extend(
             [
-                f"{termui.green(str(len(add)))} to add,",
-                f"{termui.yellow(str(len(update)))} to update,",
-                f"{termui.red(str(len(remove)))} to remove",
+                f"[green]{len(add)}[/] to add,",
+                f"[yellow]{len(update)}[/] to update,",
+                f"[red]{len(remove)}[/] to remove",
             ]
         )
         self.ui.echo(" ".join(results) + "\n")
@@ -316,22 +316,22 @@ class Synchronizer:
         to_remove = [self.working_set[key] for key in packages["remove"]]
         lines = []
         if to_add:
-            lines.append(termui.bold("Packages to add:"))
+            lines.append("[bold]Packages to add[/]:")
             for can in to_add:
                 lines.append(f"  - {can.format()}")
         if to_update:
-            lines.append(termui.bold("Packages to update:"))
+            lines.append("[bold]Packages to update[/]:")
             for prev, cur in to_update:
                 lines.append(
-                    f"  - {termui.green(cur.name, bold=True)} "
-                    f"{termui.yellow(prev.version)} -> {termui.yellow(cur.version)}"
+                    f"  - [bold green]{cur.name}[/] "
+                    f"[yellow]{prev.version}[/] -> [yellow]{cur.version}[/]"
                 )
         if to_remove:
-            lines.append(termui.bold("Packages to remove:"))
+            lines.append("[bold]Packages to remove[/]:")
             for dist in to_remove:
                 lines.append(
-                    f"  - {termui.green(dist.metadata['Name'], bold=True)} "
-                    f"{termui.yellow(dist.version)}"
+                    f"  - [bold green]{dist.metadata['Name']}[/] "
+                    f"[yellow]{dist.version}[/]"
                 )
         if lines:
             self.ui.echo("\n".join(lines))
@@ -376,7 +376,7 @@ class Synchronizer:
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
                 failed_jobs.append((kind, key))
                 errors.extend(
-                    [f"{kind} {termui.green(key)} failed:\n"]
+                    [f"{kind} [green]{key}[/] failed:\n"]
                     + traceback.format_exception(*exc_info)
                 )
 
@@ -404,7 +404,7 @@ class Synchronizer:
                     live.console.print("Retry failed jobs")
 
             if errors:
-                live.console.print(termui.red("\nERRORS:"))
+                live.console.print("\n[red]ERRORS[/]:")
                 live.console.print("".join(errors))
                 raise InstallationError("Some package operations are not complete yet")
 

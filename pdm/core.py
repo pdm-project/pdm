@@ -169,7 +169,7 @@ class Core:
                 if self.ui.verbosity > termui.NORMAL and should_show_tb:
                     raise cast(Exception, err).with_traceback(traceback)
                 self.ui.echo(
-                    f"{termui.red('[' + etype.__name__ + ']')}: {err}",  # type: ignore
+                    rf"[red]\[{etype.__name__}][/]: {err}",  # type: ignore
                     err=True,
                 )
                 if should_show_tb:

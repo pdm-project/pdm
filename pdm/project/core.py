@@ -447,7 +447,7 @@ class Project:
             with atomic_open_for_write(self.lockfile_file) as fp:
                 tomlkit.dump(toml_data, fp)  # type: ignore
             if show_message:
-                self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
+                self.core.ui.echo("Changes are written to [green]pdm.lock[/].")
             self._lockfile = None
         else:
             self._lockfile = toml_data
@@ -541,9 +541,7 @@ class Project:
         ) as f:
             tomlkit.dump(self.pyproject, f)  # type: ignore
         if show_message:
-            self.core.ui.echo(
-                f"Changes are written to {termui.green('pyproject.toml')}."
-            )
+            self.core.ui.echo("Changes are written to [green]pyproject.toml[/].")
         self._pyproject = None
 
     @property
