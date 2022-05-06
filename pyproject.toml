@@ -83,7 +83,6 @@ doc = [
 workflow = [
     "parver>=0.3.1",
     "towncrier>=20",
-    "vendoring; python_version >= \"3.8\"",
     "pycomplete~=0.3"
 ]
 
@@ -172,30 +171,6 @@ known_third_party = [
     "pythonfinder",
     "tomlkit"
 ]
-
-[tool.vendoring]
-destination = "pdm/_vendor/"
-requirements = "pdm/_vendor/vendors.txt"
-namespace = "pdm._vendor"
-
-protected-files = ["__init__.py", "README.md", "vendors.txt"]
-patches-dir = "tasks/patches"
-
-[tool.vendoring.transformations]
-drop = [
-    "bin/",
-    "*.so",
-    "typing.*",
-    "*/tests/"
-]
-
-[tool.vendoring.typing-stubs]
-log_symbols = []
-colorama = []
-
-[tool.vendoring.license.directories]
-
-[tool.vendoring.license.fallback-urls]
 
 [tool.pytest.ini_options]
 filterwarnings = [

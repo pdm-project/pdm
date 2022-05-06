@@ -1,2 +1,0 @@
-log_symbols==0.0.14
-colorama==0.4.4

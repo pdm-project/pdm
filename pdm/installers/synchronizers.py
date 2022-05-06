@@ -422,4 +422,4 @@ class Synchronizer:
                 else:
                     self.install_candidate(self_key, progress, live)
 
-            live.console.print(f"\n{termui.Emoji.SUCC} All complete!")
+            live.console.print("\n:party_popper: All complete!")

@@ -100,7 +100,7 @@ def do_lock(
                     resolve_max_rounds,
                 )
         except ResolutionTooDeep:
-            ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
+            ui.echo(":lock: Lock failed", err=True)
             ui.echo(
                 "The dependency resolution exceeds the maximum loop depth of "
                 f"{resolve_max_rounds}, there may be some circular dependencies "
@@ -110,12 +110,12 @@ def do_lock(
             )
             raise
         except ResolutionImpossible as err:
-            ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
+            ui.echo(":lock: Lock failed", err=True)
             ui.echo(format_resolution_impossible(err), err=True)
             raise ResolutionImpossible("Unable to find a resolution") from None
         else:
             data = format_lockfile(project, mapping, dependencies)
-            ui.echo(f"{termui.Emoji.LOCK} Lock successful")
+            ui.echo(":lock: Lock successful")
             signals.post_lock.send(project, resolution=mapping, dry_run=dry_run)
 
     project.write_lockfile(data, write=not dry_run)

@@ -16,9 +16,6 @@ from rich.progress import Progress, SpinnerColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 
-from pdm._vendor import colorama
-from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
-
 if TYPE_CHECKING:
     from rich.status import Status
 
@@ -125,10 +122,6 @@ class UI:
         self.verbosity = verbosity
         self._indent = ""
         self.supports_ansi = not no_ansi if no_ansi is not None else supports_ansi()
-        if not self.supports_ansi:
-            colorama.init()
-        else:
-            colorama.deinit()
         self._console = Console(force_terminal=self.supports_ansi)
         self._err_console = Console(force_terminal=self.supports_ansi, stderr=True)
 
@@ -247,14 +240,3 @@ class UI:
             SpinnerColumn(speed=1, style="bold cyan"),
             "{task.description}",
         )
-
-
-class Emoji:
-    """A collection of emoji characters used in terminal output"""
-
-    if supports_unicode():  # type: ignore
-        SUCC = "🎉"
-        LOCK = "🔒"
-    else:
-        SUCC = ""
-        LOCK = ""
