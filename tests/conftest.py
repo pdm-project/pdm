@@ -32,7 +32,8 @@ from pdm.utils import get_finder, normalize_name
 from tests import FIXTURES
 
 os.environ["CI"] = "1"
-os.environ["COLUMNS"] = "120"
+# prevent rich from wrapping long output
+os.environ["COLUMNS"] = "200"
 
 
 @contextmanager

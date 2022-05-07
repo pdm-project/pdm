@@ -28,22 +28,22 @@ def test_auto_isolate_site_packages(project, invoke):
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
     proc = subprocess.run(
-        [str(project.python.executable), "-c", "import rich"], env=env
+        [str(project.python.executable), "-c", "import tomli"], env=env
     )
     assert proc.returncode == 0
 
-    result = invoke(["run", "python", "-c", "import rich"], obj=project)
+    result = invoke(["run", "python", "-c", "import tomli"], obj=project)
     if os.name != "nt":  # os.environ handling seems problematic on Windows
         assert result.exit_code != 0
 
 
 def test_run_with_site_packages(project, invoke):
     project.tool_settings["scripts"] = {
-        "foo": {"cmd": "python -c 'import rich'", "site_packages": True}
+        "foo": {"cmd": "python -c 'import tomli'", "site_packages": True}
     }
     project.write_pyproject()
     result = invoke(
-        ["run", "--site-packages", "python", "-c", "import rich"], obj=project
+        ["run", "--site-packages", "python", "-c", "import tomli"], obj=project
     )
     assert result.exit_code == 0
 
