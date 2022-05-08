@@ -3,11 +3,15 @@ from __future__ import annotations
 import functools
 import operator
 import os
+import sys
 from argparse import Namespace
 from os import PathLike
 from typing import Any
 
-import tomli
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 from packaging.markers import default_environment
 
 from pdm._types import RequirementDict
@@ -45,7 +49,7 @@ def convert(
     project: Project, filename: PathLike, options: Namespace | None
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     with open(filename, "rb") as fp:
-        data = tomli.load(fp)
+        data = tomllib.load(fp)
     result = {}
     settings = {}
     if "pipenv" in data:

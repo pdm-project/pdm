@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import sys
 import tempfile
 import textwrap
 import threading
@@ -10,7 +11,10 @@ from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
-import tomli
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 from pep517.wrappers import Pep517HookCaller
 
 from pdm.exceptions import BuildError
@@ -169,7 +173,7 @@ class EnvBuilder:
         logger.debug("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
-                spec = tomli.load(f)
+                spec = tomllib.load(f)
         except FileNotFoundError:
             spec = {}
         except Exception as e:

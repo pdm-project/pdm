@@ -1,10 +1,14 @@
 import functools
+import sys
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
-import tomli
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
@@ -21,8 +25,8 @@ from pdm.project.core import Project
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
     with open(filename, "rb") as fp:
         try:
-            data = tomli.load(fp)
-        except tomli.TOMLDecodeError:
+            data = tomllib.load(fp)
+        except tomllib.TOMLDecodeError:
             return False
 
     return (
@@ -167,7 +171,7 @@ def convert(
     project: Project, filename: Path, options: Optional[Namespace]
 ) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, "rb") as fp:
-        converter = LegacyMetaConverter(tomli.load(fp)["tool"]["pdm"], project.core.ui)
+        converter = LegacyMetaConverter(tomllib.load(fp)["tool"]["pdm"], project.core.ui)
         return converter.convert()
 
 

@@ -4,11 +4,15 @@ import functools
 import operator
 import os
 import re
+import sys
 from argparse import Namespace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping
 
-import tomli
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 from pdm._types import RequirementDict, Source
 from pdm.formats.base import (
@@ -31,8 +35,8 @@ from pdm.utils import cd
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
     with open(filename, "rb") as fp:
         try:
-            data = tomli.load(fp)
-        except tomli.TOMLDecodeError:
+            data = tomllib.load(fp)
+        except tomllib.TOMLDecodeError:
             return False
 
     return "tool" in data and "poetry" in data["tool"]
@@ -198,7 +202,7 @@ def convert(
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         converter = PoetryMetaConverter(
-            tomli.load(fp)["tool"]["poetry"], project.core.ui if project else None
+            tomllib.load(fp)["tool"]["poetry"], project.core.ui if project else None
         )
         return converter.convert()
 

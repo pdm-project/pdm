@@ -1,11 +1,15 @@
 import ast
 import os
+import sys
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
 
-import tomli
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 from pdm.formats.base import (
     MetaConverter,
@@ -21,8 +25,8 @@ from pdm.utils import cd
 def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     with open(filename, "rb") as fp:
         try:
-            data = tomli.load(fp)
-        except tomli.TOMLDecodeError:
+            data = tomllib.load(fp)
+        except tomllib.TOMLDecodeError:
             return False
 
     return "tool" in data and "flit" in data["tool"]
@@ -144,7 +148,7 @@ def convert(
 ) -> Tuple[Mapping, Mapping]:
     with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         converter = FlitMetaConverter(
-            tomli.load(fp)["tool"]["flit"], project.core.ui if project else None
+            tomllib.load(fp)["tool"]["flit"], project.core.ui if project else None
         )
         return converter.convert()
 

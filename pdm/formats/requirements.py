@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import urllib.parse
+import sys
 from argparse import Namespace
 from os import PathLike
 from typing import Any, Mapping
@@ -77,11 +78,14 @@ def parse_requirement_file(
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
-    import tomli
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        import tomli as tomllib
 
     with open(filename, "rb") as fp:
         try:
-            tomli.load(fp)
+            tomllib.load(fp)
         except ValueError:
             # the file should be a requirements.txt if it not a TOML document.
             return True
