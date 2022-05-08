@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
-import urllib.parse
 import sys
+import urllib.parse
 from argparse import Namespace
 from os import PathLike
 from typing import Any, Mapping

@@ -171,7 +171,9 @@ def convert(
     project: Project, filename: Path, options: Optional[Namespace]
 ) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, "rb") as fp:
-        converter = LegacyMetaConverter(tomllib.load(fp)["tool"]["pdm"], project.core.ui)
+        converter = LegacyMetaConverter(
+            tomllib.load(fp)["tool"]["pdm"], project.core.ui
+        )
         return converter.convert()
 
 
