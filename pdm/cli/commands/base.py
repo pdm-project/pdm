@@ -31,8 +31,11 @@ class BaseCommand:
         with an optional name of the subcommand.
         """
         help_text = cls.description or cls.__doc__
+        name = name or cls.name or ""
+        # Remove the existing subparser as it will raises an error on Python 3.11+
+        subparsers._name_parser_map.pop(name, None)
         parser = subparsers.add_parser(
-            name or cls.name or "",
+            name,
             description=help_text,
             help=help_text,
             formatter_class=PdmFormatter,

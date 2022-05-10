@@ -357,9 +357,11 @@ class FileRequirement(Requirement):
             self.name = name
             self.extras = extras
         if not self.name and not self.is_vcs:
-            filename = os.path.basename(url_without_fragments(self.url))
+            filename = os.path.basename(
+                urlparse.unquote(url_without_fragments(self.url))
+            )
             if filename.endswith(".whl"):
-                self.name, self.version = parse_name_version_from_wheel(filename)
+                self.name, _ = parse_name_version_from_wheel(filename)
             else:
                 match = _egg_info_re.match(filename)
                 # Filename is like `<name>-<version>.tar.gz`, where name will be
