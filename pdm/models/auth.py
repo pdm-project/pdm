@@ -30,8 +30,8 @@ class PdmBasicAuth(MultiDomainBasicAuth):
     ) -> Tuple[Optional[str], Optional[str], bool]:
         if not self._real_prompting:
             raise PdmException(
-                f"The credentials for {netloc} are incorrect. "
-                "Please run the command with `-v` option."
+                f"The credentials for {netloc} are not provided. "
+                "Please rerun the command with `-v` option."
             )
         return super()._prompt_for_password(netloc)
 

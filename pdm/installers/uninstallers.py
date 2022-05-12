@@ -243,7 +243,7 @@ class StashedRemovePaths(BaseRemovePaths):
             root = _get_file_root(old_path, prefix)
             if root is None:
                 termui.logger.debug(
-                    "File path %s is not under packages root, skip", old_path
+                    "File path %s is not under packages root %s, skip", old_path, prefix
                 )
                 continue
             if root not in self._tempdirs:
