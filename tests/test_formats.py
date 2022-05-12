@@ -1,6 +1,8 @@
+import shutil
 from argparse import Namespace
 
 from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
+from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
 from tests import FIXTURES
 
@@ -165,8 +167,17 @@ def test_export_expand_env_vars_in_source(project, monkeypatch):
         {"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}
     ]
     project.write_pyproject()
-    result = requirements.export(project, [], None)
+    result = requirements.export(project, [], Namespace())
     assert (
         result.strip().splitlines()[-1]
         == "--index-url https://foo:bar@test.pypi.org/simple"
     )
+
+
+def test_export_replace_project_root(project):
+    artifact = FIXTURES / "artifacts/first-2.0.2-py2.py3-none-any.whl"
+    shutil.copy2(artifact, project.root)
+    with cd(project.root):
+        req = parse_requirement(f"./{artifact.name}")
+    result = requirements.export(project, [req], Namespace(hashes=False))
+    assert "${PROJECT_ROOT}" not in result

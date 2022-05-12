@@ -125,7 +125,7 @@ def export(
     options: Namespace,
 ) -> str:
     lines = []
-    for candidate in sorted(candidates, key=lambda x: x.identify()):
+    for candidate in sorted(candidates, key=lambda x: x.identify()):  # type: ignore
         if isinstance(candidate, Candidate):
             req = dataclasses.replace(
                 candidate.req, specifier=f"=={candidate.version}", marker=None
@@ -133,7 +133,11 @@ def export(
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
-        lines.append(req.as_line())
+        lines.append(
+            req.as_line().replace(
+                "${PROJECT_ROOT}", project.root.absolute().as_posix().lstrip("/")
+            )
+        )
         if options.hashes and getattr(candidate, "hashes", None):
             for item in candidate.hashes.values():  # type: ignore
                 lines.append(f" \\\n    --hash={item}")
