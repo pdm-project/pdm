@@ -30,6 +30,7 @@ from pdm.utils import (
     atomic_open_for_write,
     cached_property,
     cd,
+    deprecation_warning,
     expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
@@ -176,6 +177,12 @@ class Project:
     def python(self) -> PythonInfo:
         if not self._python:
             self._python = self.resolve_interpreter()
+            if self._python.major < 3:
+                deprecation_warning(
+                    "Python 2.7 has reached EOL and PDM will remove the support "
+                    "in version 2.0. Please upgrade your Python to 3.6 or later.",
+                    raise_since="2.0",
+                )
         return self._python
 
     @python.setter

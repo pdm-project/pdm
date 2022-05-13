@@ -175,3 +175,13 @@ def test_prod_should_not_be_with_dev(project):
 )
 def test_prepare_pip_source_args(sources, pip_args, expected):
     assert utils.prepare_pip_source_args(sources, pip_args) == expected
+
+
+def test_deprecation_warning():
+    with pytest.warns(DeprecationWarning) as record:
+        utils.deprecation_warning("Test warning", raise_since="99.99")
+    assert len(record) == 1
+    assert str(record[0].message) == "Test warning"
+
+    with pytest.raises(DeprecationWarning):
+        utils.deprecation_warning("Test warning", raise_since="0.0")
