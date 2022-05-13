@@ -14,6 +14,7 @@ import sys
 import sysconfig
 import tempfile
 import urllib.parse as parse
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from re import Match
@@ -31,6 +32,7 @@ from typing import (
     overload,
 )
 
+from packaging.version import Version
 from pip._vendor.packaging.tags import Tag
 from pip._vendor.requests import Session
 
@@ -541,3 +543,17 @@ def fs_supports_symlink() -> bool:
                 return False
     else:
         return True
+
+
+def deprecation_warning(
+    message: str, stacklevel: int = 1, raise_since: str | None = None
+) -> None:
+    """Show a deprecation warning with the given message and raise an error
+    after a specified version.
+    """
+    from pdm.__version__ import parsed_version
+
+    if raise_since is not None and parsed_version:
+        if parsed_version >= Version(raise_since):
+            raise DeprecationWarning(message)
+    warnings.warn(message, DeprecationWarning, stacklevel=stacklevel + 1)

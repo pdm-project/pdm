@@ -13,6 +13,7 @@ import click
 from resolvelib import Resolver
 
 from pdm import termui
+from pdm.__version__ import __version__
 from pdm.cli.actions import check_update, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
@@ -46,11 +47,7 @@ class Core:
     install_manager_class = InstallManager
 
     def __init__(self) -> None:
-        try:
-            self.version = importlib_metadata.version(__name__.split(".")[0])
-        except importlib_metadata.PackageNotFoundError:
-            self.version = "UNKNOWN"
-
+        self.version = __version__
         self.ui = termui.UI()
         self.init_parser()
         self.load_plugins()
