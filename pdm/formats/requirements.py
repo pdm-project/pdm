@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
-import sys
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
