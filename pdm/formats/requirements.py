@@ -78,10 +78,7 @@ def parse_requirement_file(
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
-    if sys.version_info >= (3, 11):
-        import tomllib
-    else:
-        import tomli as tomllib
+    from pdm.compat import tomllib
 
     with open(filename, "rb") as fp:
         try:

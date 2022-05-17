@@ -1,16 +1,11 @@
 import functools
-import sys
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
-
 from pdm._types import RequirementDict, Source
+from pdm.compat import tomllib
 from pdm.formats.base import (
     MetaConverter,
     Unset,

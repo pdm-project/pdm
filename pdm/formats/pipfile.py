@@ -3,18 +3,14 @@ from __future__ import annotations
 import functools
 import operator
 import os
-import sys
 from argparse import Namespace
 from os import PathLike
 from typing import Any
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 from packaging.markers import default_environment
 
 from pdm._types import RequirementDict
+from pdm.compat import tomllib
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement

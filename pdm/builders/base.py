@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
-import sys
 import tempfile
 import textwrap
 import threading
@@ -11,12 +10,9 @@ from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 from pep517.wrappers import Pep517HookCaller
 
+from pdm.compat import tomllib
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_sys_config_paths
 from pdm.models.requirements import parse_requirement
