@@ -77,11 +77,11 @@ def parse_requirement_file(
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
-    import tomli
+    from pdm.compat import tomllib
 
     with open(filename, "rb") as fp:
         try:
-            tomli.load(fp)
+            tomllib.load(fp)
         except ValueError:
             # the file should be a requirements.txt if it not a TOML document.
             return True
