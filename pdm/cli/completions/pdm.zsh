@@ -361,13 +361,18 @@ _pdm_groups() {
 
 _get_packages_with_python() {
   command ${PDM_PYTHON} - << EOF
-import os, re, tomli
+import sys
+if sys.version_info >= (3, 11):
+  import tomllib
+else:
+  import tomli as tomllib
+import os, re
 PACKAGE_REGEX = re.compile(r'^[A-Za-z][A-Za-z0-9._-]*')
 def get_packages(lines):
     return [PACKAGE_REGEX.match(line).group() for line in lines]
 
 with open('pyproject.toml', 'rb') as f:
-    data = tomli.load(f)
+    data = tomllib.load(f)
 packages = get_packages(data.get('project', {}).get('dependencies', []))
 for reqs in data.get('project', {}).get('optional-dependencies', {}).values():
     packages.extend(get_packages(reqs))

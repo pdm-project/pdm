@@ -7,10 +7,10 @@ from argparse import Namespace
 from os import PathLike
 from typing import Any
 
-import tomli
 from packaging.markers import default_environment
 
 from pdm._types import RequirementDict
+from pdm.compat import tomllib
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
@@ -45,7 +45,7 @@ def convert(
     project: Project, filename: PathLike, options: Namespace | None
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     with open(filename, "rb") as fp:
-        data = tomli.load(fp)
+        data = tomllib.load(fp)
     result = {}
     settings = {}
     if "pipenv" in data:
