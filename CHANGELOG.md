@@ -9,7 +9,7 @@ Release v1.15.0 (2022-05-16)
 
 - Replace the editable entry in `pyproject.toml` when running `pdm add --no-editable <package>`. [#1050](https://github.com/pdm-project/pdm/issues/1050)
 - Ensure the pip module inside venv in installation script. [#1053](https://github.com/pdm-project/pdm/issues/1053)
-- Fix the py2 compatiblity issue in the in-process `get_sysconfig_path.py` script. [#1056](https://github.com/pdm-project/pdm/issues/1056)
+- Fix the py2 compatibility issue in the in-process `get_sysconfig_path.py` script. [#1056](https://github.com/pdm-project/pdm/issues/1056)
 - Fix a bug that file paths in URLs are not correctly unquoted. [#1073](https://github.com/pdm-project/pdm/issues/1073)
 - Fix a bug on Python 3.11 that overriding an existing command from plugins raises an error. [#1075](https://github.com/pdm-project/pdm/issues/1075)
 - Replace the `${PROJECT_ROOT}` variable in the result of `export` command. [#1079](https://github.com/pdm-project/pdm/issues/1079)
@@ -85,7 +85,7 @@ Release v1.13.5 (2022-03-23)
 - Fix the compatibility when fetching license information in `show` command. [#966](https://github.com/pdm-project/pdm/issues/966)
 - Don't follow symlinks for the paths in the requirement strings. [#976](https://github.com/pdm-project/pdm/issues/976)
 - Use the default install scheme when installing build requirements. [#983](https://github.com/pdm-project/pdm/issues/983)
-- Fix a bug that `_.site_packages` is overriden by default option value. [#985](https://github.com/pdm-project/pdm/issues/985)
+- Fix a bug that `_.site_packages` is overridden by default option value. [#985](https://github.com/pdm-project/pdm/issues/985)
 
 
 Release v1.13.4 (2022-03-09)

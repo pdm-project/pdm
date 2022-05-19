@@ -454,7 +454,7 @@ class Halo(object):
         if not self.enabled:
             # in case we're disabled or stream is closed while still rendering,
             # we render the frame and increment the frame index, so the proper
-            # frame is rendered if we're reenabled or the stream opens again.
+            # frame is rendered if we're re-enabled or the stream opens again.
             return
 
         frame = self.frame()
