@@ -274,7 +274,7 @@ _New in version 1.12.0_
 ```toml
 [tool.pdm.overrides]
 asgiref = "3.2.10"  # exact version
-urllib3 = ">=1.26.2"  # verison range
+urllib3 = ">=1.26.2"  # version range
 pytz = "file:///${PROJECT_ROOT}/pytz-2020.9-py3-none-any.whl"  # absolute URL
 ```
 Each entry of that table is a package name with the wanted version.
