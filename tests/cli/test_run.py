@@ -64,7 +64,6 @@ def test_run_with_site_packages(project, invoke):
         obj=project,
     )
     assert result.exit_code == 0
-
     result = invoke(["run", "foo"], obj=project)
     assert result.exit_code == 0
 
