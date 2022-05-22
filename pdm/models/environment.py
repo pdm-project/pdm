@@ -75,7 +75,8 @@ class Environment:
         self.project = project
         self.interpreter = project.python
         self.auth = make_basic_auth(
-            self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
+            self.project.sources,
+            self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )
 
     def get_paths(self) -> dict[str, str]:
@@ -244,7 +245,8 @@ class BareEnvironment(Environment):
         self.project = project
         self.interpreter = PythonInfo.from_path(sys.executable)
         self.auth = make_basic_auth(
-            self.project.sources, self.project.core.ui.verbosity >= termui.DETAIL
+            self.project.sources,
+            self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )
 
     def get_working_set(self) -> WorkingSet:

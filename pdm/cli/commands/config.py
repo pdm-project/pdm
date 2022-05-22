@@ -37,7 +37,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{project.project_config.deprecated[options.key]}",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             options.key = project.project_config.deprecated[options.key]
@@ -49,7 +49,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
         config[options.key] = options.value
@@ -59,25 +59,32 @@ class Command(BaseCommand):
             config_item = config._config_map[key]
             deprecated = ""
             if config_item.replace and config_item.replace in config._data:
-                deprecated = termui.red(f"(deprecating: {config_item.replace})")
+                deprecated = f"[red](deprecating: {config_item.replace})[/]"
             ui.echo(
-                termui.yellow("# " + config_item.description),
-                verbosity=termui.DETAIL,
+                f"# {config_item.description}",
+                style="yellow",
+                verbosity=termui.Verbosity.DETAIL,
             )
-            ui.echo(f"{termui.cyan(key)}{deprecated} = {config[key]}")
+            ui.echo(f"[cyan]{key}[/]{deprecated} = {config[key]}")
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
         ui = project.core.ui
-        ui.echo("Home configuration ({}):".format(project.global_config.config_file))
-        with ui.indent("  "):
-            self._show_config(project.global_config, ui)
+        ui.echo(
+            "Home configuration ([green]{}[/]):".format(
+                project.global_config.config_file
+            ),
+            style="bold",
+        )
+        self._show_config(project.global_config, ui)
 
         ui.echo()
         ui.echo(
-            "Project configuration ({}):".format(project.project_config.config_file)
+            "Project configuration ([green]{}[/]):".format(
+                project.project_config.config_file
+            ),
+            style="bold",
         )
-        with ui.indent("  "):
-            self._show_config(project.project_config, ui)
+        self._show_config(project.project_config, ui)
 
     def _delete_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
@@ -85,7 +92,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
         del config[options.key]

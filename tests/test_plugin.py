@@ -1,12 +1,8 @@
 from unittest import mock
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.compat import importlib_metadata
 from pdm.project.config import ConfigItem
-
-try:
-    import importlib.metadata as importlib_metadata
-except ModuleNotFoundError:
-    import importlib_metadata
 
 
 class HelloCommand(BaseCommand):
