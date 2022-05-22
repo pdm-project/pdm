@@ -28,25 +28,42 @@ def test_auto_isolate_site_packages(project, invoke):
     env = os.environ.copy()
     env.update({"PYTHONPATH": PEP582_PATH})
     proc = subprocess.run(
-        [str(project.python.executable), "-c", "import click"], env=env
+        [str(project.python.executable), "-c", "import sys;print(sys.path, sep='\\n')"],
+        env=env,
+        capture_output=True,
+        text=True,
+        cwd=str(project.root),
+        check=True,
     )
-    assert proc.returncode == 0
+    assert any("site-packages" in path for path in proc.stdout.splitlines())
 
-    result = invoke(["run", "python", "-c", "import click"], obj=project)
-    if os.name != "nt":  # os.environ handling seems problematic on Windows
-        assert result.exit_code != 0
+    result = invoke(
+        ["run", "python", "-c", "import sys;print(sys.path, sep='\\n')"],
+        obj=project,
+        strict=True,
+    )
+    assert not any("site-packages" in path for path in result.stdout.splitlines())
 
 
 def test_run_with_site_packages(project, invoke):
     project.tool_settings["scripts"] = {
-        "foo": {"cmd": "python -c 'import click'", "site_packages": True}
+        "foo": {
+            "cmd": ["python", "-c", "import sys;print(sys.path, sep='\\n')"],
+            "site_packages": True,
+        }
     }
     project.write_pyproject()
     result = invoke(
-        ["run", "--site-packages", "python", "-c", "import click"], obj=project
+        [
+            "run",
+            "--site-packages",
+            "python",
+            "-c",
+            "import sys;print(sys.path, sep='\\n')",
+        ],
+        obj=project,
     )
     assert result.exit_code == 0
-
     result = invoke(["run", "foo"], obj=project)
     assert result.exit_code == 0
 
@@ -231,13 +248,16 @@ def test_run_show_list_of_scripts(project, invoke):
     }
     project.write_pyproject()
     result = invoke(["run", "--list"], obj=project)
-    result_lines = result.output.splitlines()[2:]
-    assert result_lines[0].strip() == "test_cmd    cmd   flask db upgrade"
+    result_lines = result.output.splitlines()[3:]
+    assert result_lines[0][1:-1].strip() == "test_cmd    │ cmd   │ flask db upgrade │"
     assert (
-        result_lines[1].strip()
-        == "test_script call  test_script:main call a python function"
+        result_lines[1][1:-1].strip()
+        == "test_script │ call  │ test_script:main │ call a python function"
     )
-    assert result_lines[2].strip() == "test_shell  shell echo $FOO        shell command"
+    assert (
+        result_lines[2][1:-1].strip()
+        == "test_shell  │ shell │ echo $FOO        │ shell command"
+    )
 
 
 def test_run_with_another_project_root(project, local_finder, invoke, capfd):
@@ -251,8 +271,8 @@ def test_run_with_another_project_root(project, local_finder, invoke, capfd):
         capfd.readouterr()
         with cd(tmp_dir):
             ret = invoke(["run", "-p", str(project.root), "python", "main.py"])
-            assert ret.exit_code == 0
-            out, _ = capfd.readouterr()
+            out, err = capfd.readouterr()
+            assert ret.exit_code == 0, err
             assert out.strip() == "1"
 
 

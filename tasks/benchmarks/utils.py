@@ -8,7 +8,18 @@ from pathlib import Path
 from time import monotonic
 from typing import Any, Callable, Generator, Sequence, TypeVar
 
-import click
+from rich.console import Console
+
+_console = Console(highlight=False)
+_err_console = Console(stderr=True, highlight=False)
+
+
+def echo(*args: str, err: bool = False, **kwargs: Any):
+    if err:
+        _err_console.print(*args, **kwargs)
+    else:
+        _console.print(*args, **kwargs)
+
 
 PROJECT_DIR = Path(__file__).parent.joinpath("projects")
 
@@ -33,9 +44,9 @@ class Executor:
                 **kwargs,
             )
         except subprocess.CalledProcessError as e:
-            click.secho(f"Run command {e.cmd} failed", fg="yellow", err=True)
-            click.secho(e.stdout.decode(), fg="yellow", err=True)
-            click.secho(e.stderr.decode(), fg="red", err=True)
+            echo(f"Run command {e.cmd} failed", style="yellow", err=True)
+            echo(e.stdout.decode(), style="yellow", err=True)
+            echo(e.stderr.decode(), style="red", err=True)
             sys.exit(1)
 
     def measure(
@@ -44,7 +55,7 @@ class Executor:
         time_start = monotonic()
         proc = self.run(args, **kwargs)
         time_cost = monotonic() - time_start
-        click.echo(f"  {click.style(text + ':', fg='yellow'):>42s} {time_cost:.2f}s")
+        echo(f"[yellow]{(text + ':'):>42s}[/] {time_cost:.2f}s")
         return proc
 
 
@@ -73,7 +84,7 @@ def temp_env() -> Generator[None, None, None]:
 def benchmark(func: TestFunc) -> Any:
     meta = func._meta
     version = subprocess.check_output([meta["cmd"], "--version"]).strip().decode("utf8")
-    click.secho(f"Running benchmark: {version}", fg="green")
+    echo(f"Running benchmark: {version}", style="green")
     project_file = PROJECT_DIR.joinpath(meta["project_file"])
     with tempfile.TemporaryDirectory(prefix="pdm-benchmark-") as tempdir:
         if project_file.name.startswith("pyproject"):

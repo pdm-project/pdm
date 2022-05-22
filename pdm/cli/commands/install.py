@@ -1,9 +1,7 @@
 import argparse
 import sys
 
-import click
-
-from pdm import signals
+from pdm import signals, termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.run import run_script_if_present
@@ -33,18 +31,20 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        if not project.meta and click._compat.isatty(sys.stdout):
+        if not project.meta and termui.is_interactive():
             actions.ask_for_import(project)
 
         strategy = actions.check_lockfile(project, False)
         if strategy:
             if options.check:
                 project.core.ui.echo(
-                    "Please run `pdm lock` to update the lock file", err=True
+                    "Please run [green]`pdm lock`[/] to update the lock file", err=True
                 )
                 sys.exit(1)
             if options.lock:
-                project.core.ui.echo("Updating the lock file...", fg="green", err=True)
+                project.core.ui.echo(
+                    "Updating the lock file...", style="green", err=True
+                )
                 actions.do_lock(project, strategy=strategy, dry_run=options.dry_run)
 
         actions.do_sync(

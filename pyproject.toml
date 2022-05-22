@@ -9,7 +9,6 @@ requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
     "blinker",
-    "click>=7",
     "findpython",
     "importlib-metadata; python_version < \"3.8\"",
     "installer>=0.5.1,<0.6",
@@ -20,6 +19,7 @@ dependencies = [
     "platformdirs",
     "python-dotenv>=0.15",
     "resolvelib>=0.8,<0.9",
+    "rich>=12.3.0",
     "shellingham>=1.3.2",
     "tomli>=1.1.0; python_version < \"3.11\"",
     "tomlkit>=0.8.0,<1",
@@ -68,10 +68,11 @@ benchmark = "python tasks/benchmarks/main.py"
 
 [tool.pdm.dev-dependencies]
 test = [
+    "click>=8.1.3",
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pytest-xdist>=1.31.0"
+    "pytest-xdist>=1.31.0",
 ]
 doc = [
     "mkdocs>=1.1",
@@ -82,7 +83,6 @@ doc = [
 workflow = [
     "parver>=0.3.1",
     "towncrier>=20",
-    "vendoring; python_version >= \"3.8\"",
     "pycomplete~=0.3"
 ]
 
@@ -100,7 +100,6 @@ exclude = '''
   | buck-out
   | build
   | dist
-  | pdm/_vendor
   | tests/fixtures
 )/
 '''
@@ -156,7 +155,7 @@ build-backend = "pdm.pep517.api"
 [tool.isort]
 profile = "black"
 atomic = true
-skip_glob = ["*/setup.py", "pdm/_vendor/*"]
+skip_glob = ["*/setup.py"]
 filter_files = true
 known_first_party = ["pdm"]
 known_third_party = [
@@ -171,36 +170,6 @@ known_third_party = [
     "pythonfinder",
     "tomlkit"
 ]
-
-[tool.vendoring]
-destination = "pdm/_vendor/"
-requirements = "pdm/_vendor/vendors.txt"
-namespace = "pdm._vendor"
-
-protected-files = ["__init__.py", "README.md", "vendors.txt"]
-patches-dir = "tasks/patches"
-
-[tool.vendoring.transformations]
-substitute = [
-  {match = 'import halo\.', replace = 'import pdm._vendor.halo.'}
-]
-drop = [
-    "bin/",
-    "*.so",
-    "typing.*",
-    "*/tests/"
-]
-
-[tool.vendoring.typing-stubs]
-halo = []
-log_symbols = []
-spinners = []
-termcolor = []
-colorama = []
-
-[tool.vendoring.license.directories]
-
-[tool.vendoring.license.fallback-urls]
 
 [tool.pytest.ini_options]
 filterwarnings = [

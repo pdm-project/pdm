@@ -36,7 +36,8 @@ from packaging.version import Version
 from pip._vendor.packaging.tags import Tag
 from pip._vendor.requests import Session
 
-from pdm._types import Distribution, Source
+from pdm._types import Source
+from pdm.compat import Distribution
 from pdm.models.pip_shims import (
     InstallCommand,
     InstallRequirement,

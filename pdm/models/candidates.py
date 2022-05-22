@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import os
 import re
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
+from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound
 from pdm.models import pip_shims
 from pdm.models.requirements import (
@@ -32,11 +32,6 @@ from pdm.utils import (
     populate_link,
     url_without_fragments,
 )
-
-if sys.version_info >= (3, 8):
-    from importlib.metadata import Distribution, PathDistribution
-else:
-    from importlib_metadata import Distribution, PathDistribution
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -192,10 +187,7 @@ class Candidate:
 
     def format(self) -> str:
         """Format for output."""
-        return (
-            f"{termui.green(self.name, bold=True)} "
-            f"{termui.yellow(str(self.version))}"
-        )
+        return f"[bold green]{self.name}[/] [yellow]{self.version}[/]"
 
     def prepare(self, environment: Environment) -> PreparedCandidate:
         """Prepare the candidate for installation."""
@@ -217,7 +209,7 @@ class PreparedCandidate:
         self.ireq = self.get_ireq()
 
         self._metadata_dir: str | None = None
-        self._metadata: Distribution | None = None
+        self._metadata: im.Distribution | None = None
 
     def get_ireq(self) -> pip_shims.InstallRequirement:
         rv, project = self.req.as_ireq(), self.environment.project
@@ -378,18 +370,18 @@ class PreparedCandidate:
                     self.wheel = downloaded.path
                     return
 
-    def prepare_metadata(self) -> Distribution:
+    def prepare_metadata(self) -> im.Distribution:
         """Prepare the metadata for the candidate.
         Will call the prepare_metadata_* hooks behind the scene
         """
         self.obtain(allow_all=True)
         metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
-        result: Distribution
+        result: im.Distribution
         if self.wheel:
             self._metadata_dir = _get_wheel_metadata_from_wheel(
                 self.wheel, metadir_parent
             )
-            result = PathDistribution(Path(self._metadata_dir))
+            result = im.PathDistribution(Path(self._metadata_dir))
         else:
             source_dir = self.ireq.unpacked_source_directory
             builder = EditableBuilder if self.req.editable else WheelBuilder
@@ -403,7 +395,7 @@ class PreparedCandidate:
                 )
                 result = parse_metadata_from_source(source_dir)
             else:
-                result = PathDistribution(Path(self._metadata_dir))
+                result = im.PathDistribution(Path(self._metadata_dir))
         if not self.candidate.name:
             self.req.name = self.candidate.name = cast(str, result.metadata["Name"])
         if not self.candidate.version:
@@ -415,7 +407,7 @@ class PreparedCandidate:
         return result
 
     @property
-    def metadata(self) -> Distribution:
+    def metadata(self) -> im.Distribution:
         if self._metadata is None:
             self._metadata = self.prepare_metadata()
         return self._metadata
