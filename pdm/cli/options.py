@@ -4,7 +4,7 @@ import argparse
 import os
 from typing import Any, Callable, Sequence
 
-from pdm._types import Protocol
+from pdm.compat import Protocol
 from pdm.termui import UI
 
 ui = UI()

@@ -17,7 +17,6 @@ from typing import (
 )
 
 from pdm import termui
-from pdm._types import Distribution
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
@@ -28,6 +27,8 @@ from pdm.utils import is_editable
 if TYPE_CHECKING:
     from rich.live import Live
     from rich.progress import Progress
+
+    from pdm.compat import Distribution
 
 
 class DummyFuture:

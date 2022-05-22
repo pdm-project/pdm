@@ -5,7 +5,7 @@ import contextlib
 import logging
 import os
 from tempfile import mktemp
-from typing import TYPE_CHECKING, Any, Iterator, Sequence, Type
+from typing import Any, Iterator, Sequence, Type
 
 from rich.box import ROUNDED
 from rich.console import Console
@@ -14,9 +14,7 @@ from rich.progress import Progress, SpinnerColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 
-if TYPE_CHECKING:
-    from rich.status import Status
-
+from pdm._types import Spinner, SpinnerT
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -83,20 +81,10 @@ class DummySpinner:
     But only display text onto screen.
     """
 
-    def start(self, text: str) -> None:
-        _console.print(text)
-
-    def stop_and_persist(self, symbol: str = " ", text: str | None = None) -> None:
-        _console.print(symbol + " " + (text or ""))
-
     def update(self, text: str) -> None:
         self.text = text
 
-    succeed = fail = start
-
-    text = property(lambda self: "", start)
-
-    def __enter__(self) -> DummySpinner:
+    def __enter__(self: SpinnerT) -> SpinnerT:
         return self
 
     def __exit__(self, *args: Any) -> None:
@@ -203,7 +191,7 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(self, title: str, spinner: str = "dots") -> DummySpinner | Status:
+    def open_spinner(self, title: str, spinner: str = "dots") -> Spinner:
         """Open a spinner as a context manager."""
         if self.verbosity >= DETAIL or not is_interactive():
             return DummySpinner()

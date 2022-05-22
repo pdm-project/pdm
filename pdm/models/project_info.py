@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import itertools
-import sys
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 from pdm.pep517.metadata import Metadata
 
-if sys.version_info >= (3, 8):
-    from importlib.metadata import Distribution
-else:
-    from importlib_metadata import Distribution
+if TYPE_CHECKING:
+    from pdm.compat import Distribution
 
 
 class ProjectInfo:

@@ -26,7 +26,6 @@ from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
 from pdm import termui
-from pdm._types import Distribution
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
@@ -45,6 +44,7 @@ from pdm.utils import is_path_relative_to
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
+    from pdm.compat import Distribution
     from pdm.models.candidates import Candidate
 
 

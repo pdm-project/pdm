@@ -1,22 +1,18 @@
-import sys
-from typing import Any, Dict, List, NamedTuple, Tuple, Union
+from __future__ import annotations
 
-if sys.version_info >= (3, 8):
-    from importlib.metadata import Distribution
-    from typing import Literal, Protocol, TypedDict
-else:
-    from importlib_metadata import Distribution
-    from typing_extensions import Literal, Protocol, TypedDict
+from typing import Any, Dict, List, NamedTuple, Tuple, TypeVar, Union
+
+from pdm.compat import Literal, Protocol, TypedDict
 
 
 class Source(TypedDict, total=False):
     url: str
     verify_ssl: bool
     name: str
-    type: Union[Literal["index"], Literal["find_links"]]
+    type: Literal["index"] | Literal["find_links"]
 
 
-RequirementDict = Union[str, Dict[str, Union[bool, str]]]
+RequirementDict = Union[str, Dict[str, Union[str, bool]]]
 CandidateInfo = Tuple[List[str], str, str]
 
 
@@ -31,15 +27,18 @@ class Comparable(Protocol):
         ...
 
 
-SearchResult = List[Package]
+SpinnerT = TypeVar("SpinnerT", bound="Spinner")
 
-__all__ = (
-    "Literal",
-    "Source",
-    "RequirementDict",
-    "CandidateInfo",
-    "Distribution",
-    "Package",
-    "SearchResult",
-    "Protocol",
-)
+
+class Spinner(Protocol):
+    def update(self, text: str) -> None:
+        ...
+
+    def __enter__(self: SpinnerT) -> SpinnerT:
+        ...
+
+    def __exit__(self, *args: Any) -> None:
+        ...
+
+
+SearchResult = List[Package]

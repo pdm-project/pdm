@@ -17,16 +17,12 @@ from pdm.cli.actions import check_update, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter
+from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
-
-if sys.version_info >= (3, 8):
-    import importlib.metadata as importlib_metadata
-else:
-    import importlib_metadata
 
 COMMANDS_MODULE_PATH: str = importlib.import_module(
     "pdm.cli.commands"

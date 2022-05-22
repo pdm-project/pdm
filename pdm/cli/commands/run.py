@@ -9,10 +9,10 @@ import sys
 from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 
 from pdm import termui
-from pdm._types import TypedDict
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import check_project_file
+from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.utils import is_path_relative_to

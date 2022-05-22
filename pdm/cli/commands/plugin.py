@@ -6,20 +6,16 @@ import shlex
 import subprocess
 import sys
 
+from pip import __file__ as pip_location
+
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
+from pdm.compat import importlib_metadata
 from pdm.models.environment import WorkingSet
 from pdm.project import Project
 from pdm.utils import normalize_name
-
-if sys.version_info >= (3, 8):
-    import importlib.metadata as importlib_metadata
-else:
-    import importlib_metadata
-
-from pip import __file__ as pip_location
 
 
 def _all_plugins() -> list[str]:
