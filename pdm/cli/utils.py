@@ -23,9 +23,9 @@ import tomlkit
 from packaging.specifiers import SpecifierSet
 from packaging.version import parse as parse_version
 from resolvelib.structs import DirectedGraph
+from rich.tree import Tree
 
 from pdm import termui
-from pdm._types import Distribution
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
@@ -44,13 +44,14 @@ from pdm.utils import is_path_relative_to
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
+    from pdm.compat import Distribution
     from pdm.models.candidates import Candidate
 
 
 class PdmFormatter(argparse.HelpFormatter):
     def start_section(self, heading: str | None) -> None:
         return super().start_section(
-            termui.yellow(heading.title() if heading else heading, bold=True)
+            termui.style(heading.title() if heading else "", style="bold yellow")
         )
 
     def _format_usage(
@@ -64,7 +65,7 @@ class PdmFormatter(argparse.HelpFormatter):
             prefix = "Usage: "
         result = super()._format_usage(usage, actions, groups, prefix)
         if prefix:
-            return result.replace(prefix, termui.yellow(prefix, bold=True))
+            return result.replace(prefix, termui.style(prefix, style="bold yellow"))
         return result
 
     def _format_action(self, action: Action) -> str:
@@ -92,7 +93,7 @@ class PdmFormatter(argparse.HelpFormatter):
             indent_first = help_position
 
         # collect the pieces of the action help
-        parts = [termui.cyan(action_header)]
+        parts = [termui.style(action_header, style="cyan")]
 
         # if there was help for the action, add lines of help text
         if action.help:
@@ -191,81 +192,65 @@ def build_dependency_graph(
     return graph
 
 
-LAST_CHILD = "└── "
-LAST_PREFIX = "    "
-NON_LAST_CHILD = "├── "
-NON_LAST_PREFIX = "│   "
-
-
 def specifier_from_requirement(requirement: Requirement) -> str:
     return str(requirement.specifier or "Any")
 
 
-def format_package(
+def add_package_to_tree(
+    root: Tree,
     graph: DirectedGraph,
     package: Package,
     required: str = "",
-    prefix: str = "",
     visited: frozenset[str] = frozenset(),
-) -> str:
+) -> None:
     """Format one package.
 
     :param graph: the dependency graph
     :param package: the package instance
     :param required: the version required by its parent
-    :param prefix: prefix text for children
     :param visited: the visited package collection
     """
-    result = []
     version = (
-        termui.red("[ not installed ]")
+        "[red][ not installed ][/]"
         if not package.version
-        else termui.red(package.version)
+        else f"[red]{package.version}[/]"
         if required
         and required not in ("Any", "This project")
         and not SpecifierSet(required).contains(package.version)
-        else termui.yellow(package.version)
+        else f"[yellow]{package.version}[/]"
     )
+    # escape deps with extras
+    name = package.name.replace("[", r"\[") if "[" in package.name else package.name
     if package.name in visited:
-        version = termui.red("[circular]")
+        version = r"[red]\[circular][/]"
     required = f"[ required: {required} ]" if required else "[ Not required ]"
-    result.append(f"{termui.green(package.name, bold=True)} {version} {required}\n")
+    node = root.add(f"[bold green]{name}[/] {version} {required}")
     if package.name in visited:
-        return "".join(result)
+        return
     children = sorted(graph.iter_children(package), key=lambda p: p.name)
-    for i, child in enumerate(children):
-        is_last = i == len(children) - 1
-        head = LAST_CHILD if is_last else NON_LAST_CHILD
-        cur_prefix = LAST_PREFIX if is_last else NON_LAST_PREFIX
+    for child in children:
         required = specifier_from_requirement(package.requirements[child.name])
-        result.append(
-            prefix
-            + head
-            + format_package(
-                graph, child, required, prefix + cur_prefix, visited | {package.name}
-            )
-        )
-    return "".join(result)
+        add_package_to_tree(node, graph, child, required, visited | {package.name})
 
 
-def format_reverse_package(
+def add_package_to_reverse_tree(
+    root: Tree,
     graph: DirectedGraph,
     package: Package,
     child: Package | None = None,
     requires: str = "",
-    prefix: str = "",
     visited: frozenset[str] = frozenset(),
-) -> str:
+) -> None:
     """Format one package for output reverse dependency graph."""
     version = (
-        termui.red("[ not installed ]")
+        "[red][ not installed ][/]"
         if not package.version
-        else termui.yellow(package.version)
+        else f"[yellow]{package.version}[/]"
     )
     if package.name in visited:
-        version = termui.red("[circular]")
+        version = r"[red]\[circular][/]"
     requires = (
-        f"[ requires: {termui.red(requires)} ]"
+        f"[ requires: [red]{requires}[/] ]"
         if requires not in ("Any", "")
         and child
         and child.version
@@ -274,30 +259,20 @@ def format_reverse_package(
         if not requires
         else f"[ requires: {requires} ]"
     )
-    result = [f"{termui.green(package.name, bold=True)} {version} {requires}\n"]
+    name = package.name.replace("[", r"\[") if "[" in package.name else package.name
+    node = root.add(f"[bold green]{name}[/] {version} {requires}")
+
     if package.name in visited:
-        return "".join(result)
+        return
     parents: list[Package] = sorted(
         filter(None, graph.iter_parents(package)), key=lambda p: p.name
     )
-    for i, parent in enumerate(parents):
-        is_last = i == len(parents) - 1
-        head = LAST_CHILD if is_last else NON_LAST_CHILD
-        cur_prefix = LAST_PREFIX if is_last else NON_LAST_PREFIX
+    for parent in parents:
         requires = specifier_from_requirement(parent.requirements[package.name])
-        result.append(
-            prefix
-            + head
-            + format_reverse_package(
-                graph,
-                parent,
-                package,
-                requires,
-                prefix + cur_prefix,
-                visited | {package.name},
-            )
+        add_package_to_reverse_tree(
+            node, graph, parent, package, requires, visited=visited | {package.name}
         )
-    return "".join(result)
+    return
 
 
 def package_is_project(package: Package, project: Project) -> bool:
@@ -308,9 +283,9 @@ def package_is_project(package: Package, project: Project) -> bool:
     )
 
 
-def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> str:
+def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> Tree:
     """Format dependency graph for output."""
-    content = []
+    root = Tree("Dependencies", hide_root=True)
     all_dependencies = ChainMap(*project.all_dependencies.values())
     top_level_dependencies = sorted(graph.iter_children(None), key=lambda p: p.name)
     for package in top_level_dependencies:
@@ -320,22 +295,24 @@ def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> 
             required = "This project"
         else:
             required = ""
-        content.append(format_package(graph, package, required, ""))
-    return "".join(content).strip()
+        add_package_to_tree(root, graph, package, required)
+    return root
 
 
 def _format_reverse_dependency_graph(
     project: Project, graph: DirectedGraph[Package | None]
-) -> str:
+) -> Tree:
     """Format reverse dependency graph for output."""
+    root = Tree("Dependencies", hide_root=True)
     leaf_nodes = sorted(
         (node for node in graph if not list(graph.iter_children(node)) and node),
         key=lambda p: p.name,
     )
-    content = [
-        format_reverse_package(graph, node, prefix="") for node in leaf_nodes if node
-    ]
-    return "".join(content).strip()
+    for package in leaf_nodes:
+        if not package:
+            continue
+        add_package_to_reverse_tree(root, graph, package)
+    return root
 
 
 def build_forward_dependency_json_subtree(
@@ -422,22 +399,27 @@ def build_dependency_json_tree(
     ]
 
 
-def format_dependency_graph(
+def show_dependency_graph(
     project: Project,
     graph: DirectedGraph[Package | None],
     reverse: bool = False,
     json: bool = False,
-) -> str:
+) -> None:
+    echo = project.core.ui.echo
     if json:
-        return dumps(
-            build_dependency_json_tree(project, graph, reverse),
-            indent=2,
+        echo(
+            dumps(
+                build_dependency_json_tree(project, graph, reverse),
+                indent=2,
+            )
         )
+        return
 
     if reverse:
-        return _format_reverse_dependency_graph(project, graph)
+        tree = _format_reverse_dependency_graph(project, graph)
     else:
-        return _format_forward_dependency_graph(project, graph)
+        tree = _format_forward_dependency_graph(project, graph)
+    echo(tree)
 
 
 def format_lockfile(
@@ -508,7 +490,7 @@ def check_project_file(project: Project) -> None:
     if not project.meta:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
-            "by running {}.".format(termui.green("'pdm init'"))
+            "by running [green]`pdm init`[/]."
         )
 
 
@@ -568,7 +550,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         result = [
             "Unable to find a resolution because the following dependencies don't work "
             "on all Python versions defined by the project's `requires-python`: "
-            f"{termui.green(str(project_requires.specifier))}"
+            f"[green]{str(project_requires.specifier)}[/]."
         ]
         for req, parent in conflicting:
             info_lines.add(f"  {req.as_line()} (from {repr(parent)})")
@@ -582,14 +564,14 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     if len(causes) == 1:
         return (
             "Unable to find a resolution for "
-            f"{termui.green(causes[0].requirement.identify())}\n"
+            f"[green]{causes[0].requirement.identify()}[/]\n"
             "Please make sure the package name is correct."
         )
 
     result = [
-        f"Unable to find a resolution for "
-        f"{termui.green(causes[0].requirement.identify())} because of the following "
-        "conflicts:"
+        "Unable to find a resolution for "
+        f"[green]{causes[0].requirement.identify()}[/]\n"
+        "because of the following conflicts:"
     ]
     for req, parent in causes:
         info_lines.add(
@@ -630,7 +612,8 @@ def translate_groups(
     invalid_groups = groups_set - set(project.iter_groups())
     if invalid_groups:
         project.core.ui.echo(
-            f"Ignoring non-existing groups: {invalid_groups}", fg="yellow", err=True
+            f"[d]Ignoring non-existing groups: [green]{', '.join(invalid_groups)}[/]",
+            err=True,
         )
         groups_set -= invalid_groups
     return sorted(groups_set)

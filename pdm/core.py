@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
-import click
 from resolvelib import Resolver
 
 from pdm import termui
@@ -18,16 +17,12 @@ from pdm.cli.actions import check_update, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import PdmFormatter
+from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
-
-if sys.version_info >= (3, 8):
-    import importlib.metadata as importlib_metadata
-else:
-    import importlib_metadata
 
 COMMANDS_MODULE_PATH: str = importlib.import_module(
     "pdm.cli.commands"
@@ -64,7 +59,8 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                click.style("Python Development Master (PDM)", bold=True), self.version
+                termui.style("Python Development Master (PDM)", style="bold"),
+                self.version,
             ),
             help="show the version and exit",
         )
@@ -163,15 +159,17 @@ class Core:
             except Exception:
                 etype, err, traceback = sys.exc_info()
                 should_show_tb = not isinstance(err, PdmUsageError)
-                if self.ui.verbosity > termui.NORMAL and should_show_tb:
+                if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
                     raise cast(Exception, err).with_traceback(traceback)
                 self.ui.echo(
-                    f"{termui.red('[' + etype.__name__ + ']')}: {err}",  # type: ignore
+                    rf"[red]\[{etype.__name__}][/]: {err}",  # type: ignore
                     err=True,
                 )
                 if should_show_tb:
                     self.ui.echo(
-                        "Add '-v' to see the detailed traceback", fg="yellow", err=True
+                        "Add '-v' to see the detailed traceback",
+                        style="yellow",
+                        err=True,
                     )
                 sys.exit(1)
             else:
@@ -222,7 +220,7 @@ class Core:
             except Exception as e:
                 self.ui.echo(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
-                    fg="red",
+                    style="red",
                     err=True,
                 )
 

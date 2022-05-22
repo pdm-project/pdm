@@ -9,10 +9,10 @@ import sys
 from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 
 from pdm import termui
-from pdm._types import TypedDict
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import check_project_file
+from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.utils import is_path_relative_to
@@ -32,7 +32,7 @@ class Task(NamedTuple):
     options: TaskOptions
 
     def __str__(self) -> str:
-        return f"<task {termui.cyan(self.name)}>"
+        return f"<task [cyan]{self.name}[/]>"
 
 
 class TaskRunner:
@@ -112,9 +112,9 @@ class TaskRunner:
             import dotenv
 
             project.core.ui.echo(
-                f"Loading .env file: {termui.green(env_file)}",
+                f"Loading .env file: [green]{env_file}[/]",
                 err=True,
-                verbosity=termui.DETAIL,
+                verbosity=termui.Verbosity.DETAIL,
             )
             process_env.update(
                 dotenv.dotenv_values(project.root / env_file, encoding="utf-8")
@@ -130,9 +130,7 @@ class TaskRunner:
             expanded_command = project_env.which(command)
             if not expanded_command:
                 raise PdmUsageError(
-                    "Command {} is not found on your PATH.".format(
-                        termui.green(f"'{command}'")
-                    )
+                    f"Command [green]'{command}'[/] is not found on your PATH.".format()
                 )
             expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
             expanded_args = [
@@ -192,9 +190,9 @@ class TaskRunner:
             "env_file", self.global_options.get("env_file")
         )
         self.project.core.ui.echo(
-            f"Running {task}: {termui.green(str(args))}",
+            f"Running {task}: [green]{str(args)}[/]",
             err=True,
-            verbosity=termui.DETAIL,
+            verbosity=termui.Verbosity.DETAIL,
         )
         return self._run_process(
             args, chdir=True, shell=shell, **options  # type: ignore
@@ -232,7 +230,7 @@ class TaskRunner:
             assert task is not None
             result.append(
                 (
-                    termui.green(name),
+                    f"[green]{name}[/]",
                     task.kind,
                     str(task.args),
                     task.options.get("help", ""),
@@ -274,7 +272,7 @@ class Command(BaseCommand):
         if not options.command:
             project.core.ui.echo(
                 "No command is given, default to the Python REPL.",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             options.command = "python"

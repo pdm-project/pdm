@@ -65,7 +65,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "The exported requirements file is no longer cross-platform. "
                 "Using it on other platforms may cause unexpected result.",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             candidates = resolve_candidates_from_lockfile(

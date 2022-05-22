@@ -2,7 +2,6 @@ import argparse
 
 from packaging.version import Version
 
-from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
 from pdm.models.candidates import Candidate
@@ -44,8 +43,9 @@ class Command(BaseCommand):
             latest = next(iter(matches), None)
             if not latest:
                 project.core.ui.echo(
-                    termui.yellow(f"No match found for the package {package!r}"),
+                    f"No match found for the package {package!r}",
                     err=True,
+                    style="yellow",
                 )
                 return
             latest_stable = next(filter(filter_stable, matches), None)
