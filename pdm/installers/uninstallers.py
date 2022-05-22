@@ -6,14 +6,16 @@ import os
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Iterable, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Iterable, Type, TypeVar, cast
 
 from pdm import termui
-from pdm._types import Distribution
 from pdm.exceptions import UninstallError
 from pdm.installers.packages import CachedPackage
-from pdm.models.environment import Environment
 from pdm.utils import is_egg_link, is_path_relative_to
+
+if TYPE_CHECKING:
+    from pdm.compat import Distribution
+    from pdm.models.environment import Environment
 
 _T = TypeVar("_T", bound="BaseRemovePaths")
 

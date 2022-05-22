@@ -2,9 +2,21 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
-import click
 import parver
+from rich.console import Console
+
+_console = Console(highlight=False)
+_err_console = Console(stderr=True, highlight=False)
+
+
+def echo(*args: str, err: bool = False, **kwargs: Any):
+    if err:
+        _err_console.print(*args, **kwargs)
+    else:
+        _console.print(*args, **kwargs)
+
 
 PROJECT_DIR = Path(__file__).parent.parent
 
@@ -20,9 +32,9 @@ def bump_version(pre=None, major=False, minor=False, patch=True):
     if not any([major, minor, patch]):
         patch = True
     if len([v for v in [major, minor, patch] if v]) != 1:
-        click.secho(
+        echo(
             "Only one option should be provided among " "(--major, --minor, --patch)",
-            fg="red",
+            style="red",
             err=True,
         )
         sys.exit(1)
@@ -42,7 +54,7 @@ def bump_version(pre=None, major=False, minor=False, patch=True):
 
 def release(dry_run=False, commit=True, pre=None, major=False, minor=False, patch=True):
     new_version = bump_version(pre, major, minor, patch)
-    click.secho(f"Bump version to: {new_version}", fg="yellow")
+    echo(f"Bump version to: {new_version}", style="yellow")
     if dry_run:
         subprocess.check_call(
             ["towncrier", "build", "--version", new_version, "--draft"]
