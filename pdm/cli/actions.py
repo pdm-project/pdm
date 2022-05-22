@@ -432,7 +432,7 @@ def do_list(
     json: bool = False,
 ) -> None:
     """Display a list of packages installed in the local packages directory."""
-    from pdm.cli.utils import build_dependency_graph, format_dependency_graph
+    from pdm.cli.utils import build_dependency_graph, show_dependency_graph
 
     check_project_file(project)
     working_set = project.environment.get_working_set()
@@ -440,9 +440,7 @@ def do_list(
         dep_graph = build_dependency_graph(
             working_set, project.environment.marker_environment
         )
-        project.core.ui.echo(
-            format_dependency_graph(project, dep_graph, reverse=reverse, json=json)
-        )
+        show_dependency_graph(project, dep_graph, reverse=reverse, json=json)
     else:
         if reverse:
             raise PdmUsageError("--reverse must be used with --graph")
@@ -835,23 +833,23 @@ def check_update(project: Project) -> None:
     ):
         return
     if is_pipx_installation():  # pragma: no cover
-        install_command = "$ pipx upgrade pdm"
+        install_command = "pipx upgrade pdm"
     elif is_scoop_installation():  # pragma: no cover
-        install_command = "$ scoop update pdm"
+        install_command = "scoop update pdm"
     elif is_homebrew_installation():  # pragma: no cover
-        install_command = "$ brew upgrade pdm"
+        install_command = "brew upgrade pdm"
     else:
-        install_command = f"$ {quote(sys.executable)} -m pip install -U pdm"
+        install_command = f"{quote(sys.executable)} -m pip install -U pdm"
 
-    disable_command = "$ pdm config check_update false"
+    disable_command = "pdm config check_update false"
 
     message = [
         f"\nPDM [cyan]{this_version}[/]",
         f" is installed, while [cyan]{latest_version}[/]",
         " is available.\n",
-        f"Please run [bold green]{install_command}[/]",
+        f"Please run [bold green]`{install_command}`[/]",
         " to upgrade.\n",
-        f"Run [bold green]{disable_command}[/]",
+        f"Run [bold green]`{disable_command}`[/]",
         " to disable the check.",
     ]
     project.core.ui.echo("".join(message), err=True, style="blue")

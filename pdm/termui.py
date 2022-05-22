@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import atexit
 import contextlib
-import io
 import logging
 import os
-import sys
 from tempfile import mktemp
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Sequence, Type, Union
+from typing import TYPE_CHECKING, Any, Iterator, Sequence, Type
 
 from rich.box import ROUNDED
 from rich.console import Console
@@ -25,24 +23,14 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
 
 
-def supports_ansi() -> bool:
-    if os.getenv("CI") or not hasattr(sys.stdout, "fileno"):
-        return False
-    if sys.platform == "win32":
-        return (
-            os.getenv("ANSICON") is not None
-            or os.getenv("WT_SESSION") is not None
-            or "ON" == os.getenv("ConEmuANSI")
-            or "xterm" == os.getenv("Term")
-        )
-    try:
-        return os.isatty(sys.stdout.fileno())
-    except io.UnsupportedOperation:
-        return False
+_console = Console(highlight=False)
+_err_console = Console(stderr=True)
 
 
-_console = Console(force_terminal=supports_ansi(), highlight=False)
-_err_console = Console(force_terminal=supports_ansi(), stderr=True)
+def is_interactive(console: Console | None = None) -> bool:
+    if console is None:
+        console = _console
+    return console.is_interactive
 
 
 def style(
@@ -68,7 +56,7 @@ def confirm(*args: str, **kwargs: Any) -> str:
 
 
 def ask(
-    *args: str, prompt_type: Union[Type[str], Type[int]] = None, **kwargs: Any
+    *args: str, prompt_type: Type[str] | Type[int] | None = None, **kwargs: Any
 ) -> str:
     """prompt user and return reponse
 
@@ -76,9 +64,9 @@ def ask(
     :raises ValueError: unsupported prompt type
     :return: str of user's selection
     """
-    if not prompt_type or prompt_type == str:
+    if not prompt_type or prompt_type is str:
         return Prompt.ask(*args, **kwargs)
-    elif prompt_type == int:
+    elif prompt_type is int:
         return str(IntPrompt.ask(*args, **kwargs))
     else:
         raise ValueError(f"unsupported {prompt_type}")
@@ -98,7 +86,7 @@ class DummySpinner:
     def start(self, text: str) -> None:
         _console.print(text)
 
-    def stop_and_persist(self, symbol: str = " ", text: Optional[str] = None) -> None:
+    def stop_and_persist(self, symbol: str = " ", text: str | None = None) -> None:
         _console.print(symbol + " " + (text or ""))
 
     def update(self, text: str) -> None:
@@ -118,12 +106,9 @@ class DummySpinner:
 class UI:
     """Terminal UI object"""
 
-    def __init__(self, verbosity: int = NORMAL, no_ansi: Optional[bool] = None) -> None:
+    def __init__(self, verbosity: int = NORMAL) -> None:
         self.verbosity = verbosity
         self._indent = ""
-        self.supports_ansi = not no_ansi if no_ansi is not None else supports_ansi()
-        self._console = Console(force_terminal=self.supports_ansi)
-        self._err_console = Console(force_terminal=self.supports_ansi, stderr=True)
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = verbosity
@@ -142,13 +127,11 @@ class UI:
         :param verbosity: verbosity level, defaults to NORMAL.
         """
         if self.verbosity >= verbosity:
-
             console = _err_console if err else _console
-
             console.print(message, **kwargs)
 
     def display_columns(
-        self, rows: Sequence[Sequence[str]], header: Optional[List[str]] = None
+        self, rows: Sequence[Sequence[str]], header: list[str] | None = None
     ) -> None:
         """Print rows in aligned columns.
 
@@ -158,8 +141,14 @@ class UI:
 
         if header:
             table = Table(box=ROUNDED)
-            for item in header:
-                table.add_column(item)
+            for title in header:
+                if title[0] == "^":
+                    title, justify = title[1:], "center"
+                elif title[0] == ">":
+                    title, justify = title[1:], "right"
+                else:
+                    title, justify = title, "left"
+                table.add_column(title, justify=justify)
         else:
             table = Table.grid(padding=(0, 1))
             for _ in rows[0]:
@@ -214,23 +203,19 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(
-        self, title: str, spinner: str = "dots"
-    ) -> Union[DummySpinner, Status]:
+    def open_spinner(self, title: str, spinner: str = "dots") -> DummySpinner | Status:
         """Open a spinner as a context manager."""
-        if self.verbosity >= DETAIL or not self.supports_ansi:
+        if self.verbosity >= DETAIL or not is_interactive():
             return DummySpinner()
         else:
-            return self._console.status(
-                title, spinner=spinner, spinner_style="bold cyan"
-            )
+            return _console.status(title, spinner=spinner, spinner_style="bold cyan")
 
     def live_progress(self, progress: Progress, console: Console = None) -> Live:
         """open a live instance"""
         return Live(
             progress,
             refresh_per_second=10,
-            console=(console if console else self._console),
+            console=(console if console else _console),
         )
 
     def make_progress(self) -> Progress:

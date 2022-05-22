@@ -23,6 +23,7 @@ import tomlkit
 from packaging.specifiers import SpecifierSet
 from packaging.version import parse as parse_version
 from resolvelib.structs import DirectedGraph
+from rich.tree import Tree
 
 from pdm import termui
 from pdm._types import Distribution
@@ -188,32 +189,24 @@ def build_dependency_graph(
     return graph
 
 
-LAST_CHILD = "└── "
-LAST_PREFIX = "    "
-NON_LAST_CHILD = "├── "
-NON_LAST_PREFIX = "│   "
-
-
 def specifier_from_requirement(requirement: Requirement) -> str:
     return str(requirement.specifier or "Any")
 
 
-def format_package(
+def add_package_to_tree(
+    root: Tree,
     graph: DirectedGraph,
     package: Package,
     required: str = "",
-    prefix: str = "",
     visited: frozenset[str] = frozenset(),
-) -> str:
+) -> None:
     """Format one package.
 
     :param graph: the dependency graph
     :param package: the package instance
     :param required: the version required by its parent
-    :param prefix: prefix text for children
     :param visited: the visited package collection
     """
-    result = []
     version = (
         "[red][ not installed ][/]"
         if not package.version
@@ -228,33 +221,23 @@ def format_package(
     if package.name in visited:
         version = r"[red]\[circular][/]"
     required = f"[ required: {required} ]" if required else "[ Not required ]"
-    result.append(f"[bold green]{name}[/] {version} {required}\n")
+    node = root.add(f"[bold green]{name}[/] {version} {required}")
     if package.name in visited:
-        return "".join(result)
+        return
     children = sorted(graph.iter_children(package), key=lambda p: p.name)
-    for i, child in enumerate(children):
-        is_last = i == len(children) - 1
-        head = LAST_CHILD if is_last else NON_LAST_CHILD
-        cur_prefix = LAST_PREFIX if is_last else NON_LAST_PREFIX
+    for child in children:
         required = specifier_from_requirement(package.requirements[child.name])
-        result.append(
-            prefix
-            + head
-            + format_package(
-                graph, child, required, prefix + cur_prefix, visited | {package.name}
-            )
-        )
-    return "".join(result)
+        add_package_to_tree(node, graph, child, required, visited | {package.name})
 
 
-def format_reverse_package(
+def add_package_to_reverse_tree(
+    root: Tree,
     graph: DirectedGraph,
     package: Package,
     child: Package | None = None,
     requires: str = "",
-    prefix: str = "",
     visited: frozenset[str] = frozenset(),
-) -> str:
+) -> None:
     """Format one package for output reverse dependency graph."""
     version = (
         "[red][ not installed ][/]"
@@ -274,31 +257,19 @@ def format_reverse_package(
         else f"[ requires: {requires} ]"
     )
     name = package.name.replace("[", r"\[") if "[" in package.name else package.name
-    result = [f"[bold green]{name}[/] {version} {requires}\n"]
+    node = root.add(f"[bold green]{name}[/] {version} {requires}")
 
     if package.name in visited:
-        return "".join(result)
+        return
     parents: list[Package] = sorted(
         filter(None, graph.iter_parents(package)), key=lambda p: p.name
     )
-    for i, parent in enumerate(parents):
-        is_last = i == len(parents) - 1
-        head = LAST_CHILD if is_last else NON_LAST_CHILD
-        cur_prefix = LAST_PREFIX if is_last else NON_LAST_PREFIX
+    for parent in parents:
         requires = specifier_from_requirement(parent.requirements[package.name])
-        result.append(
-            prefix
-            + head
-            + format_reverse_package(
-                graph,
-                parent,
-                package,
-                requires,
-                prefix + cur_prefix,
-                visited | {package.name},
-            )
+        add_package_to_reverse_tree(
+            node, graph, parent, package, requires, visited=visited | {package.name}
         )
-    return "".join(result)
+    return
 
 
 def package_is_project(package: Package, project: Project) -> bool:
@@ -309,9 +280,9 @@ def package_is_project(package: Package, project: Project) -> bool:
     )
 
 
-def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> str:
+def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> Tree:
     """Format dependency graph for output."""
-    content = []
+    root = Tree("Dependencies", hide_root=True)
     all_dependencies = ChainMap(*project.all_dependencies.values())
     top_level_dependencies = sorted(graph.iter_children(None), key=lambda p: p.name)
     for package in top_level_dependencies:
@@ -321,22 +292,24 @@ def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> 
             required = "This project"
         else:
             required = ""
-        content.append(format_package(graph, package, required, ""))
-    return "".join(content).strip()
+        add_package_to_tree(root, graph, package, required)
+    return root
 
 
 def _format_reverse_dependency_graph(
     project: Project, graph: DirectedGraph[Package | None]
-) -> str:
+) -> Tree:
     """Format reverse dependency graph for output."""
+    root = Tree("Dependencies", hide_root=True)
     leaf_nodes = sorted(
         (node for node in graph if not list(graph.iter_children(node)) and node),
         key=lambda p: p.name,
     )
-    content = [
-        format_reverse_package(graph, node, prefix="") for node in leaf_nodes if node
-    ]
-    return "".join(content).strip()
+    for package in leaf_nodes:
+        if not package:
+            continue
+        add_package_to_reverse_tree(root, graph, package)
+    return root
 
 
 def build_forward_dependency_json_subtree(
@@ -423,22 +396,27 @@ def build_dependency_json_tree(
     ]
 
 
-def format_dependency_graph(
+def show_dependency_graph(
     project: Project,
     graph: DirectedGraph[Package | None],
     reverse: bool = False,
     json: bool = False,
-) -> str:
+) -> None:
+    echo = project.core.ui.echo
     if json:
-        return dumps(
-            build_dependency_json_tree(project, graph, reverse),
-            indent=2,
+        echo(
+            dumps(
+                build_dependency_json_tree(project, graph, reverse),
+                indent=2,
+            )
         )
+        return
 
     if reverse:
-        return _format_reverse_dependency_graph(project, graph)
+        tree = _format_reverse_dependency_graph(project, graph)
     else:
-        return _format_forward_dependency_graph(project, graph)
+        tree = _format_forward_dependency_graph(project, graph)
+    echo(tree)
 
 
 def format_lockfile(
@@ -509,7 +487,7 @@ def check_project_file(project: Project) -> None:
     if not project.meta:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
-            "by running [green]'pdm init'[/]."
+            "by running [green]`pdm init`[/]."
         )
 
 
@@ -631,7 +609,8 @@ def translate_groups(
     invalid_groups = groups_set - set(project.iter_groups())
     if invalid_groups:
         project.core.ui.echo(
-            f"Ignoring non-existing groups: {invalid_groups}", style="yellow", err=True
+            f"[d]Ignoring non-existing groups: [green]{', '.join(invalid_groups)}[/]",
+            err=True,
         )
         groups_set -= invalid_groups
     return sorted(groups_set)

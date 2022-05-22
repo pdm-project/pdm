@@ -31,14 +31,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        if not project.meta and termui.supports_ansi():
+        if not project.meta and termui.is_interactive():
             actions.ask_for_import(project)
 
         strategy = actions.check_lockfile(project, False)
         if strategy:
             if options.check:
                 project.core.ui.echo(
-                    "Please run `pdm lock` to update the lock file", err=True
+                    "Please run [green]`pdm lock`[/] to update the lock file", err=True
                 )
                 sys.exit(1)
             if options.lock:
