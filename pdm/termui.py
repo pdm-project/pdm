@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import atexit
 import contextlib
+import enum
 import logging
 import os
 from tempfile import mktemp
@@ -26,9 +27,17 @@ _err_console = Console(stderr=True)
 
 
 def is_interactive(console: Console | None = None) -> bool:
+    """Check if the terminal is run under interactive mode"""
     if console is None:
         console = _console
     return console.is_interactive
+
+
+def is_legacy_windows(console: Console | None = None) -> bool:
+    """Legacy Windows renderer may have problem rendering emojis"""
+    if console is None:
+        console = _console
+    return console.legacy_windows
 
 
 def style(
@@ -70,10 +79,24 @@ def ask(
         raise ValueError(f"unsupported {prompt_type}")
 
 
-# Verbosity levels
-NORMAL = 0
-DETAIL = 1
-DEBUG = 2
+class Verbosity(enum.IntEnum):
+    NORMAL = 0
+    DETAIL = enum.auto()
+    DEBUG = enum.auto()
+
+
+class Emoji:
+    if is_legacy_windows():
+        SUCC = "v"
+        FAIL = "x"
+        LOCK = " "
+        CONGRAT = " "
+        POPPER = " "
+    else:
+        SUCC = ":heavy_check_mark:"
+        FAIL = ":heavy_multiplication_x:"
+        LOCK = ":lock:"
+        POPPER = ":party_popper:"
 
 
 class DummySpinner:
@@ -94,18 +117,17 @@ class DummySpinner:
 class UI:
     """Terminal UI object"""
 
-    def __init__(self, verbosity: int = NORMAL) -> None:
+    def __init__(self, verbosity: Verbosity = Verbosity.NORMAL) -> None:
         self.verbosity = verbosity
-        self._indent = ""
 
     def set_verbosity(self, verbosity: int) -> None:
-        self.verbosity = verbosity
+        self.verbosity = Verbosity(verbosity)
 
     def echo(
         self,
         message: str = "",
         err: bool = False,
-        verbosity: int = NORMAL,
+        verbosity: Verbosity = Verbosity.NORMAL,
         **kwargs: Any,
     ) -> None:
         """print message using rich console
@@ -147,21 +169,13 @@ class UI:
         _console.print(table)
 
     @contextlib.contextmanager
-    def indent(self, prefix: str) -> Iterator[None]:
-        """Indent the following lines with a prefix."""
-        _indent = self._indent
-        self._indent += prefix
-        yield
-        self._indent = _indent
-
-    @contextlib.contextmanager
     def logging(self, type_: str = "install") -> Iterator[logging.Logger]:
         """A context manager that opens a file for logging when verbosity is NORMAL or
         print to the stdout otherwise.
         """
         file_name = mktemp(".log", f"pdm-{type_}-")
 
-        if self.verbosity >= DETAIL:
+        if self.verbosity >= Verbosity.DETAIL:
             handler: logging.Handler = logging.StreamHandler()
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
@@ -179,7 +193,7 @@ class UI:
         try:
             yield logger
         except Exception:
-            if self.verbosity < DETAIL:
+            if self.verbosity < Verbosity.DETAIL:
                 logger.exception("Error occurs")
                 self.echo(
                     f"See {file_name} for detailed debug log.", style="yellow", err=True
@@ -193,7 +207,7 @@ class UI:
 
     def open_spinner(self, title: str, spinner: str = "dots") -> Spinner:
         """Open a spinner as a context manager."""
-        if self.verbosity >= DETAIL or not is_interactive():
+        if self.verbosity >= Verbosity.DETAIL or not is_interactive():
             return DummySpinner()
         else:
             return _console.status(title, spinner=spinner, spinner_style="bold cyan")

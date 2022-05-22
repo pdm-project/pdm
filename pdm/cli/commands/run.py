@@ -114,7 +114,7 @@ class TaskRunner:
             project.core.ui.echo(
                 f"Loading .env file: [green]{env_file}[/]",
                 err=True,
-                verbosity=termui.DETAIL,
+                verbosity=termui.Verbosity.DETAIL,
             )
             process_env.update(
                 dotenv.dotenv_values(project.root / env_file, encoding="utf-8")
@@ -192,7 +192,7 @@ class TaskRunner:
         self.project.core.ui.echo(
             f"Running {task}: [green]{str(args)}[/]",
             err=True,
-            verbosity=termui.DETAIL,
+            verbosity=termui.Verbosity.DETAIL,
         )
         return self._run_process(
             args, chdir=True, shell=shell, **options  # type: ignore

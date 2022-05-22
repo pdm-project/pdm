@@ -95,7 +95,7 @@ class AddCommand(BaseCommand):
         pip_args = ["install"] + shlex.split(options.pip_args) + options.packages
 
         project.core.ui.echo(
-            f"Running pip command: {pip_args}", verbosity=termui.DETAIL
+            f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
         )
         try:
             with project.core.ui.open_spinner(
@@ -174,7 +174,7 @@ class RemoveCommand(BaseCommand):
         )
 
         project.core.ui.echo(
-            f"Running pip command: {pip_args}", verbosity=termui.DETAIL
+            f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
         )
         try:
             with project.core.ui.open_spinner(

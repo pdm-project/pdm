@@ -159,7 +159,7 @@ class Core:
             except Exception:
                 etype, err, traceback = sys.exc_info()
                 should_show_tb = not isinstance(err, PdmUsageError)
-                if self.ui.verbosity > termui.NORMAL and should_show_tb:
+                if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
                     raise cast(Exception, err).with_traceback(traceback)
                 self.ui.echo(
                     rf"[red]\[{etype.__name__}][/]: {err}",  # type: ignore

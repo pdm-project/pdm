@@ -224,12 +224,12 @@ class Synchronizer:
             progress.update(job, completed=1, visible=False)
         except Exception:
             live.console.print(
-                f"  [red]:heavy_multiplication_x:[/] Install {can.format()} failed"
+                f"  [red]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
             )
             raise
         else:
             live.console.print(
-                f"  [green]:heavy_check_mark:[/] Install {can.format()} successful"
+                f"  [green]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
             )
         return can
 
@@ -253,14 +253,14 @@ class Synchronizer:
 
         except Exception:
             live.console.print(
-                f"  [red]:heavy_multiplication_x:[/] Update [bold green]{key}[/] "
+                f"  [red]{termui.Emoji.FAIL}[/] Update [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] "
                 f"-> [yellow]{can.version}[/]...",
             )
             raise
         else:
             live.console.print(
-                f"  [green]:heavy_check_mark:[/] Update [bold green]{key}[/] "
+                f"  [green]{termui.Emoji.SUCC}[/] Update [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] "
                 f"-> [yellow]{can.version}[/]..."
             )
@@ -283,13 +283,13 @@ class Synchronizer:
             progress.update(job, completed=1, visible=False)
         except Exception:
             live.console.print(
-                f"  [red]:heavy_multiplication_x:[/] Remove [bold green]{key}[/] "
+                f"  [red]{termui.Emoji.FAIL}[/] Remove [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] failed",
             )
             raise
         else:
             live.console.print(
-                f"  [green]:heavy_check_mark:[/] Remove [bold green]{key}[/] "
+                f"  [green]{termui.Emoji.SUCC}[/] Remove [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] successful"
             )
         return dist
@@ -423,4 +423,4 @@ class Synchronizer:
                 else:
                     self.install_candidate(self_key, progress, live)
 
-            live.console.print("\n:party_popper: All complete!")
+            live.console.print(f"\n{termui.Emoji.POPPER} All complete!")

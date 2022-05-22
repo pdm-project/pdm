@@ -55,7 +55,7 @@ def remove_cache_files(project: Project, pattern: str) -> None:
 
     for file in files:
         os.unlink(file)
-        project.core.ui.echo(f"Removed {file}", verbosity=termui.DETAIL)
+        project.core.ui.echo(f"Removed {file}", verbosity=termui.Verbosity.DETAIL)
     project.core.ui.echo(f"{len(files)} file{'s' if len(files) > 1 else ''} removed")
 
 
