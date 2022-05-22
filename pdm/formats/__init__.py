@@ -4,7 +4,7 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Iterable, Mapping, Union, cast
 
-from pdm._types import Protocol
+from pdm.compat import Protocol
 from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
