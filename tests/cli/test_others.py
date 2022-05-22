@@ -254,4 +254,4 @@ def test_show_update_hint(invoke, project):
     finally:
         project.core.version = prev_version
     assert "to upgrade." in r.stderr
-    assert "Run $ pdm config check_update false to disable the check." in r.stderr
+    assert "Run `pdm config check_update false` to disable the check." in r.stderr

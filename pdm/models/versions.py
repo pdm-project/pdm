@@ -1,7 +1,7 @@
 import re
 from typing import Any, List, Optional, Tuple, Union, overload
 
-from pdm._types import Literal
+from pdm.compat import Literal
 from pdm.exceptions import InvalidPyVersion
 
 VersionBit = Union[int, Literal["*"]]

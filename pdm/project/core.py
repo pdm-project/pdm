@@ -41,8 +41,8 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
+    from rich.status import Status
 
-    from pdm._vendor import halo
     from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
 
@@ -95,7 +95,7 @@ class Project:
         ):
             self.core.ui.echo(
                 "Project is not found, fallback to the global project",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             root_path = global_project
@@ -276,7 +276,7 @@ class Project:
                     f"The {group} group exists in both [optional-dependencies] "
                     "and [dev-dependencies], the former is taken.",
                     err=True,
-                    fg="yellow",
+                    style="yellow",
                 )
             if group in optional_dependencies:
                 deps = optional_dependencies[group]
@@ -402,7 +402,7 @@ class Project:
         if strategy != "all" and not self.is_lockfile_compatible():
             self.core.ui.echo(
                 "Updating the whole lock file as it is not compatible with PDM",
-                fg="yellow",
+                style="yellow",
                 err=True,
             )
             strategy = "all"
@@ -428,7 +428,7 @@ class Project:
         self,
         requirements: list[Requirement],
         tracked_names: Iterable[str] | None = None,
-        spinner: halo.Halo | termui.DummySpinner | None = None,
+        spinner: Status | termui.DummySpinner | None = None,
     ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 
@@ -455,7 +455,7 @@ class Project:
             with atomic_open_for_write(self.lockfile_file) as fp:
                 tomlkit.dump(toml_data, fp)  # type: ignore
             if show_message:
-                self.core.ui.echo(f"Changes are written to {termui.green('pdm.lock')}.")
+                self.core.ui.echo("Changes are written to [green]pdm.lock[/].")
             self._lockfile = None
         else:
             self._lockfile = toml_data
@@ -549,9 +549,7 @@ class Project:
         ) as f:
             tomlkit.dump(self.pyproject, f)  # type: ignore
         if show_message:
-            self.core.ui.echo(
-                f"Changes are written to {termui.green('pyproject.toml')}."
-            )
+            self.core.ui.echo("Changes are written to [green]pyproject.toml[/].")
         self._pyproject = None
 
     @property

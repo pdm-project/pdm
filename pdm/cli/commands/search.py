@@ -36,12 +36,7 @@ def print_results(
                 )
         current_width = len(name) + len(latest) + 4
         spaces = " " * (name_column_width - current_width)
-        line = "{name} ({latest}){spaces} - {summary}".format(
-            name=termui.green(name, bold=True),
-            latest=termui.yellow(latest),
-            spaces=spaces,
-            summary=summary,
-        )
+        line = f"[bold green]{name}[/] ([yellow]{latest}[/]){spaces} - {summary}"
         try:
             ui.echo(line)
             if normalize_name(name) in working_set:

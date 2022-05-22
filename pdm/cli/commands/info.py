@@ -1,7 +1,6 @@
 import argparse
 import json
 
-from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ArgumentGroup
 from pdm.cli.utils import check_project_file
@@ -45,16 +44,21 @@ class Command(BaseCommand):
             )
         else:
 
-            rows = [
-                (termui.cyan("PDM version:", bold=True), project.core.version),
-                (
-                    termui.cyan("Python Interpreter:", bold=True),
+            rows = zip(
+                [
+                    f"[bold cyan]{key}[/]:"
+                    for key in [
+                        "PDM version",
+                        "Python Interpreter",
+                        "Project Root",
+                        "Project Packages",
+                    ]
+                ],
+                [
+                    project.core.version,
                     f"{interpreter.executable} ({interpreter.identifier})",
-                ),
-                (termui.cyan("Project Root:", bold=True), project.root.as_posix()),
-                (
-                    termui.cyan("Project Packages:", bold=True),
+                    project.root.as_posix(),
                     str(project.environment.packages_path),
-                ),
-            ]
-            project.core.ui.display_columns(rows)
+                ],
+            )
+            project.core.ui.display_columns(list(rows))
