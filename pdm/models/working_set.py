@@ -5,13 +5,8 @@ import sys
 from pathlib import Path
 from typing import Iterable, Iterator, Mapping
 
+from pdm.compat import importlib_metadata as im
 from pdm.utils import normalize_name
-
-if sys.version_info >= (3, 8):
-    import importlib.metadata as im
-else:
-    import importlib_metadata as im
-
 
 default_context = im.DistributionFinder.Context()
 

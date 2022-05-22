@@ -2,72 +2,101 @@ from __future__ import annotations
 
 import atexit
 import contextlib
-import functools
-import io
+import enum
 import logging
 import os
-import sys
-from itertools import zip_longest
 from tempfile import mktemp
-from typing import Any, Callable, Iterator, List, Optional, Sequence, Union
+from typing import Any, Iterator, Sequence, Type
 
-import click
-from click._compat import strip_ansi
+from rich.box import ROUNDED
+from rich.console import Console
+from rich.live import Live
+from rich.progress import Progress, SpinnerColumn
+from rich.prompt import Confirm, IntPrompt, Prompt
+from rich.table import Table
 
-from pdm._vendor import colorama, halo
-from pdm._vendor.log_symbols.symbols import is_supported as supports_unicode
+from pdm._types import Spinner, SpinnerT
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
 
 
-def ljust(text: str, length: int) -> str:
-    """Like str.ljust() but ignore all ANSI controlling characters."""
-    return text + " " * (length - len(strip_ansi(text)))
+_console = Console(highlight=False)
+_err_console = Console(stderr=True)
 
 
-def rjust(text: str, length: int) -> str:
-    """Like str.rjust() but ignore all ANSI controlling characters."""
-    return " " * (length - len(strip_ansi(text))) + text
+def is_interactive(console: Console | None = None) -> bool:
+    """Check if the terminal is run under interactive mode"""
+    if console is None:
+        console = _console
+    return console.is_interactive
 
 
-def centerize(text: str, length: int) -> str:
-    """Centerize the text while ignoring ANSI controlling characters."""
-    space_num = length - len(strip_ansi(text))
-    left_space = space_num // 2
-    return " " * left_space + text + " " * (space_num - left_space)
+def is_legacy_windows(console: Console | None = None) -> bool:
+    """Legacy Windows renderer may have problem rendering emojis"""
+    if console is None:
+        console = _console
+    return console.legacy_windows
 
 
-def supports_ansi() -> bool:
-    if os.getenv("CI") or not hasattr(sys.stdout, "fileno"):
-        return False
-    if sys.platform == "win32":
-        return (
-            os.getenv("ANSICON") is not None
-            or os.getenv("WT_SESSION") is not None
-            or "ON" == os.getenv("ConEmuANSI")
-            or "xterm" == os.getenv("Term")
-        )
+def style(
+    text: str,
+    *args: str,
+    style: str = None,
+    **kwargs: Any,
+) -> str:
+    """return text with ansi codes using rich console
 
-    try:
-        return os.isatty(sys.stdout.fileno())
-    except io.UnsupportedOperation:
-        return False
+    :param text: message with rich markup, defaults to "".
+    :param style: rich style to apply to whole string
+    :return: string containing ansi codes
+    """
+
+    with _console.capture() as capture:
+        _console.print(text, *args, end="", style=style, **kwargs)
+    return capture.get()
 
 
-# Export some style shortcut helpers
-green = functools.partial(click.style, fg="green")
-red = functools.partial(click.style, fg="red")
-yellow = functools.partial(click.style, fg="yellow")
-cyan = functools.partial(click.style, fg="cyan")
-blue = functools.partial(click.style, fg="blue")
-bold = functools.partial(click.style, bold=True)
+def confirm(*args: str, **kwargs: Any) -> str:
+    return Confirm.ask(*args, **kwargs)
 
-# Verbosity levels
-NORMAL = 0
-DETAIL = 1
-DEBUG = 2
+
+def ask(
+    *args: str, prompt_type: Type[str] | Type[int] | None = None, **kwargs: Any
+) -> str:
+    """prompt user and return reponse
+
+    :prompt_type: which rich prompt to use, defaults to str.
+    :raises ValueError: unsupported prompt type
+    :return: str of user's selection
+    """
+    if not prompt_type or prompt_type is str:
+        return Prompt.ask(*args, **kwargs)
+    elif prompt_type is int:
+        return str(IntPrompt.ask(*args, **kwargs))
+    else:
+        raise ValueError(f"unsupported {prompt_type}")
+
+
+class Verbosity(enum.IntEnum):
+    NORMAL = 0
+    DETAIL = enum.auto()
+    DEBUG = enum.auto()
+
+
+class Emoji:
+    if is_legacy_windows():
+        SUCC = "v"
+        FAIL = "x"
+        LOCK = " "
+        CONGRAT = " "
+        POPPER = " "
+    else:
+        SUCC = ":heavy_check_mark:"
+        FAIL = ":heavy_multiplication_x:"
+        LOCK = ":lock:"
+        POPPER = ":party_popper:"
 
 
 class DummySpinner:
@@ -75,17 +104,10 @@ class DummySpinner:
     But only display text onto screen.
     """
 
-    def start(self, text: str) -> None:
-        click.echo(text)
+    def update(self, text: str) -> None:
+        self.text = text
 
-    def stop_and_persist(self, symbol: str = " ", text: Optional[str] = None) -> None:
-        click.echo(symbol + " " + (text or ""))
-
-    succeed = fail = start
-
-    text = property(lambda self: "", start)
-
-    def __enter__(self) -> DummySpinner:
+    def __enter__(self: SpinnerT) -> SpinnerT:
         return self
 
     def __exit__(self, *args: Any) -> None:
@@ -95,32 +117,31 @@ class DummySpinner:
 class UI:
     """Terminal UI object"""
 
-    def __init__(self, verbosity: int = NORMAL, no_ansi: Optional[bool] = None) -> None:
+    def __init__(self, verbosity: Verbosity = Verbosity.NORMAL) -> None:
         self.verbosity = verbosity
-        self._indent = ""
-        self.supports_ansi = not no_ansi if no_ansi is not None else supports_ansi()
-        if not self.supports_ansi:
-            colorama.init()
-        else:
-            colorama.deinit()
 
     def set_verbosity(self, verbosity: int) -> None:
-        self.verbosity = verbosity
+        self.verbosity = Verbosity(verbosity)
 
     def echo(
         self,
         message: str = "",
         err: bool = False,
-        verbosity: int = NORMAL,
+        verbosity: Verbosity = Verbosity.NORMAL,
         **kwargs: Any,
     ) -> None:
+        """print message using rich console
+
+        :param message: message with rich markup, defaults to "".
+        :param err: if true print to stderr, defaults to False.
+        :param verbosity: verbosity level, defaults to NORMAL.
+        """
         if self.verbosity >= verbosity:
-            click.secho(
-                self._indent + str(message), err=err, color=self.supports_ansi, **kwargs
-            )
+            console = _err_console if err else _console
+            console.print(message, **kwargs)
 
     def display_columns(
-        self, rows: Sequence[Sequence[str]], header: Optional[List[str]] = None
+        self, rows: Sequence[Sequence[str]], header: list[str] | None = None
     ) -> None:
         """Print rows in aligned columns.
 
@@ -128,51 +149,24 @@ class UI:
         :param header: a list of header strings.
         """
 
-        def get_aligner(align: str) -> Callable:
-            if align == ">":
-                return rjust
-            if align == "^":
-                return centerize
-            else:
-                return ljust
-
-        sizes = list(
-            map(
-                lambda column: max(map(lambda x: len(strip_ansi(x)), column)),
-                zip_longest(header or [], *rows, fillvalue=""),
-            )
-        )
-
-        aligners = [ljust] * len(sizes)
         if header:
-            aligners = []
-            for i, head in enumerate(header):
-                aligners.append(get_aligner(head[0]))
-                if head[0] in (">", "^", "<"):
-                    header[i] = head[1:]
-            self.echo(
-                " ".join(
-                    aligner(head, size)
-                    for aligner, head, size in zip(aligners, header, sizes)
-                ).rstrip()
-            )
-            # Print a separator
-            self.echo(" ".join("-" * size for size in sizes))
+            table = Table(box=ROUNDED)
+            for title in header:
+                if title[0] == "^":
+                    title, justify = title[1:], "center"
+                elif title[0] == ">":
+                    title, justify = title[1:], "right"
+                else:
+                    title, justify = title, "left"
+                table.add_column(title, justify=justify)
+        else:
+            table = Table.grid(padding=(0, 1))
+            for _ in rows[0]:
+                table.add_column()
         for row in rows:
-            self.echo(
-                " ".join(
-                    aligner(item, size)
-                    for aligner, item, size in zip(aligners, row, sizes)
-                ).rstrip()
-            )
+            table.add_row(*row)
 
-    @contextlib.contextmanager
-    def indent(self, prefix: str) -> Iterator[None]:
-        """Indent the following lines with a prefix."""
-        _indent = self._indent
-        self._indent += prefix
-        yield
-        self._indent = _indent
+        _console.print(table)
 
     @contextlib.contextmanager
     def logging(self, type_: str = "install") -> Iterator[logging.Logger]:
@@ -181,7 +175,7 @@ class UI:
         """
         file_name = mktemp(".log", f"pdm-{type_}-")
 
-        if self.verbosity >= DETAIL:
+        if self.verbosity >= Verbosity.DETAIL:
             handler: logging.Handler = logging.StreamHandler()
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
@@ -199,9 +193,11 @@ class UI:
         try:
             yield logger
         except Exception:
-            if self.verbosity < DETAIL:
+            if self.verbosity < Verbosity.DETAIL:
                 logger.exception("Error occurs")
-                self.echo(yellow(f"See {file_name} for detailed debug log."), err=True)
+                self.echo(
+                    f"See {file_name} for detailed debug log.", style="yellow", err=True
+                )
             raise
         else:
             atexit.register(cleanup)
@@ -209,24 +205,25 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(
-        self, title: str, spinner: str = "dots"
-    ) -> Union[DummySpinner, halo.Halo]:
+    def open_spinner(self, title: str, spinner: str = "dots") -> Spinner:
         """Open a spinner as a context manager."""
-        if self.verbosity >= DETAIL or not self.supports_ansi:
+        if self.verbosity >= Verbosity.DETAIL or not is_interactive():
             return DummySpinner()
         else:
-            return halo.Halo(  # type: ignore
-                title, spinner=spinner, indent=self._indent
-            )
+            return _console.status(title, spinner=spinner, spinner_style="bold cyan")
 
+    def live_progress(self, progress: Progress, console: Console = None) -> Live:
+        """open a live instance"""
+        return Live(
+            progress,
+            refresh_per_second=10,
+            console=(console if console else _console),
+        )
 
-class Emoji:
-    """A collection of emoji characters used in terminal output"""
-
-    if supports_unicode():  # type: ignore
-        SUCC = "🎉"
-        LOCK = "🔒"
-    else:
-        SUCC = ""
-        LOCK = ""
+    def make_progress(self) -> Progress:
+        """create a progress instance for indented spinners"""
+        return Progress(
+            " ",
+            SpinnerColumn(speed=1, style="bold cyan"),
+            "{task.description}",
+        )

@@ -1,8 +1,26 @@
 import sys
 
 if sys.version_info >= (3, 11):
-    import tomllib as tomllib
+    import tomllib
 else:
-    import tomli
+    import tomli as tomllib
 
-    tomllib = tomli
+
+if sys.version_info >= (3, 8):
+    import importlib.metadata as importlib_metadata
+    from typing import Literal, Protocol, TypedDict
+else:
+    import importlib_metadata
+    from typing_extensions import Literal, Protocol, TypedDict
+
+Distribution = importlib_metadata.Distribution
+
+
+__all__ = [
+    "tomllib",
+    "importlib_metadata",
+    "Literal",
+    "Protocol",
+    "TypedDict",
+    "Distribution",
+]

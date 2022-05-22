@@ -8,7 +8,7 @@ from pdm.installers.installers import install_wheel, install_wheel_with_cache
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
 
 if TYPE_CHECKING:
-    from pdm._types import Distribution
+    from pdm.compat import Distribution
     from pdm.models.candidates import Candidate
     from pdm.models.environment import Environment
 

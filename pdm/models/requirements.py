@@ -6,11 +6,10 @@ import json
 import os
 import re
 import secrets
-import sys
 import urllib.parse as urlparse
 import warnings
 from pathlib import Path
-from typing import Any, Sequence, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Sequence, Type, TypeVar, cast
 
 from pip._vendor.packaging.markers import InvalidMarker
 from pip._vendor.packaging.requirements import InvalidRequirement
@@ -18,7 +17,7 @@ from pip._vendor.packaging.specifiers import SpecifierSet
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
 from pip._vendor.pkg_resources import RequirementParseError, safe_name
 
-from pdm._types import RequirementDict
+from pdm.compat import Distribution
 from pdm.exceptions import ExtrasWarning, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_extras
 from pdm.models.pip_shims import (
@@ -37,10 +36,9 @@ from pdm.utils import (
     url_without_fragments,
 )
 
-if sys.version_info >= (3, 8):
-    from importlib.metadata import Distribution
-else:
-    from importlib_metadata import Distribution
+if TYPE_CHECKING:
+    from pdm._types import RequirementDict
+
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 _vcs_req_re = re.compile(
