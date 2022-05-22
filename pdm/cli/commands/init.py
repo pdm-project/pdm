@@ -1,7 +1,5 @@
 import argparse
 
-import click
-
 from pdm import signals, termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
@@ -23,7 +21,7 @@ class Command(BaseCommand):
     def ask(self, question: str, default: str) -> str:
         if not self.interactive:
             return default
-        return click.prompt(question, default=default)
+        return termui.ask(question, default=default)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -37,14 +35,10 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if project.pyproject_file.exists():
             project.core.ui.echo(
-                "{}".format(
-                    termui.cyan("pyproject.toml already exists, update it now.")
-                )
+                "pyproject.toml already exists, update it now.", style="cyan"
             )
         else:
-            project.core.ui.echo(
-                "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
-            )
+            project.core.ui.echo("Creating a pyproject.toml for PDM...", style="cyan")
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:
@@ -52,7 +46,7 @@ class Command(BaseCommand):
         else:
             actions.do_use(project, "3", True)
         is_library = (
-            click.confirm("Is the project a library that will be uploaded to PyPI?")
+            termui.ask("Is the project a library that will be uploaded to PyPI")
             if self.interactive
             else False
         )
