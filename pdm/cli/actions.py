@@ -12,7 +12,6 @@ from collections import defaultdict
 from itertools import chain
 from typing import Collection, Iterable, Mapping, Sequence, cast
 
-import click
 import tomlkit
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
@@ -87,34 +86,36 @@ def do_lock(
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
-        with ui.open_spinner(title="Resolving dependencies", spinner="dots") as spin:
-            reporter = project.get_reporter(requirements, tracked_names, spin)
-            resolver: Resolver = project.core.resolver_class(provider, reporter)
-            signals.pre_lock.send(project, requirements=requirements, dry_run=dry_run)
-            try:
+        try:
+            with ui.open_spinner(title="Resolving dependencies") as spin:
+                reporter = project.get_reporter(requirements, tracked_names, spin)
+                resolver: Resolver = project.core.resolver_class(provider, reporter)
+                signals.pre_lock.send(
+                    project, requirements=requirements, dry_run=dry_run
+                )
                 mapping, dependencies = resolve(
                     resolver,
                     requirements,
                     project.environment.python_requires,
                     resolve_max_rounds,
                 )
-            except ResolutionTooDeep:
-                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
-                ui.echo(
-                    "The dependency resolution exceeds the maximum loop depth of "
-                    f"{resolve_max_rounds}, there may be some circular dependencies "
-                    "in your project. Try to solve them or increase the "
-                    f"{termui.green('`strategy.resolve_max_rounds`')} config.",
-                    err=True,
-                )
-                raise
-            except ResolutionImpossible as err:
-                spin.fail(f"{termui.Emoji.LOCK} Lock failed")
-                ui.echo(format_resolution_impossible(err), err=True)
-                raise ResolutionImpossible("Unable to find a resolution") from None
-            else:
-                data = format_lockfile(project, mapping, dependencies)
-                spin.succeed(f"{termui.Emoji.LOCK} Lock successful")
+        except ResolutionTooDeep:
+            ui.echo(":lock: Lock failed", err=True)
+            ui.echo(
+                "The dependency resolution exceeds the maximum loop depth of "
+                f"{resolve_max_rounds}, there may be some circular dependencies "
+                "in your project. Try to solve them or increase the "
+                f"[green]`strategy.resolve_max_rounds`[/] config.",
+                err=True,
+            )
+            raise
+        except ResolutionImpossible as err:
+            ui.echo(":lock: Lock failed", err=True)
+            ui.echo(format_resolution_impossible(err), err=True)
+            raise ResolutionImpossible("Unable to find a resolution") from None
+        else:
+            data = format_lockfile(project, mapping, dependencies)
+            ui.echo(":lock: Lock successful")
             signals.post_lock.send(project, resolution=mapping, dry_run=dry_run)
 
     project.write_lockfile(data, write=not dry_run)
@@ -151,19 +152,19 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
     if not project.lockfile_file.exists():
         if raise_not_exist:
             raise ProjectError("Lock file does not exist, nothing to install")
-        project.core.ui.echo("Lock file does not exist", fg="yellow", err=True)
+        project.core.ui.echo("Lock file does not exist", style="yellow", err=True)
         return "all"
     elif not project.is_lockfile_compatible():
         project.core.ui.echo(
             "Lock file version is not compatible with PDM, installation may fail",
-            fg="yellow",
+            style="yellow",
             err=True,
         )
         return "all"
     elif not project.is_lockfile_hash_match():
         project.core.ui.echo(
             "Lock file hash doesn't match pyproject.toml, packages may be outdated",
-            fg="yellow",
+            style="yellow",
             err=True,
         )
         return "reuse"
@@ -244,7 +245,7 @@ def do_add(
         requirements[key] = r
     project.core.ui.echo(
         f"Adding packages to {group} {'dev-' if dev else ''}dependencies: "
-        + ", ".join(termui.green(r.as_line(), bold=True) for r in requirements.values())
+        + ", ".join(f"[bold green]{r.as_line()}[/]" for r in requirements.values())
     )
     all_dependencies = project.all_dependencies
     group_deps = all_dependencies.setdefault(group, {})
@@ -323,16 +324,15 @@ def do_update(
             )
             if not matched_name:
                 raise ProjectError(
-                    "{} does not exist in {} {}dependencies.".format(
-                        termui.green(name, bold=True), group, "dev-" if dev else ""
-                    )
+                    f"[bold green]{name}[/] does not exist in {group} "
+                    f"{'dev-' if dev else ''}dependencies."
                 )
             dependencies[matched_name].prerelease = prerelease
             updated_deps[group][matched_name] = dependencies[matched_name]
         project.core.ui.echo(
             "Updating packages: {}.".format(
                 ", ".join(
-                    termui.green(v, bold=True)
+                    f"[bold green]{v}[/]"
                     for v in chain.from_iterable(updated_deps.values())
                 )
             )
@@ -395,7 +395,7 @@ def do_remove(
     deps = project.get_pyproject_dependencies(group, dev)
     project.core.ui.echo(
         f"Removing packages from {group} {'dev-' if dev else ''}dependencies: "
-        + ", ".join(str(termui.green(name, bold=True)) for name in packages)
+        + ", ".join(f"[bold green]{name}[/]" for name in packages)
     )
     for name in packages:
         req = parse_requirement(name)
@@ -404,9 +404,7 @@ def do_remove(
         )
         if not matched_indexes:
             raise ProjectError(
-                "{} does not exist in {} dependencies.".format(
-                    termui.green(name, bold=True), group
-                )
+                f"[bold green]{name}[/] does not exist in {group} dependencies."
             )
         for i in matched_indexes:
             del deps[i]
@@ -468,7 +466,7 @@ def do_list(
             project.core.ui.echo("\n".join(reqs))
             return
         rows = [
-            (termui.green(k, bold=True), termui.yellow(v.version), get_dist_location(v))
+            (f"[b green]{k}[/]", f"[yellow]{v.version}[/]", get_dist_location(v))
             for k, v in sorted(working_set.items())
         ]
         project.core.ui.display_columns(rows, ["Package", "Version", "Location"])
@@ -587,13 +585,13 @@ def do_use(
             if not cached_python.valid:
                 project.core.ui.echo(
                     f"The last selection is corrupted. {path!r}",
-                    fg="red",
+                    style="red",
                     err=True,
                 )
             elif version_matcher(cached_python):
                 project.core.ui.echo(
                     "Using the last selection, add '-i' to ignore it.",
-                    fg="yellow",
+                    style="yellow",
                     err=True,
                 )
                 selected_python = cached_python
@@ -609,7 +607,7 @@ def do_use(
                 project.core.ui.echo(f"  - {py.executable} ({py.identifier})", err=True)
             raise NoPythonVersion(
                 "No python is found meeting the requirement "
-                f"{termui.green('python' + str(project.python_requires))}"
+                f"[green]python {str(project.python_requires)}[/]"
             )
         if first or len(matching_interperters) == 1:
             selected_python = matching_interperters[0]
@@ -617,13 +615,14 @@ def do_use(
             project.core.ui.echo("Please enter the Python interpreter to use")
             for i, py_version in enumerate(matching_interperters):
                 project.core.ui.echo(
-                    f"{i}. {termui.green(str(py_version.executable))} "
+                    f"{i}. [green]{str(py_version.executable)}[/] "
                     f"({py_version.identifier})"
                 )
-            selection = click.prompt(
-                "Please select:",
-                type=click.Choice([str(i) for i in range(len(matching_interperters))]),
+            selection = termui.ask(
+                "Please select",
                 default="0",
+                prompt_type=int,
+                choices=[str(i) for i in range(len(matching_interperters))],
                 show_choices=False,
             )
             selected_python = matching_interperters[int(selection)]
@@ -636,10 +635,9 @@ def do_use(
 
     old_python = project.python if "python.path" in project.config else None
     project.core.ui.echo(
-        "Using Python interpreter: {} ({})".format(
-            termui.green(str(selected_python.executable)),
-            selected_python.identifier,
-        )
+        "Using Python interpreter: "
+        f"[green]{str(selected_python.executable)}[/] "
+        f"({selected_python.identifier})"
     )
     project.python = selected_python
     if (
@@ -647,7 +645,7 @@ def do_use(
         and old_python.path != selected_python.path
         and not project.environment.is_global
     ):
-        project.core.ui.echo(termui.cyan("Updating executable scripts..."))
+        project.core.ui.echo("Updating executable scripts...", style="cyan")
         project.environment.update_shebangs(selected_python.executable.as_posix())
 
 
@@ -708,20 +706,18 @@ def ask_for_import(project: Project) -> None:
     if not importable_files:
         return
     project.core.ui.echo(
-        termui.cyan("Found following files from other formats that you may import:")
+        "Found following files from other formats that you may import:", style="cyan"
     )
     for i, (key, filepath) in enumerate(importable_files):
-        project.core.ui.echo(f"{i}. {termui.green(filepath.as_posix())} ({key})")
+        project.core.ui.echo(f"{i}. [green]{filepath.as_posix()}[/] ({key})")
     project.core.ui.echo(
-        "{}. {}".format(
-            len(importable_files),
-            termui.yellow("don't do anything, I will import later."),
-        )
+        f"{len(importable_files)}. [yellow]don't do anything, I will import later.[/]"
     )
-    choice = click.prompt(
-        "Please select:",
-        type=click.Choice([str(i) for i in range(len(importable_files) + 1)]),
-        show_default=False,
+    choice = termui.ask(
+        "Please select",
+        prompt_type=int,
+        choices=[str(i) for i in range(len(importable_files) + 1)],
+        show_choices=False,
     )
     if int(choice) == len(importable_files):
         return
@@ -738,16 +734,14 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
             set_env_in_reg("PYTHONPATH", PEP582_PATH)
         except PermissionError:
             ui.echo(
-                termui.red(
-                    "Permission denied, please run the terminal as administrator."
-                ),
+                "Permission denied, please run the terminal as administrator.",
+                style="red",
                 err=True,
             )
         ui.echo(
-            termui.green(
-                "The environment variable has been saved, "
-                "please restart the session to take effect."
-            )
+            "The environment variable has been saved, "
+            "please restart the session to take effect.",
+            style="green",
         )
         return
     lib_path = PEP582_PATH.replace("'", "\\'")
@@ -852,12 +846,12 @@ def check_update(project: Project) -> None:
     disable_command = "$ pdm config check_update false"
 
     message = [
-        termui.blue(f"\nPDM {termui.cyan(this_version)}"),
-        termui.blue(f" is installed, while {termui.cyan(latest_version)}"),
-        termui.blue(" is available.\n"),
-        termui.blue(f"Please run {termui.green(install_command, bold=True)}"),
-        termui.blue(" to upgrade.\n"),
-        termui.blue(f"Run {termui.green(disable_command, bold=True)}"),
-        termui.blue(" to disable the check."),
+        f"\nPDM [cyan]{this_version}[/]",
+        f" is installed, while [cyan]{latest_version}[/]",
+        " is available.\n",
+        f"Please run [bold green]{install_command}[/]",
+        " to upgrade.\n",
+        f"Run [bold green]{disable_command}[/]",
+        " to disable the check.",
     ]
-    project.core.ui.echo("".join(message), err=True)
+    project.core.ui.echo("".join(message), err=True, style="blue")

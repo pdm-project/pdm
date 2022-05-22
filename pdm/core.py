@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import Any, List, Optional, Type, cast
 
-import click
 from resolvelib import Resolver
 
 from pdm import termui
@@ -64,7 +63,8 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                click.style("Python Development Master (PDM)", bold=True), self.version
+                termui.style("Python Development Master (PDM)", style="bold"),
+                self.version,
             ),
             help="show the version and exit",
         )
@@ -166,12 +166,14 @@ class Core:
                 if self.ui.verbosity > termui.NORMAL and should_show_tb:
                     raise cast(Exception, err).with_traceback(traceback)
                 self.ui.echo(
-                    f"{termui.red('[' + etype.__name__ + ']')}: {err}",  # type: ignore
+                    rf"[red]\[{etype.__name__}][/]: {err}",  # type: ignore
                     err=True,
                 )
                 if should_show_tb:
                     self.ui.echo(
-                        "Add '-v' to see the detailed traceback", fg="yellow", err=True
+                        "Add '-v' to see the detailed traceback",
+                        style="yellow",
+                        err=True,
                     )
                 sys.exit(1)
             else:
@@ -222,7 +224,7 @@ class Core:
             except Exception as e:
                 self.ui.echo(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
-                    fg="red",
+                    style="red",
                     err=True,
                 )
 

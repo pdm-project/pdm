@@ -192,10 +192,7 @@ class Candidate:
 
     def format(self) -> str:
         """Format for output."""
-        return (
-            f"{termui.green(self.name, bold=True)} "
-            f"{termui.yellow(str(self.version))}"
-        )
+        return f"[bold green]{self.name}[/] [yellow]{self.version}[/]"
 
     def prepare(self, environment: Environment) -> PreparedCandidate:
         """Prepare the candidate for installation."""

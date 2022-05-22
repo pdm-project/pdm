@@ -4,9 +4,10 @@ import argparse
 import os
 from typing import Any, Callable, Sequence
 
-from click import secho
-
 from pdm._types import Protocol
+from pdm.termui import UI
+
+ui = UI()
 
 
 class ActionCallback(Protocol):
@@ -90,7 +91,7 @@ def deprecated(message: str, type_: type = str) -> Callable[[Any], Any]:
     """Prints deprecation message for the argument"""
 
     def wrapped_type(obj: Any) -> Any:
-        secho(f"DEPRECATED: {message}", fg="red", err=True)
+        ui.echo(f"DEPRECATED: {message}", style="red", err=True)
         return type_(obj)
 
     return wrapped_type
