@@ -99,6 +99,12 @@ class Emoji:
         POPPER = ":party_popper:"
 
 
+if is_legacy_windows():
+    SPINNER = "line"
+else:
+    SPINNER = "dots"
+
+
 class DummySpinner:
     """A dummy spinner class implementing needed interfaces.
     But only display text onto screen.
@@ -205,12 +211,12 @@ class UI:
             logger.handlers.remove(handler)
             pip_logger.handlers.remove(handler)
 
-    def open_spinner(self, title: str, spinner: str = "dots") -> Spinner:
+    def open_spinner(self, title: str) -> Spinner:
         """Open a spinner as a context manager."""
         if self.verbosity >= Verbosity.DETAIL or not is_interactive():
             return DummySpinner()
         else:
-            return _console.status(title, spinner=spinner, spinner_style="bold cyan")
+            return _console.status(title, spinner=SPINNER, spinner_style="bold cyan")
 
     def live_progress(self, progress: Progress, console: Console = None) -> Live:
         """open a live instance"""
@@ -224,6 +230,6 @@ class UI:
         """create a progress instance for indented spinners"""
         return Progress(
             " ",
-            SpinnerColumn(speed=1, style="bold cyan"),
+            SpinnerColumn(SPINNER, speed=1, style="bold cyan"),
             "{task.description}",
         )
