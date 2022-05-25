@@ -9,6 +9,7 @@ from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
+    FileRequirement,
     Requirement,
     filter_requirements_with_extras,
     parse_requirement,
@@ -364,7 +365,10 @@ class LockedRepository(BaseRepository):
                 if k not in ("dependencies", "requires_python", "summary")
             }
             req = Requirement.from_req_dict(package_name, req_dict)
-            can = Candidate(req, name=package_name, version=version)
+            link = None
+            if req.is_file_or_url:
+                link = cast(FileRequirement, req).as_link()
+            can = Candidate(req, name=package_name, version=version, link=link)
             can_id = self._identify_candidate(can)
             self.packages[can_id] = can
             candidate_info: CandidateInfo = (

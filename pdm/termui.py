@@ -10,7 +10,6 @@ from typing import Any, Iterator, Sequence, Type
 
 from rich.box import ROUNDED
 from rich.console import Console
-from rich.live import Live
 from rich.progress import Progress, SpinnerColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
@@ -20,6 +19,8 @@ from pdm._types import Spinner, SpinnerT
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
+unearch_logger = logging.getLogger("unearth")
+unearch_logger.setLevel(logging.DEBUG)
 
 
 _console = Console(highlight=False)
@@ -83,6 +84,13 @@ class Verbosity(enum.IntEnum):
     NORMAL = 0
     DETAIL = enum.auto()
     DEBUG = enum.auto()
+
+
+LOG_LEVELS = {
+    Verbosity.NORMAL: logging.WARN,
+    Verbosity.DETAIL: logging.INFO,
+    Verbosity.DEBUG: logging.DEBUG,
+}
 
 
 class Emoji:
@@ -183,10 +191,12 @@ class UI:
 
         if self.verbosity >= Verbosity.DETAIL:
             handler: logging.Handler = logging.StreamHandler()
+            handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
-        handler.setLevel(logging.DEBUG)
-        logger.handlers[1:] = [handler]
+            handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
+        logger.handlers[1:] = unearch_logger.handlers[:] = [handler]
 
         def cleanup() -> None:
             try:
@@ -200,7 +210,9 @@ class UI:
             if self.verbosity < Verbosity.DETAIL:
                 logger.exception("Error occurs")
                 self.echo(
-                    f"See {file_name} for detailed debug log.", style="yellow", err=True
+                    f"See [bold yellow]{file_name}[/] for detailed debug log.",
+                    style="red",
+                    err=True,
                 )
             raise
         else:
@@ -215,18 +227,11 @@ class UI:
         else:
             return _console.status(title, spinner=SPINNER, spinner_style="bold cyan")
 
-    def live_progress(self, progress: Progress, console: Console = None) -> Live:
-        """open a live instance"""
-        return Live(
-            progress,
-            refresh_per_second=10,
-            console=(console if console else _console),
-        )
-
     def make_progress(self) -> Progress:
         """create a progress instance for indented spinners"""
         return Progress(
             " ",
             SpinnerColumn(SPINNER, speed=1, style="bold cyan"),
             "{task.description}",
+            disable=self.verbosity >= Verbosity.DETAIL,
         )

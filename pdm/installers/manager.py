@@ -45,6 +45,8 @@ class InstallManager:
     def uninstall(self, dist: Distribution) -> None:
         """Perform the uninstallation for a given distribution"""
         remove_path = self.get_paths_to_remove(dist)
+        dist_name = dist.metadata["Name"]
+        termui.logger.info("Removing distribution %s", dist_name)
         try:
             remove_path.remove()
             remove_path.commit()

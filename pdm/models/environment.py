@@ -219,15 +219,20 @@ class Environment:
         )
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
-            return [executable, "-Esm", "pip"]
-        if python_major == 3:
+            command = [executable, "-Esm", "pip"]
+        elif python_major == 3:
             # Use the host pip package.
-            return [executable, "-Es", os.path.dirname(pip_location)]
-        # For py2, only pip<21 is eligible, download a pip wheel from the Internet.
-        pip_wheel = self.project.cache_dir / "pip.whl"
-        if not pip_wheel.is_file():
-            self._download_pip_wheel(pip_wheel)
-        return [executable, str(pip_wheel / "pip")]
+            command = [executable, "-Es", os.path.dirname(pip_location)]
+        else:
+            # For py2, only pip<21 is eligible, download a pip wheel from the Internet.
+            pip_wheel = self.project.cache_dir / "pip.whl"
+            if not pip_wheel.is_file():
+                self._download_pip_wheel(pip_wheel)
+            command = [executable, str(pip_wheel / "pip")]
+        verbosity = self.project.core.ui.verbosity
+        if verbosity > 0:
+            command.append("-" + "v" * verbosity)
+        return command
 
 
 class GlobalEnvironment(Environment):

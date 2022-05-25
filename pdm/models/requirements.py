@@ -309,6 +309,14 @@ class FileRequirement(Requirement):
     def is_local_dir(self) -> bool:
         return self.is_local and cast(Path, self.path).is_dir()
 
+    def as_link(self) -> Link:
+        line = self.as_line()
+        if line.startswith("-e "):
+            line = line.split("-e ", 1)[-1]
+        if " @ " in line:
+            line = line.split(" @ ", 1)[1]
+        return Link(line)
+
     def as_line(self) -> str:
         project_name = f"{self.project_name}" if self.project_name else ""
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""

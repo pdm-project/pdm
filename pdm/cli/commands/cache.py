@@ -34,8 +34,14 @@ def file_size(file: Path) -> int:
     return os.path.getsize(file)
 
 
+def find_files(parent: Path, pattern: str) -> Iterable[Path]:
+    for file in parent.rglob(pattern):
+        if file.is_file() or file.is_symlink():
+            yield file
+
+
 def directory_size(directory: Path) -> int:
-    return sum(map(file_size, directory.rglob("*")))
+    return sum(map(file_size, find_files(directory, "*")))
 
 
 def format_size(size: float) -> str:
@@ -54,7 +60,7 @@ def remove_cache_files(project: Project, pattern: str) -> None:
         raise PdmUsageError("Please provide a pattern")
 
     wheel_cache = project.cache("wheels")
-    files = list(wheel_cache.rglob(pattern))
+    files = list(find_files(wheel_cache, pattern))
 
     if not files:
         raise PdmUsageError("No matching files found")
@@ -95,7 +101,7 @@ class ClearCommand(BaseCommand):
 
     @staticmethod
     def _clear_files(root: Path) -> int:
-        files = list(root.rglob("*"))
+        files = list(find_files(root, "*"))
         for file in files:
             os.unlink(file)
         return len(files)
@@ -157,7 +163,7 @@ class ListCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         rows = [
             (format_size(file_size(file)), file.name)
-            for file in project.cache("wheels").rglob(options.pattern)
+            for file in find_files(project.cache("wheels"), options.pattern)
         ]
         project.core.ui.display_columns(rows, [">Size", "Filename"])
 
@@ -181,7 +187,7 @@ class InfoCommand(BaseCommand):
                 ("packages", "Package Cache"),
             ]:
                 cache_location = project.cache(name)
-                files = list(cache_location.rglob("*"))
+                files = list(find_files(cache_location, "*"))
                 size = directory_size(cache_location)
                 output.append(f"  [cyan]{description}[/]: {cache_location}")
                 output.append(f"    Files: {len(files)}, Size: {format_size(size)}")

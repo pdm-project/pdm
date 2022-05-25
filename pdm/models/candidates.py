@@ -77,7 +77,8 @@ def _find_best_match_link(
     """Get the best matching link for a requirement"""
     # This function is called when a lock file candidate is given or incompatible wheel
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
-    return finder.find_best_match(req.as_line(), hashes=hashes).best
+    best = finder.find_best_match(req.as_line(), hashes=hashes).best
+    return best.link if best is not None else None
 
 
 class Candidate:
@@ -315,7 +316,7 @@ class PreparedCandidate:
         build_dir = self._get_wheel_dir()
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
-        termui.logger.debug("Building wheel for %s", self.link)
+        termui.logger.info("Building wheel for %s", self.link)
         self.wheel = Path(
             builder.build(build_dir, metadata_directory=self._metadata_dir)
         )
@@ -352,7 +353,9 @@ class PreparedCandidate:
                     hash_options,
                 )
                 if not self.link:
-                    raise CandidateNotFound("No candidate is found for %s", self)
+                    raise CandidateNotFound(
+                        "No candidate is found for %s", self.candidate
+                    )
                 if not self.candidate.link:
                     self.candidate.link = self.link
             if allow_all and not self.req.editable:
@@ -427,7 +430,11 @@ class PreparedCandidate:
     def should_cache(self) -> bool:
         """Determine whether to cache the dependencies and built wheel."""
         link, source_dir = self.candidate.link, self._source_dir
-        if self.req.is_vcs and not self.req.editable:
+        if self.req.editable:
+            return False
+        if self.req.is_named:
+            return True
+        if self.req.is_vcs:
             if not source_dir:
                 # If the candidate isn't prepared, we can't cache it
                 return False
@@ -436,9 +443,7 @@ class PreparedCandidate:
                 link.vcs, self.environment.project.core.ui.verbosity
             )
             return vcs_backend.is_immutable_revision(source_dir, link)
-        elif self.req.is_named:
-            return True
-        elif link and not (link.is_file and link.file_path.is_dir()):
+        if link and not (link.is_file and link.file_path.is_dir()):
             # Cache if the link contains egg-info like 'foo-1.0'
             return _egg_info_re.search(link.filename) is not None
         return False
@@ -450,7 +455,7 @@ class PreparedCandidate:
             self.candidate.link, self.candidate.name, self.environment.target_python
         )
         if cache_entry is not None:
-            termui.logger.debug("Using cached wheel: %s", cache_entry)
+            termui.logger.info("Using cached wheel: %s", cache_entry)
         return cache_entry
 
     def _get_build_dir(self) -> str:
@@ -490,6 +495,7 @@ class PreparedCandidate:
     def _get_wheel_dir(self) -> str:
         assert self.candidate.link
         if self.should_cache():
+            termui.logger.info("Saving wheel to cache: %s", self.candidate.link)
             wheel_cache = self.environment.project.make_wheel_cache()
             return wheel_cache.get_path_for_link(
                 self.candidate.link, self.environment.target_python

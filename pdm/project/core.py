@@ -21,7 +21,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository, PyPIRepository
-from pdm.models.requirements import Requirement, parse_requirement
+from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
 from pdm.project.metadata import MutableMetadata as Metadata
@@ -462,7 +462,12 @@ class Project:
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
-        return Candidate(req, name=self.meta.name, version=self.meta.version)
+        return Candidate(
+            req,
+            name=self.meta.name,
+            version=self.meta.version,
+            link=cast(FileRequirement, req).as_link(),
+        )
 
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies groups. Otherwise lock file is
