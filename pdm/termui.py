@@ -187,8 +187,6 @@ class UI:
             handler = logging.FileHandler(file_name, encoding="utf-8")
         handler.setLevel(logging.DEBUG)
         logger.handlers[1:] = [handler]
-        pip_logger = logging.getLogger("pip.subprocessor")
-        pip_logger.handlers[:] = [handler]
 
         def cleanup() -> None:
             try:
@@ -209,7 +207,6 @@ class UI:
             atexit.register(cleanup)
         finally:
             logger.handlers.remove(handler)
-            pip_logger.handlers.remove(handler)
 
     def open_spinner(self, title: str) -> Spinner:
         """Open a spinner as a context manager."""

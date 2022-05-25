@@ -7,7 +7,6 @@ from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.exceptions import PdmUsageError
-from pdm.models.pip_shims import directory_size, file_size, find_files
 from pdm.project import Project
 
 
@@ -29,6 +28,16 @@ class Command(BaseCommand):
         self.parser.print_help()
 
 
+def file_size(file: Path) -> int:
+    if file.is_symlink():
+        return 0
+    return os.path.getsize(file)
+
+
+def directory_size(directory: Path) -> int:
+    return sum(map(file_size, directory.rglob("*")))
+
+
 def format_size(size: float) -> str:
     if size > 1000 * 1000:
         return "{:.1f} MB".format(size / 1000.0 / 1000)
@@ -44,11 +53,8 @@ def remove_cache_files(project: Project, pattern: str) -> None:
     if not pattern:
         raise PdmUsageError("Please provide a pattern")
 
-    if pattern == "*":
-        files = list(find_files(project.cache_dir.as_posix(), pattern))
-    else:
-        # Only remove wheel files which specific pattern is given
-        files = list(find_files(project.cache("wheels").as_posix(), pattern))
+    wheel_cache = project.cache("wheels")
+    files = list(wheel_cache.rglob(pattern))
 
     if not files:
         raise PdmUsageError("No matching files found")
@@ -89,7 +95,7 @@ class ClearCommand(BaseCommand):
 
     @staticmethod
     def _clear_files(root: Path) -> int:
-        files = find_files(root.as_posix(), "*")
+        files = list(root.rglob("*"))
         for file in files:
             os.unlink(file)
         return len(files)
@@ -150,8 +156,8 @@ class ListCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         rows = [
-            (format_size(file_size(file)), os.path.basename(file))
-            for file in find_files(project.cache("wheels").as_posix(), options.pattern)
+            (format_size(file_size(file)), file.name)
+            for file in project.cache("wheels").rglob(options.pattern)
         ]
         project.core.ui.display_columns(rows, [">Size", "Filename"])
 
@@ -165,7 +171,7 @@ class InfoCommand(BaseCommand):
         with project.core.ui.open_spinner("Calculating cache files"):
             output = [
                 f"[cyan]Cache Root[/]: {project.cache_dir}, "
-                f"Total size: {format_size(directory_size(str(project.cache_dir)))}"
+                f"Total size: {format_size(directory_size(project.cache_dir))}"
             ]
             for name, description in [
                 ("hashes", "File Hashe Cache"),
@@ -175,8 +181,8 @@ class InfoCommand(BaseCommand):
                 ("packages", "Package Cache"),
             ]:
                 cache_location = project.cache(name)
-                files = list(find_files(cache_location.as_posix(), "*"))
-                size = directory_size(cache_location.as_posix())
+                files = list(cache_location.rglob("*"))
+                size = directory_size(cache_location)
                 output.append(f"  [cyan]{description}[/]: {cache_location}")
                 output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
 

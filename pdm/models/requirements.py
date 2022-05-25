@@ -11,28 +11,23 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence, Type, TypeVar, cast
 
-from pip._vendor.packaging.markers import InvalidMarker
-from pip._vendor.packaging.requirements import InvalidRequirement
-from pip._vendor.packaging.specifiers import SpecifierSet
-from pip._vendor.pkg_resources import Requirement as PackageRequirement
-from pip._vendor.pkg_resources import RequirementParseError, safe_name
+from packaging.markers import InvalidMarker
+from packaging.requirements import InvalidRequirement
+from packaging.requirements import Requirement as PackageRequirement
+from packaging.specifiers import SpecifierSet
+from packaging.utils import parse_sdist_filename, parse_wheel_filename
+from unearth.link import Link
 
 from pdm.compat import Distribution
 from pdm.exceptions import ExtrasWarning, RequirementError
 from pdm.models.markers import Marker, get_marker, split_marker_extras
-from pdm.models.pip_shims import (
-    InstallRequirement,
-    Link,
-    install_req_from_editable,
-    install_req_from_line,
-    path_to_url,
-    url_to_path,
-)
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
     add_ssh_scheme_to_git_uri,
-    parse_name_version_from_wheel,
+    normalize_name,
+    path_to_url,
+    url_to_path,
     url_without_fragments,
 )
 
@@ -87,33 +82,27 @@ class Requirement:
 
     @property
     def project_name(self) -> str | None:
-        return safe_name(self.name) if self.name else None  # type: ignore
+        return normalize_name(self.name) if self.name else None  # type: ignore
 
     @property
     def key(self) -> str | None:
         return self.project_name.lower() if self.project_name else None
 
     @property
-    def version(self) -> str | None:
+    def is_pinned(self) -> bool:
         if not self.specifier:
-            return None
+            return False
 
-        is_pinned = len(self.specifier) == 1 and next(
-            iter(self.specifier)
-        ).operator in (
+        return len(self.specifier) == 1 and next(iter(self.specifier)).operator in (
             "==",
             "===",
         )
-        if is_pinned:
-            return next(iter(self.specifier)).version
-        return None
 
-    @version.setter
-    def version(self, v: str) -> None:
-        if not v or v == "*":
-            self.specifier = SpecifierSet()
-        else:
-            self.specifier = get_specifier(f"=={v}")
+    def as_pinned_version(self: T, other_version: str | None) -> T:
+        """Return a new requirement with the given pinned version."""
+        if self.is_pinned or not other_version:
+            return self
+        return dataclasses.replace(self, specifier=get_specifier(f"=={other_version}"))
 
     def _hash_key(self) -> tuple:
         return (
@@ -220,19 +209,6 @@ class Requirement:
         return self.key == req.key and (
             not editable_match or self.editable == req.editable
         )
-
-    def as_ireq(self, **kwargs: Any) -> InstallRequirement:
-        line_for_req = self.as_line()
-        try:
-            if self.editable:
-                line_for_req = line_for_req[3:].strip()
-                ireq = install_req_from_editable(line_for_req, **kwargs)
-            else:
-                ireq = install_req_from_line(line_for_req, **kwargs)
-        except Exception as e:
-            raise RequirementError(e)
-        ireq.req = self  # type: ignore
-        return ireq
 
     @classmethod
     def from_pkg_requirement(cls, req: PackageRequirement) -> "Requirement":
@@ -359,13 +335,17 @@ class FileRequirement(Requirement):
                 urlparse.unquote(url_without_fragments(self.url))
             )
             if filename.endswith(".whl"):
-                self.name, _ = parse_name_version_from_wheel(filename)
+                self.name, *_ = parse_wheel_filename(filename)
             else:
-                match = _egg_info_re.match(filename)
-                # Filename is like `<name>-<version>.tar.gz`, where name will be
-                # extracted and version will be left to be determined from the metadata.
-                if match:
-                    self.name = match.group(1)
+                try:
+                    self.name, *_ = parse_sdist_filename(filename)
+                except ValueError:
+                    match = _egg_info_re.match(filename)
+                    # Filename is like `<name>-<version>.tar.gz`, where name will be
+                    # extracted and version will be left to be determined from
+                    # the metadata.
+                    if match:
+                        self.name = match.group(1)
 
     def _check_installable(self) -> None:
         assert self.path
@@ -477,7 +457,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
     else:
         try:
             package_req = PackageRequirement(line)  # type: ignore
-        except (RequirementParseError, InvalidRequirement) as e:
+        except InvalidRequirement as e:
             m = _file_req_re.match(line)
             if m is None:
                 raise RequirementError(str(e)) from None

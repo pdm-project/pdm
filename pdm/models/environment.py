@@ -11,9 +11,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
+import unearth
+from unearth.session import PyPISession
+
 from pdm import termui
 from pdm.exceptions import BuildError
-from pdm.models import pip_shims
 from pdm.models.auth import make_basic_auth
 from pdm.models.in_process import (
     get_pep508_environment,
@@ -22,7 +24,7 @@ from pdm.models.in_process import (
 )
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
-from pdm.utils import cached_property, get_finder, is_venv_python, pdm_scheme
+from pdm.utils import cached_property, get_index_urls, is_venv_python, pdm_scheme
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -103,33 +105,49 @@ class Environment:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
+    @cached_property
+    def target_python(self) -> unearth.TargetPython:
+        # TODO: get abi, platform and impl from subprocess
+        python_version = self.interpreter.version_tuple
+        python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
+        return unearth.TargetPython(python_version, [python_abi_tag])
+
     @contextmanager
     def get_finder(
         self,
         sources: list[Source] | None = None,
-        ignore_requires_python: bool = False,
-    ) -> Generator[pip_shims.PackageFinder, None, None]:
+        ignore_compatibility: bool = False,
+    ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
-        :param ignore_requires_python: whether to ignore the python version constraint.
+        :param ignore_compatibility: whether to ignore the python version
+            and wheel tags.
         """
         if sources is None:
             sources = self.project.sources
 
-        python_version = self.interpreter.version_tuple
-        python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
-        finder = get_finder(
-            sources,
-            self.project.cache_dir.as_posix(),
-            python_version,
-            python_abi_tag,
-            ignore_requires_python,
+        index_urls, find_links, trusted_hosts = get_index_urls(sources)
+        session = PyPISession(
+            index_urls=index_urls,
+            cache_name=str(self.project.cache("http") / "cache"),
         )
-        # Reuse the auth across sessions to avoid prompting repeatedly.
-        finder.session.auth = self.auth  # type: ignore
-        yield finder
-        finder.session.close()  # type: ignore
+        session.auth = self.auth
+        finder = unearth.PackageFinder(
+            session=session,
+            index_urls=index_urls,
+            find_links=find_links,
+            trusted_hosts=trusted_hosts,
+            target_python=self.target_python,
+            ignore_compatibility=ignore_compatibility,
+            no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
+            only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
+            verbosity=self.project.core.ui.verbosity,
+        )
+        try:
+            yield finder
+        finally:
+            session.close()
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""

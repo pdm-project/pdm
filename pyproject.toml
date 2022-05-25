@@ -15,7 +15,6 @@ dependencies = [
     "packaging",
     "pdm-pep517>=0.9,<1",
     "pep517>=0.11.0",
-    "pip>=20.1",
     "platformdirs",
     "python-dotenv>=0.15",
     "resolvelib>=0.8,<0.9",
@@ -24,6 +23,7 @@ dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
     "tomlkit>=0.8.0,<1",
     "typing-extensions; python_version < \"3.8\"",
+    "unearth>=0.2.0,<0.3.0",
     "wheel>=0.36.2",
 ]
 name = "pdm"
@@ -159,16 +159,13 @@ skip_glob = ["*/setup.py"]
 filter_files = true
 known_first_party = ["pdm"]
 known_third_party = [
-    "appdirs",
-    "click",
-    "cfonts",
-    "distlib",
-    "halo",
+    "platformdirs",
     "packaging",
-    "pip_shims",
     "pytest",
-    "pythonfinder",
-    "tomlkit"
+    "findpython",
+    "tomlkit",
+    "unearth",
+    "requests",
 ]
 
 [tool.pytest.ini_options]

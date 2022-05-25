@@ -8,7 +8,6 @@ import tomlkit
 
 from pdm import termui
 from pdm.exceptions import NoConfigError
-from pdm.utils import get_pypi_source
 
 T = TypeVar("T")
 ui = termui.UI()
@@ -44,6 +43,9 @@ def ensure_boolean(val: Any) -> bool:
     return bool(val) and val.lower() not in ("false", "no", "0")
 
 
+DEFAULT_PYPI_INDEX = "https://pypi.org/simple"
+
+
 @dataclasses.dataclass
 class ConfigItem:
     """An item of configuration, with following attributes:
@@ -73,7 +75,6 @@ class ConfigItem:
 class Config(MutableMapping[str, str]):
     """A dict-like object for configuration key and values"""
 
-    pypi_url, verify_ssl = get_pypi_source()
     _config_map: Dict[str, ConfigItem] = {
         "cache_dir": ConfigItem(
             "The root directory of cached files",
@@ -158,11 +159,11 @@ class Config(MutableMapping[str, str]):
         ),
         "pypi.url": ConfigItem(
             "The URL of PyPI mirror, defaults to https://pypi.org/simple",
-            pypi_url,
+            DEFAULT_PYPI_INDEX,
             env_var="PDM_PYPI_URL",
         ),
         "pypi.verify_ssl": ConfigItem(
-            "Verify SSL certificate when query PyPI", verify_ssl, coerce=ensure_boolean
+            "Verify SSL certificate when query PyPI", True, coerce=ensure_boolean
         ),
         "pypi.json_api": ConfigItem(
             "Consult PyPI's JSON API for package metadata",
@@ -171,7 +172,6 @@ class Config(MutableMapping[str, str]):
             coerce=ensure_boolean,
         ),
     }
-    del pypi_url, verify_ssl
 
     @classmethod
     def get_defaults(cls) -> Dict[str, Any]:
