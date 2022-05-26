@@ -20,6 +20,9 @@ class Command(BaseCommand):
     def set_interactive(self, value: bool) -> None:
         self.interactive = value
 
+    def set_python_runtime(self, value: str) -> None:
+        self.python_runtime = value
+
     def ask(self, question: str, default: str) -> str:
         if not self.interactive:
             return default
@@ -33,6 +36,12 @@ class Command(BaseCommand):
             action="store_true",
             help="Don't ask questions but use default values",
         )
+        parser.add_argument(
+            "-r",
+            "--runtime",
+            default="3",
+            help="Set python runtime",
+        )
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -44,8 +53,12 @@ class Command(BaseCommand):
                 "pyproject.toml already exists, update it now.", style="cyan"
             )
         else:
-            project.core.ui.echo("Creating a pyproject.toml for PDM...", style="cyan")
+            project.core.ui.echo(
+                "{}".format(termui.cyan("Creating a pyproject.toml for PDM..."))
+            )
+
         self.set_interactive(not options.non_interactive)
+        self.set_python_runtime(options.runtime)
 
         if self.interactive:
             python = actions.do_use(project, ignore_requires_python=True, hooks=hooks)
@@ -69,18 +82,14 @@ class Command(BaseCommand):
                             err=True,
                         )
         else:
-            actions.do_use(project, "3", True, ignore_requires_python=True, hooks=hooks)
-        if get_venv_like_prefix(project.python.executable) is None:
-            project.core.ui.echo(
-                "You are using the PEP 582 mode, no virtualenv is created.\n"
-                "For more info, please visit https://peps.python.org/pep-0582/",
-                style="green",
-            )
+            actions.do_use(project, self.python_runtime, True)
+
         is_library = (
             termui.confirm("Is the project a library that will be uploaded to PyPI")
             if self.interactive
             else False
         )
+
         if is_library:
             name = self.ask("Project name", project.root.name)
             version = self.ask("Project version", "0.1.0")
