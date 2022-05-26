@@ -57,7 +57,7 @@ class Core:
     def init_parser(self) -> None:
         self.parser = ErrorArgumentParser(
             prog="pdm",
-            description=__doc__,
+            description="PDM - Python Development Master (slai)",
             formatter_class=PdmFormatter,
         )
         self.parser.is_root = True  # type: ignore
