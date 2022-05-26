@@ -2,10 +2,10 @@ import logging
 import os
 
 import pytest
+from unearth.link import Link
 
 from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate
-from pdm.models.pip_shims import Link
 from pdm.models.requirements import parse_requirement
 from pdm.utils import fs_supports_symlink
 from tests import FIXTURES
@@ -118,7 +118,7 @@ def test_install_wheel_with_cache(project, invoke):
         assert os.path.islink(os.path.join(lib_path, "future_fstrings.py"))
         assert os.path.islink(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     else:
-        assert os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
+        assert os.path.isfile(os.path.join(lib_path, "aaa_future_fstrings.pth"))
         assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
 
     cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
@@ -132,7 +132,7 @@ def test_install_wheel_with_cache(project, invoke):
         assert not os.path.exists(os.path.join(lib_path, "future_fstrings.py"))
         assert not os.path.exists(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     else:
-        assert not os.path.isfile(os.path.join(lib_path, "future_fstrings.pth"))
+        assert not os.path.isfile(os.path.join(lib_path, "aaa_future_fstrings.pth"))
         assert not os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     assert not dist.read_text("direct_url.json")
     assert not cache_path.exists()

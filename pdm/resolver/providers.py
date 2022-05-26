@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from resolvelib import AbstractProvider
 
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import FileRequirement, parse_requirement
+from pdm.models.requirements import parse_requirement
 from pdm.resolver.python import (
     PythonCandidate,
     PythonRequirement,
@@ -121,9 +121,7 @@ class BaseProvider(AbstractProvider):
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named:
-            can = Candidate(
-                requirement, link=cast(FileRequirement, requirement).as_link()
-            )
+            can = Candidate(requirement)
             can.prepare(self.repository.environment).prepare_metadata()
             return [can]
         else:

@@ -108,8 +108,9 @@ class ClearCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
 
+        types: Iterable[str] = ()
         if not options.type:
-            types: Iterable[str] = self.CACHE_TYPES
+            pass
         elif options.type not in self.CACHE_TYPES:
             raise PdmUsageError(
                 f"Invalid cache type {options.type}, should one of {self.CACHE_TYPES}"
@@ -121,11 +122,14 @@ class ClearCommand(BaseCommand):
         with project.core.ui.open_spinner(
             f"Clearing {options.type or 'all'} caches..."
         ):
-            for type_ in types:
-                if type_ == "packages":
-                    packages += self._clear_packages(project.cache(type_))
-                else:
-                    files += self._clear_files(project.cache(type_))
+            if not options.type:
+                packages, files = 0, self._clear_files(project.cache_dir)
+            else:
+                for type_ in types:
+                    if type_ == "packages":
+                        packages += self._clear_packages(project.cache(type_))
+                    else:
+                        files += self._clear_files(project.cache(type_))
             message = []
             if packages:
                 message.append(f"{packages} package{'s' if packages > 1 else ''}")

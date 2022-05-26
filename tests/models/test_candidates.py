@@ -1,12 +1,12 @@
 import shutil
-from pathlib import Path
 
 import pytest
+from unearth.link import Link
 
 from pdm.exceptions import ExtrasWarning
 from pdm.models.candidates import Candidate
-from pdm.models.pip_shims import Link, path_to_url
 from pdm.models.requirements import parse_requirement
+from pdm.utils import path_to_url
 from tests import FIXTURES
 
 
@@ -69,7 +69,7 @@ def test_parse_metadata_with_extras(project):
     )
     candidate = Candidate(req)
     prepared = candidate.prepare(project.environment)
-    assert prepared.ireq.is_wheel
+    assert prepared.link.is_wheel
     assert sorted(prepared.get_dependencies_from_metadata()) == [
         "pytest",
         'requests; python_version >= "3.6"',
@@ -83,7 +83,7 @@ def test_parse_remote_link_metadata(project):
     )
     candidate = Candidate(req)
     prepared = candidate.prepare(project.environment)
-    assert prepared.ireq.is_wheel
+    assert prepared.link.is_wheel
     assert prepared.get_dependencies_from_metadata() == [
         "idna",
         'chardet; os_name == "nt"',
@@ -99,7 +99,7 @@ def test_extras_warning(project, recwarn):
     )
     candidate = Candidate(req)
     prepared = candidate.prepare(project.environment)
-    assert prepared.ireq.is_wheel
+    assert prepared.link.is_wheel
     assert prepared.get_dependencies_from_metadata() == []
     warning = recwarn.pop(ExtrasWarning)
     assert str(warning.message) == "Extras not found for demo: [foo]"
@@ -238,24 +238,26 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
 @pytest.mark.usefixtures("local_finder")
 def test_sdist_candidate_with_wheel_cache(project, mocker):
     file_link = Link(path_to_url((FIXTURES / "artifacts/demo-0.0.1.tar.gz").as_posix()))
-    built_path = (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix()
+    built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
     wheel_cache = project.make_wheel_cache()
-    cache_path = wheel_cache.get_path_for_link(file_link)
-    if not Path(cache_path).exists():
-        Path(cache_path).mkdir(parents=True)
+    cache_path = wheel_cache.get_path_for_link(
+        file_link, project.environment.target_python
+    )
+    if not cache_path.exists():
+        cache_path.mkdir(parents=True)
     shutil.copy2(built_path, cache_path)
     req = parse_requirement(file_link.url)
-    downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
+    downloader = mocker.patch("unearth.finder.unpack_link")
     prepared = Candidate(req).prepare(project.environment)
     prepared.prepare_metadata()
     downloader.assert_not_called()
-    assert Path(prepared.wheel) == Path(cache_path) / Path(built_path).name
+    assert prepared.wheel == cache_path / built_path.name
 
     prepared.wheel = None
     builder = mocker.patch("pdm.builders.WheelBuilder.build")
     wheel = prepared.build()
     builder.assert_not_called()
-    assert Path(wheel) == Path(cache_path) / Path(built_path).name
+    assert wheel == cache_path / built_path.name
 
 
 @pytest.mark.usefixtures("vcs", "local_finder")
@@ -264,7 +266,7 @@ def test_cache_vcs_immutable_revision(project):
     candidate = Candidate(req)
     wheel = candidate.prepare(project.environment).build()
     with pytest.raises(ValueError):
-        Path(wheel).relative_to(project.cache_dir)
+        wheel.relative_to(project.cache_dir)
     assert candidate.get_revision() == "1234567890abcdef"
 
     req = parse_requirement(
@@ -272,12 +274,12 @@ def test_cache_vcs_immutable_revision(project):
     )
     candidate = Candidate(req)
     wheel = candidate.prepare(project.environment).build()
-    assert Path(wheel).relative_to(project.cache_dir)
+    assert wheel.relative_to(project.cache_dir)
     assert candidate.get_revision() == "1234567890abcdef"
 
     # test the revision can be got correctly after cached
     prepared = Candidate(req).prepare(project.environment)
-    assert not prepared.ireq.source_dir
+    assert not prepared._source_dir
     assert prepared.revision == "1234567890abcdef"
 
 
@@ -286,28 +288,35 @@ def test_cache_egg_info_sdist(project):
     req = parse_requirement("demo @ http://fixtures.test/artifacts/demo-0.0.1.tar.gz")
     candidate = Candidate(req)
     wheel = candidate.prepare(project.environment).build()
-    assert Path(wheel).relative_to(project.cache_dir)
+    assert wheel.relative_to(project.cache_dir)
 
 
-def test_invalidate_incompatible_wheel_link(project, index):
+def test_invalidate_incompatible_wheel_link(project):
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("demo")
-    prepared = Candidate(req, name="demo", version="0.0.1").prepare(project.environment)
+    prepared = Candidate(
+        req,
+        name="demo",
+        version="0.0.1",
+        link=Link("http://fixtures.test/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl"),
+    ).prepare(project.environment)
     prepared.obtain(True)
     assert (
-        Path(prepared.wheel).name
-        == prepared.ireq.link.filename
+        prepared.wheel.name
+        == prepared.link.filename
         == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
     )
 
     prepared.obtain(False)
     assert (
-        Path(prepared.wheel).name
-        == prepared.ireq.link.filename
+        prepared.wheel.name
+        == prepared.link.filename
         == "demo-0.0.1-py2.py3-none-any.whl"
     )
 
 
-def test_legacy_pep345_tag_link(project, index):
+def test_legacy_pep345_tag_link(project):
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("pep345-legacy")
     repo = project.get_repository()
     candidate = next(iter(repo.find_candidates(req)))

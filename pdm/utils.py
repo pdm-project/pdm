@@ -101,7 +101,7 @@ def get_index_urls(sources: list[Source]) -> tuple[list[str], list[str], list[st
         host = netloc.rsplit("@", 1)[-1]
         if host not in trusted_hosts and not source.get("verify_ssl", True):
             trusted_hosts.append(host)
-        if source.get("type") == "index":
+        if source.get("type", "index") == "index":
             index_urls.append(url)
         else:
             find_link_urls.append(url)
@@ -402,8 +402,9 @@ def get_rev_from_url(url: str) -> str:
     return ""
 
 
-def normalize_name(name: str) -> str:
-    return re.sub(r"[^A-Za-z0-9.]+", "-", name).lower()
+def normalize_name(name: str, lowercase: bool = True) -> str:
+    name = re.sub(r"[^A-Za-z0-9.]+", "-", name)
+    return name.lower() if lowercase else name
 
 
 def is_egg_link(dist: Distribution) -> bool:

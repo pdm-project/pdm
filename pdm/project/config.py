@@ -85,6 +85,7 @@ class Config(MutableMapping[str, str]):
             "Check if there is any newer version available",
             True,
             True,
+            env_var="PDM_CHECK_UPDATE",
             coerce=ensure_boolean,
         ),
         "build_isolation": ConfigItem(

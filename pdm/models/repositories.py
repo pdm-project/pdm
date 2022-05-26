@@ -9,11 +9,11 @@ from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
-    FileRequirement,
     Requirement,
     filter_requirements_with_extras,
     parse_requirement,
 )
+from pdm.models.search import SearchResultParser
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import normalize_name, url_without_fragments
 
@@ -293,7 +293,6 @@ class PyPIRepository(BaseRepository):
 
     def search(self, query: str) -> SearchResult:
         pypi_simple = self.sources[0]["url"].rstrip("/")
-        results: SearchResult = []
 
         if pypi_simple.endswith("/simple"):
             search_url = pypi_simple[:-6] + "search"
@@ -314,26 +313,10 @@ class PyPIRepository(BaseRepository):
                 resp = session.get(
                     f"{self.DEFAULT_INDEX_URL}/search", params={"q": query}
                 )
+            parser = SearchResultParser()
             resp.raise_for_status()
-            # TODO: HTML parsing logic
-
-            # content = ET.fromstring(resp.content)
-
-        # for result in content.findall(".//*[@class='package-snippet']"):
-        #     name = result.find("h3/*[@class='package-snippet__name']").text
-        #     version = result.find("h3/*[@class='package-snippet__version']").text
-
-        #     if not name or not version:
-        #         continue
-
-        #     description = result.find("p[@class='package-snippet__description']").text
-        #     if not description:
-        #         description = ""
-
-        #     result = Package(name, version, description)
-        #     results.append(result)
-
-        return results
+            parser.feed(resp.text)
+            return parser.results
 
 
 class LockedRepository(BaseRepository):
@@ -365,10 +348,7 @@ class LockedRepository(BaseRepository):
                 if k not in ("dependencies", "requires_python", "summary")
             }
             req = Requirement.from_req_dict(package_name, req_dict)
-            link = None
-            if req.is_file_or_url:
-                link = cast(FileRequirement, req).as_link()
-            can = Candidate(req, name=package_name, version=version, link=link)
+            can = Candidate(req, name=package_name, version=version)
             can_id = self._identify_candidate(can)
             self.packages[can_id] = can
             candidate_info: CandidateInfo = (

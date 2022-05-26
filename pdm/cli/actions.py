@@ -802,7 +802,9 @@ def get_latest_version(project: Project) -> str | None:
         and current_time - state["last-check"] < 60 * 60 * 24 * 7
     ):
         return cast(str, state["latest-version"])
-    with project.environment.get_finder(ignore_compatibility=True) as finder:
+    with project.environment.get_finder(
+        [project.default_source], ignore_compatibility=True
+    ) as finder:
         candidate = finder.find_best_match("pdm").best
     if not candidate:
         return None

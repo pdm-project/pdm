@@ -105,6 +105,8 @@ class Candidate:
         self.req = req
         self.name = name or self.req.project_name
         self.version = version
+        if link is None and not req.is_named:
+            link = req.as_file_link()  # type: ignore
         self.link = link
         self.summary = ""
         self.hashes: dict[str, str] | None = None
@@ -221,12 +223,25 @@ class PreparedCandidate:
         self.req = candidate.req
 
         self.wheel: Path | None = None
-        self.link = self.candidate.link
+        self.link = self._replace_url_vars(self.candidate.link)
 
         self._source_dir: Path | None = None
         self._unpacked_dir: Path | None = None
         self._metadata_dir: str | None = None
         self._metadata: im.Distribution | None = None
+
+        if self.link is not None and self.link.is_file and self.link.file_path.is_dir():
+            self._source_dir = self.link.file_path
+            self._unpacked_dir = self._source_dir / (self.link.subdirectory or "")
+
+    def _replace_url_vars(self, link: Link | None) -> Link | None:
+        if link is None:
+            return None
+        project_root = self.environment.project.root.as_posix()  # type: ignore
+        url = expand_env_vars_in_auth(link.normalized).replace(
+            "${PROJECT_ROOT}", project_root.lstrip("/")
+        )
+        return Link(url)
 
     @cached_property
     def revision(self) -> str:
@@ -236,11 +251,11 @@ class PreparedCandidate:
             # hash which can be taken as the revision safely.
             # See more info at https://github.com/pdm-project/pdm/issues/349
             rev = get_rev_from_url(self.candidate.link.url)  # type: ignore
-            assert rev
-            return rev
+            if rev:
+                return rev
         return vcs.get_backend(
             self.req.vcs, self.environment.project.core.ui.verbosity  # type: ignore
-        ).get_revision(cast(str, self._source_dir))
+        ).get_revision(cast(Path, self._source_dir))
 
     def direct_url(self) -> dict[str, Any] | None:
         """PEP 610 direct_url.json data"""

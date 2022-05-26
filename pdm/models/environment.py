@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 import unearth
+from unearth.errors import UnpackError
 from unearth.session import PyPISession
 
 from pdm import termui
@@ -130,6 +131,7 @@ class Environment:
         index_urls, find_links, trusted_hosts = get_index_urls(sources)
         session = PyPISession(
             index_urls=index_urls,
+            trusted_hosts=trusted_hosts,
             cache_name=str(self.project.cache("http") / "cache"),
         )
         session.auth = self.auth
@@ -137,7 +139,6 @@ class Environment:
             session=session,
             index_urls=index_urls,
             find_links=find_links,
-            trusted_hosts=trusted_hosts,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
@@ -184,33 +185,30 @@ class Environment:
             child.write_bytes(_replace_shebang(child.read_bytes(), new_shebang))
 
     def _download_pip_wheel(self, path: str | Path) -> None:
-        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
-        try:
-            subprocess.check_call(
-                [
-                    getattr(sys, "_original_executable", sys.executable),
-                    "-m",
-                    "pip",
-                    "download",
-                    "--only-binary=:all:",
-                    "-d",
-                    str(dirname),
-                    "pip<21",  # pip>=21 drops the support of py27
-                ],
-            )
-            wheel_file = next(dirname.glob("pip-*.whl"))
-            shutil.move(str(wheel_file), path)
-        except subprocess.CalledProcessError:
-            raise BuildError("Failed to download pip for the given interpreter")
-        finally:
-            shutil.rmtree(dirname, ignore_errors=True)
+        download_error = BuildError("Can't get a working copy of pip for the project")
+        with self.get_finder([self.project.default_source]) as finder:
+            finder.only_binary = ["pip"]
+            best_match = finder.find_best_match("pip").best
+            if not best_match:
+                raise download_error
+            with tempfile.TemporaryDirectory(prefix="pip-download-") as dirname:
+                try:
+                    downloaded = finder.download_and_unpack(
+                        best_match.link, dirname, dirname
+                    )
+                except UnpackError:
+                    raise download_error
+                shutil.move(str(downloaded), path)
 
     @cached_property
     def pip_command(self) -> list[str]:
         """Get a pip command for this environment, and download one if not available.
         Return a list of args like ['python', '-m', 'pip']
         """
-        from pip import __file__ as pip_location
+        try:
+            from pip import __file__ as pip_location
+        except ModuleNotFoundError:
+            pip_location = None  # type: ignore
 
         python_major = self.interpreter.major
         executable = str(self.interpreter.executable)
@@ -220,11 +218,11 @@ class Environment:
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
             command = [executable, "-Esm", "pip"]
-        elif python_major == 3:
-            # Use the host pip package.
+        elif python_major == 3 and pip_location:
+            # Use the host pip package if available
             command = [executable, "-Es", os.path.dirname(pip_location)]
         else:
-            # For py2, only pip<21 is eligible, download a pip wheel from the Internet.
+            # Otherwise, download a pip wheel from the Internet.
             pip_wheel = self.project.cache_dir / "pip.whl"
             if not pip_wheel.is_file():
                 self._download_pip_wheel(pip_wheel)
@@ -274,6 +272,6 @@ class BareEnvironment(Environment):
 
     def get_working_set(self) -> WorkingSet:
         if self.project.project_config.config_file.exists():
-            return super().get_working_set()
+            return self.project.get_environment().get_working_set()
         else:
             return WorkingSet([])

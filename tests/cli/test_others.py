@@ -246,7 +246,8 @@ def test_completion_command(invoke):
 
 
 @pytest.mark.network
-def test_show_update_hint(invoke, project):
+def test_show_update_hint(invoke, project, monkeypatch):
+    monkeypatch.delenv("PDM_CHECK_UPDATE", raising=False)
     prev_version = project.core.version
     try:
         project.core.version = "0.0.0"

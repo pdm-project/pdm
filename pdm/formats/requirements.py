@@ -36,10 +36,10 @@ class RequirementParser:
         parser = argparse.ArgumentParser()
         parser.add_argument("--index-url", "-i")
         parser.add_argument("--no-index", action="store_true")
-        parser.add_argument("--extra-index-url", nargs="+")
+        parser.add_argument("--extra-index-url")
         parser.add_argument("--find-links", "-f")
         parser.add_argument("--trusted-host")
-        parser.add_argument("-e", "--editable")
+        parser.add_argument("-e", "--editable", nargs="+")
         parser.add_argument("-r", "--requirement")
         self._parser = parser
 
@@ -52,7 +52,7 @@ class RequirementParser:
 
     def _parse_line(self, line: str) -> None:
         if not line.startswith("-"):
-            # Starts with a requirement
+            # Starts with a requirement, just ignore all per-requirement options
             req_string = line.split(" -", 1)[0].strip()
             self.requirements.append(parse_requirement(req_string))
             return
@@ -121,7 +121,7 @@ def convert_url_to_source(
     }
     if type != "index":
         source["type"] = type
-    return cast(Source, source)
+    return cast("Source", source)
 
 
 def convert(

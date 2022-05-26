@@ -82,7 +82,7 @@ class Requirement:
 
     @property
     def project_name(self) -> str | None:
-        return normalize_name(self.name) if self.name else None  # type: ignore
+        return normalize_name(self.name, lowercase=False) if self.name else None
 
     @property
     def key(self) -> str | None:
@@ -309,26 +309,36 @@ class FileRequirement(Requirement):
     def is_local_dir(self) -> bool:
         return self.is_local and cast(Path, self.path).is_dir()
 
-    def as_link(self) -> Link:
-        line = self.as_line()
-        if line.startswith("-e "):
-            line = line.split("-e ", 1)[-1]
-        if " @ " in line:
-            line = line.split(" @ ", 1)[1]
-        return Link(line)
+    def as_file_link(self) -> Link:
+        url = self.get_full_url()
+        # only subdirectory is useful in a file link
+        if self.subdirectory:
+            url += f"#subdirectory={self.subdirectory}"
+        return Link(url)
+
+    def get_full_url(self) -> str:
+        return url_without_fragments(self.url)
 
     def as_line(self) -> str:
         project_name = f"{self.project_name}" if self.project_name else ""
-        extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
+        extras = (
+            f"[{','.join(sorted(self.extras))}]"
+            if self.extras and self.project_name
+            else ""
+        )
         marker = self._format_marker()
-        url = url_without_fragments(self.url)
-        if self.editable or self.subdirectory:
-            fragments = f"egg={project_name}{extras}"
-            if self.subdirectory:
-                fragments = f"{fragments}&subdirectory={self.subdirectory}"
-            return f"{'-e ' if self.editable else ''}{url}#{fragments}{marker}"
+        url = self.get_full_url()
+        fragments = []
+        if self.subdirectory:
+            fragments.append(f"subdirectory={self.subdirectory}")
+        if self.editable:
+            if project_name:
+                fragments.insert(0, f"egg={project_name}{extras}")
+            fragment_str = ("#" + "&".join(fragments)) if fragments else ""
+            return f"-e {url}{fragment_str}{marker}"
         delimiter = " @ " if project_name else ""
-        return f"{project_name}{extras}{delimiter}{url}{marker}"
+        fragment_str = ("#" + "&".join(fragments)) if fragments else ""
+        return f"{project_name}{extras}{delimiter}{url}{fragment_str}{marker}"
 
     def _parse_name_from_url(self) -> None:
         parsed = urlparse.urlparse(self.url)
@@ -380,22 +390,13 @@ class VcsRequirement(FileRequirement):
         if not self.vcs:
             self.vcs = self.url.split("+", 1)[0]
 
-    def as_line(self) -> str:
-        project_name = f"{self.project_name}" if self.project_name else ""
-        extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
-        marker = self._format_marker()
-        url = self.url
+    def get_full_url(self) -> str:
+        url = super().get_full_url()
         if self.revision and not self.editable:
             url += f"@{self.revision}"
         elif self.ref:
             url += f"@{self.ref}"
-        if self.editable or self.subdirectory:
-            fragments = f"egg={project_name}{extras}"
-            if self.subdirectory:
-                fragments = f"{fragments}&subdirectory={self.subdirectory}"
-            return f"{'-e ' if self.editable else ''}{url}#{fragments}{marker}"
-        delimiter = " @ " if project_name else ""
-        return f"{project_name}{extras}{delimiter}{url}{marker}"
+        return url
 
     def _parse_url(self) -> None:
         vcs, url_no_vcs = self.url.split("+", 1)
@@ -414,18 +415,6 @@ class VcsRequirement(FileRequirement):
         repo = urlparse.urlunparse(parsed._replace(path=path, fragment=""))
         self.url = f"{vcs}+{repo}"
         self.repo, self.ref = repo, ref  # type: ignore
-
-    @staticmethod
-    def _build_url_from_req_dict(name: str, url: str, req_dict: RequirementDict) -> str:
-        assert not isinstance(req_dict, str)
-        ref = f"@{req_dict['ref']}" if "ref" in req_dict else ""
-        fragments = f"#egg={urlparse.quote(name)}"
-        if "subdirectory" in req_dict:
-            fragments += (
-                "&subdirectory="  # type: ignore
-                f"{urlparse.quote(req_dict.pop('subdirectory'))}"  # type: ignore
-            )
-        return f"{url}{ref}{fragments}"
 
 
 def filter_requirements_with_extras(

@@ -21,7 +21,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository, PyPIRepository
-from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
+from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
 from pdm.project.metadata import MutableMetadata as Metadata
@@ -333,17 +333,22 @@ class Project:
         return self.tool_settings.get("allow_prereleases")
 
     @property
+    def default_source(self) -> Source:
+        """Get the default source of from the pypi setting"""
+        return cast(
+            "Source",
+            {
+                "url": self.config["pypi.url"],
+                "verify_ssl": self.config["pypi.verify_ssl"],
+                "name": "pypi",
+            },
+        )
+
+    @property
     def sources(self) -> list[Source]:
         sources = list(self.tool_settings.get("source", []))
         if all(source.get("name") != "pypi" for source in sources):
-            sources.insert(
-                0,
-                {
-                    "url": self.config["pypi.url"],
-                    "verify_ssl": self.config["pypi.verify_ssl"],
-                    "name": "pypi",
-                },
-            )
+            sources.insert(0, self.default_source)
         expanded_sources: list[Source] = [
             Source(
                 url=expand_env_vars_in_auth(s["url"]),
@@ -462,12 +467,7 @@ class Project:
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
-        return Candidate(
-            req,
-            name=self.meta.name,
-            version=self.meta.version,
-            link=cast(FileRequirement, req).as_link(),
-        )
+        return Candidate(req, name=self.meta.name, version=self.meta.version)
 
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies groups. Otherwise lock file is
