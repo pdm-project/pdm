@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from pdm.models.pip_shims import path_to_url
 from pdm.models.requirements import RequirementError, parse_requirement
+from pdm.utils import path_to_url
 from tests import FIXTURES
 
 FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
@@ -62,7 +62,6 @@ REQUIREMENTS = [
 @pytest.mark.parametrize("req, result", REQUIREMENTS)
 def test_convert_req_dict_to_req_line(req, result):
     r = parse_requirement(req)
-    assert r.as_ireq()
     result = result or req
     assert r.as_line() == result
 

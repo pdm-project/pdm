@@ -97,6 +97,7 @@ def test_resolve_with_extras(resolve):
         f"{(FIXTURES / 'artifacts/demo-0.0.1.tar.gz').as_posix()}",
         f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}",
     ],
+    ids=["sdist", "wheel"],
 )
 def test_resolve_local_artifacts(resolve, requirement_line):
     result = resolve([requirement_line], ">=3.6")

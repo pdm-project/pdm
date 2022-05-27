@@ -1,19 +1,20 @@
 import collections
+import functools
 import json
 import os
-import re
 import shutil
 import sys
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import pytest
+import requests
 from click.testing import CliRunner
-from pip._internal.vcs import versioncontrol
-from pip._vendor import requests
+from packaging.version import parse as parse_version
+from unearth.vcs import Git, vcs_support
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
@@ -27,13 +28,12 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_requirement,
 )
+from pdm.models.session import PDMSession
 from pdm.project.config import Config
-from pdm.utils import get_finder, normalize_name
+from pdm.utils import normalize_name, path_to_url
 from tests import FIXTURES
 
-os.environ["CI"] = "1"
-# prevent rich from wrapping long output
-os.environ["COLUMNS"] = "200"
+os.environ.update(CI="1", PDM_CHECK_UPDATE="0")
 
 
 @contextmanager
@@ -47,19 +47,41 @@ def temp_environ():
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
-    def __init__(self, base_path):
+    def __init__(self, aliases, overrides=None, strip_suffix=False):
         super().__init__()
-        self.base_path = base_path
+        self.aliases = sorted(
+            aliases.items(), key=lambda item: len(item[0]), reverse=True
+        )
+        self.overrides = overrides if overrides is not None else {}
+        self.strip_suffix = strip_suffix
         self._opened_files = []
+
+    def get_file_path(self, path):
+        for prefix, base_path in self.aliases:
+            if path.startswith(prefix):
+                file_path = base_path / path[len(prefix) :].lstrip("/")
+                if not self.strip_suffix:
+                    return file_path
+                return next(
+                    (p for p in file_path.parent.iterdir() if p.stem == file_path.name),
+                    None,
+                )
+        return None
 
     def send(
         self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
     ):
-        file_path = self.base_path / urlparse(request.url).path.lstrip("/")
+        request_path = urlparse(request.url).path
+        file_path = self.get_file_path(request_path)
         response = requests.models.Response()
         response.url = request.url
         response.request = request
-        if not file_path.exists():
+        if request_path in self.overrides:
+            response.status_code = 200
+            response.reason = "OK"
+            response.raw = BytesIO(self.overrides[request_path])
+            response.headers["Content-Type"] = "text/html"
+        elif file_path is None or not file_path.exists():
             response.status_code = 404
             response.reason = "Not Found"
             response.raw = BytesIO(b"Not Found")
@@ -78,21 +100,18 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
         self._opened_files.clear()
 
 
-class MockVersionControl(versioncontrol.VersionControl):
-    def obtain(self, dest, url, verbosity=0):
-        url, _ = self.get_url_rev_options(url)
-        path = os.path.splitext(os.path.basename(urlparse(str(url)).path))[0]
+class MockGit(Git):
+    def fetch_new(self, location, url, rev, args):
+        path = os.path.splitext(os.path.basename(unquote(urlparse(str(url)).path)))[0]
         mocked_path = FIXTURES / "projects" / path
-        shutil.copytree(mocked_path, dest)
+        shutil.copytree(mocked_path, location)
 
-    @classmethod
-    def get_revision(cls, location):
+    def get_revision(self, location: Path) -> str:
         return "1234567890abcdef"
 
-    def is_immutable_rev_checkout(self, url: str, dest: str) -> bool:
-        if "@1234567890abcdef" in url:
-            return True
-        return super().is_immutable_rev_checkout(url, dest)
+    def is_immutable_revision(self, location, link) -> bool:
+        rev = self.get_url_and_rev_options(link)[1]
+        return rev == "1234567890abcdef"
 
 
 class _FakeLink:
@@ -139,7 +158,11 @@ class TestRepository(BaseRepository):
         return {}
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
-        for version, candidate in self._pypi_data.get(requirement.key, {}).items():
+        for version, candidate in sorted(
+            self._pypi_data.get(requirement.key, {}).items(),
+            key=lambda item: parse_version(item[0]),
+            reverse=True,
+        ):
             c = Candidate(
                 requirement,
                 name=requirement.project_name,
@@ -222,18 +245,14 @@ def working_set(mocker, repository):
     yield rv
 
 
-def get_local_finder(*args, **kwargs):
-    finder = get_finder(*args, **kwargs)
-    finder.session.mount("http://fixtures.test/", LocalFileAdapter(FIXTURES))
-    return finder
-
-
-@pytest.fixture(autouse=True)
-def pip_global_tempdir_manager():
-    from pdm.models.pip_shims import global_tempdir_manager
-
-    with global_tempdir_manager():
-        yield
+def get_pypi_session(*args, overrides=None, **kwargs):
+    session = PDMSession(*args, **kwargs)
+    session.mount("http://fixtures.test/", LocalFileAdapter({"/": FIXTURES}))
+    session.mount(
+        "https://my.pypi.org/",
+        LocalFileAdapter({"/simple": FIXTURES / "index"}, overrides, strip_suffix=True),
+    )
+    return session
 
 
 def remove_pep582_path_from_pythonpath(pythonpath):
@@ -253,7 +272,12 @@ def core():
 
 
 @pytest.fixture()
-def project_no_init(tmp_path, mocker, core):
+def index():
+    return {}
+
+
+@pytest.fixture()
+def project_no_init(tmp_path, mocker, core, index):
     test_home = tmp_path / ".pdm-home"
     test_home.mkdir(parents=True)
     test_home.joinpath("config.toml").write_text(
@@ -264,8 +288,10 @@ def project_no_init(tmp_path, mocker, core):
     p = core.create_project(
         tmp_path, global_config=test_home.joinpath("config.toml").as_posix()
     )
-    mocker.patch("pdm.utils.get_finder", get_local_finder)
-    mocker.patch("pdm.models.environment.get_finder", get_local_finder)
+    mocker.patch(
+        "pdm.models.environment.PDMSession",
+        functools.partial(get_pypi_session, overrides=index),
+    )
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     do_use(p, getattr(sys, "_base_executable", sys.executable))
@@ -283,9 +309,17 @@ def project_no_init(tmp_path, mocker, core):
 
 @pytest.fixture()
 def local_finder(project_no_init, mocker):
-    return_value = ["--no-index", "--find-links", str(FIXTURES / "artifacts")]
-    mocker.patch("pdm.utils.prepare_pip_source_args", return_value=return_value)
+    artifacts_dir = str(FIXTURES / "artifacts")
+    return_value = ["--no-index", "--find-links", artifacts_dir]
     mocker.patch("pdm.builders.base.prepare_pip_source_args", return_value=return_value)
+    project_no_init.tool_settings["source"] = [
+        {
+            "type": "find_links",
+            "verify_ssl": False,
+            "url": path_to_url(artifacts_dir),
+        }
+    ]
+    project_no_init.write_pyproject()
 
 
 @pytest.fixture()
@@ -327,16 +361,9 @@ def repository(project, mocker, local_finder):
 
 
 @pytest.fixture()
-def vcs(mocker):
-    ret = MockVersionControl()
-    mocker.patch(
-        "pip._internal.vcs.versioncontrol.VcsSupport.get_backend", return_value=ret
-    )
-    mocker.patch(
-        "pip._internal.vcs.versioncontrol.VcsSupport.get_backend_for_scheme",
-        return_value=ret,
-    )
-    yield ret
+def vcs(monkeypatch):
+    monkeypatch.setattr(vcs_support, "_registry", {"git": MockGit})
+    return
 
 
 @pytest.fixture(params=[False, True])
@@ -364,26 +391,3 @@ def invoke(core):
         return result
 
     return caller
-
-
-@pytest.fixture()
-def index():
-    from pip._internal.index.collector import HTMLPage, LinkCollector
-
-    old_fetcher = LinkCollector.fetch_page
-    fake_index = {}
-
-    def fetch_page(self, location):
-        m = re.search(r"/simple/([^/]+)/?", location.url)
-        if not m:
-            return old_fetcher(self, location)
-        name = m.group(1)
-        if name not in fake_index:
-            fake_index[name] = (FIXTURES / f"index/{name}.html").read_bytes()
-        return HTMLPage(
-            fake_index[name], "utf-8", location.url, cache_link_parsing=False
-        )
-
-    LinkCollector.fetch_page = fetch_page
-    yield fake_index
-    LinkCollector.fetch_page = old_fetcher

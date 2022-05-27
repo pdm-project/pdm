@@ -119,11 +119,12 @@ def test_sync_without_self(project, working_set):
 
 
 def test_sync_with_index_change(project, index):
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     project.meta["requires-python"] = ">=3.6"
     project.meta["dependencies"] = ["future-fstrings"]
     project.write_pyproject()
     index[
-        "future-fstrings"
+        "/simple/future-fstrings"
     ] = """
     <html>
     <body>
@@ -141,7 +142,7 @@ def test_sync_with_index_change(project, index):
         "sha256:90e49598b553d8746c4dc7d9442e0359d038c3039d802c91c0a55505da318c63"
     ]
     # Mimic the CDN inconsistences of PyPI simple index. See issues/596.
-    del index["future-fstrings"]
+    del index["/simple/future-fstrings"]
     actions.do_sync(project, no_self=True)
 
 
