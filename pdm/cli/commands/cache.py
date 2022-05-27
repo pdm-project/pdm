@@ -184,7 +184,7 @@ class InfoCommand(BaseCommand):
                 f"Total size: {format_size(directory_size(project.cache_dir))}"
             ]
             for name, description in [
-                ("hashes", "File Hashe Cache"),
+                ("hashes", "File Hash Cache"),
                 ("http", "HTTP Cache"),
                 ("wheels", "Wheels Cache"),
                 ("metadata", "Metadata Cache"),
