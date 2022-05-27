@@ -790,8 +790,6 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
 
 def get_latest_version(project: Project) -> str | None:
     """Get the latest version of PDM from PyPI, cache for 7 days"""
-    from pdm.utils import get_finder
-
     cache_key = hashlib.sha224(sys.executable.encode()).hexdigest()
     cache_file = project.cache("self-check") / cache_key
     if cache_file.exists():
@@ -804,10 +802,13 @@ def get_latest_version(project: Project) -> str | None:
         and current_time - state["last-check"] < 60 * 60 * 24 * 7
     ):
         return cast(str, state["latest-version"])
-    candidate = get_finder([], project.cache_dir.as_posix()).find_best_candidate("pdm")
-    if not candidate.best_candidate:
+    with project.environment.get_finder(
+        [project.default_source], ignore_compatibility=True
+    ) as finder:
+        candidate = finder.find_best_match("pdm").best
+    if not candidate:
         return None
-    latest_version = str(candidate.best_candidate.version)
+    latest_version = str(candidate.version)
     state.update({"latest-version": latest_version, "last-check": current_time})
     cache_file.write_text(json.dumps(state))
     return latest_version
@@ -818,7 +819,7 @@ def check_update(project: Project) -> None:
     import sys
     from shlex import quote
 
-    from pip._vendor.packaging.version import parse as parse_version
+    from packaging.version import parse as parse_version
 
     from pdm.cli.utils import (
         is_homebrew_installation,

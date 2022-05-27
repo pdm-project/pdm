@@ -134,8 +134,6 @@ class Core:
         **extra: Any,
     ) -> None:
         """The main entry function"""
-        from pdm.models.pip_shims import global_tempdir_manager
-
         options = self.parser.parse_args(args or None)
         self.ui.set_verbosity(options.verbose)
         if options.ignore_python:
@@ -154,8 +152,7 @@ class Core:
             sys.exit(1)
         else:
             try:
-                with global_tempdir_manager():
-                    f(options.project, options)
+                f(options.project, options)
             except Exception:
                 etype, err, traceback = sys.exc_info()
                 should_show_tb = not isinstance(err, PdmUsageError)
