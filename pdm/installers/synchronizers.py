@@ -25,7 +25,6 @@ from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.utils import is_editable
 
 if TYPE_CHECKING:
-    from rich.live import Live
     from rich.progress import Progress
 
     from pdm.compat import Distribution
@@ -214,7 +213,7 @@ class Synchronizer:
             sorted(to_remove) if self.clean else [],
         )
 
-    def install_candidate(self, key: str, progress: Progress, live: Live) -> Candidate:
+    def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
 
@@ -223,18 +222,18 @@ class Synchronizer:
             self.manager.install(can)
             progress.update(job, completed=1, visible=False)
         except Exception:
-            live.console.print(
+            progress.live.console.print(
                 f"  [red]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
             )
             raise
         else:
-            live.console.print(
+            progress.live.console.print(
                 f"  [green]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
             )
         return can
 
     def update_candidate(
-        self, key: str, progress: Progress, live: Live
+        self, key: str, progress: Progress
     ) -> Tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
@@ -252,24 +251,22 @@ class Synchronizer:
             progress.update(job, completed=1, visible=False)
 
         except Exception:
-            live.console.print(
+            progress.live.console.print(
                 f"  [red]{termui.Emoji.FAIL}[/] Update [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] "
-                f"-> [yellow]{can.version}[/]...",
+                f"-> [yellow]{can.version}[/] failed",
             )
             raise
         else:
-            live.console.print(
+            progress.live.console.print(
                 f"  [green]{termui.Emoji.SUCC}[/] Update [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] "
-                f"-> [yellow]{can.version}[/]..."
+                f"-> [yellow]{can.version}[/] successful",
             )
 
         return dist, can
 
-    def remove_distribution(
-        self, key: str, progress: Progress, live: Live
-    ) -> Distribution:
+    def remove_distribution(self, key: str, progress: Progress) -> Distribution:
         """Remove distributions with given names."""
         dist = self.working_set[key]
         dist_version = dist.version
@@ -282,13 +279,13 @@ class Synchronizer:
             self.manager.uninstall(dist)
             progress.update(job, completed=1, visible=False)
         except Exception:
-            live.console.print(
+            progress.live.console.print(
                 f"  [red]{termui.Emoji.FAIL}[/] Remove [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] failed",
             )
             raise
         else:
-            live.console.print(
+            progress.live.console.print(
                 f"  [green]{termui.Emoji.SUCC}[/] Remove [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] successful"
             )
@@ -382,19 +379,17 @@ class Synchronizer:
                 )
 
         # get rich progess and live handler to deal with multiple spinners
-        progress = self.ui.make_progress()
-        with self.ui.live_progress(progress) as live:
+        with self.ui.make_progress() as progress:
+            live = progress.live
             with self.ui.logging("install"):
                 for job in sequential_jobs:
                     kind, key = job
-                    handlers[kind](key, progress, live)
+                    handlers[kind](key, progress)
                 for i in range(self.retry_times + 1):
                     with self.create_executor() as executor:
                         for job in parallel_jobs:
                             kind, key = job
-                            future = executor.submit(
-                                handlers[kind], key, progress, live
-                            )
+                            future = executor.submit(handlers[kind], key, progress)
                             future.add_done_callback(
                                 functools.partial(update_progress, kind=kind, key=key)
                             )
@@ -419,8 +414,8 @@ class Synchronizer:
                 word = "a" if self.no_editable else "an editable"
                 live.console.print(f"Installing the project as {word} package...")
                 if self_key in self.working_set:
-                    self.update_candidate(self_key, progress, live)
+                    self.update_candidate(self_key, progress)
                 else:
-                    self.install_candidate(self_key, progress, live)
+                    self.install_candidate(self_key, progress)
 
             live.console.print(f"\n{termui.Emoji.POPPER} All complete!")

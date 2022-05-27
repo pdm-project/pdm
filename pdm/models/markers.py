@@ -4,7 +4,7 @@ import operator
 from functools import reduce
 from typing import Any, List, Optional, Set, Tuple, Union
 
-from pip._vendor.packaging.markers import Marker as PackageMarker
+from packaging.markers import Marker as PackageMarker
 
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import join_list_with

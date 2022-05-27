@@ -25,5 +25,4 @@ repos:
         args: [pdm]
         pass_filenames: false
         additional_dependencies:
-          - types-setuptools
-          - types-toml
+          - types-requests

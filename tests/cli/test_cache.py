@@ -1,7 +1,7 @@
 import pytest
+from unearth import Link
 
 from pdm.installers.packages import CachedPackage
-from pdm.models.pip_shims import Link
 from tests import FIXTURES
 
 
@@ -96,7 +96,7 @@ def test_cache_remove_wildcard(project, invoke):
     ):
         assert not (project.cache("wheels") / "arbitrary/path" / name).exists()
 
-    assert not (project.cache("http") / "arbitrary/path/foo-0.1.0.tar.gz").exists()
+    assert (project.cache("http") / "arbitrary/path/foo-0.1.0.tar.gz").exists()
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
@@ -159,8 +159,7 @@ def test_cache_info(project, invoke):
 def test_hash_cache(project, url, hash):
     with project.environment.get_finder() as finder:
         hash_cache = project.make_hash_cache()
-        hash_cache.session = finder.session
-        assert hash_cache.get_hash(Link(url)) == hash
+        assert hash_cache.get_hash(Link(url), finder.session) == hash
 
 
 def test_clear_package_cache(project, invoke):
