@@ -12,8 +12,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 import unearth
-from unearth.errors import UnpackError
-from unearth.session import PyPISession
 
 from pdm import termui
 from pdm.exceptions import BuildError
@@ -24,6 +22,7 @@ from pdm.models.in_process import (
     get_sys_config_paths,
 )
 from pdm.models.python import PythonInfo
+from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
 from pdm.utils import cached_property, get_index_urls, is_venv_python, pdm_scheme
 
@@ -129,10 +128,10 @@ class Environment:
             sources = self.project.sources
 
         index_urls, find_links, trusted_hosts = get_index_urls(sources)
-        session = PyPISession(
+        session = PDMSession(
+            cache_dir=self.project.cache("http"),
             index_urls=index_urls,
             trusted_hosts=trusted_hosts,
-            cache_name=str(self.project.cache("http") / "cache"),
         )
         session.auth = self.auth
         finder = unearth.PackageFinder(
@@ -196,7 +195,7 @@ class Environment:
                     downloaded = finder.download_and_unpack(
                         best_match.link, dirname, dirname
                     )
-                except UnpackError:
+                except unearth.UnpackError:
                     raise download_error
                 shutil.move(str(downloaded), path)
 

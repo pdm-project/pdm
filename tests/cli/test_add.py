@@ -1,7 +1,7 @@
 import shutil
 
 import pytest
-from unearth.link import Link
+from unearth import Link
 
 from pdm.cli import actions
 from pdm.models.specifiers import PySpecSet

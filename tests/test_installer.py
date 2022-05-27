@@ -2,7 +2,7 @@ import logging
 import os
 
 import pytest
-from unearth.link import Link
+from unearth import Link
 
 from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate

@@ -1,5 +1,5 @@
 import pytest
-from unearth.link import Link
+from unearth import Link
 
 from pdm.installers.packages import CachedPackage
 from tests import FIXTURES

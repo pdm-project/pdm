@@ -152,6 +152,9 @@ class UI:
         """
         if self.verbosity >= verbosity:
             console = _err_console if err else _console
+            if not console.is_interactive:
+                kwargs.setdefault("crop", False)
+                kwargs.setdefault("overflow", "ignore")
             console.print(message, **kwargs)
 
     def display_columns(

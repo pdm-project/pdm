@@ -209,7 +209,6 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     requirements_pyproject = project.root / "requirements.ini"
 
     result = invoke(["export"], obj=project)
-    print("==========OUTPUT=============", result.output.strip(), result.stderr.strip())
     assert result.exit_code == 0
     assert result.output.strip() == requirements_txt.read_text().strip()
 

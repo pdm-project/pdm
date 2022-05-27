@@ -17,8 +17,7 @@ from pdm.termui import logger
 from pdm.utils import atomic_open_for_write
 
 if TYPE_CHECKING:
-    from unearth import TargetPython
-    from unearth.link import Link
+    from unearth import Link, TargetPython
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")

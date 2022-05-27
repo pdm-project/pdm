@@ -16,7 +16,7 @@ from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
-from unearth.link import Link
+from unearth import Link
 
 from pdm.compat import Distribution
 from pdm.exceptions import ExtrasWarning, RequirementError

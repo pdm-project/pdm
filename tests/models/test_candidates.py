@@ -1,7 +1,7 @@
 import shutil
 
 import pytest
-from unearth.link import Link
+from unearth import Link
 
 from pdm.exceptions import ExtrasWarning
 from pdm.models.candidates import Candidate

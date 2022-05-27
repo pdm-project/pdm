@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
 from packaging.utils import parse_wheel_filename
-from unearth.link import Link
-from unearth.vcs import vcs
+from unearth import Link, vcs_support
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
@@ -37,8 +36,7 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from unearth import PackageFinder
-    from unearth.evaluator import Package
+    from unearth import Package, PackageFinder
 
     from pdm.models.environment import Environment
 
@@ -253,7 +251,7 @@ class PreparedCandidate:
             rev = get_rev_from_url(self.candidate.link.url)  # type: ignore
             if rev:
                 return rev
-        return vcs.get_backend(
+        return vcs_support.get_backend(
             self.req.vcs, self.environment.project.core.ui.verbosity  # type: ignore
         ).get_revision(cast(Path, self._source_dir))
 
@@ -385,7 +383,7 @@ class PreparedCandidate:
                 else:
                     download_dir = tmpdir
                 result = finder.download_and_unpack(
-                    self.link, download_dir, build_dir, hash_options
+                    self.link, build_dir, download_dir, hash_options
                 )
                 if self.link.is_wheel:
                     self.wheel = result
@@ -454,7 +452,7 @@ class PreparedCandidate:
                 # If the candidate isn't prepared, we can't cache it
                 return False
             assert link
-            vcs_backend = vcs.get_backend(
+            vcs_backend = vcs_support.get_backend(
                 link.vcs, self.environment.project.core.ui.verbosity
             )
             return vcs_backend.is_immutable_revision(source_dir, link)

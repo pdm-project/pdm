@@ -14,9 +14,7 @@ import pytest
 import requests
 from click.testing import CliRunner
 from packaging.version import parse as parse_version
-from unearth.session import PyPISession
-from unearth.vcs import Git
-from unearth.vcs import vcs as vcs_support
+from unearth.vcs import Git, vcs_support
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
@@ -30,6 +28,7 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_requirement,
 )
+from pdm.models.session import PDMSession
 from pdm.project.config import Config
 from pdm.utils import normalize_name, path_to_url
 from tests import FIXTURES
@@ -102,15 +101,15 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
 
 
 class MockGit(Git):
-    def fetch_new(self, dest, url, rev, args):
+    def fetch_new(self, location, url, rev, args):
         path = os.path.splitext(os.path.basename(unquote(urlparse(str(url)).path)))[0]
         mocked_path = FIXTURES / "projects" / path
-        shutil.copytree(mocked_path, dest)
+        shutil.copytree(mocked_path, location)
 
-    def get_revision(self, dest: Path) -> str:
+    def get_revision(self, location: Path) -> str:
         return "1234567890abcdef"
 
-    def is_immutable_revision(self, dest, link) -> bool:
+    def is_immutable_revision(self, location, link) -> bool:
         rev = self.get_url_and_rev_options(link)[1]
         return rev == "1234567890abcdef"
 
@@ -247,7 +246,7 @@ def working_set(mocker, repository):
 
 
 def get_pypi_session(*args, overrides=None, **kwargs):
-    session = PyPISession(*args, **kwargs)
+    session = PDMSession(*args, **kwargs)
     session.mount("http://fixtures.test/", LocalFileAdapter({"/": FIXTURES}))
     session.mount(
         "https://my.pypi.org/",
@@ -290,7 +289,7 @@ def project_no_init(tmp_path, mocker, core, index):
         tmp_path, global_config=test_home.joinpath("config.toml").as_posix()
     )
     mocker.patch(
-        "pdm.models.environment.PyPISession",
+        "pdm.models.environment.PDMSession",
         functools.partial(get_pypi_session, overrides=index),
     )
     tmp_path.joinpath("caches").mkdir(parents=True)
