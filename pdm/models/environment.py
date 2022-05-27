@@ -11,9 +11,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
+import unearth
+
 from pdm import termui
 from pdm.exceptions import BuildError
-from pdm.models import pip_shims
 from pdm.models.auth import make_basic_auth
 from pdm.models.in_process import (
     get_pep508_environment,
@@ -21,8 +22,9 @@ from pdm.models.in_process import (
     get_sys_config_paths,
 )
 from pdm.models.python import PythonInfo
+from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
-from pdm.utils import cached_property, get_finder, is_venv_python, pdm_scheme
+from pdm.utils import cached_property, get_index_urls, is_venv_python, pdm_scheme
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -103,33 +105,49 @@ class Environment:
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
+    @cached_property
+    def target_python(self) -> unearth.TargetPython:
+        # TODO: get abi, platform and impl from subprocess
+        python_version = self.interpreter.version_tuple
+        python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
+        return unearth.TargetPython(python_version, [python_abi_tag])
+
     @contextmanager
     def get_finder(
         self,
         sources: list[Source] | None = None,
-        ignore_requires_python: bool = False,
-    ) -> Generator[pip_shims.PackageFinder, None, None]:
+        ignore_compatibility: bool = False,
+    ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
-        :param ignore_requires_python: whether to ignore the python version constraint.
+        :param ignore_compatibility: whether to ignore the python version
+            and wheel tags.
         """
         if sources is None:
             sources = self.project.sources
 
-        python_version = self.interpreter.version_tuple
-        python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
-        finder = get_finder(
-            sources,
-            self.project.cache_dir.as_posix(),
-            python_version,
-            python_abi_tag,
-            ignore_requires_python,
+        index_urls, find_links, trusted_hosts = get_index_urls(sources)
+        session = PDMSession(
+            cache_dir=self.project.cache("http"),
+            index_urls=index_urls,
+            trusted_hosts=trusted_hosts,
         )
-        # Reuse the auth across sessions to avoid prompting repeatedly.
-        finder.session.auth = self.auth  # type: ignore
-        yield finder
-        finder.session.close()  # type: ignore
+        session.auth = self.auth
+        finder = unearth.PackageFinder(
+            session=session,
+            index_urls=index_urls,
+            find_links=find_links,
+            target_python=self.target_python,
+            ignore_compatibility=ignore_compatibility,
+            no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
+            only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
+            verbosity=self.project.core.ui.verbosity,
+        )
+        try:
+            yield finder
+        finally:
+            session.close()
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
@@ -166,33 +184,30 @@ class Environment:
             child.write_bytes(_replace_shebang(child.read_bytes(), new_shebang))
 
     def _download_pip_wheel(self, path: str | Path) -> None:
-        dirname = Path(tempfile.mkdtemp(prefix="pip-download-"))
-        try:
-            subprocess.check_call(
-                [
-                    getattr(sys, "_original_executable", sys.executable),
-                    "-m",
-                    "pip",
-                    "download",
-                    "--only-binary=:all:",
-                    "-d",
-                    str(dirname),
-                    "pip<21",  # pip>=21 drops the support of py27
-                ],
-            )
-            wheel_file = next(dirname.glob("pip-*.whl"))
-            shutil.move(str(wheel_file), path)
-        except subprocess.CalledProcessError:
-            raise BuildError("Failed to download pip for the given interpreter")
-        finally:
-            shutil.rmtree(dirname, ignore_errors=True)
+        download_error = BuildError("Can't get a working copy of pip for the project")
+        with self.get_finder([self.project.default_source]) as finder:
+            finder.only_binary = ["pip"]
+            best_match = finder.find_best_match("pip").best
+            if not best_match:
+                raise download_error
+            with tempfile.TemporaryDirectory(prefix="pip-download-") as dirname:
+                try:
+                    downloaded = finder.download_and_unpack(
+                        best_match.link, dirname, dirname
+                    )
+                except unearth.UnpackError:
+                    raise download_error
+                shutil.move(str(downloaded), path)
 
     @cached_property
     def pip_command(self) -> list[str]:
         """Get a pip command for this environment, and download one if not available.
         Return a list of args like ['python', '-m', 'pip']
         """
-        from pip import __file__ as pip_location
+        try:
+            from pip import __file__ as pip_location
+        except ModuleNotFoundError:
+            pip_location = None  # type: ignore
 
         python_major = self.interpreter.major
         executable = str(self.interpreter.executable)
@@ -201,15 +216,20 @@ class Environment:
         )
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
-            return [executable, "-Esm", "pip"]
-        if python_major == 3:
-            # Use the host pip package.
-            return [executable, "-Es", os.path.dirname(pip_location)]
-        # For py2, only pip<21 is eligible, download a pip wheel from the Internet.
-        pip_wheel = self.project.cache_dir / "pip.whl"
-        if not pip_wheel.is_file():
-            self._download_pip_wheel(pip_wheel)
-        return [executable, str(pip_wheel / "pip")]
+            command = [executable, "-Esm", "pip"]
+        elif python_major == 3 and pip_location:
+            # Use the host pip package if available
+            command = [executable, "-Es", os.path.dirname(pip_location)]
+        else:
+            # Otherwise, download a pip wheel from the Internet.
+            pip_wheel = self.project.cache_dir / "pip.whl"
+            if not pip_wheel.is_file():
+                self._download_pip_wheel(pip_wheel)
+            command = [executable, str(pip_wheel / "pip")]
+        verbosity = self.project.core.ui.verbosity
+        if verbosity > 0:
+            command.append("-" + "v" * verbosity)
+        return command
 
 
 class GlobalEnvironment(Environment):
@@ -251,6 +271,6 @@ class BareEnvironment(Environment):
 
     def get_working_set(self) -> WorkingSet:
         if self.project.project_config.config_file.exists():
-            return super().get_working_set()
+            return self.project.get_environment().get_working_set()
         else:
             return WorkingSet([])

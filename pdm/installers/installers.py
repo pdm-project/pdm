@@ -203,7 +203,7 @@ def install_wheel_with_cache(
         and fs_supports_symlink()
     )
     if not cache_path.is_dir():
-        logger.debug("Installing wheel into cached location %s", cache_path)
+        logger.info("Installing wheel into cached location %s", cache_path)
         cache_path.mkdir(exist_ok=True)
         destination = InstallDestination(
             scheme_dict=package_cache.scheme(),

@@ -9,7 +9,7 @@ class Source(TypedDict, total=False):
     url: str
     verify_ssl: bool
     name: str
-    type: Literal["index"] | Literal["find_links"]
+    type: Literal["index", "find_links"]
 
 
 RequirementDict = Union[str, Dict[str, Union[str, bool]]]
