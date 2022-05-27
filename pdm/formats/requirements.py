@@ -1,79 +1,89 @@
 from __future__ import annotations
 
+import argparse
 import dataclasses
 import hashlib
+import shlex
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping, cast
 
 from pdm.formats.base import make_array
 from pdm.models.candidates import Candidate
-from pdm.models.environment import Environment
-from pdm.models.pip_shims import InstallRequirement, PackageFinder, parse_requirements
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
-from pdm.utils import expand_env_vars_in_auth, get_finder
+from pdm.utils import expand_env_vars_in_auth
+
+if TYPE_CHECKING:
+    from pdm._types import Source
 
 
-def _requirement_to_str_lowercase_name(requirement: InstallRequirement) -> str:
-    """Formats a packaging.requirements.Requirement with a lowercase name."""
-    assert requirement.name
-    parts = [requirement.name.lower()]
-
-    if requirement.extras:
-        parts.append("[{0}]".format(",".join(sorted(requirement.extras))))
-
-    if requirement.specifier:
-        parts.append(str(requirement.specifier))
-
-    if requirement.link:
-        parts.append("@ {0}".format(requirement.link.url_without_fragment))
-        if requirement.link.subdirectory_fragment:
-            parts.append(
-                "#subdirectory={0}".format(requirement.link.subdirectory_fragment)
-            )
-
-    return "".join(parts)
-
-
-def ireq_as_line(ireq: InstallRequirement, environment: Environment) -> str:
-    """Formats an `InstallRequirement` instance as a
-    PEP 508 dependency string.
-
-    Generic formatter for pretty printing InstallRequirements to the terminal
-    in a less verbose way than using its `__str__` method.
-
-    :param :class:`InstallRequirement` ireq: A pip **InstallRequirement** instance.
-    :return: A formatted string for prettyprinting
-    :rtype: str
+class RequirementParser:
+    """Reference:
+    https://pip.pypa.io/en/stable/reference/requirements-file-format/
     """
-    if ireq.editable:
-        line = "-e {}".format(ireq.link)
-    else:
-        if not ireq.req:
-            req = parse_requirement("dummy @" + ireq.link.url)  # type: ignore
-            req.name = Candidate(req).prepare(environment).metadata.metadata["Name"]
-            ireq.req = req  # type: ignore
 
-        line = _requirement_to_str_lowercase_name(ireq)
-    if ireq.markers:
-        line = f"{line}; {ireq.markers}"
+    # TODO: support no_binary, only_binary, prefer_binary, pre and no_index
 
-    return line
+    def __init__(self) -> None:
+        self.requirements: list[Requirement] = []
+        self.index_url: str | None = None
+        self.extra_index_urls: list[str] = []
+        self.no_index: bool = False
+        self.find_links: list[str] = []
+        self.trusted_hosts: list[str] = []
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--index-url", "-i")
+        parser.add_argument("--no-index", action="store_true")
+        parser.add_argument("--extra-index-url")
+        parser.add_argument("--find-links", "-f")
+        parser.add_argument("--trusted-host")
+        parser.add_argument("-e", "--editable", nargs="+")
+        parser.add_argument("-r", "--requirement")
+        self._parser = parser
 
+    def _clean_line(self, line: str) -> str:
+        """Strip the surrounding whitespaces and comment from the line"""
+        line = line.strip()
+        if line.startswith("#"):
+            return ""
+        return line.split(" #", 1)[0].strip()
 
-def parse_requirement_file(
-    filename: str,
-) -> tuple[list[InstallRequirement], PackageFinder]:
-    from pdm.models.pip_shims import install_req_from_parsed_requirement
+    def _parse_line(self, line: str) -> None:
+        if not line.startswith("-"):
+            # Starts with a requirement, just ignore all per-requirement options
+            req_string = line.split(" -", 1)[0].strip()
+            self.requirements.append(parse_requirement(req_string))
+            return
+        args, _ = self._parser.parse_known_args(shlex.split(line))
+        if args.index_url:
+            self.index_url = args.index_url
+        if args.no_index:
+            self.no_index = args.no_index
+        if args.extra_index_url:
+            self.extra_index_urls.append(args.extra_index_url)
+        if args.find_links:
+            self.find_links.append(args.find_links)
+        if args.trusted_host:
+            self.trusted_hosts.append(args.trusted_host)
+        if args.editable:
+            self.requirements.append(parse_requirement(" ".join(args.editable), True))
+        if args.requirement:
+            self.parse(args.requirement)
 
-    finder = get_finder([])
-    ireqs = [
-        install_req_from_parsed_requirement(pr)
-        for pr in parse_requirements(filename, finder.session, finder)  # type: ignore
-    ]
-    return ireqs, finder
+    def parse(self, filename: str) -> None:
+        with open(filename, encoding="utf-8") as f:
+            this_line = ""
+            for line in filter(None, map(self._clean_line, f)):
+                if line.endswith("\\"):
+                    this_line += line[:-1].rstrip() + " "
+                    continue
+                this_line += line
+                self._parse_line(this_line)
+                this_line = ""
+            if this_line:
+                self._parse_line(this_line)
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
@@ -89,20 +99,38 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
             return False
 
 
-def convert_url_to_source(url: str, name: str | None = None) -> dict[str, Any]:
+def _is_url_trusted(url: str, trusted_hosts: list[str]) -> bool:
+    parsed = urllib.parse.urlparse(url)
+    netloc, host = parsed.netloc, parsed.hostname
+
+    for trusted in trusted_hosts:
+        if trusted in (host, netloc):
+            return True
+    return False
+
+
+def convert_url_to_source(
+    url: str, name: str | None, trusted_hosts: list[str], type: str = "index"
+) -> Source:
     if not name:
         name = hashlib.sha1(url.encode("utf-8")).hexdigest()[:6]
-    return {"name": name, "url": url, "verify_ssl": url.startswith("https://")}
+    source = {
+        "name": name,
+        "url": url,
+        "verify_ssl": not _is_url_trusted(url, trusted_hosts),
+    }
+    if type != "index":
+        source["type"] = type
+    return cast("Source", source)
 
 
 def convert(
     project: Project, filename: PathLike, options: Namespace
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-    ireqs, finder = parse_requirement_file(str(filename))
-    with project.core.ui.logging("build"):
-        reqs = [ireq_as_line(ireq, project.environment) for ireq in ireqs]
+    parser = RequirementParser()
+    parser.parse(str(filename))
 
-    deps = make_array(reqs, True)
+    deps = make_array([r.as_line() for r in parser.requirements], True)
     data: dict[str, Any] = {}
     settings: dict[str, Any] = {}
     if options.dev:
@@ -111,11 +139,31 @@ def convert(
         data["optional-dependencies"] = {options.group: deps}
     else:
         data["dependencies"] = deps
-    if finder.index_urls:
-        sources = [convert_url_to_source(finder.index_urls[0], "pypi")]
-        sources.extend(convert_url_to_source(url) for url in finder.index_urls[1:])
-        settings["source"] = sources
+    sources: list[Source] = []
+    if parser.index_url and not parser.no_index:
+        sources.append(
+            convert_url_to_source(parser.index_url, "pypi", parser.trusted_hosts)
+        )
+    if not parser.no_index:
+        for url in parser.extra_index_urls:
+            sources.append(convert_url_to_source(url, None, parser.trusted_hosts))
+    if parser.find_links:
+        first, *find_links = parser.find_links
+        sources.append(
+            convert_url_to_source(
+                first,
+                "pypi" if parser.no_index else None,
+                parser.trusted_hosts,
+                "find_links",
+            )
+        )
+        for url in find_links:
+            sources.append(
+                convert_url_to_source(url, None, parser.trusted_hosts, "find_links")
+            )
 
+    if sources:
+        settings["source"] = sources
     return data, settings
 
 

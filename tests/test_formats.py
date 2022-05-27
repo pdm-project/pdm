@@ -35,7 +35,7 @@ def test_convert_requirements_file(project, is_dev):
     assert 'whoosh==2.7.4; sys_platform == "win32"' in group
     assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
     assert (
-        "pep508-package@ git+https://github.com/techalchemy/test-project.git"
+        "pep508-package @ git+https://github.com/techalchemy/test-project.git"
         "@master#subdirectory=parent_folder/pep508-package" in group
     )
 
@@ -50,7 +50,7 @@ def test_convert_requirements_file_without_name(project, vcs):
         project, str(req_file), Namespace(dev=False, group=None)
     )
 
-    assert result["dependencies"] == ["demo@ git+https://github.com/test-root/demo.git"]
+    assert result["dependencies"] == ["git+https://github.com/test-root/demo.git"]
 
 
 def test_convert_poetry(project):

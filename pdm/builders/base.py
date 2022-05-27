@@ -74,7 +74,7 @@ def log_subprocessor(
     env = os.environ.copy()
     if extra_environ:
         env.update(extra_environ)
-    outstream = LoggerWrapper(logger, logging.DEBUG)
+    outstream = LoggerWrapper(logger, logging.INFO)
     try:
         subprocess.check_call(
             cmd,
@@ -171,7 +171,7 @@ class EnvBuilder:
         self.executable = self._env.interpreter.executable.as_posix()
         self.src_dir = src_dir
         self.isolated = environment.project.config["build_isolation"]
-        logger.debug("Preparing isolated env for PEP 517 build...")
+        logger.info("Preparing isolated env for PEP 517 build...")
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
                 spec = tomllib.load(f)

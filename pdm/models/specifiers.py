@@ -6,7 +6,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
-from pip._vendor.packaging.specifiers import SpecifierSet
+from packaging.specifiers import SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
 from pdm.models.versions import Version

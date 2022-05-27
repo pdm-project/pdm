@@ -18,35 +18,12 @@ import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from re import Match
-from typing import (
-    Any,
-    BinaryIO,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    TextIO,
-    TypeVar,
-    cast,
-    no_type_check,
-    overload,
-)
+from typing import Any, Callable, Generic, Iterator, TextIO, TypeVar, overload
 
 from packaging.version import Version
-from pip._vendor.packaging.tags import Tag
-from pip._vendor.requests import Session
 
 from pdm._types import Source
 from pdm.compat import Distribution
-from pdm.models.pip_shims import (
-    InstallCommand,
-    InstallRequirement,
-    Link,
-    PackageFinder,
-    PipWheel,
-    get_package_finder,
-    url_to_path,
-)
 
 if sys.version_info >= (3, 8):
     from functools import cached_property
@@ -100,42 +77,6 @@ def prepare_pip_source_args(
     return pip_args
 
 
-def get_pypi_source() -> tuple[str, bool]:
-    """Get what is defined in pip.conf as the index-url."""
-    install_cmd = InstallCommand()
-    options, _ = install_cmd.parser.parse_args([])
-    index_url = options.index_url
-    parsed = parse.urlparse(index_url)
-    verify_ssl = parsed.scheme == "https"
-    if any(parsed.hostname.startswith(host) for host in options.trusted_hosts):
-        verify_ssl = False
-    return index_url, verify_ssl
-
-
-def get_finder(
-    sources: list[Source],
-    cache_dir: str | None = None,
-    python_version: tuple[int, ...] | None = None,
-    python_abi_tag: str | None = None,
-    ignore_requires_python: bool = False,
-) -> PackageFinder:
-    install_cmd = InstallCommand()
-    pip_args = prepare_pip_source_args(sources)
-    options, _ = install_cmd.parser.parse_args(pip_args)
-    if cache_dir:
-        options.cache_dir = cache_dir
-    finder = get_package_finder(
-        install_cmd=install_cmd,
-        options=options,
-        python_version=python_version,
-        python_abi_tag=python_abi_tag,
-        ignore_requires_python=ignore_requires_python,
-    )
-    if not hasattr(finder, "session"):
-        finder.session = finder._link_collector.session  # type: ignore
-    return finder
-
-
 def create_tracked_tempdir(
     suffix: str | None = None, prefix: str | None = None, dir: str | None = None
 ) -> str:
@@ -149,9 +90,22 @@ def create_tracked_tempdir(
     return name
 
 
-def parse_name_version_from_wheel(filename: str) -> tuple[str, str]:
-    w = PipWheel(os.path.basename(filename))
-    return w.name, w.version
+def get_index_urls(sources: list[Source]) -> tuple[list[str], list[str], list[str]]:
+    """Parse the project sources and return
+    (index_urls, find_link_urls, trusted_hosts)
+    """
+    index_urls, find_link_urls, trusted_hosts = [], [], []
+    for source in sources:
+        url = source["url"]
+        netloc = parse.urlparse(url).netloc
+        host = netloc.rsplit("@", 1)[-1]
+        if host not in trusted_hosts and not source.get("verify_ssl", True):
+            trusted_hosts.append(host)
+        if source.get("type", "index") == "index":
+            index_urls.append(url)
+        else:
+            find_link_urls.append(url)
+    return index_urls, find_link_urls, trusted_hosts
 
 
 def url_without_fragments(url: str) -> str:
@@ -163,56 +117,6 @@ def join_list_with(items: list[Any], sep: Any) -> list[Any]:
     for item in items:
         new_items.extend([item, sep])
     return new_items[:-1]
-
-
-original_wheel_supported = PipWheel.supported
-original_support_index_min = PipWheel.support_index_min
-_has_find_most_preferred_tag = (
-    getattr(PipWheel, "find_most_preferred_tag", None) is not None
-)
-
-if _has_find_most_preferred_tag:
-    original_find: Any = PipWheel.find_most_preferred_tag
-else:
-    original_find = None
-
-
-@no_type_check
-@contextmanager
-def allow_all_wheels(enable: bool = True) -> Iterator:
-    """Monkey patch pip.Wheel to allow all wheels
-
-    The usual checks against platforms and Python versions are ignored to allow
-    fetching all available entries in PyPI. This also saves the candidate cache
-    and set a new one, or else the results from the previous non-patched calls
-    will interfere.
-    """
-    if not enable:
-        yield
-        return
-
-    def _wheel_supported(self: PipWheel, tags: Iterable[Tag]) -> bool:
-        # Ignore current platform. Support everything.
-        return True
-
-    def _wheel_support_index_min(self: PipWheel, tags: list[Tag]) -> int:
-        # All wheels are equal priority for sorting.
-        return 0
-
-    def _find_most_preferred_tag(
-        self: PipWheel, tags: list[Tag], tag_to_priority: dict[Tag, int]
-    ) -> int:
-        return 0
-
-    PipWheel.supported = _wheel_supported
-    PipWheel.support_index_min = _wheel_support_index_min
-    if _has_find_most_preferred_tag:
-        PipWheel.find_most_preferred_tag = _find_most_preferred_tag
-    yield
-    PipWheel.supported = original_wheel_supported
-    PipWheel.support_index_min = original_support_index_min
-    if _has_find_most_preferred_tag:
-        PipWheel.find_most_preferred_tag = original_find
 
 
 def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
@@ -333,47 +237,59 @@ def cd(path: str | Path) -> Iterator:
         os.chdir(_old_cwd)
 
 
-@contextmanager
-def open_file(url: str, session: Session | None = None) -> Iterator[BinaryIO]:
-    if url.startswith("file://"):
-        local_path = url_to_path(url)
-        if os.path.isdir(local_path):
-            raise ValueError("Cannot open directory for read: {}".format(url))
-        else:
-            with open(local_path, "rb") as local_file:
-                yield local_file
+def url_to_path(url: str) -> str:
+    """
+    Convert a file: URL to a path.
+    """
+    from urllib.request import url2pathname
+
+    WINDOWS = sys.platform == "win32"
+
+    assert url.startswith(
+        "file:"
+    ), f"You can only turn file: urls into filenames (not {url!r})"
+
+    _, netloc, path, _, _ = parse.urlsplit(url)
+
+    if not netloc or netloc == "localhost":
+        # According to RFC 8089, same as empty authority.
+        netloc = ""
+    elif WINDOWS:
+        # If we have a UNC path, prepend UNC share notation.
+        netloc = "\\\\" + netloc
     else:
-        assert session
-        headers = {"Accept-Encoding": "identity"}
-        with session.get(url, headers=headers, stream=True) as resp:
-            try:
-                raw = getattr(resp, "raw", None)
-                result = raw or resp
-                yield result
-            finally:
-                if raw:
-                    conn = getattr(raw, "_connection", None)
-                    if conn is not None:
-                        conn.close()
-                result.close()
+        raise ValueError(
+            f"non-local file URIs are not supported on this platform: {url!r}"
+        )
+
+    path = url2pathname(netloc + path)
+
+    # On Windows, urlsplit parses the path as something like "/C:/Users/foo".
+    # This creates issues for path-related functions like io.open(), so we try
+    # to detect and strip the leading slash.
+    if (
+        WINDOWS
+        and not netloc  # Not UNC.
+        and len(path) >= 3
+        and path[0] == "/"  # Leading slash to strip.
+        and path[1].isalpha()  # Drive letter.
+        and path[2:4] in (":", ":/")  # Colon + end of string, or colon + absolute path.
+    ):
+        path = path[1:]
+
+    return path
 
 
-def populate_link(
-    finder: PackageFinder,
-    ireq: InstallRequirement,
-    upgrade: bool = False,
-) -> Link | None:
-    """Populate ireq's link attribute"""
-    if not ireq.link:
-        candidate = finder.find_requirement(ireq, upgrade)
-        if not candidate:
-            return None
-        link = cast(Link, getattr(candidate, "link", candidate))
-        ireq.link = link
-    return ireq.link
+def path_to_url(path: str) -> str:
+    """
+    Convert a path to a file: URL.  The path will be made absolute and have
+    quoted path parts.
+    """
+    from urllib.request import pathname2url
 
-
-_VT = TypeVar("_VT")
+    path = os.path.normpath(os.path.abspath(path))
+    url = parse.urljoin("file:", pathname2url(path))
+    return url
 
 
 def expand_env_vars(credential: str, quote: bool = False) -> str:
@@ -486,8 +402,9 @@ def get_rev_from_url(url: str) -> str:
     return ""
 
 
-def normalize_name(name: str) -> str:
-    return re.sub(r"[^A-Za-z0-9.]+", "-", name).lower()
+def normalize_name(name: str, lowercase: bool = True) -> str:
+    name = re.sub(r"[^A-Za-z0-9.]+", "-", name)
+    return name.lower() if lowercase else name
 
 
 def is_egg_link(dist: Distribution) -> bool:
