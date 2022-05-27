@@ -152,7 +152,10 @@ def build_dependency_graph(
             requirements = (
                 parse_requirement(r)
                 for r in filter_requirements_with_extras(
-                    dist.metadata["Name"], dist.requires or [], extras  # type: ignore
+                    cast(str, dist.metadata["Name"]),
+                    dist.requires or [],
+                    extras,
+                    include_default=True,
                 )
             )
             for req in requirements:

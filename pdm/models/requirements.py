@@ -443,7 +443,10 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    project_name: str, requirement_lines: list[str], extras: Sequence[str]
+    project_name: str,
+    requirement_lines: list[str],
+    extras: Sequence[str],
+    include_default: bool = False,
 ) -> list[str]:
     """Filter the requirements with extras.
     If extras are given, return those with matching extra markers.
@@ -454,13 +457,18 @@ def filter_requirements_with_extras(
     for req in requirement_lines:
         _r = parse_requirement(req)
         if _r.marker:
-            elements, rest = split_marker_extras(str(_r.marker))
-            if elements:
-                extras_in_meta.update(elements)
+            req_extras, rest = split_marker_extras(str(_r.marker))
+            if req_extras:
+                extras_in_meta.update(req_extras)
                 _r.marker = Marker(rest) if rest else None
         else:
-            elements = set()
-        if extras and not elements.isdisjoint(extras) or not (extras or elements):
+            req_extras = set()
+        if (
+            req_extras
+            and not req_extras.isdisjoint(extras)
+            or not req_extras
+            and (include_default or not extras)
+        ):
             result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
