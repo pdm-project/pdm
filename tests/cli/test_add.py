@@ -1,10 +1,9 @@
 import shutil
-from pathlib import Path
 
 import pytest
+from unearth import Link
 
 from pdm.cli import actions
-from pdm.models.pip_shims import Link
 from pdm.models.specifiers import PySpecSet
 from tests import FIXTURES
 
@@ -280,11 +279,13 @@ def test_add_cached_vcs_requirement(project, mocker):
     url = "git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
     built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
     wheel_cache = project.make_wheel_cache()
-    cache_path = Path(wheel_cache.get_path_for_link(Link(url)))
+    cache_path = wheel_cache.get_path_for_link(
+        Link(url), project.environment.target_python
+    )
     if not cache_path.exists():
         cache_path.mkdir(parents=True)
     shutil.copy2(built_path, cache_path)
-    downloader = mocker.patch("pdm.models.pip_shims.unpack_url")
+    downloader = mocker.patch("unearth.finder.unpack_link")
     builder = mocker.patch("pdm.builders.WheelBuilder.build")
     actions.do_add(project, packages=[url], no_self=True)
     lockfile_entry = next(p for p in project.lockfile["package"] if p["name"] == "demo")

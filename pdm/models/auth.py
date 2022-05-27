@@ -1,8 +1,9 @@
 from typing import List, Optional, Tuple
 
+from unearth.auth import MultiDomainBasicAuth
+
 from pdm._types import Source
 from pdm.exceptions import PdmException
-from pdm.models.pip_shims import MultiDomainBasicAuth
 from pdm.termui import UI
 
 try:
@@ -50,4 +51,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
 
 
 def make_basic_auth(sources: List[Source], prompting: bool) -> PdmBasicAuth:
-    return PdmBasicAuth(prompting, [source["url"] for source in sources])
+    return PdmBasicAuth(
+        prompting,
+        [source["url"] for source in sources if source.get("type", "index") == "index"],
+    )

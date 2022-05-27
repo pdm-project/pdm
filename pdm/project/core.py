@@ -16,8 +16,7 @@ from findpython import Finder
 from pdm import termui
 from pdm._types import Source
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
-from pdm.models import pip_shims
-from pdm.models.caches import CandidateInfoCache, HashCache
+from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
@@ -37,6 +36,7 @@ from pdm.utils import (
     get_in_project_venv_python,
     get_venv_like_prefix,
     normalize_name,
+    path_to_url,
 )
 
 if TYPE_CHECKING:
@@ -333,17 +333,22 @@ class Project:
         return self.tool_settings.get("allow_prereleases")
 
     @property
+    def default_source(self) -> Source:
+        """Get the default source of from the pypi setting"""
+        return cast(
+            "Source",
+            {
+                "url": self.config["pypi.url"],
+                "verify_ssl": self.config["pypi.verify_ssl"],
+                "name": "pypi",
+            },
+        )
+
+    @property
     def sources(self) -> list[Source]:
         sources = list(self.tool_settings.get("source", []))
         if all(source.get("name") != "pypi" for source in sources):
-            sources.insert(
-                0,
-                {
-                    "url": self.config["pypi.url"],
-                    "verify_ssl": self.config["pypi.verify_ssl"],
-                    "name": "pypi",
-                },
-            )
+            sources.insert(0, self.default_source)
         expanded_sources: list[Source] = [
             Source(
                 url=expand_env_vars_in_auth(s["url"]),
@@ -460,7 +465,7 @@ class Project:
             self._lockfile = toml_data
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
-        req = parse_requirement(pip_shims.path_to_url(self.root.as_posix()), editable)
+        req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
         return Candidate(req, name=self.meta.name, version=self.meta.version)
 
@@ -582,13 +587,10 @@ dependencies = ["pip", "setuptools", "wheel"]
         path.mkdir(parents=True, exist_ok=True)
         return path
 
-    def make_wheel_cache(self) -> pip_shims.WheelCache:
-        return pip_shims.WheelCache(
-            self.cache_dir.as_posix(), pip_shims.FormatControl(set(), set())
-        )
+    def make_wheel_cache(self) -> WheelCache:
+        return WheelCache(self.cache("wheels"))
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
-
         python_hash = hashlib.sha1(
             str(self.environment.python_requires).encode()
         ).hexdigest()
@@ -596,7 +598,7 @@ dependencies = ["pip", "setuptools", "wheel"]
         return CandidateInfoCache(self.cache("metadata") / file_name)
 
     def make_hash_cache(self) -> HashCache:
-        return HashCache(directory=self.cache("hashes").as_posix())
+        return HashCache(directory=self.cache("hashes"))
 
     def find_interpreters(self, python_spec: str | None = None) -> Iterable[PythonInfo]:
         """Return an iterable of interpreter paths that matches the given specifier,

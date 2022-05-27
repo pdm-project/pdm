@@ -44,7 +44,7 @@ class Command(BaseCommand):
             )
         else:
 
-            rows = zip(
+            for name, value in zip(
                 [
                     f"[bold cyan]{key}[/]:"
                     for key in [
@@ -60,5 +60,5 @@ class Command(BaseCommand):
                     project.root.as_posix(),
                     str(project.environment.packages_path),
                 ],
-            )
-            project.core.ui.display_columns(list(rows))
+            ):
+                project.core.ui.echo(f"{name}\n  {value}")
