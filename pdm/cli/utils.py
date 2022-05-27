@@ -29,7 +29,6 @@ from pdm import termui
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
-from pdm.models.pip_shims import url_to_path
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -39,7 +38,7 @@ from pdm.models.requirements import (
 from pdm.models.specifiers import get_specifier
 from pdm.models.working_set import WorkingSet
 from pdm.project import Project
-from pdm.utils import is_path_relative_to
+from pdm.utils import is_path_relative_to, url_to_path
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible

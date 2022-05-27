@@ -252,6 +252,21 @@ Include the following setting in `pyproject.toml` to enable:
 allow_prereleases = true
 ```
 
+## Set acceptable format for locking or installing
+
+If you want to control the format(binary/sdist) of the packages, you can set the env vars `PDM_NO_BINARY` and `PDM_ONLY_BINARY`.
+
+Each env var is a comma-separated list of package name. You can set it to `:all:` to apply to all packages. For example:
+
+```
+# No binary for werkzeug will be locked nor used for installation
+PDM_NO_BINARY=werkzeug pdm add flask
+# Only binaries will be locked in the lock file
+PDM_ONLY_BINARY=:all: pdm lock
+# No binaries will be used for installation
+PDM_NO_BINARY=:all: pdm install
+```
+
 ## Solve the locking failure
 
 If PDM is not able to find a resolution to satisfy the requirements, it will raise an error. For example,

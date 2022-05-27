@@ -5,11 +5,7 @@ import sys
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
-from packaging.version import parse as parse_version
-from pip._vendor.html5lib import parse
-
 from pdm import termui
-from pdm._types import CandidateInfo, Package, SearchResult, Source
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
@@ -17,10 +13,12 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_requirement,
 )
+from pdm.models.search import SearchResultParser
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm.utils import allow_all_wheels, normalize_name, url_without_fragments
+from pdm.utils import normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
+    from pdm._types import CandidateInfo, SearchResult, Source
     from pdm.models.environment import Environment
 
 ALLOW_ALL_PYTHON = PySpecSet()
@@ -102,11 +100,7 @@ class BaseRepository:
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
         requires_python = requirement.requires_python & self.environment.python_requires
-        cans = sorted(
-            self._find_candidates(requirement),
-            key=lambda c: (parse_version(c.version), c.link.is_wheel),  # type: ignore
-            reverse=True,
-        )
+        cans = list(self._find_candidates(requirement))
         applicable_cans = [
             c
             for c in cans
@@ -210,11 +204,10 @@ class BaseRepository:
         if candidate.req.is_file_or_url:
             matching_candidates: Iterable[Candidate] = [candidate]
         else:
-            matching_candidates = self.find_candidates(req, True)
+            matching_candidates = self.find_candidates(req, ignore_requires_python=True)
         with self.environment.get_finder(self.sources) as finder:
-            self._hash_cache.session = finder.session  # type: ignore
             return {
-                c.link.filename: self._hash_cache.get_hash(c.link)  # type: ignore
+                c.link.filename: self._hash_cache.get_hash(c.link, finder.session)
                 for c in matching_candidates
                 if c.link and not c.link.is_vcs
             } or None
@@ -254,7 +247,7 @@ class PyPIRepository(BaseRepository):
             if proc_url.endswith("/simple")
         ]
         with self.environment.get_finder(sources) as finder:
-            session = finder.session  # type: ignore
+            session = finder.session
             for prefix in url_prefixes:
                 json_url = f"{prefix}/pypi/{candidate.name}/{candidate.version}/json"
                 resp = session.get(json_url)
@@ -286,10 +279,10 @@ class PyPIRepository(BaseRepository):
     @lru_cache()
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
-        with self.environment.get_finder(sources, True) as finder, allow_all_wheels():
+        with self.environment.get_finder(sources, True) as finder:
             cans = [
                 Candidate.from_installation_candidate(c, requirement)
-                for c in finder.find_all_candidates(requirement.project_name)
+                for c in finder.find_all_packages(requirement.project_name)
             ]
         if not cans:
             raise CandidateNotFound(
@@ -300,7 +293,6 @@ class PyPIRepository(BaseRepository):
 
     def search(self, query: str) -> SearchResult:
         pypi_simple = self.sources[0]["url"].rstrip("/")
-        results = []
 
         if pypi_simple.endswith("/simple"):
             search_url = pypi_simple[:-6] + "search"
@@ -321,24 +313,10 @@ class PyPIRepository(BaseRepository):
                 resp = session.get(
                     f"{self.DEFAULT_INDEX_URL}/search", params={"q": query}
                 )
+            parser = SearchResultParser()
             resp.raise_for_status()
-            content = parse(resp.content, namespaceHTMLElements=False)
-
-        for result in content.findall(".//*[@class='package-snippet']"):
-            name = result.find("h3/*[@class='package-snippet__name']").text
-            version = result.find("h3/*[@class='package-snippet__version']").text
-
-            if not name or not version:
-                continue
-
-            description = result.find("p[@class='package-snippet__description']").text
-            if not description:
-                description = ""
-
-            result = Package(name, version, description)
-            results.append(result)
-
-        return results
+            parser.feed(resp.text)
+            return parser.results
 
 
 class LockedRepository(BaseRepository):
