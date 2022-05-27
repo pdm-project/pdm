@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, cast
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from resolvelib import AbstractProvider
@@ -65,7 +65,7 @@ class BaseProvider(AbstractProvider):
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
-    ) -> Comparable:
+    ) -> tuple[Comparable, ...]:
         is_top = any(parent is None for _, parent in information[identifier])
         is_backtrack_cause = any(
             requirement.identify() == identifier
@@ -134,20 +134,24 @@ class BaseProvider(AbstractProvider):
         identifier: str,
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
-    ) -> Iterable[Candidate]:
-        incompat = list(incompatibilities[identifier])
-        if identifier == "python":
-            candidates = find_python_matches(identifier, requirements)
-            return [c for c in candidates if c not in incompat]
-        elif identifier in self.overrides:
-            return self.get_override_candidates(identifier)
-        reqs = sorted(requirements[identifier], key=self.requirement_preference)
-        candidates = self._find_candidates(reqs[0])
-        return [
-            can
-            for can in candidates
-            if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
-        ]
+    ) -> Callable[[], Iterator[Candidate]]:
+        def matches_gen() -> Iterator[Candidate]:
+            incompat = list(incompatibilities[identifier])
+            if identifier == "python":
+                candidates = find_python_matches(identifier, requirements)
+                return (c for c in candidates if c not in incompat)
+            elif identifier in self.overrides:
+                return iter(self.get_override_candidates(identifier))
+            reqs = sorted(requirements[identifier], key=self.requirement_preference)
+            candidates = self._find_candidates(reqs[0])
+            return (
+                can
+                for can in candidates
+                if can not in incompat
+                and all(self.is_satisfied_by(r, can) for r in reqs)
+            )
+
+        return matches_gen
 
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if isinstance(requirement, PythonRequirement):
@@ -156,15 +160,19 @@ class BaseProvider(AbstractProvider):
             return True
         if not requirement.is_named:
             return not candidate.req.is_named and url_without_fragments(
-                candidate.req.url
-            ) == url_without_fragments(requirement.url)
-        version = candidate.version or candidate.metadata.version
+                candidate.req.url  # type: ignore
+            ) == url_without_fragments(
+                requirement.url  # type: ignore
+            )
+        version = candidate.version
         # Allow prereleases if: 1) it is not specified in the tool settings or
         # 2) the candidate doesn't come from PyPI index.
         allow_prereleases = (
             self.allow_prereleases in (True, None) or not candidate.req.is_named
         )
-        return requirement.specifier.contains(version, allow_prereleases)
+        return cast(SpecifierSet, requirement.specifier).contains(
+            version, allow_prereleases
+        )
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         if isinstance(candidate, PythonCandidate):
@@ -222,19 +230,27 @@ class ReusePinProvider(BaseProvider):
         identifier: str,
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
-    ) -> Iterable[Candidate]:
-        if identifier not in self.tracked_names and identifier in self.preferred_pins:
-            pin = self.preferred_pins[identifier]
-            incompat = list(incompatibilities[identifier])
-            demanded_req = next(requirements[identifier], None)
-            if demanded_req and demanded_req.is_named:
-                pin.req = demanded_req
-            pin._preferred = True
-            if pin not in incompat and all(
-                self.is_satisfied_by(r, pin) for r in requirements[identifier]
+    ) -> Callable[[], Iterator[Candidate]]:
+        super_find = super().find_matches(identifier, requirements, incompatibilities)
+
+        def matches_gen() -> Iterator[Candidate]:
+            if (
+                identifier not in self.tracked_names
+                and identifier in self.preferred_pins
             ):
-                yield pin
-        yield from super().find_matches(identifier, requirements, incompatibilities)
+                pin = self.preferred_pins[identifier]
+                incompat = list(incompatibilities[identifier])
+                demanded_req = next(requirements[identifier], None)
+                if demanded_req and demanded_req.is_named:
+                    pin.req = demanded_req
+                pin._preferred = True  # type: ignore
+                if pin not in incompat and all(
+                    self.is_satisfied_by(r, pin) for r in requirements[identifier]
+                ):
+                    yield pin
+            yield from super_find()
+
+        return matches_gen
 
 
 class EagerUpdateProvider(ReusePinProvider):
@@ -275,7 +291,7 @@ class EagerUpdateProvider(ReusePinProvider):
         candidates: dict[str, Iterator[Candidate]],
         information: dict[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
-    ) -> Comparable:
+    ) -> tuple[Comparable, ...]:
         # Resolve tracking packages so we have a chance to unpin them first.
         (python, *others) = super().get_preference(
             identifier, resolutions, candidates, information, backtrack_causes
