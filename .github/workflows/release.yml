@@ -38,16 +38,14 @@ jobs:
         id: get-changelog
         run: |
           awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md > .changelog.md
+      - name: Pack Test Artifacts
+        run: tar czvf test-artifacts-${{ github.ref }}.tar.gz -C tests/fixtures/artifacts .
       - name: Create Release
-        uses: actions/create-release@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
           release_name: v${{ github.ref }}
           body_path: .changelog.md
-          draft: false
-          prerelease: false
+          files: test-artifacts-${{ github.ref }}.tar.gz
       - name: Trigger Bucket Update
         uses: benc-uk/workflow-dispatch@v1
         with:
