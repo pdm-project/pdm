@@ -107,12 +107,14 @@ class _SetupReader:
         parser.read(str(file))
 
         name = None
-        version = None
+        version = "0.0.0"
         if parser.has_option("metadata", "name"):
             name = parser.get("metadata", "name")
 
         if parser.has_option("metadata", "version"):
-            version = parser.get("metadata", "version")
+            meta_version = parser.get("metadata", "version")
+            if not meta_version.startswith("attr:"):
+                version = meta_version
 
         install_requires = []
         extras_require: Dict[str, List[str]] = {}
