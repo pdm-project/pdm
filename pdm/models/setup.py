@@ -92,7 +92,7 @@ class _SetupReader:
 
         return Setup(
             name=cls._find_single_string(setup_call, body, "name"),
-            version=cls._find_single_string(setup_call, body, "version"),
+            version=cls._find_single_string(setup_call, body, "version") or "0.0.0",
             install_requires=cls._find_install_requires(setup_call, body),
             extras_require=cls._find_extras_require(setup_call, body),
             python_requires=cls._find_single_string(
@@ -107,12 +107,14 @@ class _SetupReader:
         parser.read(str(file))
 
         name = None
-        version = None
+        version = "0.0.0"
         if parser.has_option("metadata", "name"):
             name = parser.get("metadata", "name")
 
         if parser.has_option("metadata", "version"):
-            version = parser.get("metadata", "version")
+            meta_version = parser.get("metadata", "version")
+            if not meta_version.startswith("attr:"):
+                version = meta_version
 
         install_requires = []
         extras_require: Dict[str, List[str]] = {}
