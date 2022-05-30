@@ -367,7 +367,8 @@ class PreparedCandidate:
                 )
                 if not self.link:
                     raise CandidateNotFound(
-                        "No candidate is found for %s", self.candidate
+                        f"No candidate is found for `{self.req.project_name}` "
+                        "that matches the environment or hashes"
                     )
                 if not self.candidate.link:
                     self.candidate.link = self.link
