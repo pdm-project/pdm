@@ -4,17 +4,7 @@ import functools
 import multiprocessing
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Collection,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
 
 from pdm import termui
 from pdm.exceptions import InstallationError
@@ -30,12 +20,15 @@ if TYPE_CHECKING:
     from pdm.compat import Distribution
 
 
+_T = TypeVar("_T")
+
+
 class DummyFuture:
     _NOT_SET = object()
 
     def __init__(self) -> None:
         self._result = self._NOT_SET
-        self._exc: Optional[Exception] = None
+        self._exc: Exception | None = None
 
     def set_result(self, result: Any) -> None:
         self._result = result
@@ -46,10 +39,10 @@ class DummyFuture:
     def result(self) -> Any:
         return self._result
 
-    def exception(self) -> Optional[Exception]:
+    def exception(self) -> Exception | None:
         return self._exc
 
-    def add_done_callback(self, func: Callable) -> None:
+    def add_done_callback(self: _T, func: Callable[[_T], Any]) -> None:
         func(self)
 
 
@@ -58,7 +51,7 @@ class DummyExecutor:
     functions are called and awaited for the result
     """
 
-    def submit(self, func: Callable, *args: str, **kwargs: Any) -> DummyFuture:
+    def submit(self, func: Callable, *args: Any, **kwargs: Any) -> DummyFuture:
         future = DummyFuture()
         try:
             future.set_result(func(*args, **kwargs))
@@ -66,7 +59,7 @@ class DummyExecutor:
             future.set_exception(exc)
         return future
 
-    def __enter__(self) -> DummyExecutor:
+    def __enter__(self: _T) -> _T:
         return self
 
     def __exit__(self, *args: Any, **kwargs: Any) -> None:
@@ -98,7 +91,7 @@ class Synchronizer:
 
     def __init__(
         self,
-        candidates: Dict[str, Candidate],
+        candidates: dict[str, Candidate],
         environment: Environment,
         clean: bool = False,
         dry_run: bool = False,
@@ -147,7 +140,7 @@ class Synchronizer:
 
     def create_executor(
         self,
-    ) -> Union[ThreadPoolExecutor, DummyExecutor]:
+    ) -> ThreadPoolExecutor | DummyExecutor:
         if self.parallel:
             return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
         else:
@@ -165,7 +158,7 @@ class Synchronizer:
         )
 
     @property
-    def self_key(self) -> Optional[str]:
+    def self_key(self) -> str | None:
         name = self.environment.project.name
         if name:
             return self.environment.project.meta.project_name.lower()
@@ -180,7 +173,7 @@ class Synchronizer:
         else:
             return dist.version != can.version
 
-    def compare_with_working_set(self) -> Tuple[List[str], List[str], List[str]]:
+    def compare_with_working_set(self) -> tuple[list[str], list[str], list[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
         candidates = self.candidates.copy()
@@ -216,11 +209,9 @@ class Synchronizer:
     def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
-
+        job = progress.add_task(f"Installing {can.format()}...", total=1)
         try:
-            job = progress.add_task(f"Installing {can.format()}...", total=1)
             self.manager.install(can)
-            progress.update(job, completed=1, visible=False)
         except Exception:
             progress.live.console.print(
                 f"  [red]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
@@ -230,26 +221,26 @@ class Synchronizer:
             progress.live.console.print(
                 f"  [green]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
             )
+        finally:
+            progress.update(job, completed=1, visible=False)
         return can
 
     def update_candidate(
         self, key: str, progress: Progress
-    ) -> Tuple[Distribution, Candidate]:
+    ) -> tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[strip_extras(key)[0]]
         dist_version = dist.version
+        job = progress.add_task(
+            f"Updating [bold green]{key}[/] "
+            f"[yellow]{dist_version}[/] "
+            f"-> [yellow]{can.version}[/]...",
+            total=1,
+        )
         try:
-            job = progress.add_task(
-                f"Updating [bold green]{key}[/] "
-                f"[yellow]{dist_version}[/] "
-                f"-> [yellow]{can.version}[/]...",
-                total=1,
-            )
             self.manager.uninstall(dist)
             self.manager.install(can)
-            progress.update(job, completed=1, visible=False)
-
         except Exception:
             progress.live.console.print(
                 f"  [red]{termui.Emoji.FAIL}[/] Update [bold green]{key}[/] "
@@ -263,6 +254,8 @@ class Synchronizer:
                 f"[yellow]{dist_version}[/] "
                 f"-> [yellow]{can.version}[/] successful",
             )
+        finally:
+            progress.update(job, completed=1, visible=False)
 
         return dist, can
 
@@ -271,13 +264,12 @@ class Synchronizer:
         dist = self.working_set[key]
         dist_version = dist.version
 
+        job = progress.add_task(
+            f"Removing [bold green]{key}[/] " f"[yellow]{dist_version}[/]...",
+            total=1,
+        )
         try:
-            job = progress.add_task(
-                f"Removing [bold green]{key}[/] " f"[yellow]{dist_version}[/]...",
-                total=1,
-            )
             self.manager.uninstall(dist)
-            progress.update(job, completed=1, visible=False)
         except Exception:
             progress.live.console.print(
                 f"  [red]{termui.Emoji.FAIL}[/] Remove [bold green]{key}[/] "
@@ -289,9 +281,11 @@ class Synchronizer:
                 f"  [green]{termui.Emoji.SUCC}[/] Remove [bold green]{key}[/] "
                 f"[yellow]{dist_version}[/] successful"
             )
+        finally:
+            progress.update(job, completed=1, visible=False)
         return dist
 
-    def _show_headline(self, packages: Dict[str, List[str]]) -> None:
+    def _show_headline(self, packages: dict[str, list[str]]) -> None:
         add, update, remove = packages["add"], packages["update"], packages["remove"]
         if not any((add, update, remove)):
             self.ui.echo("All packages are synced to date, nothing to do.\n")
@@ -306,7 +300,7 @@ class Synchronizer:
         )
         self.ui.echo(" ".join(results) + "\n")
 
-    def _show_summary(self, packages: Dict[str, List[str]]) -> None:
+    def _show_summary(self, packages: dict[str, list[str]]) -> None:
         to_add = [self.candidates[key] for key in packages["add"]]
         to_update = [
             (self.working_set[key], self.candidates[key]) for key in packages["update"]
@@ -362,12 +356,10 @@ class Synchronizer:
                 else:
                     parallel_jobs.append((kind, key))
 
-        errors: List[str] = []
-        failed_jobs: List[Tuple[str, str]] = []
+        errors: list[str] = []
+        failed_jobs: list[tuple[str, str]] = []
 
-        def update_progress(
-            future: Union[Future, DummyFuture], kind: str, key: str
-        ) -> None:
+        def update_progress(future: Future | DummyFuture, kind: str, key: str) -> None:
             error = future.exception()
             if error:
                 exc_info = (type(error), error, error.__traceback__)
@@ -379,29 +371,27 @@ class Synchronizer:
                 )
 
         # get rich progess and live handler to deal with multiple spinners
-        with self.ui.make_progress() as progress:
+        with self.ui.logging("install"), self.ui.make_progress() as progress:
             live = progress.live
-            with self.ui.logging("install"):
-                for job in sequential_jobs:
-                    kind, key = job
-                    handlers[kind](key, progress)
-                for i in range(self.retry_times + 1):
-                    with self.create_executor() as executor:
-                        for job in parallel_jobs:
-                            kind, key = job
-                            future = executor.submit(handlers[kind], key, progress)
-                            future.add_done_callback(
-                                functools.partial(update_progress, kind=kind, key=key)
-                            )
-                    if not failed_jobs or i == self.retry_times:
-                        break
-                    parallel_jobs, failed_jobs = failed_jobs, []
-                    errors.clear()
-                    live.console.print("Retry failed jobs")
+            for kind, key in sequential_jobs:
+                handlers[kind](key, progress)
+            for i in range(self.retry_times + 1):
+                with self.create_executor() as executor:
+                    for kind, key in parallel_jobs:
+                        future = executor.submit(handlers[kind], key, progress)
+                        future.add_done_callback(
+                            functools.partial(update_progress, kind=kind, key=key)
+                        )
+                if not failed_jobs or i == self.retry_times:
+                    break
+                parallel_jobs, failed_jobs = failed_jobs, []
+                errors.clear()
+                live.console.print("Retry failed jobs")
 
             if errors:
-                live.console.print("\n[red]ERRORS[/]:")
-                live.console.print("".join(errors))
+                if self.ui.verbosity < termui.Verbosity.DETAIL:
+                    live.console.print("\n[red]ERRORS[/]:")
+                    live.console.print("".join(errors), end="")
                 raise InstallationError("Some package operations are not complete yet")
 
             if self.install_self:
