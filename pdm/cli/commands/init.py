@@ -46,7 +46,9 @@ class Command(BaseCommand):
         else:
             actions.do_use(project, "3", True)
         is_library = (
-            termui.ask("Is the project a library that will be uploaded to PyPI")
+            termui.confirm(
+                "Is the project a library that will be uploaded to PyPI", default=False
+            )
             if self.interactive
             else False
         )
