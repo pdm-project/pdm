@@ -117,8 +117,7 @@ lockfile_option = Option(
     "-L",
     "--lockfile",
     default=os.getenv("PDM_LOCKFILE"),
-    help="Specify another lockfile path, or use `PDM_LOCKFILE` env variable. "
-    "Default: pdm.lock",
+    help="Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]",
 )
 
 pep582_option = Option(
