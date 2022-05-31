@@ -245,6 +245,13 @@ update_strategy_group.add_argument(
     const="eager",
     help="Try to update the packages and their dependencies recursively",
 )
+update_strategy_group.add_argument(
+    "--update-all",
+    action="store_const",
+    dest="update_strategy",
+    const="all",
+    help="Update all dependencies and sub-depenencies",
+)
 
 project_option = Option(
     "-p",

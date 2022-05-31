@@ -33,7 +33,8 @@ def test_update_ignore_constraints(project, repository):
 
 
 @pytest.mark.usefixtures("working_set")
-def test_update_all_packages(project, repository, capsys):
+@pytest.mark.parametrize("strategy", ["reuse", "all"])
+def test_update_all_packages(project, repository, capsys, strategy):
     actions.do_add(project, packages=["requests", "pytz"])
     repository.add_candidate("pytz", "2019.6")
     repository.add_candidate("chardet", "3.0.5")
@@ -48,13 +49,16 @@ def test_update_all_packages(project, repository, capsys):
             "urllib3<1.24,>=1.21.1",
         ],
     )
-    actions.do_update(project)
+    actions.do_update(project, strategy=strategy)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
-    assert locked_candidates["chardet"].version == "3.0.5"
+    assert locked_candidates["chardet"].version == (
+        "3.0.5" if strategy == "all" else "3.0.4"
+    )
     assert locked_candidates["pytz"].version == "2019.6"
     out, _ = capsys.readouterr()
-    assert "3 to update" in out, out
+    update_num = 3 if strategy == "all" else 2
+    assert f"{update_num} to update" in out, out
 
     actions.do_sync(project)
     out, _ = capsys.readouterr()

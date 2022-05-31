@@ -344,7 +344,7 @@ def do_update(
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     resolved = do_lock(
         project,
-        strategy if top or packages else "all",
+        strategy,
         chain.from_iterable(updated_deps.values()),
         reqs,
         dry_run=dry_run,
