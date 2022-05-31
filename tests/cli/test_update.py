@@ -51,10 +51,11 @@ def test_update_all_packages(project, repository, capsys):
     actions.do_update(project)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
-    assert locked_candidates["chardet"].version == "3.0.5"
+    # Transitive pacakge versions are kept unless strategy='all'
+    assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.6"
     out, _ = capsys.readouterr()
-    assert "3 to update" in out, out
+    assert "2 to update" in out, out
 
     actions.do_sync(project)
     out, _ = capsys.readouterr()
