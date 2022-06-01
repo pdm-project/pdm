@@ -1,28 +1,54 @@
+from __future__ import annotations
+
+import collections
 import dataclasses
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, MutableMapping, Optional, Set, TypeVar
+from typing import Any, Callable, Iterator, Mapping, MutableMapping, TypeVar
 
 import platformdirs
 import tomlkit
 
 from pdm import termui
-from pdm.exceptions import NoConfigError
+from pdm.exceptions import NoConfigError, PdmUsageError
 
 T = TypeVar("T")
 ui = termui.UI()
 
+REPOSITORY = "repository"
 
-def load_config(file_path: Path) -> Dict[str, Any]:
+
+@dataclasses.dataclass
+class RepositoryConfig:
+    url: str
+    username: str | None = None
+    password: str | None = None
+
+    def __rich__(self) -> str:
+        lines = [f"[cyan]url[/] = {self.url}"]
+        if self.username:
+            lines.append(f"[cyan]username[/] = {self.username}")
+        if self.password:
+            lines.append("[cyan]password[/] = <hidden>")
+        return "\n".join(lines)
+
+
+DEFAULT_REPOSITORIES = {
+    "pypi": RepositoryConfig("https://upload.pypi.org/legacy/"),
+    "testpypi": RepositoryConfig("https://test.pypi.org/legacy/"),
+}
+
+
+def load_config(file_path: Path) -> dict[str, Any]:
     """Load a nested TOML document into key-value paires
 
     E.g. ["python"]["path"] will be loaded as "python.path" key.
     """
 
-    def get_item(sub_data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_item(sub_data: Mapping[str, Any]) -> Mapping[str, Any]:
         result = {}
         for k, v in sub_data.items():
-            if getattr(v, "items", None) is not None:
+            if k != REPOSITORY and isinstance(v, Mapping):
                 result.update(
                     {f"{k}.{sub_k}": sub_v for sub_k, sub_v in get_item(v).items()}
                 )
@@ -64,9 +90,9 @@ class ConfigItem:
     description: str
     default: Any = _NOT_SET
     global_only: bool = False
-    env_var: Optional[str] = None
+    env_var: str | None = None
     coerce: Callable = str
-    replace: Optional[str] = None
+    replace: str | None = None
 
     def should_show(self) -> bool:
         return self.default is not self._NOT_SET
@@ -75,7 +101,7 @@ class ConfigItem:
 class Config(MutableMapping[str, str]):
     """A dict-like object for configuration key and values"""
 
-    _config_map: Dict[str, ConfigItem] = {
+    _config_map: dict[str, ConfigItem] = {
         "cache_dir": ConfigItem(
             "The root directory of cached files",
             platformdirs.user_cache_dir("pdm"),
@@ -175,7 +201,7 @@ class Config(MutableMapping[str, str]):
     }
 
     @classmethod
-    def get_defaults(cls) -> Dict[str, Any]:
+    def get_defaults(cls) -> dict[str, Any]:
         return {k: v.default for k, v in cls._config_map.items() if v.should_show()}
 
     @classmethod
@@ -184,22 +210,20 @@ class Config(MutableMapping[str, str]):
         cls._config_map[name] = item
 
     def __init__(self, config_file: Path, is_global: bool = False):
-        self._data = {}
-        if is_global:
-            self._data.update(self.get_defaults())
-
         self.is_global = is_global
         self.config_file = config_file.resolve()
         self._file_data = load_config(self.config_file)
         self.deprecated = {
             v.replace: k for k, v in self._config_map.items() if v.replace
         }
-        self._data.update(self._file_data)
+        self._data = collections.ChainMap(
+            self._file_data, self.get_defaults() if is_global else {}
+        )
 
     def _save_config(self) -> None:
         """Save the changed to config file."""
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
-        toml_data: Dict[str, Any] = {}
+        toml_data: dict[str, Any] = {}
         for key, value in self._file_data.items():
             *parts, last = key.split(".")
             temp = toml_data
@@ -213,6 +237,19 @@ class Config(MutableMapping[str, str]):
             tomlkit.dump(toml_data, fp)  # type: ignore
 
     def __getitem__(self, key: str) -> Any:
+        parts = key.split(".")
+        if parts[0] == REPOSITORY:
+            if len(parts) < 2:
+                raise PdmUsageError("Must specify a repository name")
+            repo = self.get_repository_config(parts[1])
+            if repo is None:
+                raise KeyError(f"No repository named {parts[1]}")
+
+            value = getattr(repo, parts[2]) if len(parts) >= 3 else repo
+            if len(parts) >= 3 and parts[2] == "password" and value:
+                return "<hidden>"
+            return value
+
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
         config_key = self.deprecated.get(key, key)
@@ -230,6 +267,17 @@ class Config(MutableMapping[str, str]):
         return config.coerce(result)
 
     def __setitem__(self, key: str, value: Any) -> None:
+        parts = key.split(".")
+        if parts[0] == REPOSITORY:
+            if len(parts) < 3:
+                raise PdmUsageError(
+                    "Set repository config with [green]repository.{name}.{attr}"
+                )
+            self._file_data.setdefault(parts[0], {}).setdefault(
+                parts[1], {}
+            ).setdefault(parts[2], value)
+            self._save_config()
+            return
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
         config_key = self.deprecated.get(key, key)
@@ -247,10 +295,8 @@ class Config(MutableMapping[str, str]):
                 "the value set won't take effect.".format(env_var),
                 style="yellow",
             )
-        self._data[config_key] = value
         self._file_data[config_key] = value
         if config.replace:
-            self._data.pop(config.replace, None)
             self._file_data.pop(config.replace, None)
         self._save_config()
 
@@ -258,7 +304,7 @@ class Config(MutableMapping[str, str]):
         return len(self._data)
 
     def __iter__(self) -> Iterator[str]:
-        keys: Set[str] = set()
+        keys: set[str] = set()
         for key in self._data:
             if key in self._config_map:
                 keys.add(key)
@@ -267,14 +313,20 @@ class Config(MutableMapping[str, str]):
         return iter(keys)
 
     def __delitem__(self, key: str) -> None:
+        parts = key.split(".")
+        if parts[0] == REPOSITORY:
+            if len(parts) < 2:
+                raise PdmUsageError("Should specify the name of repository")
+            if len(parts) >= 3:
+                del self._file_data.get(REPOSITORY, {}).get(parts[1], {})[parts[2]]
+            else:
+                del self._file_data.get(REPOSITORY, {})[parts[1]]
+            self._save_config()
+            return
         config_key = self.deprecated.get(key, key)
         config = self._config_map[config_key]
-        self._data.pop(config_key, None)
         self._file_data.pop(config_key, None)
-        if self.is_global and config.should_show():
-            self._data[config_key] = config.default
         if config.replace:
-            self._data.pop(config.replace, None)
             self._file_data.pop(config.replace, None)
 
         env_var = config.env_var
@@ -285,3 +337,29 @@ class Config(MutableMapping[str, str]):
                 style="yellow",
             )
         self._save_config()
+
+    def get_repository_config(self, name_or_url: str) -> RepositoryConfig | None:
+        """Get a repository by name or url."""
+        if not self.is_global:  # pragma: no cover
+            raise PdmUsageError("No repository config in project config.")
+        repositories: Mapping[str, Mapping[str, str | None]] = self._data.get(
+            REPOSITORY, {}
+        )
+        repo: RepositoryConfig | None = None
+        if "://" in name_or_url:
+            config: Mapping[str, str | None] = next(
+                (v for v in repositories.values() if v.get("url") == name_or_url), {}
+            )
+            repo = next(
+                (r for r in DEFAULT_REPOSITORIES.values() if r.url == name_or_url),
+                RepositoryConfig(name_or_url),
+            )
+        else:
+            config = repositories.get(name_or_url, {})
+            if name_or_url in DEFAULT_REPOSITORIES:
+                repo = DEFAULT_REPOSITORIES[name_or_url]
+        if repo:
+            return dataclasses.replace(repo, **config)
+        if not config:
+            return None
+        return RepositoryConfig(**config)  # type: ignore

@@ -191,7 +191,7 @@ function TabExpansion($line, $lastWord) {
 
     if ($lastBlock -match "^pdm ") {
         [string[]]$words = $lastBlock.Split()[1..$lastBlock.Length]
-        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "import", "info", "init", "install", "list", "lock", "plugin", "remove", "run", "search", "show", "sync", "update", "use")
+        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "import", "info", "init", "install", "list", "lock", "plugin", "publish", "remove", "run", "search", "show", "sync", "update", "use")
         [string[]]$commands = $words.Where( { $_ -notlike "-*" })
         $command = $commands[0]
         $completer = [Completer]::new()
@@ -311,6 +311,14 @@ function TabExpansion($line, $lastWord) {
                         break
                     }
                 }
+                break
+            }
+            "publish" {
+                $completer.AddOpts(
+                    @(
+                        [Option]::new(@("-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment", "--no-build")),
+                        $projectOption
+                    ))
                 break
             }
             "remove" {
