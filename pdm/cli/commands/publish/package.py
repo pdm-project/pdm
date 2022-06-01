@@ -123,7 +123,7 @@ class PackageFile:
     def read_metadata_from_wheel(filename: str) -> email.message.Message:
         with zipfile.ZipFile(filename, allowZip64=True) as zip:
             for fn in zip.namelist():
-                if fn.replace("\\", "/") == ".dist-info/METADATA":
+                if fn.replace("\\", "/").endswith(".dist-info/METADATA"):
                     return email.message_from_binary_file(zip.open(fn))
         raise ProjectError(f"No egg-info is found in {filename}")
 
@@ -134,6 +134,7 @@ class PackageFile:
             self.gpg_signature = (signature_name, f.read())
 
     def sign(self, identity: str | None) -> None:
+        logger.info("Signing %s with gpg", self.base_filename)
         gpg_args = ["gpg", "--detach-sign"]
         if identity is not None:
             gpg_args.extend(["--local-user", identity])
@@ -141,7 +142,8 @@ class PackageFile:
         self._run_gpg(gpg_args)
         self.add_gpg_signature(self.filename + ".asc", self.base_filename + ".asc")
 
-    def _run_gpg(self, gpg_args: list[str]) -> None:
+    @staticmethod
+    def _run_gpg(gpg_args: list[str]) -> None:
         try:
             subprocess.run(gpg_args, check=True)
             return

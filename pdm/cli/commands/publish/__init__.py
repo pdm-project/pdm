@@ -1,9 +1,26 @@
 import argparse
+import os
 
+import requests
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
+
+from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.commands.publish.package import PackageFile
+from pdm.cli.commands.publish.repository import Repository
+from pdm.exceptions import PdmUsageError, PublishError
+from pdm.project import Project
+from pdm.termui import logger
 
 
 class Command(BaseCommand):
+    """Build and publish the project to PyPI."""
+
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "-r",
@@ -30,8 +47,114 @@ class Command(BaseCommand):
             help="Upload the package with PGP signature",
         )
         parser.add_argument(
+            "-i",
+            "--identity",
+            help="GPG identity used to sign files.",
+        )
+        parser.add_argument(
+            "-c",
+            "--comment",
+            help="The comment to include with the distribution file.",
+        )
+        parser.add_argument(
             "--no-build",
             action="store_false",
             dest="build",
             help="Don't build the package before publishing",
         )
+
+    @staticmethod
+    def _make_package(
+        filename: str, signatures: dict[str, str], options: argparse.Namespace
+    ) -> PackageFile:
+        p = PackageFile.from_filename(filename, options.comment)
+        if p.base_filename in signatures:
+            p.add_gpg_signature(signatures[p.base_filename], p.base_filename + ".asc")
+        elif options.sign:
+            p.sign(options.identity)
+        return p
+
+    @staticmethod
+    def _check_response(response: requests.Response) -> None:
+        message = ""
+        if response.status_code == 410 and "pypi.python.org" in response.url:
+            message = (
+                "Uploading to these sites is deprecated. "
+                "Try using https://upload.pypi.org/legacy/ "
+                "(or https://test.pypi.org/legacy/) instead."
+            )
+        elif response.status_code == 405 and "pypi.org" in response.url:
+            message = (
+                "It appears you're trying to upload to pypi.org but have an "
+                "invalid URL."
+            )
+        else:
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as err:
+                message = str(err)
+        if message:
+            raise PublishError(message)
+
+    @staticmethod
+    def get_repository(project: Project, options: argparse.Namespace) -> Repository:
+        repository = options.repository or os.getenv("PDM_PUBLISH_REPO", "pypi")
+        username = options.username or os.getenv("PDM_PUBLISH_USERNAME")
+        password = options.password or os.getenv("PDM_PUBLISH_PASSWORD")
+
+        config = project.global_config.get_repository_config(repository)
+        if config is None:
+            raise PdmUsageError(f"Missing repository config of {repository}")
+        if username is not None:
+            config.username = username
+        if password is not None:
+            config.password = password
+        return Repository(project, config.url, config.username, config.password)
+
+    def handle(self, project: Project, options: argparse.Namespace) -> None:
+        if options.build:
+            actions.do_build(project)
+
+        package_files = [
+            str(p)
+            for p in project.root.joinpath("dist").iterdir()
+            if not p.name.endswith(".asc")
+        ]
+        signatures = {
+            p.stem: str(p)
+            for p in project.root.joinpath("dist").iterdir()
+            if p.name.endswith(".asc")
+        }
+
+        repository = self.get_repository(project, options)
+        uploaded: list[PackageFile] = []
+        with project.core.ui.make_progress(
+            " [progress.percentage]{task.percentage:>3.0f}%",
+            BarColumn(),
+            DownloadColumn(),
+            "•",
+            TimeRemainingColumn(
+                compact=True,
+                elapsed_when_finished=True,
+            ),
+            "•",
+            TransferSpeedColumn(),
+        ) as progress, project.core.ui.logging("publish"):
+            packages = sorted(
+                (self._make_package(p, signatures, options) for p in package_files),
+                # Upload wheels first if they exist.
+                key=lambda p: not p.base_filename.endswith(".whl"),
+            )
+            for package in packages:
+                resp = repository.upload(package, progress)
+                logger.debug(
+                    "Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason
+                )
+                self._check_response(resp)
+                uploaded.append(package)
+
+        release_urls = repository.get_release_urls(uploaded)
+        if release_urls:
+            project.core.ui.echo("\n[green]View at:")
+            for url in release_urls:
+                project.core.ui.echo(url)
