@@ -211,13 +211,16 @@ class BaseRepository:
             matching_candidates: Iterable[Candidate] = [candidate]
         else:
             matching_candidates = self.find_candidates(req, True)
+        result: dict[str, str] = {}
         with self.environment.get_finder(self.sources) as finder:
             self._hash_cache.session = finder.session  # type: ignore
-            return {
-                c.link.filename: self._hash_cache.get_hash(c.link)  # type: ignore
-                for c in matching_candidates
-                if c.link and not c.link.is_vcs
-            } or None
+            for c in matching_candidates:
+                link = c.prepare(self.environment).ireq.link
+                if not link or link.is_vcs:
+                    continue
+                result[link.filename] = self._hash_cache.get_hash(link)
+
+        return result or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
