@@ -1,3 +1,19 @@
+Release v1.15.1 (2022-06-02)
+----------------------------
+
+### Bug Fixes
+
+- Fix a bug that dependencies are missing from the dep graph when they are depended by a requirement with extras. [#1097](https://github.com/pdm-project/pdm/issues/1097)
+- Give a default version if the version is dynamic in `setup.cfg` or `setup.py`. [#1101](https://github.com/pdm-project/pdm/issues/1101)
+- Fix a bug that the hashes for file URLs are not included in the lock file. [#1103](https://github.com/pdm-project/pdm/issues/1103)
+- Fix a bug that package versions are updated even when they are excluded by `pdm update` command. [#1104](https://github.com/pdm-project/pdm/issues/1104)
+- Prefer `venv` install scheme when available. This scheme is more stable than `posix_prefix` scheme since the latter is often patched by distributions. [#1106](https://github.com/pdm-project/pdm/issues/1106)
+
+### Miscellany
+
+- Move the test artifacts to a submodule. It will make it easier to package this project. [#1084](https://github.com/pdm-project/pdm/issues/1084)
+
+
 Release v1.15.0 (2022-05-16)
 ----------------------------
 
