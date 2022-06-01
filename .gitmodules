@@ -1,3 +1,4 @@
 [submodule "test-artifacts"]
 	path = tests/fixtures/artifacts
 	url = https://github.com/pdm-project/test-artifacts
+	shallow = true
