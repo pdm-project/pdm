@@ -1,9 +1,11 @@
 import os
 import shutil
+from argparse import Namespace
 
 import pytest
 import requests
 
+from pdm.cli.commands.publish import Command as PublishCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
 from tests import FIXTURES
@@ -160,3 +162,28 @@ def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
     assert "Uploading demo_module-0.1.0-py3-none-any.whl" in result
     assert "Uploading demo-module-0.1.0.tar.gz" in result
     assert "https://pypi.org/project/demo-module/0.1.0/" in result
+
+
+def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
+    repo = PublishCommand.get_repository(
+        project, Namespace(repository=None, username="foo", password="bar")
+    )
+    assert repo.url == "https://upload.pypi.org/legacy/"
+    assert repo.session.auth == ("foo", "bar")
+
+    with monkeypatch.context() as m:
+        m.setenv("PDM_PUBLISH_USERNAME", "bar")
+        m.setenv("PDM_PUBLISH_PASSWORD", "secret")
+        m.setenv("PDM_PUBLISH_REPO", "testpypi")
+
+        repo = PublishCommand.get_repository(
+            project, Namespace(repository=None, username=None, password=None)
+        )
+        assert repo.url == "https://test.pypi.org/legacy/"
+        assert repo.session.auth == ("bar", "secret")
+
+        repo = PublishCommand.get_repository(
+            project, Namespace(repository="pypi", username="foo", password=None)
+        )
+        assert repo.url == "https://upload.pypi.org/legacy/"
+        assert repo.session.auth == ("foo", "secret")
