@@ -14,15 +14,19 @@ class PdmUsageError(PdmException):
     pass
 
 
-class RequirementError(PdmException, ValueError):
+class RequirementError(PdmUsageError, ValueError):
     pass
 
 
-class InvalidPyVersion(PdmException, ValueError):
+class PublishError(PdmUsageError):
     pass
 
 
-class CorruptedCacheError(PdmException):
+class InvalidPyVersion(PdmUsageError, ValueError):
+    pass
+
+
+class CorruptedCacheError(PdmUsageError):
     pass
 
 
@@ -57,12 +61,12 @@ class UninstallError(PdmException):
     pass
 
 
-class NoConfigError(PdmException, KeyError):
+class NoConfigError(PdmUsageError, KeyError):
     def __init__(self, key: str) -> None:
         super().__init__("No such config item: {}".format(key))
 
 
-class NoPythonVersion(PdmException):
+class NoPythonVersion(PdmUsageError):
     pass
 
 
