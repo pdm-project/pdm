@@ -1,1 +1,0 @@
-tests/fixtures/artifacts/* filter=lfs diff=lfs merge=lfs -text
