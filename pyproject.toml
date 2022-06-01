@@ -52,6 +52,7 @@ pdm = "pdm.core:main"
 
 [tool.pdm]
 includes = ["pdm"]
+excludes = ["./**/.git"]
 source-includes = ["tests", "CHANGELOG.md", "LICENSE", "README.md"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
