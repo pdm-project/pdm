@@ -41,7 +41,11 @@ class Command(BaseCommand):
                 err=True,
             )
             options.key = project.project_config.deprecated[options.key]
-        project.core.ui.echo(project.config[options.key])
+        if options.key.split(".")[0] == "repository":
+            value = project.global_config[options.key]
+        else:
+            value = project.config[options.key]
+        project.core.ui.echo(value)
 
     def _set_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
