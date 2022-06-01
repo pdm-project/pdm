@@ -507,7 +507,7 @@ def is_editable(dist: Distribution) -> bool:
 
 def pdm_scheme(base: str) -> dict[str, str]:
     """Return a PEP 582 style install scheme"""
-    if "pep582" not in sysconfig._INSTALL_SCHEMES:  # type: ignore
+    if "pep582" not in sysconfig.get_scheme_names():
         bin_prefix = "Scripts" if os.name == "nt" else "bin"
         sysconfig._INSTALL_SCHEMES["pep582"] = {  # type: ignore
             "stdlib": "{pep582_base}/lib",
