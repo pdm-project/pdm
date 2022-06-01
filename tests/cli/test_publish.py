@@ -1,6 +1,8 @@
 import os
+import shutil
 
 import pytest
+import requests
 
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
@@ -15,6 +17,34 @@ def mock_run_gpg(mocker):
             f.write(b"fake signature")
 
     mocker.patch.object(PackageFile, "_run_gpg", side_effect=mock_run_gpg)
+
+
+@pytest.fixture()
+def prepare_packages(tmp_path):
+    dist_path = tmp_path / "dist"
+    dist_path.mkdir()
+    for filename in [
+        "demo-0.0.1-py2.py3-none-any.whl",
+        "demo-0.0.1.tar.gz",
+        "demo-0.0.1.zip",
+    ]:
+        shutil.copy2(FIXTURES / "artifacts" / filename, dist_path)
+
+
+@pytest.fixture()
+def uploaded(mocker):
+    packages = []
+
+    def fake_upload(package, progress):
+        packages.append(package)
+        resp = requests.Response()
+        resp.status_code = 200
+        resp.reason = "OK"
+        resp.url = "https://upload.pypi.org/legacy/"
+        return resp
+
+    mocker.patch.object(Repository, "upload", side_effect=fake_upload)
+    return packages
 
 
 @pytest.mark.parametrize(
@@ -79,3 +109,37 @@ def test_repository_get_release_urls(project):
 
     repository = Repository(project, "https://example.pypi.org/legacy/", None, None)
     assert not repository.get_release_urls(package_files)
+
+
+@pytest.mark.usefixtures("prepare_packages")
+def test_publish_pick_up_asc_files(project, uploaded, invoke):
+    for p in list(project.root.joinpath("dist").iterdir()):
+        with open(str(p) + ".asc", "w") as f:
+            f.write("fake signature")
+
+    invoke(["publish", "--no-build"], obj=project, strict=True)
+    # Test wheels are uploaded first
+    assert uploaded[0].base_filename.endswith(".whl")
+    for package in uploaded:
+        assert package.gpg_signature == (
+            package.base_filename + ".asc",
+            b"fake signature",
+        )
+
+
+@pytest.mark.usefixtures("prepare_packages")
+def test_publish_package_with_signature(project, uploaded, invoke):
+    invoke(["publish", "--no-build", "-S"], obj=project, strict=True)
+    for package in uploaded:
+        assert package.gpg_signature == (
+            package.base_filename + ".asc",
+            b"fake signature",
+        )
+
+
+@pytest.mark.usefixtures("local_finder")
+def test_publish_and_build_in_one_run(fixture_project, invoke, uploaded):
+    project = fixture_project("demo-module")
+    invoke(["publish"], obj=project, strict=True)
+    assert uploaded[0].base_filename == "demo_module-0.1.0-py3-none-any.whl"
+    assert uploaded[1].base_filename == "demo-module-0.1.0.tar.gz"
