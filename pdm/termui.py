@@ -10,7 +10,7 @@ from typing import Any, Iterator, Sequence, Type
 
 from rich.box import ROUNDED
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn
+from rich.progress import Progress, ProgressColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 
@@ -230,11 +230,11 @@ class UI:
         else:
             return _console.status(title, spinner=SPINNER, spinner_style="bold cyan")
 
-    def make_progress(self) -> Progress:
+    def make_progress(self, *columns: str | ProgressColumn, **kwargs: Any) -> Progress:
         """create a progress instance for indented spinners"""
         return Progress(
-            " ",
-            SpinnerColumn(SPINNER, speed=1, style="bold cyan"),
-            "{task.description}",
+            *columns,
+            console=_console,
             disable=self.verbosity >= Verbosity.DETAIL,
+            **kwargs,
         )

@@ -26,6 +26,7 @@ dependencies = [
     "typing-extensions; python_version < \"3.8\"",
     "unearth>=0.3.0,<0.4.0",
     "cachecontrol[filecache]>=0.12.11",
+    "requests-toolbelt",
 ]
 name = "pdm"
 description = "Python Development Master"

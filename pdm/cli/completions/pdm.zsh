@@ -28,6 +28,7 @@ _pdm() {
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
     'plugin:Manage the PDM plugins'
+    'publish:Build and publish the project to PyPI'
     'remove:Remove packages from pyproject.toml'
     'run:Run commands or scripts with local packages loaded'
     'search:Search for PyPI packages'
@@ -106,7 +107,7 @@ _pdm() {
         args)
           case $words[1] in
             clear)
-              compadd -X type 'hashes' 'http' 'wheels' 'metadata' && ret=0
+              compadd -X type 'hashes' 'http' 'wheels' 'metadata' 'packages' && ret=0
               ;;
             *)
               _message "pattern" && ret=0
@@ -236,6 +237,17 @@ _pdm() {
           ;;
       esac
       return $ret
+      ;;
+    publish)
+      arguments+=(
+        {-r,--repository}'[The repository name or url to publish the package to }[env var: PDM_PUBLISH_REPO]]:repository:'
+        {-u,--username}'[The username to access the repository [env var: PDM_PUBLISH_USERNAME]]:username:'
+        {-P,--password}'[The password to access the repository [env var: PDM_PUBLISH_PASSWORD]]:password:'
+        {-S,--sign}'[Upload the package with PGP signature]'
+        {-i,--identity}'[GPG identity used to sign files.]:gpg identity:'
+        {-c,--comment}'[The comment to include with the distribution file.]:comment:'
+        "--no-build[Don't build the package before publishing]"
+      )
       ;;
     remove)
       arguments+=(

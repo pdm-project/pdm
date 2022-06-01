@@ -46,7 +46,7 @@ extras = ["filecache"]
 requires_python = ">=3.6"
 summary = "httplib2 caching for requests"
 dependencies = [
-    "cachecontrol",
+    "cachecontrol>=0.12.11",
     "lockfile>=0.9",
 ]
 
@@ -520,6 +520,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "requests-toolbelt"
+version = "0.9.1"
+summary = "A utility belt for advanced users of python-requests"
+dependencies = [
+    "requests<3.0.0,>=2.0.1",
+]
+
+[[package]]
 name = "resolvelib"
 version = "0.8.1"
 summary = "Resolve abstract dependencies into concrete ones"
@@ -621,7 +629,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:754d53d71a3b7f32000fbeaab8cfecfc0f630cf37d377aa8e6953673be3afcb1"
+content_hash = "sha256:81d85f3e6b79cd961a23c768dbe8c3307c7c7a484ad14db7357ec0d49a663e86"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -1000,6 +1008,10 @@ content_hash = "sha256:754d53d71a3b7f32000fbeaab8cfecfc0f630cf37d377aa8e6953673b
 "requests 2.27.1" = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
     {file = "requests-2.27.1.tar.gz", hash = "sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61"},
+]
+"requests-toolbelt 0.9.1" = [
+    {file = "requests_toolbelt-0.9.1-py2.py3-none-any.whl", hash = "sha256:380606e1d10dc85c3bd47bf5a6095f815ec007be7a8b69c878507068df059e6f"},
+    {file = "requests-toolbelt-0.9.1.tar.gz", hash = "sha256:968089d4584ad4ad7c171454f0a5c6dac23971e9472521ea3b6d49d610aa6fc0"},
 ]
 "resolvelib 0.8.1" = [
     {file = "resolvelib-0.8.1-py2.py3-none-any.whl", hash = "sha256:d9b7907f055c3b3a2cfc56c914ffd940122915826ff5fb5b1de0c99778f4de98"},
