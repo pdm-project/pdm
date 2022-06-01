@@ -4,7 +4,10 @@ from typing import Any
 
 from cachecontrol.adapter import CacheControlAdapter
 from cachecontrol.caches import FileCache
+from requests_toolbelt.utils import user_agent
 from unearth.session import InsecureMixin, PyPISession
+
+from pdm.__version__ import __version__
 
 
 class InsecureCacheControlAdapter(InsecureMixin, CacheControlAdapter):
@@ -20,3 +23,11 @@ class PDMSession(PyPISession):
             InsecureCacheControlAdapter, cache=FileCache(str(cache_dir))
         )
         super().__init__(**kwargs)
+        self.headers["User-Agent"] = self._make_user_agent()
+
+    def _make_user_agent(self) -> str:
+        return (
+            user_agent.UserAgentBuilder("pdm", __version__)
+            .include_implementation()
+            .build()
+        )
