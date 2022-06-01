@@ -5,6 +5,8 @@ import sys
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
+from unearth import Link
+
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
 from pdm.models.candidates import Candidate
@@ -205,12 +207,15 @@ class BaseRepository:
             matching_candidates: Iterable[Candidate] = [candidate]
         else:
             matching_candidates = self.find_candidates(req, ignore_requires_python=True)
+        result: dict[str, str] = {}
         with self.environment.get_finder(self.sources) as finder:
-            return {
-                c.link.filename: self._hash_cache.get_hash(c.link, finder.session)
-                for c in matching_candidates
-                if c.link and not c.link.is_vcs
-            } or None
+            for can in matching_candidates:
+                if not can.link or can.link.is_vcs:
+                    continue
+                # Prepare the candidate to replace the vars in the link url
+                link = cast(Link, can.prepare(self.environment).link)
+                result[link.filename] = self._hash_cache.get_hash(link, finder.session)
+        return result or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
