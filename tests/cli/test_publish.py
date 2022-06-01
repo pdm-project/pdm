@@ -32,6 +32,20 @@ def prepare_packages(tmp_path):
 
 
 @pytest.fixture()
+def mock_pypi(mocker):
+    def post(url, *, data, **kwargs):
+        # consume the data body to make the progress complete
+        data.read()
+        resp = requests.Response()
+        resp.status_code = 200
+        resp.reason = "OK"
+        resp.url = url
+        return resp
+
+    return mocker.patch("pdm.models.session.PDMSession.post", side_effect=post)
+
+
+@pytest.fixture()
 def uploaded(mocker):
     packages = []
 
@@ -138,8 +152,11 @@ def test_publish_package_with_signature(project, uploaded, invoke):
 
 
 @pytest.mark.usefixtures("local_finder")
-def test_publish_and_build_in_one_run(fixture_project, invoke, uploaded):
+def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
     project = fixture_project("demo-module")
-    invoke(["publish"], obj=project, strict=True)
-    assert uploaded[0].base_filename == "demo_module-0.1.0-py3-none-any.whl"
-    assert uploaded[1].base_filename == "demo-module-0.1.0.tar.gz"
+    result = invoke(["publish"], obj=project, strict=True).output
+
+    mock_pypi.assert_called()
+    assert "Uploading demo_module-0.1.0-py3-none-any.whl" in result
+    assert "Uploading demo-module-0.1.0.tar.gz" in result
+    assert "https://pypi.org/project/demo-module/0.1.0/" in result
