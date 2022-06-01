@@ -108,6 +108,56 @@ If `-g/--global` option is used, the first item will be replaced by `~/.pdm/glob
 
 You can find all available configuration items in [Configuration Page](../configuration.md).
 
+## Publish the project to PyPI
+
+With PDM, you can build and then upload your project to PyPI in one step.
+
+```bash
+pdm publish
+```
+
+You can specify which repository you would like to publish:
+
+```bash
+pdm publish -r pypi
+```
+
+PDM will look for the repository named `pypi` from the configuration and use the URL for upload.
+You can also give the URL directly with `-r/--repository` option:
+
+```bash
+pdm publish -r https://test.pypi.org/simple
+```
+
+See all supported options by typing `pdm publish --help`.
+
+### Configure the repository secrets for upload
+
+When using the `pdm publish` command, it reads the repository secrets from the *global* config file(`~/.pdm/config.toml`). The content of the config is as follows:
+
+```toml
+[repository.pypi]
+username = "frostming"
+password = "<secret>"
+
+[repository.company]
+url = "https://pypi.company.org/legacy/"
+username = "frostming"
+password = "<secret>"
+```
+
+!!! NOTE
+    You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
+
+To change the repository config from the command line, use the `pdm config` command:
+
+```bash
+pdm config repository.pypi.username "__token__"
+pdm config repository.pypi.password "my-pypi-token"
+
+pdm config repository.company.url "https://pypi.company.org/legacy/"
+```
+
 ## Cache the installation of wheels
 
 If a package is required by many projects on the system, each project has to keep its own copy. This may become a waste of disk space especially for data science and machine learning libraries.
