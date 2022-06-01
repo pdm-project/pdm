@@ -6,6 +6,8 @@ import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
 
+from rich.progress import SpinnerColumn
+
 from pdm import termui
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
@@ -371,7 +373,11 @@ class Synchronizer:
                 )
 
         # get rich progess and live handler to deal with multiple spinners
-        with self.ui.logging("install"), self.ui.make_progress() as progress:
+        with self.ui.logging("install"), self.ui.make_progress(
+            " ",
+            SpinnerColumn(termui.SPINNER, speed=1, style="bold cyan"),
+            "{task.description}",
+        ) as progress:
             live = progress.live
             for kind, key in sequential_jobs:
                 handlers[kind](key, progress)
