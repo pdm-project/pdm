@@ -13,13 +13,16 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
+from pdm.cli.options import project_option, verbose_option
 from pdm.exceptions import PdmUsageError, PublishError
 from pdm.project import Project
 from pdm.termui import logger
 
 
 class Command(BaseCommand):
-    """Build and publish the project to PyPI."""
+    """Build and publish the project to PyPI"""
+
+    arguments = [verbose_option, project_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
