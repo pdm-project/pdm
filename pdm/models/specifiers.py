@@ -69,8 +69,6 @@ class PySpecSet(SpecifierSet):
             self._analyze_specifiers()
 
     def _analyze_specifiers(self) -> None:
-        # XXX: Prerelease or postrelease specifiers will fail here, but I guess we can
-        # just ignore them for now.
         lower_bound, upper_bound = Version.MIN, Version.MAX
         excludes: Set[Version] = set()
         for spec in self:
@@ -238,9 +236,9 @@ class PySpecSet(SpecifierSet):
             return ""
         lower = self._lower_bound
         upper = self._upper_bound
-        if lower[-1] == 0:
+        if lower[-1] == 0 and not lower.is_prerelease:
             lower = lower[:-1]
-        if upper[-1] == 0:
+        if upper[-1] == 0 and not upper.is_prerelease:
             upper = upper[:-1]
         lower_str = "" if lower == Version.MIN else f">={lower}"
         upper_str = "" if upper == Version.MAX else f"<{upper}"
