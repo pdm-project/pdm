@@ -10,6 +10,7 @@ from typing import Any, Iterator, Sequence, Type
 
 from rich.box import ROUNDED
 from rich.console import Console
+from rich.logging import RichHandler
 from rich.progress import Progress, ProgressColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
@@ -193,7 +194,9 @@ class UI:
         file_name = mktemp(".log", f"pdm-{type_}-")
 
         if self.verbosity >= Verbosity.DETAIL:
-            handler: logging.Handler = logging.StreamHandler()
+            handler: logging.Handler = RichHandler(
+                console=_err_console, show_time=False, show_level=False, show_path=False
+            )
             handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
             handler = logging.FileHandler(file_name, encoding="utf-8")
