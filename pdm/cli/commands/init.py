@@ -102,7 +102,13 @@ class Command(BaseCommand):
         author = self.ask("Author name", git_user)
         email = self.ask("Author email", git_email)
         python_version = f"{project.python.major}.{project.python.minor}"
-        python_requires = "*"
+
+        if python_version == "3.6":
+            python_version = "3.6.9"
+
+        python_requires = self.ask(
+            "Python requires('*' to allow any)", f">={python_version}"
+        )
 
         actions.do_init(
             project,
