@@ -3,9 +3,19 @@ import pytest
 from pdm.models.versions import InvalidPyVersion, Version
 
 
-def test_unsupported_prerelease_version():
+def test_unsupported_post_version() -> None:
     with pytest.raises(InvalidPyVersion):
-        Version("3.9.0a4")
+        Version("3.10.0post1")
+
+
+def test_support_prerelease_version() -> None:
+    assert not Version("3.9.0").is_prerelease
+    v = Version("3.9.0a4")
+    assert v.is_prerelease
+    assert str(v) == "3.9.0a4"
+    assert v.complete() == v
+    assert v.bump() == Version("3.9.0a5")
+    assert v.bump(2) == Version("3.9.1")
 
 
 def test_normalize_non_standard_version():
@@ -18,6 +28,12 @@ def test_version_comparison():
     assert Version("3.4") < Version("3.9.1")
     assert Version("3.7.*") < Version("3.7.5")
     assert Version("3.7") == Version((3, 7))
+
+    assert Version("3.9.0a") != Version("3.9.0")
+    assert Version("3.9.0a") == Version("3.9.0a0")
+    assert Version("3.10.0a9") < Version("3.10.0a12")
+    assert Version("3.10.0a12") < Version("3.10.0b1")
+    assert Version("3.7.*") < Version("3.7.1b")
 
 
 def test_version_is_wildcard():

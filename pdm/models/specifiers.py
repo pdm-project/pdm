@@ -6,7 +6,6 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
-from packaging.version import Version as PackageVersion
 from pip._vendor.packaging.specifiers import SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
@@ -69,8 +68,6 @@ class PySpecSet(SpecifierSet):
             self._analyze_specifiers()
 
     def _analyze_specifiers(self) -> None:
-        # XXX: Prerelease or postrelease specifiers will fail here, but I guess we can
-        # just ignore them for now.
         lower_bound, upper_bound = Version.MIN, Version.MAX
         excludes: Set[Version] = set()
         for spec in self:
@@ -100,19 +97,6 @@ class PySpecSet(SpecifierSet):
             else:
                 raise InvalidPyVersion(f"Unsupported version specifier: {op}{version}")
         self._rearrange(lower_bound, upper_bound, excludes)
-
-    @classmethod
-    def equal_to(cls, version: PackageVersion) -> "PySpecSet":
-        """Create a specifierset that is equal to the given version."""
-        if not version.is_prerelease:
-            return cls(f"=={version}")
-        spec = cls(f"=={version}", analyze=False)
-        spec._upper_bound = Version((version.major, version.minor, 0))
-        lower_bound = Version((version.major, version.minor - 1))
-        spec._lower_bound = lower_bound.complete(
-            cls.PY_MAX_MINOR_VERSION[lower_bound] + 1
-        )
-        return spec
 
     @classmethod
     def _merge_bounds_and_excludes(
@@ -238,9 +222,9 @@ class PySpecSet(SpecifierSet):
             return ""
         lower = self._lower_bound
         upper = self._upper_bound
-        if lower[-1] == 0:
+        if lower[-1] == 0 and not lower.is_prerelease:
             lower = lower[:-1]
-        if upper[-1] == 0:
+        if upper[-1] == 0 and not upper.is_prerelease:
             upper = upper[:-1]
         lower_str = "" if lower == Version.MIN else f">={lower}"
         upper_str = "" if upper == Version.MAX else f"<{upper}"

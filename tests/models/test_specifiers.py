@@ -23,6 +23,8 @@ from pdm.models.specifiers import PySpecSet
         (">3.4.*", ">=3.5"),
         ("<=3.4.*", "<3.4"),
         ("<3.4.*", "<3.4"),
+        ("<3.10.0a6", "<3.10.0a6"),
+        ("<3.10.2a3", "<3.10.2a3"),
     ],
 )
 def test_normalize_pyspec(original, normalized):
@@ -38,6 +40,8 @@ def test_normalize_pyspec(original, normalized):
         ("", ">=3.6", ">=3.6"),
         (">=3.6", "<3.2", "impossible"),
         (">=2.7,!=3.0.*", "!=3.1.*", ">=2.7,!=3.0.*,!=3.1.*"),
+        (">=3.11.0a2", "<3.11.0b", ">=3.11.0a2,<3.11.0b0"),
+        ("<3.11.0a2", ">3.11.0b", "impossible"),
     ],
 )
 def test_pyspec_and_op(left, right, result):
@@ -55,6 +59,7 @@ def test_pyspec_and_op(left, right, result):
         (">=3.6,<3.8", ">=3.4,<3.7", ">=3.4,<3.8"),
         ("~=2.7", ">=3.6", ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"),
         ("<2.7.15", ">=3.0", "!=2.7.15,!=2.7.16,!=2.7.17,!=2.7.18"),
+        (">3.11.0a2", ">3.11.0b", ">=3.11.0a3"),
     ],
 )
 def test_pyspec_or_op(left, right, result):
@@ -86,6 +91,7 @@ def test_impossible_pyspec():
             ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*",
             ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
         ),
+        (">=3.11*", ">=3.11.0rc"),  # 11* normalizes to 11.0
     ],
 )
 def test_pyspec_is_subset_superset(left, right):
@@ -102,6 +108,7 @@ def test_pyspec_is_subset_superset(left, right):
         (">=3.7", ">=3.6,<3.9"),
         (">=3.7,<3.6", "==2.7"),
         (">=3.0,!=3.4.*", ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"),
+        (">=3.11.0", "<3.11.0a"),
     ],
 )
 def test_pyspec_isnot_subset_superset(left, right):
