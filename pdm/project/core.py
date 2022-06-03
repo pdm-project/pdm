@@ -241,7 +241,7 @@ class Project:
             env = GlobalEnvironment(self)
             # Rewrite global project's python requires to be
             # compatible with the exact version
-            env.python_requires = PySpecSet.equal_to(self.python.version)
+            env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
         if self.config["python.use_venv"] and get_venv_like_prefix(
             self.python.executable

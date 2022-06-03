@@ -6,7 +6,6 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
-from packaging.version import Version as PackageVersion
 from pip._vendor.packaging.specifiers import SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
@@ -98,19 +97,6 @@ class PySpecSet(SpecifierSet):
             else:
                 raise InvalidPyVersion(f"Unsupported version specifier: {op}{version}")
         self._rearrange(lower_bound, upper_bound, excludes)
-
-    @classmethod
-    def equal_to(cls, version: PackageVersion) -> "PySpecSet":
-        """Create a specifierset that is equal to the given version."""
-        if not version.is_prerelease:
-            return cls(f"=={version}")
-        spec = cls(f"=={version}", analyze=False)
-        spec._upper_bound = Version((version.major, version.minor, 0))
-        lower_bound = Version((version.major, version.minor - 1))
-        spec._lower_bound = lower_bound.complete(
-            cls.PY_MAX_MINOR_VERSION[lower_bound] + 1
-        )
-        return spec
 
     @classmethod
     def _merge_bounds_and_excludes(
