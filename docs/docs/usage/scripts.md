@@ -35,7 +35,7 @@ $ pdm run start -h 0.0.0.0
 Flask server started at http://0.0.0.0:54321
 ```
 
-PDM supports 3 types of scripts:
+PDM supports 4 types of scripts:
 
 ### `cmd`
 
@@ -85,6 +85,32 @@ The function can be supplied with literal arguments:
 foobar = {call = "foo_package.bar_module:main('dev')"}
 ```
 
+### `composite`
+
+This script kind execute other defined scripts:
+
+```toml
+[tool.pdm.scripts]
+lint = "flake8"
+test = "pytest"
+all = {composite = ["lint", "test"]}
+```
+
+Running `pdm run all` will run `lint` first and then `test` if `lint` succeeded.
+
+You can also provide arguments to the called scripts:
+
+```toml
+[tool.pdm.scripts]
+lint = "flake8"
+test = "pytest"
+all = {composite = ["lint mypackage/", "test -v tests/"]}
+```
+
+!!! note
+    Argument passed on the command line are given to each called task.
+
+
 ### `env`
 
 All environment variables set in the current shell can be seen by `pdm run` and will be expanded when executed.
@@ -98,6 +124,9 @@ start.env = {FOO = "bar", FLASK_ENV = "development"}
 
 Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a composite dictionary.
 
+!!! note
+    Environment variables specified on a composite task level will override those defined by called tasks.
+
 ### `env_file`
 
 You can also store all environment variables in a dotenv file and let PDM read it:
@@ -107,6 +136,9 @@ You can also store all environment variables in a dotenv file and let PDM read i
 start.cmd = "flask run -p 54321"
 start.env_file = ".env"
 ```
+
+!!! note
+    A dotenv file specified on a composite task level will override those defined by called tasks.
 
 ### `site_packages`
 
@@ -183,3 +215,7 @@ Under certain situations PDM will look for some special hook scripts for executi
     If there exists an `install` scripts under `[tool.pdm.scripts]` table, `pre_install`
     scripts can be triggered by both `pdm install` and `pdm run install`. So it is
     recommended to not use the preserved names.
+
+!!! note
+    Composite tasks can also have pre and post scripts.
+    Called tasks will run their own pre and post scripts.
