@@ -6,6 +6,7 @@ import re
 import shlex
 import subprocess
 import sys
+import signal
 from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 
 from pdm import termui
