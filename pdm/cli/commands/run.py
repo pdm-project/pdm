@@ -151,11 +151,12 @@ class TaskRunner:
                 process_env["NO_SITE_PACKAGES"] = "1"
 
         cwd = project.root if chdir else None
-        process = subprocess.Popen(expanded_args, cwd=cwd, env=process_env, shell=shell)
-        try:
-            process.wait()
-        except KeyboardInterrupt:
-            pass
+        def send_int(exitnum,handler):
+            process.send_signal(signal.SIGINT)
+        s = signal.signal(signal.SIGINT, send_int)
+        process = subprocess.Popen(expanded_args, cwd=cwd, env=process_env, shell=shell,bufsize=0)
+        process.wait()
+        signal.signal(signal.SIGINT, s)
         return process.returncode
 
     def _run_task(self, task: Task, args: Sequence[str] = ()) -> int:
