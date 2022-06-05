@@ -153,7 +153,9 @@ class TaskRunner:
 
         cwd = project.root if chdir else None
 
-        s = signal.signal(signal.SIGINT, lambda signum, frame: process.send_signal(signum))
+        s = signal.signal(
+            signal.SIGINT, lambda signum, frame: process.send_signal(signum)
+        )
         process = subprocess.Popen(
             expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0
         )
