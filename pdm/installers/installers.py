@@ -256,7 +256,11 @@ def install_wheel_with_cache(
         additional_contents=additional_contents,
         additional_metadata=additional_metadata,
     )
-    package_cache.add_referrer(dist_info_dir)
+
+    # Don't add referrer when we're not caching dependencies
+    # This should allow cache directory to be mounted as a read-only volume
+    if os.getenv("PDM_SKIP_CACHE", "false") == "true":
+        package_cache.add_referrer(dist_info_dir)
 
 
 def _install_wheel(
