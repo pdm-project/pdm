@@ -1,3 +1,14 @@
+Release v1.15.2 (2022-06-06)
+----------------------------
+
+### Bug Fixes
+
+- Fix bug where SIGINT is sent to the main `pdm` process and not to the process actually being run. [#1095](https://github.com/pdm-project/pdm/issues/1095)
+- Fix a bug due to the build backend fallback, which causes different versions of the same requirement to exist in the build environment, making the building unstable depending on which version being used. [#1099](https://github.com/pdm-project/pdm/issues/1099)
+- Don't include the `version` in the cache key of the locked candidates if they are from a URL requirement. [#1099](https://github.com/pdm-project/pdm/issues/1099)
+- Fix a bug where dependencies with `requires-python` pre-release versions caused `pdm update` to fail with `InvalidPyVersion`. [#1111](https://github.com/pdm-project/pdm/issues/1111)
+
+
 Release v1.15.1 (2022-06-02)
 ----------------------------
 
