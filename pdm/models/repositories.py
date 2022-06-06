@@ -393,7 +393,7 @@ class LockedRepository(BaseRepository):
         url = getattr(candidate.req, "url", None)
         return (
             candidate.identify(),
-            candidate.version,
+            candidate.version if not url else None,
             url_without_fragments(url) if url else None,
             candidate.req.editable,
         )

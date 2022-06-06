@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import subprocess
 import tempfile
 import textwrap
@@ -101,8 +102,10 @@ class _Prefix:
             self.bin_dirs.append(paths["scripts"])
             self.lib_dirs.extend([paths["platlib"], paths["purelib"]])
         self.site_dir = os.path.join(overlay, "site")
-        if not os.path.isdir(self.site_dir):
-            os.makedirs(self.site_dir)
+        if os.path.isdir(self.site_dir):
+            # Clear existing site dir as .pyc may be cached.
+            shutil.rmtree(self.site_dir)
+        os.makedirs(self.site_dir)
         with open(os.path.join(self.site_dir, "sitecustomize.py"), "w") as fp:
             fp.write(
                 textwrap.dedent(
@@ -141,13 +144,15 @@ class EnvBuilder:
     if TYPE_CHECKING:
         _hook: Pep517HookCaller
         _requires: list[str]
+        _prefix: _Prefix
 
     @classmethod
     def get_shared_env(cls, key: int) -> str:
         if key in cls._shared_envs:
             logger.debug("Reusing shared build env: %s", cls._shared_envs[key])
             return cls._shared_envs[key]
-        # Postpone the cache after installation is done
+        # We don't save the cache here, instead it will be done after the installation
+        # finished.
         return create_tracked_tempdir("-shared", "pdm-build-env-")
 
     @classmethod
@@ -183,11 +188,6 @@ class EnvBuilder:
             raise BuildError("Missing 'build-system.requires' in pyproject.toml")
 
         self.init_build_system(build_system)
-        self._prefix = _Prefix(
-            self.executable,
-            shared=self.get_shared_env(hash(frozenset(self._requires))),
-            overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
-        )
 
     def init_build_system(self, build_system: dict[str, Any]) -> None:
         """Initialize the build system and requires list from the PEP 517 spec"""
@@ -199,6 +199,14 @@ class EnvBuilder:
             python_executable=self.executable,
         )
         self._requires = build_system["requires"]
+        self._prefix = _Prefix(
+            self.executable,
+            # Build backends with the same requires list share the cached base env.
+            shared=self.get_shared_env(hash(frozenset(self._requires))),
+            # Overlay envs are unique for each source to be built.
+            overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
+        )
+
         if build_system["build-backend"].startswith("setuptools"):
             self.ensure_setup_py()
 
@@ -279,7 +287,7 @@ class EnvBuilder:
 
         if shared:
             # The shared env is prepared and is safe to be cached now. This is to make
-            # sure no broken env is returned when run in parallel mode.
+            # sure no broken env is returned early when run in parallel mode.
             key = hash(frozenset(requirements))
             if key not in self._shared_envs:
                 self._shared_envs[key] = path
