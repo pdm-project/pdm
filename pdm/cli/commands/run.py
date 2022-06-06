@@ -4,6 +4,7 @@ import argparse
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
 from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
@@ -151,11 +152,15 @@ class TaskRunner:
                 process_env["NO_SITE_PACKAGES"] = "1"
 
         cwd = project.root if chdir else None
-        process = subprocess.Popen(expanded_args, cwd=cwd, env=process_env, shell=shell)
-        try:
-            process.wait()
-        except KeyboardInterrupt:
-            pass
+
+        s = signal.signal(
+            signal.SIGINT, lambda signum, frame: process.send_signal(signum)
+        )
+        process = subprocess.Popen(
+            expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0
+        )
+        process.wait()
+        signal.signal(signal.SIGINT, s)
         return process.returncode
 
     def _run_task(self, task: Task, args: Sequence[str] = ()) -> int:
