@@ -121,6 +121,8 @@ class Synchronizer:
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
 
+        self.CANDIDATE_BLACKLIST = ["functools32 3.2.3.post2"]
+
         if isinstance(self.no_editable, Collection):
             keys = self.no_editable
         elif self.no_editable:
@@ -212,20 +214,20 @@ class Synchronizer:
     def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
-        job = progress.add_task(f"Installing {can.format()}...", total=1)
-        try:
-            self.manager.install(can)
-        except Exception:
-            progress.live.console.print(
-                f"  [red]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
-            )
-            raise
-        else:
-            progress.live.console.print(
-                f"  [green]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
-            )
-        finally:
-            progress.update(job, completed=1, visible=False)
+        with self.ui.open_spinner(f"Installing {can.format()}...") as spinner:
+            try:
+                self.manager.install(can)
+            except Exception:
+
+                spinner.fail(f"Install {can.format()} failed")
+
+                if can.format() in self.CANDIDATE_BLACKLIST:
+                    return can
+
+                raise
+            else:
+                spinner.succeed(f"Install {can.format()} successful")
+
         return can
 
     def update_candidate(
