@@ -202,8 +202,13 @@ def install_wheel_with_cache(
         environment.project.config["install.cache_method"] == "symlink"
         and fs_supports_symlink()
     )
+
     if not cache_path.is_dir():
-        logger.info("Installing wheel into cached location %s", cache_path)
+        # HACK: If there is a cache miss and skip_cache field is found, don't install wheel to cache
+        if os.getenv("PDM_SKIP_CACHE", "false") == "true":
+            return install_wheel(wheel, environment, direct_url)
+
+        logger.debug("Installing wheel into cached location %s", cache_path)
         cache_path.mkdir(exist_ok=True)
         destination = InstallDestination(
             scheme_dict=package_cache.scheme(),
