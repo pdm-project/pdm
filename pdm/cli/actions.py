@@ -661,8 +661,8 @@ def do_use(
                 choices=[str(i) for i in range(len(matching_interpreters))],
                 show_choices=False,
             )
-            selected_python = matching_interpreters[int(selection)]
-        if python:
+            selected_python = matching_interperters[int(selection)]
+        if python and os.getenv("PDM_SKIP_CACHE", "false") != "true":
             use_cache.set(python, selected_python.path.as_posix())
 
     if not selected_python.valid:
