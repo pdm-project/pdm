@@ -73,20 +73,20 @@ class SpinnerReporter(BaseReporter):
             requirements passed in from ``Resolver.resolve()``.
         """
         parent_line = f"(from {parent.name} {parent.version})" if parent else ""
-        logger.info(f"  Adding requirement {requirement.as_line()}{parent_line}")
+        logger.info("  Adding requirement %s%s", requirement.as_line(), parent_line)
 
     def backtracking(self, candidate: Candidate) -> None:
         """Called when rejecting a candidate during backtracking."""
-        logger.info(f"Candidate rejected: {candidate.name} {candidate.version}")
+        logger.info("Candidate rejected: %s %s", candidate.name, candidate.version)
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
         self.spinner.text = f"Resolving: new pin {candidate.format()}"
+        logger.info("Pinning: %s %s", candidate.name, candidate.version)
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
         conflicts = [
             f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
             for req, parent in causes
         ]
-        logger.info("Conflicts detected: ")
-        logger.info("\n".join(conflicts))
+        logger.info("Conflicts detected: \n%s", "\n".join(conflicts))
