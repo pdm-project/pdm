@@ -4,14 +4,20 @@ from pdm import signals
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.run import run_script_if_present
-from pdm.cli.options import no_isolation_option, project_option, verbose_option
+from pdm.cli.hooks import HookManager
+from pdm.cli.options import (
+    no_isolation_option,
+    project_option,
+    skip_option,
+    verbose_option,
+)
 from pdm.project import Project
 
 
 class Command(BaseCommand):
     """Build artifacts for distribution"""
 
-    arguments = [verbose_option, project_option, no_isolation_option]
+    arguments = [verbose_option, project_option, no_isolation_option, skip_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -66,6 +72,7 @@ class Command(BaseCommand):
             dest=options.dest,
             clean=options.clean,
             config_settings=config_settings,
+            hooks=HookManager(project, options.skip),
         )
 
 

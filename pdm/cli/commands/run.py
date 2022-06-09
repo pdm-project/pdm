@@ -12,6 +12,8 @@ from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 from pdm import termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.hooks import HookManager
+from pdm.cli.options import skip_option
 from pdm.cli.utils import check_project_file
 from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
@@ -24,6 +26,8 @@ class TaskOptions(TypedDict, total=False):
     env_file: str | None
     help: str
     site_packages: bool
+    skip_hooks: bool
+    skip: list[str]
 
 
 def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
@@ -55,13 +59,14 @@ class TaskRunner:
     TYPES = ["cmd", "shell", "call", "composite"]
     OPTIONS = ["env", "env_file", "help", "site_packages"]
 
-    def __init__(self, project: Project) -> None:
+    def __init__(self, project: Project, hooks: HookManager) -> None:
         self.project = project
         global_options = cast(
             TaskOptions,
             self.project.scripts.get("_", {}) if self.project.scripts else {},
         )
         self.global_options = global_options.copy()
+        self.hooks = hooks
 
     def _get_task(self, script_name: str) -> Task | None:
         if script_name not in self.project.scripts:
@@ -228,12 +233,15 @@ class TaskRunner:
         )
 
     def run(
-        self, command: str, args: Sequence[str], opts: TaskOptions | None = None
+        self, command: str, args: list[str], opts: TaskOptions | None = None
     ) -> int:
+        if command in self.hooks.skip:
+            return 0
         task = self._get_task(command)
         if task is not None:
+
             pre_task = self._get_task(f"pre_{command}")
-            if pre_task is not None:
+            if pre_task is not None and self.hooks.should_run(pre_task.name):
                 code = self._run_task(pre_task, opts=opts)
                 if code != 0:
                     return code
@@ -241,12 +249,12 @@ class TaskRunner:
             if code != 0:
                 return code
             post_task = self._get_task(f"post_{command}")
-            if post_task is not None:
+            if post_task is not None and self.hooks.should_run(post_task.name):
                 code = self._run_task(post_task, opts=opts)
             return code
         else:
             return self._run_process(
-                [command] + args,  # type: ignore
+                [command] + args,
                 **exec_opts(self.global_options, opts),
             )
 
@@ -275,6 +283,7 @@ class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        skip_option.add_to_parser(parser)
         parser.add_argument(
             "-l",
             "--list",
@@ -296,7 +305,7 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
-        runner = TaskRunner(project)
+        runner = TaskRunner(project, hooks=HookManager(project, options.skip))
         if options.list:
             return runner.show_list()
         if options.site_packages:
@@ -314,8 +323,8 @@ class Command(BaseCommand):
 def run_script_if_present(script_name: str) -> Callable:
     """Helper to create a signal handler to run specific script"""
 
-    def handler(sender: Project, **kwargs: Any) -> None:
-        runner = TaskRunner(sender)
+    def handler(sender: Project, hooks: HookManager, **kwargs: Any) -> None:
+        runner = TaskRunner(sender, hooks)
         task = runner._get_task(script_name)
         if task is None:
             return

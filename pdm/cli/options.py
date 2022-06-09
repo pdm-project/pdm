@@ -97,6 +97,26 @@ def deprecated(message: str, type_: type = str) -> Callable[[Any], Any]:
     return wrapped_type
 
 
+def split_lists(separator: str) -> type[argparse.Action]:
+    class SplitList(argparse.Action):
+        def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            args: argparse.Namespace,
+            values: Any,
+            option_string: str | None = None,
+        ) -> None:
+            if not isinstance(values, str):
+                return
+            splitted = getattr(args, self.dest) or []
+            splitted.extend(
+                value.strip() for value in values.split(separator) if value.strip()
+            )
+            setattr(args, self.dest, splitted)
+
+    return SplitList
+
+
 verbose_option = Option(
     "-v",
     "--verbose",
@@ -228,6 +248,14 @@ save_strategy_group.add_argument(
     dest="save_strategy",
     const="minimum",
     help="Save minimum version specifiers",
+)
+
+skip_option = Option(
+    "-k",
+    "--skip",
+    dest="skip",
+    action=split_lists(","),
+    help="Skip some tasks and/or hooks",
 )
 
 update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)

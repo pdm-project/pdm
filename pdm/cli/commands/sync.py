@@ -2,12 +2,14 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     clean_group,
     dry_run_option,
     groups_group,
     install_group,
     lockfile_option,
+    skip_option,
 )
 from pdm.project import Project
 
@@ -25,6 +27,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Force reinstall existing dependencies",
         )
+        skip_option.add_to_parser(parser)
         clean_group.add_to_parser(parser)
         install_group.add_to_parser(parser)
 
@@ -40,4 +43,5 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             reinstall=options.reinstall,
+            hooks=HookManager(project, options.skip),
         )

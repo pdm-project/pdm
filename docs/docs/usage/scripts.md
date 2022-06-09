@@ -219,3 +219,22 @@ Under certain situations PDM will look for some special hook scripts for executi
 !!! note
     Composite tasks can also have pre and post scripts.
     Called tasks will run their own pre and post scripts.
+
+
+## Skipping scripts
+
+Because, sometimes it is desirable to run a script but without its hooks,
+there is a `--skip=:all` which will disable all hooks, pre and post.
+There is also `--skip=:pre` and `--skip=:post` allowing to respectively
+skip all `pre_*` hooks and all `post_*` hooks.
+
+It is also possible to need a pre scripts but not the post one,
+or to need all tasks from a composite tasks except one.
+For those use cases, there is a finer grained `--skip` parameter
+accepting a list of tasks or hooks name to exclude.
+
+```console
+pdm run --skip pre_task1,task2 my-composite
+```
+
+This command will run the `my-composite` task and skip the `pre_task1` hook as well as the `task2` and its hooks.
