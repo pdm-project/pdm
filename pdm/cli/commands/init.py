@@ -107,7 +107,7 @@ class Command(BaseCommand):
             python_version = "3.6.9"
 
         python_requires = self.ask(
-            "Python requires('*' to allow any)", f">={python_version}"
+            "Python requires('*' to allow any)", f">={python_version},<3.11"
         )
 
         actions.do_init(
