@@ -182,9 +182,9 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 当当当当！你已经把应用运行起来了，而它的依赖全被安装在一个项目独立的文件夹下，而我们完全没有创建虚拟环境。
 
-如果你是 Windows 用户，请参考[文档](https://pdm.fming.dev/#enable-pep-582-globally)获取设置的方法。
+如果你是 Windows 用户，请参考[文档](https://pdm.fming.dev/latest/#enable-pep-582-globally)获取设置的方法。
 
-如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
+如果你好奇这是如何实现的，可以查看[文档](https://pdm.fming.dev/latest/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter)，有一个简短的解释。
 
 ## 徽章
 

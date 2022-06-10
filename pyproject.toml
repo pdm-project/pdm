@@ -43,7 +43,7 @@ classifiers = [
 Homepage = "https://pdm.fming.dev"
 Repository = "https://github.com/pdm-project/pdm"
 Documentation = "https://pdm.fming.dev"
-Changelog = "https://pdm.fming.dev/dev/changelog/"
+Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
 
 [project.optional-dependencies]
 
