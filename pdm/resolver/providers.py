@@ -94,7 +94,7 @@ class BaseProvider(AbstractProvider):
         ]
         is_python = identifier == "python"
         is_pinned = any(op[:2] == "==" for op in operators)
-        is_free = bool(operators)
+        constraints = len(operators)
         return (
             not is_python,
             not is_top,
@@ -102,7 +102,7 @@ class BaseProvider(AbstractProvider):
             not is_pinned,
             not is_backtrack_cause,
             dep_depth,
-            is_free,
+            -constraints,
             identifier,
         )
 
