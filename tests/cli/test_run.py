@@ -5,8 +5,40 @@ import textwrap
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from pdm.cli.actions import PEP582_PATH
 from pdm.utils import cd
+
+
+@pytest.fixture
+def _vars(project):
+    (project.root / "vars.py").write_text(
+        textwrap.dedent(
+            """
+            import os
+            import sys
+            name = sys.argv[1]
+            vars = " ".join([f"{v}={os.getenv(v)}" for v in sys.argv[2:]])
+            print(f"{name} CALLED with {vars}" if vars else f"{name} CALLED")
+            """
+        )
+    )
+
+
+@pytest.fixture
+def _args(project):
+    (project.root / "args.py").write_text(
+        textwrap.dedent(
+            """
+            import os
+            import sys
+            name = sys.argv[1]
+            args = ", ".join(sys.argv[2:])
+            print(f"{name} CALLED with {args}" if args else f"{name} CALLED")
+            """
+        )
+    )
 
 
 def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
@@ -350,8 +382,213 @@ def test_pre_and_post_scripts(project, invoke, capfd):
         "post_test": "python -c \"print('POST test CALLED')\"",
     }
     project.write_pyproject()
+    capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     assert "PRE test CALLED" in out
     assert "IN test CALLED" in out
     assert "POST test CALLED" in out
+
+
+def test_run_composite(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "first": "echo 'First CALLED'",
+        "second": {"shell": "echo 'Second CALLED'"},
+        "test": {"composite": ["first", "second"]},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED" in out
+    assert "Second CALLED" in out
+
+
+def test_composite_stops_on_first_failure(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "first": "echo 'First CALLED'",
+        "fail": "false",
+        "second": "echo 'Second CALLED'",
+        "test": {"composite": ["first", "fail", "second"]},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    result = invoke(["run", "test"], obj=project)
+    assert result.exit_code == 1
+    out, _ = capfd.readouterr()
+    assert "First CALLED" in out
+    assert "Second CALLED" not in out
+
+
+def test_composite_inherit_env(project, invoke, capfd, _vars):
+    project.tool_settings["scripts"] = {
+        "first": {
+            "cmd": "python vars.py First VAR",
+            "env": {"VAR": "42"},
+        },
+        "second": {
+            "cmd": "python vars.py Second VAR",
+            "env": {"VAR": "42"},
+        },
+        "test": {"composite": ["first", "second"], "env": {"VAR": "overriden"}},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED with VAR=overriden" in out
+    assert "Second CALLED with VAR=overriden" in out
+
+
+def test_composite_fail_on_first_missing_task(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "first": "echo 'First CALLED'",
+        "second": "echo 'Second CALLED'",
+        "test": {"composite": ["first", "fail", "second"]},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    result = invoke(["run", "test"], obj=project)
+    assert result.exit_code == 1
+    out, _ = capfd.readouterr()
+    assert "First CALLED" in out
+    assert "Second CALLED" not in out
+
+
+def test_composite_runs_all_hooks(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "test": {"composite": ["first", "second"]},
+        "pre_test": "echo 'Pre-Test CALLED'",
+        "post_test": "echo 'Post-Test CALLED'",
+        "first": "echo 'First CALLED'",
+        "pre_first": "echo 'Pre-First CALLED'",
+        "second": "echo 'Second CALLED'",
+        "post_second": "echo 'Post-Second CALLED'",
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Pre-Test CALLED" in out
+    assert "Pre-First CALLED" in out
+    assert "First CALLED" in out
+    assert "Second CALLED" in out
+    assert "Post-Second CALLED" in out
+    assert "Post-Test CALLED" in out
+
+
+def test_composite_pass_parameters_to_subtasks(project, invoke, capfd, _args):
+    project.tool_settings["scripts"] = {
+        "test": {"composite": ["first", "second"]},
+        "pre_test": "python args.py Pre-Test",
+        "post_test": "python args.py Post-Test",
+        "first": "python args.py First",
+        "pre_first": "python args.py Pre-First",
+        "second": "python args.py Second",
+        "post_second": "python args.py Post-Second",
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test", "param=value"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Pre-Test CALLED" in out
+    assert "Pre-First CALLED" in out
+    assert "First CALLED with param=value" in out
+    assert "Second CALLED with param=value" in out
+    assert "Post-Second CALLED" in out
+    assert "Post-Test CALLED" in out
+
+
+def test_composite_can_pass_parameters(project, invoke, capfd, _args):
+    project.tool_settings["scripts"] = {
+        "test": {"composite": ["first param=first", "second param=second"]},
+        "pre_test": "python args.py Pre-Test",
+        "post_test": "python args.py Post-Test",
+        "first": "python args.py First",
+        "pre_first": "python args.py Pre-First",
+        "second": "python args.py Second",
+        "post_second": "python args.py Post-Second",
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Pre-Test CALLED" in out
+    assert "Pre-First CALLED" in out
+    assert "First CALLED with param=first" in out
+    assert "Second CALLED with param=second" in out
+    assert "Post-Second CALLED" in out
+    assert "Post-Test CALLED" in out
+
+
+def test_composite_hooks_inherit_env(project, invoke, capfd, _vars):
+    project.tool_settings["scripts"] = {
+        "pre_task": {"cmd": "python vars.py Pre-Task VAR", "env": {"VAR": "42"}},
+        "task": "echo 'Task CALLED'",
+        "post_task": {"cmd": "python vars.py Post-Task VAR", "env": {"VAR": "42"}},
+        "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Pre-Task CALLED with VAR=overriden" in out
+    assert "Task CALLED" in out
+    assert "Post-Task CALLED with VAR=overriden" in out
+
+
+def test_composite_inherit_env_in_cascade(project, invoke, capfd, _vars):
+    project.tool_settings["scripts"] = {
+        "_": {"env": {"FOO": "BAR", "TIK": "TOK"}},
+        "pre_task": {
+            "cmd": "python vars.py Pre-Task VAR FOO TIK",
+            "env": {"VAR": "42", "FOO": "foobar"},
+        },
+        "task": {
+            "cmd": "python vars.py Task VAR FOO TIK",
+            "env": {"VAR": "42", "FOO": "foobar"},
+        },
+        "post_task": {
+            "cmd": "python vars.py Post-Task VAR FOO TIK",
+            "env": {"VAR": "42", "FOO": "foobar"},
+        },
+        "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Pre-Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
+    assert "Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
+    assert "Post-Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
+
+
+def test_composite_inherit_dotfile(project, invoke, capfd, _vars):
+    (project.root / ".env").write_text("VAR=42")
+    (project.root / "override.env").write_text("VAR=overriden")
+    project.tool_settings["scripts"] = {
+        "pre_task": {"cmd": "python vars.py Pre-Task VAR", "env_file": ".env"},
+        "task": {"cmd": "python vars.py Task VAR", "env_file": ".env"},
+        "post_task": {"cmd": "python vars.py Post-Task VAR", "env_file": ".env"},
+        "test": {"composite": ["task"], "env_file": "override.env"},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Pre-Task CALLED with VAR=overriden" in out
+    assert "Task CALLED with VAR=overriden" in out
+    assert "Post-Task CALLED with VAR=overriden" in out
+
+
+def test_composite_can_have_commands(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "task": "echo 'Task CALLED'",
+        "test": {"composite": ["task", "echo 'Command CALLED'"]},
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    invoke(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "Task CALLED" in out
+    assert "Command CALLED" in out
