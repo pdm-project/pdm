@@ -542,7 +542,7 @@ dependencies = [
 
 [[package]]
 name = "setuptools"
-version = "62.1.0"
+version = "62.3.3"
 requires_python = ">=3.7"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
 
@@ -640,7 +640,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:72a9f7432cfcf435eb6d2382f77f10d1d25e5c06cbac2fbd6984825aa0095d25"
+content_hash = "sha256:214ff0e84d8c04b7a633957f7df2c714d4764fc16979212186f1d8d1807b2c56"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -1019,9 +1019,9 @@ content_hash = "sha256:72a9f7432cfcf435eb6d2382f77f10d1d25e5c06cbac2fbd6984825aa
     {file = "rich-12.2.0-py3-none-any.whl", hash = "sha256:c50f3d253bc6a9bb9c79d61a26d510d74abdf1b16881260fab5edfc3edfb082f"},
     {file = "rich-12.2.0.tar.gz", hash = "sha256:ea74bc9dad9589d8eea3e3fd0b136d8bf6e428888955f215824c2894f0da8b47"},
 ]
-"setuptools 62.1.0" = [
-    {file = "setuptools-62.1.0-py3-none-any.whl", hash = "sha256:26ead7d1f93efc0f8c804d9fafafbe4a44b179580a7105754b245155f9af05a8"},
-    {file = "setuptools-62.1.0.tar.gz", hash = "sha256:47c7b0c0f8fc10eec4cf1e71c6fdadf8decaa74ffa087e68cd1c20db7ad6a592"},
+"setuptools 62.3.3" = [
+    {file = "setuptools-62.3.3-py3-none-any.whl", hash = "sha256:d1746e7fd520e83bbe210d02fff1aa1a425ad671c7a9da7d246ec2401a087198"},
+    {file = "setuptools-62.3.3.tar.gz", hash = "sha256:e7d11f3db616cda0751372244c2ba798e8e56a28e096ec4529010b803485f3fe"},
 ]
 "shellingham 1.4.0" = [
     {file = "shellingham-1.4.0-py2.py3-none-any.whl", hash = "sha256:536b67a0697f2e4af32ab176c00a50ac2899c5a05e0d8e2dadac8e58888283f9"},
