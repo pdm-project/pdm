@@ -381,6 +381,7 @@ def invoke(core):
     runner = CliRunner(mix_stderr=False)
 
     def caller(args, strict=False, **kwargs):
+        __tracebackhide__ = True
         result = runner.invoke(
             core, args, catch_exceptions=not strict, prog_name="pdm", **kwargs
         )
