@@ -1,4 +1,4 @@
-site_name: PDM - Python Development Master
+site_name: PDM
 
 repo_url: https://github.com/pdm-project/pdm
 edit_uri: edit/main/docs/docs
@@ -27,6 +27,7 @@ theme:
 
 plugins:
   - search
+  - mike
   - mkdocstrings:
       handlers:
         python:
@@ -69,6 +70,8 @@ markdown_extensions:
 copyright: Copyright &copy; 2019-2021 <a href="https://frostming.com">Frost Ming</a>
 
 extra:
+  version:
+    provider: mike
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/pdm-project/pdm
