@@ -44,12 +44,7 @@ jobs:
           DOC_VERSION=${tag%.*}
           cd docs
           pdm run mike deploy --no-redirect --update-aliases "$DOC_VERSION" latest
-
-      - name: Push Doc Changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gh-pages
+          git push origin gh-pages
 
       - name: Upload to Pypi
         run: |
