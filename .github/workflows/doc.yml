@@ -29,5 +29,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git fetch origin gh-pages:gh-pages
           cd docs && pdm run mike deploy --update-aliases dev
           git push origin gh-pages

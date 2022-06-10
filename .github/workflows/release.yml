@@ -40,6 +40,7 @@ jobs:
           pdm install -G doc
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git fetch origin gh-pages:gh-pages
           tag="${{ github.ref }}"
           DOC_VERSION=${tag%.*}
           cd docs
