@@ -88,7 +88,7 @@ requires_python = ">=3.7"
 summary = "Code coverage measurement for Python"
 dependencies = [
     "coverage>=5.2.1",
-    "tomli",
+    "tomli; python_version < \"3.11\"",
 ]
 
 [[package]]
@@ -214,6 +214,17 @@ requires_python = ">=3.6"
 summary = "A deep merge function for 🐍."
 
 [[package]]
+name = "mike"
+version = "1.1.2"
+summary = "Manage multiple versions of your MkDocs-powered documentation"
+dependencies = [
+    "jinja2",
+    "mkdocs>=1.0",
+    "pyyaml>=5.1",
+    "verspec",
+]
+
+[[package]]
 name = "mkdocs"
 version = "1.3.0"
 requires_python = ">=3.6"
@@ -244,15 +255,15 @@ dependencies = [
 [[package]]
 name = "mkdocs-material"
 version = "8.2.9"
-requires_python = ">=3.6"
-summary = "A Material Design theme for MkDocs"
+requires_python = ">=3.7"
+summary = "Documentation that simply works"
 dependencies = [
-    "jinja2>=2.11.1",
+    "jinja2>=3.0.2",
     "markdown>=3.2",
     "mkdocs-material-extensions>=1.0.3",
     "mkdocs>=1.3.0",
-    "pygments>=2.10",
-    "pymdown-extensions>=9.0",
+    "pygments>=2.12",
+    "pymdown-extensions>=9.4",
 ]
 
 [[package]]
@@ -378,17 +389,17 @@ summary = "A Python library to generate static completion scripts for your CLI a
 
 [[package]]
 name = "pygments"
-version = "2.11.2"
-requires_python = ">=3.5"
+version = "2.12.0"
+requires_python = ">=3.6"
 summary = "Pygments is a syntax highlighting package written in Python."
 
 [[package]]
 name = "pymdown-extensions"
-version = "9.3"
+version = "9.5"
 requires_python = ">=3.7"
 summary = "Extension pack for Python Markdown."
 dependencies = [
-    "Markdown>=3.2",
+    "markdown>=3.2",
 ]
 
 [[package]]
@@ -605,6 +616,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "verspec"
+version = "0.1.0"
+summary = "Flexible version handling"
+
+[[package]]
 name = "watchdog"
 version = "2.1.7"
 requires_python = ">=3.6"
@@ -624,7 +640,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:119ba5eb4b9898489263b165b80865dfd57826376ad4a3e4115aad619fb7c44b"
+content_hash = "sha256:72a9f7432cfcf435eb6d2382f77f10d1d25e5c06cbac2fbd6984825aa0095d25"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -817,6 +833,10 @@ content_hash = "sha256:119ba5eb4b9898489263b165b80865dfd57826376ad4a3e4115aad619
     {file = "mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307"},
     {file = "mergedeep-1.3.4.tar.gz", hash = "sha256:0096d52e9dad9939c3d975a774666af186eda617e6ca84df4c94dec30004f2a8"},
 ]
+"mike 1.1.2" = [
+    {file = "mike-1.1.2-py3-none-any.whl", hash = "sha256:4c307c28769834d78df10f834f57f810f04ca27d248f80a75f49c6fa2d1527ca"},
+    {file = "mike-1.1.2.tar.gz", hash = "sha256:56c3f1794c2d0b5fdccfa9b9487beb013ca813de2e3ad0744724e9d34d40b77b"},
+]
 "mkdocs 1.3.0" = [
     {file = "mkdocs-1.3.0-py3-none-any.whl", hash = "sha256:26bd2b03d739ac57a3e6eed0b7bcc86168703b719c27b99ad6ca91dc439aacde"},
     {file = "mkdocs-1.3.0.tar.gz", hash = "sha256:b504405b04da38795fec9b2e5e28f6aa3a73bb0960cb6d5d27ead28952bd35ea"},
@@ -881,13 +901,13 @@ content_hash = "sha256:119ba5eb4b9898489263b165b80865dfd57826376ad4a3e4115aad619
     {file = "pycomplete-0.3.2-py3-none-any.whl", hash = "sha256:ebeb40dfd453c21ee4b02af9efd0c0134d595aef9fa2e29b207dc9c0932c3f21"},
     {file = "pycomplete-0.3.2.tar.gz", hash = "sha256:671bfba70b6f2eecedad6b6daabac2aa3f1573cd790cc56ccd48b8067f584391"},
 ]
-"pygments 2.11.2" = [
-    {file = "Pygments-2.11.2-py3-none-any.whl", hash = "sha256:44238f1b60a76d78fc8ca0528ee429702aae011c265fe6a8dd8b63049ae41c65"},
-    {file = "Pygments-2.11.2.tar.gz", hash = "sha256:4e426f72023d88d03b2fa258de560726ce890ff3b630f88c21cbb8b2503b8c6a"},
+"pygments 2.12.0" = [
+    {file = "Pygments-2.12.0-py3-none-any.whl", hash = "sha256:dc9c10fb40944260f6ed4c688ece0cd2048414940f1cea51b8b226318411c519"},
+    {file = "Pygments-2.12.0.tar.gz", hash = "sha256:5eb116118f9612ff1ee89ac96437bb6b49e8f04d8a13b514ba26f620208e26eb"},
 ]
-"pymdown-extensions 9.3" = [
-    {file = "pymdown_extensions-9.3-py3-none-any.whl", hash = "sha256:b37461a181c1c8103cfe1660081726a0361a8294cbfda88e5b02cefe976f0546"},
-    {file = "pymdown-extensions-9.3.tar.gz", hash = "sha256:a80553b243d3ed2d6c27723bcd64ca9887e560e6f4808baa96f36e93061eaf90"},
+"pymdown-extensions 9.5" = [
+    {file = "pymdown_extensions-9.5-py3-none-any.whl", hash = "sha256:ec141c0f4983755349f0c8710416348d1a13753976c028186ed14f190c8061c4"},
+    {file = "pymdown_extensions-9.5.tar.gz", hash = "sha256:3ef2d998c0d5fa7eb09291926d90d69391283561cf6306f85cd588a5eb5befa0"},
 ]
 "pyparsing 3.0.8" = [
     {file = "pyparsing-3.0.8-py3-none-any.whl", hash = "sha256:ef7b523f6356f763771559412c0d7134753f037822dad1b16945b7b846f7ad06"},
@@ -1038,6 +1058,10 @@ content_hash = "sha256:119ba5eb4b9898489263b165b80865dfd57826376ad4a3e4115aad619
 "vendoring 1.2.0" = [
     {file = "vendoring-1.2.0-py2.py3-none-any.whl", hash = "sha256:35b5fca683264e69e851a7580bb6a6f9848af024ffc8382ed5491bcfa55750c6"},
     {file = "vendoring-1.2.0.tar.gz", hash = "sha256:6340a84bf542222c96f22ebc3cb87e4d86932dc04bc8d446e38285594702c00e"},
+]
+"verspec 0.1.0" = [
+    {file = "verspec-0.1.0-py3-none-any.whl", hash = "sha256:741877d5633cc9464c45a469ae2a31e801e6dbbaa85b9675d481cda100f11c31"},
+    {file = "verspec-0.1.0.tar.gz", hash = "sha256:c4504ca697b2056cdb4bfa7121461f5a0e81809255b41c03dda4ba823637c01e"},
 ]
 "watchdog 2.1.7" = [
     {file = "watchdog-2.1.7-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:177bae28ca723bc00846466016d34f8c1d6a621383b6caca86745918d55c7383"},

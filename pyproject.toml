@@ -43,7 +43,7 @@ classifiers = [
 Homepage = "https://pdm.fming.dev"
 Repository = "https://github.com/pdm-project/pdm"
 Documentation = "https://pdm.fming.dev"
-Changelog = "https://pdm.fming.dev/dev/changelog/"
+Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
 
 [project.optional-dependencies]
 
@@ -79,6 +79,7 @@ doc = [
     "mkdocs-material>=7.3",
     "mkdocstrings[python]>=0.18",
     "markdown-include>=0.5.1",
+    "mike>=1.1.2",
 ]
 workflow = [
     "parver>=0.3.1",

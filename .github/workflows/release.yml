@@ -11,33 +11,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: actions/setup-python@v2
+
+      - uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.9
           architecture: "x64"
+
       - name: Install build tool
         run: |
-          pip install -U build
+          pip install -U build .
+
       - name: Build artifacts
         run: |
           python -m build --sdist --wheel .
+
       - name: Test Build
         run: |
           python3 -m venv fresh_env
           . fresh_env/bin/activate
           pip install dist/*.whl
           fresh_env/bin/pdm --help
+
+      - name: Build Release Docs
+        run: |
+          pdm install -G doc
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          tag="${{ github.ref }}"
+          DOC_VERSION=${tag%.*}
+          cd docs
+          pdm run mike deploy --no-redirect --update-aliases "$DOC_VERSION" latest
+
+      - name: Push Doc Changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+
       - name: Upload to Pypi
         run: |
           pip install twine
           twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
+
       - name: Get Changelog
         id: get-changelog
         run: |
           awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md > .changelog.md
+
       - name: Create Release
         uses: actions/create-release@main
         env:
@@ -48,6 +71,7 @@ jobs:
           body_path: .changelog.md
           draft: false
           prerelease: false
+
       - name: Trigger Bucket Update
         uses: benc-uk/workflow-dispatch@v1
         with:

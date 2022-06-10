@@ -116,14 +116,14 @@ You can either pass the options after the script or set the env var value.
     cd into the project folder and:
 
     === "Linux/Mac"
-    
+
         ```
         curl -LO https://github.com/pyprojectx/pyprojectx/releases/latest/download/wrappers.zip && unzip wrappers.zip && rm -f wrappers.zip
         ./pw --init pdm
         ```
-    
+
     === "Windows"
-    
+
         ```powershell
         Invoke-WebRequest https://github.com/pyprojectx/pyprojectx/releases/latest/download/wrappers.zip -OutFile wrappers.zip; Expand-Archive -Path wrappers.zip -DestinationPath .; Remove-Item -Path wrappers.zip
         .\pw --init pdm
@@ -238,7 +238,7 @@ Add the following two entries to the top-level dict in `.vscode/settings.json`:
 }
 ```
 
-[Enable PEP582 globally](https://pdm.fming.dev/#enable-pep-582-globally),
+[Enable PEP582 globally](#enable-pep-582-globally),
 and make sure VSCode runs using the same user and shell you enabled PEP582 for.
 
 ??? note "Cannot enable PEP582 globally?"
@@ -294,7 +294,7 @@ and make sure VSCode runs using the same user and shell you enabled PEP582 for.
     ```
 
     If the above still doesn't work, it's most likely because the environment variable is not properly loaded when the Notebook starts. There are two workarounds.
-    
+
     1. Run `code .` in Terminal. It will open a new VSCode window in the current directory with the path set correctly. Use the Jupyter Notebook in the new window
     2. If you prefer not to open a new window, run the following at the beginning of your Jupyter Notebook to explicitly set the path:
 
@@ -314,7 +314,7 @@ can be run natively as [VSCode Tasks][vscode tasks].
 
 [vscode tasks]: https://code.visualstudio.com/docs/editor/tasks
 [pdm task provider]: https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider
-[pdm scripts]: https://pdm.fming.dev/project/#run-scripts-in-isolated-environment
+[pdm scripts]: usage/scripts.md
 
 ### Neovim
 
