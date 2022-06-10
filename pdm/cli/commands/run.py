@@ -26,6 +26,19 @@ class TaskOptions(TypedDict, total=False):
     site_packages: bool
 
 
+def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
+    return dict(
+        env={k: v for opts in options if opts for k, v in opts.get("env", {}).items()},
+        **{
+            k: v
+            for opts in options
+            if opts
+            for k, v in opts.items()
+            if k not in ("env", "help")
+        },
+    )
+
+
 class Task(NamedTuple):
     kind: str
     name: str
@@ -39,7 +52,7 @@ class Task(NamedTuple):
 class TaskRunner:
     """The task runner for pdm project"""
 
-    TYPES = ["cmd", "shell", "call"]
+    TYPES = ["cmd", "shell", "call", "composite"]
     OPTIONS = ["env", "env_file", "help", "site_packages"]
 
     def __init__(self, project: Project) -> None:
@@ -161,9 +174,10 @@ class TaskRunner:
         signal.signal(signal.SIGINT, s)
         return process.returncode
 
-    def _run_task(self, task: Task, args: Sequence[str] = ()) -> int:
+    def _run_task(
+        self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None
+    ) -> int:
         kind, _, value, options = task
-        options.pop("help", None)
         shell = False
         if kind == "cmd":
             if not isinstance(value, list):
@@ -189,38 +203,51 @@ class TaskRunner:
                 f"import sys, {module} as {short_name};"
                 f"sys.exit({short_name}.{func})",
             ] + list(args)
-        if "env" in self.global_options:
-            options["env"] = {**self.global_options["env"], **options.get("env", {})}
-        options["env_file"] = options.get(
-            "env_file", self.global_options.get("env_file")
-        )
+        elif kind == "composite":
+            assert isinstance(value, list)
+
         self.project.core.ui.echo(
             f"Running {task}: [green]{str(args)}[/]",
             err=True,
             verbosity=termui.Verbosity.DETAIL,
         )
+        if kind == "composite":
+            for script in value:
+                splitted = shlex.split(script)
+                cmd = splitted[0]
+                subargs = splitted[1:] + args  # type: ignore
+                code = self.run(cmd, subargs, options)
+                if code != 0:
+                    return code
+            return code
         return self._run_process(
-            args, chdir=True, shell=shell, **options  # type: ignore
+            args,
+            chdir=True,
+            shell=shell,
+            **exec_opts(self.global_options, options, opts),
         )
 
-    def run(self, command: str, args: Sequence[str]) -> int:
+    def run(
+        self, command: str, args: Sequence[str], opts: TaskOptions | None = None
+    ) -> int:
         task = self._get_task(command)
         if task is not None:
             pre_task = self._get_task(f"pre_{command}")
             if pre_task is not None:
-                code = self._run_task(pre_task)
+                code = self._run_task(pre_task, opts=opts)
                 if code != 0:
                     return code
-            code = self._run_task(task, args)
+            code = self._run_task(task, args, opts=opts)
             if code != 0:
                 return code
             post_task = self._get_task(f"post_{command}")
             if post_task is not None:
-                code = self._run_task(post_task)
+                code = self._run_task(post_task, opts=opts)
             return code
         else:
             return self._run_process(
-                [command] + args, **self.global_options  # type: ignore
+                [command] + args,  # type: ignore
+                **exec_opts(self.global_options, opts),
             )
 
     def show_list(self) -> None:
