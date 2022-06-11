@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - '1.x'
     paths-ignore:
       - "docs/**"
       - "news/**"
