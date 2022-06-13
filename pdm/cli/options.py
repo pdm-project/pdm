@@ -97,6 +97,41 @@ def deprecated(message: str, type_: type = str) -> Callable[[Any], Any]:
     return wrapped_type
 
 
+def split_lists(separator: str) -> type[argparse.Action]:
+    """
+    Works the same as `append` except each argument
+    is considered a `separator`-separated list.
+    """
+
+    class SplitList(argparse.Action):
+        def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            args: argparse.Namespace,
+            values: Any,
+            option_string: str | None = None,
+        ) -> None:
+            if not isinstance(values, str):
+                return
+            splitted = getattr(args, self.dest) or []
+            splitted.extend(
+                value.strip() for value in values.split(separator) if value.strip()
+            )
+            setattr(args, self.dest, splitted)
+
+    return SplitList
+
+
+def from_splitted_env(name: str, separator: str) -> list[str] | None:
+    """
+    Parse a `separator`-separated list from a `name` environment variable if present.
+    """
+    value = os.getenv(name)
+    if not value:
+        return None
+    return [v.strip() for v in value.split(separator) if v.strip()] or None
+
+
 verbose_option = Option(
     "-v",
     "--verbose",
@@ -228,6 +263,18 @@ save_strategy_group.add_argument(
     dest="save_strategy",
     const="minimum",
     help="Save minimum version specifiers",
+)
+
+skip_option = Option(
+    "-k",
+    "--skip",
+    dest="skip",
+    action=split_lists(","),
+    help="Skip some tasks and/or hooks by their comma-separated names."
+    " Can be supplied multiple times."
+    ' Use ":all" to skip all hooks.'
+    ' Use ":pre" and ":post" to skip all pre or post hooks.',
+    default=from_splitted_env("PDM_SKIP_HOOKS", ","),
 )
 
 update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)

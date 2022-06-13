@@ -9,7 +9,7 @@ def test_post_init_signal(project_no_init, invoke):
     with signals.post_init.connected_to(mock_handler):
         result = invoke(["init"], input="\n\n\n\n\n\n", obj=project_no_init)
         assert result.exit_code == 0
-    mock_handler.assert_called_once_with(project_no_init)
+    mock_handler.assert_called_once_with(project_no_init, hooks=mock.ANY)
 
 
 def test_post_lock_and_install_signals(project, working_set, repository):
