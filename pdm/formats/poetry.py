@@ -102,7 +102,7 @@ class PoetryMetaConverter(MetaConverter):
         return parse_name_email(value)
 
     @convert_from("license")
-    def license(self, value: str) -> str:
+    def license(self, value: str) -> dict[str, str]:
         return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
