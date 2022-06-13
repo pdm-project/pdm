@@ -5,6 +5,7 @@ import pytest
 
 from pdm.cli import actions
 from pdm.cli.hooks import KNOWN_HOOKS
+from pdm.cli.options import from_splitted_env
 from pdm.models.requirements import parse_requirement
 
 
@@ -128,6 +129,26 @@ def test_skip_option(project, invoke, capfd, args):
     assert "Second CALLED" not in out
     assert "Post-Second CALLED" not in out
     assert "Post-Test CALLED" in out
+
+
+@pytest.mark.parametrize(
+    "env, expected",
+    [
+        ("pre_test", ["pre_test"]),
+        ("pre_test,post_test", ["pre_test", "post_test"]),
+        ("pre_test , post_test", ["pre_test", "post_test"]),
+        (None, None),
+        (" ", None),
+        (" , ", None),
+    ],
+)
+def test_skip_option_default_from_env(env, expected, monkeypatch):
+    if env is not None:
+        monkeypatch.setenv("PDM_SKIP_HOOKS", env)
+
+    # Default value is set once and not easily testable
+    # so we test the function generating this default value
+    assert from_splitted_env("PDM_SKIP_HOOKS", ",") == expected
 
 
 HookSpecs = namedtuple("HookSpecs", ["command", "hooks", "fixtures"])

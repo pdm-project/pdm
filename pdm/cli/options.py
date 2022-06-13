@@ -98,6 +98,11 @@ def deprecated(message: str, type_: type = str) -> Callable[[Any], Any]:
 
 
 def split_lists(separator: str) -> type[argparse.Action]:
+    """
+    Works the same as `append` except each argument
+    is considered a `separator`-separated list.
+    """
+
     class SplitList(argparse.Action):
         def __call__(
             self,
@@ -115,6 +120,16 @@ def split_lists(separator: str) -> type[argparse.Action]:
             setattr(args, self.dest, splitted)
 
     return SplitList
+
+
+def from_splitted_env(name: str, separator: str) -> list[str] | None:
+    """
+    Parse a `separator`-separated list from a `name` environment variable if present.
+    """
+    value = os.getenv(name)
+    if not value:
+        return None
+    return [v.strip() for v in value.split(separator) if v.strip()] or None
 
 
 verbose_option = Option(
@@ -255,7 +270,11 @@ skip_option = Option(
     "--skip",
     dest="skip",
     action=split_lists(","),
-    help="Skip some tasks and/or hooks",
+    help="Skip some tasks and/or hooks by their comma-separated names."
+    " Can be supplied multiple times."
+    ' Use ":all" to skip all hooks.'
+    ' Use ":pre" and ":post" to skip all pre or post hooks.',
+    default=from_splitted_env("PDM_SKIP_HOOKS", ","),
 )
 
 update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)
