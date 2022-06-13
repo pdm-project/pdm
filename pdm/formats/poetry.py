@@ -16,6 +16,7 @@ from pdm.formats.base import (
     Unset,
     convert_from,
     make_array,
+    make_inline_table,
     parse_name_email,
 )
 from pdm.models.markers import Marker
@@ -100,9 +101,9 @@ class PoetryMetaConverter(MetaConverter):
     def maintainers(self, value: list[str]) -> list[str]:
         return parse_name_email(value)
 
-    @convert_from("license", name="license-expression")
-    def license(self, value: str) -> str:
-        return value
+    @convert_from("license")
+    def license(self, value: str) -> dict[str, str]:
+        return make_inline_table({"text": value})
 
     @convert_from(name="requires-python")
     def requires_python(self, source: dict[str, Any]) -> str:
@@ -174,8 +175,11 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("build")
-    def build(self, value: str) -> None:
-        self.settings["build"] = value
+    def build(self, value: str | dict) -> None:
+        if isinstance(value, str):
+            self.settings["build"] = value
+        elif "script" in value:
+            self.settings["build"] = value.get("script")
         raise Unset()
 
     @convert_from("source")
