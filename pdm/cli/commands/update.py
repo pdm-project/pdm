@@ -2,12 +2,14 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     groups_group,
     install_group,
     lockfile_option,
     prerelease_option,
     save_strategy_group,
+    skip_option,
     unconstrained_option,
     update_strategy_group,
 )
@@ -25,6 +27,7 @@ class Command(BaseCommand):
         update_strategy_group,
         prerelease_option,
         unconstrained_option,
+        skip_option,
     ]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -69,4 +72,5 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             prerelease=options.prerelease,
+            hooks=HookManager(project, options.skip),
         )

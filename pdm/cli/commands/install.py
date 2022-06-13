@@ -5,7 +5,14 @@ from pdm import signals, termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.run import run_script_if_present
-from pdm.cli.options import dry_run_option, groups_group, install_group, lockfile_option
+from pdm.cli.hooks import HookManager
+from pdm.cli.options import (
+    dry_run_option,
+    groups_group,
+    install_group,
+    lockfile_option,
+    skip_option,
+)
 from pdm.project import Project
 
 
@@ -17,6 +24,7 @@ class Command(BaseCommand):
         install_group.add_to_parser(parser)
         dry_run_option.add_to_parser(parser)
         lockfile_option.add_to_parser(parser)
+        skip_option.add_to_parser(parser)
         parser.add_argument(
             "--no-lock",
             dest="lock",
@@ -34,6 +42,8 @@ class Command(BaseCommand):
         if not project.meta and termui.is_interactive():
             actions.ask_for_import(project)
 
+        hooks = HookManager(project, options.skip)
+
         strategy = actions.check_lockfile(project, False)
         if strategy:
             if options.check:
@@ -45,7 +55,9 @@ class Command(BaseCommand):
                 project.core.ui.echo(
                     "Updating the lock file...", style="green", err=True
                 )
-                actions.do_lock(project, strategy=strategy, dry_run=options.dry_run)
+                actions.do_lock(
+                    project, strategy=strategy, dry_run=options.dry_run, hooks=hooks
+                )
 
         actions.do_sync(
             project,
@@ -55,6 +67,7 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             dry_run=options.dry_run,
+            hooks=hooks,
         )
 
 

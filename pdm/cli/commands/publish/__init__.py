@@ -15,7 +15,8 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
-from pdm.cli.options import project_option, verbose_option
+from pdm.cli.hooks import HookManager
+from pdm.cli.options import project_option, skip_option, verbose_option
 from pdm.exceptions import PdmUsageError, PublishError
 from pdm.project import Project
 from pdm.termui import logger
@@ -24,7 +25,7 @@ from pdm.termui import logger
 class Command(BaseCommand):
     """Build and publish the project to PyPI"""
 
-    arguments = [verbose_option, project_option]
+    arguments = [verbose_option, project_option, skip_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -118,7 +119,7 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.build:
-            actions.do_build(project)
+            actions.do_build(project, hooks=HookManager(project, options.skip))
 
         package_files = [
             str(p)

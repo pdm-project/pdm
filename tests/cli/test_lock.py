@@ -1,3 +1,5 @@
+from unittest.mock import ANY
+
 import pytest
 
 from pdm.cli import actions
@@ -7,7 +9,7 @@ from pdm.models.requirements import parse_requirement
 def test_lock_command(project, invoke, mocker):
     m = mocker.patch.object(actions, "do_lock")
     invoke(["lock"], obj=project)
-    m.assert_called_with(project, refresh=False)
+    m.assert_called_with(project, refresh=False, hooks=ANY)
 
 
 @pytest.mark.usefixtures("repository")
