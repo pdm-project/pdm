@@ -4,6 +4,8 @@ from pdm import signals, termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.run import run_script_if_present
+from pdm.cli.hooks import HookManager
+from pdm.cli.options import skip_option
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git
 
@@ -24,6 +26,7 @@ class Command(BaseCommand):
         return termui.ask(question, default=default)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        skip_option.add_to_parser(parser)
         parser.add_argument(
             "-n",
             "--non-interactive",
@@ -77,6 +80,7 @@ class Command(BaseCommand):
             author=author,
             email=email,
             python_requires=python_requires,
+            hooks=HookManager(project, options.skip),
         )
         if self.interactive:
             actions.ask_for_import(project)
