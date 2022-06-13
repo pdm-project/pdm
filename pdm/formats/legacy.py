@@ -12,6 +12,7 @@ from pdm.formats.base import (
     Unset,
     convert_from,
     make_array,
+    make_inline_table,
     parse_name_email,
 )
 from pdm.models.requirements import Requirement
@@ -55,9 +56,9 @@ class LegacyMetaConverter(MetaConverter):
             self._data["dynamic"].append("classifiers")
         return value
 
-    @convert_from("license", name="license-expression")
+    @convert_from("license")
     def license(self, value: str) -> str:
-        return value
+        return make_inline_table({"text": value})
 
     @convert_from("source")
     def sources(self, value: List[Source]) -> None:
