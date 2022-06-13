@@ -16,7 +16,8 @@ import tomlkit
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
 
-from pdm import signals, termui
+from pdm import termui
+from pdm.cli.hooks import HookManager
 from pdm.cli.utils import (
     check_project_file,
     find_importable_files,
@@ -55,8 +56,10 @@ def do_lock(
     requirements: list[Requirement] | None = None,
     dry_run: bool = False,
     refresh: bool = False,
+    hooks: HookManager | None = None,
 ) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
+    hooks = hooks or HookManager(project)
     check_project_file(project)
     if refresh:
         locked_repo = project.locked_repository
@@ -90,9 +93,7 @@ def do_lock(
             with ui.open_spinner(title="Resolving dependencies") as spin:
                 reporter = project.get_reporter(requirements, tracked_names, spin)
                 resolver: Resolver = project.core.resolver_class(provider, reporter)
-                signals.pre_lock.send(
-                    project, requirements=requirements, dry_run=dry_run
-                )
+                hooks.try_emit("pre_lock", requirements=requirements, dry_run=dry_run)
                 mapping, dependencies = resolve(
                     resolver,
                     requirements,
@@ -116,7 +117,7 @@ def do_lock(
         else:
             data = format_lockfile(project, mapping, dependencies)
             ui.echo(f"{termui.Emoji.LOCK} Lock successful")
-            signals.post_lock.send(project, resolution=mapping, dry_run=dry_run)
+            hooks.try_emit("post_lock", resolution=mapping, dry_run=dry_run)
 
     project.write_lockfile(data, write=not dry_run)
 
@@ -184,8 +185,10 @@ def do_sync(
     no_editable: bool | Collection[str] = False,
     no_self: bool = False,
     reinstall: bool = False,
+    hooks: HookManager | None = None,
 ) -> None:
     """Synchronize project"""
+    hooks = hooks or HookManager(project)
     if requirements is None:
         groups = translate_groups(project, default, dev, groups or ())
         requirements = []
@@ -206,9 +209,9 @@ def do_sync(
         use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
     )
-    signals.pre_install.send(project, candidates=candidates, dry_run=dry_run)
+    hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
     handler.synchronize()
-    signals.post_install.send(project, candidates=candidates, dry_run=dry_run)
+    hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
 
 
 def do_add(
@@ -225,8 +228,10 @@ def do_add(
     no_self: bool = False,
     dry_run: bool = False,
     prerelease: bool = False,
+    hooks: HookManager | None = None,
 ) -> None:
     """Add packages and install"""
+    hooks = hooks or HookManager(project)
     check_project_file(project)
     if not editables and not packages:
         raise PdmUsageError("Must specify at least one package or editable package.")
@@ -254,7 +259,9 @@ def do_add(
             req.specifier = get_specifier("")
     group_deps.update(requirements)
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
-    resolved = do_lock(project, strategy, tracked_names, reqs, dry_run=dry_run)
+    resolved = do_lock(
+        project, strategy, tracked_names, reqs, dry_run=dry_run, hooks=hooks
+    )
 
     # Update dependency specifiers and lockfile hash.
     deps_to_update = group_deps if unconstrained else requirements
@@ -274,6 +281,7 @@ def do_add(
             no_self=no_self,
             requirements=list(group_deps.values()),
             dry_run=dry_run,
+            hooks=hooks,
         )
 
 
@@ -293,8 +301,10 @@ def do_update(
     no_editable: bool = False,
     no_self: bool = False,
     prerelease: bool = False,
+    hooks: HookManager | None = None,
 ) -> None:
     """Update specified packages or all packages"""
+    hooks = hooks or HookManager(project)
     check_project_file(project)
     if len(packages) > 0 and (top or len(groups) > 1 or not default):
         raise PdmUsageError(
@@ -348,6 +358,7 @@ def do_update(
         chain.from_iterable(updated_deps.values()),
         reqs,
         dry_run=dry_run,
+        hooks=hooks,
     )
     if sync or dry_run:
         do_sync(
@@ -363,6 +374,7 @@ def do_update(
             else None,
             no_editable=no_editable,
             no_self=no_self,
+            hooks=hooks,
         )
     if unconstrained and not dry_run:
         # Need to update version constraints
@@ -382,8 +394,10 @@ def do_remove(
     no_editable: bool = False,
     no_self: bool = False,
     dry_run: bool = False,
+    hooks: HookManager | None = None,
 ) -> None:
     """Remove packages from working set and pyproject.toml"""
+    hooks = hooks or HookManager(project)
     check_project_file(project)
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
@@ -411,7 +425,7 @@ def do_remove(
 
     if not dry_run:
         project.write_pyproject()
-    do_lock(project, "reuse", dry_run=dry_run)
+    do_lock(project, "reuse", dry_run=dry_run, hooks=hooks)
     if sync:
         do_sync(
             project,
@@ -421,6 +435,7 @@ def do_remove(
             no_editable=no_editable,
             no_self=no_self,
             dry_run=dry_run,
+            hooks=hooks,
         )
 
 
@@ -477,9 +492,12 @@ def do_build(
     dest: str = "dist",
     clean: bool = True,
     config_settings: Mapping[str, str] | None = None,
+    hooks: HookManager | None = None,
 ) -> None:
     """Build artifacts for distribution."""
     from pdm.builders import SdistBuilder, WheelBuilder
+
+    hooks = hooks or HookManager(project)
 
     if project.is_global:
         raise ProjectError("Not allowed to build based on the global project.")
@@ -490,7 +508,7 @@ def do_build(
         dest = project.root.joinpath(dest).as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
-    signals.pre_build.send(project, dest=dest, config_settings=config_settings)
+    hooks.try_emit("pre_build", dest=dest, config_settings=config_settings)
     artifacts: list[str] = []
     with project.core.ui.logging("build"):
         if sdist:
@@ -507,9 +525,7 @@ def do_build(
             )
             project.core.ui.echo(f"Built wheel at {loc}")
             artifacts.append(loc)
-    signals.post_build.send(
-        project, artifacts=artifacts, config_settings=config_settings
-    )
+    hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
 
 
 def do_init(
@@ -521,8 +537,10 @@ def do_init(
     author: str = "",
     email: str = "",
     python_requires: str = "",
+    hooks: HookManager | None = None,
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
+    hooks = hooks or HookManager(project)
     data = {
         "project": {
             "name": name,
@@ -552,7 +570,7 @@ def do_init(
         project._pyproject["project"] = data["project"]  # type: ignore
         project._pyproject["build-system"] = data["build-system"]  # type: ignore
     project.write_pyproject()
-    signals.post_init.send(project)
+    hooks.try_emit("post_init")
 
 
 def do_use(

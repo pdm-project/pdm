@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import collections
 import functools
 import json
@@ -18,6 +20,7 @@ from unearth.vcs import Git, vcs_support
 
 from pdm._types import CandidateInfo
 from pdm.cli.actions import do_init, do_use
+from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.models.candidates import Candidate
@@ -324,7 +327,8 @@ def local_finder(project_no_init, mocker):
 
 @pytest.fixture()
 def project(project_no_init):
-    do_init(project_no_init, "test_project", "0.0.0")
+    hooks = HookManager(project_no_init, ["post_init"])
+    do_init(project_no_init, "test_project", "0.0.0", hooks=hooks)
     # Clean the cached property
     project_no_init._environment = None
     return project_no_init

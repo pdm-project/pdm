@@ -1,3 +1,5 @@
+from unittest.mock import ANY
+
 import pytest
 
 from pdm.cli import actions
@@ -93,6 +95,7 @@ def test_init_command(project_no_init, invoke, mocker):
         author="Testing",
         email="me@example.org",
         python_requires=f">={python_version}",
+        hooks=ANY,
     )
 
 
@@ -118,6 +121,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
         author="Testing",
         email="me@example.org",
         python_requires=f">={python_version}",
+        hooks=ANY,
     )
 
 
@@ -139,6 +143,7 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         author="Testing",
         email="me@example.org",
         python_requires=f">={python_version}",
+        hooks=ANY,
     )
 
 

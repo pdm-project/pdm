@@ -63,7 +63,7 @@ version = {use_scm = true}
 [tool.pdm.scripts]
 pre_release = "python tasks/max_versions.py"
 release = "python tasks/release.py"
-test = "pytest tests/"
+test = "pytest"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
@@ -184,3 +184,7 @@ markers = [
     "deprecated: Tests about deprecated features",
 ]
 addopts = "-ra"
+testpaths = [
+    "tests/",
+]
+
