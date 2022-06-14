@@ -41,7 +41,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch origin gh-pages:gh-pages
-          tag="${{ github.ref }}"
+          tag="${{ github.ref_name }}"
           DOC_VERSION=${tag%.*}
           cd docs
           pdm run mike deploy --no-redirect --update-aliases "$DOC_VERSION" latest
