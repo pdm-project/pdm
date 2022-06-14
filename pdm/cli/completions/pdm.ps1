@@ -198,6 +198,7 @@ function TabExpansion($line, $lastWord) {
         $completer.AddOpts(([Option]::new(("-h", "--help", "-v", "--verbose"))))
         $sectionOption = [Option]::new(@("-G", "--group")).WithValues(@(getSections))
         $projectOption = [Option]::new(@("-p", "--project")).WithValues(@())
+        $skipOption = [Option]::new(@("-k", "--skip")).WithValues(@())
         $formatOption = [Option]::new(@("-f", "--format")).WithValues(@("setuppy", "requirements", "poetry", "flit"))
 
         Switch ($command) {
@@ -207,12 +208,13 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation", "--pre", "--prerelease", "-L", "--lockfile")),
                         $sectionOption,
                         $projectOption,
+                        $skipOption
                         [Option]::new(@("-e", "--editable")).WithValues(@(getPyPIPackages))
                     ))
                 $completer.AddParams(@(getPyPIPackages), $true)
                 break
             }
-            "build" { $completer.AddOpts(@([Option]::new(@("-d", "--dest", "--no-clean", "--no-sdist", "--no-wheel", "-C", "--config-setting", "--no-isolation")), $projectOption)) }
+            "build" { $completer.AddOpts(@([Option]::new(@("-d", "--dest", "--no-clean", "--no-sdist", "--no-wheel", "-C", "--config-setting", "--no-isolation")), $projectOption, $skipOption)) }
             "cache" {
                 $subCommand = $commands[1]
                 switch ($subCommand) {
@@ -264,7 +266,8 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("-g", "--global", "--non-interactive", "-n")),
-                        $projectOption
+                        $projectOption,
+                        $skipOption
                     ))
                 break
             }
@@ -272,6 +275,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(@(
                         [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "--check", "-L", "--lockfile")),
                         $sectionOption,
+                        $skipOption,
                         $projectOption
                     ))
                 break
@@ -288,6 +292,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile")),
+                        $skipOption,
                         $projectOption
                     ))
                 break
@@ -317,6 +322,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment", "--no-build")),
+                        $skipOption,
                         $projectOption
                     ))
                 break
@@ -326,6 +332,7 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@("--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
                         $projectOption,
+                        $skipOption,
                         $sectionOption
                     ))
                 $completer.AddParams(@(getPdmPackages), $true)
@@ -335,6 +342,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("--global", "-g", "-l", "--list", "-s", "--site-packages")),
+                        $skipOption,
                         $projectOption
                     ))
                 $completer.AddParams(@(getScripts), $false)
@@ -353,6 +361,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(@(
                         [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
                         $sectionOption,
+                        $skipOption,
                         $projectOption
                     ))
                 break
@@ -361,6 +370,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(@(
                         [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync", "--pre", "--prerelease", "-L", "--lockfile")),
                         $sectionOption,
+                        $skipOption,
                         $projectOption
                     ))
                 $completer.AddParams(@(getPdmPackages), $true)

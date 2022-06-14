@@ -61,8 +61,9 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-compatible -d 'S
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-exact -d 'Save exact version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-minimum -d 'Save minimum version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-wildcard -d 'Save wildcard version specifiers'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l unconstrained -d 'Ignore the version constraint of packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-all -d 'Update all dependencies and sub depenencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-all -d 'Update all dependencies and sub-depenencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l verbose -d '-v for detailed output and -vv for more detailed'
@@ -76,6 +77,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-isolation -d 'Do
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-sdist -d 'Don\'t build source tarballs'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-wheel -d 'Don\'t build wheels'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from build' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # cache
@@ -132,6 +134,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don\'t ask questions but use default values'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # install
@@ -149,6 +152,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-lock -d 'Don\'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-self -d 'Don\'t install the project itself'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # list
@@ -168,6 +172,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l lockfile -d 'Specify
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'Do not isolate the build in a clean environment'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # plugin
@@ -183,6 +188,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l password -d 'The 
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l repository -d 'The repository name or url to publish the package to [env var: PDM_PUBLISH_REPO]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l sign -d 'Upload the package with PGP signature'
+complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l username -d 'The username to access the repository [env var: PDM_PUBLISH_USERNAME]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l verbose -d '-v for detailed output and -vv for more detailed'
 
@@ -198,6 +204,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-isolation -d 'D
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-self -d 'Don\'t install the project itself'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-sync -d 'Only write pyproject.toml and do not uninstall packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # run
@@ -206,6 +213,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l help -d 'show this he
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l list -d 'Show all available scripts defined in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l site-packages -d 'Load site-packages from the selected interpreter'
+complete -c pdm -A -n '__fish_seen_subcommand_from run' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # search
@@ -240,6 +248,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-self -d 'Don\'t i
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l reinstall -d 'Force reinstall existing dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # update
@@ -261,9 +270,10 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-compatible -d
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-exact -d 'Save exact version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-minimum -d 'Save minimum version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-wildcard -d 'Save wildcard version specifiers'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l top -d 'Only update those list in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l unconstrained -d 'Ignore the version constraint of packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-all -d 'Update all dependencies and sub depenencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-all -d 'Update all dependencies and sub-depenencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d '-v for detailed output and -vv for more detailed'
