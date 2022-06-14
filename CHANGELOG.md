@@ -1,3 +1,16 @@
+Release v1.15.3 (2022-06-14)
+----------------------------
+
+### Bug Fixes
+
+- Fix a defect in the resolution preferences that causes an infinite resolution loop. [#1119](https://github.com/pdm-project/pdm/issues/1119)
+- Update the poetry importer to support the new `[tool.poetry.build]` config table. [#1131](https://github.com/pdm-project/pdm/issues/1131)
+
+### Improved Documentation
+
+- Add support for multiple versions of documentations. [#1126](https://github.com/pdm-project/pdm/issues/1126)
+
+
 Release v1.15.2 (2022-06-06)
 ----------------------------
 
