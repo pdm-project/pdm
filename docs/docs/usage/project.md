@@ -229,10 +229,13 @@ PDM provides `import` command so that you don't have to initialize the project m
 1. Pipenv's `Pipfile`
 2. Poetry's section in `pyproject.toml`
 3. Flit's section in `pyproject.toml`
-4. `requirements.txt` format used by Pip
+4. `requirements.txt` format used by pip
+5. setuptools `setup.py`
 
-Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import
-if your PDM project has not been initialized yet.
+Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
+
+!!! attention "CAUTION"
+    Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
 
 ## Export locked packages to alternative formats
 

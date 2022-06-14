@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 FOLDER_PATH = Path(__file__).parent
 
@@ -35,3 +35,9 @@ def get_pep508_environment(executable: str) -> Dict[str, str]:
     script = str(FOLDER_PATH / "pep508.py")
     args = [executable, "-Es", script]
     return json.loads(subprocess.check_output(args))
+
+
+def parse_setup_py(executable: str, path: str) -> Dict[str, Any]:
+    """Parse setup.py and return the kwargs"""
+    cmd = [executable, "-Es", str(FOLDER_PATH / "parse_setup.py"), path]
+    return json.loads(subprocess.check_output(cmd))
