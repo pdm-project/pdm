@@ -500,6 +500,7 @@ def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
         "pyproject.toml",
         "requirements.in",
         "requirements.txt",
+        "setup.py",
     ):
         project_file = project.root / filename
         if not project_file.exists():
