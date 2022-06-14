@@ -31,9 +31,9 @@ def convert(
         if name in parsed:
             metadata[name] = parsed[name]
     if "authors" in parsed:
-        metadata["author"] = array_of_inline_tables(parsed["authors"])
+        metadata["authors"] = array_of_inline_tables(parsed["authors"])
     if "maintainers" in parsed:
-        metadata["maintainer"] = array_of_inline_tables(parsed["maintainers"])
+        metadata["maintainers"] = array_of_inline_tables(parsed["maintainers"])
     if "classifiers" in parsed:
         metadata["classifiers"] = make_array(sorted(parsed["classifiers"]), True)
     if "python_requires" in parsed:
@@ -48,6 +48,14 @@ def convert(
         metadata["license"] = make_inline_table({"text": parsed["license"]})
     if "package_dir" in parsed:
         settings["package-dir"] = parsed["package_dir"]
+
+    entry_points = parsed.get("entry_points", {})
+    if "console_scripts" in entry_points:
+        metadata["scripts"] = entry_points.pop("console_scripts")
+    if "gui_scripts" in entry_points:
+        metadata["gui-scripts"] = entry_points.pop("gui_scripts")
+    if entry_points:
+        metadata["entry-points"] = entry_points
 
     return metadata, settings
 

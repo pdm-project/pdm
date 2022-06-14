@@ -51,9 +51,14 @@ def _parse_setup_cfg(path: str) -> Dict[str, Any]:
 
     if "project_urls" in metadata:
         result["project_urls"] = dict(
-            url.replace(" = ", "=", 1).split("=")
+            [u.strip() for u in url.split("=", 1)]
             for url in metadata["project_urls"].strip().splitlines()
         )
+
+    if "long_description" in metadata:
+        long_description = metadata["long_description"].strip()
+        if long_description.startswith("file:"):
+            result["readme"] = long_description[5:].strip()
 
     if setup_cfg.has_section("options"):
         options = setup_cfg["options"]
@@ -68,7 +73,7 @@ def _parse_setup_cfg(path: str) -> Dict[str, Any]:
 
         if "package_dir" in options:
             result["package_dir"] = dict(
-                d.replace(" = ", "=", 1).split("=")
+                [p.strip() for p in d.split("=", 1)]
                 for d in options["package_dir"].strip().splitlines()
             )
 
@@ -143,6 +148,12 @@ def clean_metadata(metadata: Dict[str, Any]) -> None:
     if "" in metadata.get("package_dir", {}):
         metadata["package_dir"] = metadata["package_dir"][""]
 
+    if "keywords" in metadata:
+        keywords = metadata["keywords"]
+        if isinstance(keywords, str):
+            keywords = [k.strip() for k in keywords.split(",")]
+        metadata["keywords"] = keywords
+
     if "entry_points" in metadata and isinstance(metadata["entry_points"], dict):
         entry_points = {}
         for entry_point, definitions in metadata["entry_points"].items():
@@ -173,6 +184,7 @@ def parse_setup(path: str) -> Dict[str, Any]:
 
     # Execute setup.py and get the kwargs
     __file__ = sys.argv[0] = path
+    sys.path.insert(0, project_path)
     setup_kwargs.clear()
 
     with tokenize.open(path) as f:
@@ -183,11 +195,12 @@ def parse_setup(path: str) -> Dict[str, Any]:
     )
     parsed.update(setup_kwargs)
 
-    for readme_file in ("README.md", "README.rst", "README.txt"):
-        readme_path = os.path.join(project_path, readme_file)
-        if os.path.exists(readme_path):
-            parsed["readme"] = readme_file
-            break
+    if "readme" not in parsed:
+        for readme_file in ("README.md", "README.rst", "README.txt"):
+            readme_path = os.path.join(project_path, readme_file)
+            if os.path.exists(readme_path):
+                parsed["readme"] = readme_file
+                break
     clean_metadata(parsed)
     return parsed
 
