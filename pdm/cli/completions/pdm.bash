@@ -29,11 +29,11 @@ _pdm_25182a7ef85b840e_complete()
         case "$com" in
 
             (add)
-            opts="--dev --dry-run --editable --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --unconstrained --update-all --update-eager --update-reuse --verbose"
+            opts="--dev --dry-run --editable --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --verbose"
             ;;
 
             (build)
-            opts="--config-setting --dest --help --no-clean --no-isolation --no-sdist --no-wheel --project --verbose"
+            opts="--config-setting --dest --help --no-clean --no-isolation --no-sdist --no-wheel --project --skip --verbose"
             ;;
 
             (cache)
@@ -61,11 +61,11 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (init)
-            opts="--global --help --non-interactive --project --verbose"
+            opts="--global --help --non-interactive --project --skip --verbose"
             ;;
 
             (install)
-            opts="--check --dev --dry-run --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --production --project --verbose"
+            opts="--check --dev --dry-run --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --production --project --skip --verbose"
             ;;
 
             (list)
@@ -73,7 +73,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (lock)
-            opts="--global --help --lockfile --no-isolation --project --refresh --verbose"
+            opts="--global --help --lockfile --no-isolation --project --refresh --skip --verbose"
             ;;
 
             (plugin)
@@ -81,15 +81,15 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (publish)
-            opts="--comment --help --identity --no-build --password --project --repository --sign --username --verbose"
+            opts="--comment --help --identity --no-build --password --project --repository --sign --skip --username --verbose"
             ;;
 
             (remove)
-            opts="--dev --dry-run --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --verbose"
+            opts="--dev --dry-run --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --skip --verbose"
             ;;
 
             (run)
-            opts="--global --help --list --project --site-packages --verbose"
+            opts="--global --help --list --project --site-packages --skip --verbose"
             ;;
 
             (search)
@@ -101,11 +101,11 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --global --group --help --lockfile --no-clean --no-default --no-editable --no-isolation --no-self --production --project --reinstall --verbose"
+            opts="--clean --dev --dry-run --global --group --help --lockfile --no-clean --no-default --no-editable --no-isolation --no-self --production --project --reinstall --skip --verbose"
             ;;
 
             (update)
-            opts="--dev --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --top --unconstrained --update-all --update-eager --update-reuse --verbose"
+            opts="--dev --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --verbose"
             ;;
 
             (use)

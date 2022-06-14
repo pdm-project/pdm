@@ -71,6 +71,7 @@ _pdm() {
         '--update-all[Update all dependencies and sub-dependencies]'
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         {-e+,--editable+}'[Specify editable packages]:packages'
@@ -84,6 +85,7 @@ _pdm() {
         "--no-sdist[Don't build source tarballs]"
         "--no-wheel[Don't build wheels]"
         {-d+,--dest+}'[Target directory to put artifacts]:directory:_files -/'
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         '--no-clean[Do not clean the target directory]'
         {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=--opt(=value)" or "-C--opt(=value)"]'
         "--no-isolation[do not isolate the build in a clean environment]"
@@ -167,6 +169,7 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-n,--non-interactive}"[Don't ask questions but use default values]"
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
       )
       ;;
     install)
@@ -176,6 +179,7 @@ _pdm() {
         {-d,--dev}"[Select dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--no-lock[Don't do lock if lock file is not found or outdated]"
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editable[Install non-editable versions for all packages]'
@@ -199,6 +203,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         "--no-isolation[Do not isolate the build in a clean environment]"
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--refresh[Don't update pinned versions, only refresh the lock file]"
       )
       ;;
@@ -245,6 +250,7 @@ _pdm() {
         {-P,--password}'[The password to access the repository [env var: PDM_PUBLISH_PASSWORD]]:password:'
         {-S,--sign}'[Upload the package with PGP signature]'
         {-i,--identity}'[GPG identity used to sign files.]:gpg identity:'
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-c,--comment}'[The comment to include with the distribution file.]:comment:'
         "--no-build[Don't build the package before publishing]"
       )
@@ -255,6 +261,7 @@ _pdm() {
         {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
@@ -267,6 +274,7 @@ _pdm() {
       _arguments -s \
         {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
         {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]' \
         {-s,--site-packages}'[Load site-packages from the selected interpreter]' \
         '(-)1:command:->command' \
         '*:arguments: _normal ' && return 0
@@ -301,6 +309,7 @@ _pdm() {
         {-d,--dev}"[Select dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         '--dry-run[Only prints actions without actually running them]'
         {-r,--reinstall}"[Force reinstall existing dependencies]"
         '--clean[Clean unused packages]'
@@ -326,6 +335,7 @@ _pdm() {
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-sync[Only update lock file but do not sync packages]"
+        {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         {-d,--dev}'[Select dev dependencies]'
