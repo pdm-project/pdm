@@ -181,3 +181,23 @@ def test_export_replace_project_root(project):
         req = parse_requirement(f"./{artifact.name}")
     result = requirements.export(project, [req], Namespace(hashes=False))
     assert "${PROJECT_ROOT}" not in result
+
+
+def test_convert_setup_py_project(project):
+    golden_file = FIXTURES / "projects/test-setuptools/setup.py"
+    assert setup_py.check_fingerprint(project, golden_file)
+    result, settings = setup_py.convert(project, golden_file, Namespace())
+    assert result == {
+        "name": "mymodule",
+        "version": "0.1.0",
+        "description": "A test module",
+        "keywords": ["one", "two"],
+        "readme": "README.md",
+        "authors": [{"name": "frostming"}],
+        "license": {"text": "MIT"},
+        "classifiers": ["Framework :: Django", "Programming Language :: Python :: 3"],
+        "requires-python": ">=3.5",
+        "dependencies": ['importlib-metadata; python_version<"3.8"', "requests"],
+        "scripts": {"mycli": "mymodule:main"},
+    }
+    assert settings == {"package-dir": "src"}
