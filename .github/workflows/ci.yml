@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - '1.x'
+      - "1.x"
     paths-ignore:
       - "docs/**"
       - "news/**"
@@ -48,39 +48,38 @@ jobs:
             arch: x86
     continue-on-error: ${{ startsWith(matrix.python-version, '3.11') }}
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
+      - uses: actions/checkout@v3
+
       - name: Set Python 2.7
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: 2.7
           architecture: ${{ matrix.arch }}
       - name: Set Python 3.6
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: 3.6
           architecture: ${{ matrix.arch }}
       - name: Set Python 3.7
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         if: matrix.python-version != '3.7'
         with:
           python-version: 3.7
           architecture: ${{ matrix.arch }}
       - name: Set Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         if: matrix.python-version != '3.8'
         with:
           python-version: 3.8
           architecture: ${{ matrix.arch }}
       - name: Set Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         if: matrix.python-version != '3.9'
         with:
           python-version: 3.9
           architecture: ${{ matrix.arch }}
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.arch }}
