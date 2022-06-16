@@ -16,6 +16,7 @@ from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
+from packaging.version import parse as parse_version
 from unearth import Link
 
 from pdm.compat import Distribution
@@ -102,7 +103,12 @@ class Requirement:
         """Return a new requirement with the given pinned version."""
         if self.is_pinned or not other_version:
             return self
-        return dataclasses.replace(self, specifier=get_specifier(f"=={other_version}"))
+        version = parse_version(other_version)
+        normalized = str(version)
+        if version.local:
+            # Remove the local part to accept wider range of prereleases.
+            normalized = normalized.rsplit("+", 1)[0]
+        return dataclasses.replace(self, specifier=get_specifier(f"=={normalized}"))
 
     def _hash_key(self) -> tuple:
         return (

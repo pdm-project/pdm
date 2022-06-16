@@ -14,7 +14,7 @@ from pdm.models.requirements import (
     parse_requirement,
 )
 from pdm.models.search import SearchResultParser
-from pdm.models.specifiers import PySpecSet, get_specifier
+from pdm.models.specifiers import PySpecSet
 from pdm.utils import normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
@@ -198,9 +198,7 @@ class BaseRepository:
             return None
         if candidate.hashes:
             return candidate.hashes
-        req = dataclasses.replace(
-            candidate.req, specifier=get_specifier(f"=={candidate.version}")
-        )
+        req = candidate.req.as_pinned_version(candidate.version)
         if candidate.req.is_file_or_url:
             matching_candidates: Iterable[Candidate] = [candidate]
         else:
