@@ -290,7 +290,7 @@ class Synchronizer:
     def _show_headline(self, packages: dict[str, list[str]]) -> None:
         add, update, remove = packages["add"], packages["update"], packages["remove"]
         if not any((add, update, remove)):
-            self.ui.echo("All packages are synced to date, nothing to do.\n")
+            self.ui.echo("All packages are synced to date, nothing to do.")
             return
         results = ["[bold]Synchronizing working set with lock file[/]:"]
         results.extend(

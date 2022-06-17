@@ -292,9 +292,9 @@ class Project:
                 if line.startswith("-e "):
                     if in_metadata:
                         self.core.ui.echo(
-                            "WARNING: Skipping editable packages in the [green]"
-                            r"\[project][/] table. Please move them to the [green]"
-                            r"\[tool.pdm.dev-dependencies][/] table",
+                            f"WARNING: Skipping editable dependency [b]{line}[/] in the"
+                            r" [green]\[project][/] table. Please move it to the "
+                            r"[green]\[tool.pdm.dev-dependencies][/] table",
                             err=True,
                             style="yellow",
                         )
@@ -546,14 +546,7 @@ class Project:
         deps = self.get_pyproject_dependencies(to_group, dev).multiline(  # type: ignore
             True
         )
-        is_in_metadata = to_group == "default" or to_group in self.meta.get(
-            "optional-dependencies", {}
-        )
         for _, dep in requirements.items():
-            if dep.editable and is_in_metadata:
-                raise PdmUsageError(
-                    "Editable dependencies are not allowed to be added to metadata"
-                )
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)),
                 None,
