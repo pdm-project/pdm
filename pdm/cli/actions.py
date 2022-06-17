@@ -241,6 +241,15 @@ def do_add(
         group = "dev" if dev else "default"
     tracked_names: set[str] = set()
     requirements: dict[str, Requirement] = {}
+    if (
+        group == "default"
+        or not dev
+        and group not in project.tool_settings.get("dev-dependencies", {})
+    ):
+        if editables:
+            raise PdmUsageError(
+                "Cannot add editables to the default or optional dependency group"
+            )
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:

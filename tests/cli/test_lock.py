@@ -76,5 +76,5 @@ def test_skip_editable_dependencies_in_metadata(project, capsys):
     project.write_pyproject()
     actions.do_lock(project)
     _, err = capsys.readouterr()
-    assert "WARNING: Skipping editable packages" in err
+    assert "WARNING: Skipping editable dependency" in err
     assert not project.locked_repository.all_candidates
