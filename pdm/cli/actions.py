@@ -267,9 +267,7 @@ def do_add(
     deps_to_update = group_deps if unconstrained else requirements
     save_version_specifiers({group: deps_to_update}, resolved, save)
     if not dry_run:
-        project.add_dependencies(
-            deps_to_update, group, dev, replace_editable=no_editable
-        )
+        project.add_dependencies(deps_to_update, group, dev)
         project.write_lockfile(project.lockfile, False)
 
     if sync:
@@ -414,7 +412,7 @@ def do_remove(
     for name in packages:
         req = parse_requirement(name)
         matched_indexes = sorted(
-            (i for i, r in enumerate(deps) if req.matches(r, False)), reverse=True
+            (i for i, r in enumerate(deps) if req.matches(r)), reverse=True
         )
         if not matched_indexes:
             raise ProjectError(
