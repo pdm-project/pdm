@@ -350,7 +350,7 @@ print(json.dumps(sysconfig.get_paths()))
 
 def test_run_composite(project, invoke, capfd):
     project.tool_settings["scripts"] = {
-        "first": "echo 'First CALLED'",
+        "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
         "second": {"shell": "echo 'Second CALLED'"},
         "test": {"composite": ["first", "second"]},
     }
@@ -364,8 +364,8 @@ def test_run_composite(project, invoke, capfd):
 
 def test_composite_stops_on_first_failure(project, invoke, capfd):
     project.tool_settings["scripts"] = {
-        "first": "echo 'First CALLED'",
-        "fail": "false",
+        "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
+        "fail": "python -c 'raise Exception'",
         "second": "echo 'Second CALLED'",
         "test": {"composite": ["first", "fail", "second"]},
     }
@@ -400,8 +400,8 @@ def test_composite_inherit_env(project, invoke, capfd, _vars):
 
 def test_composite_fail_on_first_missing_task(project, invoke, capfd):
     project.tool_settings["scripts"] = {
-        "first": "echo 'First CALLED'",
-        "second": "echo 'Second CALLED'",
+        "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
+        "second": {"cmd": ["python", "-c", "print('Second CALLED')"]},
         "test": {"composite": ["first", "fail", "second"]},
     }
     project.write_pyproject()
@@ -416,12 +416,12 @@ def test_composite_fail_on_first_missing_task(project, invoke, capfd):
 def test_composite_runs_all_hooks(project, invoke, capfd):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": "echo 'Pre-Test CALLED'",
-        "post_test": "echo 'Post-Test CALLED'",
-        "first": "echo 'First CALLED'",
-        "pre_first": "echo 'Pre-First CALLED'",
-        "second": "echo 'Second CALLED'",
-        "post_second": "echo 'Post-Second CALLED'",
+        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
+        "post_test": {"shell": "echo 'Post-Test CALLED'"},
+        "first": {"shell": "echo 'First CALLED'"},
+        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
+        "second": {"shell": "echo 'Second CALLED'"},
+        "post_second": {"shell": "echo 'Post-Second CALLED'"},
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -482,7 +482,7 @@ def test_composite_can_pass_parameters(project, invoke, capfd, _args):
 def test_composite_hooks_inherit_env(project, invoke, capfd, _vars):
     project.tool_settings["scripts"] = {
         "pre_task": {"cmd": "python vars.py Pre-Task VAR", "env": {"VAR": "42"}},
-        "task": "echo 'Task CALLED'",
+        "task": {"shell": "echo 'Task CALLED'"},
         "post_task": {"cmd": "python vars.py Post-Task VAR", "env": {"VAR": "42"}},
         "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
     }
@@ -541,12 +541,12 @@ def test_composite_inherit_dotfile(project, invoke, capfd, _vars):
 
 def test_composite_can_have_commands(project, invoke, capfd):
     project.tool_settings["scripts"] = {
-        "task": "echo 'Task CALLED'",
-        "test": {"composite": ["task", "echo 'Command CALLED'"]},
+        "task": {"cmd": ["python", "-c", 'print("Task CALLED")']},
+        "test": {"composite": ["task", "python -c 'print(\"Command CALLED\")'"]},
     }
     project.write_pyproject()
     capfd.readouterr()
-    invoke(["run", "test"], strict=True, obj=project)
+    invoke(["run", "-v", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     assert "Task CALLED" in out
     assert "Command CALLED" in out
