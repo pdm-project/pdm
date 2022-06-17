@@ -204,7 +204,7 @@ class Requirement:
     def as_line(self) -> str:
         raise NotImplementedError
 
-    def matches(self, line: str, editable_match: bool = True) -> bool:
+    def matches(self, line: str) -> bool:
         """Return whether the passed in PEP 508 string
         is the same requirement as this one.
         """
@@ -212,9 +212,7 @@ class Requirement:
             req = parse_requirement(line.split("-e ", 1)[-1], True)
         else:
             req = parse_requirement(line, False)
-        return self.key == req.key and (
-            not editable_match or self.editable == req.editable
-        )
+        return self.key == req.key
 
     @classmethod
     def from_pkg_requirement(cls, req: PackageRequirement) -> "Requirement":

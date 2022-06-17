@@ -266,9 +266,11 @@ class Project:
 
     def get_dependencies(self, group: str | None = None) -> dict[str, Requirement]:
         metadata = self.meta
+        group = group or "default"
         optional_dependencies = metadata.get("optional-dependencies", {})
         dev_dependencies = self.tool_settings.get("dev-dependencies", {})
-        if group in (None, "default"):
+        in_metadata = group == "default" or group in optional_dependencies
+        if group == "default":
             deps = metadata.get("dependencies", [])
         else:
             if group in optional_dependencies and group in dev_dependencies:
@@ -288,6 +290,15 @@ class Project:
         with cd(self.root):
             for line in deps:
                 if line.startswith("-e "):
+                    if in_metadata:
+                        self.core.ui.echo(
+                            "WARNING: Skipping editable packages in the [green]"
+                            r"\[project][/] table. Please move them to the [green]"
+                            r"\[tool.pdm.dev-dependencies][/] table",
+                            err=True,
+                            style="yellow",
+                        )
+                        continue
                     req = parse_requirement(line[3:].strip(), True)
                 else:
                     req = parse_requirement(line)
@@ -531,14 +542,20 @@ class Project:
         to_group: str = "default",
         dev: bool = False,
         show_message: bool = True,
-        replace_editable: bool = False,
     ) -> None:
         deps = self.get_pyproject_dependencies(to_group, dev).multiline(  # type: ignore
             True
         )
+        is_in_metadata = to_group == "default" or to_group in self.meta.get(
+            "optional-dependencies", {}
+        )
         for _, dep in requirements.items():
+            if dep.editable and is_in_metadata:
+                raise PdmUsageError(
+                    "Editable dependencies are not allowed to be added to metadata"
+                )
             matched_index = next(
-                (i for i, r in enumerate(deps) if dep.matches(r, not replace_editable)),
+                (i for i, r in enumerate(deps) if dep.matches(r)),
                 None,
             )
             if matched_index is None:
