@@ -66,3 +66,15 @@ def test_innovations_with_specified_lockfile(invoke, project, working_set):
     assert "requests" in locked
     invoke(["sync", "--lockfile", lockfile], strict=True, obj=project)
     assert "requests" in working_set
+
+
+@pytest.mark.usefixtures("repository", "vcs")
+def test_skip_editable_dependencies_in_metadata(project, capsys):
+    project.meta["dependencies"] = [
+        "-e git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
+    ]
+    project.write_pyproject()
+    actions.do_lock(project)
+    _, err = capsys.readouterr()
+    assert "WARNING: Skipping editable packages" in err
+    assert not project.locked_repository.all_candidates
