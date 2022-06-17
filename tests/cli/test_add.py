@@ -4,6 +4,7 @@ import pytest
 from unearth import Link
 
 from pdm.cli import actions
+from pdm.exceptions import PdmUsageError
 from pdm.models.specifiers import PySpecSet
 from tests import FIXTURES
 
@@ -54,27 +55,23 @@ def test_add_package_to_custom_dev_group(project, working_set):
 
 
 @pytest.mark.usefixtures("repository", "vcs")
-def test_add_editable_package(project, working_set, is_dev):
+def test_add_editable_package(project, working_set):
     # Ensure that correct python version is used.
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, is_dev, packages=["demo"])
+    actions.do_add(project, True, packages=["demo"])
     actions.do_add(
         project,
-        is_dev,
+        True,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    group = (
-        project.tool_settings["dev-dependencies"]["dev"]
-        if is_dev
-        else project.meta["dependencies"]
-    )
-    assert "demo" in group[0]
-    assert "-e git+https://github.com/test-root/demo.git#egg=demo" in group[1]
+    group = project.tool_settings["dev-dependencies"]["dev"]
+    assert group == ["-e git+https://github.com/test-root/demo.git#egg=demo"]
     locked_candidates = project.locked_repository.all_candidates
     assert (
         locked_candidates["demo"].prepare(project.environment).revision
         == "1234567890abcdef"
     )
+    assert working_set["demo"].link_file
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
 
@@ -82,48 +79,37 @@ def test_add_editable_package(project, working_set, is_dev):
     assert not working_set["demo"].link_file
 
 
-@pytest.mark.usefixtures("repository", "vcs")
-def test_editable_package_override_non_editable(project, working_set):
+@pytest.mark.usefixtures("repository", "vcs", "working_set")
+def test_add_editable_package_to_metadata_forbidden(project):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(
-        project, packages=["git+https://github.com/test-root/demo.git#egg=demo"]
-    )
-    actions.do_add(
-        project,
-        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
-    )
-    assert working_set["demo"].link_file
+    with pytest.raises(PdmUsageError):
+        actions.do_add(
+            project, editables=["git+https://github.com/test-root/demo.git#egg=demo"]
+        )
+    with pytest.raises(PdmUsageError):
+        actions.do_add(
+            project,
+            group="foo",
+            editables=["git+https://github.com/test-root/demo.git#egg=demo"],
+        )
 
 
 @pytest.mark.usefixtures("repository", "vcs")
-def test_non_editable_no_override_editable(project, working_set, is_editable):
+def test_non_editable_override_editable(project, working_set):
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(
         project,
+        dev=True,
         editables=[
             "git+https://github.com/test-root/demo.git#egg=demo",
-            "git+https://github.com/test-root/demo-module.git#egg=demo-module",
         ],
     )
     actions.do_add(
         project,
+        dev=True,
         packages=["git+https://github.com/test-root/demo.git#egg=demo"],
-        no_editable=not is_editable,
     )
-    assert working_set["demo-module"].link_file
-    assert bool(working_set["demo"].link_file) is is_editable
-    dependencies = project.get_pyproject_dependencies("default")
-    if is_editable:
-        assert dependencies == [
-            "-e git+https://github.com/test-root/demo.git#egg=demo",
-            "-e git+https://github.com/test-root/demo-module.git#egg=demo-module",
-            "demo @ git+https://github.com/test-root/demo.git",
-        ]
-    else:
-        assert dependencies == [
-            "demo @ git+https://github.com/test-root/demo.git",
-            "-e git+https://github.com/test-root/demo-module.git#egg=demo-module",
-        ]
+    assert not project.dev_dependencies["demo"].editable
 
 
 @pytest.mark.usefixtures("repository", "working_set")

@@ -12,22 +12,20 @@ def test_remove_command(project, invoke, mocker):
 
 
 @pytest.mark.usefixtures("repository", "working_set", "vcs")
-def test_remove_both_normal_and_editable_packages(project, is_dev):
+def test_remove_editable_packages_while_keeping_normal(project):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, is_dev, packages=["demo"])
+    actions.do_add(project, packages=["demo"])
     actions.do_add(
         project,
-        is_dev,
+        True,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    group = (
-        project.tool_settings["dev-dependencies"]["dev"]
-        if is_dev
-        else project.meta["dependencies"]
-    )
-    actions.do_remove(project, is_dev, packages=["demo"])
-    assert not group
-    assert "demo" not in project.locked_repository.all_candidates
+    dev_group = project.tool_settings["dev-dependencies"]["dev"]
+    default_group = project.meta["dependencies"]
+    actions.do_remove(project, True, packages=["demo"])
+    assert not dev_group
+    assert len(default_group) == 1
+    assert not project.locked_repository.all_candidates["demo"].req.editable
 
 
 @pytest.mark.usefixtures("repository")
