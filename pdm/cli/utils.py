@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
 
 
-class PdmFormatter(argparse.HelpFormatter):
+class PdmFormatter(argparse.RawDescriptionHelpFormatter):
     def start_section(self, heading: str | None) -> None:
         return super().start_section(
             termui.style(heading.title() if heading else "", style="bold yellow")
