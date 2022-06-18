@@ -28,6 +28,7 @@ theme:
 plugins:
   - search
   - mike
+  - markdown-exec
   - mkdocstrings:
       handlers:
         python:
@@ -41,6 +42,7 @@ nav:
       - usage/project.md
       - usage/scripts.md
       - usage/advanced.md
+      - usage/cli_reference.md
   - Writing pyproject.toml:
       - pyproject/pep621.md
       - pyproject/tool-pdm.md
