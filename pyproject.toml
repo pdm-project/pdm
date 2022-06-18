@@ -84,6 +84,7 @@ doc = [
     "markdown-include>=0.5.1",
     "mike>=1.1.2",
     "setuptools>=62.3.3",
+    "markdown-exec>=0.7.0",
 ]
 workflow = [
     "parver>=0.3.1",
