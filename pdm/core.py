@@ -1,3 +1,10 @@
+r"""
+    ____  ____  __  ___
+   / __ \/ __ \/  |/  /
+  / /_/ / / / / /|_/ /
+ / ____/ /_/ / /  / /
+/_/   /_____/_/  /_/
+"""
 from __future__ import annotations
 
 import argparse
@@ -50,7 +57,7 @@ class Core:
     def init_parser(self) -> None:
         self.parser = argparse.ArgumentParser(
             prog="pdm",
-            description="PDM - Python Development Master",
+            description=__doc__,
             formatter_class=PdmFormatter,
         )
         self.parser.is_root = True  # type: ignore
@@ -59,7 +66,7 @@ class Core:
             "--version",
             action="version",
             version="{}, version {}".format(
-                termui.style("Python Development Master (PDM)", style="bold"),
+                termui.style("PDM", style="bold"),
                 self.version,
             ),
             help="show the version and exit",
