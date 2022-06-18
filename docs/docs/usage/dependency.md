@@ -45,7 +45,7 @@ PDM also allows extra dependency groups by providing `-G/--group <name>` option,
 
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see the resolved result of all dependencies.
 
-### Add local dependencies
+### Local dependencies
 
 Local packages can be added with their paths. The path can be a file or a directory:
 
@@ -56,8 +56,30 @@ pdm add ./first-1.0.0-py2.py3-none-any.whl
 
 The paths MUST start with a `.`, otherwise it will be recognized as a normal named requirement.
 
-In addition, **a local directory** can also be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs)
-(just like `pip install -e <local project path>` would) using `pdm add -e/--editable <local project path>`.
+
+### VCS dependencies
+
+You can also install from a git repository url or other version control systems. The following are supported:
+
+- Git: `git`
+- Mercurial: `hg`
+- Subversion: `svn`
+- Bazaar: `bzr`
+
+The URL should be like: `{vcs}+{url}@{rev}`
+
+Examples:
+
+```console
+# Install pip repo on tag `22.0`
+pdm add "git+https://github.com/pypa/pip.git@22.0"
+# Provide credentials in the URL
+pdm add "git+https://username:password@github.com/username/private-repo.git@master"
+# Give a name to the dependency
+pdm add "pip @ git+https://github.com/pypa/pip.git@22.0"
+# Or use the #egg fragment
+pdm add "git+https://github.com/pypa/pip.git@22.0#egg=pip"
+```
 
 ### Add development only dependencies
 
@@ -81,7 +103,20 @@ test = ["pytest"]
 For backward-compatibility, if only `-d` or `--dev` is specified, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
-    The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]` .
+    The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]`.
+
+### Editable dependencies
+
+**Local directories** and **VCS dependencies** can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs). If you are familiar with `pip`, it is just like `pip install -e <package>`. **Editable packages are allowed only in development dependencies**:
+
+```console
+# A relative path to the directory
+pdm add -e ./sub-package
+# A file URL to a local directory
+pdm add -e file:///path/to/sub-package
+# A VCS URL
+pdm add -e git+https://github.com/pallets/click.git@main#egg=click
+```
 
 ### Save version specifiers
 
