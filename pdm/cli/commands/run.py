@@ -9,7 +9,7 @@ import subprocess
 import sys
 from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 
-from pdm import termui
+from pdm import signals, termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
@@ -239,7 +239,7 @@ class TaskRunner:
             return 0
         task = self._get_task(command)
         if task is not None:
-
+            self.hooks.try_emit("pre_script", script=command, args=args)
             pre_task = self._get_task(f"pre_{command}")
             if pre_task is not None and self.hooks.should_run(pre_task.name):
                 code = self._run_task(pre_task, opts=opts)
@@ -251,6 +251,7 @@ class TaskRunner:
             post_task = self._get_task(f"post_{command}")
             if post_task is not None and self.hooks.should_run(post_task.name):
                 code = self._run_task(post_task, opts=opts)
+            self.hooks.try_emit("post_script", script=command, args=args)
             return code
         else:
             return self._run_process(
@@ -305,7 +306,8 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
-        runner = TaskRunner(project, hooks=HookManager(project, options.skip))
+        hooks = HookManager(project, options.skip)
+        runner = TaskRunner(project, hooks=hooks)
         if options.list:
             return runner.show_list()
         if options.site_packages:
@@ -317,7 +319,10 @@ class Command(BaseCommand):
                 err=True,
             )
             options.command = "python"
-        sys.exit(runner.run(options.command, options.args))
+        hooks.try_emit("pre_run", script=options.command, args=options.args)
+        exit_code = runner.run(options.command, options.args)
+        hooks.try_emit("post_run", script=options.command, args=options.args)
+        sys.exit(exit_code)
 
 
 def run_script_if_present(script_name: str) -> Callable:
@@ -333,3 +338,9 @@ def run_script_if_present(script_name: str) -> Callable:
             sys.exit(exit_code)
 
     return handler
+
+
+signals.pre_run.connect(run_script_if_present("pre_run"), weak=False)
+signals.post_run.connect(run_script_if_present("post_run"), weak=False)
+signals.pre_script.connect(run_script_if_present("pre_script"), weak=False)
+signals.post_script.connect(run_script_if_present("post_script"), weak=False)

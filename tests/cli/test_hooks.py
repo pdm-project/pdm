@@ -1,5 +1,6 @@
 import shlex
 from collections import namedtuple
+from textwrap import dedent
 
 import pytest
 
@@ -26,17 +27,30 @@ def test_pre_script_fail_fast(project, invoke, capfd, mocker):
 
 def test_pre_and_post_scripts(project, invoke, capfd):
     project.tool_settings["scripts"] = {
-        "pre_test": "python -c \"print('PRE test CALLED')\"",
-        "test": "python -c \"print('IN test CALLED')\"",
-        "post_test": "python -c \"print('POST test CALLED')\"",
+        "pre_script": "echo 'pre_script CALLED'",
+        "post_script": "echo 'post_script CALLED'",
+        "pre_test": "echo 'pre_test CALLED'",
+        "test": "echo 'test CALLED'",
+        "post_test": "echo 'post_test CALLED'",
+        "pre_run": "echo 'pre_run CALLED'",
+        "post_run": "echo 'post_run CALLED'",
     }
     project.write_pyproject()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "PRE test CALLED" in out
-    assert "IN test CALLED" in out
-    assert "POST test CALLED" in out
+    expected = dedent(
+        """
+        pre_run CALLED
+        pre_script CALLED
+        pre_test CALLED
+        test CALLED
+        post_test CALLED
+        post_script CALLED
+        post_run CALLED
+        """
+    ).strip()
+    assert out.strip() == expected
 
 
 def test_composite_runs_all_hooks(project, invoke, capfd):
@@ -48,17 +62,34 @@ def test_composite_runs_all_hooks(project, invoke, capfd):
         "pre_first": {"shell": "echo 'Pre-First CALLED'"},
         "second": {"shell": "echo 'Second CALLED'"},
         "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_script": {"shell": "echo 'Pre-Script CALLED'"},
+        "post_script": {"shell": "echo 'Post-Script CALLED'"},
+        "pre_run": {"shell": "echo 'Pre-Run CALLED'"},
+        "post_run": {"shell": "echo 'Post-Run CALLED'"},
     }
     project.write_pyproject()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "Pre-Test CALLED" in out
-    assert "Pre-First CALLED" in out
-    assert "First CALLED" in out
-    assert "Second CALLED" in out
-    assert "Post-Second CALLED" in out
-    assert "Post-Test CALLED" in out
+    expected = dedent(
+        """
+        Pre-Run CALLED
+        Pre-Script CALLED
+        Pre-Test CALLED
+        Pre-Script CALLED
+        Pre-First CALLED
+        First CALLED
+        Post-Script CALLED
+        Pre-Script CALLED
+        Second CALLED
+        Post-Second CALLED
+        Post-Script CALLED
+        Post-Test CALLED
+        Post-Script CALLED
+        Post-Run CALLED
+        """
+    ).strip()
+    assert out.strip() == expected
 
 
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
@@ -73,6 +104,10 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
         "second": {"shell": "echo 'Second CALLED'"},
         "pre_second": {"shell": "echo 'Pre-Second CALLED'"},
         "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_script": {"shell": "echo 'Pre-Script CALLED'"},
+        "post_script": {"shell": "echo 'Post-Script CALLED'"},
+        "pre_run": {"shell": "echo 'Pre-Run CALLED'"},
+        "post_run": {"shell": "echo 'Post-Run CALLED'"},
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -81,6 +116,8 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
     assert "Pre-First CALLED" not in out
     assert "First CALLED" in out
     assert "Post-First CALLED" not in out
+    assert "Pre-Script CALLED" not in out
+    assert "Post-Script CALLED" not in out
     capfd.readouterr()
     invoke(["run", f"--skip={option}", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -92,6 +129,10 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
     assert "Second CALLED" in out
     assert "Post-Second CALLED" not in out
     assert "Post-Test CALLED" not in out
+    assert "Pre-Script CALLED" not in out
+    assert "Post-Script CALLED" not in out
+    assert "Pre-Run CALLED" not in out
+    assert "Post-Run CALLED" not in out
 
 
 @pytest.mark.parametrize(

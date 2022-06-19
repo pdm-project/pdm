@@ -83,3 +83,35 @@ post_publish: NamedSignal = pdm_signals.signal("post_publish")
 Args:
     project (Project): The project object
 """
+pre_run: NamedSignal = pdm_signals.signal("pre_run")
+"""Called before any run.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""
+post_run: NamedSignal = pdm_signals.signal("post_run")
+"""Called after any run.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""
+pre_script: NamedSignal = pdm_signals.signal("pre_script")
+"""Called before any script.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""
+post_script: NamedSignal = pdm_signals.signal("post_script")
+"""Called after any script.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""

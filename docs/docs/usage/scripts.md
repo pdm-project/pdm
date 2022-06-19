@@ -209,6 +209,8 @@ Under certain situations PDM will look for some special hook scripts for executi
 - `post_build`: Run after distributions are built
 - `pre_publish`: Run before publishinbg distributions
 - `post_publish`: Run after distributions are published
+- `pre_script`: Run before any script
+- `post_script`: Run after any script
 
 !!! note
     Pre & post scripts can't receive any arguments.
