@@ -354,8 +354,8 @@ class Installer:
     def install(self) -> None:
         venv = self._make_env()
         self._install(venv)
-        bin = self._make_bin(venv)
-        self._post_install(venv, bin)
+        bin_dir = self._make_bin(venv)
+        self._post_install(venv, bin_dir)
 
     def uninstall(self) -> None:
         _echo(
