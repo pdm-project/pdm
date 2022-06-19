@@ -195,6 +195,7 @@ class Installer:
     version: str | None = None
     prerelease: bool = False
     additional_deps: Sequence[str] = ()
+    skip_add_to_path: bool = False
 
     def __post_init__(self):
         self._path = self._decide_path()
@@ -349,7 +350,8 @@ class Installer:
                 colored("cyan", str(script)),
             )
         )
-        _add_to_path(bin_path)
+        if not self.skip_add_to_path:
+            _add_to_path(bin_path)
 
     def install(self) -> None:
         venv = self._make_env()
@@ -419,10 +421,20 @@ def main():
         default=os.getenv("PDM_DEPS", "").split(","),
         help="Specify additional dependencies, can be given multiple times",
     )
+    parser.add_argument(
+        "--skip-add-to-path",
+        action="store_true",
+        help="Do not add binary to the PATH.",
+        default=os.getenv("PDM_SKIP_ADD_TO_PATH"),
+    )
 
     options = parser.parse_args()
     installer = Installer(
-        options.path, options.version, options.prerelease, options.dep
+        location=options.path,
+        version=options.version,
+        prerelease=options.prerelease,
+        additional_deps=options.dep,
+        skip_add_to_path=options.skip_add_to_path,
     )
     if options.remove:
         installer.uninstall()
