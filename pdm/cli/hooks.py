@@ -14,6 +14,8 @@ KNOWN_HOOKS = (
     "post_install",
     "pre_lock",
     "post_lock",
+    "pre_publish",
+    "post_publish",
 )
 
 

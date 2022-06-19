@@ -164,7 +164,12 @@ KNOWN_COMMAND_HOOKS = (
         ["repository"],
     ),
     ("lock", "lock", ("pre_lock", "post_lock"), []),
-    ("publish", "publish", ("pre_build", "post_build"), ["mock_publish"]),
+    (
+        "publish",
+        "publish",
+        ("pre_publish", "pre_build", "post_build", "post_publish"),
+        ["mock_publish"],
+    ),
     ("remove", "remove requests", ("pre_lock", "post_lock"), ["lock"]),
     ("sync", "sync", ("pre_install", "post_install"), ["lock"]),
     ("update", "update", ("pre_install", "post_install", "pre_lock", "post_lock"), []),

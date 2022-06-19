@@ -207,6 +207,8 @@ Under certain situations PDM will look for some special hook scripts for executi
 - `post_lock`: Run after dependency resolution
 - `pre_build`: Run before building distributions
 - `post_build`: Run after distributions are built
+- `pre_publish`: Run before publishinbg distributions
+- `post_publish`: Run after distributions are published
 
 !!! note
     Pre & post scripts can't receive any arguments.

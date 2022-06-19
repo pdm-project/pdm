@@ -71,3 +71,15 @@ Args:
     artifacts (Sequence[str]): The locations of built artifacts
     config_settings (dict[str, str]|None): Additional config settings passed via args
 """
+pre_publish: NamedSignal = pdm_signals.signal("pre_publish")
+"""Called before a project is published.
+
+Args:
+    project (Project): The project object
+"""
+post_publish: NamedSignal = pdm_signals.signal("post_publish")
+"""Called after a project is published.
+
+Args:
+    project (Project): The project object
+"""
