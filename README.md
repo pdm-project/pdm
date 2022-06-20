@@ -141,6 +141,12 @@ Or you can install it under a user site:
 pip install --user pdm
 ```
 
+With [asdf-vm](https://asdf-vm.com/)
+```bash
+asdf plugin add github.com/1oglop1/asdf-pdm.git
+asdf install pdm latest
+```
+
 ## Quickstart
 
 **Initialize a new PDM project**
