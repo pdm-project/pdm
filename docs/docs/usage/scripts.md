@@ -211,6 +211,8 @@ Under certain situations PDM will look for some special hook scripts for executi
 - `post_publish`: Run after distributions are published
 - `pre_script`: Run before any script
 - `post_script`: Run after any script
+- `pre_run`: Run once before run script invocation
+- `post_script`: Run once after run script invocation
 
 !!! note
     Pre & post scripts can't receive any arguments.
@@ -226,7 +228,7 @@ Under certain situations PDM will look for some special hook scripts for executi
 
 ## Skipping scripts
 
-Because, sometimes it is desirable to run a script but without its hooks,
+Because, sometimes it is desirable to run a script but without its hooks or pre and post scripts,
 there is a `--skip=:all` which will disable all hooks, pre and post.
 There is also `--skip=:pre` and `--skip=:post` allowing to respectively
 skip all `pre_*` hooks and all `post_*` hooks.
@@ -244,3 +246,5 @@ This command will run the `my-composite` task and skip the `pre_task1` hook as w
 
 You can also provide you skip list in `PDM_SKIP_HOOKS` environment variable
 but it will be overridden as soon as the `--skip` parameter is provided.
+
+There is more details on hooks and pre/post scripts behavior on [the dedicated hooks page](hooks.md).

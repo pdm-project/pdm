@@ -41,6 +41,7 @@ nav:
       - usage/dependency.md
       - usage/project.md
       - usage/scripts.md
+      - usage/hooks.md
       - usage/advanced.md
       - usage/cli_reference.md
   - Writing pyproject.toml:
@@ -68,6 +69,12 @@ markdown_extensions:
       permalink: "#"
   - markdown_include.include:
       base_path: docs
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
 
 copyright: Copyright &copy; 2019-2021 <a href="https://frostming.com">Frost Ming</a>
 
