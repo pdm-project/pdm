@@ -12,7 +12,7 @@ from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 from pdm import signals, termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.hooks import HookManager
+from pdm.cli.hooks import KNOWN_HOOKS, HookManager
 from pdm.cli.options import skip_option
 from pdm.cli.utils import check_project_file
 from pdm.compat import TypedDict
@@ -340,7 +340,5 @@ def run_script_if_present(script_name: str) -> Callable:
     return handler
 
 
-signals.pre_run.connect(run_script_if_present("pre_run"), weak=False)
-signals.post_run.connect(run_script_if_present("post_run"), weak=False)
-signals.pre_script.connect(run_script_if_present("pre_script"), weak=False)
-signals.post_script.connect(run_script_if_present("post_script"), weak=False)
+for hook in KNOWN_HOOKS:
+    getattr(signals, hook).connect(run_script_if_present(hook), weak=False)

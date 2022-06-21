@@ -11,12 +11,10 @@ from rich.progress import (
     TransferSpeedColumn,
 )
 
-from pdm import signals
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
-from pdm.cli.commands.run import run_script_if_present
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import project_option, skip_option, verbose_option
 from pdm.exceptions import PdmUsageError, PublishError
@@ -172,7 +170,3 @@ class Command(BaseCommand):
                 project.core.ui.echo(url)
 
         hooks.try_emit("post_publish")
-
-
-signals.pre_publish.connect(run_script_if_present("pre_publish"), weak=False)
-signals.post_publish.connect(run_script_if_present("post_publish"), weak=False)
