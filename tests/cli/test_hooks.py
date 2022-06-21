@@ -25,15 +25,15 @@ def test_pre_script_fail_fast(project, invoke, capfd, mocker):
     synchronize.assert_not_called()
 
 
-def test_pre_and_post_scripts(project, invoke, capfd):
+def test_pre_and_post_scripts(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
-        "pre_script": "echo 'pre_script CALLED'",
-        "post_script": "echo 'post_script CALLED'",
-        "pre_test": "echo 'pre_test CALLED'",
-        "test": "echo 'test CALLED'",
-        "post_test": "echo 'post_test CALLED'",
-        "pre_run": "echo 'pre_run CALLED'",
-        "post_run": "echo 'post_run CALLED'",
+        "pre_script": "python echo.py pre_script",
+        "post_script": "python echo.py post_script",
+        "pre_test": "python echo.py pre_test",
+        "test": "python echo.py test",
+        "post_test": "python echo.py post_test",
+        "pre_run": "python echo.py pre_run",
+        "post_run": "python echo.py post_run",
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -53,19 +53,19 @@ def test_pre_and_post_scripts(project, invoke, capfd):
     assert out.strip() == expected
 
 
-def test_composite_runs_all_hooks(project, invoke, capfd):
+def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
-        "pre_script": {"shell": "echo 'Pre-Script CALLED'"},
-        "post_script": {"shell": "echo 'Post-Script CALLED'"},
-        "pre_run": {"shell": "echo 'Pre-Run CALLED'"},
-        "post_run": {"shell": "echo 'Post-Run CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "second": "python echo.py Second",
+        "post_second": "python echo.py Post-Second",
+        "pre_script": "python echo.py Pre-Script",
+        "post_script": "python echo.py Post-Script",
+        "pre_run": "python echo.py Pre-Run",
+        "post_run": "python echo.py Post-Run",
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -93,21 +93,21 @@ def test_composite_runs_all_hooks(project, invoke, capfd):
 
 
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
-def test_skip_all_hooks_option(project, invoke, capfd, option: str):
+def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "post_first": {"shell": "echo 'Post-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "pre_second": {"shell": "echo 'Pre-Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
-        "pre_script": {"shell": "echo 'Pre-Script CALLED'"},
-        "post_script": {"shell": "echo 'Post-Script CALLED'"},
-        "pre_run": {"shell": "echo 'Pre-Run CALLED'"},
-        "post_run": {"shell": "echo 'Post-Run CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "post_first": "python echo.py Post-First",
+        "second": "python echo.py Second",
+        "pre_second": "python echo.py Pre-Second",
+        "post_second": "python echo.py Post-Second",
+        "pre_script": "python echo.py Pre-Script",
+        "post_script": "python echo.py Post-Script",
+        "pre_run": "python echo.py Pre-Run",
+        "post_run": "python echo.py Post-Run",
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -146,17 +146,17 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
         "-k pre_test -k post_first,second",
     ],
 )
-def test_skip_option(project, invoke, capfd, args):
+def test_skip_option(project, invoke, capfd, args, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "post_first": {"shell": "echo 'Post-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "pre_second": {"shell": "echo 'Pre-Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "post_first": "python echo.py Post-First",
+        "second": "python echo.py Second",
+        "pre_second": "python echo.py Pre-Second",
+        "post_second": "python echo.py Post-Second",
     }
     project.write_pyproject()
     capfd.readouterr()
