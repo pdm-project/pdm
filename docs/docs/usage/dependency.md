@@ -29,7 +29,7 @@ dependencies = []
 If `pyproject.toml` is already present, it will be updated with the metadata. The metadata format follows the
 [PEP 621 specification](https://www.python.org/dev/peps/pep-0621/)
 
-For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](/pyproject/pep621/).
+For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](../pyproject/pep621.md).
 
 ## Add dependencies
 

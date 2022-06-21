@@ -106,7 +106,7 @@ The configuration files are searched in the following order:
 
 If `-g/--global` option is used, the first item will be replaced by `~/.pdm/global-project/.pdm.toml`.
 
-You can find all available configuration items in [Configuration Page](/configuration/).
+You can find all available configuration items in [Configuration Page](../configuration.md).
 
 ## Cache the installation of wheels
 
