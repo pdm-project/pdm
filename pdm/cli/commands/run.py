@@ -26,8 +26,6 @@ class TaskOptions(TypedDict, total=False):
     env_file: str | None
     help: str
     site_packages: bool
-    skip_hooks: bool
-    skip: list[str]
 
 
 def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
