@@ -71,3 +71,47 @@ Args:
     artifacts (Sequence[str]): The locations of built artifacts
     config_settings (dict[str, str]|None): Additional config settings passed via args
 """
+pre_publish: NamedSignal = pdm_signals.signal("pre_publish")
+"""Called before a project is published.
+
+Args:
+    project (Project): The project object
+"""
+post_publish: NamedSignal = pdm_signals.signal("post_publish")
+"""Called after a project is published.
+
+Args:
+    project (Project): The project object
+"""
+pre_run: NamedSignal = pdm_signals.signal("pre_run")
+"""Called before any run.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""
+post_run: NamedSignal = pdm_signals.signal("post_run")
+"""Called after any run.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""
+pre_script: NamedSignal = pdm_signals.signal("pre_script")
+"""Called before any script.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""
+post_script: NamedSignal = pdm_signals.signal("post_script")
+"""Called after any script.
+
+Args:
+    project (Project): The project object
+    script (str): the script name
+    args (Sequence[str]): the command line provided arguments
+"""

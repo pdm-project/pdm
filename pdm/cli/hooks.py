@@ -2,18 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from blinker import Signal
+
 from pdm import signals
 from pdm.project.core import Project
 from pdm.utils import cached_property
 
-KNOWN_HOOKS = (
-    "post_init",
-    "pre_build",
-    "post_build",
-    "pre_install",
-    "post_install",
-    "pre_lock",
-    "post_lock",
+KNOWN_HOOKS = tuple(
+    name for name, obj in signals.__dict__.items() if isinstance(obj, Signal)
 )
 
 

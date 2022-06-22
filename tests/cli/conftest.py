@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -79,4 +80,22 @@ def mock_publish(mock_pypi, uploaded) -> PublishMock:
     return PublishMock(
         mock_pypi=mock_pypi,
         uploaded=uploaded,
+    )
+
+
+@pytest.fixture
+def _echo(project):
+    """
+    Provides an echo.py script producing cross-platform expectable outputs
+    """
+    (project.root / "echo.py").write_text(
+        textwrap.dedent(
+            """\
+            import os, sys, io
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, newline='\\n')
+            name = sys.argv[1]
+            vars = " ".join([f"{v}={os.getenv(v)}" for v in sys.argv[2:]])
+            print(f"{name} CALLED with {vars}" if vars else f"{name} CALLED")
+            """
+        )
     )
