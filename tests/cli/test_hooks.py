@@ -1,5 +1,6 @@
 import shlex
 from collections import namedtuple
+from textwrap import dedent
 
 import pytest
 
@@ -24,55 +25,89 @@ def test_pre_script_fail_fast(project, invoke, capfd, mocker):
     synchronize.assert_not_called()
 
 
-def test_pre_and_post_scripts(project, invoke, capfd):
+def test_pre_and_post_scripts(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
-        "pre_test": "python -c \"print('PRE test CALLED')\"",
-        "test": "python -c \"print('IN test CALLED')\"",
-        "post_test": "python -c \"print('POST test CALLED')\"",
+        "pre_script": "python echo.py pre_script",
+        "post_script": "python echo.py post_script",
+        "pre_test": "python echo.py pre_test",
+        "test": "python echo.py test",
+        "post_test": "python echo.py post_test",
+        "pre_run": "python echo.py pre_run",
+        "post_run": "python echo.py post_run",
     }
     project.write_pyproject()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "PRE test CALLED" in out
-    assert "IN test CALLED" in out
-    assert "POST test CALLED" in out
+    expected = dedent(
+        """
+        pre_run CALLED
+        pre_script CALLED
+        pre_test CALLED
+        test CALLED
+        post_test CALLED
+        post_script CALLED
+        post_run CALLED
+        """
+    ).strip()
+    assert out.strip() == expected
 
 
-def test_composite_runs_all_hooks(project, invoke, capfd):
+def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "second": "python echo.py Second",
+        "post_second": "python echo.py Post-Second",
+        "pre_script": "python echo.py Pre-Script",
+        "post_script": "python echo.py Post-Script",
+        "pre_run": "python echo.py Pre-Run",
+        "post_run": "python echo.py Post-Run",
     }
     project.write_pyproject()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "Pre-Test CALLED" in out
-    assert "Pre-First CALLED" in out
-    assert "First CALLED" in out
-    assert "Second CALLED" in out
-    assert "Post-Second CALLED" in out
-    assert "Post-Test CALLED" in out
+    expected = dedent(
+        """
+        Pre-Run CALLED
+        Pre-Script CALLED
+        Pre-Test CALLED
+        Pre-Script CALLED
+        Pre-First CALLED
+        First CALLED
+        Post-Script CALLED
+        Pre-Script CALLED
+        Second CALLED
+        Post-Second CALLED
+        Post-Script CALLED
+        Post-Test CALLED
+        Post-Script CALLED
+        Post-Run CALLED
+        """
+    ).strip()
+    assert out.strip() == expected
 
 
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
-def test_skip_all_hooks_option(project, invoke, capfd, option: str):
+def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "post_first": {"shell": "echo 'Post-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "pre_second": {"shell": "echo 'Pre-Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "post_first": "python echo.py Post-First",
+        "second": "python echo.py Second",
+        "pre_second": "python echo.py Pre-Second",
+        "post_second": "python echo.py Post-Second",
+        "pre_script": "python echo.py Pre-Script",
+        "post_script": "python echo.py Post-Script",
+        "pre_run": "python echo.py Pre-Run",
+        "post_run": "python echo.py Post-Run",
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -81,6 +116,8 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
     assert "Pre-First CALLED" not in out
     assert "First CALLED" in out
     assert "Post-First CALLED" not in out
+    assert "Pre-Script CALLED" not in out
+    assert "Post-Script CALLED" not in out
     capfd.readouterr()
     invoke(["run", f"--skip={option}", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -92,6 +129,10 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
     assert "Second CALLED" in out
     assert "Post-Second CALLED" not in out
     assert "Post-Test CALLED" not in out
+    assert "Pre-Script CALLED" not in out
+    assert "Post-Script CALLED" not in out
+    assert "Pre-Run CALLED" not in out
+    assert "Post-Run CALLED" not in out
 
 
 @pytest.mark.parametrize(
@@ -105,17 +146,17 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str):
         "-k pre_test -k post_first,second",
     ],
 )
-def test_skip_option(project, invoke, capfd, args):
+def test_skip_option(project, invoke, capfd, args, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "post_first": {"shell": "echo 'Post-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "pre_second": {"shell": "echo 'Pre-Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "post_first": "python echo.py Post-First",
+        "second": "python echo.py Second",
+        "pre_second": "python echo.py Pre-Second",
+        "post_second": "python echo.py Post-Second",
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -164,7 +205,12 @@ KNOWN_COMMAND_HOOKS = (
         ["repository"],
     ),
     ("lock", "lock", ("pre_lock", "post_lock"), []),
-    ("publish", "publish", ("pre_build", "post_build"), ["mock_publish"]),
+    (
+        "publish",
+        "publish",
+        ("pre_publish", "pre_build", "post_build", "post_publish"),
+        ["mock_publish"],
+    ),
     ("remove", "remove requests", ("pre_lock", "post_lock"), ["lock"]),
     ("sync", "sync", ("pre_install", "post_install"), ["lock"]),
     ("update", "update", ("pre_install", "post_install", "pre_lock", "post_lock"), []),

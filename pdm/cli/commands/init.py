@@ -1,9 +1,8 @@
 import argparse
 
-from pdm import signals, termui
+from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.run import run_script_if_present
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.project import Project
@@ -84,6 +83,3 @@ class Command(BaseCommand):
         )
         if self.interactive:
             actions.ask_for_import(project)
-
-
-signals.post_init.connect(run_script_if_present("post_init"), weak=False)
