@@ -118,8 +118,12 @@ class Command(BaseCommand):
         return Repository(project, config.url, config.username, config.password)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        hooks = HookManager(project, options.skip)
+
+        hooks.try_emit("pre_publish")
+
         if options.build:
-            actions.do_build(project, hooks=HookManager(project, options.skip))
+            actions.do_build(project, hooks=hooks)
 
         package_files = [
             str(p)
@@ -164,3 +168,5 @@ class Command(BaseCommand):
             project.core.ui.echo("\n[green]View at:")
             for url in release_urls:
                 project.core.ui.echo(url)
+
+        hooks.try_emit("post_publish")
