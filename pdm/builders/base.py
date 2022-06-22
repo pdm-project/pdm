@@ -316,11 +316,10 @@ class EnvBuilder:
         from pdm.project.metadata import MutableMetadata
 
         builder = Builder(self.src_dir)
-        if os.path.exists(os.path.join(self.src_dir, "pyproject.toml")):
+        project_file = os.path.join(self.src_dir, "pyproject.toml")
+        if os.path.exists(project_file):
             try:
-                builder._meta = MutableMetadata(
-                    os.path.join(self.src_dir, "pyproject.toml")
-                )
+                builder._meta = MutableMetadata.from_file(project_file)
             except ValueError:
                 builder._meta = None
         return builder.ensure_setup_py().as_posix()
