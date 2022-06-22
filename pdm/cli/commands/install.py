@@ -1,10 +1,9 @@
 import argparse
 import sys
 
-from pdm import signals, termui
+from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.run import run_script_if_present
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     dry_run_option,
@@ -69,7 +68,3 @@ class Command(BaseCommand):
             dry_run=options.dry_run,
             hooks=hooks,
         )
-
-
-signals.pre_install.connect(run_script_if_present("pre_install"), weak=False)
-signals.post_install.connect(run_script_if_present("post_install"), weak=False)

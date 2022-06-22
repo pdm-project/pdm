@@ -1,9 +1,7 @@
 import argparse
 
-from pdm import signals
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.run import run_script_if_present
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import lockfile_option, no_isolation_option, skip_option
 from pdm.project import Project
@@ -31,7 +29,3 @@ class Command(BaseCommand):
             refresh=options.refresh,
             hooks=HookManager(project, options.skip),
         )
-
-
-signals.pre_lock.connect(run_script_if_present("pre_lock"), weak=False)
-signals.post_lock.connect(run_script_if_present("post_lock"), weak=False)

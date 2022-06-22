@@ -12,21 +12,6 @@ from pdm.utils import cd
 
 
 @pytest.fixture
-def _vars(project):
-    (project.root / "vars.py").write_text(
-        textwrap.dedent(
-            """
-            import os
-            import sys
-            name = sys.argv[1]
-            vars = " ".join([f"{v}={os.getenv(v)}" for v in sys.argv[2:]])
-            print(f"{name} CALLED with {vars}" if vars else f"{name} CALLED")
-            """
-        )
-    )
-
-
-@pytest.fixture
 def _args(project):
     (project.root / "args.py").write_text(
         textwrap.dedent(
@@ -348,10 +333,10 @@ print(json.dumps(sysconfig.get_paths()))
     assert "__pypackages__" in out["purelib"]
 
 
-def test_run_composite(project, invoke, capfd):
+def test_run_composite(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
-        "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
-        "second": {"shell": "echo 'Second CALLED'"},
+        "first": "python echo.py First",
+        "second": "python echo.py Second",
         "test": {"composite": ["first", "second"]},
     }
     project.write_pyproject()
@@ -378,14 +363,14 @@ def test_composite_stops_on_first_failure(project, invoke, capfd):
     assert "Second CALLED" not in out
 
 
-def test_composite_inherit_env(project, invoke, capfd, _vars):
+def test_composite_inherit_env(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
         "first": {
-            "cmd": "python vars.py First VAR",
+            "cmd": "python echo.py First VAR",
             "env": {"VAR": "42"},
         },
         "second": {
-            "cmd": "python vars.py Second VAR",
+            "cmd": "python echo.py Second VAR",
             "env": {"VAR": "42"},
         },
         "test": {"composite": ["first", "second"], "env": {"VAR": "overriden"}},
@@ -398,10 +383,10 @@ def test_composite_inherit_env(project, invoke, capfd, _vars):
     assert "Second CALLED with VAR=overriden" in out
 
 
-def test_composite_fail_on_first_missing_task(project, invoke, capfd):
+def test_composite_fail_on_first_missing_task(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
-        "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
-        "second": {"cmd": ["python", "-c", "print('Second CALLED')"]},
+        "first": "python echo.py First",
+        "second": "python echo.py Second",
         "test": {"composite": ["first", "fail", "second"]},
     }
     project.write_pyproject()
@@ -413,15 +398,15 @@ def test_composite_fail_on_first_missing_task(project, invoke, capfd):
     assert "Second CALLED" not in out
 
 
-def test_composite_runs_all_hooks(project, invoke, capfd):
+def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
-        "pre_test": {"shell": "echo 'Pre-Test CALLED'"},
-        "post_test": {"shell": "echo 'Post-Test CALLED'"},
-        "first": {"shell": "echo 'First CALLED'"},
-        "pre_first": {"shell": "echo 'Pre-First CALLED'"},
-        "second": {"shell": "echo 'Second CALLED'"},
-        "post_second": {"shell": "echo 'Post-Second CALLED'"},
+        "pre_test": "python echo.py Pre-Test",
+        "post_test": "python echo.py Post-Test",
+        "first": "python echo.py First",
+        "pre_first": "python echo.py Pre-First",
+        "second": "python echo.py Second",
+        "post_second": "python echo.py Post-Second",
     }
     project.write_pyproject()
     capfd.readouterr()
@@ -479,11 +464,11 @@ def test_composite_can_pass_parameters(project, invoke, capfd, _args):
     assert "Post-Test CALLED" in out
 
 
-def test_composite_hooks_inherit_env(project, invoke, capfd, _vars):
+def test_composite_hooks_inherit_env(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
-        "pre_task": {"cmd": "python vars.py Pre-Task VAR", "env": {"VAR": "42"}},
-        "task": {"shell": "echo 'Task CALLED'"},
-        "post_task": {"cmd": "python vars.py Post-Task VAR", "env": {"VAR": "42"}},
+        "pre_task": {"cmd": "python echo.py Pre-Task VAR", "env": {"VAR": "42"}},
+        "task": "python echo.py Task",
+        "post_task": {"cmd": "python echo.py Post-Task VAR", "env": {"VAR": "42"}},
         "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
     }
     project.write_pyproject()
@@ -495,19 +480,19 @@ def test_composite_hooks_inherit_env(project, invoke, capfd, _vars):
     assert "Post-Task CALLED with VAR=overriden" in out
 
 
-def test_composite_inherit_env_in_cascade(project, invoke, capfd, _vars):
+def test_composite_inherit_env_in_cascade(project, invoke, capfd, _echo):
     project.tool_settings["scripts"] = {
         "_": {"env": {"FOO": "BAR", "TIK": "TOK"}},
         "pre_task": {
-            "cmd": "python vars.py Pre-Task VAR FOO TIK",
+            "cmd": "python echo.py Pre-Task VAR FOO TIK",
             "env": {"VAR": "42", "FOO": "foobar"},
         },
         "task": {
-            "cmd": "python vars.py Task VAR FOO TIK",
+            "cmd": "python echo.py Task VAR FOO TIK",
             "env": {"VAR": "42", "FOO": "foobar"},
         },
         "post_task": {
-            "cmd": "python vars.py Post-Task VAR FOO TIK",
+            "cmd": "python echo.py Post-Task VAR FOO TIK",
             "env": {"VAR": "42", "FOO": "foobar"},
         },
         "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
@@ -521,13 +506,13 @@ def test_composite_inherit_env_in_cascade(project, invoke, capfd, _vars):
     assert "Post-Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
 
 
-def test_composite_inherit_dotfile(project, invoke, capfd, _vars):
+def test_composite_inherit_dotfile(project, invoke, capfd, _echo):
     (project.root / ".env").write_text("VAR=42")
     (project.root / "override.env").write_text("VAR=overriden")
     project.tool_settings["scripts"] = {
-        "pre_task": {"cmd": "python vars.py Pre-Task VAR", "env_file": ".env"},
-        "task": {"cmd": "python vars.py Task VAR", "env_file": ".env"},
-        "post_task": {"cmd": "python vars.py Post-Task VAR", "env_file": ".env"},
+        "pre_task": {"cmd": "python echo.py Pre-Task VAR", "env_file": ".env"},
+        "task": {"cmd": "python echo.py Task VAR", "env_file": ".env"},
+        "post_task": {"cmd": "python echo.py Post-Task VAR", "env_file": ".env"},
         "test": {"composite": ["task"], "env_file": "override.env"},
     }
     project.write_pyproject()
