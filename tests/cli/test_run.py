@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+from pdm import termui
 from pdm.cli.actions import PEP582_PATH
 from pdm.utils import cd
 
@@ -259,22 +260,35 @@ def test_run_script_override_global_env(project, invoke, capfd):
 
 def test_run_show_list_of_scripts(project, invoke):
     project.tool_settings["scripts"] = {
+        "test_composite": {"composite": ["test_cmd", "test_script", "test_shell"]},
         "test_cmd": "flask db upgrade",
+        "test_multi": """\
+            I am a multilines
+            command
+        """,
         "test_script": {"call": "test_script:main", "help": "call a python function"},
         "test_shell": {"shell": "echo $FOO", "help": "shell command"},
     }
     project.write_pyproject()
     result = invoke(["run", "--list"], obj=project)
     result_lines = result.output.splitlines()[3:]
-    assert result_lines[0][1:-1].strip() == "test_cmd    │ cmd   │ flask db upgrade │"
+    assert (
+        result_lines[0][1:-1].strip() == "test_cmd       │ cmd       │ flask db upgrade"
+    )
+    sep = termui.Emoji.ARROW_SEPARATOR
     assert (
         result_lines[1][1:-1].strip()
-        == "test_script │ call  │ test_script:main │ call a python function"
+        == f"test_composite │ composite │ test_cmd {sep} test_script {sep} test_shell"
     )
     assert (
         result_lines[2][1:-1].strip()
-        == "test_shell  │ shell │ echo $FOO        │ shell command"
+        == f"test_multi     │ cmd       │ I am a multilines{termui.Emoji.ELLIPSIS}"
     )
+    assert (
+        result_lines[3][1:-1].strip()
+        == "test_script    │ call      │ call a python function"
+    )
+    assert result_lines[4][1:-1].strip() == "test_shell     │ shell     │ shell command"
 
 
 def test_run_with_another_project_root(project, local_finder, invoke, capfd):

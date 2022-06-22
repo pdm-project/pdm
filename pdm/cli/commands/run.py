@@ -50,6 +50,22 @@ class Task(NamedTuple):
     def __str__(self) -> str:
         return f"<task [cyan]{self.name}[/]>"
 
+    @property
+    def short_description(self) -> str:
+        """
+        A short one line task description
+        """
+        if self.kind == "composite":
+            fallback = f" {termui.Emoji.ARROW_SEPARATOR} ".join(self.args)
+        else:
+            lines = [
+                line.strip() for line in str(self.args).splitlines() if line.strip()
+            ]
+            fallback = (
+                f"{lines[0]}{termui.Emoji.ELLIPSIS}" if len(lines) > 1 else lines[0]
+            )
+        return self.options.get("help", fallback)
+
 
 class TaskRunner:
     """The task runner for pdm project"""
@@ -260,9 +276,9 @@ class TaskRunner:
     def show_list(self) -> None:
         if not self.project.scripts:
             return
-        columns = ["Name", "Type", "Script", "Description"]
+        columns = ["Name", "Type", "Description"]
         result = []
-        for name in self.project.scripts:
+        for name in sorted(self.project.scripts):
             if name == "_":
                 continue
             task = self._get_task(name)
@@ -271,8 +287,7 @@ class TaskRunner:
                 (
                     f"[green]{name}[/]",
                     task.kind,
-                    str(task.args),
-                    task.options.get("help", ""),
+                    task.short_description,
                 )
             )
         self.project.core.ui.display_columns(result, columns)
