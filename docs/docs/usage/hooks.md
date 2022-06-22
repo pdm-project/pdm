@@ -90,8 +90,7 @@ flowchart LR
 
 As soon as you are ready to publish you package/app/libray, you will require the publication tasks:
 
-- `build`: build/compile assets requiring it
-- `package`: package you library/application into a Python package
+- `build`: build/compile assets requiring it and package everything into a Python package (sdist, wheel)
 - `upload`: upload/publish the package to a remote PyPI index
 
 All thoses steps are available with the following commands:
