@@ -42,6 +42,4 @@ def resolve(
             mapping[new_key] = mapping.pop(key)
             key = new_key
 
-        candidate.hashes = provider.repository.get_hashes(candidate)
-
     return mapping, provider.fetched_dependencies
