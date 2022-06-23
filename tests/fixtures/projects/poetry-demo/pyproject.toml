@@ -4,11 +4,15 @@ version = "0.1.0"
 authors = ["Thomas Kluyver <thomas@kluyver.me.uk>"]
 homepage = "https://github.com/takluyver/flit"
 license = "BSD-3-Clause"
-
+description = "A demo project for Poetry"
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+packages = [
+    { include = "mylib.py" },
 ]
 
 [tool.poetry.urls]

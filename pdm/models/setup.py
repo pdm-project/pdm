@@ -66,7 +66,7 @@ class _SetupReader:
         from pdm.project.metadata import MutableMetadata
 
         try:
-            metadata = MutableMetadata(file)
+            metadata = MutableMetadata.from_file(file)
         except ValueError:
             return Setup()
         return Setup(

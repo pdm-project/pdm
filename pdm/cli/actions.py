@@ -716,7 +716,7 @@ def do_import(
     merge_dictionary(pyproject["project"], project_data)  # type: ignore
     merge_dictionary(pyproject["tool"]["pdm"], settings)  # type: ignore
     pyproject["build-system"] = {
-        "requires": ["pdm-pep517"],
+        "requires": ["pdm-pep517>=0.12.0"],
         "build-backend": "pdm.pep517.api",
     }
     project.pyproject = cast(dict, pyproject)
