@@ -6,6 +6,7 @@ import os
 import sys
 from argparse import Action, _ArgumentGroup
 from collections import ChainMap, OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from json import dumps
 from pathlib import Path
 from typing import (
@@ -29,6 +30,7 @@ from pdm import termui
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
+from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -634,6 +636,16 @@ def merge_dictionary(
             target[key].extend(value)
         else:
             target[key] = value
+
+
+def fetch_hashes(repository: BaseRepository, mapping: Mapping[str, Candidate]) -> None:
+    """Fetch hashes for candidates in parallel"""
+
+    def do_fetch(candidate: Candidate) -> None:
+        candidate.hashes = repository.get_hashes(candidate)
+
+    with ThreadPoolExecutor() as executor:
+        executor.map(do_fetch, mapping.values())
 
 
 def is_pipx_installation() -> bool:

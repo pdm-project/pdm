@@ -20,6 +20,7 @@ from pdm import termui
 from pdm.cli.hooks import HookManager
 from pdm.cli.utils import (
     check_project_file,
+    fetch_hashes,
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
@@ -69,12 +70,12 @@ def do_lock(
         with project.core.ui.open_spinner("Re-calculating hashes..."):
             for key, candidate in locked_repo.packages.items():
                 reqs, python_requires, summary = locked_repo.candidate_info[key]
-                candidate.hashes = repo.get_hashes(candidate)
                 candidate.summary = summary
                 candidate.requires_python = python_requires
                 ident = cast(str, key[0])
                 mapping[ident] = candidate
                 dependencies[ident] = list(map(parse_requirement, reqs))
+            fetch_hashes(repo, mapping)
             lockfile = format_lockfile(project, mapping, dependencies)
         project.write_lockfile(lockfile)
         return mapping
@@ -100,6 +101,7 @@ def do_lock(
                     project.environment.python_requires,
                     resolve_max_rounds,
                 )
+                fetch_hashes(provider.repository, mapping)
         except ResolutionTooDeep:
             ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
             ui.echo(
@@ -145,6 +147,7 @@ def resolve_candidates_from_lockfile(
                 project.environment.python_requires,
                 resolve_max_rounds,
             )
+            fetch_hashes(provider.repository, mapping)
     return mapping
 
 
