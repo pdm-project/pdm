@@ -22,16 +22,16 @@ PROJECT_DIR = Path(__file__).parent.parent
 
 
 def get_current_version():
-    from pdm.pep517.metadata import Metadata
+    from pdm.pep517.base import Builder
 
-    metadata = Metadata(PROJECT_DIR / "pyproject.toml")
+    metadata = Builder(PROJECT_DIR).meta
     return metadata.version
 
 
 def bump_version(pre=None, major=False, minor=False, patch=True):
-    if not any([major, minor, patch]):
+    if not any([major, minor, patch, pre]):
         patch = True
-    if len([v for v in [major, minor, patch] if v]) != 1:
+    if len([v for v in [major, minor, patch] if v]) > 1:
         echo(
             "Only one option should be provided among " "(--major, --minor, --patch)",
             style="red",
