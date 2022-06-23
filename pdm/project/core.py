@@ -20,7 +20,7 @@ from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
-from pdm.models.repositories import BaseRepository, LockedRepository, PyPIRepository
+from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
@@ -374,7 +374,7 @@ class Project:
     def get_repository(self, cls: Type[BaseRepository] | None = None) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
-            cls = PyPIRepository
+            cls = self.core.repository_class
         sources = self.sources or []
         return cls(sources, self.environment)
 
@@ -409,7 +409,7 @@ class Project:
             ReusePinProvider,
         )
 
-        repository = self.get_repository(cls=self.core.repository_class)
+        repository = self.get_repository()
         allow_prereleases = self.allow_prereleases
         overrides = {
             normalize_name(k): v
