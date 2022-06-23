@@ -101,11 +101,15 @@ class Emoji:
         LOCK = " "
         CONGRAT = " "
         POPPER = " "
+        ELLIPSIS = "..."
+        ARROW_SEPARATOR = ">"
     else:
         SUCC = ":heavy_check_mark:"
         FAIL = ":heavy_multiplication_x:"
         LOCK = ":lock:"
         POPPER = ":party_popper:"
+        ELLIPSIS = "…"
+        ARROW_SEPARATOR = "➤"
 
 
 if is_legacy_windows():
