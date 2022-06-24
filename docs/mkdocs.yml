@@ -47,6 +47,7 @@ nav:
   - Writing pyproject.toml:
       - pyproject/pep621.md
       - pyproject/tool-pdm.md
+      - pyproject/build.md
   - Configuration: configuration.md
   - Plugins:
       - plugin/write.md
@@ -74,7 +75,6 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-
 
 copyright: Copyright &copy; 2019-2021 <a href="https://frostming.com">Frost Ming</a>
 
