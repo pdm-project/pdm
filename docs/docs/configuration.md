@@ -1,6 +1,6 @@
 ## Available Configurations
 
-The following configuration items can be retrieved and modified by `pdm config` command.
+The following configuration items can be retrieved and modified by [`pdm config`](usage/cli_reference.md#exec-0--config) command.
 
 | Config Item                   | Description                                                               | Default Value                                                             | Available in Project | Env var                  |
 | ----------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------- | ------------------------ |

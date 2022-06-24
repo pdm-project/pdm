@@ -1,19 +1,8 @@
 # Manage Project
 
-PDM can act as a PEP 517 build backend, to enable that, write the following lines in your
-`pyproject.toml`. If you used `pdm init` to create it for you, it should be done already.
-
-```toml
-[build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
-```
-
-`pip` will read the backend settings to install or build a package.
-
 ## Choose a Python interpreter
 
-If you have used `pdm init`, you must have already seen how PDM detects and selects the Python
+If you have used [`pdm init`](cli_reference.md#exec-0--init), you must have already seen how PDM detects and selects the Python
 interpreter. After initialized, you can also change the settings by `pdm use <python_version_or_path>`.
 The argument can be either a version specifier of any length, or a relative or absolute path to the
 python interpreter, but remember the Python interpreter must conform with the `python_requires`
@@ -147,7 +136,7 @@ See all supported options by typing `pdm publish --help`.
 
 ### Configure the repository secrets for upload
 
-When using the `pdm publish` command, it reads the repository secrets from the *global* config file(`~/.pdm/config.toml`). The content of the config is as follows:
+When using the [`pdm publish`](cli_reference.md#exec-0--publish) command, it reads the repository secrets from the *global* config file(`~/.pdm/config.toml`). The content of the config is as follows:
 
 ```toml
 [repository.pypi]
@@ -163,7 +152,7 @@ password = "<secret>"
 !!! NOTE
     You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
 
-To change the repository config from the command line, use the `pdm config` command:
+To change the repository config from the command line, use the [`pdm config`](cli_reference.md#exec-0--config) command:
 
 ```bash
 pdm config repository.pypi.username "__token__"
@@ -232,14 +221,14 @@ PDM provides `import` command so that you don't have to initialize the project m
 4. `requirements.txt` format used by pip
 5. setuptools `setup.py`
 
-Also, when you are executing `pdm init` or `pdm install`, PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
+Also, when you are executing [`pdm init`](cli_reference.md#exec-0--init) or [`pdm install`](cli_reference.md#exec-0--install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
 
 !!! attention "CAUTION"
     Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
 
 ## Export locked packages to alternative formats
 
-You can also export `pdm.lock` to other formats, to ease the CI flow or image building process. Currently,
+You can also export [`pdm lock`](cli_reference.md#exec-0--lock) to other formats, to ease the CI flow or image building process. Currently,
 only `requirements.txt` and `setup.py` format is supported:
 
 ```console

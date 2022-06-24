@@ -10,7 +10,7 @@ pdm run flask run -p 54321
 
 It will run `flask run -p 54321` in the environment that is aware of packages in `__pypackages__/` folder.
 
-## `[tool.pdm.scripts]` Table
+## User Scripts
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.
 
@@ -28,12 +28,14 @@ $ pdm run start
 Flask server started at http://127.0.0.1:54321
 ```
 
-Any extra arguments will be appended to the command:
+Any following arguments will be appended to the command:
 
 ```bash
 $ pdm run start -h 0.0.0.0
 Flask server started at http://0.0.0.0:54321
 ```
+
+---
 
 PDM supports 4 types of scripts:
 
@@ -111,6 +113,8 @@ all = {composite = ["lint mypackage/", "test -v tests/"]}
     Argument passed on the command line are given to each called task.
 
 
+## Script Options
+
 ### `env`
 
 All environment variables set in the current shell can be seen by `pdm run` and will be expanded when executed.
@@ -151,9 +155,9 @@ site-packages from the selected interpreter WON'T be loaded into `sys.path`, unl
 
 Note that site-packages will always be loaded if running with PEP 582 enabled(without the `pdm run` prefix).
 
-### Shared Settings
+### Shared Options
 
-If you want the settings to be shared by all tasks run by `pdm run`,
+If you want the options to be shared by all tasks run by `pdm run`,
 you can write them under a special key `_` in `[tool.pdm.scripts]` table:
 
 ```toml
@@ -171,11 +175,13 @@ Use `pdm run --list/-l` to show the list of available script shortcuts:
 
 ```bash
 $ pdm run --list
-Name        Type  Script           Description
------------ ----- ---------------- ----------------------
-test_cmd    cmd   flask db upgrade
-test_script call  test_script:main call a python function
-test_shell  shell echo $FOO        shell command
+╭─────────────┬───────┬───────────────────────────╮
+│ Name        │ Type  │ Description               │
+├─────────────┼───────┼───────────────────────────┤
+│ test_cmd    │ cmd   │ flask db upgrade          │
+│ test_script │ call  │ call a python function    │
+│ test_shell  │ shell │ shell command             │
+╰─────────────┴───────┴───────────────────────────╯
 ```
 
 You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
