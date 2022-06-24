@@ -12,7 +12,7 @@ def render_parser(
 ) -> str:
     """Render the parser help documents as a string."""
     result = [f"{'#' * heading_level} {title}\n"]
-    if parser.description:
+    if parser.description and title != "pdm":
         result.append("> " + parser.description + "\n")
 
     for group in sorted(
