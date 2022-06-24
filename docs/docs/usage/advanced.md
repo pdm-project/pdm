@@ -28,10 +28,10 @@ commands =
 ```
 
 To use the virtualenv created by Tox, you should make sure you have set `pdm config use_venv true`. PDM then will install
-dependencies from `pdm.lock` into the virtualenv. In the dedicated venv you can directly run tools by `pytest tests/` instead
+dependencies from [`pdm lock`](cli_reference.md#exec-0--lock) into the virtualenv. In the dedicated venv you can directly run tools by `pytest tests/` instead
 of `pdm run pytest tests/`.
 
-You should also make sure you don't run `pdm add/pdm remove/pdm update/pdm lock` in the test commands, otherwise the `pdm.lock`
+You should also make sure you don't run `pdm add/pdm remove/pdm update/pdm lock` in the test commands, otherwise the [`pdm lock`](cli_reference.md#exec-0--lock)
 file will be modified unexpectedly. Additional dependencies can be supplied with the `deps` config. Besides, `isolated_buid` and `passenv`
 config should be set as the above example to make PDM work properly.
 
@@ -94,7 +94,7 @@ Before running nox, you should also `pdm config use_venv true` to enable venv re
 
 ### About PEP 582 `__pypackages__` directory
 
-By default, if you run tools by `pdm run`, `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
+By default, if you run tools by [`pdm run`](cli_reference.md#exec-0--run), `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
 For `nox`, you can avoid this by adding a line in `noxfile.py`:
 
 ```python
@@ -146,18 +146,6 @@ Testing:
     ```bash
     export HOME=/tmp/home
     ```
-
-## Use other PEP 517 backends
-
-PDM supports ALL PEP 517 build backends that comply with PEP 621 specification. At the time of writing, `flit` is going to switch to PEP 621 metadata in the near future, then you can keep `flit` as the build-backend while still managing dependencies using PDM:
-
-```toml
-[build-system]
-requires = ["flit_core >=2,<4"]
-build-backend = "flit_core.buildapi"
-```
-
-PDM will call the correct backend when `pdm build`.
 
 ## Use PDM in a multi-stage Dockerfile
 

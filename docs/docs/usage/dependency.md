@@ -37,7 +37,7 @@ For details of the meaning of each field in `pyproject.toml`, please refer to [P
 pdm add requests
 ```
 
-`pdm add` can be followed by one or several dependencies, and the dependency specification is described in
+[`pdm add`](cli_reference.md#exec-0--add) can be followed by one or several dependencies, and the dependency specification is described in
 [PEP 508](https://www.python.org/dev/peps/pep-0508/).
 
 PDM also allows extra dependency groups by providing `-G/--group <name>` option, and those dependencies will go to
@@ -131,7 +131,7 @@ for the dependency):
 
 ### Add prereleases
 
-One can give `--pre/--prerelease` option to `pdm add` so that prereleases are allowed to be pinned for the given packages.
+One can give `--pre/--prerelease` option to [`pdm add`](cli_reference.md#exec-0--add) so that prereleases are allowed to be pinned for the given packages.
 
 ## Update existing dependencies
 
@@ -182,7 +182,7 @@ which is given by `--update-<strategy>` option:
 ### Update packages to the versions that break the version specifiers
 
 One can give `-u/--unconstrained` to tell PDM to ignore the version specifiers in the `pyproject.toml`.
-This works similarly to the `yarn upgrade -L/--latest` command. Besides, `pdm update` also supports the
+This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](cli_reference.md#exec-0--update) also supports the
 `--pre/--prerelease` option.
 
 ## Remove existing dependencies
@@ -202,13 +202,12 @@ pdm remove -dG test pytest-cov
 
 There are two similar commands to do this job with a slight difference:
 
-- `pdm install` will check the lock file and relock if it mismatches with project file, then install.
-- `pdm sync` installs dependencies in the lock file and will error out if it doesn't exist.
-  Besides, `pdm sync` can also remove unneeded packages if `--clean` option is given.
+- [`pdm install`](cli_reference.md#exec-0--install) will check the lock file and relock if it mismatches with project file, then install.
+- [`pdm update`](cli_reference.md#exec-0--sync) installs dependencies in the lock file and will error out if it doesn't exist. Besides, [`pdm sync`](cli_reference.md#exec-0--sync) can also remove unneeded packages if `--clean` option is given.
 
 ## Specify the lockfile to use
 
-You can specify another lockfile than the default `pdm.lock` by using the `-L/--lockfilie <filepath>` option or the `PDM_LOCKFILE` environment variable.
+You can specify another lockfile than the default [`pdm lock`](cli_reference.md#exec-0--lock) by using the `-L/--lockfilie <filepath>` option or the `PDM_LOCKFILE` environment variable.
 
 ### Select a subset of dependencies with CLI options
 
