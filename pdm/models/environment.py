@@ -142,6 +142,9 @@ class Environment:
             ignore_compatibility=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
             only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
+            respect_source_order=self.project.tool_settings.get("resolution", {}).get(
+                "respect-source-order", False
+            ),
             verbosity=self.project.core.ui.verbosity,
         )
         try:
