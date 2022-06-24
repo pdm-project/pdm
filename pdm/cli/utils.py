@@ -446,7 +446,7 @@ def format_lockfile(
             if key in file_hashes:
                 continue
             array = tomlkit.array().multiline(True)
-            for filename, hash_value in v.hashes.items():
+            for filename, hash_value in sorted(v.hashes.items()):
                 inline = make_inline_table({"file": filename, "hash": hash_value})
                 array.append(inline)  # type: ignore
             if array:
