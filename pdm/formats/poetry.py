@@ -6,7 +6,7 @@ import os
 import re
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping, cast
 
 from pdm._types import RequirementDict, Source
 from pdm.compat import tomllib
@@ -165,20 +165,24 @@ class PoetryMetaConverter(MetaConverter):
                 include = f"{item.get('from')}/{include}"
             result.append(include)
         result.extend(source.pop("include", []))
-        self.settings["includes"] = result
+        self.settings.setdefault("build", {})["includes"] = result
         raise Unset()
 
     @convert_from("exclude")
     def excludes(self, value: list[str]) -> None:
-        self.settings["excludes"] = value
+        self.settings.setdefault("build", {})["excludes"] = value
         raise Unset()
 
     @convert_from("build")
     def build(self, value: str | dict) -> None:
-        if isinstance(value, str):
-            self.settings["build"] = value
-        elif "script" in value:
-            self.settings["build"] = value.get("script")
+        run_setuptools = True
+        if isinstance(value, dict):
+            if "generate-setup-file" in value:
+                run_setuptools = cast(bool, value["generate-setup-file"])
+            value = value["script"]
+        self.settings.setdefault("build", {}).update(
+            {"setup-script": value, "run-setuptools": run_setuptools}
+        )
         raise Unset()
 
     @convert_from("source")

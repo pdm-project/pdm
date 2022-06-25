@@ -134,8 +134,9 @@ class FlitMetaConverter(MetaConverter):
 
     @convert_from("sdist")
     def includes(self, value: Dict[str, List[str]]) -> None:
-        self.settings["excludes"] = value.get("exclude")
-        self.settings["includes"] = value.get("include")
+        self.settings.setdefault("build", {}).update(
+            {"excludes": value.get("exclude"), "includes": value.get("include")}
+        )
         raise Unset()
 
 
