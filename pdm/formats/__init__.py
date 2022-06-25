@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Iterable, Mapping, Union, cast
 
 from pdm.compat import Protocol
-from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
+from pdm.formats import flit, pipfile, poetry, requirements, setup_py
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.project import Project
@@ -36,6 +36,5 @@ FORMATS: Mapping[str, _Format] = {
     "poetry": cast(_Format, poetry),
     "flit": cast(_Format, flit),
     "requirements": cast(_Format, requirements),
-    "legacy": cast(_Format, legacy),
     "setuppy": cast(_Format, setup_py),
 }
