@@ -1,7 +1,7 @@
 import shutil
 from argparse import Namespace
 
-from pdm.formats import flit, legacy, pipfile, poetry, requirements, setup_py
+from pdm.formats import flit, pipfile, poetry, requirements, setup_py
 from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
 from tests import FIXTURES
@@ -84,8 +84,9 @@ def test_convert_poetry(project):
     assert result["entry-points"]["blogtool.parsers"] == {
         ".rst": "some_module:SomeClass"
     }
-    assert settings["includes"] == ["lib/my_package", "tests", "CHANGELOG.md"]
-    assert settings["excludes"] == ["my_package/excluded.py"]
+    build = settings["build"]
+    assert build["includes"] == ["lib/my_package", "tests", "CHANGELOG.md"]
+    assert build["excludes"] == ["my_package/excluded.py"]
 
 
 def test_convert_flit(project):
@@ -120,23 +121,9 @@ def test_convert_flit(project):
         result["entry-points"]["pygments.lexers"]["dogelang"]
         == "dogelang.lexer:DogeLexer"
     )
-    assert settings["includes"] == ["doc/"]
-    assert settings["excludes"] == ["doc/*.html"]
-
-
-def test_convert_legacy_format(project):
-    golden_file = FIXTURES / "pyproject-legacy.toml"
-    assert legacy.check_fingerprint(project, golden_file)
-    result, settings = legacy.convert(project, golden_file, None)
-
-    assert result["name"] == "demo-package"
-    assert result["authors"][0] == {"name": "frostming", "email": "mianghong@gmail.com"}
-    assert result["license"] == {"text": "MIT"}
-    assert sorted(result["dynamic"]) == ["classifiers", "version"]
-    assert result["dependencies"] == ["flask"]
-    assert not result.get("dev-dependencies", {}).get("dev")
-    assert result["optional-dependencies"]["test"] == ["pytest"]
-    assert settings["source"][0]["url"] == "https://test.pypi.org/simple"
+    build = settings["build"]
+    assert build["includes"] == ["doc/"]
+    assert build["excludes"] == ["doc/*.html"]
 
 
 def test_export_setup_py(fixture_project):

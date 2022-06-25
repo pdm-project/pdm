@@ -561,7 +561,7 @@ def do_init(
             "dependencies": make_array([], True),
         },
         "build-system": {
-            "requires": ["pdm-pep517>=0.12.0"],
+            "requires": ["pdm-pep517>=1.0.0"],
             "build-backend": "pdm.pep517.api",
         },
     }
@@ -706,7 +706,13 @@ def do_import(
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:  # type: ignore
         pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
-
+    if "build" in pyproject["tool"]["pdm"] and isinstance(
+        pyproject["tool"]["pdm"]["build"], str
+    ):
+        pyproject["tool"]["pdm"]["build"] = {
+            "setup-script": pyproject["tool"]["pdm"]["build"],
+            "run-setuptools": True,
+        }
     if "project" not in pyproject:
         pyproject.add("project", tomlkit.table())  # type: ignore
         pyproject["project"].add(  # type: ignore
@@ -719,7 +725,7 @@ def do_import(
     merge_dictionary(pyproject["project"], project_data)  # type: ignore
     merge_dictionary(pyproject["tool"]["pdm"], settings)  # type: ignore
     pyproject["build-system"] = {
-        "requires": ["pdm-pep517>=0.12.0"],
+        "requires": ["pdm-pep517>=1.0.0"],
         "build-backend": "pdm.pep517.api",
     }
     project.pyproject = cast(dict, pyproject)
