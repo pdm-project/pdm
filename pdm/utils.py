@@ -4,6 +4,7 @@ Utility functions
 from __future__ import annotations
 
 import atexit
+import contextlib
 import functools
 import json
 import os
@@ -15,10 +16,9 @@ import sysconfig
 import tempfile
 import urllib.parse as parse
 import warnings
-from contextlib import contextmanager
 from pathlib import Path
 from re import Match
-from typing import Any, Callable, Generic, Iterator, TextIO, TypeVar, overload
+from typing import IO, Any, Callable, Generic, Iterator, TypeVar, overload
 
 from packaging.version import Version
 
@@ -202,12 +202,15 @@ def get_in_project_venv_python(root: Path) -> Path | None:
     return None
 
 
-@contextmanager
+@contextlib.contextmanager
 def atomic_open_for_write(
-    filename: str | Path, *, encoding: str = "utf-8"
-) -> Iterator[TextIO]:
-    fd, name = tempfile.mkstemp("-atomic-write", "pdm-")
-    fp = open(fd, "w", encoding=encoding)
+    filename: str | Path, *, mode: str = "w", encoding: str = "utf-8"
+) -> Iterator[IO]:
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    fd, name = tempfile.mkstemp(prefix="atomic-write-", dir=dirname)
+    fp = open(fd, mode, encoding=encoding if "b" not in mode else None)
     try:
         yield fp
     except Exception:
@@ -215,10 +218,8 @@ def atomic_open_for_write(
         raise
     else:
         fp.close()
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(filename)
-        except OSError:
-            pass
         # The tempfile is created with mode 600, we need to restore the default mode
         # with copyfile() instead of move().
         # See: https://github.com/pdm-project/pdm/issues/542
@@ -227,7 +228,7 @@ def atomic_open_for_write(
         os.unlink(name)
 
 
-@contextmanager
+@contextlib.contextmanager
 def cd(path: str | Path) -> Iterator:
     _old_cwd = os.getcwd()
     os.chdir(path)

@@ -6,7 +6,7 @@ from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
 from pdm import termui
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, CorruptedCacheError
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
@@ -171,9 +171,6 @@ class BaseRepository:
     def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
         try:
             result = self._candidate_info_cache.get(candidate)
-        except CorruptedCacheError:
-            self._candidate_info_cache.clear()
-            raise CandidateInfoNotFound(candidate)
         except KeyError:
             raise CandidateInfoNotFound(candidate)
         return result
