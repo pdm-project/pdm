@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any
 
 from cachecontrol.adapter import CacheControlAdapter
-from cachecontrol.caches import FileCache
 from requests_toolbelt.utils import user_agent
 from unearth.session import InsecureMixin, PyPISession
 
@@ -16,11 +15,12 @@ class InsecureCacheControlAdapter(InsecureMixin, CacheControlAdapter):
 
 class PDMSession(PyPISession):
     def __init__(self, *, cache_dir: Path, **kwargs: Any) -> None:
-        self.secure_adapter_cls = functools.partial(
-            CacheControlAdapter, cache=FileCache(str(cache_dir))
-        )
+        from pdm.models.caches import SafeFileCache
+
+        cache = SafeFileCache(str(cache_dir))
+        self.secure_adapter_cls = functools.partial(CacheControlAdapter, cache=cache)
         self.insecure_adapter_cls = functools.partial(
-            InsecureCacheControlAdapter, cache=FileCache(str(cache_dir))
+            InsecureCacheControlAdapter, cache=cache
         )
         super().__init__(**kwargs)
         self.headers["User-Agent"] = self._make_user_agent()
