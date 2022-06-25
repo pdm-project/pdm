@@ -26,10 +26,6 @@ class InvalidPyVersion(PdmUsageError, ValueError):
     pass
 
 
-class CorruptedCacheError(PdmUsageError):
-    pass
-
-
 class CandidateNotFound(PdmException):
     pass
 

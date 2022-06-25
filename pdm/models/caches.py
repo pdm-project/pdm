@@ -14,7 +14,7 @@ from cachecontrol.caches import FileCache
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from pdm._types import CandidateInfo
-from pdm.exceptions import CorruptedCacheError, PdmException
+from pdm.exceptions import PdmException
 from pdm.models.candidates import Candidate
 from pdm.termui import logger
 from pdm.utils import atomic_open_for_write
@@ -42,7 +42,7 @@ class JSONFileCache(Generic[KT, VT]):
             try:
                 self._cache = json.load(fp)
             except json.JSONDecodeError:
-                raise CorruptedCacheError("The dependencies cache seems to be broken.")
+                return
 
     def _write_cache(self) -> None:
         with self.cache_file.open("w") as fp:
