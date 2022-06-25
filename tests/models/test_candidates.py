@@ -249,7 +249,7 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     req = parse_requirement(file_link.url)
     downloader = mocker.patch("unearth.finder.unpack_link")
     prepared = Candidate(req).prepare(project.environment)
-    prepared.prepare_metadata()
+    prepared.metadata
     downloader.assert_not_called()
     assert prepared.wheel == cache_path / built_path.name
 

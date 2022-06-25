@@ -20,8 +20,9 @@ from pdm.models.requirements import (
     VcsRequirement,
     _egg_info_re,
     filter_requirements_with_extras,
-    parse_metadata_from_source,
 )
+from pdm.models.setup import Setup
+from pdm.project.metadata import MutableMetadata, SetupDistribution
 from pdm.utils import (
     cached_property,
     convert_hashes,
@@ -393,45 +394,58 @@ class PreparedCandidate:
                     self._unpacked_dir = result
 
     def prepare_metadata(self) -> im.Distribution:
-        """Prepare the metadata for the candidate.
-        Will call the prepare_metadata_* hooks behind the scene
-        """
         self.obtain(allow_all=True)
         metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
-        result: im.Distribution
         if self.wheel:
+            # Get metadata from METADATA inside the wheel
             self._metadata_dir = _get_wheel_metadata_from_wheel(
                 self.wheel, metadir_parent
             )
-            result = im.PathDistribution(Path(self._metadata_dir))
-        else:
-            source_dir = str(self._unpacked_dir)
-            builder = EditableBuilder if self.req.editable else WheelBuilder
+            return im.PathDistribution(Path(self._metadata_dir))
+
+        assert self._unpacked_dir, "Source directory isn't ready yet"
+        # Try getting from PEP 621 metadata
+        pyproject_toml = self._unpacked_dir / "pyproject.toml"
+        if pyproject_toml.exists():
             try:
-                self._metadata_dir = builder(
-                    source_dir, self.environment
-                ).prepare_metadata(metadir_parent)
-            except BuildError:
-                termui.logger.warn(
-                    "Failed to build package, try parsing project files."
-                )
-                result = parse_metadata_from_source(source_dir)
+                metadata = MutableMetadata.from_file(pyproject_toml)
+            except ValueError:
+                termui.logger.warn("Failed to parse pyproject.toml")
             else:
-                result = im.PathDistribution(Path(self._metadata_dir))
-        if not self.candidate.name:
-            self.req.name = self.candidate.name = cast(str, result.metadata["Name"])
-        if not self.candidate.version:
-            self.candidate.version = result.version
-        if not self.candidate.requires_python:
-            self.candidate.requires_python = cast(
-                str, result.metadata.get("Requires-Python", "")
-            )
-        return result
+                setup = Setup(
+                    name=metadata.name,
+                    version=metadata.version,
+                    install_requires=metadata.dependencies or [],
+                    extras_require=metadata.optional_dependencies or {},
+                    python_requires=metadata.requires_python or None,
+                )
+                return SetupDistribution(setup)
+        # If all fail, try building the source to get the metadata
+        builder = EditableBuilder if self.req.editable else WheelBuilder
+        try:
+            self._metadata_dir = builder(
+                self._unpacked_dir, self.environment
+            ).prepare_metadata(metadir_parent)
+        except BuildError:
+            termui.logger.warn("Failed to build package, try parsing project files.")
+            setup = Setup.from_directory(self._unpacked_dir)
+            return SetupDistribution(setup)
+        else:
+            return im.PathDistribution(Path(self._metadata_dir))
 
     @property
     def metadata(self) -> im.Distribution:
         if self._metadata is None:
-            self._metadata = self.prepare_metadata()
+            result = self.prepare_metadata()
+            if not self.candidate.name:
+                self.req.name = self.candidate.name = cast(str, result.metadata["Name"])
+            if not self.candidate.version:
+                self.candidate.version = result.version
+            if not self.candidate.requires_python:
+                self.candidate.requires_python = cast(
+                    str, result.metadata.get("Requires-Python", "")
+                )
+            self._metadata = result
         return self._metadata
 
     def get_dependencies_from_metadata(self) -> list[str]:
