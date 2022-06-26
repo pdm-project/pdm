@@ -6,6 +6,7 @@ if ((Test-Path Function:\TabExpansion) -and -not (Test-Path Function:\_pdm_compl
 
 $PDM_PYTHON = "%{python_executable}"
 $PDM_PIP_INDEX = (& $PDM_PYTHON -m pdm config pypi.url).Trim()
+$CONFIG_DIR = "$env:LOCALAPPDATA\pdm"
 
 class Option {
     [string[]] $Opts
@@ -110,14 +111,14 @@ function getSections() {
 }
 
 function _fetchPackageListFromPyPI() {
-    if (-not (Test-Path -Path "~/.pdm")) {
-        mkdir "~/.pdm"
+    if (-not (Test-Path -Path $CONFIG_DIR)) {
+        mkdir $CONFIG_DIR
     }
-    (Invoke-WebRequest $PDM_PIP_INDEX).Links | ForEach-Object { $_.innerText } | Out-File -FilePath "~/.pdm/.pypiPackages"
+    (Invoke-WebRequest $PDM_PIP_INDEX).Links | ForEach-Object { $_.innerText } | Out-File -FilePath "$CONFIG_DIR\.pypiPackages"
 }
 
 function getPyPIPackages() {
-    # $cacheFile = "~/.pdm/.pypiPackages"
+    # $cacheFile = "$CONFIG_DIR\.pypiPackages"
     # if (-not (Test-Path -Path $cacheFile) -or (Get-Item $cacheFile).LastWriteTime -lt (Get-Date).AddDays(-28)) {
     #     _fetchPackageListFromPyPI
     # }
