@@ -91,9 +91,15 @@ Any local configurations will be stored in `.pdm.toml` under the project root di
 The configuration files are searched in the following order:
 
 1. `<PROJECT_ROOT>/.pdm.toml` - The project configuration
-2. `~/.pdm/config.toml` - The home configuration
+2. `<CONFIG_ROOT>/config.toml` - The home configuration
 
-If `-g/--global` option is used, the first item will be replaced by `~/.pdm/global-project/.pdm.toml`.
+where `<CONFIG_ROOT>` is:
+
+- `$XDG_CONFIG_HOME/pdm` (`~/.config/pdm` in most cases) on Linux as defined by [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+- `~/Library/Preferences/pdm` on MacOS as defined by [Appli File System Basics](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html)
+- `%USERPROFILE%\AppData\Local\pdm` on Windows as defined in [Known folders](https://docs.microsoft.com/en-us/windows/win32/shell/known-folders)
+
+If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROOT>/global-project/.pdm.toml`.
 
 You can find all available configuration items in [Configuration Page](../configuration.md).
 
@@ -122,7 +128,7 @@ See all supported options by typing `pdm publish --help`.
 
 ### Configure the repository secrets for upload
 
-When using the [`pdm publish`](cli_reference.md#exec-0--publish) command, it reads the repository secrets from the *global* config file(`~/.pdm/config.toml`). The content of the config is as follows:
+When using the [`pdm publish`](cli_reference.md#exec-0--publish) command, it reads the repository secrets from the *global* config file(`<CONFIG_ROOT>/config.toml`). The content of the config is as follows:
 
 ```toml
 [repository.pypi]
@@ -169,7 +175,7 @@ The caches are located under `$(pdm config cache_dir)/packages`. One can view th
 Sometimes users may want to keep track of the dependencies of global Python interpreter as well.
 It is easy to do so with PDM, via `-g/--global` option which is supported by most subcommands.
 
-If the option is passed, `~/.pdm/global-project` will be used as the project directory, which is
+If the option is passed, `<CONFIG_ROOT>/global-project` will be used as the project directory, which is
 almost the same as normal project except that `pyproject.toml` will be created automatically for you
 and it doesn't support build features. The idea is taken from Haskell's [stack](https://docs.haskellstack.org).
 
@@ -177,7 +183,7 @@ However, unlike `stack`, by default, PDM won't use global project automatically 
 Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
 But PDM also leave the decision to users, just set the config `global_project.fallback` to `true`.
 
-If you want global project to track another project file other than `~/.pdm/global-project`, you can provide the
+If you want global project to track another project file other than `<CONFIG_ROOT>/global-project`, you can provide the
 project path via `-p/--project <path>` option.
 
 !!! attention "CAUTION"

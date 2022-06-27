@@ -130,7 +130,7 @@ class Config(MutableMapping[str, str]):
         ),
         "global_project.path": ConfigItem(
             "The path to the global project",
-            os.path.expanduser("~/.pdm/global-project"),
+            platformdirs.user_config_path("pdm") / "global-project",
             True,
         ),
         "global_project.user_site": ConfigItem(
