@@ -35,6 +35,7 @@ class Command(BaseCommand):
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        hooks = HookManager(project, options.skip)
         if project.pyproject_file.exists():
             project.core.ui.echo(
                 "pyproject.toml already exists, update it now.", style="cyan"
@@ -44,9 +45,9 @@ class Command(BaseCommand):
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:
-            actions.do_use(project)
+            actions.do_use(project, hooks=hooks)
         else:
-            actions.do_use(project, "3", True)
+            actions.do_use(project, "3", True, hooks=hooks)
         is_library = (
             termui.confirm(
                 "Is the project a library that will be uploaded to PyPI", default=False
@@ -79,7 +80,7 @@ class Command(BaseCommand):
             author=author,
             email=email,
             python_requires=python_requires,
-            hooks=HookManager(project, options.skip),
+            hooks=hooks,
         )
         if self.interactive:
             actions.ask_for_import(project)

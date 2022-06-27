@@ -115,3 +115,10 @@ Args:
     script (str): the script name
     args (Sequence[str]): the command line provided arguments
 """
+post_use: NamedSignal = pdm_signals.signal("post_use")
+"""Called after use switched to a new Python version.
+
+Args:
+    project (Project): The project object
+    python (PythonInfo): Informations about the new Python interpreter
+"""

@@ -131,9 +131,16 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
+    do_use = mocker.patch.object(actions, "do_use")
     result = invoke(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
+    do_use.assert_called_once_with(
+        project_no_init,
+        ANY,
+        True,
+        hooks=ANY,
+    )
     do_init.assert_called_with(
         project_no_init,
         name="",

@@ -214,6 +214,7 @@ KNOWN_COMMAND_HOOKS = (
     ("remove", "remove requests", ("pre_lock", "post_lock"), ["lock"]),
     ("sync", "sync", ("pre_install", "post_install"), ["lock"]),
     ("update", "update", ("pre_install", "post_install", "pre_lock", "post_lock"), []),
+    ("use", "use -f 3.7", ("post_use",), []),
 )
 
 parametrize_with_commands = pytest.mark.parametrize(
