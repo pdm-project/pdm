@@ -66,6 +66,7 @@ editable-backend = "path"
 pre_release = "python tasks/max_versions.py"
 release = "python tasks/release.py"
 test = "pytest"
+tox = "tox"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
@@ -78,6 +79,10 @@ test = [
     "pytest-cov",
     "pytest-mock",
     "pytest-xdist>=1.31.0",
+]
+tox = [
+    "tox",
+    "tox-pdm>=0.5",
 ]
 doc = [
     "mkdocs>=1.1",

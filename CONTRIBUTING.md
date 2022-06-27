@@ -75,6 +75,20 @@ pdm run test
 
 The test suite is still simple and needs expansion! Please help write more test cases.
 
+!!! note
+    You can also run your test suite against all supported Python version using `tox` with the `tox-pdm` plugin.
+    You can either run it by yourself with:
+ 
+    ```shell
+    tox
+    ```
+ 
+    or from `pdm` with:
+ 
+    ```shell
+    pdm run tox
+    ```
+
 ### Code style
 
 PDM uses `pre-commit` for linting. Install `pre-commit` first, then:
