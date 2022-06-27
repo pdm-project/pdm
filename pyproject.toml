@@ -53,12 +53,14 @@ Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
 pdm = "pdm.core:main"
 
 [tool.pdm]
+version = {use_scm = true}
+
+[tool.pdm.build]
 includes = ["pdm"]
 excludes = ["./**/.git"]
 source-includes = ["tests", "CHANGELOG.md", "LICENSE", "README.md"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
-version = {use_scm = true}
 
 [tool.pdm.scripts]
 pre_release = "python tasks/max_versions.py"
