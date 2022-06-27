@@ -39,8 +39,6 @@ def get_paths(kind="default", vars=None):
             )
         return sysconfig.get_paths(scheme, vars=vars)
     else:
-        if "venv" in scheme_names and kind == "prefix":
-            return sysconfig.get_paths("venv", vars)
         if (
             sys.platform == "darwin"
             and "osx_framework_library" in scheme_names
