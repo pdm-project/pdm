@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Type, cast
 from urllib.parse import urlparse
 
+import platformdirs
 import tomlkit
 from findpython import Finder
 
@@ -78,7 +79,7 @@ class Project:
         self.core = core
 
         if global_config is None:
-            global_config = Path.home() / ".pdm/config.toml"
+            global_config = platformdirs.user_config_path("pdm") / "config.toml"
         self.global_config = Config(Path(global_config), is_global=True)
         global_project = Path(self.global_config["global_project.path"])
 
