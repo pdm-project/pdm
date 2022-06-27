@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling>=0.15.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "test-hatch"
+version = "0.1.0"
+description = "Test hatch project"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.7"
+authors = [{ name = "John", email = "john@example.org" }]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+]
+dependencies = ["requests", "click"]

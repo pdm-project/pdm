@@ -334,3 +334,24 @@ def test_find_candidates_from_find_links(project):
     ]
     candidates = list(repo.find_candidates(parse_requirement("demo")))
     assert len(candidates) == 2
+
+
+def test_parse_metadata_from_pep621(project, mocker):
+    builder = mocker.patch("pdm.builders.wheel.WheelBuilder.build")
+    req = parse_requirement(
+        f"test-hatch @ file://{FIXTURES.as_posix()}/projects/test-hatch-static"
+    )
+    candidate = Candidate(req)
+    metadata = candidate.prepare(project.environment).metadata
+    assert sorted(metadata.requires) == ["click", "requests"]
+    builder.assert_not_called()
+
+
+def test_parse_metadata_with_dynamic_fields(project, local_finder):
+    req = parse_requirement(
+        f"demo-package @ file://{FIXTURES.as_posix()}/projects/demo-src-package"
+    )
+    candidate = Candidate(req)
+    metadata = candidate.prepare(project.environment).metadata
+    assert not metadata.requires
+    assert metadata.version == "0.1.0"
