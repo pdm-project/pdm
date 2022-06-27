@@ -412,14 +412,25 @@ class PreparedCandidate:
             except ValueError:
                 termui.logger.warn("Failed to parse pyproject.toml")
             else:
-                setup = Setup(
-                    name=metadata.name,
-                    version=metadata.version,
-                    install_requires=metadata.dependencies or [],
-                    extras_require=metadata.optional_dependencies or {},
-                    python_requires=metadata.requires_python or None,
-                )
-                return SetupDistribution(setup)
+                dynamic_fields = metadata.dynamic or []
+                # Use the parse result only when all are static
+                if set(dynamic_fields).isdisjoint(
+                    {
+                        "name",
+                        "version",
+                        "dependencies",
+                        "optional-dependencies",
+                        "requires-python",
+                    }
+                ):
+                    setup = Setup(
+                        name=metadata.name,
+                        version=metadata.version,
+                        install_requires=metadata.dependencies or [],
+                        extras_require=metadata.optional_dependencies or {},
+                        python_requires=metadata.requires_python or None,
+                    )
+                    return SetupDistribution(setup)
         # If all fail, try building the source to get the metadata
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
