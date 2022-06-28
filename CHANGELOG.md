@@ -1,3 +1,18 @@
+Release v1.15.4 (2022-06-28)
+----------------------------
+
+### Bug Fixes
+
+- Revert #1106: Do not use `venv` scheme for `prefix` kind install scheme. [#1158](https://github.com/pdm-project/pdm/issues/1158)
+- Fix a bug when updating a package with extra requirements, the package version doesn't get updated correctly. [#1166](https://github.com/pdm-project/pdm/issues/1166)
+
+### Miscellany
+
+- Add additional installation option via [asdf-pdm](https://github.com/1oglop1/asdf-pdm).
+  Add `skip-add-to-path` option to installer in order to prevent changing `PATH`.
+  Replace `bin` variable name with `bin_dir`. [#1145](https://github.com/pdm-project/pdm/issues/1145)
+
+
 Release v1.15.3 (2022-06-14)
 ----------------------------
 
