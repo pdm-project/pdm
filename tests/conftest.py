@@ -298,7 +298,11 @@ def project_no_init(tmp_path, mocker, core, index):
     )
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    do_use(p, getattr(sys, "_base_executable", sys.executable))
+    do_use(
+        p,
+        getattr(sys, "_base_executable", sys.executable),
+        HookManager(p, ["post_use"]),
+    )
     with temp_environ():
         os.environ.pop("VIRTUAL_ENV", None)
         os.environ.pop("CONDA_PREFIX", None)
