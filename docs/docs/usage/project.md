@@ -56,8 +56,8 @@ The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/t
 typing `pdm build --help`.
 
 ??? note "Looking for publish support?"
-If you are looking for `publish` subcommand as poetry, you can refer to the [pdm-publish](https://github.com/branchvincent/pdm-publish) plugin.
-Indeed, most of the time, publishing should be handled by CI/CD pipelines.
+    If you are looking for `publish` subcommand as poetry, you can refer to the [pdm-publish](https://github.com/branchvincent/pdm-publish) plugin.
+    Indeed, most of the time, publishing should be handled by CI/CD pipelines.
 
 ## Show the current Python environment
 
