@@ -27,6 +27,20 @@ to find the latest version of `foo`, whose `requires-python` version range is a 
 
 So, make sure you write `requires-python` properly if you don't want any outdated packages to be locked.
 
+### Working with Python < 3.7
+
+Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-pep517` only works on Python 3.7+, so if you run `pdm build` on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
+
+| Backend               | Supported Python | Support PEP 621 |
+| --------------------- | ---------------- | --------------- |
+| `pdm-pep517`          | `>=3.7`          | Yes             |
+| `setuptools>=60`      | `>=3.7`          | Experimental    |
+| `hatchling`           | `>=3.7`          | Yes             |
+| `flit-core>=3.4`      | `>=3.6`          | Yes             |
+| `flit-core>=3.2,<3.4` | `>=3.4`          | Yes             |
+
+Note that if your project is an application(without `name` metadata), the above limitation of backends don't apply, since you don't need a build backend afterall, and you can use a Python version up to `2.7`.
+
 ## Build distribution artifacts
 
 ```console
@@ -42,8 +56,8 @@ The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/t
 typing `pdm build --help`.
 
 ??? note "Looking for publish support?"
-    If you are looking for `publish` subcommand as poetry, you can refer to the [pdm-publish](https://github.com/branchvincent/pdm-publish) plugin.
-    Indeed, most of the time, publishing should be handled by CI/CD pipelines.
+If you are looking for `publish` subcommand as poetry, you can refer to the [pdm-publish](https://github.com/branchvincent/pdm-publish) plugin.
+Indeed, most of the time, publishing should be handled by CI/CD pipelines.
 
 ## Show the current Python environment
 
