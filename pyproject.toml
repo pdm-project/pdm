@@ -53,7 +53,7 @@ Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
 pdm = "pdm.core:main"
 
 [tool.pdm]
-version = {use_scm = true}
+version = {source = "scm"}
 
 [tool.pdm.build]
 includes = ["pdm"]
@@ -74,7 +74,6 @@ benchmark = "python tasks/benchmarks/main.py"
 
 [tool.pdm.dev-dependencies]
 test = [
-    "click>=8.1.3",
     "pytest",
     "pytest-cov",
     "pytest-mock",
@@ -162,7 +161,7 @@ underlines = "-~^"
   showcontent = true
 
 [build-system]
-requires = ["pdm-pep517>=0.12.0"]
+requires = ["pdm-pep517>=1.0"]
 build-backend = "pdm.pep517.api"
 
 [tool.isort]
