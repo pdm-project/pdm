@@ -6,7 +6,7 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from resolvelib import AbstractProvider
 
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import parse_requirement
+from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.resolver.python import (
     PythonCandidate,
     PythonRequirement,
@@ -223,7 +223,8 @@ class ReusePinProvider(BaseProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Iterable[Candidate]:
-        if identifier not in self.tracked_names and identifier in self.preferred_pins:
+        bare_name = strip_extras(identifier)[0]
+        if bare_name not in self.tracked_names and identifier in self.preferred_pins:
             pin = self.preferred_pins[identifier]
             incompat = list(incompatibilities[identifier])
             demanded_req = next(requirements[identifier], None)
@@ -252,7 +253,7 @@ class EagerUpdateProvider(ReusePinProvider):
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         # If this is a tracking package, tell the resolver out of using the
         # preferred pin, and into a "normal" candidate selection process.
-        if self.identify(requirement) in self.tracked_names and getattr(
+        if requirement.key in self.tracked_names and getattr(
             candidate, "_preferred", False
         ):
             return False
@@ -264,8 +265,8 @@ class EagerUpdateProvider(ReusePinProvider):
         dependencies = super().get_dependencies(candidate)
         if self.identify(candidate) in self.tracked_names:
             for dependency in dependencies:
-                name = self.identify(dependency)
-                self.tracked_names.add(name)
+                if dependency.key:
+                    self.tracked_names.add(dependency.key)
         return dependencies
 
     def get_preference(
