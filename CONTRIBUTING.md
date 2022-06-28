@@ -78,13 +78,13 @@ The test suite is still simple and needs expansion! Please help write more test 
 !!! note
     You can also run your test suite against all supported Python version using `tox` with the `tox-pdm` plugin.
     You can either run it by yourself with:
- 
+
     ```shell
     tox
     ```
- 
+
     or from `pdm` with:
- 
+
     ```shell
     pdm run tox
     ```
@@ -126,3 +126,25 @@ If you make some changes to the `docs/` and you want to preview the build result
 ```bash
 pdm run doc
 ```
+
+
+## Release
+
+Once all changes are done and ready to release, you can preview the changelog contents by running:
+
+```bash
+pdm run release --dry-run
+```
+
+Make sure the next version and the changelog are as expected in the output.
+
+Then cut a release on the **main** branch:
+
+
+```bash
+pdm run release
+```
+
+GitHub action will create the release and upload the distributions to PyPI.
+
+Read more options about version bumping by `pdm run release --help`.
