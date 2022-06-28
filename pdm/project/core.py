@@ -22,7 +22,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository, PyPIRepository
-from pdm.models.requirements import Requirement, parse_requirement
+from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
 from pdm.project.metadata import MutableMetadata as Metadata
@@ -415,9 +415,10 @@ class Project:
         provider_class = (
             ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         )
+        tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
         return provider_class(
             locked_repository.all_candidates,
-            tracked_names or (),
+            tracked_names,
             repository,
             allow_prereleases,
             overrides,

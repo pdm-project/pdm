@@ -192,3 +192,17 @@ def test_update_existing_package_with_prerelease(project, working_set):
     )
     assert project.meta.dependencies[0] == "urllib3<2,>=1.23b0"
     assert working_set["urllib3"].version == "1.23b0"
+
+
+def test_update_package_with_extras(project, repository, working_set):
+    repository.add_candidate("foo", "0.1")
+    foo_deps = ["urllib3; extra == 'req'"]
+    repository.add_dependencies("foo", "0.1", foo_deps)
+    actions.do_add(project, packages=["foo[req]"])
+    assert working_set["foo"].version == "0.1"
+
+    repository.add_candidate("foo", "0.2")
+    repository.add_dependencies("foo", "0.2", foo_deps)
+    actions.do_update(project)
+    assert working_set["foo"].version == "0.2"
+    assert project.locked_repository.all_candidates["foo"].version == "0.2"
