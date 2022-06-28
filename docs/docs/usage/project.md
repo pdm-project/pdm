@@ -40,36 +40,7 @@ $ pdm build
 - Built pdm_test-0.0.0-py3-none-any.whl
 ```
 
-The artifacts can then be uploaded to PyPI by [twine](https://pypi.org/project/twine) or using the
-[pdm-publish](https://github.com/branchvincent/pdm-publish) plugin. Available options can be found by
-typing `pdm build --help`.
-
-??? note "Looking for publish support?"
-    If you are looking for `publish` subcommand as poetry, you can refer to the [pdm-publish](https://github.com/branchvincent/pdm-publish) plugin.
-    Indeed, most of the time, publishing should be handled by CI/CD pipelines.
-
-## Show the current Python environment
-
-```console
-$ pdm info
-Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
-Project Root:       D:/Workspace/pdm
-                                                                                                                                   [10:42]
-$ pdm info --env
-{
-  "implementation_name": "cpython",
-  "implementation_version": "3.8.0",
-  "os_name": "nt",
-  "platform_machine": "AMD64",
-  "platform_release": "10",
-  "platform_system": "Windows",
-  "platform_version": "10.0.18362",
-  "python_full_version": "3.8.0",
-  "platform_python_implementaiton": "CPython",
-  "python_version": "3.8",
-  "sys_platform": "win32"
-}
-```
+The artifacts will be available at `dist/` and able to upload to PyPI.
 
 ## Configure the project
 
@@ -183,6 +154,29 @@ The caches are located under `$(pdm config cache_dir)/packages`. One can view th
 
 !!! note
     Only the installation of _named requirements_ resolved from PyPI can be cached.
+
+## Show the current Python environment
+
+```console
+$ pdm info
+Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
+Project Root:       D:/Workspace/pdm
+                                                                                                                                   [10:42]
+$ pdm info --env
+{
+  "implementation_name": "cpython",
+  "implementation_version": "3.8.0",
+  "os_name": "nt",
+  "platform_machine": "AMD64",
+  "platform_release": "10",
+  "platform_system": "Windows",
+  "platform_version": "10.0.18362",
+  "python_full_version": "3.8.0",
+  "platform_python_implementaiton": "CPython",
+  "python_version": "3.8",
+  "sys_platform": "win32"
+}
+```
 
 ## Manage global project
 

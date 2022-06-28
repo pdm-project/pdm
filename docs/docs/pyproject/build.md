@@ -3,13 +3,16 @@
 `pdm` uses the [PEP 517](https://www.python.org/dev/peps/pep-0517/) to build the package.
 A build backend is what drives the build system to build source distributions and wheels from arbitrary source trees.
 
-`pdm` also ships with its own build backend, [`pdm-pep517`](https://pypi.org/project/pdm-pep517/). Besides the [PEP 621 project meta](pep621.md), it also reads some additional configurations to control the build behavior. To use it, include the following in your `pyproject.toml`(It will be done automatically if you use the [`pdm init`](../usage/cli_reference.md#exec-0--init) or [`pdm import`](../usage/cli_reference.md#exec-0--import) to create the file):
+`pdm` also ships with its own build backend, [`pdm-pep517`](https://pypi.org/project/pdm-pep517/). Besides the [PEP 621 project meta](pep621.md), it reads additional configurations stored in `[tool.pdm.build]` table to control the build behavior. To use it, include the following in your `pyproject.toml`(It will be done automatically if you use the [`pdm init`](../usage/cli_reference.md#exec-0--init) or [`pdm import`](../usage/cli_reference.md#exec-0--import) to create the file):
 
 ```toml
 [build-system]
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
 ```
+
+!!! NOTE
+    The following part of this documentation assumes you are using the `pdm-pep517` backend as mentioned above. Different backends will have different configurations.
 
 ## Dynamic versioning
 
@@ -80,7 +83,7 @@ For source distributions, the version will be *frozen* and converted to a static
 
 ## Include and exclude files
 
-To include extra files and/or exclude files from the distribution, given the paths in `includes` and `excludes` configuration, as glob patterns:
+To include extra files and/or exclude files from the distribution, give the paths in `includes` and `excludes` configuration, as glob patterns:
 
 ```toml
 [tool.pdm.build]
@@ -93,7 +96,7 @@ excludes = [
 ]
 ```
 
-In case you may want some files to be included in sdist only, use the `source-includes` field:
+In case you may want some files to be included in source distributions only, use the `source-includes` field:
 
 ```toml
 [tool.pdm.build]
@@ -236,11 +239,11 @@ So you would need to change to `path` in that case.
 
 ## Use other PEP 517 backends
 
-Apart from `pdm-pep517`, `pdm` plays well with any PEP 517 build backends that comply with PEP 621 specification. At the time of writing, [`flit`](https://pypi.org/project/flit)(backend: `flit-core`) and [`hatch`](https://pypi.org/project/hatch)(backend: `hatchling`) are working well with PEP 621 and [`setuptools`](https://pypi.org/project/setuptools) has experimental support. To use one of them, you can specify the backend in the `pyproject.toml`:
+Apart from `pdm-pep517`, `pdm` plays well with any PEP 517 build backends that read PEP 621 metadata. At the time of writing, [`flit`](https://pypi.org/project/flit)(backend: `flit-core`) and [`hatch`](https://pypi.org/project/hatch)(backend: `hatchling`) are working well with PEP 621 and [`setuptools`](https://pypi.org/project/setuptools) has experimental support. To use one of them, you can specify the backend in the `pyproject.toml`:
 
 ```toml
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 ```
 
