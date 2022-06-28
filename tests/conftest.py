@@ -7,14 +7,14 @@ import os
 import shutil
 import sys
 from contextlib import contextmanager
-from io import BytesIO
+from dataclasses import dataclass
+from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 from urllib.parse import unquote, urlparse
 
 import pytest
 import requests
-from click.testing import CliRunner
 from packaging.version import parse as parse_version
 from unearth.vcs import Git, vcs_support
 
@@ -33,6 +33,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.session import PDMSession
 from pdm.project.config import Config
+from pdm.project.core import Project
 from pdm.utils import normalize_name, path_to_url
 from tests import FIXTURES
 
@@ -380,15 +381,61 @@ def is_dev(request):
     return request.param
 
 
-@pytest.fixture()
-def invoke(core):
-    runner = CliRunner(mix_stderr=False)
+@dataclass
+class RunResult:
+    exit_code: int
+    stdout: str
+    stderr: str
+    exception: Optional[Exception] = None
 
-    def caller(args, strict=False, **kwargs):
+    @property
+    def output(self) -> str:
+        return self.stdout
+
+    @property
+    def outputs(self) -> str:
+        return self.stdout + self.stderr
+
+    def print(self):
+        print("# exit code:", self.exit_code)
+        print("# stdout:", self.stdout, sep="\n")
+        print("# stderr:", self.stderr, sep="\n")
+
+
+@pytest.fixture()
+def invoke(core, monkeypatch):
+    def caller(
+        args,
+        strict: bool = False,
+        input: Optional[str] = None,
+        obj: Optional[Project] = None,
+        env: Optional[Mapping[str, str]] = None,
+        **kwargs,
+    ):
         __tracebackhide__ = True
-        result = runner.invoke(
-            core, args, catch_exceptions=not strict, prog_name="pdm", **kwargs
-        )
+
+        stdin = StringIO(input)
+        stdout = StringIO()
+        stderr = StringIO()
+        exit_code = 0
+        exception = None
+
+        with monkeypatch.context() as m:
+            m.setattr("sys.stdin", stdin)
+            m.setattr("sys.stdout", stdout)
+            m.setattr("sys.stderr", stderr)
+            for key, value in (env or {}).items():
+                m.setenv(key, value)
+            try:
+                core.main(args, "pdm", obj=obj, **kwargs)
+            except SystemExit as e:
+                exit_code = e.code
+            except Exception as e:
+                exit_code = 1
+                exception = e
+
+        result = RunResult(exit_code, stdout.getvalue(), stderr.getvalue(), exception)
+
         if strict and result.exit_code != 0:
             raise RuntimeError(
                 f"Call command {args} failed({result.exit_code}): {result.stderr}"
