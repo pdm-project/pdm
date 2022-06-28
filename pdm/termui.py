@@ -5,6 +5,8 @@ import contextlib
 import enum
 import logging
 import os
+import warnings
+from functools import partial
 from tempfile import mktemp
 from typing import Any, Iterator, Sequence, Type
 
@@ -46,6 +48,7 @@ def style(
     text: str,
     *args: str,
     style: str = None,
+    deprecated: bool = False,
     **kwargs: Any,
 ) -> str:
     """return text with ansi codes using rich console
@@ -54,7 +57,13 @@ def style(
     :param style: rich style to apply to whole string
     :return: string containing ansi codes
     """
-
+    if deprecated:  # pragma: no cover
+        warnings.warn(
+            "calling color function from termui is deprecated, please use "
+            "rich's console markup",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     with _console.capture() as capture:
         _console.print(text, *args, end="", style=style, **kwargs)
     return capture.get()
@@ -62,6 +71,15 @@ def style(
 
 def confirm(*args: str, **kwargs: Any) -> str:
     return Confirm.ask(*args, **kwargs)
+
+
+# For backward-compatiblity
+green = partial(style, style="green", deprecated=True)
+red = partial(style, style="red", deprecated=True)
+yellow = partial(style, style="yellow", deprecated=True)
+blue = partial(style, style="blue", deprecated=True)
+cyan = partial(style, style="cyan", deprecated=True)
+bold = partial(style, style="bold", deprecated=True)
 
 
 def ask(
