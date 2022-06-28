@@ -141,7 +141,24 @@ class Core:
         **extra: Any,
     ) -> None:
         """The main entry function"""
-        options = self.parser.parse_args(args or None)
+        # Ensure same behavior while testing and using the CLI
+        args = args or sys.argv[1:]
+        # Keep it for after project parsing to check if its a defined script
+        root_script = None
+        try:
+            options = self.parser.parse_args(args)
+        except SystemExit as e:
+            # Failed to parse, try to give all to `run` command as shortcut
+            # and keep to root script (first non-dashed param) to check existence
+            # as soon as the project is parsed
+            root_script = next((arg for arg in args if not arg.startswith("-")), None)
+            if not root_script:
+                raise
+            try:
+                options = self.parser.parse_args(["run", *args])
+            except SystemExit:
+                raise e
+
         self.ui.set_verbosity(options.verbose)
         if options.ignore_python:
             os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
@@ -152,10 +169,13 @@ class Core:
 
         self.ensure_project(options, obj)
 
+        if root_script and root_script not in options.project.scripts:
+            self.parser.error(f"Command unknown: {root_script}")
+
         try:
             f = options.handler
         except AttributeError:
-            self.parser.print_help()
+            self.parser.print_help(sys.stderr)
             sys.exit(1)
         else:
             try:

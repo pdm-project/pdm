@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from pdm import termui
+from pdm.cli import actions
 from pdm.cli.actions import PEP582_PATH
 from pdm.utils import cd
 
@@ -549,3 +550,52 @@ def test_composite_can_have_commands(project, invoke, capfd):
     out, _ = capfd.readouterr()
     assert "Task CALLED" in out
     assert "Command CALLED" in out
+
+
+def test_run_shortcut(project, invoke, capfd):
+    project.tool_settings["scripts"] = {
+        "test": "echo 'Everything is fine'",
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    result = invoke(["test"], obj=project, strict=True)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert "Everything is fine" in out
+
+
+def test_run_shortcuts_dont_override_commands(project, invoke, capfd, mocker):
+    do_lock = mocker.patch.object(actions, "do_lock")
+    do_sync = mocker.patch.object(actions, "do_sync")
+    project.tool_settings["scripts"] = {
+        "install": "echo 'Should not run'",
+    }
+    project.write_pyproject()
+    capfd.readouterr()
+    result = invoke(["install"], obj=project, strict=True)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert "Should not run" not in out
+    do_lock.assert_called_once()
+    do_sync.assert_called_once()
+
+
+def test_run_shortcut_fail_with_usage_if_script_not_found(project, invoke):
+    result = invoke(["whatever"], obj=project)
+    assert result.exit_code != 0
+    assert "Command unknown: whatever" in result.stderr
+    assert "Usage" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        pytest.param([], id="no args"),
+        pytest.param(["-ko"], id="unknown param"),
+        pytest.param(["pip", "--version"], id="not an user script"),
+    ],
+)
+def test_empty_positionnal_args_still_display_usage(project, invoke, args):
+    result = invoke(args, obj=project)
+    assert result.exit_code != 0
+    assert "Usage" in result.stderr

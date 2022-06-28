@@ -58,10 +58,8 @@ nav:
       - dev/benchmark.md
 
 markdown_extensions:
-  - admonition
   - pymdownx.highlight:
       linenums: true
-  - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
