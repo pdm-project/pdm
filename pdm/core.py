@@ -23,9 +23,9 @@ from pdm.__version__ import __version__
 from pdm.cli.actions import check_update, print_pep582_command
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
-from pdm.cli.utils import PdmFormatter
+from pdm.cli.utils import ErrorArgumentParser, PdmFormatter
 from pdm.compat import importlib_metadata
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
@@ -55,7 +55,7 @@ class Core:
         self.load_plugins()
 
     def init_parser(self) -> None:
-        self.parser = argparse.ArgumentParser(
+        self.parser = ErrorArgumentParser(
             prog="pdm",
             description=__doc__,
             formatter_class=PdmFormatter,
@@ -81,7 +81,9 @@ class Core:
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
-        self.subparsers = self.parser.add_subparsers()
+        self.subparsers = self.parser.add_subparsers(
+            parser_class=argparse.ArgumentParser
+        )
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:
@@ -147,17 +149,17 @@ class Core:
         root_script = None
         try:
             options = self.parser.parse_args(args)
-        except SystemExit as e:
+        except PdmArgumentError as e:
             # Failed to parse, try to give all to `run` command as shortcut
             # and keep to root script (first non-dashed param) to check existence
             # as soon as the project is parsed
             root_script = next((arg for arg in args if not arg.startswith("-")), None)
             if not root_script:
-                raise
+                self.parser.error(str(e.__cause__))
             try:
                 options = self.parser.parse_args(["run", *args])
-            except SystemExit:
-                raise e
+            except PdmArgumentError as e:
+                self.parser.error(str(e.__cause__))
 
         self.ui.set_verbosity(options.verbose)
         if options.ignore_python:

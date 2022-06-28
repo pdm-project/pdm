@@ -27,7 +27,7 @@ from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
 from pdm import termui
-from pdm.exceptions import PdmUsageError, ProjectError
+from pdm.exceptions import PdmArgumentError, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.repositories import BaseRepository
@@ -47,6 +47,23 @@ if TYPE_CHECKING:
 
     from pdm.compat import Distribution
     from pdm.models.candidates import Candidate
+
+
+class ErrorArgumentParser(argparse.ArgumentParser):
+    """A subclass of argparse.ArgumentParser that raises
+    parsing error rather than exiting.
+
+    This does the same as passing exit_on_error=False on Python 3.9+
+    """
+
+    def _parse_known_args(
+        self, arg_strings: list[str], namespace: argparse.Namespace
+    ) -> tuple[argparse.Namespace, list[str]]:
+        try:
+            return super()._parse_known_args(arg_strings, namespace)
+        except argparse.ArgumentError as e:
+            # We raise a dedicated error to avoid being caught by the caller
+            raise PdmArgumentError(e) from e
 
 
 class PdmFormatter(argparse.RawDescriptionHelpFormatter):
