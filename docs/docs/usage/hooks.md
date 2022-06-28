@@ -28,7 +28,7 @@ They trigger the following hooks:
 
 - [`post_init`][pdm.signals.post_init]
 
-``` mermaid
+```mermaid
 flowchart LR
   subgraph pdm-init [pdm init]
     direction LR
@@ -62,8 +62,7 @@ They trigger the following hooks:
 - [`pre_lock`][pdm.signals.pre_lock]
 - [`post_lock`][pdm.signals.post_lock]
 
-
-``` mermaid
+```mermaid
 flowchart LR
   subgraph pdm-install [pdm install]
     direction LR
@@ -86,6 +85,21 @@ flowchart LR
   end
 ```
 
+### Switching Python version
+
+This is a special case in dependency management:
+you can switch the current Python version using [`pdm use`](cli_reference.md#exec-0--use) 
+and it will emit the [`post_use`][pdm.signals.post_use] signal with the new Python interpreter.
+
+```mermaid
+flowchart LR
+  subgraph pdm-use [pdm use]
+    direction LR
+    post-use{{Emit post_use}}
+    use --> post-use
+  end 
+```
+
 ## Publication
 
 As soon as you are ready to publish you package/app/libray, you will require the publication tasks:
@@ -106,7 +120,7 @@ They trigger the following hooks:
 - [`post_build`][pdm.signals.post_build]
 
 
-``` mermaid
+```mermaid
 flowchart LR
   subgraph pdm-publish [pdm publish]
     direction LR
@@ -155,7 +169,7 @@ composite = {composite: ["test"]}
 
 a `pdm run test` will have the following lifecycle:
 
-``` mermaid
+```mermaid
 flowchart LR
   subgraph pdm-run-test [pdm run test]
     direction LR
@@ -178,7 +192,7 @@ flowchart LR
 
 while `pdm run composite` will have the following:
 
-``` mermaid
+```mermaid
 flowchart LR
   subgraph pdm-run-composite [pdm run composite]
     direction LR
@@ -222,7 +236,7 @@ but it will be overridden as soon as the `--skip` parameter is provided.
 
 Given the previous script block, running `pdm run --skip=:pre,post_test composite` will result in the following reduced lifecycle:
 
-``` mermaid
+```mermaid
 flowchart LR
   subgraph pdm-run-composite [pdm run composite]
     direction LR
