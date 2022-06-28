@@ -10,6 +10,10 @@ class PdmException(Exception):
     pass
 
 
+class PdmArgumentError(PdmException):
+    pass
+
+
 class PdmUsageError(PdmException):
     pass
 
