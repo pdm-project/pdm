@@ -56,7 +56,6 @@ pdm add ./first-1.0.0-py2.py3-none-any.whl
 
 The paths MUST start with a `.`, otherwise it will be recognized as a normal named requirement.
 
-
 ### VCS dependencies
 
 You can also install from a git repository url or other version control systems. The following are supported:
@@ -274,9 +273,6 @@ You can specify a PyPI mirror URL by following commands:
 pdm config pypi.url https://test.pypi.org/simple
 ```
 
-By default, PDM will read the pip's configuration files to decide the PyPI URL, and fallback
-to `https://pypi.org/simple` if none is found.
-
 ## Allow prerelease versions to be installed
 
 Include the following setting in `pyproject.toml` to enable:
@@ -326,6 +322,7 @@ asgiref = "3.2.10"  # exact version
 urllib3 = ">=1.26.2"  # version range
 pytz = "file:///${PROJECT_ROOT}/pytz-2020.9-py3-none-any.whl"  # absolute URL
 ```
+
 Each entry of that table is a package name with the wanted version.
 In this example, PDM will resolve the above packages into the given versions no matter whether there is any other resolution available.
 
