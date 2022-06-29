@@ -1,3 +1,50 @@
+Release v2.0.0a1 (2022-06-29)
+-----------------------------
+
+### Breaking Changes
+
+- Editable dependencies in the `[project]` table is not allowed, according to PEP 621. They are however still allowed in the `[tool.pdm.dev-dependencies]` table. PDM will emit a warning when it finds editable dependencies in the `[project]` table, or will abort when you try to add them into the `[project]` table via CLI. [#1083](https://github.com/pdm-project/pdm/issues/1083)
+- Now the paths to the global configurations and global project are calculated according to platform standards. [#1161](https://github.com/pdm-project/pdm/issues/1161)
+
+### Features & Improvements
+
+- Add support for importing from a `setup.py` project. [#1062](https://github.com/pdm-project/pdm/issues/1062)
+- Switch the UI backend to `rich`. [#1091](https://github.com/pdm-project/pdm/issues/1091)
+- Improved the terminal UI and logging. Disable live progress under verbose mode. The logger levels can be controlled by the `-v` option. [#1096](https://github.com/pdm-project/pdm/issues/1096)
+- Use `unearth` to replace `pip`'s `PackageFinder` and related data models. PDM no longer relies on `pip` internals, which are unstable across updates. [#1096](https://github.com/pdm-project/pdm/issues/1096)
+- Lazily load the candidates returned by `find_matches()` to speed up the resolution. [#1098](https://github.com/pdm-project/pdm/issues/1098)
+- Add a new command `publish` to PDM since it is required for so many people and it will make the workflow easier. [#1107](https://github.com/pdm-project/pdm/issues/1107)
+- Add a `composite` script kind allowing to run multiple defined scripts in a single command as well as reusing scripts but overriding `env` or `env_file`. [#1117](https://github.com/pdm-project/pdm/issues/1117)
+- Add a new execution option `--skip` to opt-out some scripts and hooks from any execution (both scripts and PDM commands). [#1127](https://github.com/pdm-project/pdm/issues/1127)
+- Add the `pre/post_publish`, `pre/post_run` and `pre/post_script` hooks as well as an extensive lifecycle and hooks documentation. [#1147](https://github.com/pdm-project/pdm/issues/1147)
+- Shorter scripts listing, especially for multilines and composite scripts. [#1151](https://github.com/pdm-project/pdm/issues/1151)
+- Build configurations have been moved to `[tool.pdm.build]`, according to `pdm-pep517 1.0.0`. At the same time, warnings will be shown against old usages. [#1153](https://github.com/pdm-project/pdm/issues/1153)
+- Improve the lock speed by parallelizing the hash fetching. [#1154](https://github.com/pdm-project/pdm/issues/1154)
+- Retrieve the candidate metadata by parsing the `pyproject.toml` rather than building it. [#1156](https://github.com/pdm-project/pdm/issues/1156)
+- Update the format converters to support the new `[tool.pdm.build]` table. [#1157](https://github.com/pdm-project/pdm/issues/1157)
+- Scripts are now available as root command if they don't conflict with any builtin or plugin-contributed command. [#1159](https://github.com/pdm-project/pdm/issues/1159)
+- Add a `post_use` hook triggered after succesfully switching Python version. [#1163](https://github.com/pdm-project/pdm/issues/1163)
+- Add project configuration `respect-source-order` under `[tool.pdm.resolution]` to respect the source order in the `pyproject.toml` file. Packages will be returned by source earlier in the order or later ones if not found. [#593](https://github.com/pdm-project/pdm/issues/593)
+
+### Bug Fixes
+
+- Fix a bug that candidates with local part in the version can't be found and installed correctly. [#1093](https://github.com/pdm-project/pdm/issues/1093)
+
+### Dependencies
+
+- Prefer `tomllib` on Python 3.11 [#1072](https://github.com/pdm-project/pdm/issues/1072)
+- Drop the vendored libraries `click`, `halo`, `colorama` and `log_symbols`. PDM has no vendors now. [#1091](https://github.com/pdm-project/pdm/issues/1091)
+- Update dependency version `pdm-pep517` to `1.0.0`. [#1153](https://github.com/pdm-project/pdm/issues/1153)
+
+### Removals and Deprecations
+
+- PDM legacy metadata format(from `pdm 0.x`) is no longer supported. [#1157](https://github.com/pdm-project/pdm/issues/1157)
+
+### Miscellany
+
+- Provide a `tox.ini` file for easier local testing against all Python versions. [#1160](https://github.com/pdm-project/pdm/issues/1160)
+
+
 Release v1.15.4 (2022-06-28)
 ----------------------------
 
