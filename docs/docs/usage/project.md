@@ -81,7 +81,7 @@ The configuration files are searched in the following order:
 where `<CONFIG_ROOT>` is:
 
 - `$XDG_CONFIG_HOME/pdm` (`~/.config/pdm` in most cases) on Linux as defined by [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
-- `~/Library/Preferences/pdm` on MacOS as defined by [Appli File System Basics](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html)
+- `~/Library/Preferences/pdm` on MacOS as defined by [Apple File System Basics](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html)
 - `%USERPROFILE%\AppData\Local\pdm` on Windows as defined in [Known folders](https://docs.microsoft.com/en-us/windows/win32/shell/known-folders)
 
 If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROOT>/global-project/.pdm.toml`.
@@ -273,7 +273,7 @@ PDM provides a convenient command group to manage the cache, there are four kind
 1. `http/` stores the HTTP response content.
 1. `metadata/` stores package metadata retrieved by the resolver.
 1. `hashes/` stores the file hashes fetched from the package index or calculated locally.
-1. `packages/` The centrialized repository for installed wheels.
+1. `packages/` The centralized repository for installed wheels.
 
 See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
 Find the usage by the `--help` option of each command.
