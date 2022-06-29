@@ -126,6 +126,11 @@ template = "news/towncrier_template.md"
 underlines = "-~^"
 
   [[tool.towncrier.type]]
+  directory = "break"
+  name = "Breaking Changes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
   directory = "feature"
   name = "Features & Improvements"
   showcontent = true
@@ -137,7 +142,7 @@ underlines = "-~^"
 
   [[tool.towncrier.type]]
   directory = "doc"
-  name = "Improved Documentation"
+  name = "Documentation"
   showcontent = true
 
   [[tool.towncrier.type]]
@@ -153,11 +158,6 @@ underlines = "-~^"
   [[tool.towncrier.type]]
   directory = "misc"
   name = "Miscellany"
-  showcontent = true
-
-  [[tool.towncrier.type]]
-  directory = "refactor"
-  name = "Refactor"
   showcontent = true
 
 [build-system]
