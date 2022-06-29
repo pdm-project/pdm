@@ -251,7 +251,7 @@ or to need all tasks from a composite tasks except one.
 For those use cases, there is a finer grained `--skip` parameter
 accepting a list of tasks or hooks name to exclude.
 
-```console
+```bash
 pdm run --skip pre_task1,task2 my-composite
 ```
 

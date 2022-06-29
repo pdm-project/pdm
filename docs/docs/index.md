@@ -102,7 +102,7 @@ You can either pass the options after the script or set the env var value.
 
 === "pip"
 
-    ```console
+    ```bash
     pip install --user pdm
     ```
 
@@ -198,12 +198,6 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
     Set-ExecutionPolicy Unrestricted -Scope CurrentUser
     pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
     ```
-
-## Unicode and ANSI supports
-
-PDM provides a fancy terminal UI with the help of ANSI characters and unicode emojis.
-It can turn on/off automatically depending on whether it is supported on your terminal.
-However, if you see any garbled characters, set env var `DISABLE_UNICODE_OUTPUT=1` to turn off it.
 
 ## Use with IDE
 

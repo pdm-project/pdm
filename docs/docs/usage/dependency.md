@@ -5,7 +5,7 @@ The following examples are run on Ubuntu 18.04, a few changes must be done if yo
 
 ## Initialize a project
 
-```console
+```bash
 mkdir pdm-test && cd pdm-test
 pdm init
 ```
@@ -33,7 +33,7 @@ For details of the meaning of each field in `pyproject.toml`, please refer to [P
 
 ## Add dependencies
 
-```console
+```bash
 pdm add requests
 ```
 
@@ -49,7 +49,7 @@ After that, dependencies and sub-dependencies will be resolved properly and inst
 
 Local packages can be added with their paths. The path can be a file or a directory:
 
-```console
+```bash
 pdm add ./sub-package
 pdm add ./first-1.0.0-py2.py3-none-any.whl
 ```
@@ -70,7 +70,7 @@ The URL should be like: `{vcs}+{url}@{rev}`
 
 Examples:
 
-```console
+```bash
 # Install pip repo on tag `22.0`
 pdm add "git+https://github.com/pypa/pip.git@22.0"
 # Provide credentials in the URL
@@ -89,7 +89,7 @@ PDM also supports defining groups of dependencies that are useful for developmen
 e.g. some for testing and others for linting. We usually don't want these dependencies appear in the distribution's metadata
 so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
 
-```console
+```bash
 pdm add -dG test pytest
 ```
 
@@ -109,7 +109,7 @@ For backward-compatibility, if only `-d` or `--dev` is specified, dependencies w
 
 **Local directories** and **VCS dependencies** can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs). If you are familiar with `pip`, it is just like `pip install -e <package>`. **Editable packages are allowed only in development dependencies**:
 
-```console
+```bash
 # A relative path to the directory
 pdm add -e ./sub-package
 # A file URL to a local directory
@@ -137,25 +137,25 @@ One can give `--pre/--prerelease` option to [`pdm add`](cli_reference.md#exec-0-
 
 To update all dependencies in the lock file:
 
-```console
+```bash
 pdm update
 ```
 
 To update the specified package(s):
 
-```console
+```bash
 pdm update requests
 ```
 
 To update multiple groups of dependencies:
 
-```console
+```bash
 pdm update -G security -G http
 ```
 
 To update a given package in the specified group:
 
-```console
+```bash
 pdm update -G security cryptography
 ```
 
@@ -163,7 +163,7 @@ If the group is not given, PDM will search for the requirement in the default de
 
 To update packages in development dependencies:
 
-```console
+```bash
 # Update all default + dev-dependencies
 pdm update -d
 # Update a package in the specified group of dev-dependencies
@@ -176,8 +176,8 @@ Similarly, PDM also provides 2 different behaviors of updating dependencies and 
 which is given by `--update-<strategy>` option:
 
 - `reuse`: Keep all locked dependencies except for those given in the command line (default).
-- `eager`: Try to lock a newer version of the packages in command line and their recursive sub-dependencies
-  and keep other dependencies as they are.
+- `eager`: Try to lock a newer version of the packages in command line and their recursive sub-dependencies and keep other dependencies as they are.
+- `all`: Update all dependencies and sub-dependencies.
 
 ### Update packages to the versions that break the version specifiers
 
@@ -189,7 +189,7 @@ This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm u
 
 To remove existing dependencies from project file and the library directory:
 
-```console
+```bash
 # Remove requests from the default dependencies
 pdm remove requests
 # Remove h11 from the 'web' group of optional-dependencies
@@ -203,7 +203,7 @@ pdm remove -dG test pytest-cov
 There are two similar commands to do this job with a slight difference:
 
 - [`pdm install`](cli_reference.md#exec-0--install) will check the lock file and relock if it mismatches with project file, then install.
-- [`pdm update`](cli_reference.md#exec-0--sync) installs dependencies in the lock file and will error out if it doesn't exist. Besides, [`pdm sync`](cli_reference.md#exec-0--sync) can also remove unneeded packages if `--clean` option is given.
+- [`pdm update`](cli_reference.md#exec-0--update) installs dependencies in the lock file and will error out if it doesn't exist. Besides, [`pdm sync`](cli_reference.md#exec-0--sync) can also remove unneeded packages if `--clean` option is given.
 
 ## Specify the lockfile to use
 
@@ -245,7 +245,7 @@ Besides, if you don't want the root project to be installed, add `--no-self` opt
 
 Similar to `pip list`, you can list all packages installed in the packages directory:
 
-```console
+```bash
 pdm list
 ```
 
@@ -270,7 +270,7 @@ bump2version 1.0.0
 
 You can specify a PyPI mirror URL by following commands:
 
-```console
+```bash
 pdm config pypi.url https://test.pypi.org/simple
 ```
 

@@ -32,7 +32,7 @@ Note that if your project is an application(without `name` metadata), the above 
 
 ## Build distribution artifacts
 
-```console
+```bash
 $ pdm build
 - Building sdist...
 - Built pdm-test-0.0.0.tar.gz
@@ -49,25 +49,25 @@ show configurations.
 
 Show the current configurations:
 
-```console
+```bash
 pdm config
 ```
 
 Get one single configuration:
 
-```console
+```bash
 pdm config pypi.url
 ```
 
 Change a configuration value and store in home configuration:
 
-```console
+```bash
 pdm config pypi.url "https://test.pypi.org/simple"
 ```
 
 By default, the configuration are changed globally, if you want to make the config seen by this project only, add a `--local` flag:
 
-```console
+```bash
 pdm config --local pypi.url "https://test.pypi.org/simple"
 ```
 
@@ -157,7 +157,7 @@ The caches are located under `$(pdm config cache_dir)/packages`. One can view th
 
 ## Show the current Python environment
 
-```console
+```bash
 $ pdm info
 Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
 Project Root:       D:/Workspace/pdm
@@ -231,7 +231,7 @@ Also, when you are executing [`pdm init`](cli_reference.md#exec-0--init) or [`pd
 You can also export [`pdm lock`](cli_reference.md#exec-0--lock) to other formats, to ease the CI flow or image building process. Currently,
 only `requirements.txt` and `setup.py` format is supported:
 
-```console
+```bash
 pdm export -o requirements.txt
 pdm export -f setuppy -o setup.py
 ```
