@@ -29,7 +29,7 @@ dependencies = [
     "requests-toolbelt",
 ]
 name = "pdm"
-description = "Python Development Master"
+description = "A modern Python package and dependency manager supporting the latest PEP standards"
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
