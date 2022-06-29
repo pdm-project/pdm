@@ -1,8 +1,8 @@
 <div align="center">
 
-# PDM - Python Development Master
+# PDM
 
-一个现代的 Python 包管理器，支持 [PEP 582]。[English version README](README.md)
+一个现代的 Python 包管理器，支持 PEP 最新标准。[English version README](README.md)
 
 ![PDM logo](https://raw.githubusercontents.com/pdm-project/pdm/main/docs/docs/assets/logo_big.png)
 
@@ -47,6 +47,7 @@ foo
 - 兼容 [PEP 517] 的构建后端，用于构建发布包(源码格式与 wheel 格式)
 - 灵活且强大的插件系统
 - [PEP 621] 元数据格式
+- 功能强大的用户脚本
 - 像 [pnpm] 一样的中心化安装缓存，节省磁盘空间
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517

@@ -1,8 +1,9 @@
 <div align="center">
 
-# PDM - Python Development Master
+# PDM
 
-A modern Python package manager with [PEP 582] support. [中文版本说明](README_zh.md)
+A modern Python package and dependency manager supporting the latest PEP standards.
+[中文版本说明](README_zh.md)
 
 ![PDM logo](https://raw.githubusercontent.com/pdm-project/pdm/main/docs/docs/assets/logo_big.png)
 
@@ -46,11 +47,12 @@ Read more about the specification [here](https://www.python.org/dev/peps/pep-058
 ## Highlights of features
 
 - [PEP 582] local package installer and runner, no virtualenv involved at all.
-- Simple and relatively fast dependency resolver, mainly for large binary distributions.
+- Simple and fast dependency resolver, mainly for large binary distributions.
 - A [PEP 517] build backend.
-- A flexible yet powerful plug-in system.
-- [PEP 621] project metadata format.
-- Opted-in centralized installation cache like [pnpm].
+- [PEP 621] project metadata.
+- Flexible and powerful plug-in system.
+- Versatile user scripts.
+- Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
 [pep 582]: https://www.python.org/dev/peps/pep-0582

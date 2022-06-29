@@ -100,7 +100,7 @@ Running benchmark: Poetry version 1.1.12
               Install dependencies: 17.82s
        Add dependencies with cache: 43.90s
     Add dependencies without cache: 37.24s
-Running benchmark: Python Development Master (PDM), version 1.11.2
+Running benchmark: PDM, version 1.11.2
    Lock dependencies without cache: 27.56s
       Lock dependencies with cache: 21.91s
               Install dependencies: 12.16s

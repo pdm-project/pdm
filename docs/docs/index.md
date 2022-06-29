@@ -4,21 +4,25 @@
 
 # Introduction
 
-PDM is a modern Python package manager with [PEP 582] support. It installs and manages packages
+PDM, as described, is a modern Python package and dependency manager supporting the latest PEP standards. But it is more than a package manager. It boosts your development workflow in various aspects. The most significant benefit is it installs and manages packages
 in a similar way to `npm` that doesn't need to create a virtualenv at all!
 
 <script id="asciicast-jnifN30pjfXbO9We2KqOdXEhB" src="https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.js" async></script>
 
-[pep 582]: https://www.python.org/dev/peps/pep-0582/
-
 ## Feature highlights
 
-- PEP 582 local package installer and runner, no virtualenv involved at all.
-- Simple and relatively fast dependency resolver, mainly for large binary distributions.
-- A PEP 517 build backend.
-- PEP 621 project metadata.
-- Flexible yet powerful plug-in system.
-- Opted-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
+- [PEP 582] local package installer and runner, no virtualenv involved at all.
+- Simple and fast dependency resolver, mainly for large binary distributions.
+- A [PEP 517] build backend.
+- [PEP 621] project metadata.
+- Flexible and powerful plug-in system.
+- Versatile user scripts.
+- Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
+
+[pep 517]: https://www.python.org/dev/peps/pep-0517
+[pep 582]: https://www.python.org/dev/peps/pep-0582
+[pep 621]: https://www.python.org/dev/peps/pep-0621
+[pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
 ## Installation
 
