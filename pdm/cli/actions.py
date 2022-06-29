@@ -627,10 +627,10 @@ def do_use(
 
     if selected_python is None:
         found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
-        matching_interperters = list(filter(version_matcher, found_interpreters))
+        matching_interpreters = list(filter(version_matcher, found_interpreters))
         if not found_interpreters:
             raise NoPythonVersion("Python interpreter is not found on the system.")
-        if not matching_interperters:
+        if not matching_interpreters:
             project.core.ui.echo("Interpreters found but not matching:", err=True)
             for py in found_interpreters:
                 project.core.ui.echo(f"  - {py.executable} ({py.identifier})", err=True)
@@ -638,11 +638,11 @@ def do_use(
                 "No python is found meeting the requirement "
                 f"[green]python {str(project.python_requires)}[/]"
             )
-        if first or len(matching_interperters) == 1:
-            selected_python = matching_interperters[0]
+        if first or len(matching_interpreters) == 1:
+            selected_python = matching_interpreters[0]
         else:
             project.core.ui.echo("Please enter the Python interpreter to use")
-            for i, py_version in enumerate(matching_interperters):
+            for i, py_version in enumerate(matching_interpreters):
                 project.core.ui.echo(
                     f"{i}. [green]{str(py_version.executable)}[/] "
                     f"({py_version.identifier})"
@@ -651,10 +651,10 @@ def do_use(
                 "Please select",
                 default="0",
                 prompt_type=int,
-                choices=[str(i) for i in range(len(matching_interperters))],
+                choices=[str(i) for i in range(len(matching_interpreters))],
                 show_choices=False,
             )
-            selected_python = matching_interperters[int(selection)]
+            selected_python = matching_interpreters[int(selection)]
         if python:
             use_cache.set(python, selected_python.path.as_posix())
 
