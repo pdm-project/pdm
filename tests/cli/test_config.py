@@ -87,7 +87,7 @@ def test_deprecated_config_name(project, invoke):
 
 @pytest.mark.deprecated
 @pytest.mark.usefixtures("project")
-def test_rename_deprected_config(tmp_path, invoke):
+def test_rename_deprecated_config(tmp_path, invoke):
     tmp_path.joinpath(".pdm.toml").write_text("use_venv = true\n")
     with cd(tmp_path):
         result = invoke(["config"])
@@ -144,7 +144,7 @@ def test_repository_config_key_short(project):
         del project.global_config["repository"]
 
 
-def test_repostory_overwrite_default(project):
+def test_repository_overwrite_default(project):
     project.global_config["repository.pypi.username"] = "foo"
     project.global_config["repository.pypi.password"] = "bar"
     repository = project.global_config.get_repository_config("pypi")

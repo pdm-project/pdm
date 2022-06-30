@@ -40,7 +40,7 @@ DEFAULT_REPOSITORIES = {
 
 
 def load_config(file_path: Path) -> dict[str, Any]:
-    """Load a nested TOML document into key-value paires
+    """Load a nested TOML document into key-value pairs
 
     E.g. ["python"]["path"] will be loaded as "python.path" key.
     """
@@ -152,7 +152,7 @@ class Config(MutableMapping[str, str]):
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",
             10000,
-            env_var="PDM_RESOLVE_MAX_ROUDNS",
+            env_var="PDM_RESOLVE_MAX_ROUNDS",
             coerce=int,
         ),
         "install.parallel": ConfigItem(
