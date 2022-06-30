@@ -4,6 +4,15 @@ version = "1.10.2"
 summary = "Packrat parser interpreter"
 
 [[package]]
+name = "astunparse"
+version = "1.6.3"
+summary = "An AST unparser for Python"
+dependencies = [
+    "six<2.0,>=1.6.1",
+    "wheel<1.0,>=0.23.0",
+]
+
+[[package]]
 name = "atomicwrites"
 version = "1.4.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -37,7 +46,7 @@ extras = ["filecache"]
 requires_python = ">=3.6"
 summary = "httplib2 caching for requests"
 dependencies = [
-    "cachecontrol>=0.12.11",
+    "cachecontrol==0.12.11",
     "lockfile>=0.9",
 ]
 
@@ -100,8 +109,8 @@ extras = ["toml"]
 requires_python = ">=3.7"
 summary = "Code coverage measurement for Python"
 dependencies = [
-    "coverage>=5.2.1",
-    "tomli; python_version < \"3.11\"",
+    "coverage==6.3.2",
+    "tomli",
 ]
 
 [[package]]
@@ -292,7 +301,7 @@ summary = "Extension pack for Python Markdown."
 
 [[package]]
 name = "mkdocstrings"
-version = "0.19.0"
+version = "0.18.1"
 requires_python = ">=3.7"
 summary = "Automatic documentation from sources, for MkDocs."
 dependencies = [
@@ -301,6 +310,7 @@ dependencies = [
     "MarkupSafe>=1.1",
     "mkdocs-autorefs>=0.3.1",
     "mkdocs>=1.2",
+    "mkdocstrings-python-legacy>=0.2",
     "pymdown-extensions>=6.3",
 ]
 
@@ -315,6 +325,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mkdocstrings-python-legacy"
+version = "0.2.2"
+requires_python = ">=3.7"
+summary = "A legacy Python handler for mkdocstrings."
+dependencies = [
+    "mkdocstrings>=0.18",
+    "pytkdocs>=0.14",
+]
+
+[[package]]
 name = "mkdocstrings"
 version = "0.18.1"
 extras = ["python"]
@@ -322,7 +342,7 @@ requires_python = ">=3.7"
 summary = "Automatic documentation from sources, for MkDocs."
 dependencies = [
     "mkdocstrings-python>=0.5.2",
-    "mkdocstrings>=0.18",
+    "mkdocstrings==0.18.1",
 ]
 
 [[package]]
@@ -491,6 +511,17 @@ name = "python-dotenv"
 version = "0.20.0"
 requires_python = ">=3.5"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
+
+[[package]]
+name = "pytkdocs"
+version = "0.16.1"
+requires_python = ">=3.7"
+summary = "Load Python objects documentation."
+dependencies = [
+    "astunparse>=1.6; python_version < \"3.9\"",
+    "cached-property>=1.5; python_version < \"3.8\"",
+    "typing-extensions>=3.7; python_version < \"3.8\"",
+]
 
 [[package]]
 name = "pyyaml"
@@ -667,6 +698,12 @@ requires_python = ">=3.6"
 summary = "Filesystem events monitoring"
 
 [[package]]
+name = "wheel"
+version = "0.37.1"
+requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+summary = "A built-package format for Python"
+
+[[package]]
 name = "zipp"
 version = "3.8.0"
 requires_python = ">=3.7"
@@ -680,6 +717,10 @@ content_hash = "sha256:849f0d5912f6dc46efa4f7919c586cae25c43c3dc5ff8939a3e7ef0f0
 "arpeggio 1.10.2" = [
     {file = "Arpeggio-1.10.2-py2.py3-none-any.whl", hash = "sha256:fed68a1cb7f529cbd4d725597cc811b7506885fcdef17d4cdcf564341a1e210b"},
     {file = "Arpeggio-1.10.2.tar.gz", hash = "sha256:bfe349f252f82f82d84cb886f1d5081d1a31451e6045275e9f90b65d0daa06f1"},
+]
+"astunparse 1.6.3" = [
+    {file = "astunparse-1.6.3-py2.py3-none-any.whl", hash = "sha256:c2652417f2c8b5bb325c885ae329bdf3f86424075c4fd1a128674bc6fba4b8e8"},
+    {file = "astunparse-1.6.3.tar.gz", hash = "sha256:5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872"},
 ]
 "atomicwrites 1.4.0" = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -895,17 +936,17 @@ content_hash = "sha256:849f0d5912f6dc46efa4f7919c586cae25c43c3dc5ff8939a3e7ef0f0
     {file = "mkdocs-material-extensions-1.0.3.tar.gz", hash = "sha256:bfd24dfdef7b41c312ede42648f9eb83476ea168ec163b613f9abd12bbfddba2"},
     {file = "mkdocs_material_extensions-1.0.3-py3-none-any.whl", hash = "sha256:a82b70e533ce060b2a5d9eb2bc2e1be201cf61f901f93704b4acf6e3d5983a44"},
 ]
-"mkdocstrings 0.19.0" = [
-    {file = "mkdocstrings-0.19.0-py3-none-any.whl", hash = "sha256:3217d510d385c961f69385a670b2677e68e07b5fea4a504d86bf54c006c87c7d"},
-    {file = "mkdocstrings-0.19.0.tar.gz", hash = "sha256:efa34a67bad11229d532d89f6836a8a215937548623b64f3698a1df62e01cc3e"},
+"mkdocstrings 0.18.1" = [
+    {file = "mkdocstrings-0.18.1-py3-none-any.whl", hash = "sha256:4053929356df8cd69ed32eef71d8f676a472ef72980c9ffd4f933ead1debcdad"},
+    {file = "mkdocstrings-0.18.1.tar.gz", hash = "sha256:fb7c91ce7e3ab70488d3fa6c073a4f827cdc319042f682ef8ea95459790d64fc"},
 ]
 "mkdocstrings-python 0.6.6" = [
     {file = "mkdocstrings-python-0.6.6.tar.gz", hash = "sha256:37281696b9f199624ae420e0625b6659b7fdfbea736618bce7fd978682dea3b1"},
     {file = "mkdocstrings_python-0.6.6-py3-none-any.whl", hash = "sha256:c118438d3cb4b14c492a51d109f4e5b27ab06ba19b099d624430dfd904926152"},
 ]
-"mkdocstrings 0.18.1" = [
-    {file = "mkdocstrings-0.18.1-py3-none-any.whl", hash = "sha256:4053929356df8cd69ed32eef71d8f676a472ef72980c9ffd4f933ead1debcdad"},
-    {file = "mkdocstrings-0.18.1.tar.gz", hash = "sha256:fb7c91ce7e3ab70488d3fa6c073a4f827cdc319042f682ef8ea95459790d64fc"},
+"mkdocstrings-python-legacy 0.2.2" = [
+    {file = "mkdocstrings-python-legacy-0.2.2.tar.gz", hash = "sha256:f0e7ec6a19750581b752acb38f6b32fcd1efe006f14f6703125d2c2c9a5c6f02"},
+    {file = "mkdocstrings_python_legacy-0.2.2-py3-none-any.whl", hash = "sha256:379107a3a5b8db9b462efc4493c122efe21e825e3702425dbd404621302a563a"},
 ]
 "msgpack 1.0.3" = [
     {file = "msgpack-1.0.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:96acc674bb9c9be63fa8b6dabc3248fdc575c4adc005c440ad02f87ca7edd079"},
@@ -1018,6 +1059,10 @@ content_hash = "sha256:849f0d5912f6dc46efa4f7919c586cae25c43c3dc5ff8939a3e7ef0f0
 "python-dotenv 0.20.0" = [
     {file = "python-dotenv-0.20.0.tar.gz", hash = "sha256:b7e3b04a59693c42c36f9ab1cc2acc46fa5df8c78e178fc33a8d4cd05c8d498f"},
     {file = "python_dotenv-0.20.0-py3-none-any.whl", hash = "sha256:d92a187be61fe482e4fd675b6d52200e7be63a12b724abbf931a40ce4fa92938"},
+]
+"pytkdocs 0.16.1" = [
+    {file = "pytkdocs-0.16.1-py3-none-any.whl", hash = "sha256:a8c3f46ecef0b92864cc598e9101e9c4cf832ebbf228f50c84aa5dd850aac379"},
+    {file = "pytkdocs-0.16.1.tar.gz", hash = "sha256:e2ccf6dfe9dbbceb09818673f040f1a7c32ed0bffb2d709b06be6453c4026045"},
 ]
 "pyyaml 6.0" = [
     {file = "PyYAML-6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d4db7c7aef085872ef65a8fd7d6d09a14ae91f691dec3e87ee5ee0539d516f53"},
@@ -1155,6 +1200,10 @@ content_hash = "sha256:849f0d5912f6dc46efa4f7919c586cae25c43c3dc5ff8939a3e7ef0f0
     {file = "watchdog-2.1.7-py3-none-win_amd64.whl", hash = "sha256:340b875aecf4b0e6672076a6f05cfce6686935559bb6d34cebedee04126a9566"},
     {file = "watchdog-2.1.7-py3-none-win_ia64.whl", hash = "sha256:351e09b6d9374d5bcb947e6ac47a608ec25b9d70583e9db00b2fcdb97b00b572"},
     {file = "watchdog-2.1.7.tar.gz", hash = "sha256:3fd47815353be9c44eebc94cc28fe26b2b0c5bd889dafc4a5a7cbdf924143480"},
+]
+"wheel 0.37.1" = [
+    {file = "wheel-0.37.1-py2.py3-none-any.whl", hash = "sha256:4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a"},
+    {file = "wheel-0.37.1.tar.gz", hash = "sha256:e9a504e793efbca1b8e0e9cb979a249cf4a0a7b5b8c9e8b65a5e39d49529c1c4"},
 ]
 "zipp 3.8.0" = [
     {file = "zipp-3.8.0-py3-none-any.whl", hash = "sha256:c4f6e5bbf48e74f7a38e7cc5b0480ff42b0ae5178957d564d18932525d5cf099"},
