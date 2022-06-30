@@ -14,7 +14,7 @@ from typing import Any, Sequence, Type, TypeVar, cast
 
 from packaging.specifiers import SpecifierSet
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
-from pip._vendor.pkg_resources import safe_name
+from pip._vendor.pkg_resources import RequirementParseError, safe_name
 
 from pdm._types import RequirementDict
 from pdm.exceptions import ExtrasWarning, RequirementError
@@ -43,8 +43,8 @@ else:
 
 INVALID_MARKER_ERROR = import_pip_vendor_object("packaging.markers", "InvalidMarker")
 INVALID_REQUIREMENT_ERROR = (
+    RequirementParseError,
     *import_pip_vendor_object("packaging.requirements", "InvalidRequirement"),
-    *import_pip_vendor_object("pkg_resources", "RequirementParseError"),
 )
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
