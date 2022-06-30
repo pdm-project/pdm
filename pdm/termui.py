@@ -21,8 +21,8 @@ from pdm._types import Spinner, SpinnerT
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
-unearch_logger = logging.getLogger("unearth")
-unearch_logger.setLevel(logging.DEBUG)
+unearth_logger = logging.getLogger("unearth")
+unearth_logger.setLevel(logging.DEBUG)
 
 
 _console = Console(highlight=False)
@@ -212,19 +212,21 @@ class UI:
         """A context manager that opens a file for logging when verbosity is NORMAL or
         print to the stdout otherwise.
         """
-        file_name = mktemp(".log", f"pdm-{type_}-")
-
+        file_name: str | None = None
         if self.verbosity >= Verbosity.DETAIL:
             handler: logging.Handler = logging.StreamHandler()
             handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
+            file_name = mktemp(".log", f"pdm-{type_}-")
             handler = logging.FileHandler(file_name, encoding="utf-8")
             handler.setLevel(logging.DEBUG)
         handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
         logger.addHandler(handler)
-        unearch_logger.addHandler(handler)
+        unearth_logger.addHandler(handler)
 
         def cleanup() -> None:
+            if not file_name:
+                return
             with contextlib.suppress(OSError):
                 os.unlink(file_name)
 
@@ -243,7 +245,7 @@ class UI:
             atexit.register(cleanup)
         finally:
             logger.removeHandler(handler)
-            unearch_logger.removeHandler(handler)
+            unearth_logger.removeHandler(handler)
 
     def open_spinner(self, title: str) -> Spinner:
         """Open a spinner as a context manager."""
