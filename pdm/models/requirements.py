@@ -41,7 +41,7 @@ if sys.version_info >= (3, 8):
 else:
     from importlib_metadata import Distribution
 
-INVAID_MARKER_ERROR = import_pip_vendor_object("packaging.markers", "InvalidMarker")
+INVALID_MARKER_ERROR = import_pip_vendor_object("packaging.markers", "InvalidMarker")
 INVALID_REQUIREMENT_ERROR = (
     *import_pip_vendor_object("packaging.requirements", "InvalidRequirement"),
     *import_pip_vendor_object("pkg_resources", "RequirementParseError"),
@@ -153,7 +153,7 @@ class Requirement:
         if "marker" in kwargs:
             try:
                 kwargs["marker"] = get_marker(kwargs["marker"])
-            except INVAID_MARKER_ERROR as e:
+            except INVALID_MARKER_ERROR as e:
                 raise RequirementError("Invalid marker: %s" % str(e)) from None
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(
