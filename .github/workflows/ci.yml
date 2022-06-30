@@ -95,7 +95,7 @@ jobs:
           path: ${{ steps.set_variables.outputs.PIP_CACHE }}
           key: ${{ runner.os }}-pip-${{ steps.set_variables.outputs.PY }}
       - name: Cache pypackages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: __pypackages__
           key: pypackages-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
