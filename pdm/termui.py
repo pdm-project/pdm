@@ -12,7 +12,6 @@ from typing import Any, Iterator, Sequence, Type
 
 from rich.box import ROUNDED
 from rich.console import Console
-from rich.logging import RichHandler
 from rich.progress import Progress, ProgressColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
@@ -22,8 +21,8 @@ from pdm._types import Spinner, SpinnerT
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.NullHandler())
-unearch_logger = logging.getLogger("unearth")
-unearch_logger.setLevel(logging.DEBUG)
+unearth_logger = logging.getLogger("unearth")
+unearth_logger.setLevel(logging.DEBUG)
 
 
 _console = Console(highlight=False)
@@ -213,24 +212,23 @@ class UI:
         """A context manager that opens a file for logging when verbosity is NORMAL or
         print to the stdout otherwise.
         """
-        file_name = mktemp(".log", f"pdm-{type_}-")
-
+        file_name: str | None = None
         if self.verbosity >= Verbosity.DETAIL:
-            handler: logging.Handler = RichHandler(
-                console=_err_console, show_time=False, show_level=False, show_path=False
-            )
+            handler: logging.Handler = logging.StreamHandler()
             handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
+            file_name = mktemp(".log", f"pdm-{type_}-")
             handler = logging.FileHandler(file_name, encoding="utf-8")
             handler.setLevel(logging.DEBUG)
         handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
-        logger.handlers[1:] = unearch_logger.handlers[:] = [handler]
+        logger.addHandler(handler)
+        unearth_logger.addHandler(handler)
 
         def cleanup() -> None:
-            try:
+            if not file_name:
+                return
+            with contextlib.suppress(OSError):
                 os.unlink(file_name)
-            except OSError:
-                pass
 
         try:
             yield logger
@@ -246,7 +244,8 @@ class UI:
         else:
             atexit.register(cleanup)
         finally:
-            logger.handlers.remove(handler)
+            logger.removeHandler(handler)
+            unearth_logger.removeHandler(handler)
 
     def open_spinner(self, title: str) -> Spinner:
         """Open a spinner as a context manager."""
