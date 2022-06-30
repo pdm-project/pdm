@@ -128,6 +128,13 @@ class Config(MutableMapping[str, str]):
             coerce=ensure_boolean,
             replace="auto_global",
         ),
+        "global_project.fallback_verbose": ConfigItem(
+            "If True show message when global project is used implicitly",
+            True,
+            True,
+            coerce=ensure_boolean,
+            replace=None,
+        ),
         "global_project.path": ConfigItem(
             "The path to the global project",
             platformdirs.user_config_path("pdm") / "global-project",
