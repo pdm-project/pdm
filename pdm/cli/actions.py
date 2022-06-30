@@ -188,6 +188,7 @@ def do_sync(
     no_editable: bool | Collection[str] = False,
     no_self: bool = False,
     reinstall: bool = False,
+    pure: bool = False,
     hooks: HookManager | None = None,
 ) -> None:
     """Synchronize project"""
@@ -211,6 +212,7 @@ def do_sync(
         install_self=not no_self and "default" in groups and bool(project.name),
         use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
+        pure=pure,
     )
     hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
     handler.synchronize()
@@ -629,7 +631,9 @@ def do_use(
         found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
         matching_interpreters = list(filter(version_matcher, found_interpreters))
         if not found_interpreters:
-            raise NoPythonVersion("Python interpreter is not found on the system.")
+            raise NoPythonVersion(
+                f"No Python interpreter matching [green]{python}[/] is found."
+            )
         if not matching_interpreters:
             project.core.ui.echo("Interpreters found but not matching:", err=True)
             for py in found_interpreters:

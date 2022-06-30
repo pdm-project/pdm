@@ -202,7 +202,8 @@ pdm remove -dG test pytest-cov
 There are two similar commands to do this job with a slight difference:
 
 - [`pdm install`](cli_reference.md#exec-0--install) will check the lock file and relock if it mismatches with project file, then install.
-- [`pdm update`](cli_reference.md#exec-0--update) installs dependencies in the lock file and will error out if it doesn't exist. Besides, [`pdm sync`](cli_reference.md#exec-0--sync) can also remove unneeded packages if `--clean` option is given.
+- [`pdm update`](cli_reference.md#exec-0--update) installs dependencies in the lock file and will error out if it doesn't exist.
+- [`pdm sync`](cli_reference.md#exec-0--sync) can remove unneeded packages not included in the lockfile if `--clean` option is given. When `--pure` is given, only selected packages will be kept.
 
 ## Specify the lockfile to use
 

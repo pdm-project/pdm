@@ -313,7 +313,7 @@ _pdm() {
         '--dry-run[Only prints actions without actually running them]'
         {-r,--reinstall}"[Force reinstall existing dependencies]"
         '--clean[Clean unused packages]'
-        "--no-clean[Don't clean unused packages]"
+        "--pure[Only keep the selected packages]"
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"

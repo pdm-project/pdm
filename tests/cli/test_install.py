@@ -190,3 +190,17 @@ def test_install_check(invoke, project, repository):
     project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
     result = invoke(["install", "--check"], obj=project)
     assert result.exit_code == 1
+
+
+@pytest.mark.usefixtures("repository")
+def test_sync_with_pure_option(project, working_set, invoke):
+    project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
+    project.add_dependencies({"django": parse_requirement("django")}, "web", True)
+    invoke(["install"], obj=project, strict=True)
+    assert all(
+        p in working_set for p in ("requests", "urllib3", "django", "pytz")
+    ), list(working_set)
+    actions.do_sync(project, dev=False, pure=True)
+    assert "requests" in working_set
+    assert "urllib3" in working_set
+    assert "django" not in working_set
