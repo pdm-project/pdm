@@ -4,13 +4,15 @@ import operator
 from functools import reduce
 from typing import Any, List, Optional, Set, Tuple, Union
 
-from pip._vendor.packaging.markers import Marker as PackageMarker
+from packaging.markers import Marker as _Marker
 
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import join_list_with
+from pdm.utils import import_pip_vendor_object, join_list_with
+
+MARKER_TYPES = import_pip_vendor_object("packaging.markers", "Marker")
 
 
-class Marker(PackageMarker):
+class Marker(_Marker):
     """A subclass of Marker that supports union and intersection merging."""
 
     def copy(self) -> "Marker":
@@ -19,7 +21,7 @@ class Marker(PackageMarker):
         return inst
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, PackageMarker):
+        if not isinstance(other, MARKER_TYPES):
             return False
         return str(self) == str(other)
 
@@ -48,7 +50,7 @@ class Marker(PackageMarker):
         return marker, _build_pyspec_from_marker(join_list_with(py_markers, "and"))
 
 
-def get_marker(marker: Union[PackageMarker, Marker, None]) -> Optional[Marker]:
+def get_marker(marker: Optional[_Marker]) -> Optional[Marker]:
     return Marker(str(marker)) if marker else None
 
 
@@ -79,8 +81,8 @@ def split_marker_extras(marker: str) -> Tuple[Set[str], str]:
 
     if not marker:
         return set(), marker
-    new_marker = PackageMarker(marker)
-    submarkers = PackageMarker(marker)._markers
+    new_marker = _Marker(marker)
+    submarkers = _Marker(marker)._markers
     if "or" in submarkers:
         extras = extract_extras(submarkers)
         if extras:

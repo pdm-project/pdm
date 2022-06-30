@@ -12,11 +12,9 @@ import warnings
 from pathlib import Path
 from typing import Any, Sequence, Type, TypeVar, cast
 
-from pip._vendor.packaging.markers import InvalidMarker
-from pip._vendor.packaging.requirements import InvalidRequirement
-from pip._vendor.packaging.specifiers import SpecifierSet
+from packaging.specifiers import SpecifierSet
 from pip._vendor.pkg_resources import Requirement as PackageRequirement
-from pip._vendor.pkg_resources import RequirementParseError, safe_name
+from pip._vendor.pkg_resources import safe_name
 
 from pdm._types import RequirementDict
 from pdm.exceptions import ExtrasWarning, RequirementError
@@ -33,6 +31,7 @@ from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
     add_ssh_scheme_to_git_uri,
+    import_pip_vendor_object,
     parse_name_version_from_wheel,
     url_without_fragments,
 )
@@ -41,6 +40,12 @@ if sys.version_info >= (3, 8):
     from importlib.metadata import Distribution
 else:
     from importlib_metadata import Distribution
+
+INVAID_MARKER_ERROR = import_pip_vendor_object("packaging.markers", "InvalidMarker")
+INVALID_REQUIREMENT_ERROR = (
+    *import_pip_vendor_object("packaging.requirements", "InvalidRequirement"),
+    *import_pip_vendor_object("pkg_resources", "RequirementParseError"),
+)
 
 VCS_SCHEMA = ("git", "hg", "svn", "bzr")
 _vcs_req_re = re.compile(
@@ -148,7 +153,7 @@ class Requirement:
         if "marker" in kwargs:
             try:
                 kwargs["marker"] = get_marker(kwargs["marker"])
-            except InvalidMarker as e:
+            except INVAID_MARKER_ERROR as e:
                 raise RequirementError("Invalid marker: %s" % str(e)) from None
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(
@@ -487,7 +492,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
     else:
         try:
             package_req = PackageRequirement(line)  # type: ignore
-        except (RequirementParseError, InvalidRequirement) as e:
+        except INVALID_REQUIREMENT_ERROR as e:
             m = _file_req_re.match(line)
             if m is None:
                 raise RequirementError(str(e)) from None

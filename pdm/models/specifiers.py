@@ -6,18 +6,20 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Iterable, List, Set, Tuple, Union, cast
 
-from pip._vendor.packaging.specifiers import SpecifierSet
+from packaging.specifiers import SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
 from pdm.models.versions import Version
+from pdm.utils import import_pip_vendor_object
 
 MAX_VERSIONS_FILE = Path(__file__).with_name("python_max_versions.json")
+SPECIFIER_TYPES = import_pip_vendor_object("packaging.specifiers", "SpecifierSet")
 
 
 @lru_cache()
 def get_specifier(version_str: Union[SpecifierSet, str]) -> SpecifierSet:
-    if isinstance(version_str, SpecifierSet):
-        return version_str
+    if isinstance(version_str, SPECIFIER_TYPES):
+        return cast(SpecifierSet, version_str)
     if not version_str or version_str == "*":
         return SpecifierSet()
     return SpecifierSet(version_str)

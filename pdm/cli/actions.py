@@ -826,7 +826,7 @@ def check_update(project: Project) -> None:
     import sys
     from shlex import quote
 
-    from pip._vendor.packaging.version import parse as parse_version
+    from packaging.version import parse as parse_version
 
     from pdm.cli.utils import (
         is_homebrew_installation,

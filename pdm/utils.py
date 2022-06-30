@@ -32,8 +32,8 @@ from typing import (
     overload,
 )
 
+from packaging.tags import Tag
 from packaging.version import Version
-from pip._vendor.packaging.tags import Tag
 from pip._vendor.requests import Session
 
 from pdm._types import Distribution, Source
@@ -557,3 +557,13 @@ def deprecation_warning(
         if parsed_version >= Version(raise_since):
             raise DeprecationWarning(message)
     warnings.warn(message, DeprecationWarning, stacklevel=stacklevel + 1)
+
+
+def import_pip_vendor_object(module_name: str, attr: str) -> tuple:
+    """Import an attribute from both <module_name> and pip._vendor.<module_name>"""
+    from importlib import import_module
+
+    return (
+        getattr(import_module(module_name), attr),
+        getattr(import_module("pip._vendor." + module_name), attr),
+    )
