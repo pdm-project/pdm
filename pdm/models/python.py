@@ -33,7 +33,7 @@ class PythonInfo:
     def __eq__(self, o: Any) -> bool:
         if not isinstance(o, PythonInfo):
             return False
-        return self._py_ver == o._py_ver
+        return self.path == o.path
 
     @property
     def path(self) -> Path:
