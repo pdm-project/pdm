@@ -24,7 +24,7 @@ dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
     "tomlkit>=0.8.0,<1",
     "typing-extensions; python_version < \"3.8\"",
-    "unearth>=0.4.0,<0.5.0",
+    "unearth>=0.4.1,<0.5.0",
     "cachecontrol[filecache]>=0.12.11",
     "requests-toolbelt",
 ]
