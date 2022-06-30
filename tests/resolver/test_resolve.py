@@ -311,3 +311,14 @@ def test_resolve_extra_requirements_no_break_constraints(resolve, repository):
     result = resolve(["foo[chardet]<0.2.0"])
     assert "chardet" in result
     assert result["foo"].version == "0.1.0"
+
+
+def test_resolve_extra_and_underlying_to_the_same_version(resolve, repository):
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_dependencies("foo", "0.1.0", ["chardet; extra=='enc'"])
+    repository.add_candidate("foo", "0.2.0")
+    repository.add_dependencies("foo", "0.2.0", ["chardet; extra=='enc'"])
+    repository.add_candidate("bar", "0.1.0")
+    repository.add_dependencies("bar", "0.1.0", ["foo[enc]>=0.1.0"])
+    result = resolve(["foo==0.1.0", "bar"])
+    assert result["foo"].version == result["foo[enc]"].version == "0.1.0"
