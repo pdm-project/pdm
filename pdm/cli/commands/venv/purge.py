@@ -29,6 +29,9 @@ class PurgeCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
 
         all_central_venvs = list(iter_central_venvs(project))
+        if not all_central_venvs:
+            project.core.ui.echo("No virtualenvs to purge, quitting.", style="green")
+            return
 
         if not options.force:
             project.core.ui.echo(
@@ -38,7 +41,7 @@ class PurgeCommand(BaseCommand):
                 project.core.ui.echo(f"{i}. [green]{venv[0]}[/]")
 
         if not options.interactive:
-            if options.force or termui.confirm("continue?"):
+            if options.force or termui.confirm("continue?", default=True):
                 return self.del_all_venvs(project)
 
         selection = termui.ask(

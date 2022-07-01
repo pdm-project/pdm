@@ -9,11 +9,11 @@ from packaging.version import parse
 from pdm.utils import cd
 
 
-def test_project_python_with_pyenv_support(project, mocker):
+def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
 
     del project.project_config["python.path"]
     project._python = None
-    os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+    monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
     mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
     pyenv_python = project.root / "shims/python"
     if os.name == "nt":
@@ -61,9 +61,9 @@ def test_project_sources_overriding(project):
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
-def test_project_sources_env_var_expansion(project):
-    os.environ["PYPI_USER"] = "user"
-    os.environ["PYPI_PASS"] = "password"
+def test_project_sources_env_var_expansion(project, monkeypatch):
+    monkeypatch.setenv("PYPI_USER", "user")
+    monkeypatch.setenv("PYPI_PASS", "password")
     project.project_config[
         "pypi.url"
     ] = "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
@@ -162,13 +162,13 @@ def test_project_auto_detect_venv(project):
     assert project.environment.is_global
 
 
-def test_ignore_saved_python(project):
+def test_ignore_saved_python(project, monkeypatch):
     project.project_config["python.use_venv"] = True
     project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
-    os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+    monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
     assert project.python.executable != project.project_config["python.path"]
     assert (
         project.python.executable == project.root / "venv" / scripts / f"python{suffix}"
@@ -213,4 +213,52 @@ def test_global_python_path_config(project_no_init, tmp_path):
 def test_set_non_exist_python_path(project_no_init):
     project_no_init.project_config["python.path"] = "non-exist-python"
     project_no_init._python = None
-    assert project_no_init.python.executable == Path(sys.executable)
+    assert str(project_no_init.python.executable).startswith(str(sys.executable))
+
+
+@pytest.mark.usefixtures("venv_backends")
+def test_create_venv_first_time(invoke, project):
+    project.project_config.update({"python.use_venv": True, "venv.in_project": False})
+    del project.project_config["python.path"]
+    result = invoke(["install"], obj=project)
+    assert result.exit_code == 0
+    venv_parent = project.root / "venvs"
+    venv_path = next(venv_parent.iterdir(), None)
+    assert venv_path is not None
+
+    assert Path(project.project_config["python.path"]).relative_to(venv_path)
+
+
+@pytest.mark.usefixtures("venv_backends")
+def test_create_venv_in_project(invoke, project):
+    project.project_config.update({"python.use_venv": True, "venv.in_project": True})
+    del project.project_config["python.path"]
+    result = invoke(["install"], obj=project)
+    assert result.exit_code == 0
+    assert project.root.joinpath(".venv").exists()
+
+
+@pytest.mark.usefixtures("venv_backends")
+def test_find_interpreters_from_venv(invoke, project):
+    project.project_config.update({"python.use_venv": True, "venv.in_project": False})
+    del project.project_config["python.path"]
+    result = invoke(["install"], obj=project)
+    assert result.exit_code == 0
+    venv_parent = project.root / "venvs"
+    venv_path = next(venv_parent.iterdir(), None)
+
+    assert Path(next(project.find_interpreters()).executable).relative_to(venv_path)
+
+
+def test_iter_project_venvs(project):
+    from pdm.cli.commands.venv import utils
+
+    venv_parent = Path(project.config["venv.location"])
+    venv_prefix = utils.get_venv_prefix(project)
+    for name in ("foo", "bar", "baz"):
+        venv_parent.joinpath(venv_prefix + name).mkdir(parents=True)
+    dot_venv_python = utils.get_venv_python(project.root / ".venv")
+    dot_venv_python.parent.mkdir(parents=True)
+    dot_venv_python.touch()
+    venv_keys = [key for key, _ in utils.iter_venvs(project)]
+    assert sorted(venv_keys) == ["bar", "baz", "foo", "in-project"]

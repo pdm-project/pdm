@@ -673,10 +673,6 @@ dependencies = ["pip", "setuptools", "wheel"]
                     yield PythonInfo.from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
                     yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
-
-            python = shutil.which("python")
-            if python:
-                yield PythonInfo.from_path(python)
             args = []
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
@@ -694,6 +690,9 @@ dependencies = ["pip", "setuptools", "wheel"]
         for entry in finder.find_all(*args):
             yield PythonInfo(entry)
         if not python_spec:
+            python = shutil.which("python")
+            if python:
+                yield PythonInfo.from_path(python)
             # Return the host Python as well
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)

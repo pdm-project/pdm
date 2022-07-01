@@ -1,4 +1,3 @@
-import os
 import tarfile
 import zipfile
 
@@ -169,7 +168,7 @@ def test_build_with_no_isolation(fixture_project, invoke, isolated):
     assert result.exit_code == int(isolated)
 
 
-def test_build_ignoring_pip_environment(fixture_project):
+def test_build_ignoring_pip_environment(fixture_project, monkeypatch):
     project = fixture_project("demo-module")
-    os.environ["PIP_REQUIRE_VIRTUALENV"] = "1"
+    monkeypatch.setenv("PIP_REQUIRE_VIRTUALENV", "1")
     actions.do_build(project)

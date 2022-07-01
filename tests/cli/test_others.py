@@ -1,5 +1,3 @@
-from unittest.mock import ANY
-
 import pytest
 
 from pdm.cli import actions
@@ -31,11 +29,6 @@ def test_project_no_init_error(project_no_init):
             PdmException, match="The pyproject.toml has not been initialized yet"
         ):
             handler(project_no_init)
-
-
-def test_init_validate_python_requires(project_no_init):
-    with pytest.raises(ValueError):
-        actions.do_init(project_no_init, python_requires="3.7")
 
 
 def test_help_option(invoke):
@@ -76,82 +69,6 @@ def test_uncaught_error(invoke, mocker):
 
     result = invoke(["list", "-v"])
     assert isinstance(result.exception, RuntimeError)
-
-
-def test_init_command(project_no_init, invoke, mocker):
-    mocker.patch(
-        "pdm.cli.commands.init.get_user_email_from_git",
-        return_value=("Testing", "me@example.org"),
-    )
-    do_init = mocker.patch.object(actions, "do_init")
-    invoke(["init"], input="\n\n\n\n\n\n", strict=True, obj=project_no_init)
-    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
-    do_init.assert_called_with(
-        project_no_init,
-        name="",
-        version="",
-        description="",
-        license="MIT",
-        author="Testing",
-        email="me@example.org",
-        python_requires=f">={python_version}",
-        hooks=ANY,
-    )
-
-
-def test_init_command_library(project_no_init, invoke, mocker):
-    mocker.patch(
-        "pdm.cli.commands.init.get_user_email_from_git",
-        return_value=("Testing", "me@example.org"),
-    )
-    do_init = mocker.patch.object(actions, "do_init")
-    result = invoke(
-        ["init"],
-        input="\ny\ntest-project\n\nTest Project\n\n\n\n\n",
-        obj=project_no_init,
-    )
-    assert result.exit_code == 0
-    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
-    do_init.assert_called_with(
-        project_no_init,
-        name="test-project",
-        version="0.1.0",
-        description="Test Project",
-        license="MIT",
-        author="Testing",
-        email="me@example.org",
-        python_requires=f">={python_version}",
-        hooks=ANY,
-    )
-
-
-def test_init_non_interactive(project_no_init, invoke, mocker):
-    mocker.patch(
-        "pdm.cli.commands.init.get_user_email_from_git",
-        return_value=("Testing", "me@example.org"),
-    )
-    do_init = mocker.patch.object(actions, "do_init")
-    do_use = mocker.patch.object(actions, "do_use")
-    result = invoke(["init", "-n"], obj=project_no_init)
-    assert result.exit_code == 0
-    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
-    do_use.assert_called_once_with(
-        project_no_init,
-        ANY,
-        True,
-        hooks=ANY,
-    )
-    do_init.assert_called_with(
-        project_no_init,
-        name="",
-        version="",
-        description="",
-        license="MIT",
-        author="Testing",
-        email="me@example.org",
-        python_requires=f">={python_version}",
-        hooks=ANY,
-    )
 
 
 @pytest.mark.parametrize(

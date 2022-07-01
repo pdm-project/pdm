@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from pdm.exceptions import PdmUsageError
@@ -53,8 +51,8 @@ def test_config_del_command(project, invoke):
     assert result.output.strip() == "True"
 
 
-def test_config_env_var_shadowing(project, invoke):
-    os.environ["PDM_PYPI_URL"] = "https://example.org/simple"
+def test_config_env_var_shadowing(project, invoke, monkeypatch):
+    monkeypatch.setenv("PDM_PYPI_URL", "https://example.org/simple")
     result = invoke(["config", "pypi.url"], obj=project)
     assert result.output.strip() == "https://example.org/simple"
 
@@ -63,7 +61,7 @@ def test_config_env_var_shadowing(project, invoke):
     result = invoke(["config", "pypi.url"], obj=project)
     assert result.output.strip() == "https://example.org/simple"
 
-    del os.environ["PDM_PYPI_URL"]
+    monkeypatch.delenv("PDM_PYPI_URL")
     result = invoke(["config", "pypi.url"], obj=project)
     assert result.output.strip() == "https://test.pypi.org/pypi"
 
@@ -102,14 +100,14 @@ def test_rename_deprecated_config(tmp_path, invoke):
         )
 
 
-def test_specify_config_file(tmp_path, invoke):
+def test_specify_config_file(tmp_path, invoke, monkeypatch):
     tmp_path.joinpath("global_config.toml").write_text("project_max_depth = 9\n")
     with cd(tmp_path):
         result = invoke(["-c", "global_config.toml", "config", "project_max_depth"])
         assert result.exit_code == 0
         assert result.output.strip() == "9"
 
-        os.environ["PDM_CONFIG_FILE"] = "global_config.toml"
+        monkeypatch.setenv("PDM_CONFIG_FILE", "global_config.toml")
         result = invoke(["config", "project_max_depth"])
         assert result.exit_code == 0
         assert result.output.strip() == "9"
