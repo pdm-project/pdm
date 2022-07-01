@@ -330,3 +330,9 @@ extraPaths = ["__pypackages__/<major.minor>/lib/"]
 ## PDM Eco-system
 
 [Awesome PDM](https://github.com/pdm-project/awesome-pdm) is a curated list of awesome PDM plugins and resources.
+
+## Sponsors
+
+<p align="center">
+    <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+</p>

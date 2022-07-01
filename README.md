@@ -144,6 +144,7 @@ pip install --user pdm
 ```
 
 With [asdf-vm](https://asdf-vm.com/)
+
 ```bash
 asdf plugin add github.com/1oglop1/asdf-pdm.git
 asdf install pdm latest
@@ -233,9 +234,11 @@ Packages in the local `__pypackages__` directory will be loaded before the syste
 You'd better not. The packages installed inside `__pypackages__` are OS dependent. Instead, you should keep `pdm.lock`
 in VCS and do `pdm sync` on the target environment to deploy.
 
-### 5. Can I use `pdm` to manage a Python 2.7 project?
+## Sponsors
 
-Sure. The `pdm` itself can be installed under Python 3.7+ only, but it doesn't restrict the Python used by the project.
+<p align="center">
+    <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+</p>
 
 ## Credits
 

@@ -221,9 +221,11 @@ $ python /home/frostming/workspace/flask_app/app.py
 最好别这样搞，`__pypackages__` 下面安装的包是和操作系统相关的，所以除非是纯 Python 的包，都会有兼容性的问题。你应该把 `pdm.lock`
 纳入版本管理，然后在目标环境中执行 `pdm sync`。
 
-### 5. 我能用`pdm`管理一个 Python 2.7 的项目吗？
+## 赞助
 
-当然可以。只是`pdm`本身的安装需要 Python 版本高于 3.7，它并不限制项目使用的 Python 版本。
+<p align="center">
+    <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+</p>
 
 ## 鸣谢
 
