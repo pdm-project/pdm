@@ -23,6 +23,9 @@ theme:
     code: Fira Code
   logo: assets/logo.svg
   favicon: assets/logo.svg
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
   custom_dir: overrides
 
 plugins:
@@ -36,19 +39,19 @@ plugins:
             docstring_style: google
 
 nav:
-  - Home: index.md
   - Usage:
+      - Home: index.md
       - usage/dependency.md
       - usage/project.md
       - usage/scripts.md
       - usage/hooks.md
       - usage/advanced.md
       - usage/cli_reference.md
+      - usage/configuration.md
   - Writing pyproject.toml:
       - pyproject/pep621.md
       - pyproject/tool-pdm.md
       - pyproject/build.md
-  - Configuration: configuration.md
   - Plugins:
       - plugin/write.md
       - plugin/reference.md

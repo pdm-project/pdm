@@ -86,7 +86,7 @@ where `<CONFIG_ROOT>` is:
 
 If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROOT>/global-project/.pdm.toml`.
 
-You can find all available configuration items in [Configuration Page](../configuration.md).
+You can find all available configuration items in [Configuration Page](configuration.md).
 
 ## Publish the project to PyPI
 
