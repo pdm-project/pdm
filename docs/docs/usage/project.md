@@ -191,6 +191,8 @@ However, unlike `stack`, by default, PDM won't use global project automatically 
 Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
 But PDM also leave the decision to users, just set the config `global_project.fallback` to `true`.
 
+By default, when `pdm` uses global project implicitly the following message is printed: `Project is not found, fallback to the global project`. To disable this message set the config `global_project.fallback_verbose` to `false`.
+
 If you want global project to track another project file other than `<CONFIG_ROOT>/global-project`, you can provide the
 project path via `-p/--project <path>` option.
 

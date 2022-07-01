@@ -94,13 +94,14 @@ class Project:
             and root_path is None
             and self.global_config["global_project.fallback"]
         ):
-            self.core.ui.echo(
-                "Project is not found, fallback to the global project",
-                style="yellow",
-                err=True,
-            )
             root_path = global_project
             is_global = True
+            if self.global_config["global_project.fallback_verbose"]:
+                self.core.ui.echo(
+                    "Project is not found, fallback to the global project",
+                    style="yellow",
+                    err=True,
+                )
 
         self.root = Path(root_path or "").absolute()
         self.is_global = is_global
