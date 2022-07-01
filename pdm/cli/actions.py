@@ -590,8 +590,9 @@ def do_use(
     python: str = "",
     first: bool = False,
     ignore_remembered: bool = False,
+    ignore_requires_python: bool = False,
     hooks: HookManager | None = None,
-) -> None:
+) -> PythonInfo:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
@@ -601,7 +602,9 @@ def do_use(
         python = python.strip()
 
     def version_matcher(py_version: PythonInfo) -> bool:
-        return project.python_requires.contains(str(py_version.version), True)
+        return ignore_requires_python or project.python_requires.contains(
+            str(py_version.version), True
+        )
 
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)
@@ -681,6 +684,7 @@ def do_use(
         project.core.ui.echo("Updating executable scripts...", style="cyan")
         project.environment.update_shebangs(selected_python.executable.as_posix())
     hooks.try_emit("post_use", python=selected_python)
+    return selected_python
 
 
 def do_import(

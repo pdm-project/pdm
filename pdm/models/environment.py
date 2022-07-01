@@ -24,7 +24,7 @@ from pdm.models.in_process import (
 from pdm.models.python import PythonInfo
 from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
-from pdm.utils import cached_property, get_index_urls, is_venv_python, pdm_scheme
+from pdm.utils import cached_property, get_index_urls, get_venv_like_prefix, pdm_scheme
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -241,7 +241,7 @@ class GlobalEnvironment(Environment):
     is_global = True
 
     def get_paths(self) -> dict[str, str]:
-        is_venv = is_venv_python(self.interpreter.executable)
+        is_venv = bool(get_venv_like_prefix(self.interpreter.executable))
         paths = get_sys_config_paths(
             str(self.interpreter.executable),
             kind="user"

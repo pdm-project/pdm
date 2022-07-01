@@ -34,7 +34,6 @@ from pdm.utils import (
     expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
-    get_in_project_venv_python,
     get_venv_like_prefix,
     normalize_name,
     path_to_url,
@@ -239,18 +238,62 @@ class Project:
 
     def get_environment(self) -> Environment:
         """Get the environment selected by this project"""
+        from pdm.cli.commands.venv.utils import get_venv_python, iter_venvs
+
         if self.is_global:
             env = GlobalEnvironment(self)
             # Rewrite global project's python requires to be
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
-        if self.config["python.use_venv"] and get_venv_like_prefix(
-            self.python.executable
+        if not self.config["python.use_venv"]:
+            return Environment(self)
+        if self.project_config.get("python.path") and not os.getenv(
+            "PDM_IGNORE_SAVED_PYTHON"
         ):
-            # Only recognize venv created by python -m venv and virtualenv>20
+            return (
+                GlobalEnvironment(self)
+                if get_venv_like_prefix(self.python.executable) is not None
+                else Environment(self)
+            )
+        if os.getenv("VIRTUAL_ENV"):
+            venv = cast(str, os.getenv("VIRTUAL_ENV"))
+            self.core.ui.echo(
+                f"Detected inside an active virtualenv [green]{venv}[/], reuse it.",
+                style="yellow",
+                err=True,
+            )
+            # Temporary usage, do not save in .pdm.toml
+            self._python = PythonInfo.from_path(get_venv_python(Path(venv)))
             return GlobalEnvironment(self)
-        return Environment(self)
+        existing_venv = next((venv for _, venv in iter_venvs(self)), None)
+        if existing_venv:
+            self.core.ui.echo(
+                f"Virtualenv [green]{existing_venv}[/] is reused.",
+                err=True,
+            )
+            path = existing_venv
+        else:
+            # Create a virtualenv using the selected Python interpreter
+            self.core.ui.echo(
+                "python.use_venv is on, creating a virtualenv for this project...",
+                style="yellow",
+                err=True,
+            )
+            path = self._create_virtualenv()
+        self.python = PythonInfo.from_path(get_venv_python(path))
+        return GlobalEnvironment(self)
+
+    def _create_virtualenv(self) -> Path:
+        from pdm.cli.commands.venv.backends import BACKENDS
+
+        backend: str = self.config["venv.backend"]
+        venv_backend = BACKENDS[backend](self, None)
+        path = venv_backend.create(in_project=self.config["venv.in_project"])
+        self.core.ui.echo(
+            f"Virtualenv is created successfully at [green]{path}[/]", err=True
+        )
+        return path
 
     @property
     def environment(self) -> Environment:
@@ -630,10 +673,7 @@ dependencies = ["pip", "setuptools", "wheel"]
                     yield PythonInfo.from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
                     yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
-            if config.get("python.use_venv"):
-                python = get_in_project_venv_python(self.root)
-                if python:
-                    yield PythonInfo.from_path(python)
+
             python = shutil.which("python")
             if python:
                 yield PythonInfo.from_path(python)
@@ -650,9 +690,18 @@ dependencies = ["pip", "setuptools", "wheel"]
                         yield PythonInfo.from_path(python)
                 return
             args = [int(v) for v in python_spec.split(".") if v != ""]
-        finder = Finder(resolve_symlinks=True)
+        finder = self._get_python_finder()
         for entry in finder.find_all(*args):
             yield PythonInfo(entry)
         if not python_spec:
+            # Return the host Python as well
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)
+
+    def _get_python_finder(self) -> Finder:
+        from pdm.cli.commands.venv.utils import VenvProvider
+
+        finder = Finder(resolve_symlinks=True)
+        if self.config["python.use_venv"]:
+            finder._providers.insert(0, VenvProvider(self))
+        return finder
