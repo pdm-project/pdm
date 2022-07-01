@@ -7,7 +7,17 @@ import pytest
 from pdm.cli.commands.venv import backends
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.fixture()
+def fake_create(monkeypatch):
+    def fake_create(self, location, *args):
+        location.mkdir(parents=True)
+
+    monkeypatch.setattr(backends.VirtualenvBackend, "perform_create", fake_create)
+    monkeypatch.setattr(backends.VenvBackend, "perform_create", fake_create)
+    monkeypatch.setattr(backends.CondaBackend, "perform_create", fake_create)
+
+
+@pytest.mark.usefixtures("fake_create")
 def test_venv_create(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
@@ -18,7 +28,17 @@ def test_venv_create(invoke, project):
     assert os.path.exists(venv_path)
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.mark.usefixtures("fake_create")
+def test_venv_create_in_project(invoke, project):
+    project.project_config["venv.in_project"] = True
+    invoke(["venv", "create"], obj=project, strict=True)
+    invoke(["venv", "create"], obj=project, strict=True)
+    venv_path = project.root / ".venv"
+    assert venv_path.exists()
+    assert len(os.listdir(project.root / "venvs")) == 1
+
+
+@pytest.mark.usefixtures("fake_create")
 def test_venv_list(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
@@ -32,7 +52,7 @@ def test_venv_list(invoke, project):
     assert venv_path in result.output
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.mark.usefixtures("fake_create")
 def test_venv_remove(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
@@ -51,7 +71,7 @@ def test_venv_remove(invoke, project):
     assert not os.path.exists(venv_path)
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.mark.usefixtures("fake_create")
 def test_venv_recreate(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
@@ -77,15 +97,16 @@ def test_venv_activate(invoke, mocker, project):
     mocker.patch("shellingham.detect_shell", return_value=("bash", None))
     result = invoke(["venv", "activate", key], obj=project)
     assert result.exit_code == 0, result.stderr
+    backend = project.config["venv.backend"]
 
-    if os.getenv("DEFAULT_BACKEND") == "conda":
+    if backend == "conda":
         assert result.output.startswith("conda activate")
     else:
         assert result.output.strip("'\"\n").endswith("activate")
         assert result.output.startswith("source")
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.mark.usefixtures("fake_create")
 def test_venv_auto_create(invoke, mocker, project):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
     del project.project_config["python.path"]
@@ -94,7 +115,7 @@ def test_venv_auto_create(invoke, mocker, project):
     creator.assert_called_once()
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.mark.usefixtures("fake_create")
 def test_venv_purge(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "purge"], obj=project)
@@ -110,7 +131,7 @@ def test_venv_purge(invoke, project):
     assert not os.path.exists(venv_path)
 
 
-@pytest.mark.usefixtures("venv_backends")
+@pytest.mark.usefixtures("fake_create")
 def test_venv_purge_force(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
