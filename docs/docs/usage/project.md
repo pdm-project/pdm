@@ -197,7 +197,7 @@ If you want global project to track another project file other than `<CONFIG_ROO
 project path via `-p/--project <path>` option.
 
 !!! attention "CAUTION"
-    Be careful with `remove` and `sync --clean` commands when global project is used, because it may remove packages installed in your system Python.
+    Be careful with `remove` and `sync --clean/--pure` commands when global project is used, because it may remove packages installed in your system Python.
 
 ## Working with a virtualenv
 

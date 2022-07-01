@@ -240,7 +240,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l group -d 'Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species.'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
-complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-clean -d 'don\'t clean unused packages'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l only-keep -d 'don\'t clean unused packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-default -d 'Don\'t include dependencies from the default group'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-editable -d 'Install non-editable versions for all packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'Do not isolate the build in a clean environment'

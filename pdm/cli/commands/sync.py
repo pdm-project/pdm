@@ -43,5 +43,6 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             reinstall=options.reinstall,
+            only_keep=options.only_keep,
             hooks=HookManager(project, options.skip),
         )

@@ -360,7 +360,7 @@ function TabExpansion($line, $lastWord) {
             }
             "sync" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--no-clean", "--dry-run", "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
+                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--only-keep", "--dry-run", "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
                         $sectionOption,
                         $skipOption,
                         $projectOption

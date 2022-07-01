@@ -87,6 +87,7 @@ class Synchronizer:
         if a list, override editables with the given names
     :param use_install_cache: whether to use install cache
     :param reinstall: whether to reinstall all packages
+    :param only_keep: If true, only keep the selected candidates
     """
 
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
@@ -102,6 +103,7 @@ class Synchronizer:
         no_editable: bool | Collection[str] = False,
         use_install_cache: bool = False,
         reinstall: bool = False,
+        only_keep: bool = False,
     ) -> None:
         self.environment = environment
         self.clean = clean
@@ -111,6 +113,7 @@ class Synchronizer:
         self.install_self = install_self
         self.use_install_cache = use_install_cache
         self.reinstall = reinstall
+        self.only_keep = only_keep
 
         self.parallel = environment.project.config["install.parallel"]
         locked_repository = environment.project.locked_repository
@@ -179,7 +182,8 @@ class Synchronizer:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
         working_set = self.working_set
         candidates = self.candidates.copy()
-        to_update, to_remove = [], []
+        to_update: set[str] = set()
+        to_remove: set[str] = set()
 
         for key, dist in working_set.items():
             if key == self.self_key:
@@ -187,25 +191,22 @@ class Synchronizer:
             if key in candidates:
                 can = candidates.pop(key)
                 if self._should_update(dist, can):
-                    to_update.append(key)
+                    to_update.add(key)
             elif (
-                key not in self.all_candidate_keys
-                and key not in self.SEQUENTIAL_PACKAGES
-            ):
+                self.only_keep or self.clean and key not in self.all_candidate_keys
+            ) and key not in self.SEQUENTIAL_PACKAGES:
                 # Remove package only if it is not required by any group
                 # Packages for packaging will never be removed
-                to_remove.append(key)
-        to_add = list(
-            {
-                strip_extras(name)[0]
-                for name, _ in candidates.items()
-                if name != self.self_key and strip_extras(name)[0] not in working_set
-            }
-        )
+                to_remove.add(key)
+        to_add = {
+            strip_extras(name)[0]
+            for name, _ in candidates.items()
+            if name != self.self_key and strip_extras(name)[0] not in working_set
+        }
         return (
             sorted(to_add),
             sorted(to_update),
-            sorted(to_remove) if self.clean else [],
+            sorted(to_remove),
         )
 
     def install_candidate(self, key: str, progress: Progress) -> Candidate:

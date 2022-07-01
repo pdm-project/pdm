@@ -199,10 +199,16 @@ pdm remove -dG test pytest-cov
 
 ## Install the packages pinned in lock file
 
-There are two similar commands to do this job with a slight difference:
+There are a few similar commands to do this job with slight differences:
 
-- [`pdm install`](cli_reference.md#exec-0--install) will check the lock file and relock if it mismatches with project file, then install.
-- [`pdm update`](cli_reference.md#exec-0--update) installs dependencies in the lock file and will error out if it doesn't exist. Besides, [`pdm sync`](cli_reference.md#exec-0--sync) can also remove unneeded packages if `--clean` option is given.
+- [`pdm sync`](cli_reference.md#exec-0--sync) installs packages from the lock file.
+- [`pdm update`](cli_reference.md#exec-0--update) will update the lock file, then `sync`.
+- [`pdm install`](cli_reference.md#exec-0--install) will check the project file for changes, update the lock file if needed, then `sync`.
+
+`sync` also has a few options to manage installed packages:
+
+- `--clean`: will remove packages no longer in the lockfile
+- `--only-keep`: only selected packages (using options like `-G` or `--prod`) will be kept.
 
 ## Specify the lockfile to use
 

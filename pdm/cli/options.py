@@ -319,10 +319,10 @@ global_option = Option(
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
 clean_group.add_argument(
-    "--clean", action="store_true", dest="clean", help="clean unused packages"
+    "--clean", action="store_true", help="clean packages not in the lockfile"
 )
 clean_group.add_argument(
-    "--no-clean", action="store_false", dest="clean", help="don't clean unused packages"
+    "--only-keep", action="store_true", help="only keep the selected packages"
 )
 
 sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
