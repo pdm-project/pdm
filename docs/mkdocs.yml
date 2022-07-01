@@ -43,6 +43,7 @@ nav:
       - Home: index.md
       - usage/dependency.md
       - usage/project.md
+      - usage/environment.md
       - usage/scripts.md
       - usage/hooks.md
       - usage/advanced.md
@@ -76,7 +77,7 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
+          format: "!!python/name:pymdownx.superfences.fence_code_format"
 
 copyright: Copyright &copy; 2019-2021 <a href="https://frostming.com">Frost Ming</a>
 

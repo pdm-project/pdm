@@ -11,7 +11,7 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 
 ## Feature highlights
 
-- [PEP 582] local package installer and runner, no virtualenv involved at all.
+- Opt-in [PEP 582] support, no virtualenv involved at all.
 - Simple and fast dependency resolver, mainly for large binary distributions.
 - A [PEP 517] build backend.
 - [PEP 621] project metadata.
