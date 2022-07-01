@@ -322,7 +322,7 @@ clean_group.add_argument(
     "--clean", action="store_true", help="clean packages not in the lockfile"
 )
 clean_group.add_argument(
-    "--pure", action="store_true", help="only keep the selected packages"
+    "--only-keep", action="store_true", help="only keep the selected packages"
 )
 
 sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)

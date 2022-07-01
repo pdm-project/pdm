@@ -200,7 +200,7 @@ def test_sync_with_pure_option(project, working_set, invoke):
     assert all(
         p in working_set for p in ("requests", "urllib3", "django", "pytz")
     ), list(working_set)
-    actions.do_sync(project, dev=False, pure=True)
+    actions.do_sync(project, dev=False, only_keep=True)
     assert "requests" in working_set
     assert "urllib3" in working_set
     assert "django" not in working_set

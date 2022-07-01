@@ -101,7 +101,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --global --group --help --lockfile --pure --no-default --no-editable --no-isolation --no-self --production --project --reinstall --skip --verbose"
+            opts="--clean --dev --dry-run --global --group --help --lockfile --only-keep --no-default --no-editable --no-isolation --no-self --production --project --reinstall --skip --verbose"
             ;;
 
             (update)

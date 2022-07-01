@@ -188,7 +188,7 @@ def do_sync(
     no_editable: bool | Collection[str] = False,
     no_self: bool = False,
     reinstall: bool = False,
-    pure: bool = False,
+    only_keep: bool = False,
     hooks: HookManager | None = None,
 ) -> None:
     """Synchronize project"""
@@ -212,7 +212,7 @@ def do_sync(
         install_self=not no_self and "default" in groups and bool(project.name),
         use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
-        pure=pure,
+        only_keep=only_keep,
     )
     hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
     handler.synchronize()

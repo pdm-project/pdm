@@ -87,7 +87,7 @@ class Synchronizer:
         if a list, override editables with the given names
     :param use_install_cache: whether to use install cache
     :param reinstall: whether to reinstall all packages
-    :param pure: If true, only keep the selected candidates
+    :param only_keep: If true, only keep the selected candidates
     """
 
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
@@ -103,7 +103,7 @@ class Synchronizer:
         no_editable: bool | Collection[str] = False,
         use_install_cache: bool = False,
         reinstall: bool = False,
-        pure: bool = False,
+        only_keep: bool = False,
     ) -> None:
         self.environment = environment
         self.clean = clean
@@ -113,7 +113,7 @@ class Synchronizer:
         self.install_self = install_self
         self.use_install_cache = use_install_cache
         self.reinstall = reinstall
-        self.pure = pure
+        self.only_keep = only_keep
 
         self.parallel = environment.project.config["install.parallel"]
         locked_repository = environment.project.locked_repository
@@ -193,7 +193,7 @@ class Synchronizer:
                 if self._should_update(dist, can):
                     to_update.add(key)
             elif (
-                self.pure or self.clean and key not in self.all_candidate_keys
+                self.only_keep or self.clean and key not in self.all_candidate_keys
             ) and key not in self.SEQUENTIAL_PACKAGES:
                 # Remove package only if it is not required by any group
                 # Packages for packaging will never be removed
