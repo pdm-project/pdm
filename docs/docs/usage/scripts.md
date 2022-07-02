@@ -10,13 +10,6 @@ pdm run flask run -p 54321
 
 It will run `flask run -p 54321` in the environment that is aware of packages in `__pypackages__/` folder.
 
-!!! note "Yarn-like script shortcuts"
-    There is a builtin shortcut making all scripts available as root commands
-    as long as the script does not conflict with any builtin or plugin-contributed command.
-    Said otherwise, if you have a `test` script, you can run both `pdm run test` and `pdm test`.
-    But if you have an `install` script, only `pdm run install` will run it,
-    `pdm install` will still run the builtin `install` command.
-
 ## User Scripts
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.
@@ -42,7 +35,12 @@ $ pdm run start -h 0.0.0.0
 Flask server started at http://0.0.0.0:54321
 ```
 
----
+!!! note "Yarn-like script shortcuts"
+    There is a builtin shortcut making all scripts available as root commands
+    as long as the script does not conflict with any builtin or plugin-contributed command.
+    Said otherwise, if you have a `start` script, you can run both `pdm run start` and `pdm start`.
+    But if you have an `install` script, only `pdm run install` will run it,
+    `pdm install` will still run the builtin `install` command.
 
 PDM supports 4 types of scripts:
 

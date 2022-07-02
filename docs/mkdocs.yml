@@ -80,7 +80,7 @@ markdown_extensions:
           class: mermaid
           format: "!!python/name:pymdownx.superfences.fence_code_format"
 
-copyright: Copyright &copy; 2019-2021 <a href="https://frostming.com">Frost Ming</a>
+copyright: Copyright &copy; 2019 <a href="https://frostming.com">Frost Ming</a>
 
 extra:
   version:
