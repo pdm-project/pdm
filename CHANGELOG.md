@@ -1,3 +1,25 @@
+Release v2.0.0b1 (2022-07-02)
+-----------------------------
+
+### Features & Improvements
+
+- Integrate `pdm venv` commands into the main program. Make PEP 582 an opt-in feature. [#1162](https://github.com/pdm-project/pdm/issues/1162)
+- Add config `global_project.fallback_verbose` defaulting to `True`. When set to `False` disables message `Project is not found, fallback to the global project` [#1188](https://github.com/pdm-project/pdm/issues/1188)
+- Add `--only-keep` option to `pdm sync` to keep only selected packages. Originally requested at #398. [#1191](https://github.com/pdm-project/pdm/issues/1191)
+
+### Bug Fixes
+
+- Fix a bug that requirement extras and underlying are resolved to the different version [#1173](https://github.com/pdm-project/pdm/issues/1173)
+- Update `unearth` to `0.4.1` to skip the wheels with invalid version parts. [#1178](https://github.com/pdm-project/pdm/issues/1178)
+- Fix reading `PDM_RESOLVE_MAX_ROUNDS` environment variable (was spelled `…ROUDNS` before). [#1180](https://github.com/pdm-project/pdm/issues/1180)
+- Deduplicate the list of found Python versions. [#1182](https://github.com/pdm-project/pdm/issues/1182)
+- Use the normal stream handler for logging, to fix some display issues under non-tty environments. [#1184](https://github.com/pdm-project/pdm/issues/1184)
+
+### Removals and Deprecations
+
+- Remove the useless `--no-clean` option from `pdm sync` command. [#1191](https://github.com/pdm-project/pdm/issues/1191)
+
+
 Release v2.0.0a1 (2022-06-29)
 -----------------------------
 
