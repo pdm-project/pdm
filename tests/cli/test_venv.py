@@ -7,6 +7,7 @@ from unittest.mock import ANY
 import pytest
 
 from pdm.cli.commands.venv import backends
+from pdm.cli.commands.venv.utils import get_venv_prefix
 
 
 @pytest.fixture()
@@ -62,7 +63,7 @@ def test_venv_remove(invoke, project):
     venv_path = re.match(
         r"Virtualenv (.+) is created successfully", result.output
     ).group(1)
-    key = venv_path.rsplit("-", 1)[-1]
+    key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
 
     result = invoke(["venv", "remove", "non-exist"], obj=project)
     assert result.exit_code != 0
