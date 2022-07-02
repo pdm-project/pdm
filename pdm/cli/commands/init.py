@@ -56,6 +56,7 @@ class Command(BaseCommand):
                 if termui.confirm(
                     "Would you like to create a virtualenv with "
                     f"[green]{python.executable}[/]?",
+                    default=True,
                 ):
                     try:
                         path = project._create_virtualenv()
@@ -76,9 +77,7 @@ class Command(BaseCommand):
                 style="green",
             )
         is_library = (
-            termui.confirm(
-                "Is the project a library that will be uploaded to PyPI", default=False
-            )
+            termui.confirm("Is the project a library that will be uploaded to PyPI")
             if self.interactive
             else False
         )

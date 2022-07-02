@@ -48,7 +48,12 @@ class Backend(abc.ABC):
             f"Run command: [green]{cmd}[/]", verbosity=termui.Verbosity.DETAIL, err=True
         )
         try:
-            subprocess.check_call(cmd)
+            subprocess.check_call(
+                cmd,
+                stdout=subprocess.DEVNULL
+                if self.project.core.ui.verbosity < termui.Verbosity.DETAIL
+                else None,
+            )
         except subprocess.CalledProcessError as e:
             raise VirtualenvCreateError(e) from None
 

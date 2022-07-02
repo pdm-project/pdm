@@ -27,7 +27,7 @@ class RemoveCommand(BaseCommand):
         for ident, venv in iter_venvs(project):
             if ident == options.env:
                 if options.yes or termui.confirm(
-                    f"[yellow]Will remove: [green]{venv}[/], continue?"
+                    f"[yellow]Will remove: [green]{venv}[/], continue?", default=True
                 ):
                     shutil.rmtree(venv)
                     if (
