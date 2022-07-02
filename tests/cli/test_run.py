@@ -189,7 +189,7 @@ def test_run_script_with_extra_args(project, invoke, capfd):
     assert out.splitlines()[-3:] == ["-a", "-b", "-c"]
 
 
-def test_run_expand_env_vars(project, invoke, capfd):
+def test_run_expand_env_vars(project, invoke, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.tool_settings["scripts"] = {
         "test_cmd": 'python -c "foo, bar = 0, 1;print($FOO)"',
@@ -201,7 +201,7 @@ def test_run_expand_env_vars(project, invoke, capfd):
     project.write_pyproject()
     capfd.readouterr()
     with cd(project.root):
-        os.environ["FOO"] = "bar"
+        monkeypatch.setenv("FOO", "bar")
         invoke(["run", "test_cmd"], obj=project)
         assert capfd.readouterr()[0].strip() == "1"
 

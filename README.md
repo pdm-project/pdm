@@ -30,6 +30,33 @@ with `Pipenv` or `Poetry` and don't want to introduce another package manager,
 just stick to it. But if you are missing something that is not present in those tools,
 you can probably find some goodness in `pdm`.
 
+## Highlights of features
+
+- Opt-in [PEP 582] support, no virtualenv involved at all.
+- Simple and fast dependency resolver, mainly for large binary distributions.
+- A [PEP 517] build backend.
+- [PEP 621] project metadata.
+- Flexible and powerful plug-in system.
+- Versatile user scripts.
+- Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
+
+[pep 517]: https://www.python.org/dev/peps/pep-0517
+[pep 582]: https://www.python.org/dev/peps/pep-0582
+[pep 621]: https://www.python.org/dev/peps/pep-0621
+[pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
+
+## What is PEP 582?
+
+The majority of Python packaging tools also act as virtualenv managers to gain the ability
+to isolate project environments. But things get tricky when it comes to nested venvs: One
+installs the virtualenv manager using a venv encapsulated Python, and create more venvs using the tool
+which is based on an encapsulated Python. One day a minor release of Python is released and one has to check
+all those venvs and upgrade them if required.
+
+[PEP 582], on the other hand, introduces a way to decouple the Python interpreter from project
+environments. It is a relatively new proposal and there are not many tools supporting it (one that does
+is [pyflow], but it is written with Rust and thus can't get much help from the big Python community and for the same reason it can't act as a [PEP 517] backend).
+
 [PEP 582] proposes a project structure as below:
 
 ```
@@ -43,33 +70,6 @@ foo
 
 There is a `__pypackages__` directory in the project root to hold all dependent libraries, just like what `npm` does.
 Read more about the specification [here](https://www.python.org/dev/peps/pep-0582/#specification).
-
-## Highlights of features
-
-- [PEP 582] local package installer and runner, no virtualenv involved at all.
-- Simple and fast dependency resolver, mainly for large binary distributions.
-- A [PEP 517] build backend.
-- [PEP 621] project metadata.
-- Flexible and powerful plug-in system.
-- Versatile user scripts.
-- Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
-
-[pep 517]: https://www.python.org/dev/peps/pep-0517
-[pep 582]: https://www.python.org/dev/peps/pep-0582
-[pep 621]: https://www.python.org/dev/peps/pep-0621
-[pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
-
-## Why not virtualenv?
-
-The majority of Python packaging tools also act as virtualenv managers to gain the ability
-to isolate project environments. But things get tricky when it comes to nested venvs: One
-installs the virtualenv manager using a venv encapsulated Python, and create more venvs using the tool
-which is based on an encapsulated Python. One day a minor release of Python is released and one has to check
-all those venvs and upgrade them if required.
-
-[PEP 582], on the other hand, introduces a way to decouple the Python interpreter from project
-environments. It is a relatively new proposal and there are not many tools supporting it (one that does
-is [pyflow], but it is written with Rust and thus can't get much help from the big Python community and for the same reason it can't act as a [PEP 517] backend).
 
 ## Installation
 
@@ -160,7 +160,7 @@ pdm init
 
 Answer the questions following the guide, and a PDM project with a `pyproject.toml` file will be ready to use.
 
-**Install dependencies into the `__pypackages__` directory**
+**Install dependencies**
 
 ```bash
 pdm add requests flask
@@ -169,6 +169,9 @@ pdm add requests flask
 You can add multiple dependencies in the same command. After a while, check the `pdm.lock` file to see what is locked for each package.
 
 **Run your script with [PEP 582] support**
+
+By default, PDM will create `.venv` in the project root, when doing `pdm install` on an existing project, as other package managers do.
+But you can make PEP 582 the default by `pdm config python.use_venv false`. To enable the full power of PEP 582, do the following steps to make the Python interpreter use it.
 
 Suppose you have a script `app.py` placed next to the `__pypackages__` directory with the following content(taken from Flask's website):
 

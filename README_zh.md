@@ -26,23 +26,9 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 `poetry` 用着非常好，并不想引入一个新的包管理器，那么继续使用它们吧；但如果你发现有些东西这些
 工具不支持，那么你很可能可以在 `pdm` 中找到。
 
-[PEP 582] 提出下面这种项目的目录结构：
-
-```
-foo
-    __pypackages__
-        3.8
-            lib
-                bottle
-    myscript.py
-```
-
-项目目录中包含一个`__pypackages__`目录，用来放置所有依赖的库文件，就像`npm`的`node_modules`一样。
-你可以在[这里](https://www.python.org/dev/peps/pep-0582/#specification)阅读更多提案的细节。
-
 ## 主要特性
 
-- [PEP 582] 本地项目库目录，支持安装与运行命令，完全不需要虚拟环境。
+- [PEP 582] 支持，完全不需要虚拟环境。
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
 - 兼容 [PEP 517] 的构建后端，用于构建发布包(源码格式与 wheel 格式)
 - 灵活且强大的插件系统
@@ -65,6 +51,20 @@ foo
 然而 [PEP 582] 提供了一个能把 Python 解释器和项目开发环境解耦的方法。这是一个相对比较新的提案，
 没有很多相关的工具实现它，这其中就有 [pyflow]。但 pyflow 又是用 Rust 写的，不是所有 Python 的社区
 都会用 Rust，这样就没法贡献代码，而且，基于同样的原因，pyflow 并不支持 [PEP 517] 构建。
+
+[PEP 582] 提出下面这种项目的目录结构：
+
+```
+foo
+    __pypackages__
+        3.8
+            lib
+                bottle
+    myscript.py
+```
+
+项目目录中包含一个`__pypackages__`目录，用来放置所有依赖的库文件，就像`npm`的`node_modules`一样。
+你可以在[这里](https://www.python.org/dev/peps/pep-0582/#specification)阅读更多提案的细节。
 
 ## 安装
 
@@ -148,7 +148,7 @@ pdm init
 
 按照指引回答提示的问题，一个 PDM 项目和对应的`pyproject.toml`文件就创建好了。
 
-**把依赖安装到 `__pypackages__` 文件夹中**
+**添加依赖**
 
 ```bash
 pdm add requests flask
@@ -157,6 +157,12 @@ pdm add requests flask
 你可以在同一条命令中添加多个依赖。稍等片刻完成之后，你可以查看`pdm.lock`文件看看有哪些依赖以及对应版本。
 
 **在 [PEP 582] 加持下运行你的脚本**
+
+默认情况下，当你在一个项目中第一次运行 `pdm install`, PDM 会为你在项目根目录的 `.venv` 中创建一个虚拟环境，和其他包管理器一样。
+但你也可以把 PEP 582 设为默认，只需要运行 `pdm config python.use_venv false` 就可以了。除此之外，你还需要一点点的配置，让 Python 解释器
+可以用 PEP 582 的 `__papackages__` 目录来查找包。
+
+````bash
 
 假设你在`__pypackages__`同级的目录下有一个`app.py`脚本，内容如下（从 Flask 的官网例子复制而来）：
 
@@ -170,7 +176,7 @@ def hello_world():
 
 if __name__ == '__main__':
     app.run()
-```
+````
 
 如果你使用的是 Bash，可以通过执行`eval "$(pdm --pep582)"`设置环境变量，现在你可以用你最熟悉的 **Python 解释器** 运行脚本了：
 

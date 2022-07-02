@@ -186,7 +186,7 @@ class Config(MutableMapping[str, str]):
         ),
         "python.use_venv": ConfigItem(
             "Install packages into the activated venv site packages instead of PEP 582",
-            False,
+            True,
             env_var="PDM_USE_VENV",
             coerce=ensure_boolean,
             replace="use_venv",
@@ -203,6 +203,22 @@ class Config(MutableMapping[str, str]):
             "Consult PyPI's JSON API for package metadata",
             False,
             env_var="PDM_PYPI_JSON_API",
+            coerce=ensure_boolean,
+        ),
+        "venv.location": ConfigItem(
+            "Parent directory for virtualenvs",
+            os.path.join(platformdirs.user_data_dir("pdm"), "venvs"),
+            global_only=True,
+        ),
+        "venv.backend": ConfigItem(
+            "Default backend to create virtualenv",
+            default="virtualenv",
+            env_var="PDM_VENV_BACKEND",
+        ),
+        "venv.in_project": ConfigItem(
+            "Create virtualenv in `.venv` under project root",
+            default=True,
+            env_var="PDM_VENV_IN_PROJECT",
             coerce=ensure_boolean,
         ),
     }

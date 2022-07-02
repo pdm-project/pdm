@@ -6,7 +6,6 @@ import json
 import os
 import shutil
 import sys
-from contextlib import contextmanager
 from dataclasses import dataclass
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -38,16 +37,6 @@ from pdm.utils import normalize_name, path_to_url
 from tests import FIXTURES
 
 os.environ.update(CI="1", PDM_CHECK_UPDATE="0")
-
-
-@contextmanager
-def temp_environ():
-    environ = os.environ.copy()
-    try:
-        yield
-    finally:
-        os.environ.clear()
-        os.environ.update(environ)
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -269,6 +258,8 @@ def remove_pep582_path_from_pythonpath(pythonpath):
 @pytest.fixture()
 def core():
     old_config_map = Config._config_map.copy()
+    # Turn off use_venv by default, for testing
+    Config._config_map["python.use_venv"].default = False
     main = Core()
     yield main
     # Restore the config items
@@ -281,7 +272,7 @@ def index():
 
 
 @pytest.fixture()
-def project_no_init(tmp_path, mocker, core, index):
+def project_no_init(tmp_path, mocker, core, index, monkeypatch):
     test_home = tmp_path / ".pdm-home"
     test_home.mkdir(parents=True)
     test_home.joinpath("config.toml").write_text(
@@ -292,6 +283,7 @@ def project_no_init(tmp_path, mocker, core, index):
     p = core.create_project(
         tmp_path, global_config=test_home.joinpath("config.toml").as_posix()
     )
+    p.global_config["venv.location"] = str(tmp_path / "venvs")
     mocker.patch(
         "pdm.models.environment.PDMSession",
         functools.partial(get_pypi_session, overrides=index),
@@ -303,16 +295,15 @@ def project_no_init(tmp_path, mocker, core, index):
         getattr(sys, "_base_executable", sys.executable),
         HookManager(p, ["post_use"]),
     )
-    with temp_environ():
-        os.environ.pop("VIRTUAL_ENV", None)
-        os.environ.pop("CONDA_PREFIX", None)
-        os.environ.pop("PEP582_PACKAGES", None)
-        os.environ.pop("NO_SITE_PACKAGES", None)
-        pythonpath = os.environ.pop("PYTHONPATH", "")
-        pythonpath = remove_pep582_path_from_pythonpath(pythonpath)
-        if pythonpath:
-            os.environ["PYTHONPATH"] = pythonpath
-        yield p
+    monkeypatch.delenv("VIRTUAL_ENV", raising=False)
+    monkeypatch.delenv("CONDA_PREFIX", raising=False)
+    monkeypatch.delenv("PEP582_PACKAGES", raising=False)
+    monkeypatch.delenv("NO_SITE_PACKAGES", raising=False)
+    pythonpath = os.getenv("PYTHONPATH", "")
+    pythonpath = remove_pep582_path_from_pythonpath(pythonpath)
+    if pythonpath:
+        monkeypatch.setenv("PYTHONPATH", pythonpath)
+    yield p
 
 
 @pytest.fixture()
@@ -447,3 +438,13 @@ def invoke(core, monkeypatch):
         return result
 
     return caller
+
+
+BACKENDS = ["virtualenv", "venv"]
+
+
+@pytest.fixture(params=BACKENDS)
+def venv_backends(project, request):
+    project.project_config["venv.backend"] = request.param
+    project.project_config["python.use_venv"] = True
+    shutil.rmtree(project.root / "__pypackages__", ignore_errors=True)

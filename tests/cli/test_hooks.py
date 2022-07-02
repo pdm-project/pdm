@@ -1,4 +1,5 @@
 import shlex
+import sys
 from collections import namedtuple
 from textwrap import dedent
 
@@ -8,6 +9,8 @@ from pdm.cli import actions
 from pdm.cli.hooks import KNOWN_HOOKS
 from pdm.cli.options import from_splitted_env
 from pdm.models.requirements import parse_requirement
+
+pytestmark = pytest.mark.usefixtures("repository", "working_set", "local_finder")
 
 
 def test_pre_script_fail_fast(project, invoke, capfd, mocker):
@@ -193,6 +196,7 @@ def test_skip_option_default_from_env(env, expected, monkeypatch):
 
 
 HookSpecs = namedtuple("HookSpecs", ["command", "hooks", "fixtures"])
+this_python_version = f"{sys.version_info[0]}.{sys.version_info[1]}"
 
 KNOWN_COMMAND_HOOKS = (
     ("add", "add requests", ("pre_lock", "post_lock"), ["working_set"]),
@@ -214,7 +218,7 @@ KNOWN_COMMAND_HOOKS = (
     ("remove", "remove requests", ("pre_lock", "post_lock"), ["lock"]),
     ("sync", "sync", ("pre_install", "post_install"), ["lock"]),
     ("update", "update", ("pre_install", "post_install", "pre_lock", "post_lock"), []),
-    ("use", "use -f 3.7", ("post_use",), []),
+    ("use", f"use -f {this_python_version}", ("post_use",), []),
 )
 
 parametrize_with_commands = pytest.mark.parametrize(

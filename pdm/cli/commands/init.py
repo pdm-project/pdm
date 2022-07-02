@@ -5,8 +5,9 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
+from pdm.models.python import PythonInfo
 from pdm.project import Project
-from pdm.utils import get_user_email_from_git
+from pdm.utils import get_user_email_from_git, get_venv_like_prefix
 
 
 class Command(BaseCommand):
@@ -35,6 +36,8 @@ class Command(BaseCommand):
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        from pdm.cli.commands.venv.utils import get_venv_python
+
         hooks = HookManager(project, options.skip)
         if project.pyproject_file.exists():
             project.core.ui.echo(
@@ -45,13 +48,36 @@ class Command(BaseCommand):
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:
-            actions.do_use(project, hooks=hooks)
+            python = actions.do_use(project, ignore_requires_python=True, hooks=hooks)
+            if (
+                project.config["python.use_venv"]
+                and get_venv_like_prefix(python.executable) is None
+            ):
+                if termui.confirm(
+                    "Would you like to create a virtualenv with "
+                    f"[green]{python.executable}[/]?",
+                    default=True,
+                ):
+                    try:
+                        path = project._create_virtualenv()
+                        project.python = PythonInfo.from_path(get_venv_python(path))
+                    except Exception as e:  # pragma: no cover
+                        project.core.ui.echo(
+                            f"Error occured when creating virtualenv: {e}\n"
+                            "Please fix it and create later.",
+                            style="red",
+                            err=True,
+                        )
         else:
-            actions.do_use(project, "3", True, hooks=hooks)
-        is_library = (
-            termui.confirm(
-                "Is the project a library that will be uploaded to PyPI", default=False
+            actions.do_use(project, "3", True, ignore_requires_python=True, hooks=hooks)
+        if get_venv_like_prefix(project.python.executable) is None:
+            project.core.ui.echo(
+                "You are using the PEP 582 mode, no virtualenv is created.\n"
+                "For more info, please visit https://peps.python.org/pep-0582/",
+                style="green",
             )
+        is_library = (
+            termui.confirm("Is the project a library that will be uploaded to PyPI")
             if self.interactive
             else False
         )

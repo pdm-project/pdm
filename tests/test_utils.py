@@ -1,5 +1,4 @@
 import pathlib
-import re
 import sys
 
 import pytest
@@ -50,6 +49,10 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
+def compare_python_paths(path1, path2):
+    return path1.parent == path2.parent
+
+
 @pytest.mark.path
 def test_find_python_in_path(tmp_path):
 
@@ -58,17 +61,10 @@ def test_find_python_in_path(tmp_path):
         == pathlib.Path(sys.executable).resolve()
     )
 
-    posix_path_to_executable = pathlib.Path(sys.executable).as_posix().lower()
-    if sys.platform == "darwin":
-        found_version_of_executable = re.split(
-            r"(python@[\d.]*\d+)", posix_path_to_executable
-        )
-        posix_path_to_executable = "".join(found_version_of_executable[0:2])
-    assert (
-        utils.find_python_in_path(sys.prefix)
-        .as_posix()
-        .lower()
-        .startswith(posix_path_to_executable)
+    posix_path_to_executable = pathlib.Path(sys.executable)
+    assert compare_python_paths(
+        utils.find_python_in_path(sys.prefix),
+        posix_path_to_executable,
     )
 
     assert not utils.find_python_in_path(tmp_path)

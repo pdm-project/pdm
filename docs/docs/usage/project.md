@@ -5,7 +5,7 @@
 If you have used [`pdm init`](cli_reference.md#exec-0--init), you must have already seen how PDM detects and selects the Python
 interpreter. After initialized, you can also change the settings by `pdm use <python_version_or_path>`.
 The argument can be either a version specifier of any length, or a relative or absolute path to the
-python interpreter, but remember the Python interpreter must conform with the `python_requires`
+python interpreter, but remember the Python interpreter must conform with the `requires-python`
 constraint in the project file.
 
 ### How `requires-python` controls the project
@@ -159,9 +159,16 @@ The caches are located under `$(pdm config cache_dir)/packages`. One can view th
 
 ```bash
 $ pdm info
-Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
-Project Root:       D:/Workspace/pdm
-                                                                                                                                   [10:42]
+PDM version:
+  2.0.0
+Python Interpreter:
+  /opt/homebrew/opt/python@3.9/bin/python3.9 (3.9)
+Project Root:
+  /Users/fming/wkspace/github/test-pdm
+Project Packages:
+  /Users/fming/wkspace/github/test-pdm/__pypackages__/3.9
+
+# Show environment info
 $ pdm info --env
 {
   "implementation_name": "cpython",
@@ -177,6 +184,11 @@ $ pdm info --env
   "sys_platform": "win32"
 }
 ```
+
+[This command](cli_reference.md#exec-0--info) is useful for checking which mode is being used by the project:
+
+- If *Project Packages* is `None`, [virtualenv mode](venv.md) is enabled.
+- Otherwise, [PEP 582 mode](pep582.md) is enabled.
 
 ## Manage global project
 
@@ -198,19 +210,6 @@ project path via `-p/--project <path>` option.
 
 !!! attention "CAUTION"
     Be careful with `remove` and `sync --clean/--pure` commands when global project is used, because it may remove packages installed in your system Python.
-
-## Working with a virtualenv
-
-Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
-by the configuration item `python.use_venv`. When it is set to `True`, PDM will use the virtualenv if:
-
-- a virtualenv is already activated.
-- any of `venv`, `.venv`, `env` is a valid virtualenv folder.
-
-Besides, when `python.use_venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
-
-For enhanced virtualenv support such as virtualenv management and auto-creation, please go for [pdm-venv](https://github.com/pdm-project/pdm-venv),
-which can be installed as a plugin.
 
 ## Import project metadata from existing project files
 
@@ -279,9 +278,3 @@ PDM provides a convenient command group to manage the cache, there are four kind
 
 See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
 Find the usage by the `--help` option of each command.
-
-## How we make PEP 582 packages available to the Python interpreter
-
-Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`
-by executing the `sitecustomize.py` shipped with PDM. The interpreter can search the directories
-for the nearest `__pypackage__` folder and append it to the `sys.path` variable.

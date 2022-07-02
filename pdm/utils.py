@@ -187,21 +187,6 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
-def get_in_project_venv_python(root: Path) -> Path | None:
-    """Get the python interpreter path of venv-in-project"""
-    if os.name == "nt":
-        suffix = ".exe"
-        scripts = "Scripts"
-    else:
-        suffix = ""
-        scripts = "bin"
-    for possible_dir in ("venv", ".venv", "env"):
-        if (root / possible_dir / scripts / f"python{suffix}").exists():
-            venv = root / possible_dir
-            return venv / scripts / f"python{suffix}"
-    return None
-
-
 @contextlib.contextmanager
 def atomic_open_for_write(
     filename: str | Path, *, mode: str = "w", encoding: str = "utf-8"
@@ -343,16 +328,6 @@ def is_path_relative_to(path: str | Path, other: str | Path) -> bool:
     except ValueError:
         return False
     return True
-
-
-def is_venv_python(interpreter: str | Path) -> bool:
-    """Check if the given interpreter path is from a virtualenv"""
-    interpreter = Path(interpreter)
-    if interpreter.parent.parent.joinpath("pyvenv.cfg").exists():
-        return True
-
-    virtual_env = os.getenv("VIRTUAL_ENV")
-    return bool(virtual_env and is_path_relative_to(interpreter, virtual_env))
 
 
 def get_venv_like_prefix(interpreter: str | Path) -> Path | None:

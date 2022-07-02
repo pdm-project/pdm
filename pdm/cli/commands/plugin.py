@@ -166,7 +166,9 @@ class RemoveCommand(BaseCommand):
             sys.exit(1)
         if not (
             options.yes
-            or termui.confirm(f"Will remove: {packages_to_remove}, continue?")
+            or termui.confirm(
+                f"Will remove: {packages_to_remove}, continue?", default=True
+            )
         ):
             return
         pip_args = (

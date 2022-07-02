@@ -69,6 +69,7 @@ def style(
 
 
 def confirm(*args: str, **kwargs: Any) -> str:
+    kwargs.setdefault("default", False)
     return Confirm.ask(*args, **kwargs)
 
 
