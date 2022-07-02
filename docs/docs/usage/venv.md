@@ -1,16 +1,16 @@
-# Manage Environments
+# Working with virtualenv
 
 When you run [`pdm init`](cli_reference.md#exec-0--init) command, PDM will [ask for the Python interpreter to use](project.md#choose-a-python-interpreter) in the project, which is the base interpreter to install dependencies and run tasks.
-**The type of the Python interpreter being used(and stored in `.pdm.toml` in the project root) determines how the project stores
-your dependencies.**
 
-## Virtual environments mode
+Compared to [PEP 582](https://www.python.org/dev/peps/pep-0582/), virtual environments are considered more mature and have better support in the Python ecosystem as well as IDEs. Therefore, virtualenv is the default mode if not configured otherwise.
 
-**This type is used if the project interpreter(the interpreter stored in `.pdm.toml`, which can be checked by `pdm info`) is from a virtualenv.**
+**Virtual environments will be used if the project interpreter(the interpreter stored in `.pdm.toml`, which can be checked by `pdm info`) is from a virtualenv.**
+
+## Virtualenv auto-creation
 
 By default, PDM prefers to use the virtualenv layout as other package managers do. When you run `pdm install` the first time on a new PDM-managed project, whose Python interpreter is not decided yet, PDM will create a virtualenv in `<project_root>/.venv`, and install dependencies into it. In the interactive session of `pdm init`, PDM will also ask to create a virtualenv for you.
 
-You can choose the backend used by PDM to create a virtualenv. Currently we support three backends:
+You can choose the backend used by PDM to create a virtualenv. Currently it supports three backends:
 
 - [`virtualenv`](https://virtualenv.pypa.io/)(default)
 - `venv`
@@ -18,7 +18,7 @@ You can choose the backend used by PDM to create a virtualenv. Currently we supp
 
 You can change it by `pdm config venv.backend [virtualenv|venv|conda]`.
 
-### Create a virtualenv yourself
+## Create a virtualenv yourself
 
 You can create more than one virtualenvs with whatever Python version you want.
 
@@ -31,19 +31,19 @@ $ pdm venv create --name for-test 3.8
 $ pdm venv create --with venv 3.9
 ```
 
-### The location of virtualenvs
+## The location of virtualenvs
 
 For the first time, PDM will try to create a virtualenv **in project**, unless `.venv` already exists.
 Other virtualenvs go to the location specified by the `venv.location` configuration. They are named as `<project_name>-<path_hash>-<name_or_python_version>` to avoid name collision. A virtualenv created with `--name` option will always go to this location. You can disable the in-project virtualenv creation by `pdm config venv.in_project false`.
 
-### Virtualenv auto-detection
+## Virtualenv auto-detection
 
 When no interpreter is stored in the project config or `PDM_IGNORE_SAVED_PYTHON` env var is set, PDM will try to detect possible virtualenvs to use:
 
 - `venv`, `env`, `.venv` directories in the project root
 - The currently activated virtualenv
 
-### List all virtualenvs created with this project
+## List all virtualenvs created with this project
 
 ```bash
 $ pdm venv list
@@ -54,7 +54,7 @@ Virtualenvs created with this project:
 -  3.9.1: C:\Users\Frost Ming\AppData\Local\pdm\pdm\venvs\test-project-8Sgn_62n-3.9.1
 ```
 
-### Remove a virtualenv
+## Remove a virtualenv
 
 ```bash
 $ pdm venv remove for-test
@@ -63,7 +63,7 @@ Will remove: C:\Users\Frost Ming\AppData\Local\pdm\pdm\venvs\test-project-8Sgn_6
 Removed C:\Users\Frost Ming\AppData\Local\pdm\pdm\venvs\test-project-8Sgn_62n-for-test
 ```
 
-### Activate a virtualenv
+## Activate a virtualenv
 
 Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` doesn't create the shell for you but print the activate command to the console. In this way you won't leave the current shell. You can then feed the output to `eval` to activate the virtualenv:
 
@@ -99,12 +99,6 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` do
     `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the forementioned purpose, use the `pdm use` command.
 
 For more CLI usage, see the [`pdm venv`](cli_reference.md#exec-0--venv) documentation.
-
-## PEP 582 mode
-
-**When the project interpreter is a normal Python, this mode is enabled.**
-
-Dependencies will be installed into `__pypackages__` directory under the project root. With [PEP 582 enabled globally](../index.md#enable-pep-582-globally), you can also use the project interpreter to run scripts directly.
 
 ## Disable virtualenv mode
 

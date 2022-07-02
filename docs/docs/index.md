@@ -132,30 +132,6 @@ You can either pass the options after the script or set the env var value.
         .\pw --init pdm
         ```
 
-### Enable PEP 582 globally
-
-To make the Python interpreters aware of PEP 582 packages, one need to add the `pdm/pep582/sitecustomize.py`
-to the Python library search path.
-
-#### For Windows users
-
-One just needs to execute `pdm --pep582`, then environment variable will be changed automatically. Don't forget
-to restart the terminal session to take effect.
-
-#### For Mac and Linux users
-
-The command to change the environment variables can be printed by `pdm --pep582 [<SHELL>]`. If `<SHELL>`
-isn't given, PDM will pick one based on some guesses. You can run `eval "$(pdm --pep582)"` to execute the command.
-
-You may want to write a line in your `.bash_profile`(or similar profiles) to make it effective when logging in.
-For example, in bash you can do this:
-
-```bash
-pdm --pep582 >> ~/.bash_profile
-```
-
-Once again, Don't forget to restart the terminal session to take effect.
-
 ## Shell Completion
 
 PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. Here are some common locations for each shell:
@@ -203,129 +179,10 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
     pdm completion powershell | Out-File -Encoding utf8 $PROFILE\..\Completions\pdm_completion.ps1
     ```
 
-## Use with IDE
+## Virtualenv and PEP 582
 
-Now there are not built-in support or plugins for PEP 582 in most IDEs, you have to configure your tools manually.
-
-PDM will write and store project-wide configurations in `.pdm.toml` and you are recommended to add following lines
-in the `.gitignore`:
-
-```
-.pdm.toml
-__pypackages__/
-```
-
-### PyCharm
-
-Mark `__pypackages__/<major.minor>/lib` as [Sources Root](https://www.jetbrains.com/help/pycharm/configuring-project-structure.html#mark-dir-project-view).
-Then, select as [Python interpreter](https://www.jetbrains.com/help/pycharm/configuring-python-interpreter.html#interpreter) a Python installation with the same `<major.minor>` version.
-
-Additionally, if you want to use tools from the environment (e.g. `pytest`), you have to add the
-`__pypackages__/<major.minor>/bin` directory to the `PATH` variable in the corresponding
-run/debug configuration.
-
-### VSCode
-
-Add the following two entries to the top-level dict in `.vscode/settings.json`:
-
-```json
-{
-  "python.autoComplete.extraPaths": ["__pypackages__/<major.minor>/lib"],
-  "python.analysis.extraPaths": ["__pypackages__/<major.minor>/lib"]
-}
-```
-
-[Enable PEP582 globally](#enable-pep-582-globally),
-and make sure VSCode runs using the same user and shell you enabled PEP582 for.
-
-??? note "Cannot enable PEP582 globally?"
-    If for some reason you cannot enable PEP582 globally, you can still configure each "launch" in each project:
-    set the `PYTHONPATH` environment variable in your launch configuration, in `.vscode/launch.json`.
-    For example, to debug your `pytest` run:
-
-    ```json
-    {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "pytest",
-                "type": "python",
-                "request": "launch",
-                "module": "pytest",
-                "args": ["tests"],
-                "justMyCode": false,
-                "env": {"PYTHONPATH": "__pypackages__/<major.minor>/lib"}
-            }
-        ]
-    }
-    ```
-
-    If your package resides in a `src` directory, add it to `PYTHONPATH` as well:
-
-    ```json
-    "env": {"PYTHONPATH": "src:__pypackages__/<major.minor>/lib"}
-    ```
-
-??? note "Using Pylance/Pyright?"
-    If you have configured `"python.analysis.diagnosticMode": "workspace"`,
-    and you see a ton of errors/warnings as a result.
-    you may need to create `pyrightconfig.json` in the workspace directory, and fill in the following fields:
-
-    ```json
-    {
-        "exclude": ["__pypackages__"]
-    }
-    ```
-
-    Then restart the language server or VS Code and you're good to go.
-    In the future ([microsoft/pylance-release#1150](https://github.com/microsoft/pylance-release/issues/1150)), maybe the problem will be solved.
-
-??? note "Using Jupyter Notebook?"
-    If you wish to use pdm to install jupyter notebook and use it in vscode in conjunction with the python extension:
-
-    1. Use `pdm add notebook` or so to install notebook
-    2. Add a `.env` file inside of your project director with contents like the following:
-
-    ```
-    PYTHONPATH=/your-workspace-path/__pypackages__/<major>.<minor>/lib
-    ```
-
-    If the above still doesn't work, it's most likely because the environment variable is not properly loaded when the Notebook starts. There are two workarounds.
-
-    1. Run `code .` in Terminal. It will open a new VSCode window in the current directory with the path set correctly. Use the Jupyter Notebook in the new window
-    2. If you prefer not to open a new window, run the following at the beginning of your Jupyter Notebook to explicitly set the path:
-
-    ```
-    import sys
-    sys.path.append('/your-workspace-path/__pypackages__/<major>.<minor>/lib')
-    ```
-
-    > [Reference Issue](https://github.com/pdm-project/pdm/issues/848)
-
-#### Task Provider
-
-In addition, there is a [VSCode Task Provider extension][pdm task provider] available for download.
-
-This makes it possible for VSCode to automatically detect [pdm scripts][pdm scripts] so they
-can be run natively as [VSCode Tasks][vscode tasks].
-
-[vscode tasks]: https://code.visualstudio.com/docs/editor/tasks
-[pdm task provider]: https://marketplace.visualstudio.com/items?itemName=knowsuchagency.pdm-task-provider
-[pdm scripts]: usage/scripts.md
-
-### Neovim
-
-If using [neovim-lsp](https://github.com/neovim/nvim-lspconfig) with
-[pyright](https://github.com/Microsoft/pyright) and want your
-`__pypackages__` directory to be added to the path, you can add this to your
-project's `pyproject.toml`.
-
-```toml
-[tool.pyright]
-extraPaths = ["__pypackages__/<major.minor>/lib/"]
-```
-
-### [Seek for other IDEs or editors](usage/advanced.md#integrate-with-other-ide-or-editors)
+In addition to the virtualenv management, PDM supports [PEP 582](https://www.python.org/dev/peps/pep-0582/) as an opt-in feature.
+You can learn more about the two modes in the corresponding chapters in [Working with virtualenv](usage/venv.md) and [Working with PEP 582](usage/pep582.md)
 
 ## PDM Eco-system
 

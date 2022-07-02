@@ -199,19 +199,6 @@ project path via `-p/--project <path>` option.
 !!! attention "CAUTION"
     Be careful with `remove` and `sync --clean/--pure` commands when global project is used, because it may remove packages installed in your system Python.
 
-## Working with a virtualenv
-
-Although PDM enforces PEP 582 by default, it also allows users to install packages into the virtualenv. It is controlled
-by the configuration item `python.use_venv`. When it is set to `True`, PDM will use the virtualenv if:
-
-- a virtualenv is already activated.
-- any of `venv`, `.venv`, `env` is a valid virtualenv folder.
-
-Besides, when `python.use_venv` is on and the interpreter path given is a venv-like path, PDM will reuse that venv directory as well.
-
-For enhanced virtualenv support such as virtualenv management and auto-creation, please go for [pdm-venv](https://github.com/pdm-project/pdm-venv),
-which can be installed as a plugin.
-
 ## Import project metadata from existing project files
 
 If you are already other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
@@ -279,9 +266,3 @@ PDM provides a convenient command group to manage the cache, there are four kind
 
 See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
 Find the usage by the `--help` option of each command.
-
-## How we make PEP 582 packages available to the Python interpreter
-
-Thanks to the [site packages loading](https://docs.python.org/3/library/site.html) on Python startup. It is possible to patch the `sys.path`
-by executing the `sitecustomize.py` shipped with PDM. The interpreter can search the directories
-for the nearest `__pypackage__` folder and append it to the `sys.path` variable.

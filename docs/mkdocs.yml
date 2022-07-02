@@ -41,9 +41,10 @@ plugins:
 nav:
   - Usage:
       - Home: index.md
-      - usage/dependency.md
       - usage/project.md
-      - usage/environment.md
+      - usage/venv.md
+      - usage/pep582.md
+      - usage/dependency.md
       - usage/scripts.md
       - usage/hooks.md
       - usage/advanced.md

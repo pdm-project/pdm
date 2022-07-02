@@ -129,7 +129,7 @@ by `pip install -e .` or `python setup.py develop` in the **traditional** Python
 as there is no such `setup.py` in a PDM project, how can we do that?
 
 Fortunately, it becomes even easier with PDM and PEP 582. First, you should enable PEP 582 globally following the
-[corresponding part of this doc](../index.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
+[corresponding part of this doc](../usage/pep582.md#enable-pep-582-globally). Then you just need to install all dependencies into the `__pypackages__` directory by:
 
 ```bash
 pdm install
