@@ -85,7 +85,9 @@ def log_subprocessor(
         )
     except subprocess.CalledProcessError as e:
         raise BuildError(
-            f"Call command {cmd} return non-zero status({e.returncode})."
+            f"Call command {cmd} return non-zero status({e.returncode}). "
+            "Make sure the package is PEP 517-compliant, or you can add "
+            "`--no-isolation` to the command."
         ) from None
     finally:
         outstream.stop()
