@@ -441,8 +441,6 @@ def invoke(core, monkeypatch):
 
 
 BACKENDS = ["virtualenv", "venv"]
-if shutil.which("conda"):
-    BACKENDS.append("conda")
 
 
 @pytest.fixture(params=BACKENDS)
