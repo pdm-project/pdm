@@ -178,7 +178,17 @@ def test_virtualenv_backend_create(project, mocker):
     mock_call = mocker.patch("subprocess.check_call")
     location = backend.create()
     mock_call.assert_called_once_with(
-        [sys.executable, "-m", "virtualenv", str(location), "-p", interpreter],
+        [
+            sys.executable,
+            "-m",
+            "virtualenv",
+            "--no-pip",
+            "--no-setuptools",
+            "--no-wheel",
+            str(location),
+            "-p",
+            interpreter,
+        ],
         stdout=ANY,
     )
 
@@ -190,7 +200,7 @@ def test_venv_backend_create(project, mocker):
     mock_call = mocker.patch("subprocess.check_call")
     location = backend.create()
     mock_call.assert_called_once_with(
-        [interpreter, "-m", "venv", str(location)], stdout=ANY
+        [interpreter, "-m", "venv", "--without-pip", str(location)], stdout=ANY
     )
 
 
@@ -200,7 +210,7 @@ def test_conda_backend_create(project, mocker):
     mock_call = mocker.patch("subprocess.check_call")
     location = backend.create()
     mock_call.assert_called_once_with(
-        ["conda", "create", "--yes", "--prefix", str(location), "pip", "python=3.8"],
+        ["conda", "create", "--yes", "--prefix", str(location), "python=3.8"],
         stdout=ANY,
     )
 
@@ -215,7 +225,6 @@ def test_conda_backend_create(project, mocker):
             "--yes",
             "--prefix",
             str(location),
-            "pip",
             f"python={python_version}",
         ],
         stdout=ANY,

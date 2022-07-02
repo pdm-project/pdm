@@ -95,7 +95,15 @@ class Backend(abc.ABC):
 
 class VirtualenvBackend(Backend):
     def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
-        cmd = [sys.executable, "-m", "virtualenv", str(location)]
+        cmd = [
+            sys.executable,
+            "-m",
+            "virtualenv",
+            "--no-pip",
+            "--no-setuptools",
+            "--no-wheel",
+            str(location),
+        ]
         cmd.extend(["-p", str(self._resolved_interpreter.executable)])
         cmd.extend(args)
         self.subprocess_call(cmd)
@@ -107,6 +115,7 @@ class VenvBackend(VirtualenvBackend):
             str(self._resolved_interpreter.executable),
             "-m",
             "venv",
+            "--without-pip",
             str(location),
         ] + list(args)
         self.subprocess_call(cmd)
@@ -135,8 +144,6 @@ class CondaBackend(Backend):
             "--yes",
             "--prefix",
             str(location),
-            # Ensure the pip package is installed.
-            "pip",
             f"python={python_ver}",
             *args,
         ]
