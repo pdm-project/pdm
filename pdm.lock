@@ -132,7 +132,7 @@ summary = "A platform independent file lock."
 
 [[package]]
 name = "findpython"
-version = "0.1.6"
+version = "0.2.0"
 requires_python = ">=3.7"
 summary = "A utility to find python versions on your system"
 dependencies = [
@@ -711,7 +711,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:df175487bf4721ef07ae6819a5b0895fdd79577cc2021483686faf789991fc53"
+content_hash = "sha256:0f7b10222fac8f4982fd1632d5ee9385d3e9fc6ffaa4317cdd1fb965627ce585"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -819,9 +819,9 @@ content_hash = "sha256:df175487bf4721ef07ae6819a5b0895fdd79577cc2021483686faf789
     {file = "filelock-3.7.1-py3-none-any.whl", hash = "sha256:37def7b658813cda163b56fc564cdc75e86d338246458c4c28ae84cabefa2404"},
     {file = "filelock-3.7.1.tar.gz", hash = "sha256:3a0fd85166ad9dbab54c9aec96737b744106dc5f15c0b09a6744a445299fcf04"},
 ]
-"findpython 0.1.6" = [
-    {file = "findpython-0.1.6-py3-none-any.whl", hash = "sha256:79ec09965019b73c83f49df0de9a056d2055abf694f3813966a4841e80cf734e"},
-    {file = "findpython-0.1.6.tar.gz", hash = "sha256:9fd6185cdcb96baa7109308447efb493b2c7f1a8f569e128af14d726b2a69e18"},
+"findpython 0.2.0" = [
+    {file = "findpython-0.2.0-py3-none-any.whl", hash = "sha256:110ec222a43aca3fcd154fd90b911f465c70e86787ae0532bab2266a95870fc9"},
+    {file = "findpython-0.2.0.tar.gz", hash = "sha256:c2099ee0b71fc2714b64f68fd1f40bc0ee47f49dfe9547fb64d7cbcc02fe0871"},
 ]
 "ghp-import 2.1.0" = [
     {file = "ghp-import-2.1.0.tar.gz", hash = "sha256:9c535c4c61193c2df8871222567d7fd7e5014d835f97dc7b7439069e2413d343"},

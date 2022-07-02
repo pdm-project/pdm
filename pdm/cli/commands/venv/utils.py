@@ -77,4 +77,4 @@ class VenvProvider(BaseProvider):
         for _, venv in iter_venvs(self.project):
             python = get_venv_python(venv)
             if python.exists():
-                yield PythonVersion(python, _interpreter=python)
+                yield PythonVersion(python, _interpreter=python, keep_symlink=True)
