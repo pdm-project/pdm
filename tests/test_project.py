@@ -163,6 +163,7 @@ def test_project_auto_detect_venv(project):
     assert project.environment.is_global
 
 
+@pytest.mark.path
 def test_ignore_saved_python(project, monkeypatch):
     project.project_config["python.use_venv"] = True
     project._python = None
@@ -214,7 +215,7 @@ def test_global_python_path_config(project_no_init, tmp_path):
 def test_set_non_exist_python_path(project_no_init):
     project_no_init.project_config["python.path"] = "non-exist-python"
     project_no_init._python = None
-    assert str(project_no_init.python.executable).startswith(str(sys.executable))
+    assert project_no_init.python.executable.name != "non-exist-python"
 
 
 @pytest.mark.usefixtures("venv_backends")

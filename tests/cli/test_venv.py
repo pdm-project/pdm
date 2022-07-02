@@ -95,7 +95,7 @@ def test_venv_activate(invoke, mocker, project):
     venv_path = re.match(
         r"Virtualenv (.+) is created successfully", result.output
     ).group(1)
-    key = venv_path.rsplit("-", 1)[-1]
+    key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
 
     mocker.patch("shellingham.detect_shell", return_value=("bash", None))
     result = invoke(["venv", "activate", key], obj=project)
@@ -217,7 +217,7 @@ def test_conda_backend_create(project, mocker):
 
     backend = backends.CondaBackend(project, None)
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-    assert backend.ident == python_version
+    assert backend.ident.startswith(python_version)
     location = backend.create()
     mock_call.assert_called_with(
         [
