@@ -10,6 +10,8 @@ from pdm.cli.hooks import KNOWN_HOOKS
 from pdm.cli.options import from_splitted_env
 from pdm.models.requirements import parse_requirement
 
+pytestmark = pytest.mark.usefixtures("repository", "working_set", "local_finder")
+
 
 def test_pre_script_fail_fast(project, invoke, capfd, mocker):
     project.tool_settings["scripts"] = {
