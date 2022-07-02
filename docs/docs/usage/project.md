@@ -5,7 +5,7 @@
 If you have used [`pdm init`](cli_reference.md#exec-0--init), you must have already seen how PDM detects and selects the Python
 interpreter. After initialized, you can also change the settings by `pdm use <python_version_or_path>`.
 The argument can be either a version specifier of any length, or a relative or absolute path to the
-python interpreter, but remember the Python interpreter must conform with the `python_requires`
+python interpreter, but remember the Python interpreter must conform with the `requires-python`
 constraint in the project file.
 
 ### How `requires-python` controls the project
