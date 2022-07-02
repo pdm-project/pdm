@@ -191,5 +191,7 @@ You can learn more about the two modes in the corresponding chapters in [Working
 ## Sponsors
 
 <p align="center">
-    <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+    <a href="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg">
+        <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+    </a>
 </p>

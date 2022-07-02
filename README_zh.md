@@ -230,7 +230,9 @@ $ python /home/frostming/workspace/flask_app/app.py
 ## 赞助
 
 <p align="center">
-    <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+    <a href="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg">
+        <img src="https://cdn.jsdelivr.net/gh/pdm-project/sponsors/sponsors.svg"/>
+    </a>
 </p>
 
 ## 鸣谢
