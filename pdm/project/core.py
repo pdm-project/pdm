@@ -695,6 +695,7 @@ dependencies = ["pip", "setuptools", "wheel"]
             args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = self._get_python_finder()
         for entry in finder.find_all(*args):
+            print(entry.executable)
             yield PythonInfo(entry)
         if not python_spec:
             python = shutil.which("python")

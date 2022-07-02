@@ -50,6 +50,10 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
+def compare_paths(path1, path2):
+    return path1.startswith(path2) or path2.startswith(path1)
+
+
 @pytest.mark.path
 def test_find_python_in_path(tmp_path):
 
@@ -64,11 +68,9 @@ def test_find_python_in_path(tmp_path):
             r"(python@[\d.]*\d+)", posix_path_to_executable
         )
         posix_path_to_executable = "".join(found_version_of_executable[0:2])
-    assert (
-        utils.find_python_in_path(sys.prefix)
-        .as_posix()
-        .lower()
-        .startswith(posix_path_to_executable)
+    assert compare_paths(
+        utils.find_python_in_path(sys.prefix).as_posix().lower(),
+        posix_path_to_executable,
     )
 
     assert not utils.find_python_in_path(tmp_path)
