@@ -76,6 +76,7 @@ class VenvProvider(BaseProvider):
     def find_pythons(self) -> Iterable[PythonVersion]:
         for _, venv in iter_venvs(self.project):
             python = get_venv_python(venv)
-            # print(python, python.exists())
             if python.exists():
-                yield PythonVersion(python, _interpreter=python)
+                p = PythonVersion(python, _interpreter=python)
+                print(p.executable, p.version, p.is_valid())
+                yield p
