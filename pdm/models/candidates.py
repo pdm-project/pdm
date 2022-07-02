@@ -330,7 +330,7 @@ class PreparedCandidate:
         build_dir = self._get_wheel_dir()
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
-        termui.logger.info("Building wheel for %s", self.link)
+        termui.logger.info("Running PEP 517 backend to build a wheel for %s", self.link)
         self.wheel = Path(
             builder.build(build_dir, metadata_directory=self._metadata_dir)
         )
@@ -434,6 +434,9 @@ class PreparedCandidate:
         # If all fail, try building the source to get the metadata
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
+            termui.logger.info(
+                "Running PEP 517 backend to get metadata for %s", self.link
+            )
             self._metadata_dir = builder(
                 self._unpacked_dir, self.environment
             ).prepare_metadata(metadir_parent)

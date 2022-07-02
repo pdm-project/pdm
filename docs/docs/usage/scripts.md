@@ -10,7 +10,7 @@ pdm run flask run -p 54321
 
 It will run `flask run -p 54321` in the environment that is aware of packages in `__pypackages__/` folder.
 
-!!! note
+!!! note "Yarn-like script shortcuts"
     There is a builtin shortcut making all scripts available as root commands
     as long as the script does not conflict with any builtin or plugin-contributed command.
     Said otherwise, if you have a `test` script, you can run both `pdm run test` and `pdm test`.
