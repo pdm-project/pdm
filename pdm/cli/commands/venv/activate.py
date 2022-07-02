@@ -40,11 +40,12 @@ class ActivateCommand(BaseCommand):
                     f"Can't activate a non-venv Python [green]{interpreter}[/], "
                     "you can specify one with [green]pdm venv activate <env_name>[/]",
                     style="yellow",
+                    err=True,
                 )
                 raise SystemExit(1)
         project.core.ui.echo(self.get_activate_command(venv))
 
-    def get_activate_command(self, venv: Path) -> str:
+    def get_activate_command(self, venv: Path) -> str:  # pragma: no cover
         shell, _ = shellingham.detect_shell()
         if shell == "fish":
             command, filename = "source", "activate.fish"

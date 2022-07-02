@@ -27,9 +27,9 @@ class Backend(abc.ABC):
     def _resolved_interpreter(self) -> PythonInfo:
         if not self.python:
             return self.project.python
-        try:
+        try:  # pragma: no cover
             return next(iter(self.project.find_interpreters(self.python)))
-        except StopIteration:
+        except StopIteration:  # pragma: no cover
             raise VirtualenvCreateError(f"Can't find python interpreter {self.python}")
 
     @property
@@ -54,7 +54,7 @@ class Backend(abc.ABC):
                 if self.project.core.ui.verbosity < termui.Verbosity.DETAIL
                 else None,
             )
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as e:  # pragma: no cover
             raise VirtualenvCreateError(e) from None
 
     def _ensure_clean(self, location: Path, force: bool = False) -> None:

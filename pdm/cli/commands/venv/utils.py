@@ -70,7 +70,7 @@ class VenvProvider(BaseProvider):
         self.project = project
 
     @classmethod
-    def create(cls: Type[T]) -> Optional[T]:
+    def create(cls: Type[T]) -> Optional[T]:  # pragma: no cover
         return None
 
     def find_pythons(self) -> Iterable[PythonVersion]:

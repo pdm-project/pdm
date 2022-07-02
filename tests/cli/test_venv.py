@@ -110,6 +110,20 @@ def test_venv_activate(invoke, mocker, project):
 
 
 @pytest.mark.usefixtures("fake_create")
+def test_venv_activate_error(invoke, project):
+    project.project_config["venv.in_project"] = False
+    result = invoke(["venv", "create"], obj=project, strict=True)
+
+    result = invoke(["venv", "activate", "foo"], obj=project)
+    assert result.exit_code != 0
+    assert "No virtualenv with key" in result.stderr
+
+    result = invoke(["venv", "activate"], obj=project)
+    assert result.exit_code != 0
+    assert "Can't activate a non-venv Python" in result.stderr
+
+
+@pytest.mark.usefixtures("fake_create")
 @pytest.mark.parametrize("keep_pypackages", [True, False])
 def test_venv_auto_create(invoke, mocker, project, keep_pypackages):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")

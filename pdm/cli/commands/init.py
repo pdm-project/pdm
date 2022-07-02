@@ -61,7 +61,7 @@ class Command(BaseCommand):
                     try:
                         path = project._create_virtualenv()
                         project.python = PythonInfo.from_path(get_venv_python(path))
-                    except Exception as e:
+                    except Exception as e:  # pragma: no cover
                         project.core.ui.echo(
                             f"Error occured when creating virtualenv: {e}\n"
                             "Please fix it and create later.",
