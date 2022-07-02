@@ -71,7 +71,7 @@ class Command(BaseCommand):
             actions.do_use(project, "3", True, ignore_requires_python=True, hooks=hooks)
         if get_venv_like_prefix(project.python.executable) is None:
             project.core.ui.echo(
-                "You are using the PEP 582 layout, no virtualenv is created.\n"
+                "You are using the PEP 582 mode, no virtualenv is created.\n"
                 "For more info, please visit https://peps.python.org/pep-0582/",
                 style="green",
             )

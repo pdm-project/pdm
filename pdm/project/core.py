@@ -273,6 +273,13 @@ class Project:
                 err=True,
             )
             path = existing_venv
+        elif self.root.joinpath("__pypackages__").exists():
+            self.core.ui.echo(
+                "__pypackages__ is detected, use the PEP 582 mode",
+                style="green",
+                err=True,
+            )
+            return Environment(self)
         else:
             # Create a virtualenv using the selected Python interpreter
             self.core.ui.echo(

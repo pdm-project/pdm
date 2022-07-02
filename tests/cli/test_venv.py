@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import sys
 
 import pytest
@@ -107,12 +108,20 @@ def test_venv_activate(invoke, mocker, project):
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_auto_create(invoke, mocker, project):
+@pytest.mark.parametrize("keep_pypackages", [True, False])
+def test_venv_auto_create(invoke, mocker, project, keep_pypackages):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
     del project.project_config["python.path"]
+    if keep_pypackages:
+        project.root.joinpath("__pypackages__").mkdir(exist_ok=True)
+    else:
+        shutil.rmtree(project.root / "__pypackages__", ignore_errors=True)
     project.project_config["python.use_venv"] = True
     invoke(["install"], obj=project)
-    creator.assert_called_once()
+    if keep_pypackages:
+        creator.assert_not_called()
+    else:
+        creator.assert_called_once()
 
 
 @pytest.mark.usefixtures("fake_create")

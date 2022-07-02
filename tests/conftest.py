@@ -448,3 +448,5 @@ if shutil.which("conda"):
 @pytest.fixture(params=BACKENDS)
 def venv_backends(project, request):
     project.project_config["venv.backend"] = request.param
+    project.project_config["python.use_venv"] = True
+    shutil.rmtree(project.root / "__pypackages__", ignore_errors=True)
