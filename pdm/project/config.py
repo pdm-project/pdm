@@ -211,7 +211,9 @@ class Config(MutableMapping[str, str]):
             global_only=True,
         ),
         "venv.backend": ConfigItem(
-            "Default backend to create virtualenv", default="virtualenv"
+            "Default backend to create virtualenv",
+            default="virtualenv",
+            env_var="PDM_VENV_BACKEND",
         ),
         "venv.in_project": ConfigItem(
             "Create virtualenv in `.venv` under project root",

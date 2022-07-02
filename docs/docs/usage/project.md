@@ -159,9 +159,16 @@ The caches are located under `$(pdm config cache_dir)/packages`. One can view th
 
 ```bash
 $ pdm info
-Python Interpreter: D:/Programs/Python/Python38/python.exe (3.8.0)
-Project Root:       D:/Workspace/pdm
-                                                                                                                                   [10:42]
+PDM version:
+  2.0.0
+Python Interpreter:
+  /opt/homebrew/opt/python@3.9/bin/python3.9 (3.9)
+Project Root:
+  /Users/fming/wkspace/github/test-pdm
+Project Packages:
+  /Users/fming/wkspace/github/test-pdm/__pypackages__/3.9
+
+# Show environment info
 $ pdm info --env
 {
   "implementation_name": "cpython",
@@ -177,6 +184,11 @@ $ pdm info --env
   "sys_platform": "win32"
 }
 ```
+
+[This command](cli_reference.md#exec-0--info) is useful for checking which mode is being used by the project:
+
+- If *Project Packages* is `None`, [virtualenv mode](venv.md) is enabled.
+- Otherwise, [PEP 582 mode](pep582.md) is enabled.
 
 ## Manage global project
 
