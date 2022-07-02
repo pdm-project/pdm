@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from packaging.version import parse
 
+from pdm.cli.commands.venv.utils import get_venv_python
 from pdm.utils import cd
 
 
@@ -246,8 +247,9 @@ def test_find_interpreters_from_venv(invoke, project):
     assert result.exit_code == 0
     venv_parent = project.root / "venvs"
     venv_path = next(venv_parent.iterdir(), None)
+    venv_python = get_venv_python(venv_path)
 
-    assert Path(next(project.find_interpreters()).executable).relative_to(venv_path)
+    assert any(venv_python == p.executable for p in project.find_interpreters())
 
 
 def test_iter_project_venvs(project):
