@@ -24,7 +24,13 @@ from pdm.models.in_process import (
 from pdm.models.python import PythonInfo
 from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
-from pdm.utils import cached_property, get_index_urls, get_venv_like_prefix, pdm_scheme
+from pdm.utils import (
+    cached_property,
+    get_index_urls,
+    get_venv_like_prefix,
+    is_pip_compatible_with_python,
+    pdm_scheme,
+)
 
 if TYPE_CHECKING:
     from pdm._types import Source
@@ -207,12 +213,9 @@ class Environment:
         """Get a pip command for this environment, and download one if not available.
         Return a list of args like ['python', '-m', 'pip']
         """
-        try:
-            from pip import __file__ as pip_location
-        except ModuleNotFoundError:
-            pip_location = None  # type: ignore
+        from pip import __file__ as pip_location
 
-        python_major = self.interpreter.major
+        python_version = self.interpreter.version
         executable = str(self.interpreter.executable)
         proc = subprocess.run(
             [executable, "-Esm", "pip", "--version"], capture_output=True
@@ -220,7 +223,7 @@ class Environment:
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
             command = [executable, "-Esm", "pip"]
-        elif python_major == 3 and pip_location:
+        elif is_pip_compatible_with_python(python_version):
             # Use the host pip package if available
             command = [executable, "-Es", os.path.dirname(pip_location)]
         else:
