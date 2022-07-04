@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Iterator, TypeVar
 
 from pdm.compat import Distribution, tomllib
-from pdm.formats import flit, poetry
 from pdm.models.markers import Marker
 from pdm.models.requirements import parse_requirement
 from pdm.models.setup import Setup
@@ -22,6 +21,8 @@ class MutableMetadata(Metadata, MutableMapping):
     """
 
     def __init__(self, root: str | Path, pyproject: dict[str, Any]) -> None:
+        from pdm.formats import flit, poetry
+
         try:
             super().__init__(root, pyproject)
         except ValueError as e:
