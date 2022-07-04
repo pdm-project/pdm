@@ -2,7 +2,7 @@ ci:
   autoupdate_schedule: monthly
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
 
@@ -19,7 +19,7 @@ repos:
       - id: isort
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.960
+    rev: v0.961
     hooks:
       - id: mypy
         args: [pdm]
