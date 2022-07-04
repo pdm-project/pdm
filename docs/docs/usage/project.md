@@ -213,7 +213,7 @@ project path via `-p/--project <path>` option.
 
 ## Import project metadata from existing project files
 
-If you are already other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
+If you are already using other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
 PDM provides `import` command so that you don't have to initialize the project manually, it now supports:
 
 1. Pipenv's `Pipfile`
