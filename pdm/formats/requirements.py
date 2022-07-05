@@ -187,7 +187,7 @@ def export(
             )
         )
         if options.hashes and getattr(candidate, "hashes", None):
-            for item in candidate.hashes.values():  # type: ignore
+            for item in sorted(set(candidate.hashes.values())):  # type: ignore
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
     sources = project.tool_settings.get("source", [])

@@ -5,6 +5,8 @@ import sys
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
+from unearth import Link
+
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
 from pdm.models.candidates import Candidate
@@ -211,7 +213,7 @@ class BaseRepository:
                 link = c.prepare(self.environment).link
                 if not link or link.is_vcs:
                     continue
-                result[link.filename] = self._hash_cache.get_hash(link, finder.session)
+                result[link] = self._hash_cache.get_hash(link, finder.session)
         return result or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -362,7 +364,7 @@ class LockedRepository(BaseRepository):
 
         for key, hashes in lockfile.get("metadata", {}).get("files", {}).items():
             self.file_hashes[tuple(key.split(None, 1))] = {  # type: ignore
-                item["file"]: item["hash"] for item in hashes
+                Link(item["url"]): item["hash"] for item in hashes
             }
 
     def _identify_candidate(self, candidate: Candidate) -> tuple:
