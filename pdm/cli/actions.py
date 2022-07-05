@@ -337,10 +337,10 @@ def do_update(
         dependencies = all_dependencies[group]
         for name in packages:
             matched_name = next(
-                filter(
-                    lambda k: normalize_name(strip_extras(k)[0])
-                    == normalize_name(name),
-                    dependencies.keys(),
+                (
+                    k
+                    for k in dependencies
+                    if normalize_name(strip_extras(k)[0]) == normalize_name(name)
                 ),
                 None,
             )
