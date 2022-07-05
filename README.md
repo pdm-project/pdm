@@ -198,9 +198,8 @@ $ python /home/frostming/workspace/flask_app/app.py
 
 Ta-da! You are running an app with its dependencies installed in an isolated place, while no virtualenv is involved.
 
-For Windows users, please refer to [the doc](https://pdm.fming.dev/latest/#enable-pep-582-globally) about how to make it work.
-
-If you are curious about how this works, check [this doc section](https://pdm.fming.dev/latest/usage/project/#how-we-make-pep-582-packages-available-to-the-python-interpreter) for some explanation.
+For Windows users, please refer to [the doc](https://pdm.fming.dev/latest/usage/pep582/#enable-pep-582-globally) about how to make it work, it also includes a simple explanation of how
+it works.
 
 ## Badges
 
