@@ -110,7 +110,7 @@ requires_python = ">=3.7"
 summary = "Code coverage measurement for Python"
 dependencies = [
     "coverage==6.3.2",
-    "tomli",
+    "tomli; python_version < \"3.11\"",
 ]
 
 [[package]]
@@ -658,7 +658,7 @@ summary = "Backported and Experimental Type Hints for Python 3.7+"
 
 [[package]]
 name = "unearth"
-version = "0.4.1"
+version = "0.5.0"
 requires_python = ">=3.7"
 summary = "A utility to fetch and download python packages"
 dependencies = [
@@ -711,7 +711,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "3.1"
-content_hash = "sha256:0f7b10222fac8f4982fd1632d5ee9385d3e9fc6ffaa4317cdd1fb965627ce585"
+content_hash = "sha256:c389fdcb9ab4df5ba90c4600bb640b722cb2169a5e7f47ef8ba1625c9a4d5e94"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -1159,9 +1159,9 @@ content_hash = "sha256:0f7b10222fac8f4982fd1632d5ee9385d3e9fc6ffaa4317cdd1fb9656
     {file = "typing_extensions-4.2.0-py3-none-any.whl", hash = "sha256:6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708"},
     {file = "typing_extensions-4.2.0.tar.gz", hash = "sha256:f1c24655a0da0d1b67f07e17a5e6b2a105894e6824b92096378bb3668ef02376"},
 ]
-"unearth 0.4.1" = [
-    {file = "unearth-0.4.1-py3-none-any.whl", hash = "sha256:b0fb33b043a986dc939fdc6d91a6d258b0bdbcceb88e4351fac35fb36d2ec604"},
-    {file = "unearth-0.4.1.tar.gz", hash = "sha256:8bf3a2b6edb00ceef7aa97ae0bde4aad63a23477d3afbf8af4cb3e79fbaa4a15"},
+"unearth 0.5.0" = [
+    {file = "unearth-0.5.0-py3-none-any.whl", hash = "sha256:79c33fa599854a9a9a89945c23a6ac5aa5df127cbcbaf931a3c89cb22f4e26bc"},
+    {file = "unearth-0.5.0.tar.gz", hash = "sha256:622a35a767c7cf8b60a540aec694c884ad9c90e7047cdfac508a4da83d74d7d3"},
 ]
 "urllib3 1.26.9" = [
     {file = "urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
