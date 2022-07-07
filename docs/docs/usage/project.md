@@ -77,12 +77,19 @@ The configuration files are searched in the following order:
 
 1. `<PROJECT_ROOT>/.pdm.toml` - The project configuration
 2. `<CONFIG_ROOT>/config.toml` - The home configuration
+3. `<SITE_CONFIG_ROOT>/config.toml` - The site configuration
 
 where `<CONFIG_ROOT>` is:
 
 - `$XDG_CONFIG_HOME/pdm` (`~/.config/pdm` in most cases) on Linux as defined by [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
 - `~/Library/Preferences/pdm` on MacOS as defined by [Apple File System Basics](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html)
 - `%USERPROFILE%\AppData\Local\pdm` on Windows as defined in [Known folders](https://docs.microsoft.com/en-us/windows/win32/shell/known-folders)
+
+and `<SITE_CONFIG_ROOT>` is:
+
+- `$XDG_CONFIG_DIRS/pdm` (`/etc/xdg/pdm` in most cases) on Linux as defined by [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+- `/Library/Preferences/pdm` on MacOS as defined by [Apple File System Basics](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html)
+- `C:\ProgramData\pdm\pdm` on Windows as defined in [Known folders](https://docs.microsoft.com/en-us/windows/win32/shell/known-folders)
 
 If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROOT>/global-project/.pdm.toml`.
 

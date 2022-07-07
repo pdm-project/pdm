@@ -1,4 +1,5 @@
 import argparse
+from typing import Any, Mapping
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
@@ -8,6 +9,8 @@ from pdm.project.config import Config
 
 class Command(BaseCommand):
     """Display the current configuration"""
+
+    ui: termui.UI
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -58,37 +61,59 @@ class Command(BaseCommand):
             )
         config[options.key] = options.value
 
-    def _show_config(self, config: Config, ui: termui.UI) -> None:
+    def _show_config(
+        self, config: Mapping[str, Any], supersedes: Mapping[str, Any]
+    ) -> None:
+        assert Config.site is not None
         for key in sorted(config):
-            config_item = config._config_map[key]
             deprecated = ""
-            if config_item.replace and config_item.replace in config._data:
-                deprecated = f"[red](deprecating: {config_item.replace})[/]"
-            ui.echo(
+            canonical_key = key
+            superseded = key in supersedes
+            if key in Config.site.deprecated:
+                canonical_key = Config.site.deprecated[key]
+                if canonical_key in supersedes:
+                    superseded = True
+                deprecated = f"[red](deprecating: {key})[/]"
+            elif key not in Config._config_map:
+                continue
+            extra_style = " dim" if superseded else ""
+            config_item = Config._config_map[canonical_key]
+            self.ui.echo(
                 f"# {config_item.description}",
-                style="yellow",
+                style=f"yellow{extra_style}",
                 verbosity=termui.Verbosity.DETAIL,
             )
-            ui.echo(f"[cyan]{key}[/]{deprecated} = {config[key]}")
+            self.ui.echo(
+                f"[cyan]{canonical_key}[/]{deprecated} = {config[key]}",
+                style=extra_style or None,
+            )
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
-        ui = project.core.ui
-        ui.echo(
-            "Home configuration ([green]{}[/]):".format(
-                project.global_config.config_file
-            ),
+        self.ui = project.core.ui
+        assert Config.site is not None
+        self.ui.echo(
+            f"Site/default configuration ([green]{Config.site.config_file}[/]):",
             style="bold",
         )
-        self._show_config(project.global_config, ui)
+        self._show_config(
+            Config.get_defaults(),
+            {**project.global_config.self_data, **project.project_config.self_data},
+        )
 
-        ui.echo()
-        ui.echo(
-            "Project configuration ([green]{}[/]):".format(
-                project.project_config.config_file
-            ),
+        self.ui.echo(
+            f"\nHome configuration ([green]{project.global_config.config_file}[/]):",
             style="bold",
         )
-        self._show_config(project.project_config, ui)
+        self._show_config(
+            project.global_config.self_data, project.project_config.self_data
+        )
+
+        self.ui.echo(
+            "\nProject configuration ([green]"
+            f"{project.project_config.config_file}[/]):",
+            style="bold",
+        )
+        self._show_config(project.project_config.self_data, {})
 
     def _delete_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
