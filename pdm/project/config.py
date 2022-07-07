@@ -223,9 +223,15 @@ class Config(MutableMapping[str, str]):
         ),
     }
 
+    site: "Config" | None = None
+
     @classmethod
     def get_defaults(cls) -> dict[str, Any]:
-        return {k: v.default for k, v in cls._config_map.items() if v.should_show()}
+        defaults = {k: v.default for k, v in cls._config_map.items() if v.should_show()}
+        if cls.site is None:
+            cls.site = Config(Path(platformdirs.site_config_dir("pdm")) / "config.toml")
+        defaults.update(cls.site)
+        return defaults
 
     @classmethod
     def add_config(cls, name: str, item: ConfigItem) -> None:
@@ -242,6 +248,10 @@ class Config(MutableMapping[str, str]):
         self._data = collections.ChainMap(
             self._file_data, self.get_defaults() if is_global else {}
         )
+
+    @property
+    def self_data(self) -> dict[str, Any]:
+        return dict(self._file_data)
 
     def _save_config(self) -> None:
         """Save the changed to config file."""
