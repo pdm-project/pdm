@@ -448,6 +448,7 @@ def format_lockfile(
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
+
     packages = tomlkit.aot()
     file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
@@ -463,8 +464,10 @@ def format_lockfile(
             if key in file_hashes:
                 continue
             array = tomlkit.array().multiline(True)
-            for filename, hash_value in sorted(v.hashes.items()):
-                inline = make_inline_table({"file": filename, "hash": hash_value})
+            for link, hash_value in sorted(
+                v.hashes.items(), key=lambda l: l[0].filename
+            ):
+                inline = make_inline_table({"url": link.url, "hash": hash_value})
                 array.append(inline)  # type: ignore
             if array:
                 file_hashes.add(key, array)

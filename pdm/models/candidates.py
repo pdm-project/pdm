@@ -108,7 +108,7 @@ class Candidate:
             link = req.as_file_link()  # type: ignore
         self.link = link
         self.summary = ""
-        self.hashes: dict[str, str] | None = None
+        self.hashes: dict[Link, str] | None = None
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
