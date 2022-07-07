@@ -229,7 +229,7 @@ class Config(MutableMapping[str, str]):
     def get_defaults(cls) -> dict[str, Any]:
         defaults = {k: v.default for k, v in cls._config_map.items() if v.should_show()}
         if cls.site is None:
-            cls.site = Config(Path(platformdirs.site_config_dir("pdm")) / "config.toml")
+            cls.site = Config(platformdirs.site_config_path("pdm") / "config.toml")
         defaults.update(cls.site)
         return defaults
 
