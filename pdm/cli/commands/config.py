@@ -70,7 +70,7 @@ class Command(BaseCommand):
             canonical_key = key
             superseded = key in supersedes
             if key in Config.site.deprecated:
-                canonical_key = Config.deprecated[key]
+                canonical_key = Config.site.deprecated[key]
                 if canonical_key in supersedes:
                     superseded = True
                 deprecated = f"[red](deprecating: {key})[/]"
