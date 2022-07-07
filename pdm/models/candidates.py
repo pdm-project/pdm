@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, cast, no_type_check
+from typing import TYPE_CHECKING, Any, Iterable, cast, no_type_check
 from zipfile import ZipFile
 
 from packaging.utils import parse_wheel_filename
@@ -71,12 +71,20 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _find_best_match_link(
-    finder: PackageFinder, req: Requirement, hashes: dict[str, list[str]] | None
+    finder: PackageFinder, req: Requirement, hashes: dict[Link, str] | None
 ) -> Link | None:
     """Get the best matching link for a requirement"""
     # This function is called when a lock file candidate is given or incompatible wheel
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
-    best = finder.find_best_match(req.as_line(), hashes=hashes).best
+    # If hashes are not empty, find the best match from the links, otherwise find from
+    # the package sources.
+    if hashes is None:
+        best = finder.find_best_match(req.as_line()).best
+        return best.link if best is not None else None
+    # We don't evaluate against the hashes, they will be validated later in downloading.
+    evaluator = finder.build_evaluator(req.name)
+    packages: Iterable[Package] = filter(None, map(evaluator.evaluate_link, hashes))
+    best = max(packages, key=finder._sort_key, default=None)
     return best.link if best is not None else None
 
 
@@ -364,7 +372,7 @@ class PreparedCandidate:
                 self.link = _find_best_match_link(
                     finder,
                     self.req.as_pinned_version(self.candidate.version),
-                    hash_options,
+                    self.candidate.hashes,
                 )
                 if not self.link:
                     raise CandidateNotFound(

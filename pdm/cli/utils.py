@@ -467,7 +467,9 @@ def format_lockfile(
             for link, hash_value in sorted(
                 v.hashes.items(), key=lambda l: l[0].filename
             ):
-                inline = make_inline_table({"url": link.url, "hash": hash_value})
+                inline = make_inline_table(
+                    {"url": link.url_without_fragment, "hash": hash_value}
+                )
                 array.append(inline)  # type: ignore
             if array:
                 file_hashes.add(key, array)
