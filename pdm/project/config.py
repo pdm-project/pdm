@@ -223,8 +223,6 @@ class Config(MutableMapping[str, str]):
         ),
     }
 
-    deprecated = {v.replace: k for k, v in _config_map.items() if v.replace}
-
     site: "Config" | None = None
 
     @classmethod
@@ -243,6 +241,9 @@ class Config(MutableMapping[str, str]):
     def __init__(self, config_file: Path, is_global: bool = False):
         self.is_global = is_global
         self.config_file = config_file.resolve()
+        self.deprecated = {
+            v.replace: k for k, v in self._config_map.items() if v.replace
+        }
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
             self._file_data, self.get_defaults() if is_global else {}

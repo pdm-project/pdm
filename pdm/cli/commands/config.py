@@ -64,11 +64,12 @@ class Command(BaseCommand):
     def _show_config(
         self, config: Mapping[str, Any], supersedes: Mapping[str, Any]
     ) -> None:
+        assert Config.site is not None
         for key in sorted(config):
             deprecated = ""
             canonical_key = key
             superseded = key in supersedes
-            if key in Config.deprecated:
+            if key in Config.site.deprecated:
                 canonical_key = Config.deprecated[key]
                 if canonical_key in supersedes:
                     superseded = True
