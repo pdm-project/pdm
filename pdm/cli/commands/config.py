@@ -65,22 +65,26 @@ class Command(BaseCommand):
         self, config: Mapping[str, Any], supersedes: Mapping[str, Any]
     ) -> None:
         for key in sorted(config):
-            if key not in Config._config_map:
-                continue
-            extra_style = " dim" if key in supersedes else ""
-            config_item = Config._config_map[key]
             deprecated = ""
-            if config_item.replace and config_item.replace in config:
-                deprecated = (
-                    f"[red{extra_style}](deprecating: {config_item.replace})[/]"
-                )
+            canonical_key = key
+            superseded = key in supersedes
+            if key in Config.deprecated:
+                canonical_key = Config.deprecated[key]
+                if canonical_key in supersedes:
+                    superseded = True
+                deprecated = f"[red](deprecating: {key})[/]"
+            elif key not in Config._config_map:
+                continue
+            extra_style = " dim" if superseded else ""
+            config_item = Config._config_map[canonical_key]
             self.ui.echo(
                 f"# {config_item.description}",
                 style=f"yellow{extra_style}",
                 verbosity=termui.Verbosity.DETAIL,
             )
             self.ui.echo(
-                f"[cyan]{key}[/]{deprecated} = {config[key]}", style=extra_style or None
+                f"[cyan]{canonical_key}[/]{deprecated} = {config[key]}",
+                style=extra_style or None,
             )
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
