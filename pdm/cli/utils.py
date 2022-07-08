@@ -563,7 +563,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     info_lines: set[str] = set()
     if all(isinstance(cause.requirement, PythonRequirement) for cause in causes):
         project_requires = next(
-            (cause.requirement for cause in causes if cause.parent is None)
+            cause.requirement for cause in causes if cause.parent is None
         )
         conflicting = [
             cause

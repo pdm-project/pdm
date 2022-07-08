@@ -19,7 +19,7 @@ class PythonInfo:
         self._py_ver = py_version
 
     @classmethod
-    def from_path(cls, path: str | Path) -> "PythonInfo":
+    def from_path(cls, path: str | Path) -> PythonInfo:
         py_ver = PythonVersion(Path(path))
         return cls(py_ver)
 

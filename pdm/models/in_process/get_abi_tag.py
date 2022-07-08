@@ -32,7 +32,7 @@ def get_flag(var, fallback, expected=True, warn=True):
     if val is None:
         if warn:
             warnings.warn(
-                "Config variable '{0}' is unset, Python ABI tag may "
+                "Config variable '{}' is unset, Python ABI tag may "
                 "be incorrect".format(var),
                 RuntimeWarning,
                 2,
@@ -65,7 +65,7 @@ if __name__ == "__main__":
             warn=False,
         ):
             u = "u"
-        abi = "%s%s%s%s%s" % (impl, "".join(map(str, python_version)), d, m, u)
+        abi = "{}{}{}{}{}".format(impl, "".join(map(str, python_version)), d, m, u)
     elif soabi and soabi.startswith("cpython-"):
         abi = "cp" + soabi.split("-")[1]
     elif soabi:

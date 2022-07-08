@@ -24,11 +24,11 @@ def log_title(title: str) -> None:
 
 class SpinnerReporter(BaseReporter):
     def __init__(
-        self, spinner: Status | termui.DummySpinner, requirements: List[Requirement]
+        self, spinner: Status | termui.DummySpinner, requirements: list[Requirement]
     ) -> None:
         self.spinner = spinner
         self.requirements = requirements
-        self._previous: Optional[Dict[str, Candidate]] = None
+        self._previous: dict[str, Candidate] | None = None
 
     def starting_round(self, index: int) -> None:
         # self.spinner.hide_and_write(f"Resolving ROUND {index}")

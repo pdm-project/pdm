@@ -83,7 +83,7 @@ bold = partial(style, style="bold", deprecated=True)
 
 
 def ask(
-    *args: str, prompt_type: Type[str] | Type[int] | None = None, **kwargs: Any
+    *args: str, prompt_type: type[str] | type[int] | None = None, **kwargs: Any
 ) -> str:
     """prompt user and return reponse
 

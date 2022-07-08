@@ -57,7 +57,7 @@ def strip_extras(line: str) -> tuple[str, tuple[str, ...] | None]:
     assert match is not None
     name, extras_str = match.groups()
     extras = (
-        tuple(set(e.strip() for e in extras_str.split(","))) if extras_str else None
+        tuple({e.strip() for e in extras_str.split(",")}) if extras_str else None
     )
     return name, extras
 
@@ -137,7 +137,7 @@ class Requirement:
         return self.as_line()
 
     @classmethod
-    def create(cls: Type[T], **kwargs: Any) -> T:
+    def create(cls: type[T], **kwargs: Any) -> T:
         if "marker" in kwargs:
             try:
                 kwargs["marker"] = get_marker(kwargs["marker"])
@@ -153,7 +153,7 @@ class Requirement:
         return cls(**kwargs)
 
     @classmethod
-    def from_dist(cls, dist: Distribution) -> "Requirement":
+    def from_dist(cls, dist: Distribution) -> Requirement:
         direct_url_json = dist.read_text("direct_url.json")
         if direct_url_json is not None:
             direct_url = json.loads(direct_url_json)
@@ -177,7 +177,7 @@ class Requirement:
         )
 
     @classmethod
-    def from_req_dict(cls, name: str, req_dict: RequirementDict) -> "Requirement":
+    def from_req_dict(cls, name: str, req_dict: RequirementDict) -> Requirement:
         if isinstance(req_dict, str):  # Version specifier only.
             return NamedRequirement(name=name, specifier=get_specifier(req_dict))
         for vcs in VCS_SCHEMA:
@@ -215,7 +215,7 @@ class Requirement:
         return self.key == req.key
 
     @classmethod
-    def from_pkg_requirement(cls, req: PackageRequirement) -> "Requirement":
+    def from_pkg_requirement(cls, req: PackageRequirement) -> Requirement:
         kwargs = {
             "name": req.name,
             "extras": req.extras,
@@ -266,7 +266,7 @@ class FileRequirement(Requirement):
         return hash(self._hash_key())
 
     @classmethod
-    def create(cls: Type[T], **kwargs: Any) -> T:
+    def create(cls: type[T], **kwargs: Any) -> T:
         if kwargs.get("path"):
             kwargs["path"] = Path(kwargs["path"].replace("${PROJECT_ROOT}", "."))
         return super().create(**kwargs)  # type: ignore

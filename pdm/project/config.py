@@ -223,7 +223,7 @@ class Config(MutableMapping[str, str]):
         ),
     }
 
-    site: "Config" | None = None
+    site: Config | None = None
 
     @classmethod
     def get_defaults(cls) -> dict[str, Any]:

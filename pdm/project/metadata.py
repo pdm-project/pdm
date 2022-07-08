@@ -38,7 +38,7 @@ class MutableMetadata(Metadata, MutableMapping):
             raise e from None
 
     @classmethod
-    def from_file(cls, filename: str | Path) -> "MutableMetadata":
+    def from_file(cls, filename: str | Path) -> MutableMetadata:
         """Get the metadata from a pyproject.toml file"""
         return cls(os.path.dirname(filename), tomllib.load(open(filename, "rb")))
 

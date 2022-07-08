@@ -33,16 +33,16 @@ REQUIREMENTS = [
     ),
     (
         (FIXTURES / "projects/demo").as_posix(),
-        "demo @ " + path_to_url((FIXTURES / "projects/demo")),
+        "demo @ " + path_to_url(FIXTURES / "projects/demo"),
     ),
     (
         (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
         "demo @ "
-        + path_to_url((FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl")),
+        + path_to_url(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     ),
     (
         (FIXTURES / "projects/demo").as_posix() + "[security]",
-        "demo[security] @ " + path_to_url((FIXTURES / "projects/demo")),
+        "demo[security] @ " + path_to_url(FIXTURES / "projects/demo"),
     ),
     (
         'requests; python_version=="3.7.*"',

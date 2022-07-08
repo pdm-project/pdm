@@ -95,8 +95,7 @@ def _cache_file_from_source(py_file: str) -> Iterable[str]:
         yield py2_cache
     parent, base = os.path.split(py_file)
     cache_dir = os.path.join(parent, "__pycache__")
-    for path in glob.glob(os.path.join(cache_dir, base[:-3] + ".*.pyc")):
-        yield path
+    yield from glob.glob(os.path.join(cache_dir, base[:-3] + ".*.pyc"))
 
 
 def _get_file_root(path: str, base: str) -> str | None:
@@ -130,7 +129,7 @@ class BaseRemovePaths(abc.ABC):
         """Roll back the removal operations"""
 
     @classmethod
-    def from_dist(cls: Type[_T], dist: Distribution, environment: Environment) -> _T:
+    def from_dist(cls: type[_T], dist: Distribution, environment: Environment) -> _T:
         """Create an instance from the distribution"""
         scheme = environment.get_paths()
         instance = cls(dist, environment)

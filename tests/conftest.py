@@ -129,7 +129,7 @@ class TestRepository(BaseRepository):
 
     def _get_dependencies_from_fixture(
         self, candidate: Candidate
-    ) -> Tuple[List[str], str, str]:
+    ) -> tuple[list[str], str, str]:
         try:
             pypi_data = self._pypi_data[candidate.req.key][candidate.version]
         except KeyError:
@@ -147,7 +147,7 @@ class TestRepository(BaseRepository):
             self._get_dependencies_from_metadata,
         )
 
-    def get_hashes(self, candidate: Candidate) -> Optional[Dict[str, str]]:
+    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
         return {}
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
@@ -381,7 +381,7 @@ class RunResult:
     exit_code: int
     stdout: str
     stderr: str
-    exception: Optional[Exception] = None
+    exception: Exception | None = None
 
     @property
     def output(self) -> str:
@@ -402,9 +402,9 @@ def invoke(core, monkeypatch):
     def caller(
         args,
         strict: bool = False,
-        input: Optional[str] = None,
-        obj: Optional[Project] = None,
-        env: Optional[Mapping[str, str]] = None,
+        input: str | None = None,
+        obj: Project | None = None,
+        env: Mapping[str, str] | None = None,
         **kwargs,
     ):
         __tracebackhide__ = True
