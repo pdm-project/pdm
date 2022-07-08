@@ -113,11 +113,11 @@ def split_lists(separator: str) -> type[argparse.Action]:
         ) -> None:
             if not isinstance(values, str):
                 return
-            splitted = getattr(args, self.dest) or []
-            splitted.extend(
+            split = getattr(args, self.dest) or []
+            split.extend(
                 value.strip() for value in values.split(separator) if value.strip()
             )
-            setattr(args, self.dest, splitted)
+            setattr(args, self.dest, split)
 
     return SplitList
 

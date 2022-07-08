@@ -85,7 +85,7 @@ bold = partial(style, style="bold", deprecated=True)
 def ask(
     *args: str, prompt_type: Type[str] | Type[int] | None = None, **kwargs: Any
 ) -> str:
-    """prompt user and return reponse
+    """prompt user and return response
 
     :prompt_type: which rich prompt to use, defaults to str.
     :raises ValueError: unsupported prompt type

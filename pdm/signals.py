@@ -120,5 +120,5 @@ post_use: NamedSignal = pdm_signals.signal("post_use")
 
 Args:
     project (Project): The project object
-    python (PythonInfo): Informations about the new Python interpreter
+    python (PythonInfo): Information about the new Python interpreter
 """

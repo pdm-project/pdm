@@ -64,7 +64,7 @@ Release v2.0.0a1 (2022-06-29)
 - Retrieve the candidate metadata by parsing the `pyproject.toml` rather than building it. [#1156](https://github.com/pdm-project/pdm/issues/1156)
 - Update the format converters to support the new `[tool.pdm.build]` table. [#1157](https://github.com/pdm-project/pdm/issues/1157)
 - Scripts are now available as root command if they don't conflict with any builtin or plugin-contributed command. [#1159](https://github.com/pdm-project/pdm/issues/1159)
-- Add a `post_use` hook triggered after succesfully switching Python version. [#1163](https://github.com/pdm-project/pdm/issues/1163)
+- Add a `post_use` hook triggered after successfully switching Python version. [#1163](https://github.com/pdm-project/pdm/issues/1163)
 - Add project configuration `respect-source-order` under `[tool.pdm.resolution]` to respect the source order in the `pyproject.toml` file. Packages will be returned by source earlier in the order or later ones if not found. [#593](https://github.com/pdm-project/pdm/issues/593)
 
 ### Bug Fixes
