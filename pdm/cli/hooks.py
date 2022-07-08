@@ -35,7 +35,7 @@ class HookManager:
 
     def should_run(self, name: str) -> bool:
         """
-        Tells wether a task given its name should run or not
+        Tells whether a task given its name should run or not
         according to the current skipping rules.
         """
         return (

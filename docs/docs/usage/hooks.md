@@ -6,9 +6,9 @@ of a Python project lifecycle and PDM provides commands to perform the expected 
 It also provides hooks attached to these steps allowing for:
 
 - plugins to listen to the [signals][pdm.signals] of the same name.
-- developpers to define custom scripts with the same name.
+- developers to define custom scripts with the same name.
 
-The built-in commands are currently splitted in 3 groups:
+The built-in commands are currently split into 3 groups:
 
 - the [initialization phase](#initialization)
 - the [dependencies management](#dependencies-managment).
@@ -21,7 +21,7 @@ To provides full flexibility, PDM allows to [skip some hooks and tasks](#skippin
 
 ## Initialization
 
-The intialization phase should occur only once in a project lifetime by running the [`pdm init`](cli_reference.md#exec-0--init) 
+The initialization phase should occur only once in a project lifetime by running the [`pdm init`](cli_reference.md#exec-0--init) 
 command to initialize an existing project (prompt to fill the `pyproject.toml` file).
 
 They trigger the following hooks:
@@ -46,7 +46,7 @@ The dependencies management is required for the developer to be able to work and
 - `add`: add a dependency
 - `remove`: remove a dependency
 
-All thoses steps are directly available with the following commands:
+All those steps are directly available with the following commands:
 
 - [`pdm lock`](cli_reference.md#exec-0--lock): execute the `lock` task
 - [`pdm sync`](cli_reference.md#exec-0--sync): execute the `sync` task
@@ -102,12 +102,12 @@ flowchart LR
 
 ## Publication
 
-As soon as you are ready to publish you package/app/libray, you will require the publication tasks:
+As soon as you are ready to publish your package/app/library, you will require the publication tasks:
 
 - `build`: build/compile assets requiring it and package everything into a Python package (sdist, wheel)
 - `upload`: upload/publish the package to a remote PyPI index
 
-All thoses steps are available with the following commands:
+All those steps are available with the following commands:
 
 - [`pdm build`](cli_reference.md#exec-0--build)
 - [`pdm publish`](cli_reference.md#exec-0--publish)

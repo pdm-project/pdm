@@ -23,7 +23,7 @@ class PurgeCommand(BaseCommand):
             "-i",
             "--interactive",
             action="store_true",
-            help="Interatively purge selected Virtualenvs",
+            help="Interactively purge selected Virtualenvs",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

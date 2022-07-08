@@ -232,9 +232,9 @@ class TaskRunner:
         )
         if kind == "composite":
             for script in value:
-                splitted = shlex.split(script)
-                cmd = splitted[0]
-                subargs = splitted[1:] + args  # type: ignore
+                split = shlex.split(script)
+                cmd = split[0]
+                subargs = split[1:] + args  # type: ignore
                 code = self.run(cmd, subargs, options)
                 if code != 0:
                     return code

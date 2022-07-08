@@ -373,7 +373,7 @@ class Synchronizer:
                     + traceback.format_exception(*exc_info)
                 )
 
-        # get rich progess and live handler to deal with multiple spinners
+        # get rich progress and live handler to deal with multiple spinners
         with self.ui.logging("install"), self.ui.make_progress(
             " ",
             SpinnerColumn(termui.SPINNER, speed=1, style="bold cyan"),
