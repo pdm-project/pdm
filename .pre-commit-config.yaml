@@ -17,6 +17,7 @@ repos:
       - id: flake8
         additional_dependencies:
           - flake8-bugbear
+          - flake8-return
 
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
