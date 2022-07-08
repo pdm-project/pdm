@@ -8,7 +8,7 @@ import os
 import warnings
 from functools import partial
 from tempfile import mktemp
-from typing import Any, Iterator, Sequence, Type
+from typing import Any, Iterator, Sequence
 
 from rich.box import ROUNDED
 from rich.console import Console
@@ -83,7 +83,7 @@ bold = partial(style, style="bold", deprecated=True)
 
 
 def ask(
-    *args: str, prompt_type: Type[str] | Type[int] | None = None, **kwargs: Any
+    *args: str, prompt_type: type[str] | type[int] | None = None, **kwargs: Any
 ) -> str:
     """prompt user and return response
 

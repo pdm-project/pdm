@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Type, cast
+from typing import TYPE_CHECKING, Any, Iterable, cast
 from urllib.parse import urlparse
 
 import platformdirs
@@ -423,7 +423,7 @@ class Project:
         ]
         return expanded_sources
 
-    def get_repository(self, cls: Type[BaseRepository] | None = None) -> BaseRepository:
+    def get_repository(self, cls: type[BaseRepository] | None = None) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = self.core.repository_class

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
@@ -44,7 +44,7 @@ class CandidateInfoNotFound(PdmException):
 
 
 class ExtrasWarning(UserWarning):
-    def __init__(self, project_name: str, extras: List[str]) -> None:
+    def __init__(self, project_name: str, extras: list[str]) -> None:
         super().__init__(f"Extras not found for {project_name}: [{','.join(extras)}]")
         self.extras = tuple(extras)
 
@@ -63,7 +63,7 @@ class UninstallError(PdmException):
 
 class NoConfigError(PdmUsageError, KeyError):
     def __init__(self, key: str) -> None:
-        super().__init__("No such config item: {}".format(key))
+        super().__init__(f"No such config item: {key}")
 
 
 class NoPythonVersion(PdmUsageError):

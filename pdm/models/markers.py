@@ -132,7 +132,7 @@ def _build_pyspec_from_marker(markers: List[Any]) -> PySpecSet:
             # It is a submarker
             groups[-1] = groups[-1] & _build_pyspec_from_marker(marker)
         elif isinstance(marker, tuple):
-            key, op, version = [i.value for i in marker]
+            key, op, version = (i.value for i in marker)
             if key == "python_version":
                 if op == ">":
                     int_versions = [int(ver) for ver in version.split(".")]

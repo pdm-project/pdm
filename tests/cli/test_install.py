@@ -125,7 +125,7 @@ def test_sync_with_index_change(project, index):
     project.write_pyproject()
     index[
         "/simple/future-fstrings/"
-    ] = """
+    ] = b"""
     <html>
     <body>
         <h1>future-fstrings</h1>
@@ -135,7 +135,7 @@ def test_sync_with_index_change(project, index):
         </a>
     </body>
     </html>
-    """.encode()
+    """
     actions.do_lock(project)
     file_hashes = project.lockfile["metadata"]["files"]["future-fstrings 1.2.0"]
     assert [e["hash"] for e in file_hashes] == [

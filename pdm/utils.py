@@ -182,7 +182,7 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
         parsed = parse.urlparse(uri)
         if ":" in parsed.netloc:
             netloc, _, path_start = parsed.netloc.rpartition(":")
-            path = "/{0}{1}".format(path_start, parsed.path)
+            path = f"/{path_start}{parsed.path}"
             uri = parse.urlunparse(parsed._replace(netloc=netloc, path=path))
     return uri
 

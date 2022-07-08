@@ -1,7 +1,7 @@
 from setuptools import setup
 from mymodule import __version__
 
-with open("AUTHORS", "r") as f:
+with open("AUTHORS") as f:
     authors = f.read().strip()
 
 kwargs = {
