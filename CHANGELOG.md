@@ -1,3 +1,22 @@
+Release v2.0.0b2 (2022-07-08)
+-----------------------------
+
+### Breaking Changes
+
+- Store file URLs instead of filenames in the lock file, bump lock version to `4.0`. [#1203](https://github.com/pdm-project/pdm/issues/1203)
+
+### Features & Improvements
+
+- Read site-wide configuration, which serves as the lowest-priority layer.
+  This layer will be read-only in the CLI. [#1200](https://github.com/pdm-project/pdm/issues/1200)
+- Get package links from the urls stored in the lock file. [#1204](https://github.com/pdm-project/pdm/issues/1204)
+
+### Bug Fixes
+
+- Fix a bug that the host pip(installed with pdm) may not be compatible with the project python. [#1196](https://github.com/pdm-project/pdm/issues/1196)
+- Update `unearth` to fix a bug that install links with weak hashes are skipped. This often happens on self-hosted PyPI servers. [#1202](https://github.com/pdm-project/pdm/issues/1202)
+
+
 Release v2.0.0b1 (2022-07-02)
 -----------------------------
 
