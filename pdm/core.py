@@ -95,9 +95,7 @@ class Core:
     def __call__(self, *args: Any, **kwargs: Any) -> None:
         return self.main(*args, **kwargs)
 
-    def ensure_project(
-        self, options: argparse.Namespace, obj: Project | None
-    ) -> None:
+    def ensure_project(self, options: argparse.Namespace, obj: Project | None) -> None:
         if obj is not None:
             options.project = obj
         if getattr(options, "project", None) is None:
