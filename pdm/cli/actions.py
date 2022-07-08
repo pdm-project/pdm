@@ -613,7 +613,7 @@ def do_use(
     )
     selected_python: PythonInfo | None = None
     if python and not ignore_remembered:
-        if use_cache.has_key(python):
+        if python in use_cache:
             path = use_cache.get(python)
             cached_python = PythonInfo.from_path(path)
             if not cached_python.valid:
