@@ -124,23 +124,6 @@ class TaskRunner:
         """Run command in a subprocess and return the exit code."""
         project = self.project
         process_env = os.environ.copy()
-        if "PYTHONPATH" in process_env:
-            pythonpath = os.pathsep.join([PEP582_PATH, os.getenv("PYTHONPATH", "")])
-        else:
-            pythonpath = PEP582_PATH
-        project_env = project.environment
-        this_path = project_env.get_paths()["scripts"]
-        python_root = os.path.dirname(project.python.executable)
-        new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
-        process_env.update(
-            {
-                "PYTHONPATH": pythonpath,
-                "PATH": new_path,
-                "PDM_PROJECT_ROOT": str(project.root),
-            }
-        )
-        if project_env.packages_path:
-            process_env.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env_file:
             import dotenv
 
@@ -152,6 +135,25 @@ class TaskRunner:
             process_env.update(
                 dotenv.dotenv_values(project.root / env_file, encoding="utf-8")
             )
+        pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
+        pythonpath = [PEP582_PATH] + [
+            p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")
+        ]
+        project_env = project.environment
+        this_path = project_env.get_paths()["scripts"]
+        python_root = os.path.dirname(project.python.executable)
+        new_path = os.pathsep.join(
+            [this_path, process_env.get("PATH", ""), python_root]
+        )
+        process_env.update(
+            {
+                "PYTHONPATH": os.pathsep.join(pythonpath),
+                "PATH": new_path,
+                "PDM_PROJECT_ROOT": str(project.root),
+            }
+        )
+        if project_env.packages_path:
+            process_env.update({"PEP582_PACKAGES": str(project_env.packages_path)})
         if env:
             process_env.update(env)
         if shell:
