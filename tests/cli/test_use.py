@@ -68,7 +68,7 @@ def test_use_remember_last_selection(project, mocker):
     assert not cache._cache
     actions.do_use(project, "3", first=True)
     cache._read_cache()
-    assert cache.has_key("3")
+    assert "3" in cache
     mocker.patch.object(project, "find_interpreters")
     actions.do_use(project, "3")
     project.find_interpreters.assert_not_called()

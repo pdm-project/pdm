@@ -48,7 +48,7 @@ class JSONFileCache(Generic[KT, VT]):
         with self.cache_file.open("w") as fp:
             json.dump(self._cache, fp)
 
-    def has_key(self, obj: KT) -> bool:
+    def __contains__(self, obj: KT) -> bool:
         return self._get_key(obj) in self._cache
 
     @classmethod
