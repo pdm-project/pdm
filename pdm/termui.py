@@ -8,7 +8,7 @@ import os
 import warnings
 from functools import partial
 from tempfile import mktemp
-from typing import Any, Iterator, Sequence, Type
+from typing import Any, Iterator, Sequence
 
 from rich.box import ROUNDED
 from rich.console import Console

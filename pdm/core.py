@@ -14,7 +14,7 @@ import os
 import pkgutil
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, Type, cast
+from typing import Any, cast
 
 from resolvelib import Resolver
 

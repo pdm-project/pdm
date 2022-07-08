@@ -9,7 +9,7 @@ import secrets
 import urllib.parse as urlparse
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Sequence, TypeVar, cast
 
 from packaging.markers import InvalidMarker
 from packaging.requirements import InvalidRequirement

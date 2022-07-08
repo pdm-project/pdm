@@ -9,7 +9,7 @@ import sys
 from dataclasses import dataclass
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Callable, Iterable, Mapping
 from urllib.parse import unquote, urlparse
 
 import pytest

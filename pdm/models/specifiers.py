@@ -4,7 +4,7 @@ import json
 from functools import lru_cache
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, Iterable, List, Set, Tuple, Union, cast
+from typing import Any, Iterable, cast
 
 from packaging.specifiers import SpecifierSet
 

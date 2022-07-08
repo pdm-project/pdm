@@ -6,7 +6,7 @@ import os
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Iterable, Type, TypeVar, cast
+from typing import TYPE_CHECKING, Iterable, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import UninstallError

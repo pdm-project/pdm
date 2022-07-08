@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypeVar, cast
+from typing import Any, Callable, Mapping, TypeVar, cast
 
 import tomlkit
 

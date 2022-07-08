@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Type, cast
+from typing import TYPE_CHECKING, Any, Iterable, cast
 from urllib.parse import urlparse
 
 import platformdirs
