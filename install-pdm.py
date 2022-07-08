@@ -6,6 +6,7 @@ import io
 import json
 import os
 import platform
+import re
 import shutil
 import site
 import subprocess
@@ -207,14 +208,23 @@ class Installer:
         resp = urllib.request.urlopen(JSON_URL)
         metadata = json.load(resp)
 
-        def is_stable(v: str) -> bool:
-            return all(p.isdigit() for p in v.split("."))
+        def version_okay(v: str) -> bool:
+            return self.prerelease or all(p.isdigit() for p in v.split("."))
 
         def sort_version(v: str) -> tuple:
-            return tuple(int(p) for p in v.split("."))
+            parts = []
+            for part in v.split("."):
+                if part.isdigit():
+                    parts.append(int(part))
+                else:
+                    digit, rest = re.match(r"^(\d*)(.*)", part).groups()
+                    if digit:
+                        parts.append(int(digit))
+                    parts.append(rest)
+            return tuple(parts)
 
         releases = sorted(
-            filter(is_stable, metadata["releases"]), key=sort_version, reverse=True
+            filter(version_okay, metadata["releases"]), key=sort_version, reverse=True
         )
 
         return releases[0]
@@ -300,8 +310,6 @@ class Installer:
         else:
             req = "pdm"
         args = [req] + [d for d in self.additional_deps if d]
-        if self.prerelease:
-            args.insert(0, "--pre")
         pip_cmd = [str(venv_python), "-m", "pip", "install"] + args
         _call_subprocess(pip_cmd)
 
