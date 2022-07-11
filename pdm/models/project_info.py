@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Any, Iterator
+from email.message import Message
+from typing import TYPE_CHECKING, Any, Iterator, cast
 
 from pdm.pep517.metadata import Metadata
 
@@ -19,7 +20,7 @@ class ProjectInfo:
             self._parsed = self._parse(metadata)
 
     def _parse(self, data: Distribution) -> dict[str, Any]:
-        metadata = data.metadata
+        metadata = cast(Message, data.metadata)
         keywords = metadata.get("Keywords", "").replace(",", ", ")
         platform = metadata.get("Platform", "").replace(",", ", ")
         project_urls = {
