@@ -9,8 +9,8 @@ from rich.box import ASCII
 from pdm.cli import actions
 from pdm.cli.commands.list import Command
 from pdm.models.specifiers import PySpecSet
+from pdm.pytest import Distribution
 from tests import FIXTURES
-from tests.conftest import Distribution
 
 
 def test_list_command(project, invoke, mocker):

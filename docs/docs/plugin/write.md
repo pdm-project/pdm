@@ -122,7 +122,7 @@ Besides of commands and configurations, the `core` object exposes some other met
 PDM also provides some signals you can listen to.
 Please read the [API reference](reference.md) for more details.
 
-### Tips about developing a PDM plugin.
+### Tips about developing a PDM plugin
 
 When developing a plugin, one hopes to activate and plugin in development and get updated when the code changes. This is usually done
 by `pip install -e .` or `python setup.py develop` in the **traditional** Python packaging world which leverages `setup.py` to do so. However,
@@ -139,6 +139,30 @@ After that, all the dependencies are available with a compatible Python interpre
 to the codebase will take effect immediately without re-installation. The `pdm` executable also uses a Python interpreter under the hood,
 so if you run `pdm` from inside the plugin project, the plugin in development will be activated automatically, and you can do some testing to see how it works.
 That is how PEP 582 benefits our development workflow.
+
+### Testing your plugin
+
+PDM exposes some pytest fixtures as a plugin in the [`pdm.pytest`](fixtures.md) module.
+To benefit from them, you must add `pdm[pytest]` as a test dependency.
+
+To enable them in your test, add `pdm.pytest` as a plugin. You can do so by in your root `conftest.py`:
+
+```python title="conftest.py"
+# single plugin
+pytest_plugins = "pytest.plugin"
+
+# many plugins
+pytest_plugins = [
+    ...
+    "pdm.pytest",
+    ...
+]
+```
+
+You can see some usage examples into PDM own [tests](https://github.com/pdm-project/pdm/tree/main/tests), especially the [conftest.py file](https://github.com/pdm-project/pdm/blob/main/tests/conftest.py) for configuration.
+
+See the [pytest fixtures documentation](fixtures.md) for more details.
+
 
 ## Publish your plugin
 

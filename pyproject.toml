@@ -49,6 +49,10 @@ Documentation = "https://pdm.fming.dev"
 Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
 
 [project.optional-dependencies]
+pytest = [
+    "pytest",
+    "pytest-mock",
+]
 
 [project.scripts]
 pdm = "pdm.core:main"
@@ -76,9 +80,8 @@ complete = {call = "tasks.complete:main", help = "Create autocomplete files for 
 
 [tool.pdm.dev-dependencies]
 test = [
-    "pytest",
+    "pdm[pytest]",
     "pytest-cov",
-    "pytest-mock",
     "pytest-xdist>=1.31.0",
     "pytest-rerunfailures>=10.2",
 ]

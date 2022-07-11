@@ -35,7 +35,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          selection:
+          options:
             docstring_style: google
 
 nav:
@@ -57,6 +57,7 @@ nav:
   - Plugins:
       - plugin/write.md
       - plugin/reference.md
+      - plugin/fixtures.md
   - Development:
       - dev/contributing.md
       - dev/changelog.md
@@ -92,3 +93,7 @@ extra:
       link: https://twitter.com/pdm_project
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Phn8smztpv
+
+
+watch:
+  - ../src

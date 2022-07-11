@@ -2,7 +2,7 @@ import pytest
 
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
-from tests.conftest import Distribution
+from pdm.pytest import Distribution
 
 
 @pytest.mark.usefixtures("repository")

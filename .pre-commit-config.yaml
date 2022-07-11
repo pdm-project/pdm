@@ -32,3 +32,4 @@ repos:
         additional_dependencies:
           - types-requests
           - types-certifi
+          - pytest
