@@ -13,7 +13,7 @@ class Command(BaseCommand):
     """Generate completion scripts for the given shell"""
 
     arguments: List[Option] = []
-    SUPPORTED_SHELLS = ("bash", "zsh", "fish", "powershell")
+    SUPPORTED_SHELLS = ("bash", "zsh", "fish", "powershell", "pwsh")
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         shell = options.shell or shellingham.detect_shell()[0]
         if shell not in self.SUPPORTED_SHELLS:
             raise PdmUsageError(f"Unsupported shell: {shell}")
-        suffix = "ps1" if shell == "powershell" else shell
+        suffix = "ps1" if shell in {"powershell", "pwsh"} else shell
         completion = importlib.resources.read_text(
             "pdm.cli.completions", f"pdm.{suffix}"
         )
