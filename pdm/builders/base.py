@@ -250,8 +250,10 @@ class EnvBuilder:
     def check_requirements(self, reqs: Iterable[str]) -> Iterable[str]:
         missing = set()
         conflicting = set()
+        project_lib = self._env.get_paths()["purelib"]
+        libs = self._prefix.lib_dirs + ([project_lib] if not self.isolated else [])
         if reqs:
-            ws = WorkingSet(self._prefix.lib_dirs)
+            ws = WorkingSet(libs)
             for req in reqs:
                 parsed_req = parse_requirement(req)
                 if parsed_req.identify() not in ws:

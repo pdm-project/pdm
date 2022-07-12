@@ -65,10 +65,7 @@ def distributions(path: list[str]) -> Iterable[im.Distribution]:
 class WorkingSet(Mapping[str, im.Distribution]):
     """A dictionary of currently installed distributions"""
 
-    def __init__(
-        self,
-        paths: list[str] | None = None,
-    ):
+    def __init__(self, paths: list[str] | None = None):
         if paths is None:
             paths = sys.path
         self._dist_map = {
