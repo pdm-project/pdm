@@ -15,6 +15,7 @@ from typing import Collection, Iterable, Mapping, Sequence, cast
 import tomlkit
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
+from tomlkit.items import Array
 
 from pdm import termui
 from pdm.cli.hooks import HookManager
@@ -434,6 +435,7 @@ def do_remove(
             )
         for i in matched_indexes:
             del deps[i]
+    cast(Array, deps).multiline(True)
 
     if not dry_run:
         project.write_pyproject()
