@@ -85,3 +85,19 @@ def test_add_remove_no_package(project):
 
     with pytest.raises(PdmUsageError):
         actions.do_remove(project, packages=())
+
+
+@pytest.mark.usefixtures("repository", "working_set")
+def test_remove_package_wont_break_toml(project_no_init):
+    project_no_init.pyproject_file.write_text(
+        """
+[project]
+dependencies = [
+    "requests",
+    # this is a comment
+]
+"""
+    )
+    project_no_init.pyproject = None
+    actions.do_remove(project_no_init, packages=["requests"])
+    assert project_no_init.pyproject["project"]["dependencies"] == []

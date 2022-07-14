@@ -94,13 +94,13 @@ jobs:
         with:
           path: ${{ steps.set_variables.outputs.PIP_CACHE }}
           key: ${{ runner.os }}-pip-${{ steps.set_variables.outputs.PY }}
-      - name: Cache pypackages
+      - name: Cache venv
         uses: actions/cache@v3
         with:
-          path: __pypackages__
-          key: pypackages-${{ runner.os }}-${{ matrix.arch }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.arch }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
           restore-keys: |
-            pypackages-${{ runner.os }}-${{ matrix.arch }}-${{ matrix.python-version }}-
+            venv-${{ runner.os }}-${{ matrix.arch }}-${{ matrix.python-version }}-
       - name: Install current PDM via pip
         if: matrix.install-via == 'pip'
         run: python -m pip install -U .
