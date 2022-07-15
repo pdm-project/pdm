@@ -275,7 +275,7 @@ PDM provides several methods to achieve this:
 
 ## Manage caches
 
-PDM provides a convenient command group to manage the cache, there are four kinds of caches:
+PDM provides a convenient command group to manage the cache, there are five different caches:
 
 1. `wheels/` stores the built results of non-wheel distributions and files.
 1. `http/` stores the HTTP response content.
