@@ -627,7 +627,7 @@ summary = "Backported and Experimental Type Hints for Python 3.7+"
 
 [[package]]
 name = "unearth"
-version = "0.5.0"
+version = "0.5.1"
 requires_python = ">=3.7"
 summary = "A utility to fetch and download python packages"
 dependencies = [
@@ -674,7 +674,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:c389fdcb9ab4df5ba90c4600bb640b722cb2169a5e7f47ef8ba1625c9a4d5e94"
+content_hash = "sha256:f46b70ede07e88494ec7bc6df65947103a32fd186d15471b93b0c3c5f906262a"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -1128,9 +1128,9 @@ content_hash = "sha256:c389fdcb9ab4df5ba90c4600bb640b722cb2169a5e7f47ef8ba1625c9
     {url = "https://files.pythonhosted.org/packages/ed/d6/2afc375a8d55b8be879d6b4986d4f69f01115e795e36827fd3a40166028b/typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
     {url = "https://files.pythonhosted.org/packages/9e/1d/d128169ff58c501059330f1ad96ed62b79114a2eb30b8238af63a2e27f70/typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
 ]
-"unearth 0.5.0" = [
-    {url = "https://files.pythonhosted.org/packages/f1/f9/272ae0b9086e33459d72a6405c5614e2cea0b9a0e1532f4182bf5df87bfd/unearth-0.5.0-py3-none-any.whl", hash = "sha256:79c33fa599854a9a9a89945c23a6ac5aa5df127cbcbaf931a3c89cb22f4e26bc"},
-    {url = "https://files.pythonhosted.org/packages/3d/29/a1c78524018ff9fd54da90015797bfd0a87ecbce5a78da1fabd760deb987/unearth-0.5.0.tar.gz", hash = "sha256:622a35a767c7cf8b60a540aec694c884ad9c90e7047cdfac508a4da83d74d7d3"},
+"unearth 0.5.1" = [
+    {url = "https://files.pythonhosted.org/packages/15/11/63a8185a4d16edfd7060673f35c49501647e9cd0547c5f7dc904fe896e79/unearth-0.5.1-py3-none-any.whl", hash = "sha256:57247bc5bb70da88bccc8e0db4c9d494e5ab24a7166b91085c87a5b5703b4a3d"},
+    {url = "https://files.pythonhosted.org/packages/88/69/6d9052f35cccf9ec16c32c78b0fc17ebe000dbddaa052e39975c4483ab15/unearth-0.5.1.tar.gz", hash = "sha256:52c40d4880a4ca3b46f2e388b52b59acc7b30c1a931fea6e3dfd9966c9401507"},
 ]
 "urllib3 1.26.9" = [
     {url = "https://files.pythonhosted.org/packages/ec/03/062e6444ce4baf1eac17a6a0ebfe36bb1ad05e1df0e20b110de59c278498/urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
