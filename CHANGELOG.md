@@ -1,3 +1,15 @@
+Release v2.0.0 (2022-07-15)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that the running env overrides the PEP 582 `PYTHONPATH`. [#1211](https://github.com/pdm-project/pdm/issues/1211)
+- Add [`pwsh`](https://github.com/PowerShell/PowerShell) as an alias of `powershell` for shell completion. [#1216](https://github.com/pdm-project/pdm/issues/1216)
+- Fixed a bug with `zsh` completion regarding `--pep582` flag. [#1218](https://github.com/pdm-project/pdm/issues/1218)
+- Fix a bug of requirement checking under non-isolated mode. [#1219](https://github.com/pdm-project/pdm/issues/1219)
+- Fix a bug when removing packages, TOML document might become invalid. [#1221](https://github.com/pdm-project/pdm/issues/1221)
+
+
 Release v2.0.0b2 (2022-07-08)
 -----------------------------
 
