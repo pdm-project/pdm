@@ -111,6 +111,13 @@ def test_venv_activate(invoke, mocker, project):
         assert result.output.startswith("source")
 
 
+def test_venv_activate_project_without_python(invoke, project):
+    project.project_config.pop("python.path", None)
+    result = invoke(["venv", "activate"], obj=project)
+    assert result.exit_code != 0
+    assert "The project doesn't have a saved python.path" in result.stderr
+
+
 @pytest.mark.usefixtures("fake_create")
 def test_venv_activate_error(invoke, project):
     project.project_config["venv.in_project"] = False
