@@ -196,7 +196,6 @@ def test_venv_purge_interactive(invoke, user_choices, is_path_exists, project):
 
 
 def test_virtualenv_backend_create(project, mocker):
-    interpreter = project.python_executable
     backend = backends.VirtualenvBackend(project, None)
     assert backend.ident
     mock_call = mocker.patch("subprocess.check_call")
@@ -211,20 +210,26 @@ def test_virtualenv_backend_create(project, mocker):
             "--no-wheel",
             str(location),
             "-p",
-            interpreter,
+            str(backend._resolved_interpreter.executable),
         ],
         stdout=ANY,
     )
 
 
 def test_venv_backend_create(project, mocker):
-    interpreter = project.python_executable
     backend = backends.VenvBackend(project, None)
     assert backend.ident
     mock_call = mocker.patch("subprocess.check_call")
     location = backend.create()
     mock_call.assert_called_once_with(
-        [interpreter, "-m", "venv", "--without-pip", str(location)], stdout=ANY
+        [
+            str(backend._resolved_interpreter.executable),
+            "-m",
+            "venv",
+            "--without-pip",
+            str(location),
+        ],
+        stdout=ANY,
     )
 
 
