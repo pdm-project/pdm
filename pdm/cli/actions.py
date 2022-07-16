@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import datetime
 import hashlib
 import json
@@ -839,10 +840,9 @@ def get_latest_version(project: Project) -> str | None:
     """Get the latest version of PDM from PyPI, cache for 7 days"""
     cache_key = hashlib.sha224(sys.executable.encode()).hexdigest()
     cache_file = project.cache("self-check") / cache_key
-    if cache_file.exists():
+    state = {}
+    with contextlib.suppress(OSError):
         state = json.loads(cache_file.read_text())
-    else:
-        state = {}
     current_time = datetime.datetime.utcnow().timestamp()
     if (
         state.get("last-check")
@@ -857,7 +857,8 @@ def get_latest_version(project: Project) -> str | None:
         return None
     latest_version = str(candidate.version)
     state.update({"latest-version": latest_version, "last-check": current_time})
-    cache_file.write_text(json.dumps(state))
+    with contextlib.suppress(OSError):
+        cache_file.write_text(json.dumps(state))
     return latest_version
 
 
