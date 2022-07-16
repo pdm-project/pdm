@@ -33,7 +33,15 @@ class ActivateCommand(BaseCommand):
                 raise SystemExit(1)
         else:
             # Use what is saved in .pdm.toml
-            interpreter = project.python_executable
+            interpreter = project.project_config.get("python.path")
+            if not interpreter:
+                project.core.ui.echo(
+                    "The project doesn't have a saved python.path. "
+                    "Run [green]pdm use[/] to pick one.",
+                    style="yellow",
+                    err=True,
+                )
+                raise SystemExit(1)
             venv = get_venv_like_prefix(interpreter)
             if venv is None:
                 project.core.ui.echo(

@@ -22,6 +22,7 @@ def fake_create(monkeypatch):
 
 @pytest.mark.usefixtures("fake_create")
 def test_venv_create(invoke, project):
+    project.project_config.pop("python.path", None)
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
@@ -29,6 +30,7 @@ def test_venv_create(invoke, project):
         r"Virtualenv (.+) is created successfully", result.output
     ).group(1)
     assert os.path.exists(venv_path)
+    assert "python.path" not in project.project_config
 
 
 @pytest.mark.usefixtures("fake_create")
@@ -109,6 +111,13 @@ def test_venv_activate(invoke, mocker, project):
         assert result.output.startswith("source")
 
 
+def test_venv_activate_project_without_python(invoke, project):
+    project.project_config.pop("python.path", None)
+    result = invoke(["venv", "activate"], obj=project)
+    assert result.exit_code != 0
+    assert "The project doesn't have a saved python.path" in result.stderr
+
+
 @pytest.mark.usefixtures("fake_create")
 def test_venv_activate_error(invoke, project):
     project.project_config["venv.in_project"] = False
@@ -187,7 +196,6 @@ def test_venv_purge_interactive(invoke, user_choices, is_path_exists, project):
 
 
 def test_virtualenv_backend_create(project, mocker):
-    interpreter = project.python_executable
     backend = backends.VirtualenvBackend(project, None)
     assert backend.ident
     mock_call = mocker.patch("subprocess.check_call")
@@ -202,20 +210,26 @@ def test_virtualenv_backend_create(project, mocker):
             "--no-wheel",
             str(location),
             "-p",
-            interpreter,
+            str(backend._resolved_interpreter.executable),
         ],
         stdout=ANY,
     )
 
 
 def test_venv_backend_create(project, mocker):
-    interpreter = project.python_executable
     backend = backends.VenvBackend(project, None)
     assert backend.ident
     mock_call = mocker.patch("subprocess.check_call")
     location = backend.create()
     mock_call.assert_called_once_with(
-        [interpreter, "-m", "venv", "--without-pip", str(location)], stdout=ANY
+        [
+            str(backend._resolved_interpreter.executable),
+            "-m",
+            "venv",
+            "--without-pip",
+            str(location),
+        ],
+        stdout=ANY,
     )
 
 

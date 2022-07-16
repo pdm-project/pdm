@@ -26,11 +26,14 @@ class Backend(abc.ABC):
     @cached_property
     def _resolved_interpreter(self) -> PythonInfo:
         if not self.python:
-            return self.project.python
+            saved_python = self.project.project_config.get("python.path")
+            if saved_python:
+                return PythonInfo.from_path(saved_python)
         try:  # pragma: no cover
             return next(iter(self.project.find_interpreters(self.python)))
         except StopIteration:  # pragma: no cover
-            raise VirtualenvCreateError(f"Can't find python interpreter {self.python}")
+            python = f" {self.python}" if self.python else ""
+            raise VirtualenvCreateError(f"Can't resolve python interpreter{python}")
 
     @property
     def ident(self) -> str:
