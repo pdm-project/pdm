@@ -22,6 +22,7 @@ def fake_create(monkeypatch):
 
 @pytest.mark.usefixtures("fake_create")
 def test_venv_create(invoke, project):
+    project.project_config.pop("python.path", None)
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
@@ -29,6 +30,7 @@ def test_venv_create(invoke, project):
         r"Virtualenv (.+) is created successfully", result.output
     ).group(1)
     assert os.path.exists(venv_path)
+    assert "python.path" not in project.project_config
 
 
 @pytest.mark.usefixtures("fake_create")
