@@ -644,7 +644,11 @@ dependencies = ["pip", "setuptools", "wheel"]
 
     def cache(self, name: str) -> Path:
         path = self.cache_dir / name
-        path.mkdir(parents=True, exist_ok=True)
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            # The path could be not accessible
+            pass
         return path
 
     def make_wheel_cache(self) -> WheelCache:
