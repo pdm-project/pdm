@@ -120,9 +120,8 @@ def do_lock(
         else:
             data = format_lockfile(project, mapping, dependencies)
             ui.echo(f"{termui.Emoji.LOCK} Lock successful")
+            project.write_lockfile(data, write=not dry_run)
             hooks.try_emit("post_lock", resolution=mapping, dry_run=dry_run)
-
-    project.write_lockfile(data, write=not dry_run)
 
     return mapping
 
