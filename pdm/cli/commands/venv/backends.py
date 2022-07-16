@@ -25,6 +25,10 @@ class Backend(abc.ABC):
 
     @cached_property
     def _resolved_interpreter(self) -> PythonInfo:
+        if not self.python:
+            saved_python = self.project.project_config.get("python.path")
+            if saved_python:
+                return PythonInfo.from_path(saved_python)
         try:  # pragma: no cover
             return next(iter(self.project.find_interpreters(self.python)))
         except StopIteration:  # pragma: no cover
