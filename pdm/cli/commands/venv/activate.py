@@ -36,7 +36,8 @@ class ActivateCommand(BaseCommand):
             interpreter = project.project_config.get("python.path")
             if not interpreter:
                 project.core.ui.echo(
-                    "The project doesn't have a saved python.path",
+                    "The project doesn't have a saved python.path. "
+                    "Run [green]pdm use[/] to pick one.",
                     style="yellow",
                     err=True,
                 )
