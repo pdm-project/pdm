@@ -1,3 +1,13 @@
+Release v2.0.1 (2022-07-17)
+---------------------------
+
+### Bug Fixes
+
+- Write lockfile before calling 'post_lock' hook [#1224](https://github.com/pdm-project/pdm/issues/1224)
+- Suppress errors when cache dir isn't accessible. [#1226](https://github.com/pdm-project/pdm/issues/1226)
+- Don't save python path for venv commands. [#1230](https://github.com/pdm-project/pdm/issues/1230)
+
+
 Release v2.0.0 (2022-07-15)
 ---------------------------
 
