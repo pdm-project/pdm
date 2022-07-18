@@ -29,11 +29,16 @@ class Backend(abc.ABC):
             saved_python = self.project.project_config.get("python.path")
             if saved_python:
                 return PythonInfo.from_path(saved_python)
-        try:  # pragma: no cover
-            return next(iter(self.project.find_interpreters(self.python)))
-        except StopIteration:  # pragma: no cover
-            python = f" {self.python}" if self.python else ""
-            raise VirtualenvCreateError(f"Can't resolve python interpreter{python}")
+        for py_version in self.project.find_interpreters(self.python):
+            if (
+                self.python
+                or py_version.valid
+                and self.project.python_requires.contains(py_version.version, True)
+            ):
+                return py_version
+
+        python = f" {self.python}" if self.python else ""
+        raise VirtualenvCreateError(f"Can't resolve python interpreter{python}")
 
     @property
     def ident(self) -> str:
