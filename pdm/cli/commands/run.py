@@ -123,7 +123,7 @@ class TaskRunner:
     ) -> int:
         """Run command in a subprocess and return the exit code."""
         project = self.project
-        process_env = os.environ.copy()
+        process_env = {}
         if env_file:
             import dotenv
 
@@ -132,9 +132,10 @@ class TaskRunner:
                 err=True,
                 verbosity=termui.Verbosity.DETAIL,
             )
-            process_env.update(
-                dotenv.dotenv_values(project.root / env_file, encoding="utf-8")
+            process_env = dotenv.dotenv_values(
+                project.root / env_file, encoding="utf-8"
             )
+        process_env.update(os.environ)
         pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
         pythonpath = [PEP582_PATH] + [
             p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")
