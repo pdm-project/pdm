@@ -204,3 +204,15 @@ def test_sync_with_pure_option(project, working_set, invoke):
     assert "requests" in working_set
     assert "urllib3" in working_set
     assert "django" not in working_set
+
+
+@pytest.mark.usefixtures("repository")
+def test_install_referencing_self_package(project, working_set, invoke):
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")}, to_group="web")
+    project.add_dependencies(
+        {"test-project": parse_requirement("test-project[tz,web]")}, to_group="all"
+    )
+    invoke(["install", "-Gall"], obj=project, strict=True)
+    assert "pytz" in working_set
+    assert "urllib3" in working_set

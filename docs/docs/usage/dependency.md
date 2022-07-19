@@ -43,6 +43,19 @@ pdm add requests
 PDM also allows extra dependency groups by providing `-G/--group <name>` option, and those dependencies will go to
 `[project.optional-dependencies.<name>]` table in the project file, respectively.
 
+You can reference other optional groups in `optional-dependencies`, even before the package is uploaded:
+
+```toml
+[project]
+name = "foo"
+version = "0.1.0"
+
+[project.optional-dependencies]
+socks = ["pysocks"]
+jwt = ["pyjwt"]
+all = ["foo[socks,jwt]"]
+```
+
 After that, dependencies and sub-dependencies will be resolved properly and installed for you, you can view `pdm.lock` to see the resolved result of all dependencies.
 
 ### Local dependencies
