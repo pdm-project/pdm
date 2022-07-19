@@ -328,10 +328,11 @@ class PreparedCandidate:
         self.obtain(allow_all=False)
         if self.wheel:
             return self.wheel
-        cached = self._get_cached_wheel()
-        if cached:
-            self.wheel = cached
-            return self.wheel  # type: ignore
+        if not self.req.editable:
+            cached = self._get_cached_wheel()
+            if cached:
+                self.wheel = cached
+                return self.wheel  # type: ignore
         assert self._source_dir, "Source directory isn't ready yet"
         builder_cls = EditableBuilder if self.req.editable else WheelBuilder
         builder = builder_cls(str(self._unpacked_dir), self.environment)
