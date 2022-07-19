@@ -94,6 +94,31 @@ class BaseRepository:
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         raise NotImplementedError
 
+    def is_this_package(self, requirement: Requirement) -> bool:
+        """Whether the requirement is the same as this package"""
+        project = self.environment.project
+        return (
+            requirement.is_named
+            and project.name is not None
+            and requirement.key == normalize_name(project.name)
+        )
+
+    def make_this_candidate(self, requirement: Requirement) -> Candidate | None:
+        """Make a candidate for this package, or None if the requirement doesn't match.
+        In this case the finder will look for a candidate from the package sources
+        """
+        project = self.environment.project
+        assert project.name
+        link = Link.from_path(project.root)  # type: ignore
+        version: str = project.meta.version
+        if (
+            not version
+            or requirement.specifier
+            and not requirement.specifier.contains(version, True)
+        ):
+            return None
+        return Candidate(requirement, project.name, version, link)
+
     def find_candidates(
         self,
         requirement: Requirement,
@@ -105,6 +130,11 @@ class BaseRepository:
         """
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
+
+        if self.is_this_package(requirement):
+            candidate = self.make_this_candidate(requirement)
+            if candidate is not None:
+                return [candidate]
         requires_python = requirement.requires_python & self.environment.python_requires
         cans = list(self._find_candidates(requirement))
         applicable_cans = [
@@ -196,7 +226,9 @@ class BaseRepository:
         if (
             candidate.req.is_vcs
             or candidate.req.is_file_or_url
-            and candidate.req.is_local_dir  # type: ignore
+            and candidate.req.is_local  # type: ignore
+            or candidate.link
+            and candidate.link.is_file
         ):
             return None
         if candidate.hashes:
@@ -400,6 +432,11 @@ class LockedRepository(BaseRepository):
         allow_prereleases: bool | None = None,
         ignore_requires_python: bool = False,
     ) -> Iterable[Candidate]:
+        if self.is_this_package(requirement):
+            candidate = self.make_this_candidate(requirement)
+            if candidate is not None:
+                yield candidate
+                return
         for key, info in self.candidate_info.items():
             if key[0] != requirement.identify():
                 continue
