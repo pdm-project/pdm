@@ -1,3 +1,16 @@
+Release v2.0.2 (2022-07-20)
+---------------------------
+
+### Features & Improvements
+
+- `env_file` variables no longer override existing environment variables. [#1235](https://github.com/pdm-project/pdm/issues/1235)
+- Support referencing other optional groups in optional-dependencies with `<this_package_name>[group1, group2]` [#1241](https://github.com/pdm-project/pdm/issues/1241)
+
+### Bug Fixes
+
+- Respect `requires-python` when creating the default venv. [#1237](https://github.com/pdm-project/pdm/issues/1237)
+
+
 Release v2.0.1 (2022-07-17)
 ---------------------------
 
