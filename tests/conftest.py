@@ -18,7 +18,7 @@ from packaging.version import parse as parse_version
 from unearth.vcs import Git, vcs_support
 
 from pdm._types import CandidateInfo
-from pdm.cli.actions import do_init, do_use
+from pdm.cli.actions import do_init
 from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
@@ -290,11 +290,7 @@ def project_no_init(tmp_path, mocker, core, index, monkeypatch):
     )
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    do_use(
-        p,
-        getattr(sys, "_base_executable", sys.executable),
-        HookManager(p, ["post_use"]),
-    )
+    p.project_config["python.path"] = getattr(sys, "_base_executable", sys.executable)
     monkeypatch.delenv("VIRTUAL_ENV", raising=False)
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     monkeypatch.delenv("PEP582_PACKAGES", raising=False)
