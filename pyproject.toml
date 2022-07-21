@@ -16,7 +16,7 @@ dependencies = [
     "virtualenv>=20",
     "pep517>=0.11.0",
     "requests-toolbelt",
-    "unearth>=0.5.1,<1",
+    "unearth>=0.5.2,<1",
     "findpython>=0.2.0",
     "tomlkit>=0.8.0,<1",
     "shellingham>=1.3.2",
