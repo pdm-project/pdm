@@ -112,6 +112,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
         run: |
+          pip install -U setuptools
           pdm install -v -dGtest
           pdm info
       - name: Run Tests

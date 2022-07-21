@@ -127,8 +127,11 @@ def test_venv_activate_error(invoke, project):
     assert result.exit_code != 0
     assert "No virtualenv with key" in result.stderr
 
+    project.project_config["python.path"] = getattr(
+        sys, "_base_executable", sys.executable
+    )
     result = invoke(["venv", "activate"], obj=project)
-    assert result.exit_code != 0
+    assert result.exit_code != 0, result.output + result.stderr
     assert "Can't activate a non-venv Python" in result.stderr
 
 
