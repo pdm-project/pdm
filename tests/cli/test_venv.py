@@ -131,6 +131,7 @@ def test_venv_activate_error(invoke, project):
         sys, "_base_executable", sys.executable
     )
     result = invoke(["venv", "activate"], obj=project)
+    print(project.project_config.get("python.path"))
     assert result.exit_code != 0, result.output + result.stderr
     assert "Can't activate a non-venv Python" in result.stderr
 
