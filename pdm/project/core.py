@@ -125,9 +125,12 @@ class Project:
 
     @property
     def pyproject(self) -> dict | None:
-        if not self._pyproject and self.pyproject_file.exists():
-            data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
-            self._pyproject = cast(dict, data)
+        if not self._pyproject:
+            if self.pyproject_file.exists():
+                data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
+                self._pyproject = cast(dict, data)
+            else:
+                self._pyproject = cast(dict, tomlkit.document())
         return self._pyproject
 
     @pyproject.setter
