@@ -1,11 +1,24 @@
+import findpython
 import pytest
 
 from pdm.utils import cd
 
+PYTHON_VERSIONS = ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+
+
+def get_python_versions():
+    finder = findpython.Finder(resolve_symlinks=True)
+    available_versions = []
+    for version in PYTHON_VERSIONS:
+        v = finder.find(version)
+        if v and v.is_valid():
+            available_versions.append(version)
+    return available_versions
+
 
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.parametrize("python_version", ["3.6", "3.7", "3.8", "3.9", "3.10"])
+@pytest.mark.parametrize("python_version", get_python_versions())
 def test_basic_integration(python_version, core, tmp_path, invoke):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = core.create_project(tmp_path)
