@@ -30,24 +30,23 @@ def test_lock_refresh(invoke, project, repository):
     assert project.is_lockfile_hash_match()
     assert not project.lockfile["metadata"]["files"].get("requests 2.19.1")
     project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
-    repository.get_hashes = (
-        lambda c: {
-            Link(
-                "http://example.com/requests-2.19.1-py3-none-any.whl"
-            ): "sha256:abcdef123456"
-        }
+    url_hashes = {
+        "http://example.com/requests-2.19.1-py3-none-any.whl": "sha256:abcdef123456",
+        "http://example2.com/requests-2.19.1-py3-none-AMD64.whl": "sha256:abcdef123456",
+        "http://example1.com/requests-2.19.1-py3-none-any.whl": "sha256:abcdef123456",
+    }
+    repository.get_hashes = lambda c: (
+        {Link(url): hash for url, hash in url_hashes.items()}
         if c.identify() == "requests"
         else {}
     )
-    print(project.lockfile)
     assert not project.is_lockfile_hash_match()
     result = invoke(["lock", "--refresh", "-v"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
-    assert project.lockfile["metadata"]["files"]["requests 2.19.1"][0] == {
-        "url": "http://example.com/requests-2.19.1-py3-none-any.whl",
-        "hash": "sha256:abcdef123456",
-    }
+    assert project.lockfile["metadata"]["files"]["requests 2.19.1"] == [
+        {"url": url, "hash": hash} for url, hash in sorted(url_hashes.items())
+    ]
 
 
 def test_lock_refresh_keep_consistent(invoke, project, repository):

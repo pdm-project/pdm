@@ -465,7 +465,7 @@ def format_lockfile(
                 continue
             array = tomlkit.array().multiline(True)
             for link, hash_value in sorted(
-                v.hashes.items(), key=lambda l: l[0].filename
+                v.hashes.items(), key=lambda l_h: (l_h[0].url_without_fragment, l_h[1])
             ):
                 inline = make_inline_table(
                     {"url": link.url_without_fragment, "hash": hash_value}
