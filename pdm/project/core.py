@@ -259,8 +259,8 @@ class Project:
                 if get_venv_like_prefix(self.python.executable) is not None
                 else Environment(self)
             )
-        if os.getenv("VIRTUAL_ENV"):
-            venv = cast(str, os.getenv("VIRTUAL_ENV"))
+        venv = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
+        if venv is not None:
             self.core.ui.echo(
                 f"Detected inside an active virtualenv [green]{venv}[/], reuse it.",
                 style="yellow",
