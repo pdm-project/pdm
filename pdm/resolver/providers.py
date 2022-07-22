@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable, cast
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from resolvelib import AbstractProvider
 
-from pdm.models.candidates import Candidate
+from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.resolver.python import (
     PythonCandidate,
@@ -121,7 +121,7 @@ class BaseProvider(AbstractProvider):
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named:
-            can = Candidate(requirement)
+            can = make_candidate(requirement)
             can.prepare(self.repository.environment).metadata
             return [can]
         else:

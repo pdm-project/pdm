@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, Iterable, cast, no_type_check
@@ -95,6 +96,18 @@ class Candidate:
     dependencies together with package metadata.
     """
 
+    __slots__ = (
+        "req",
+        "name",
+        "version",
+        "link",
+        "summary",
+        "hashes",
+        "_prepared",
+        "_requires_python",
+        "_preferred",
+    )
+
     def __init__(
         self,
         req: Requirement,
@@ -104,7 +117,6 @@ class Candidate:
     ):
         """
         :param req: the requirement that produces this candidate.
-        :param environment: the bound environment instance.
         :param name: the name of the candidate.
         :param version: the version of the candidate.
         :param link: the file link of the candidate.
@@ -120,9 +132,6 @@ class Candidate:
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
-
-    def __hash__(self) -> int:
-        return hash((self.name, self.version))
 
     def identify(self) -> str:
         return self.req.identify()
@@ -553,3 +562,14 @@ class PreparedCandidate:
             ).as_posix()
         else:
             return create_tracked_tempdir(prefix="pdm-wheel-")
+
+
+@lru_cache(maxsize=None)
+def make_candidate(
+    req: Requirement,
+    name: str | None = None,
+    version: str | None = None,
+    link: Link | None = None,
+) -> Candidate:
+    """Construct a candidate and cache it in memory"""
+    return Candidate(req, name, version, link)

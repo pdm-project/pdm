@@ -18,7 +18,7 @@ from pdm import termui
 from pdm._types import Source
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
-from pdm.models.candidates import Candidate
+from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
@@ -534,7 +534,7 @@ class Project:
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         req.name = self.meta.name
-        return Candidate(req, name=self.meta.name, version=self.meta.version)
+        return make_candidate(req, name=self.meta.name, version=self.meta.version)
 
     def get_content_hash(self, algo: str = "md5") -> str:
         # Only calculate sources and dependencies groups. Otherwise lock file is

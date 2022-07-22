@@ -9,7 +9,7 @@ from unearth import Link
 
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
-from pdm.models.candidates import Candidate
+from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -117,7 +117,7 @@ class BaseRepository:
             and not requirement.specifier.contains(version, True)
         ):
             return None
-        return Candidate(requirement, project.name, version, link)
+        return make_candidate(requirement, project.name, version, link)
 
     def find_candidates(
         self,
@@ -219,7 +219,7 @@ class BaseRepository:
         summary = prepared.metadata.metadata["Summary"]
         return deps, requires_python, summary
 
-    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
+    def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
         """Get hashes of all possible installable candidates
         of a given package version.
         """
@@ -241,11 +241,14 @@ class BaseRepository:
         result: dict[str, str] = {}
         with self.environment.get_finder(self.sources) as finder:
             for c in matching_candidates:
+                assert c.link is not None
                 # Prepare the candidate to replace vars in the link URL
-                link = c.prepare(self.environment).link
-                if not link or link.is_vcs:
+                prepared_link = c.prepare(self.environment).link
+                if not prepared_link or prepared_link.is_vcs:
                     continue
-                result[link] = self._hash_cache.get_hash(link, finder.session)
+                result[c.link] = self._hash_cache.get_hash(
+                    prepared_link, finder.session
+                )
         return result or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -364,7 +367,7 @@ class LockedRepository(BaseRepository):
     ) -> None:
         super().__init__(sources, environment)
         self.packages: dict[tuple, Candidate] = {}
-        self.file_hashes: dict[tuple[str, str], dict[str, str]] = {}
+        self.file_hashes: dict[tuple[str, str], dict[Link, str]] = {}
         self.candidate_info: dict[tuple, CandidateInfo] = {}
         self._read_lockfile(lockfile)
 
@@ -384,7 +387,7 @@ class LockedRepository(BaseRepository):
                 if k not in ("dependencies", "requires_python", "summary")
             }
             req = Requirement.from_req_dict(package_name, req_dict)
-            can = Candidate(req, name=package_name, version=version)
+            can = make_candidate(req, name=package_name, version=version)
             can_id = self._identify_candidate(can)
             self.packages[can_id] = can
             candidate_info: CandidateInfo = (
@@ -450,7 +453,7 @@ class LockedRepository(BaseRepository):
             can.req = requirement
             yield can
 
-    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
+    def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
         assert candidate.name
         return self.file_hashes.get(
             (normalize_name(candidate.name), candidate.version or "")
