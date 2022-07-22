@@ -201,35 +201,54 @@ class Project:
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
+        from pdm.cli.commands.venv.utils import get_venv_python, iter_venvs
+
+        def match_version(python: PythonInfo) -> bool:
+            return python.valid and self.python_requires.contains(python.version, True)
+
+        def note(message: str) -> None:
+            if not self.is_global:
+                self.core.ui.echo(message, style="yellow", err=True)
+
         config = self.config
         if config.get("python.path") and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
             saved_path = config["python.path"]
             python = PythonInfo.from_path(saved_path)
-            if python.valid and self.python_requires.contains(
-                str(python.version), True
-            ):
+            if match_version(python):
                 return python
             self.project_config.pop("python.path", None)
-        if os.name == "nt":
-            suffix = ".exe"
-            scripts = "Scripts"
-        else:
-            suffix = ""
-            scripts = "bin"
 
-        # Resolve virtual environments from env-vars
-        virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
-        if config["python.use_venv"] and virtual_env:
-            python = PythonInfo.from_path(
-                os.path.join(virtual_env, scripts, f"python{suffix}")
-            )
-            if python.valid:
-                return python
+        if config.get("python.use_venv") and not self.is_global:
+            # Resolve virtual environments from env-vars
+            venv_in_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
+            if venv_in_env:
+                python = PythonInfo.from_path(get_venv_python(Path(venv_in_env)))
+                if match_version(python):
+                    note(
+                        f"Inside an active virtualenv [green]{venv_in_env}[/], "
+                        "reuse it."
+                    )
+                    return python
+            # otherwise, get a venv associated with the project
+            for _, venv in iter_venvs(self):
+                python = PythonInfo.from_path(get_venv_python(venv))
+                if match_version(python):
+                    note(f"Virtualenv [green]{venv}[/] is reused.")
+                    self.python = python
+                    return python
+
+            if not self.root.joinpath("__pypackages__").exists():
+                note(
+                    "python.use_venv is on, creating a virtualenv for this project"
+                    "..."
+                )
+                venv = self._create_virtualenv()
+                self.python = PythonInfo.from_path(get_venv_python(venv))
+                return self.python
 
         for py_version in self.find_interpreters():
-            if py_version.valid and self.python_requires.contains(
-                str(py_version.version), True
-            ):
+            if match_version(py_version):
+                note("[green]__pypackages__[/] is detected, using the PEP 582 mode")
                 self.python = py_version
                 return py_version
 
@@ -241,7 +260,6 @@ class Project:
 
     def get_environment(self) -> Environment:
         """Get the environment selected by this project"""
-        from pdm.cli.commands.venv.utils import get_venv_python, iter_venvs
 
         if self.is_global:
             env = GlobalEnvironment(self)
@@ -249,50 +267,13 @@ class Project:
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
-        if not self.config["python.use_venv"]:
-            return Environment(self)
-        if self.project_config.get("python.path") and not os.getenv(
-            "PDM_IGNORE_SAVED_PYTHON"
-        ):
-            return (
-                GlobalEnvironment(self)
-                if get_venv_like_prefix(self.python.executable) is not None
-                else Environment(self)
-            )
-        venv = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
-        if venv is not None:
-            self.core.ui.echo(
-                f"Detected inside an active virtualenv [green]{venv}[/], reuse it.",
-                style="yellow",
-                err=True,
-            )
-            # Temporary usage, do not save in .pdm.toml
-            self._python = PythonInfo.from_path(get_venv_python(Path(venv)))
-            return GlobalEnvironment(self)
-        existing_venv = next((venv for _, venv in iter_venvs(self)), None)
-        if existing_venv:
-            self.core.ui.echo(
-                f"Virtualenv [green]{existing_venv}[/] is reused.",
-                err=True,
-            )
-            path = existing_venv
-        elif self.root.joinpath("__pypackages__").exists():
-            self.core.ui.echo(
-                "__pypackages__ is detected, use the PEP 582 mode",
-                style="green",
-                err=True,
-            )
-            return Environment(self)
-        else:
-            # Create a virtualenv using the selected Python interpreter
-            self.core.ui.echo(
-                "python.use_venv is on, creating a virtualenv for this project...",
-                style="yellow",
-                err=True,
-            )
-            path = self._create_virtualenv()
-        self.python = PythonInfo.from_path(get_venv_python(path))
-        return GlobalEnvironment(self)
+
+        return (
+            GlobalEnvironment(self)
+            if self.config["python.use_venv"]
+            and get_venv_like_prefix(self.python.executable) is not None
+            else Environment(self)
+        )
 
     def _create_virtualenv(self) -> Path:
         from pdm.cli.commands.venv.backends import BACKENDS
@@ -687,6 +668,9 @@ dependencies = ["pip", "setuptools", "wheel"]
                     yield PythonInfo.from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
                     yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
+            python = shutil.which("python")
+            if python:
+                yield PythonInfo.from_path(python)
             args = []
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
@@ -704,10 +688,7 @@ dependencies = ["pip", "setuptools", "wheel"]
         for entry in finder.find_all(*args):
             yield PythonInfo(entry)
         if not python_spec:
-            python = shutil.which("python")
-            if python:
-                yield PythonInfo.from_path(python)
-            # Return the host Python as well
+            # Lastly, return the host Python as well
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)
 

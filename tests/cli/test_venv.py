@@ -127,9 +127,7 @@ def test_venv_activate_error(invoke, project):
     assert result.exit_code != 0
     assert "No virtualenv with key" in result.stderr
 
-    project.project_config["python.path"] = next(
-        project.find_interpreters()
-    ).path.as_posix()
+    project.project_config["python.path"] = os.path.abspath("fake/bin/python")
     result = invoke(["venv", "activate"], obj=project)
     print(project.project_config.get("python.path"))
     assert result.exit_code != 0, result.output + result.stderr
