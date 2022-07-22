@@ -20,11 +20,10 @@ def resolve(
     max_rounds: int = 10000,
 ) -> tuple[dict[str, Candidate], dict[str, list[Requirement]]]:
     """Core function to perform the actual resolve process.
-    Return a tuple containing 3 items:
+    Return a tuple containing 2 items:
 
         1. A map of pinned candidates
         2. A map of resolved dependencies for each dependency group
-        3. A map of package descriptions fetched from PyPI source
     """
     requirements.append(PythonRequirement.from_pyspec_set(requires_python))
     provider = cast(BaseProvider, resolver.provider)
