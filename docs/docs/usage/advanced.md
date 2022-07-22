@@ -120,7 +120,7 @@ Testing:
       os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up PDM
       uses: pdm-project/setup-pdm@main
       with:
