@@ -14,7 +14,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)](https://pypi.org/project/pdm)
 [![codecov](https://codecov.io/gh/pdm-project/pdm/branch/main/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
-[![](https://tokei.rs/b1/github/pdm-project/pdm)](https://github.com/pdm-project/pdm)
+[![Packaging status](https://repology.org/badge/tiny-repos/pdm.svg)](https://repology.org/project/pdm/versions)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
@@ -210,6 +210,11 @@ Tell people you are using PDM in your project by including the markdown code in 
 ```
 
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+
+
+## Packaging Status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
 
 ## PDM Eco-system
 

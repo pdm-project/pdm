@@ -12,7 +12,7 @@
 
 ![Github Actions](https://github.com/pdm-project/pdm/workflows/Tests/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/pdm?logo=python&logoColor=%23cccccc)](https://pypi.org/project/pdm)
-[![](https://tokei.rs/b1/github/pdm-project/pdm)](https://github.com/pdm-project/pdm)
+[![Packaging status](https://repology.org/badge/tiny-repos/pdm.svg)](https://repology.org/project/pdm/versions)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 
@@ -200,6 +200,10 @@ $ python /home/frostming/workspace/flask_app/app.py
 ```
 
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+
+## 打包状态
+
+[![打包状态](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
 
 ## PDM 生态
 
