@@ -9,7 +9,7 @@ from unearth import Link
 
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
-from pdm.models.candidates import Candidate
+from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -117,7 +117,7 @@ class BaseRepository:
             and not requirement.specifier.contains(version, True)
         ):
             return None
-        return Candidate(requirement, project.name, version, link)
+        return make_candidate(requirement, project.name, version, link)
 
     def find_candidates(
         self,
@@ -387,7 +387,7 @@ class LockedRepository(BaseRepository):
                 if k not in ("dependencies", "requires_python", "summary")
             }
             req = Requirement.from_req_dict(package_name, req_dict)
-            can = Candidate(req, name=package_name, version=version)
+            can = make_candidate(req, name=package_name, version=version)
             can_id = self._identify_candidate(can)
             self.packages[can_id] = can
             candidate_info: CandidateInfo = (

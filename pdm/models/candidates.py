@@ -89,7 +89,6 @@ def _find_best_match_link(
     return best.link if best is not None else None
 
 
-@lru_cache(maxsize=None)
 class Candidate:
     """A concrete candidate that can be downloaded and installed.
     A candidate comes from the PyPI index of a package, or from the requirement itself
@@ -562,3 +561,14 @@ class PreparedCandidate:
             ).as_posix()
         else:
             return create_tracked_tempdir(prefix="pdm-wheel-")
+
+
+@lru_cache(maxsize=None)
+def make_candidate(
+    req: Requirement,
+    name: str | None = None,
+    version: str | None = None,
+    link: Link | None = None,
+) -> Candidate:
+    """Construct a candidate and cache it in memory"""
+    return Candidate(req, name, version, link)
