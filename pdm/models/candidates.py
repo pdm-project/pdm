@@ -101,10 +101,11 @@ class Candidate:
         "name",
         "version",
         "link",
-        "_prepared",
         "summary",
         "hashes",
+        "_prepared",
         "_requires_python",
+        "_preferred",
     )
 
     def __init__(
