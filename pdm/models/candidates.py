@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, Iterable, cast, no_type_check
@@ -88,12 +89,24 @@ def _find_best_match_link(
     return best.link if best is not None else None
 
 
+@lru_cache(maxsize=None)
 class Candidate:
     """A concrete candidate that can be downloaded and installed.
     A candidate comes from the PyPI index of a package, or from the requirement itself
     (for file or VCS requirements). Each candidate has a name, version and several
     dependencies together with package metadata.
     """
+
+    __slots__ = (
+        "req",
+        "name",
+        "version",
+        "link",
+        "_prepared",
+        "summary",
+        "hashes",
+        "_requires_python",
+    )
 
     def __init__(
         self,
@@ -104,7 +117,6 @@ class Candidate:
     ):
         """
         :param req: the requirement that produces this candidate.
-        :param environment: the bound environment instance.
         :param name: the name of the candidate.
         :param version: the version of the candidate.
         :param link: the file link of the candidate.
@@ -120,9 +132,6 @@ class Candidate:
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
-
-    def __hash__(self) -> int:
-        return hash((self.name, self.version))
 
     def identify(self) -> str:
         return self.req.identify()

@@ -122,8 +122,7 @@ class BaseProvider(AbstractProvider):
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named:
             can = Candidate(requirement)
-            if not can.name:
-                can.prepare(self.repository.environment).metadata
+            can.prepare(self.repository.environment).metadata
             return [can]
         else:
             return self.repository.find_candidates(
