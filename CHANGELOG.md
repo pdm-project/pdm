@@ -1,3 +1,14 @@
+Release v2.0.3 (2022-07-22)
+---------------------------
+
+### Bug Fixes
+
+- Support Conda environments when detecting the project environment. [#1253](https://github.com/pdm-project/pdm/issues/1253)
+- Fix the interpreter resolution to first try `python` executable in the `PATH`. [#1255](https://github.com/pdm-project/pdm/issues/1255)
+- Stabilize sorting of URLs in `metadata.files` in `pdm.lock`. [#1256](https://github.com/pdm-project/pdm/issues/1256)
+- Don't expand credentials in the file URLs in the `[metada.files]` table of the lock file. [#1259](https://github.com/pdm-project/pdm/issues/1259)
+
+
 Release v2.0.2 (2022-07-20)
 ---------------------------
 
