@@ -31,3 +31,4 @@ repos:
         pass_filenames: false
         additional_dependencies:
           - types-requests
+          - types-certifi

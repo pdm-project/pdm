@@ -15,7 +15,7 @@ dependencies = [
     "virtualenv>=20",
     "pep517>=0.11.0",
     "requests-toolbelt",
-    "unearth>=0.5.2,<1",
+    "unearth>=0.6.0",
     "findpython>=0.2.0",
     "tomlkit>=0.8.0,<1",
     "shellingham>=1.3.2",
@@ -27,6 +27,7 @@ dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
     "typing-extensions; python_version < \"3.8\"",
     "importlib-metadata; python_version < \"3.8\"",
+    "certifi>=2022.6.15",
 ]
 name = "pdm"
 description = "A modern Python package and dependency manager supporting the latest PEP standards"
@@ -194,4 +195,3 @@ addopts = "-ra"
 testpaths = [
     "tests/",
 ]
-
