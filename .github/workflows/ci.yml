@@ -39,10 +39,6 @@ jobs:
         arch: [x64]
         include:
           - python-version: 3.9
-            os: ubuntu-latest
-            install-via: script
-            arch: x64
-          - python-version: 3.9
             os: windows-latest
             install-via: pip
             arch: x86
