@@ -1,3 +1,11 @@
+Release v1.15.5 (2022-07-23)
+----------------------------
+
+### Dependencies
+
+- 1.15.x: set upper bound for `pip` dependency to `<22.2`. [#1261](https://github.com/pdm-project/pdm/issues/1261)
+
+
 Release v1.15.4 (2022-06-28)
 ----------------------------
 
