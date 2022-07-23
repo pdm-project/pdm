@@ -254,8 +254,16 @@ class EnvBuilder:
         libs = self._prefix.lib_dirs + ([project_lib] if not self.isolated else [])
         if reqs:
             ws = WorkingSet(libs)
+            marker_env = self._env.marker_environment
             for req in reqs:
                 parsed_req = parse_requirement(req)
+                if parsed_req.marker and not parsed_req.marker.evaluate(marker_env):
+                    logger.debug(
+                        "Skipping requirement %s: mismatching marker %s",
+                        req,
+                        parsed_req.marker,
+                    )
+                    continue
                 if parsed_req.identify() not in ws:
                     missing.add(req)
                 elif parsed_req.specifier and not parsed_req.specifier.contains(
