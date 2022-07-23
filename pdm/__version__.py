@@ -1,14 +1,8 @@
 from __future__ import annotations
 
-import sys
-
 from packaging.version import Version, parse
 
-if sys.version_info >= (3, 8):
-    import importlib.metadata as importlib_metadata
-else:
-    import importlib_metadata
-
+from pdm.compat import importlib_metadata
 
 try:
     __version__ = importlib_metadata.version(__package__)

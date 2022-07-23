@@ -67,7 +67,7 @@ class Core:
             action="version",
             version="{}, version {}".format(
                 termui.style("PDM", style="bold"),
-                self.version,
+                termui.style(self.version, style="cyan"),
             ),
             help="show the version and exit",
         )

@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 import platformdirs
 import tomlkit
 from findpython import Finder
+from tomlkit.items import Array
 
 from pdm import termui
 from pdm._types import Source
@@ -562,15 +563,14 @@ class Project:
         """Get the dependencies array in the pyproject.toml"""
         if group == "default":
             return self.meta.setdefault("dependencies", [])
-        else:
-            deps_dict = {
-                False: self.meta.setdefault("optional-dependencies", {}),
-                True: self.tool_settings.setdefault("dev-dependencies", {}),
-            }
-            for deps in deps_dict.values():
-                if group in deps:
-                    return deps[group]
-            return deps_dict[dev].setdefault(group, [])
+        deps_dict = {
+            False: self.meta.setdefault("optional-dependencies", {}),
+            True: self.tool_settings.setdefault("dev-dependencies", {}),
+        }
+        for deps in deps_dict.values():
+            if group in deps:
+                return deps[group]
+        return deps_dict[dev].setdefault(group, [])
 
     def add_dependencies(
         self,
@@ -579,9 +579,8 @@ class Project:
         dev: bool = False,
         show_message: bool = True,
     ) -> None:
-        deps = self.get_pyproject_dependencies(to_group, dev).multiline(  # type: ignore
-            True
-        )
+        deps = cast(Array, self.get_pyproject_dependencies(to_group, dev))
+        deps.multiline(True)
         for _, dep in requirements.items():
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)),

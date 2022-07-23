@@ -24,7 +24,6 @@ logger.addHandler(logging.NullHandler())
 unearth_logger = logging.getLogger("unearth")
 unearth_logger.setLevel(logging.DEBUG)
 
-
 _console = Console(highlight=False)
 _err_console = Console(stderr=True)
 
