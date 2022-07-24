@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shlex
 import subprocess
 import sys
-
-from pip import __file__ as pip_location
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
 from pdm.compat import importlib_metadata
-from pdm.models.environment import WorkingSet
+from pdm.models.environment import BareEnvironment, WorkingSet
 from pdm.project import Project
 from pdm.utils import normalize_name
 
@@ -26,11 +23,10 @@ def _all_plugins() -> list[str]:
     return sorted(result)
 
 
-def run_pip(args: list[str]) -> bytes:
-    return subprocess.check_output(
-        [sys.executable, "-I", os.path.dirname(pip_location)] + args,
-        stderr=subprocess.STDOUT,
-    )
+def run_pip(project: Project, args: list[str]) -> bytes:
+    env = BareEnvironment(project)
+    project.environment = env
+    return subprocess.check_output(env.pip_command + args, stderr=subprocess.STDOUT)
 
 
 class Command(BaseCommand):
@@ -101,7 +97,7 @@ class AddCommand(BaseCommand):
             with project.core.ui.open_spinner(
                 f"Installing plugins: {options.packages}"
             ):
-                run_pip(pip_args)
+                run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
                 "Installation failed: \n" + e.output.decode("utf8"), err=True
@@ -182,7 +178,7 @@ class RemoveCommand(BaseCommand):
             with project.core.ui.open_spinner(
                 f"Uninstalling plugins: {valid_packages}"
             ):
-                run_pip(pip_args)
+                run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
                 "Uninstallation failed: \n" + e.output.decode("utf8"), err=True
