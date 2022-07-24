@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock
 
 import pytest
 
@@ -34,13 +34,15 @@ def test_plugin_list(invoke):
 def test_plugin_add(invoke, mock_pip):
     result = invoke(["plugin", "add", "foo"])
     assert result.exit_code == 0, result.stderr
-    mock_pip.assert_called_with(["install", "foo"])
+    mock_pip.assert_called_with(ANY, ["install", "foo"])
 
     result = invoke(
         ["plugin", "add", "--pip-args", "--force-reinstall --upgrade", "foo"]
     )
     assert result.exit_code == 0, result.stderr
-    mock_pip.assert_called_with(["install", "--force-reinstall", "--upgrade", "foo"])
+    mock_pip.assert_called_with(
+        ANY, ["install", "--force-reinstall", "--upgrade", "foo"]
+    )
 
 
 @pytest.mark.usefixtures("mock_all_plugins")
@@ -59,4 +61,4 @@ def test_plugin_remove(invoke, mock_pip, monkeypatch):
 
     result = invoke(["plugin", "remove", "-y", "demo"])
     assert result.exit_code == 0, result.stderr
-    mock_pip.assert_called_with(["uninstall", "-y", "demo", "pytz"])
+    mock_pip.assert_called_with(ANY, ["uninstall", "-y", "demo", "pytz"])
