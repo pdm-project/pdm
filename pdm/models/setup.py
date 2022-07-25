@@ -16,6 +16,7 @@ class Setup:
     install_requires: List[str] = field(default_factory=list)
     extras_require: Dict[str, List[str]] = field(default_factory=dict)
     python_requires: Optional[str] = None
+    summary: Optional[str] = None
 
     def update(self, other: "Setup") -> None:
         if other.name:
@@ -28,6 +29,8 @@ class Setup:
             self.extras_require = other.extras_require
         if other.python_requires:
             self.python_requires = other.python_requires
+        if other.summary:
+            self.summary = other.summary
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)

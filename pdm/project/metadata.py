@@ -76,7 +76,7 @@ class SetupDistribution(Distribution):
         return {
             "Name": self._data.name,
             "Version": self._data.version,
-            "Summary": "UNKNOWN",
+            "Summary": self._data.summary,
             "Requires-Python": self._data.python_requires,
         }
 

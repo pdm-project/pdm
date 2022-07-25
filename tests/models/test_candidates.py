@@ -342,8 +342,9 @@ def test_parse_metadata_from_pep621(project, mocker):
         f"test-hatch @ file://{FIXTURES.as_posix()}/projects/test-hatch-static"
     )
     candidate = Candidate(req)
-    metadata = candidate.prepare(project.environment).metadata
-    assert sorted(metadata.requires) == ["click", "requests"]
+    distribution = candidate.prepare(project.environment).metadata
+    assert sorted(distribution.requires) == ["click", "requests"]
+    assert distribution.metadata["Summary"] == "Test hatch project"
     builder.assert_not_called()
 
 

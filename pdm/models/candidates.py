@@ -443,6 +443,7 @@ class PreparedCandidate:
                 ):
                     setup = Setup(
                         name=metadata.name,
+                        summary=metadata.description,
                         version=metadata.version,
                         install_requires=metadata.dependencies or [],
                         extras_require=metadata.optional_dependencies or {},
