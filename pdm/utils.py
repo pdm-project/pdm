@@ -460,4 +460,4 @@ def is_pip_compatible_with_python(python_version: Version | str) -> bool:
 
     pip = importlib_metadata.distribution("pip")
     requires_python = get_specifier(pip.metadata["Requires-Python"])
-    return requires_python.contains(python_version)
+    return requires_python.contains(python_version, True)

@@ -213,7 +213,10 @@ class Environment:
         """Get a pip command for this environment, and download one if not available.
         Return a list of args like ['python', '-m', 'pip']
         """
-        from pip import __file__ as pip_location
+        try:
+            from pip import __file__ as pip_location
+        except ImportError:
+            pip_location = None  # type: ignore
 
         python_version = self.interpreter.version
         executable = str(self.interpreter.executable)
@@ -223,7 +226,7 @@ class Environment:
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
             command = [executable, "-Esm", "pip"]
-        elif is_pip_compatible_with_python(python_version):
+        elif pip_location and is_pip_compatible_with_python(python_version):
             # Use the host pip package if available
             command = [executable, "-Es", os.path.dirname(pip_location)]
         else:
