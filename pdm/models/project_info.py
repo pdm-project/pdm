@@ -23,10 +23,17 @@ class ProjectInfo:
         metadata = cast(Message, data.metadata)
         keywords = metadata.get("Keywords", "").replace(",", ", ")
         platform = metadata.get("Platform", "").replace(",", ", ")
-        project_urls = {
-            k.strip(): v.strip()
-            for k, v in (row.split(",") for row in metadata.get_all("Project-URL", []))
-        }
+
+        if "Project-URL" in metadata:
+            project_urls = {
+                k.strip(): v.strip()
+                for k, v in (
+                    row.split(",") for row in metadata.get_all("Project-URL", [])
+                )
+            }
+        else:
+            project_urls = {}
+
         return {
             "name": metadata["Name"],
             "version": metadata["Version"],
