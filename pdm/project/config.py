@@ -199,6 +199,10 @@ class Config(MutableMapping[str, str]):
         "pypi.verify_ssl": ConfigItem(
             "Verify SSL certificate when query PyPI", True, coerce=ensure_boolean
         ),
+        "pypi.ca_certs": ConfigItem(
+            "Path to a CA certificate bundle used for verifying the identity "
+            "of the PyPI server",
+        ),
         "pypi.json_api": ConfigItem(
             "Consult PyPI's JSON API for package metadata",
             False,

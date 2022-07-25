@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
+import certifi
 import unearth
 
 from pdm import termui
@@ -138,6 +139,9 @@ class Environment:
             cache_dir=self.project.cache("http"),
             index_urls=index_urls,
             trusted_hosts=trusted_hosts,
+            ca_certificates=Path(
+                self.project.config.get("pypi.ca_certs", certifi.where())
+            ),
         )
         session.auth = self.auth
         finder = unearth.PackageFinder(
