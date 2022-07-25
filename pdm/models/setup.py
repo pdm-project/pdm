@@ -1,6 +1,6 @@
 import ast
 from configparser import ConfigParser
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, no_type_check
 
@@ -19,18 +19,10 @@ class Setup:
     summary: Optional[str] = None
 
     def update(self, other: "Setup") -> None:
-        if other.name:
-            self.name = other.name
-        if other.version:
-            self.version = other.version
-        if other.install_requires:
-            self.install_requires = other.install_requires
-        if other.extras_require:
-            self.extras_require = other.extras_require
-        if other.python_requires:
-            self.python_requires = other.python_requires
-        if other.summary:
-            self.summary = other.summary
+        for f in fields(self):
+            other_field = getattr(other, f.name)
+            if other_field:
+                setattr(self, f.name, other_field)
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
