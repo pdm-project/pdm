@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import email
 import email.message
+import email.policy
 import hashlib
 import os
 import re
@@ -29,6 +30,7 @@ wheel_file_re = re.compile(
         \.whl|\.dist-info)$""",
     re.VERBOSE,
 )
+message_policy = email.policy.default.clone(utf8=True)
 
 
 @dataclass
@@ -104,7 +106,7 @@ class PackageFile:
                 fn = split_leading_dir(m.name)[1] if has_leading else m.name
                 if fn == "PKG-INFO":
                     return email.message_from_binary_file(
-                        cast(IO[bytes], tar.extractfile(m))
+                        cast(IO[bytes], tar.extractfile(m)), policy=message_policy
                     )
         raise ProjectError(f"No PKG-INFO found in {filename}")
 
@@ -116,7 +118,9 @@ class PackageFile:
             for name in filenames:
                 fn = split_leading_dir(name)[1] if has_leading else name
                 if fn == "PKG-INFO":
-                    return email.message_from_binary_file(zip.open(name))
+                    return email.message_from_binary_file(
+                        zip.open(name), policy=message_policy
+                    )
         raise ProjectError(f"No PKG-INFO found in {filename}")
 
     @staticmethod
@@ -124,7 +128,9 @@ class PackageFile:
         with zipfile.ZipFile(filename, allowZip64=True) as zip:
             for fn in zip.namelist():
                 if fn.replace("\\", "/").endswith(".dist-info/METADATA"):
-                    return email.message_from_binary_file(zip.open(fn))
+                    return email.message_from_binary_file(
+                        zip.open(fn), policy=message_policy
+                    )
         raise ProjectError(f"No egg-info is found in {filename}")
 
     def add_gpg_signature(self, filename: str, signature_name: str) -> None:
