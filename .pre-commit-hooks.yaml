@@ -1,0 +1,8 @@
+- id: pdm-export
+  name: pdm-export-lock
+  description: export locked packages to requirements.txt or setup.py
+  entry: pdm export
+  language: python
+  language_version: python3
+  pass_filenames: false
+  files: ^pdm.lock$  

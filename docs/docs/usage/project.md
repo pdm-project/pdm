@@ -244,6 +244,9 @@ pdm export -o requirements.txt
 pdm export -f setuppy -o setup.py
 ```
 
+!!! NOTE
+    You can also run `pdm export` with a [`.pre-commit` hook](advanced.md#hooks-for-pre-commit).
+
 ## Hide the credentials from pyproject.toml
 
 There are many times when we need to use sensitive information, such as login credentials for the PyPI server
