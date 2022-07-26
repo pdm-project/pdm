@@ -58,7 +58,7 @@ def test_find_python_in_path(tmp_path):
 
     assert (
         utils.find_python_in_path(sys.executable)
-        == pathlib.Path(sys.executable).resolve()
+        == pathlib.Path(sys.executable).absolute()
     )
 
     posix_path_to_executable = pathlib.Path(sys.executable)
