@@ -165,7 +165,7 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
             style="yellow",
             err=True,
         )
-        return "all"
+        return "reuse"  # try to reuse the lockfile if possible
     elif not project.is_lockfile_hash_match():
         project.core.ui.echo(
             "Lock file hash doesn't match pyproject.toml, packages may be outdated",

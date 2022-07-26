@@ -452,17 +452,21 @@ class Project:
             normalize_name(k): v
             for k, v in self.tool_settings.get("overrides", {}).items()
         }
-        if strategy != "all" and not self.is_lockfile_compatible():
-            self.core.ui.echo(
-                "Updating the whole lock file as it is not compatible with PDM",
-                style="yellow",
-                err=True,
-            )
-            strategy = "all"
-        if not for_install and strategy == "all":
-            return BaseProvider(repository, allow_prereleases, overrides)
+        locked_repository: LockedRepository | None = None
+        if strategy != "all" or for_install:
+            try:
+                locked_repository = self.locked_repository
+            except Exception:
+                if for_install:
+                    raise
+                self.core.ui.echo(
+                    "Unable to reuse the lock file as it is not compatible with PDM",
+                    style="yellow",
+                    err=True,
+                )
 
-        locked_repository = self.locked_repository
+        if locked_repository is None:
+            return BaseProvider(repository, allow_prereleases, overrides)
         if for_install:
             return BaseProvider(locked_repository, allow_prereleases, overrides)
         provider_class = (
