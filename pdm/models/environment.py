@@ -208,8 +208,8 @@ class Environment:
                     downloaded = finder.download_and_unpack(
                         best_match.link, dirname, dirname
                     )
-                except unearth.UnpackError:
-                    raise download_error
+                except unearth.UnpackError as e:
+                    raise download_error from e
                 shutil.move(str(downloaded), path)
 
     @cached_property

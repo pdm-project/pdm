@@ -208,7 +208,7 @@ class BaseRepository:
         try:
             result = self._candidate_info_cache.get(candidate)
         except KeyError:
-            raise CandidateInfoNotFound(candidate)
+            raise CandidateInfoNotFound(candidate) from None
         return result
 
     @cache_result
@@ -399,7 +399,7 @@ class LockedRepository(BaseRepository):
 
         for key, hashes in lockfile.get("metadata", {}).get("files", {}).items():
             self.file_hashes[tuple(key.split(None, 1))] = {  # type: ignore
-                Link(item["url"]): item["hash"] for item in hashes
+                Link(item["url"]): item["hash"] for item in hashes if "url" in item
             }
 
     def _identify_candidate(self, candidate: Candidate) -> tuple:

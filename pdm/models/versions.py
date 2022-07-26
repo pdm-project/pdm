@@ -49,7 +49,7 @@ class Version:
                         raise InvalidPyVersion(
                             f"{version_str}: postreleases are not supported "
                             "for python version specifiers."
-                        )
+                        ) from None
             version = tuple(bits)
         self._version: Tuple[VersionBit, ...] = version
 
