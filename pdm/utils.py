@@ -351,7 +351,7 @@ def find_python_in_path(path: str | Path) -> Path | None:
     - A valid path to the interpreter
     - A Python root directory that contains the interpreter
     """
-    pathlib_path = Path(path).resolve()
+    pathlib_path = Path(path).absolute()
     if pathlib_path.is_file():
         return pathlib_path
 
