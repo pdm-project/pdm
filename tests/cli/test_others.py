@@ -121,6 +121,10 @@ def test_show_package_on_pypi(invoke):
     assert result.exit_code == 0
     assert "requests" in result.output.splitlines()[0]
 
+    result = invoke(["show", "--name", "sphinx-data-viewer"])
+    assert result.exit_code == 0
+    assert "sphinx-data-viewer" in result.output.splitlines()[0]
+
 
 def test_show_self_package(project, invoke):
     result = invoke(["show"], obj=project)
