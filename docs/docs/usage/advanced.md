@@ -221,3 +221,21 @@ Below is a sample code snippet showing how to make PDM work with [lsp-python-ms]
                (require 'lsp-python-ms)
                (lsp))))  ; or lsp-deferred
 ```
+## Hooks for `pre-commit`
+
+[`pre-commit`](https://pre-commit.com/) is a powerful framework for managing git hooks in a centralized fashion. PDM already uses `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) for its internal QA checks. PDM exposes also several hooks that can be run locally or in CI pipelines.
+
+### Export `requirements.txt` or `setup.py`
+
+This hook wraps the command `pdm export` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that you are going to check in the codebase a `requirements.txt` or a `setup.py` file, which reflects the actual content of [`pdm lock`](cli_reference.md#exec-0--lock).
+
+```yaml
+# export python requirements
+- repo: https://github.com/pdm-project/pdm
+  rev: 2.x.y # a PDM release exposing the hook
+  hooks:
+    - id: pdm-export
+      # command arguments, e.g.:
+      args: ["-o", "requirements.txt", "--without-hashes"]
+      files: ^pdm.lock$
+```
