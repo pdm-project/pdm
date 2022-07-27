@@ -1,6 +1,7 @@
 import argparse
 
-from pdm import BaseCommand, Project
+from pdm.cli.commands.base import BaseCommand
+from pdm.project import Project
 from pdm.cli.commands.venv.backends import BACKENDS
 from pdm.cli.options import verbose_option
 

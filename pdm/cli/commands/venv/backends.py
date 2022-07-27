@@ -5,7 +5,8 @@ import sys
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Type
 
-from pdm import Project, termui
+from pdm.project import Project
+from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.python import PythonInfo

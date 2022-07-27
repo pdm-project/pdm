@@ -1,7 +1,7 @@
 import argparse
 from typing import List
 
-from pdm import Project
+from pdm.project import Project
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.activate import ActivateCommand
 from pdm.cli.commands.venv.create import CreateCommand
