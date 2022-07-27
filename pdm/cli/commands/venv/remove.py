@@ -2,7 +2,8 @@ import argparse
 import shutil
 from pathlib import Path
 
-from pdm import Project, termui
+from pdm.project import Project
+from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.utils import iter_venvs
 from pdm.cli.options import verbose_option
