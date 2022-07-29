@@ -281,7 +281,9 @@ class Project:
 
         backend: str = self.config["venv.backend"]
         venv_backend = BACKENDS[backend](self, None)
-        path = venv_backend.create(in_project=self.config["venv.in_project"])
+        path = venv_backend.create(
+            force=True, in_project=self.config["venv.in_project"]
+        )
         self.core.ui.echo(
             f"Virtualenv is created successfully at [green]{path}[/]", err=True
         )

@@ -33,4 +33,5 @@ class Command(BaseCommand):
         completion = importlib.resources.read_text(
             "pdm.cli.completions", f"pdm.{suffix}"
         )
-        project.core.ui.echo(completion.replace("%{python_executable}", sys.executable))
+        # Can't use rich print or otherwise the rich markups will be interpreted
+        print(completion.replace("%{python_executable}", sys.executable))
