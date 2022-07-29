@@ -135,6 +135,7 @@ class TaskRunner:
             process_env = dotenv.dotenv_values(
                 project.root / env_file, encoding="utf-8"
             )
+        os.environ.update(process_env)
         process_env.update(os.environ)
         pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
         pythonpath = [PEP582_PATH] + [
