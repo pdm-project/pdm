@@ -1,3 +1,29 @@
+Release v2.1.0 (2022-07-29)
+---------------------------
+
+### Features & Improvements
+
+- Allow the use of custom CA certificates using the `pypi.ca_certs` config entry. [#1240](https://github.com/pdm-project/pdm/issues/1240)
+- Add `pdm export` to available pre-commit hooks. [#1279](https://github.com/pdm-project/pdm/issues/1279)
+
+### Bug Fixes
+
+- Skip incompatible requirements when installing build dependencies. [#1264](https://github.com/pdm-project/pdm/issues/1264)
+- Fix a crash when pdm tries to publish a package with non-ASCII characters in the metadata. [#1270](https://github.com/pdm-project/pdm/issues/1270)
+- Try to read the lock file even if the lock version is incompatible. [#1273](https://github.com/pdm-project/pdm/issues/1273)
+- For packages that are only available as source distribution, the `summary` field in `pdm.lock` contains the `description` from the package's `pyproject.toml`. [#1274](https://github.com/pdm-project/pdm/issues/1274)
+- Do not crash when calling `pdm show` for a package that is only available as source distribution. [#1276](https://github.com/pdm-project/pdm/issues/1276)
+- Fix a bug that completion scripts are interpreted as rich markups. [#1283](https://github.com/pdm-project/pdm/issues/1283)
+
+### Dependencies
+
+- Remove the dependency of `pip`. [#1268](https://github.com/pdm-project/pdm/issues/1268)
+
+### Removals and Deprecations
+
+- Deprecate the top-level imports from `pdm` module, it will be removed in the future. [#1282](https://github.com/pdm-project/pdm/issues/1282)
+
+
 Release v2.0.3 (2022-07-22)
 ---------------------------
 
