@@ -284,7 +284,7 @@ def do_add(
     if not dry_run:
         project.add_dependencies(deps_to_update, group, dev)
         project.write_lockfile(project.lockfile, False)
-
+    _populate_requirement_names(group_deps)
     if sync:
         do_sync(
             project,
@@ -296,6 +296,14 @@ def do_add(
             dry_run=dry_run,
             hooks=hooks,
         )
+
+
+def _populate_requirement_names(req_mapping: dict[str, Requirement]) -> None:
+    # Update the requirement key if the name changed.
+    for key, req in list(req_mapping.items()):
+        if key and key.startswith(":empty:"):
+            req_mapping[req.identify()] = req
+            del req_mapping[key]
 
 
 def do_update(
@@ -373,6 +381,8 @@ def do_update(
         dry_run=dry_run,
         hooks=hooks,
     )
+    for deps in updated_deps.values():
+        _populate_requirement_names(deps)
     if sync or dry_run:
         do_sync(
             project,
