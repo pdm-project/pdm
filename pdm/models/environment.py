@@ -143,6 +143,10 @@ class Environment:
                 self.project.config.get("pypi.ca_certs", certifi.where())
             ),
         )
+        if certfn := self.project.config.get("pypi.client_cert"):
+            keyfn = self.project.config.get("pypi.client_key")
+            session.cert = (Path(certfn), Path(keyfn) if keyfn else None)
+
         session.auth = self.auth
         finder = unearth.PackageFinder(
             session=session,

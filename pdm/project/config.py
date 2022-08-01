@@ -203,6 +203,12 @@ class Config(MutableMapping[str, str]):
             "Path to a CA certificate bundle used for verifying the identity "
             "of the PyPI server",
         ),
+        "pypi.client_cert": ConfigItem(
+            "Path to client certificate file, or combined cert/key file",
+        ),
+        "pypi.client_key": ConfigItem(
+            "Path to client cert keyfile, if not in pypi.client_cert",
+        ),
         "pypi.json_api": ConfigItem(
             "Consult PyPI's JSON API for package metadata",
             False,
