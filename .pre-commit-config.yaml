@@ -12,7 +12,7 @@ repos:
       - id: codespell  # See setup.cfg for args
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
+    rev: 5.0.2
     hooks:
       - id: flake8
         additional_dependencies:
@@ -24,7 +24,7 @@ repos:
       - id: isort
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.961
+    rev: v0.971
     hooks:
       - id: mypy
         args: [pdm]
