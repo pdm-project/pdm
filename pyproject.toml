@@ -9,7 +9,7 @@ requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
     "blinker",
-    "packaging",
+    "packaging>=20.9",
     "platformdirs",
     "rich>=12.3.0",
     "virtualenv>=20",
