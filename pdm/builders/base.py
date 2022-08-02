@@ -307,8 +307,9 @@ class EnvBuilder:
     def prepare_metadata(
         self, out_dir: str, config_settings: Mapping[str, Any] | None = None
     ) -> str:
-        """Prepare metadata and store in the out_dir. Some backends doesn't provide that API,
-        in that case the metadata will be retrieved from the built result.
+        """Prepare metadata and store in the out_dir.
+        Some backends doesn't provide that API, in that case the metadata will be
+        retrieved from the built result.
         """
         raise NotImplementedError("Should be implemented in subclass")
 

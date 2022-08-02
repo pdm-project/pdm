@@ -74,7 +74,7 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
 
     def _format_usage(
         self,
-        usage: str,
+        usage: str | None,
         actions: Iterable[Action],
         groups: Iterable[_ArgumentGroup],
         prefix: str | None,
