@@ -135,6 +135,7 @@ class Environment:
             sources = self.project.sources
 
         index_urls, find_links, trusted_hosts = get_index_urls(sources)
+
         session = PDMSession(
             cache_dir=self.project.cache("http"),
             index_urls=index_urls,
@@ -143,7 +144,8 @@ class Environment:
                 self.project.config.get("pypi.ca_certs", certifi.where())
             ),
         )
-        if certfn := self.project.config.get("pypi.client_cert"):
+        certfn = self.project.config.get("pypi.client_cert")
+        if certfn:
             keyfn = self.project.config.get("pypi.client_key")
             session.cert = (Path(certfn), Path(keyfn) if keyfn else None)
 
