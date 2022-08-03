@@ -14,7 +14,7 @@ import sys
 import urllib.request
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Sequence, List
+from typing import List, Sequence
 
 if sys.version_info < (3, 7):
     sys.exit("Python 3.7 or above is required to install PDM.")
