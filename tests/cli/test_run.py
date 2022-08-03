@@ -230,20 +230,26 @@ def test_run_script_with_env_defined(project, invoke, capfd):
         assert capfd.readouterr()[0].strip() == "bar"
 
 
-def test_run_script_with_dotenv_file(project, invoke, capfd):
+def test_run_script_with_dotenv_file(project, invoke, capfd, monkeypatch):
     (project.root / "test_script.py").write_text(
         "import os; print(os.getenv('FOO'), os.getenv('BAR'))"
     )
     project.tool_settings["scripts"] = {
-        "_": {"env": {"BAR": "foo"}},
-        "test_script": {"cmd": "python test_script.py", "env_file": ".env"},
+        "test_override": {
+            "cmd": "python test_script.py",
+            "env_file": {"override": ".env"},
+        },
+        "test_default": {"cmd": "python test_script.py", "env_file": ".env"},
     }
     project.write_pyproject()
+    monkeypatch.setenv("BAR", "foo")
     (project.root / ".env").write_text("FOO=bar\nBAR=override")
     capfd.readouterr()
     with cd(project.root):
-        invoke(["run", "test_script"], obj=project)
+        invoke(["run", "test_default"], obj=project)
         assert capfd.readouterr()[0].strip() == "bar foo"
+        invoke(["run", "test_override"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar override"
 
 
 def test_run_script_override_global_env(project, invoke, capfd):

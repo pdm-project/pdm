@@ -21,9 +21,13 @@ from pdm.project import Project
 from pdm.utils import is_path_relative_to
 
 
+class EnvFileOptions(TypedDict, total=True):
+    override: str
+
+
 class TaskOptions(TypedDict, total=False):
     env: Mapping[str, str]
-    env_file: str | None
+    env_file: EnvFileOptions | str | None
     help: str
     site_packages: bool
 
@@ -119,12 +123,19 @@ class TaskRunner:
         shell: bool = False,
         site_packages: bool = False,
         env: Mapping[str, str] | None = None,
-        env_file: str | None = None,
+        env_file: EnvFileOptions | str | None = None,
     ) -> int:
         """Run command in a subprocess and return the exit code."""
         project = self.project
-        process_env = {}
-        if env_file:
+        process_env = os.environ.copy()
+        if env_file is not None:
+            if isinstance(env_file, str):
+                path = env_file
+                override = False
+            else:
+                path = env_file["override"]
+                override = True
+
             import dotenv
 
             project.core.ui.echo(
@@ -132,10 +143,11 @@ class TaskRunner:
                 err=True,
                 verbosity=termui.Verbosity.DETAIL,
             )
-            process_env = dotenv.dotenv_values(
-                project.root / env_file, encoding="utf-8"
-            )
-        process_env.update(os.environ)
+            dotenv_env = dotenv.dotenv_values(project.root / path, encoding="utf-8")
+            if override:
+                process_env = {**process_env, **dotenv_env}
+            else:
+                process_env = {**dotenv_env, **process_env}
         pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
         pythonpath = [PEP582_PATH] + [
             p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")
