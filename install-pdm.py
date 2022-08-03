@@ -14,7 +14,7 @@ import sys
 import urllib.request
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Sequence
+from typing import Sequence, List
 
 if sys.version_info < (3, 7):
     sys.exit("Python 3.7 or above is required to install PDM.")
@@ -37,7 +37,7 @@ FOREGROUND_COLORS = {
 }
 
 
-def _call_subprocess(args: list[str]) -> int:
+def _call_subprocess(args: List[str]) -> int:
     try:
         return subprocess.run(
             args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True
