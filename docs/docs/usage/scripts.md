@@ -146,6 +146,15 @@ start.cmd = "flask run -p 54321"
 start.env_file = ".env"
 ```
 
+The variables within the dotenv file will *not* override any existing environment variables.
+If you want the dotenv file to override existing environment variables use the following:
+
+```toml
+[tool.pdm.scripts]
+start.cmd = "flask run -p 54321"
+start.env_file.override = ".env"
+```
+
 !!! note
     A dotenv file specified on a composite task level will override those defined by called tasks.
 
