@@ -219,7 +219,7 @@ def test_set_non_exist_python_path(project_no_init):
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_create_venv_first_time(invoke, project):
+def test_create_venv_first_time(invoke, project, local_finder):
     project.project_config.update({"venv.in_project": False})
     del project.project_config["python.path"]
     result = invoke(["install"], obj=project)
@@ -232,7 +232,7 @@ def test_create_venv_first_time(invoke, project):
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_create_venv_in_project(invoke, project):
+def test_create_venv_in_project(invoke, project, local_finder):
     project.project_config.update({"venv.in_project": True})
     del project.project_config["python.path"]
     result = invoke(["install"], obj=project)
@@ -241,7 +241,7 @@ def test_create_venv_in_project(invoke, project):
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_find_interpreters_from_venv(invoke, project):
+def test_find_interpreters_from_venv(invoke, project, local_finder):
     project.project_config.update({"venv.in_project": False})
     del project.project_config["python.path"]
     result = invoke(["install"], obj=project)

@@ -312,6 +312,7 @@ def local_finder(project_no_init, mocker):
             "type": "find_links",
             "verify_ssl": False,
             "url": path_to_url(artifacts_dir),
+            "name": "pypi",
         }
     ]
     project_no_init.write_pyproject()
