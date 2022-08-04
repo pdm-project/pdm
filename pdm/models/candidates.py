@@ -72,21 +72,33 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _find_best_match_link(
-    finder: PackageFinder, req: Requirement, hashes: dict[Link, str] | None
+    finder: PackageFinder,
+    req: Requirement,
+    hashes: dict[Link, str] | None,
+    ignore_compatibility: bool = False,
 ) -> Link | None:
     """Get the best matching link for a requirement"""
     # This function is called when a lock file candidate is given or incompatible wheel
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
     # If hashes are not empty, find the best match from the links, otherwise find from
     # the package sources.
-    if hashes is None:
-        best = finder.find_best_match(req.as_line()).best
+    def attempt_to_find() -> Link | None:
+        if hashes is None:
+            best = finder.find_best_match(req.as_line()).best
+            return best.link if best is not None else None
+        # We don't evaluate against the hashes, they will be validated later.
+        evaluator = finder.build_evaluator(req.name)
+        packages: Iterable[Package] = filter(None, map(evaluator.evaluate_link, hashes))
+        best = max(packages, key=finder._sort_key, default=None)
         return best.link if best is not None else None
-    # We don't evaluate against the hashes, they will be validated later in downloading.
-    evaluator = finder.build_evaluator(req.name)
-    packages: Iterable[Package] = filter(None, map(evaluator.evaluate_link, hashes))
-    best = max(packages, key=finder._sort_key, default=None)
-    return best.link if best is not None else None
+
+    original_ignore = finder.ignore_compatibility
+    link = attempt_to_find()
+    if link is None and ignore_compatibility and not original_ignore:
+        finder.ignore_compatibility = ignore_compatibility
+        link = attempt_to_find()
+        finder.ignore_compatibility = original_ignore
+    return link
 
 
 class Candidate:
@@ -367,7 +379,7 @@ class PreparedCandidate:
         hash_options = None
         if not allow_all and self.candidate.hashes:
             hash_options = convert_hashes(self.candidate.hashes)
-        with self.environment.get_finder(ignore_compatibility=allow_all) as finder:
+        with self.environment.get_finder() as finder:
             if (
                 not self.link
                 or self.link.is_wheel
@@ -383,6 +395,7 @@ class PreparedCandidate:
                     finder,
                     self.req.as_pinned_version(self.candidate.version),
                     self.candidate.hashes,
+                    ignore_compatibility=allow_all,
                 )
                 if not self.link:
                     raise CandidateNotFound(
