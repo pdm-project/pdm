@@ -1,3 +1,22 @@
+Release v2.1.1 (2022-08-05)
+---------------------------
+
+### Features & Improvements
+
+- Add a env_file.override option that allows the user to specify that
+  the env_file should override any existing environment variables. This
+  is not the default as the environment the code runs it should take
+  precedence. [#1299](https://github.com/pdm-project/pdm/issues/1299)
+
+### Bug Fixes
+
+- Fix a bug that unnamed requirements can't override the old ones in either `add` or `update` command. [#1287](https://github.com/pdm-project/pdm/issues/1287)
+- Support mutual TLS to private repositories via pypi.client_cert and pypi.client_key config options. [#1290](https://github.com/pdm-project/pdm/issues/1290)
+- Set a minimum version for the `packaging` dependency to ensure that `packaging.utils.parse_wheel_filename` is available. [#1293](https://github.com/pdm-project/pdm/issues/1293)
+- Fix a bug that checking for PDM update creates a venv. [#1301](https://github.com/pdm-project/pdm/issues/1301)
+- Prefer compatible packages when fetching metadata. [#1302](https://github.com/pdm-project/pdm/issues/1302)
+
+
 Release v2.1.0 (2022-07-29)
 ---------------------------
 
