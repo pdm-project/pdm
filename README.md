@@ -146,7 +146,7 @@ pip install --user pdm
 With [asdf-vm](https://asdf-vm.com/)
 
 ```bash
-asdf plugin add github.com/1oglop1/asdf-pdm.git
+asdf plugin add pdm
 asdf install pdm latest
 ```
 
