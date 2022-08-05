@@ -138,6 +138,13 @@ pipx install pdm
 pip install --user pdm
 ```
 
+[asdf-vm](https://asdf-vm.com/)
+
+```bash
+asdf plugin add pdm
+asdf install pdm latest
+```
+
 ## 快速上手
 
 **初始化一个新的 PDM 项目**
