@@ -42,6 +42,7 @@ from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
+from pdm.models.environment import BareEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
@@ -859,9 +860,8 @@ def get_latest_version(project: Project) -> str | None:
         and current_time - state["last-check"] < 60 * 60 * 24 * 7
     ):
         return cast(str, state["latest-version"])
-    with project.environment.get_finder(
-        [project.default_source], ignore_compatibility=True
-    ) as finder:
+    environment = BareEnvironment(project)
+    with environment.get_finder([project.default_source]) as finder:
         candidate = finder.find_best_match("pdm").best
     if not candidate:
         return None
