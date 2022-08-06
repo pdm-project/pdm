@@ -74,8 +74,8 @@ For dynamic version read from SCM, it would be helpful to write the evaluated va
 ```toml
 [tool.pdm.version]
 source = "scm"
-write-to = "mypackage/__version__.py"
-write-template = "__version__ = '{}'"  # optional, default to "{}"
+write_to = "mypackage/__version__.py"
+write_template = "__version__ = '{}'"  # optional, default to "{}"
 ```
 
 For source distributions, the version will be *frozen* and converted to a static version in the `pyproject.toml` file, which will be included in the distribution.
