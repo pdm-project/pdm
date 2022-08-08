@@ -149,6 +149,15 @@ class Candidate:
         return self.req.identify()
 
     @property
+    def dep_key(self) -> tuple[str, str | None]:
+        """Key for retrieving and storing dependencies from the provider.
+
+        Return a tuple of (name, version). For URL candidates, the version is None but
+        there will be only one for the same name so it is also unique.
+        """
+        return (self.identify(), self.version)
+
+    @property
     def prepared(self) -> PreparedCandidate | None:
         return self._prepared
 

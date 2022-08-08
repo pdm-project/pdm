@@ -18,7 +18,7 @@ def resolve(
     requirements: list[Requirement],
     requires_python: PySpecSet,
     max_rounds: int = 10000,
-) -> tuple[dict[str, Candidate], dict[str, list[Requirement]]]:
+) -> tuple[dict[str, Candidate], dict[tuple[str, str | None], list[Requirement]]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 2 items:
 
