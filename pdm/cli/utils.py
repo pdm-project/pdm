@@ -443,7 +443,7 @@ def show_dependency_graph(
 def format_lockfile(
     project: Project,
     mapping: dict[str, Candidate],
-    fetched_dependencies: dict[str, list[Requirement]],
+    fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
 ) -> dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
@@ -455,7 +455,9 @@ def format_lockfile(
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))  # type: ignore
         base.add("summary", v.summary or "")
-        deps = make_array(sorted(r.as_line() for r in fetched_dependencies[k]), True)
+        deps = make_array(
+            sorted(r.as_line() for r in fetched_dependencies[v.dep_key]), True
+        )
         if len(deps) > 0:
             base.add("dependencies", deps)
         packages.append(base)  # type: ignore

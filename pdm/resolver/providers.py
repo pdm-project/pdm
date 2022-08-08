@@ -34,7 +34,7 @@ class BaseProvider(AbstractProvider):
     ) -> None:
         self.repository = repository
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
-        self.fetched_dependencies: dict[str, list[Requirement]] = {}
+        self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
         self.overrides = overrides or {}
         self._known_depth: dict[str, int] = {}
 
@@ -192,7 +192,7 @@ class BaseProvider(AbstractProvider):
                 continue
             dep.requires_python &= candidate.req.requires_python
             valid_deps.append(dep)
-        self.fetched_dependencies[self.identify(candidate)] = valid_deps[:]
+        self.fetched_dependencies[candidate.dep_key] = valid_deps[:]
         # A candidate contributes to the Python requirements only when:
         # It isn't an optional dependency, or the requires-python doesn't cover
         # the req's requires-python.
