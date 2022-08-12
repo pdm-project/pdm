@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any
+import contextlib
+from typing import Any, Generator
 
 from blinker import Signal
 
@@ -20,6 +21,16 @@ class HookManager:
     def __init__(self, project: Project, skip: list[str] | None = None):
         self.project = project
         self.skip = skip or []
+
+    @contextlib.contextmanager
+    def skipping(self, *names: str) -> Generator[None, None, None]:
+        """
+        Temporarily skip some hooks.
+        """
+        old_skip = self.skip[:]
+        self.skip.extend(names)
+        yield
+        self.skip = old_skip
 
     @cached_property
     def skip_all(self) -> bool:
