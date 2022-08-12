@@ -7,6 +7,7 @@ import shlex
 import signal
 import subprocess
 import sys
+from types import FrameType
 from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
 
 from pdm import signals, termui
@@ -198,14 +199,17 @@ class TaskRunner:
 
         cwd = project.root if chdir else None
 
-        s = signal.signal(
-            signal.SIGINT, lambda signum, frame: process.send_signal(signum)
-        )
+        def forward_signal(signum: int, frame: FrameType | None) -> None:
+            process.send_signal(signum)
+
+        handle_int = signal.signal(signal.SIGINT, forward_signal)
+        handle_term = signal.signal(signal.SIGTERM, forward_signal)
         process = subprocess.Popen(
             expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0
         )
         process.wait()
-        signal.signal(signal.SIGINT, s)
+        signal.signal(signal.SIGINT, handle_int)
+        signal.signal(signal.SIGTERM, handle_term)
         return process.returncode
 
     def _run_task(
