@@ -376,15 +376,14 @@ def do_update(
             for dep in deps.values():
                 dep.specifier = get_specifier("")
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
-    with hooks.skipping("post_lock"):
-        resolved = do_lock(
-            project,
-            strategy,
-            chain.from_iterable(updated_deps.values()),
-            reqs,
-            dry_run=dry_run,
-            hooks=hooks,
-        )
+    resolved = do_lock(
+        project,
+        strategy,
+        chain.from_iterable(updated_deps.values()),
+        reqs,
+        dry_run=dry_run,
+        hooks=hooks,
+    )
     for deps in updated_deps.values():
         _populate_requirement_names(deps)
     if unconstrained and not dry_run:
@@ -394,7 +393,6 @@ def do_update(
             project.add_dependencies(deps, group, dev or False)
         lockfile = project.lockfile
         project.write_lockfile(lockfile, False)
-        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
     if sync or dry_run:
         do_sync(
             project,
