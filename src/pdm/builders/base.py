@@ -40,7 +40,6 @@ class LoggerWrapper(threading.Thread):
 
         # create the pipe and reader
         self.fd_read, self.fd_write = os.pipe()
-        self.reader = os.fdopen(self.fd_read, encoding="utf-8")
 
         self.start()
 
@@ -52,11 +51,9 @@ class LoggerWrapper(threading.Thread):
         return msg[:-1] if msg.endswith("\n") else msg
 
     def run(self) -> None:
-        try:
-            for line in self.reader:
+        with os.fdopen(self.fd_read, encoding="utf-8", errors="replace") as reader:
+            for line in reader:
                 self._write(self.remove_newline(line))
-        finally:
-            self.reader.close()
 
     def _write(self, message: str) -> None:
         self.logger.log(self.level, message)
