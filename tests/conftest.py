@@ -33,7 +33,7 @@ from pdm.models.requirements import (
 from pdm.models.session import PDMSession
 from pdm.project.config import Config
 from pdm.project.core import Project
-from pdm.utils import normalize_name, path_to_url
+from pdm.utils import find_python_in_path, normalize_name, path_to_url
 from tests import FIXTURES
 
 os.environ.update(CI="1", PDM_CHECK_UPDATE="0")
@@ -290,7 +290,7 @@ def project_no_init(tmp_path, mocker, core, index, monkeypatch):
     )
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    p.project_config["python.path"] = getattr(sys, "_base_executable", sys.executable)
+    p.project_config["python.path"] = find_python_in_path(sys.base_prefix).as_posix()
     monkeypatch.delenv("VIRTUAL_ENV", raising=False)
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     monkeypatch.delenv("PEP582_PACKAGES", raising=False)
