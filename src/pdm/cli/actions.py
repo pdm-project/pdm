@@ -275,9 +275,10 @@ def do_add(
             req.specifier = get_specifier("")
     group_deps.update(requirements)
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
-    resolved = do_lock(
-        project, strategy, tracked_names, reqs, dry_run=dry_run, hooks=hooks
-    )
+    with hooks.skipping("post_lock"):
+        resolved = do_lock(
+            project, strategy, tracked_names, reqs, dry_run=dry_run, hooks=hooks
+        )
 
     # Update dependency specifiers and lockfile hash.
     deps_to_update = group_deps if unconstrained else requirements
@@ -285,6 +286,7 @@ def do_add(
     if not dry_run:
         project.add_dependencies(deps_to_update, group, dev)
         project.write_lockfile(project.lockfile, False)
+        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
     _populate_requirement_names(group_deps)
     if sync:
         do_sync(
@@ -384,6 +386,13 @@ def do_update(
     )
     for deps in updated_deps.values():
         _populate_requirement_names(deps)
+    if unconstrained and not dry_run:
+        # Need to update version constraints
+        save_version_specifiers(updated_deps, resolved, save)
+        for group, deps in updated_deps.items():
+            project.add_dependencies(deps, group, dev or False)
+        lockfile = project.lockfile
+        project.write_lockfile(lockfile, False)
     if sync or dry_run:
         do_sync(
             project,
@@ -400,13 +409,6 @@ def do_update(
             no_self=no_self,
             hooks=hooks,
         )
-    if unconstrained and not dry_run:
-        # Need to update version constraints
-        save_version_specifiers(updated_deps, resolved, save)
-        for group, deps in updated_deps.items():
-            project.add_dependencies(deps, group, dev or False)
-        lockfile = project.lockfile
-        project.write_lockfile(lockfile, False)
 
 
 def do_remove(
