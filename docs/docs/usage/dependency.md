@@ -225,7 +225,7 @@ There are a few similar commands to do this job with slight differences:
 
 ## Specify the lockfile to use
 
-You can specify another lockfile than the default [`pdm lock`](cli_reference.md#exec-0--lock) by using the `-L/--lockfilie <filepath>` option or the `PDM_LOCKFILE` environment variable.
+You can specify another lockfile than the default [`pdm lock`](cli_reference.md#exec-0--lock) by using the `-L/--lockfile <filepath>` option or the `PDM_LOCKFILE` environment variable.
 
 ### Select a subset of dependencies with CLI options
 
