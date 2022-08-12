@@ -27,7 +27,7 @@ repos:
     rev: v0.971
     hooks:
       - id: mypy
-        args: [pdm]
+        args: [src]
         pass_filenames: false
         additional_dependencies:
           - types-requests
