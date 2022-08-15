@@ -27,7 +27,7 @@ commands =
     flake8 src/
 ```
 
-To use the virtualenv created by Tox, you should make sure you have set `pdm config use_venv true`. PDM then will install
+To use the virtualenv created by Tox, you should make sure you have set `pdm config python.use_venv true`. PDM then will install
 dependencies from [`pdm lock`](cli_reference.md#exec-0--lock) into the virtualenv. In the dedicated venv you can directly run tools by `pytest tests/` instead
 of `pdm run pytest tests/`.
 
@@ -90,7 +90,7 @@ def lint(session):
 ```
 
 Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Python in the virtualenv correctly. Also make sure `pdm` is available in the `PATH`.
-Before running nox, you should also `pdm config use_venv true` to enable venv reusing.
+Before running nox, you should also ensure configuration item `python.use_venv` is true to enable venv reusing.
 
 ### About PEP 582 `__pypackages__` directory
 
@@ -116,7 +116,7 @@ Testing:
   runs-on: ${{ matrix.os }}
   strategy:
     matrix:
-      python-version: [3.7, 3.8, 3.9, "3.10"]
+      python-version: [3.7, 3.8, 3.9, '3.10']
       os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:
@@ -221,6 +221,7 @@ Below is a sample code snippet showing how to make PDM work with [lsp-python-ms]
                (require 'lsp-python-ms)
                (lsp))))  ; or lsp-deferred
 ```
+
 ## Hooks for `pre-commit`
 
 [`pre-commit`](https://pre-commit.com/) is a powerful framework for managing git hooks in a centralized fashion. PDM already uses `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) for its internal QA checks. PDM exposes also several hooks that can be run locally or in CI pipelines.
@@ -236,6 +237,6 @@ This hook wraps the command `pdm export` along with any valid argument. It can b
   hooks:
     - id: pdm-export
       # command arguments, e.g.:
-      args: ["-o", "requirements.txt", "--without-hashes"]
+      args: ['-o', 'requirements.txt', '--without-hashes']
       files: ^pdm.lock$
 ```
