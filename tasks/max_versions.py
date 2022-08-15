@@ -58,4 +58,4 @@ def dump_python_version_module(dest_file) -> None:
 
 
 if __name__ == "__main__":
-    dump_python_version_module(PROJECT_DIR / "pdm/models/python_max_versions.json")
+    dump_python_version_module(PROJECT_DIR / "src/pdm/models/python_max_versions.json")

@@ -1,3 +1,15 @@
+Release v2.1.2 (2022-08-15)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that dependencies from different versions of the same package override each other. [#1307](https://github.com/pdm-project/pdm/issues/1307)
+- Forward SIGTERM to child processes in `pdm run`. [#1312](https://github.com/pdm-project/pdm/issues/1312)
+- Fix errors when running on FIPS 140-2 enabled systems using Python 3.9 and newer. [#1313](https://github.com/pdm-project/pdm/issues/1313)
+- Fix the build failure when the subprocess outputs with non-UTF8 characters. [#1319](https://github.com/pdm-project/pdm/issues/1319)
+- Delay the trigger of `post_lock` for `add` and `update` operations, to ensure the `pyproject.toml` is updated before the hook is run. [#1320](https://github.com/pdm-project/pdm/issues/1320)
+
+
 Release v2.1.1 (2022-08-05)
 ---------------------------
 
