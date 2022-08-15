@@ -15,7 +15,9 @@ BIN_DIR = "Scripts" if IS_WIN else "bin"
 
 def hash_path(path: str) -> str:
     """Generate a hash for the given path."""
-    return base64.urlsafe_b64encode(hashlib.md5(path.encode()).digest()).decode()[:8]
+    return base64.urlsafe_b64encode(
+        hashlib.new("md5", path.encode(), usedforsecurity=False).digest()
+    ).decode()[:8]
 
 
 def get_in_project_venv_python(root: Path) -> Optional[Path]:
