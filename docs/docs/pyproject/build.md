@@ -80,7 +80,6 @@ write_template = "__version__ = '{}'"  # optional, default to "{}"
 
 For source distributions, the version will be *frozen* and converted to a static version in the `pyproject.toml` file, which will be included in the distribution.
 
-
 ## Include and exclude files
 
 To include extra files and/or exclude files from the distribution, give the paths in `includes` and `excludes` configuration, as glob patterns:
@@ -146,7 +145,7 @@ During the build, you may want to generate other files or download resources fro
 
 ```toml
 [tool.pdm.build]
-setup-script = "build.py
+setup-script = "build.py"
 ```
 
 In the `build.py` script, `pdm-pep517` looks for a `build` function and calls it with two arguments:
@@ -170,14 +169,21 @@ The generated file will be copied to the resulted wheel with the same hierarchy,
 
 `setup-script` can also be used to build platform-specific wheels, such as C extensions. Currently, building C extensions still relies on `setuptools`.
 
-Set the `run-setuptools` to `true` under `setup-script`, and `pdm-pep517` will generate a `setup.py` with the custom `build` function in the script and run `python setup.py build` to build extensions.
+Set `run-setuptools = true` under `setup-script`, and `pdm-pep517` will generate a `setup.py` with the custom `build` function in the script then run `python setup.py build` to build the wheel and any extensions:
 
-In the `build.py` script, the expected `build` function receives the argument dictionary to be passed to the `setup()` call. In the function, you can update the dictionary with any additional or changed values as you want.
+```toml
+# pyproject.toml
+[tool.pdm.build]
+setup-script = "build_setuptools.py"
+run-setuptools = true
+```
+
+In the `setup-script`, the expected `build` function receives the argument dictionary to be passed to the `setuptools.setup()` call. In the function, you can update the [keyword dictionary](https://setuptools.pypa.io/en/latest/references/keywords.html) with any additional or changed values as you want.
 
 Here is an example adapted to build `MarkupSafe`:
 
 ```python
-# build.py
+# build_setuptools.py
 from setuptools import Extension
 
 ext_modules = [
@@ -188,30 +194,21 @@ def build(setup_kwargs):
     setup_kwargs.update(ext_modules=ext_modules)
 ```
 
-The build configuration should look like:
-
-```toml
-# pyproject.toml
-[tool.pdm.build]
-setup-script = "build.py"
-run-setuptools = true
-```
-
 If you run [`pdm build`](../usage/cli_reference.md#exec-0--build)(or any other build frontends such as [build](https://pypi.org/project/build)), PDM will build a platform-specific wheel file as well as a sdist.
 
 By default, every build is performed in a clean and isolated environment, only build requirements can be seen. If your build has optional requirements that depend on the project environment, you can turn off the environment isolation by `pdm build --no-isolation` or setting config `build_isolation` to falsey value.
 
-### Override the "Is-Purelib" value
+## Override the "Is-Purelib" value
 
-Sometimes you may want to build platform-specific wheels but don't have a build script(the binaries may be built or fetched by other tools). In this case
+If this value is not specified, `pdm-pep517` will build platform-specific wheels if `run-setuptools` is `true`.
+
+Sometimes you may want to build platform-specific wheels but don't have a build script (the binaries may be built or fetched by other tools). In this case
 you can set the `is-purelib` value in the `pyproject.toml` to `false`:
 
 ```toml
 [tool.pdm.build]
 is-purelib = false
 ```
-
-If this value is not specified, `pdm-pep517` will build platform-specific wheels if `run-setuptools` is `true`, therefore `is-purelib` is `true` in this case.
 
 ## Editable build backend
 
