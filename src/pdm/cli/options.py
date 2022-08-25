@@ -59,7 +59,7 @@ class ArgumentGroup(Option):
 
     def __init__(
         self,
-        name: str = None,
+        name: str,
         is_mutually_exclusive: bool = False,
         required: bool = None,
     ) -> None:
