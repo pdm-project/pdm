@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import warnings
 from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -483,7 +484,15 @@ class PreparedCandidate:
             ).prepare_metadata(metadir_parent)
         except BuildError:
             termui.logger.warn("Failed to build package, try parsing project files.")
-            setup = Setup.from_directory(self._unpacked_dir)
+            try:
+                setup = Setup.from_directory(self._unpacked_dir)
+            except Exception:
+                message = (
+                    "Failed to parse the project files, dependencies may be missing"
+                )
+                termui.logger.warn(message)
+                warnings.warn(message, RuntimeWarning)
+                setup = Setup()
             return SetupDistribution(setup)
         else:
             return im.PathDistribution(Path(self._metadata_dir))
