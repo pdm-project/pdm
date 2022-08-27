@@ -14,7 +14,7 @@ from unearth import Link, vcs_support
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
-from pdm.exceptions import BuildError, CandidateNotFound
+from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -23,6 +23,7 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
 )
 from pdm.models.setup import Setup
+from pdm.models.specifiers import PySpecSet
 from pdm.project.metadata import MutableMetadata, SetupDistribution
 from pdm.utils import (
     cached_property,
@@ -198,9 +199,15 @@ class Candidate:
             return self._requires_python
         if self.link:
             requires_python = self.link.requires_python
-            if requires_python and requires_python.isdigit():
-                requires_python = f">={requires_python},<{int(requires_python) + 1}"
-            self._requires_python = requires_python
+            if requires_python is not None:
+                if requires_python.isdigit():
+                    requires_python = f">={requires_python},<{int(requires_python) + 1}"
+                try:  # ensure the specifier is valid
+                    PySpecSet(requires_python)
+                except InvalidPyVersion:
+                    pass
+                else:
+                    self._requires_python = requires_python
         return self._requires_python or ""
 
     @requires_python.setter
