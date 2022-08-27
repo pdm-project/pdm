@@ -226,9 +226,7 @@ class BaseRepository:
         if (
             candidate.req.is_vcs
             or candidate.req.is_file_or_url
-            and candidate.req.is_local  # type: ignore
-            or candidate.link
-            and candidate.link.is_file
+            and candidate.req.is_local_dir  # type: ignore
         ):
             return None
         if candidate.hashes:
@@ -244,7 +242,12 @@ class BaseRepository:
                 assert c.link is not None
                 # Prepare the candidate to replace vars in the link URL
                 prepared_link = c.prepare(self.environment).link
-                if not prepared_link or prepared_link.is_vcs:
+                if (
+                    not prepared_link
+                    or prepared_link.is_vcs
+                    or prepared_link.is_file
+                    and prepared_link.file_path.is_dir()
+                ):
                     continue
                 result[c.link] = self._hash_cache.get_hash(
                     prepared_link, finder.session
