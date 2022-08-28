@@ -323,6 +323,14 @@ def test_legacy_pep345_tag_link(project):
     assert candidate.requires_python == ">=3,<4"
 
 
+def test_ignore_invalid_py_version(project):
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
+    req = parse_requirement("wheel")
+    repo = project.get_repository()
+    candidate = next(iter(repo.find_candidates(req)))
+    assert not candidate.requires_python
+
+
 def test_find_candidates_from_find_links(project):
     repo = project.get_repository()
     repo.sources = [
