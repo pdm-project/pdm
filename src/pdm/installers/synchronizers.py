@@ -129,7 +129,9 @@ class Synchronizer:
             keys = []
             if (
                 self.install_self
-                and getattr(self.environment.project.meta, "editable_backend", "path")
+                and getattr(
+                    self.environment.project.meta.config, "editable_backend", "path"
+                )
                 == "editables"
                 and "editables" not in candidates
             ):
