@@ -34,6 +34,15 @@ def test_package_parse_metadata(filename):
         assert meta["filetype"] == "sdist"
 
 
+def test_parse_metadata_with_non_ascii_chars():
+    fullpath = FIXTURES / "artifacts" / "caj2pdf-restructured-0.1.0a6.tar.gz"
+    package = PackageFile.from_filename(str(fullpath), None)
+    meta = package.metadata_dict
+    assert meta["summary"] == "caj2pdf 重新组织，方便打包与安装"
+    assert meta["author_email"] == "张三 <san@zhang.me>"
+    assert meta["description"].strip() == "# caj2pdf\n\n测试中文项目"
+
+
 def test_package_add_signature(tmp_path):
     package = PackageFile.from_filename(
         str(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"), None

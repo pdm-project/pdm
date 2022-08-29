@@ -4,6 +4,7 @@ import email
 import email.message
 import email.policy
 import hashlib
+import io
 import os
 import re
 import subprocess
@@ -30,7 +31,12 @@ wheel_file_re = re.compile(
         \.whl|\.dist-info)$""",
     re.VERBOSE,
 )
-message_policy = email.policy.default.clone(utf8=True)
+
+
+def parse_metadata(fp: IO[bytes]) -> email.message.Message:
+    return email.message_from_file(
+        io.TextIOWrapper(fp, encoding="utf-8", errors="surrogateescape")
+    )
 
 
 @dataclass
@@ -105,9 +111,7 @@ class PackageFile:
             for m in members:
                 fn = split_leading_dir(m.name)[1] if has_leading else m.name
                 if fn == "PKG-INFO":
-                    return email.message_from_binary_file(
-                        cast(IO[bytes], tar.extractfile(m)), policy=message_policy
-                    )
+                    return parse_metadata(cast(IO[bytes], tar.extractfile(m)))
         raise ProjectError(f"No PKG-INFO found in {filename}")
 
     @staticmethod
@@ -118,9 +122,7 @@ class PackageFile:
             for name in filenames:
                 fn = split_leading_dir(name)[1] if has_leading else name
                 if fn == "PKG-INFO":
-                    return email.message_from_binary_file(
-                        zip.open(name), policy=message_policy
-                    )
+                    return parse_metadata(zip.open(name))
         raise ProjectError(f"No PKG-INFO found in {filename}")
 
     @staticmethod
@@ -128,9 +130,7 @@ class PackageFile:
         with zipfile.ZipFile(filename, allowZip64=True) as zip:
             for fn in zip.namelist():
                 if fn.replace("\\", "/").endswith(".dist-info/METADATA"):
-                    return email.message_from_binary_file(
-                        zip.open(fn), policy=message_policy
-                    )
+                    return parse_metadata(zip.open(fn))
         raise ProjectError(f"No egg-info is found in {filename}")
 
     def add_gpg_signature(self, filename: str, signature_name: str) -> None:
