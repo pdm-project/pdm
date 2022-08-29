@@ -265,7 +265,8 @@ def do_add(
         tracked_names.add(key)
         requirements[key] = r
     project.core.ui.echo(
-        f"Adding packages to {group} {'dev-' if dev else ''}dependencies: "
+        f"Adding packages to [bold cyan]{group}[/] "
+        f"{'dev-' if dev else ''}dependencies: "
         + ", ".join(f"[bold green]{r.as_line()}[/]" for r in requirements.values())
     )
     all_dependencies = project.all_dependencies
@@ -358,7 +359,7 @@ def do_update(
             )
             if not matched_name:
                 raise ProjectError(
-                    f"[bold green]{name}[/] does not exist in {group} "
+                    f"[bold green]{name}[/] does not exist in [bold cyan]{group}[/] "
                     f"{'dev-' if dev else ''}dependencies."
                 )
             dependencies[matched_name].prerelease = prerelease
@@ -434,7 +435,8 @@ def do_remove(
 
     deps = project.get_pyproject_dependencies(group, dev)
     project.core.ui.echo(
-        f"Removing packages from {group} {'dev-' if dev else ''}dependencies: "
+        f"Removing packages from [bold cyan]{group}[/] "
+        f"{'dev-' if dev else ''}dependencies: "
         + ", ".join(f"[bold green]{name}[/]" for name in packages)
     )
     for name in packages:
@@ -444,7 +446,8 @@ def do_remove(
         )
         if not matched_indexes:
             raise ProjectError(
-                f"[bold green]{name}[/] does not exist in {group} dependencies."
+                f"[bold green]{name}[/] does not exist in "
+                f"[bold cyan]{group}[/] dependencies."
             )
         for i in matched_indexes:
             del deps[i]
