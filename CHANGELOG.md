@@ -1,3 +1,23 @@
+Release v2.1.3 (2022-08-30)
+---------------------------
+
+### Features & Improvements
+
+- When adding a package to (or removing from) a group, enhance the formatting of the group name in the printed message. [#1329](https://github.com/pdm-project/pdm/issues/1329)
+
+### Bug Fixes
+
+- Fix a bug of missing hashes for packages with `file://` links the first time they are added. [#1325](https://github.com/pdm-project/pdm/issues/1325)
+- Ignore invalid values of `data-requires-python` when parsing package links. [#1334](https://github.com/pdm-project/pdm/issues/1334)
+- Leave an incomplete project metadata if PDM fails to parse the project files, but emit a warning. [#1337](https://github.com/pdm-project/pdm/issues/1337)
+- Fix the bug that `editables` package isn't installed for self package. [#1344](https://github.com/pdm-project/pdm/issues/1344)
+- Fix a decoding error for non-ASCII characters in package description when publishing it. [#1345](https://github.com/pdm-project/pdm/issues/1345)
+
+### Documentation
+
+- Clarify documentation explaining `setup-script`, `run-setuptools`, and `is-purelib`. [#1327](https://github.com/pdm-project/pdm/issues/1327)
+
+
 Release v2.1.2 (2022-08-15)
 ---------------------------
 
