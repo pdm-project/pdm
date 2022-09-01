@@ -86,7 +86,7 @@ class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
         # Name and version are set when dependencies are resolved,
         # so use them for cache key. Local directories won't be cached.
         if not obj.name or not obj.version:
-            raise KeyError
+            raise KeyError("The package is missing a name or version")
         extras = (
             "[{}]".format(",".join(sorted(obj.req.extras))) if obj.req.extras else ""
         )
