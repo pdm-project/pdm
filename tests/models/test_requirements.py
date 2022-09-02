@@ -21,7 +21,7 @@ REQUIREMENTS = [
     ),
     (
         'pip @ https://github.com/pypa/pip/archive/1.3.1.zip ; python_version > "3.4"',
-        'pip @ https://github.com/pypa/pip/archive/1.3.1.zip; python_version > "3.4"',
+        None,
     ),
     (
         "git+http://git.example.com/MyProject.git@master#egg=MyProject",

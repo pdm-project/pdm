@@ -329,6 +329,8 @@ class FileRequirement(Requirement):
             else ""
         )
         marker = self._format_marker()
+        if marker:
+            marker = f" {marker}"
         url = self.get_full_url()
         fragments = []
         if self.subdirectory:
