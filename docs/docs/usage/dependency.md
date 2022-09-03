@@ -121,13 +121,16 @@ For backward-compatibility, if only `-d` or `--dev` is specified, dependencies w
 
 **Local directories** and **VCS dependencies** can be installed in [editable mode](https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs). If you are familiar with `pip`, it is just like `pip install -e <package>`. **Editable packages are allowed only in development dependencies**:
 
+!!! NOTE
+    Editable installs are only allowed in the `dev` dependency group. Other groups, including the default, will fail with a `[PdmUsageError]`.
+
 ```bash
 # A relative path to the directory
-pdm add -e ./sub-package
+pdm add -e ./sub-package --dev
 # A file URL to a local directory
-pdm add -e file:///path/to/sub-package
+pdm add -e file:///path/to/sub-package --dev
 # A VCS URL
-pdm add -e git+https://github.com/pallets/click.git@main#egg=click
+pdm add -e git+https://github.com/pallets/click.git@main#egg=click --dev
 ```
 
 ### Save version specifiers
