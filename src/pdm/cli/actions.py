@@ -75,9 +75,8 @@ def do_lock(
                 reqs, python_requires, summary = locked_repo.candidate_info[key]
                 candidate.summary = summary
                 candidate.requires_python = python_requires
-                dep_key = cast("tuple[str, str | None]", key[:2])
-                mapping[dep_key[0]] = candidate
-                dependencies[dep_key] = list(map(parse_requirement, reqs))
+                mapping[candidate.identify()] = candidate
+                dependencies[candidate.dep_key] = list(map(parse_requirement, reqs))
             fetch_hashes(repo, mapping)
             lockfile = format_lockfile(project, mapping, dependencies)
         project.write_lockfile(lockfile)
