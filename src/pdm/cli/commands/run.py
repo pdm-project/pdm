@@ -243,6 +243,7 @@ class TaskRunner:
             ] + list(args)
         elif kind == "composite":
             assert isinstance(value, list)
+            args = list(args)
 
         self.project.core.ui.echo(
             f"Running {task}: [green]{str(args)}[/]",
