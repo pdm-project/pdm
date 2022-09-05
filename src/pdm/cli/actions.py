@@ -687,7 +687,11 @@ def do_use(
         path = str(selected_python.executable)
         raise InvalidPyVersion(f"Invalid Python interpreter: {path}")
 
-    old_python = project.python if "python.path" in project.config else None
+    old_python = (
+        PythonInfo.from_path(project.config["python.path"])
+        if "python.path" in project.config
+        else None
+    )
     project.core.ui.echo(
         "Using Python interpreter: "
         f"[green]{str(selected_python.executable)}[/] "
