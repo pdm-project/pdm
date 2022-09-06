@@ -15,7 +15,6 @@ KNOWN_HOOKS = tuple(
 
 
 class HookManager:
-
     def __init__(self, project: Project, skip: list[str] | None = None):
         self.project = project
         self.skip = skip or []
