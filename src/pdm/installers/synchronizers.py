@@ -332,6 +332,8 @@ class Synchronizer:
                 )
         if lines:
             self.ui.echo("\n".join(lines))
+        else:
+            self.ui.echo("All packages are synced to date, nothing to do.")
 
     def synchronize(self) -> None:
         """Synchronize the working set with pinned candidates."""
