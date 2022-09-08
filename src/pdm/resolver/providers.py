@@ -6,6 +6,7 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from resolvelib import AbstractProvider
 
 from pdm.models.candidates import Candidate, make_candidate
+from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.resolver.python import (
     PythonCandidate,
@@ -120,9 +121,12 @@ class BaseProvider(AbstractProvider):
         return self._find_candidates(parse_requirement(req))
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
-        if not requirement.is_named:
+        if not requirement.is_named and not isinstance(
+            self.repository, LockedRepository
+        ):
             can = make_candidate(requirement)
-            can.prepare(self.repository.environment).metadata
+            if not can.name:
+                can.prepare(self.repository.environment).metadata
             return [can]
         else:
             return self.repository.find_candidates(
