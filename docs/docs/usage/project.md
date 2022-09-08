@@ -247,6 +247,20 @@ pdm export -f setuppy -o setup.py
 !!! NOTE
     You can also run `pdm export` with a [`.pre-commit` hook](advanced.md#hooks-for-pre-commit).
 
+## Working with version control
+
+Ensure the `pdm.lock` and `pyproject.toml` files are committed when using a version control system with PDM. Do not commit the `.pdm.toml` file.
+
+By committing the `pdm.lock` file, you ensure that all installers are using the same versions of dependencies.
+To learn how to update dependencies see [update existing dependencies](dependency.md#update-existing-dependencies).
+
+The `pyproject.toml` file should also be committed as it contains the project's bulild metadata and dependencies needed for PDM.
+It is also commonly used by other python tools for configuration. Read more about the `pyproject.toml` file at
+[pip.pypa.io](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/).
+
+It is not necessary to commit your `.pdm.toml` file as it contains configuration specific to your system.
+If you are using git you can safely add `.pdm.toml` to your `.gitignore` file.
+
 ## Hide the credentials from pyproject.toml
 
 There are many times when we need to use sensitive information, such as login credentials for the PyPI server
@@ -288,3 +302,4 @@ PDM provides a convenient command group to manage the cache, there are five diff
 
 See the current cache usage by typing `pdm cache info`. Besides, you can use `add`, `remove` and `list` subcommands to manage the cache content.
 Find the usage by the `--help` option of each command.
+
