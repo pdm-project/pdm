@@ -379,6 +379,7 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
+        termui.logger.debug("lockfile content: %s", lockfile)
         for package in lockfile.get("package", []):
             version = package.get("version")
             if version:
