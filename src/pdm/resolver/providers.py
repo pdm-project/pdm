@@ -169,6 +169,9 @@ class BaseProvider(AbstractProvider):
                 requirement.url  # type: ignore
             )
         version = candidate.version
+        if version is None:
+            # This should be a URL candidate, consider it to be matching
+            return True
         # Allow prereleases if: 1) it is not specified in the tool settings or
         # 2) the candidate doesn't come from PyPI index.
         allow_prereleases = (
