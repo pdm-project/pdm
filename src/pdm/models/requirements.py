@@ -60,7 +60,7 @@ def strip_extras(line: str) -> tuple[str, tuple[str, ...] | None]:
     return name, extras
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class Requirement:
     """Base class of a package requirement.
     A requirement is a (virtual) specification of a package which contains
@@ -119,7 +119,7 @@ class Requirement:
         return hash(self._hash_key())
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, Requirement) and hash(self) == hash(o)
+        return isinstance(o, Requirement) and self._hash_key() == o._hash_key()
 
     @functools.lru_cache(maxsize=None)
     def identify(self) -> str:
@@ -233,17 +233,14 @@ class Requirement:
         return ""
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class NamedRequirement(Requirement):
-    def __hash__(self) -> int:
-        return hash(self._hash_key())
-
     def as_line(self) -> str:
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
         return f"{self.project_name}{extras}{self.specifier}{self._format_marker()}"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class FileRequirement(Requirement):
     url: str = ""
     path: Path | None = None
@@ -259,9 +256,6 @@ class FileRequirement(Requirement):
 
     def _hash_key(self) -> tuple:
         return super()._hash_key() + (self.url, self.editable)
-
-    def __hash__(self) -> int:
-        return hash(self._hash_key())
 
     @classmethod
     def create(cls: type[T], **kwargs: Any) -> T:
@@ -380,14 +374,11 @@ class FileRequirement(Requirement):
         self.name = result.name
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False)
 class VcsRequirement(FileRequirement):
     vcs: str = ""
     ref: str | None = None
     revision: str | None = None
-
-    def __hash__(self) -> int:
-        return hash(self._hash_key())
 
     def __post_init__(self) -> None:
         super().__post_init__()
