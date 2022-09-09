@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import functools
 import multiprocessing
 import traceback
@@ -11,7 +12,7 @@ from rich.progress import SpinnerColumn
 from pdm import termui
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
-from pdm.models.candidates import Candidate
+from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import parse_requirement, strip_extras
 from pdm.utils import is_editable
@@ -140,8 +141,13 @@ class Synchronizer:
                 if editables is not None:
                     candidates["editables"] = editables
         for key in keys:
-            if key in candidates:
-                candidates[key].req.editable = False
+            if key in candidates and candidates[key].req.editable:
+                # We do not do in-place update, which will break the caches
+                candidate = candidates[key]
+                req = dataclasses.replace(candidate.req, editable=False)
+                candidates[key] = make_candidate(
+                    req, candidate.name, candidate.version, candidate.link
+                )
         self.candidates = candidates
         self._manager: InstallManager | None = None
 
