@@ -415,7 +415,11 @@ class LockedRepository(BaseRepository):
         )
 
     def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
-        return self.candidate_info[self._identify_candidate(candidate)]
+        try:
+            return self.candidate_info[self._identify_candidate(candidate)]
+        except KeyError:
+            termui.logger.debug(self.candidate_info.keys())
+            raise
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (self._get_dependencies_from_lockfile,)
