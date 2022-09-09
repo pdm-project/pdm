@@ -17,7 +17,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.search import SearchResultParser
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import clean_url, normalize_name
+from pdm.utils import normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
     from pdm._types import CandidateInfo, SearchResult, Source
@@ -410,7 +410,7 @@ class LockedRepository(BaseRepository):
         return (
             candidate.identify(),
             candidate.version if not url else None,
-            clean_url(url) if url else None,
+            url_without_fragments(url) if url else None,
             candidate.req.editable,
         )
 

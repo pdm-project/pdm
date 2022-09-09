@@ -112,14 +112,6 @@ def url_without_fragments(url: str) -> str:
     return parse.urlunparse(parse.urlparse(url)._replace(fragment=""))
 
 
-def clean_url(url: str) -> str:
-    """Clean url that removes any fragment and (for VCS) revision part"""
-    parsed = parse.urlparse(url)._replace(fragment="")
-    if "@" in parsed.path:
-        parsed = parsed._replace(path=parsed.path.split("@")[0])
-    return parse.urlunparse(parsed)
-
-
 def join_list_with(items: list[Any], sep: Any) -> list[Any]:
     new_items = []
     for item in items:
