@@ -249,14 +249,14 @@ pdm export -f setuppy -o setup.py
 
 ## Working with version control
 
-Ensure the `pdm.lock` and `pyproject.toml` files are committed when using a version control system with PDM. Do not commit the `.pdm.toml` file.
+You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lock` file. **Do not** commit the `.pdm.toml` file.
 
-By committing the `pdm.lock` file, you ensure that all installers are using the same versions of dependencies.
-To learn how to update dependencies see [update existing dependencies](dependency.md#update-existing-dependencies).
-
-The `pyproject.toml` file should also be committed as it contains the project's bulild metadata and dependencies needed for PDM.
+The `pyproject.toml` file must be committed as it contains the project's build metadata and dependencies needed for PDM.
 It is also commonly used by other python tools for configuration. Read more about the `pyproject.toml` file at
-[pip.pypa.io](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/).
+[pip.pypa.io/en/stable/reference/build-system/pyproject-toml/](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/).
+
+You should be committing the `pdm.lock` file, by doing so you ensure that all installers are using the same versions of dependencies.
+To learn how to update dependencies see [update existing dependencies](dependency.md#update-existing-dependencies).
 
 It is not necessary to commit your `.pdm.toml` file as it contains configuration specific to your system.
 If you are using git you can safely add `.pdm.toml` to your `.gitignore` file.
