@@ -379,7 +379,6 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
-        termui.logger.debug("lockfile content: %s", lockfile)
         for package in lockfile.get("package", []):
             version = package.get("version")
             if version:
@@ -391,8 +390,16 @@ class LockedRepository(BaseRepository):
                 if k not in ("dependencies", "requires_python", "summary")
             }
             req = Requirement.from_req_dict(package_name, req_dict)
+            termui.logger.debug(
+                "%s: %s\n%s(%s)",
+                package_name,
+                req_dict,
+                type(req.editable),
+                req.editable,
+            )
             can = make_candidate(req, name=package_name, version=version)
             can_id = self._identify_candidate(can)
+            termui.logger.debug(can_id)
             self.packages[can_id] = can
             candidate_info: CandidateInfo = (
                 package.get("dependencies", []),
