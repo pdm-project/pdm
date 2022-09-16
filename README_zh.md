@@ -167,7 +167,7 @@ pdm add requests flask
 
 默认情况下，当你在一个项目中第一次运行 `pdm install`, PDM 会为你在项目根目录的 `.venv` 中创建一个虚拟环境，和其他包管理器一样。
 但你也可以把 PEP 582 设为默认，只需要运行 `pdm config python.use_venv false` 就可以了。除此之外，你还需要一点点的配置，让 Python 解释器
-可以用 PEP 582 的 `__papackages__` 目录来查找包。
+可以用 PEP 582 的 `__pypackages__` 目录来查找包。
 
 ````bash
 
