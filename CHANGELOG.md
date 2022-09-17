@@ -1,3 +1,19 @@
+Release v2.1.4 (2022-09-17)
+---------------------------
+
+### Bug Fixes
+
+- Fix a lock failure when depending on self with URL requirements. [#1347](https://github.com/pdm-project/pdm/issues/1347)
+- Ensure list to concatenate args for composite scripts. [#1359](https://github.com/pdm-project/pdm/issues/1359)
+- Fix an error in `pdm lock --refresh` if some packages has URLs. [#1361](https://github.com/pdm-project/pdm/issues/1361)
+- Fix unnecessary package downloads and VCS clones for certain commands. [#1370](https://github.com/pdm-project/pdm/issues/1370)
+- Fix a conversion error when converting a list of conditional dependencies from a Poetry format. [#1383](https://github.com/pdm-project/pdm/issues/1383)
+
+### Documentation
+
+- Adds a section to the docs on how to correctly work with PDM and version control systems. [#1364](https://github.com/pdm-project/pdm/issues/1364)
+
+
 Release v2.1.3 (2022-08-30)
 ---------------------------
 
