@@ -5,11 +5,11 @@ import sys
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Type
 
-from pdm.project import Project
 from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.python import PythonInfo
+from pdm.project import Project
 from pdm.utils import cached_property
 
 
@@ -88,11 +88,18 @@ class Backend(abc.ABC):
         args: Tuple[str, ...] = (),
         force: bool = False,
         in_project: bool = False,
+        prompt: Optional[str] = None,
     ) -> Path:
         if in_project:
             location = self.project.root / ".venv"
         else:
             location = self.get_location(name)
+        if prompt is not None:
+            prompt_string = prompt.format(
+                project_name=self.project.root.name.lower() or "virtualenv",
+                python_version=self.ident,
+            )
+            args = (*args, f"--prompt={prompt_string}")
         self._ensure_clean(location, force)
         self.perform_create(location, args)
         return location
