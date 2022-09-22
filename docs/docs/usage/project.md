@@ -134,7 +134,7 @@ password = "<secret>"
 ca_certs = "/path/to/custom-cacerts.pem"
 ```
 
-A PEM-enoded certificate authority cert bundle (`ca_certs`) can be used for local / custom PyPI repositories where the server certificate is not signed by the standard [certifi](https://github.com/certifi/python-certifi/blob/master/certifi/cacert.pem) CA bundle.
+A PEM-encoded Certificate Authority bundle (`ca_certs`) can be used for local / custom PyPI repositories where the server certificate is not signed by the standard [certifi](https://github.com/certifi/python-certifi/blob/master/certifi/cacert.pem) CA bundle.
 
 !!! NOTE
     You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.

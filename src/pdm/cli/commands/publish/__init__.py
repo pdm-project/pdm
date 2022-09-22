@@ -71,7 +71,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--ca-certs",
             dest="ca_certs",
-            help="The path to a PEM-encoded certificate authority cert bundle to use"
+            help="The path to a PEM-encoded Certificate Authority bundle to use"
             " for publish server validation [env var: PDM_PUBLISH_CA_CERTS]",
         )
 
