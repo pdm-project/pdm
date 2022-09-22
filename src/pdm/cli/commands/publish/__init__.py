@@ -72,7 +72,7 @@ class Command(BaseCommand):
             "--ca-certs",
             dest="ca_certs",
             help="The path to a PEM-encoded certificate authority cert bundle to use"
-            " for publish server validation [env var: PDM_PUBLISH_CA_CERTS]"
+            " for publish server validation [env var: PDM_PUBLISH_CA_CERTS]",
         )
 
     @staticmethod
@@ -124,7 +124,9 @@ class Command(BaseCommand):
             config.password = password
         if ca_certs is not None:
             config.ca_certs = ca_certs
-        return Repository(project, config.url, config.username, config.password, config.ca_certs)
+        return Repository(
+            project, config.url, config.username, config.password, config.ca_certs
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         hooks = HookManager(project, options.skip)

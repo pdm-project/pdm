@@ -16,11 +16,18 @@ from pdm.project.config import DEFAULT_REPOSITORIES
 
 class Repository:
     def __init__(
-        self, project: Project, url: str, username: str | None, password: str | None, ca_certs: str | None
+        self,
+        project: Project,
+        url: str,
+        username: str | None,
+        password: str | None,
+        ca_certs: str | None,
     ) -> None:
         self.url = url
         ca_path = ca_certs if ca_certs is None else pathlib.Path(ca_certs)
-        self.session = PDMSession(cache_dir=project.cache("http"), ca_certificates=ca_path)
+        self.session = PDMSession(
+            cache_dir=project.cache("http"), ca_certificates=ca_path
+        )
         self.session.auth = (
             (username or "", password or "") if username or password else None
         )
