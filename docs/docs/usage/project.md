@@ -131,10 +131,16 @@ password = "<secret>"
 url = "https://pypi.company.org/legacy/"
 username = "frostming"
 password = "<secret>"
+ca_certs = "/path/to/custom-cacerts.pem"
 ```
+
+A PEM-enoded certificate authority cert bundle (`ca_certs`) can be used for local / custom PyPI repositories where the server certificate is not signed by the standard [certifi](https://github.com/certifi/python-certifi/blob/master/certifi/cacert.pem) CA bundle.
 
 !!! NOTE
     You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
+
+!!! TIP
+    The username, password, and certificate authority bundle can be passed in from the command line for `pdm publish` via `--username`, `--password`, and `--ca-certs`, respectively.
 
 To change the repository config from the command line, use the [`pdm config`](cli_reference.md#exec-0--config) command:
 
@@ -143,6 +149,7 @@ pdm config repository.pypi.username "__token__"
 pdm config repository.pypi.password "my-pypi-token"
 
 pdm config repository.company.url "https://pypi.company.org/legacy/"
+pdm config repository.company.ca_certs "/path/to/custom-cacerts.pem"
 ```
 
 ## Cache the installation of wheels

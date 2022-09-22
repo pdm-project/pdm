@@ -75,12 +75,12 @@ def test_repository_get_release_urls(project):
             "demo-0.0.1.zip",
         ]
     ]
-    repository = Repository(project, "https://upload.pypi.org/legacy/", None, None)
+    repository = Repository(project, "https://upload.pypi.org/legacy/", None, None, None)
     assert repository.get_release_urls(package_files) == {
         "https://pypi.org/project/demo/0.0.1/"
     }
 
-    repository = Repository(project, "https://example.pypi.org/legacy/", None, None)
+    repository = Repository(project, "https://example.pypi.org/legacy/", None, None, None)
     assert not repository.get_release_urls(package_files)
 
 
@@ -123,24 +123,28 @@ def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
 
 def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
     repo = PublishCommand.get_repository(
-        project, Namespace(repository=None, username="foo", password="bar")
+        project, Namespace(repository=None, username="foo", password="bar", ca_certs="custom.pem")
     )
     assert repo.url == "https://upload.pypi.org/legacy/"
     assert repo.session.auth == ("foo", "bar")
+    assert repo.session.verify == "custom.pem"
 
     with monkeypatch.context() as m:
         m.setenv("PDM_PUBLISH_USERNAME", "bar")
         m.setenv("PDM_PUBLISH_PASSWORD", "secret")
         m.setenv("PDM_PUBLISH_REPO", "testpypi")
+        m.setenv("PDM_PUBLISH_CA_CERTS", "override.pem")
 
         repo = PublishCommand.get_repository(
-            project, Namespace(repository=None, username=None, password=None)
+            project, Namespace(repository=None, username=None, password=None, ca_certs=None)
         )
         assert repo.url == "https://test.pypi.org/legacy/"
         assert repo.session.auth == ("bar", "secret")
+        assert repo.session.verify == "override.pem"
 
         repo = PublishCommand.get_repository(
-            project, Namespace(repository="pypi", username="foo", password=None)
+            project, Namespace(repository="pypi", username="foo", password=None, ca_certs="custom.pem")
         )
         assert repo.url == "https://upload.pypi.org/legacy/"
         assert repo.session.auth == ("foo", "secret")
+        assert repo.session.verify == "custom.pem"

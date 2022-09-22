@@ -68,6 +68,12 @@ class Command(BaseCommand):
             dest="build",
             help="Don't build the package before publishing",
         )
+        parser.add_argument(
+            "--ca-certs",
+            dest="ca_certs",
+            help="The path to a PEM-encoded certificate authority cert bundle to use"
+            " for publish server validation [env var: PDM_PUBLISH_CA_CERTS]"
+        )
 
     @staticmethod
     def _make_package(
@@ -107,6 +113,7 @@ class Command(BaseCommand):
         repository = options.repository or os.getenv("PDM_PUBLISH_REPO", "pypi")
         username = options.username or os.getenv("PDM_PUBLISH_USERNAME")
         password = options.password or os.getenv("PDM_PUBLISH_PASSWORD")
+        ca_certs = options.ca_certs or os.getenv("PDM_PUBLISH_CA_CERTS", None)
 
         config = project.global_config.get_repository_config(repository)
         if config is None:
@@ -115,7 +122,9 @@ class Command(BaseCommand):
             config.username = username
         if password is not None:
             config.password = password
-        return Repository(project, config.url, config.username, config.password)
+        if ca_certs is not None:
+            config.ca_certs = ca_certs
+        return Repository(project, config.url, config.username, config.password, config.ca_certs)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         hooks = HookManager(project, options.skip)
