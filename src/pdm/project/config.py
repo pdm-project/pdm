@@ -23,6 +23,7 @@ class RepositoryConfig:
     url: str
     username: str | None = None
     password: str | None = None
+    ca_certs: str | None = None
 
     def __rich__(self) -> str:
         lines = [f"[cyan]url[/] = {self.url}"]
@@ -30,6 +31,8 @@ class RepositoryConfig:
             lines.append(f"[cyan]username[/] = {self.username}")
         if self.password:
             lines.append("[cyan]password[/] = <hidden>")
+        if self.ca_certs:
+            lines.append(f"[cyan]ca_certs[/] = {self.ca_certs}")
         return "\n".join(lines)
 
 
