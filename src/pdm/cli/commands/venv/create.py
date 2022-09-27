@@ -1,9 +1,9 @@
 import argparse
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.project import Project
 from pdm.cli.commands.venv.backends import BACKENDS
 from pdm.cli.options import verbose_option
+from pdm.project import Project
 
 
 class CreateCommand(BaseCommand):
@@ -47,12 +47,13 @@ class CreateCommand(BaseCommand):
             and not options.name
             and not project.root.joinpath(".venv").exists()
         )
+        prompt = project.config["venv.prompt"]
         backend: str = options.backend or project.config["venv.backend"]
         venv_backend = BACKENDS[backend](project, options.python)
         with project.core.ui.open_spinner(
             f"Creating virtualenv using [green]{backend}[/]..."
         ):
             path = venv_backend.create(
-                options.name, options.venv_args, options.force, in_project
+                options.name, options.venv_args, options.force, in_project, prompt
             )
         project.core.ui.echo(f"Virtualenv [green]{path}[/] is created successfully")
