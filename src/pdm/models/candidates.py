@@ -502,7 +502,7 @@ class PreparedCandidate:
                 setup = Setup()
             return SetupDistribution(setup)
         else:
-            return im.PathDistribution(Path(self._metadata_dir))
+            return im.PathDistribution(Path(cast(str, self._metadata_dir)))
 
     @property
     def metadata(self) -> im.Distribution:
