@@ -60,6 +60,11 @@ def strip_extras(line: str) -> tuple[str, tuple[str, ...] | None]:
     return name, extras
 
 
+@functools.lru_cache(maxsize=None)
+def _get_random_key(req: Requirement) -> str:
+    return f":empty:{secrets.token_urlsafe(8)}"
+
+
 @dataclasses.dataclass(eq=False)
 class Requirement:
     """Base class of a package requirement.
@@ -121,10 +126,9 @@ class Requirement:
     def __eq__(self, o: object) -> bool:
         return isinstance(o, Requirement) and self._hash_key() == o._hash_key()
 
-    @functools.lru_cache(maxsize=None)
     def identify(self) -> str:
         if not self.key:
-            return f":empty:{secrets.token_urlsafe(8)}"
+            return _get_random_key(self)
         extras = "[{}]".format(",".join(sorted(self.extras))) if self.extras else ""
         return self.key + extras
 
@@ -345,7 +349,8 @@ class FileRequirement(Requirement):
             egg_info = urlparse.unquote(fragments["egg"])
             name, extras = strip_extras(egg_info)
             self.name = name
-            self.extras = extras
+            if not self.extras:
+                self.extras = extras
         if not self.name and not self.is_vcs:
             filename = os.path.basename(
                 urlparse.unquote(url_without_fragments(self.url))
@@ -371,7 +376,8 @@ class FileRequirement(Requirement):
         ):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
         result = Setup.from_directory(self.path.absolute())
-        self.name = result.name
+        if result.name:
+            self.name = result.name
 
 
 @dataclasses.dataclass(eq=False)
