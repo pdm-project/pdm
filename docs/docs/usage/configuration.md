@@ -29,6 +29,7 @@ The following configuration items can be retrieved and modified by [`pdm config`
 | `strategy.resolve_max_rounds`     | Specify the max rounds of resolution process                              | 1000                                                                      | Yes                  | `PDM_RESOLVE_MAX_ROUNDS` |
 | `venv.location`                   | Parent directory for virtualenvs                                          | `<default data location on OS>/venvs`                                     | No                   |                          |
 | `venv.backend`                    | Default backend to create virtualenv                                      | `virtualenv`                                                              | Yes                  | `PDM_VENV_BACKEND`       |
+| `venv.prompt`                     | Formatted string to be displayed in the prompt when virtualenv is active  | `{project_name}-{python_version}`                                         | Yes                  | `PDM_VENV_PROMPT`        |
 | `venv.in-project`                 | Create virtualenv in `.venv` under project root                           | `False`                                                                   | Yes                  | `PDM_VENV_IN_PROJECT`    |
 
 _If the corresponding env var is set, the value will take precedence over what is saved in the config file._

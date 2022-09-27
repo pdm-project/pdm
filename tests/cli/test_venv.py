@@ -111,6 +111,17 @@ def test_venv_activate(invoke, mocker, project):
         assert result.output.startswith("source")
 
 
+@pytest.mark.usefixtures("venv_backends")
+def test_venv_activate_custom_prompt(invoke, mocker, project):
+    project.project_config["venv.in_project"] = False
+    creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
+    result = invoke(["venv", "create"], obj=project)
+    assert result.exit_code == 0, result.stderr
+    creator.assert_called_once_with(
+        None, [], False, False, project.project_config["venv.prompt"]
+    )
+
+
 def test_venv_activate_project_without_python(invoke, project):
     project.project_config.pop("python.path", None)
     result = invoke(["venv", "activate"], obj=project)

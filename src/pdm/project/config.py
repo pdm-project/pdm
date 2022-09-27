@@ -234,6 +234,13 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_VENV_IN_PROJECT",
             coerce=ensure_boolean,
         ),
+        "venv.prompt": ConfigItem(
+            "Define a custom template to be displayed in the prompt when virtualenv is"
+            "active. Variables `project_name` and `python_version` are available for"
+            "formatting",
+            default="{project_name}-{python_version}",
+            env_var="PDM_VENV_PROMPT",
+        ),
     }
 
     site: Config | None = None

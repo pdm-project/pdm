@@ -71,7 +71,7 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` do
 
     ```bash
     $ eval $(pdm venv activate for-test)
-    (test-project-8Sgn_62n-for-test) $  # Virtualenv entered
+    (test-project-for-test) $  # Virtualenv entered
     Fish
 
     $ eval (pdm venv activate for-test)
@@ -99,6 +99,30 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` do
     `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the forementioned purpose, use the `pdm use` command.
 
 For more CLI usage, see the [`pdm venv`](cli_reference.md#exec-0--venv) documentation.
+
+## Prompt customization
+
+By default when you activate a virtualenv, the prompt will show: `{project_name}-{python_version}`.
+
+For example if your project is named `test-project`:
+
+
+```bash
+$ eval $(pdm venv activate for-test)
+(test-project-3.10) $  # {project_name} == test-project and {python_version} == 3.10
+```
+
+The format can be customized before virtualenv creation with the [`venv.prompt`](configuration.md) configuration or `PDM_VENV_PROMPT` environment variable (before a `pdm init` or `pdm venv create`).
+Available variables are:
+
+ - `project_name`: name of your project
+ - `python_version`: version of Python (used by the virtualenv)
+
+```bash
+$ PDM_VENV_PROMPT='{project_name}-py{python_version}' pdm venv create --name test-prompt
+$ eval $(pdm venv activate test-prompt)
+(test-project-py3.10) $
+```
 
 ## Disable virtualenv mode
 
