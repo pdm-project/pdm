@@ -6,6 +6,7 @@ from unearth import Link
 from pdm.cli import actions
 from pdm.exceptions import PdmUsageError
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import path_to_url
 from tests import FIXTURES
 
 
@@ -294,3 +295,22 @@ def test_add_with_prerelease(project, working_set):
     actions.do_add(project, packages=["urllib3"], prerelease=True)
     assert working_set["urllib3"].version == "1.23b0"
     assert project.meta.dependencies[0] == "urllib3<2,>=1.23b0"
+
+
+@pytest.mark.usefixtures("repository")
+def test_add_editable_package_with_extras(project, working_set):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    dep_path = FIXTURES.joinpath("projects/demo").as_posix()
+    actions.do_add(
+        project,
+        dev=True,
+        group="dev",
+        editables=[f"{dep_path}[security]"],
+    )
+    assert (
+        f"-e {path_to_url(dep_path)}#egg=demo[security]"
+        in project.get_pyproject_dependencies("dev", True)
+    )
+    assert "demo" in working_set
+    assert "requests" in working_set
+    assert "urllib3" in working_set
