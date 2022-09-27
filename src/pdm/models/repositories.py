@@ -75,7 +75,12 @@ class BaseRepository:
         else:
             if last_ext_info is not None:
                 raise last_ext_info[1].with_traceback(last_ext_info[2])  # type: ignore
-        reqs = [parse_requirement(line) for line in requirements]
+        reqs: list[Requirement] = []
+        for line in requirements:
+            if line.startswith("-e "):
+                reqs.append(parse_requirement(line[3:], True))
+            else:
+                reqs.append(parse_requirement(line))
         if candidate.req.extras:
             # XXX: If the requirement has extras, add the original candidate
             # (without extras) as its dependency. This ensures the same package with
