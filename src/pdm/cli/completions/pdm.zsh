@@ -27,7 +27,7 @@ _pdm() {
     'install:Install dependencies from lock file'
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
-    'plugin:Manage the PDM plugins'
+    'self:Manage the PDM program itself(previously known as plugin)'
     'publish:Build and publish the project to PyPI'
     'remove:Remove packages from pyproject.toml'
     'run:Run commands or scripts with local packages loaded'
@@ -207,7 +207,7 @@ _pdm() {
         "--refresh[Don't update pinned versions, only refresh the lock file]"
       )
       ;;
-    plugin)
+    self)
       _arguments -C \
         $arguments \
         ': :->command' \
@@ -215,11 +215,12 @@ _pdm() {
       case $state in
         command)
           local -a actions=(
-            "add:Install new plugins with PDM"
-            "remove:Remove plugins from PDM's environment"
-            "list:List all plugins installed with PDM"
+            "add:Install packages to the PDM's environment"
+            "remove:Remove packages from PDM's environment"
+            "list:List all packages installed with PDM"
+            "update:Update PDM itself"
           )
-          _describe -t command 'pdm plugin actions' actions && ret=0
+          _describe -t command 'pdm self actions' actions && ret=0
           ;;
         args)
           case $words[1] in
@@ -234,6 +235,18 @@ _pdm() {
                 '--pip-args[Arguments that will be passed to pip uninstall]:pip args:'
                 {-y,--yes}'[Answer yes on the question]'
                 '*:packages:_pdm_pip_packages'
+              )
+              ;;
+            list)
+              arguments+=(
+                '--plugins[List plugins only]'
+              )
+              ;;
+            update)
+              arguments+=(
+                '--head[Update to the latest commit on the main branch]'
+                '--pre[Update to the latest prerelease version]'
+                '--pip-args[Arguments that will be passed to pip uninstall]:pip args:'
               )
               ;;
             *)
@@ -252,6 +265,7 @@ _pdm() {
         {-i,--identity}'[GPG identity used to sign files.]:gpg identity:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-c,--comment}'[The comment to include with the distribution file.]:comment:'
+        "--ca-certs[The path to a PEM-encoded Certificate Authority bundle to use for publish server validation]:cacerts:_files"
         "--no-build[Don't build the package before publishing]"
       )
       ;;

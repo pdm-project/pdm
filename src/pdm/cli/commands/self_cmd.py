@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
 
 class ListCommand(BaseCommand):
-    """List all plugins installed with PDM"""
+    """List all packages installed with PDM"""
 
     arguments = [verbose_option]
     name = "list"
@@ -212,7 +212,9 @@ class UpdateCommand(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            "--head", action="store_true", help="Update to head version"
+            "--head",
+            action="store_true",
+            help="Update to the latest commit on the main branch",
         )
         parser.add_argument(
             "--pre",

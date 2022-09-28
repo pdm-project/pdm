@@ -298,7 +298,7 @@ function TabExpansion($line, $lastWord) {
                     ))
                 break
             }
-            "plugin" {
+            "self" {
                 $subCommand = $commands[1]
                 switch ($subCommand) {
                     "add" {
@@ -312,8 +312,18 @@ function TabExpansion($line, $lastWord) {
                         $command = $subCommand
                         break
                     }
+                    "list" {
+                        $completer.AddOpts(([Option]::new(("--plugins"))))
+                        $command = $subCommand
+                        break
+                    }
+                    "update" {
+                        $completer.AddOpts(([Option]::new(("--pip-args", "--head", "--pre"))))
+                        $command = $subCommand
+                        break
+                    }
                     Default {
-                        $completer.AddParams(@("add", "remove", "list"), $false)
+                        $completer.AddParams(@("add", "remove", "list", "update"), $false)
                         break
                     }
                 }
@@ -322,7 +332,7 @@ function TabExpansion($line, $lastWord) {
             "publish" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment", "--no-build")),
+                        [Option]::new(@("-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment", "--no-build", "--ca-certs")),
                         $skipOption,
                         $projectOption
                     ))

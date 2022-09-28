@@ -132,6 +132,12 @@ You can either pass the options after the script or set the env var value.
         .\pw --init pdm
         ```
 
+### Update the PDM version
+
+```bash
+pdm self update
+```
+
 ## Packaging Status
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
