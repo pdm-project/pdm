@@ -29,7 +29,7 @@ def list_distributions(plugin_only: bool = False) -> list[Distribution]:
             ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points
         ):
             result.append(dist)
-    return sorted(result, key=lambda d: d.metadata.get("Name", "UNKNOWN"))
+    return sorted(result, key=lambda d: d.metadata["Name"] or "UNKNOWN")
 
 
 def run_pip(project: Project, args: list[str]) -> bytes:
@@ -80,7 +80,7 @@ class ListCommand(BaseCommand):
                 (
                     f"[green]{metadata['Name']}[/]",
                     f"[yellow]{metadata['Version']}[/]",
-                    metadata.get("Summary", ""),
+                    metadata["Summary"] or "",
                 ),
             )
         project.core.ui.display_columns(rows)
