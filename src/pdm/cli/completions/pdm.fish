@@ -35,7 +35,7 @@ complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a pu
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a remove -d 'Remove packages from pyproject.toml'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a run -d 'Run commands or scripts with local packages loaded'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a search -d 'Search for PyPI packages'
-complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a self -d 'Manage the PDM program itself(previously known as plugin)'
+complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a self -d 'Manage the PDM program itself (previously known as plugin)'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a show -d 'Show the package information'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a sync -d 'Synchronize the current working set with lock file'
 complete -c pdm -f -n '__fish_pdm_7426f3abf02b4bb8_complete_no_subcommand' -a update -d 'Update package(s) in pyproject.toml'

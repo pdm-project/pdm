@@ -39,7 +39,7 @@ def run_pip(project: Project, args: list[str]) -> bytes:
 
 
 class Command(BaseCommand):
-    """Manage the PDM program itself(previously known as plugin)"""
+    """Manage the PDM program itself (previously known as plugin)"""
 
     arguments = [verbose_option]
     name = "self"
@@ -70,7 +70,8 @@ class ListCommand(BaseCommand):
         distributions = list_distributions(plugin_only=options.plugins)
         echo = project.core.ui.echo
         if not distributions:
-            echo("No package is installed with PDM", err=True)
+            # This should not happen when plugin_only is False
+            echo("No plugin is installed with PDM", err=True)
             sys.exit(1)
         echo("Installed packages:", err=True)
         rows = []

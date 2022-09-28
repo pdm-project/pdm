@@ -27,7 +27,7 @@ _pdm() {
     'install:Install dependencies from lock file'
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
-    'self:Manage the PDM program itself(previously known as plugin)'
+    'self:Manage the PDM program itself (previously known as plugin)'
     'publish:Build and publish the project to PyPI'
     'remove:Remove packages from pyproject.toml'
     'run:Run commands or scripts with local packages loaded'
