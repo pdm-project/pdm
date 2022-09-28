@@ -4,7 +4,7 @@ import pycomplete
 
 from pdm.core import Core
 
-COMPLETIONS = Path(__file__).parent.parent / "pdm/cli/completions"
+COMPLETIONS = Path(__file__).parent.parent / "src/pdm/cli/completions"
 
 
 def main():

@@ -174,7 +174,7 @@ For convenience, PDM provides a `plugin` command group to manage plugins.
 Assume your plugin is published as `pdm-hello`:
 
 ```bash
-pdm plugin add pdm-hello
+pdm self add pdm-hello
 ```
 
 Now type `pdm --help` in the terminal, you will see the new added `hello` command and use it:
@@ -184,4 +184,4 @@ $ pdm hello Jack
 Hello, Jack
 ```
 
-See more plugin management subcommands by typing `pdm plugin --help` in the terminal.
+See more plugin management subcommands by typing `pdm self --help` in the terminal.
