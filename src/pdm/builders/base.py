@@ -289,6 +289,12 @@ class EnvBuilder:
                 "--prefix",
                 path,
             ]
+            ca_certs = self._env.project.config.get("pypi.ca_certs")
+            if ca_certs is not None:
+                cmd.extend(["--cert", ca_certs])
+            client_cert = self._env.project.config.get("pypi.client_cert")
+            if client_cert is not None:
+                cmd.extend(["--client-cert", client_cert])
             cmd.extend(prepare_pip_source_args(self._env.project.sources))
             cmd.extend(["-r", req_file.name])
             self.subprocess_runner(cmd, isolated=False)
