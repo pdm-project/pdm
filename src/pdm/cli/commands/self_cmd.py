@@ -4,23 +4,32 @@ import argparse
 import shlex
 import subprocess
 import sys
+from typing import Iterable
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
-from pdm.compat import importlib_metadata
+from pdm.compat import Distribution, importlib_metadata
 from pdm.models.environment import BareEnvironment, WorkingSet
 from pdm.project import Project
 from pdm.utils import normalize_name
 
+PDM_REPO = "https://github.com/pdm-project/pdm"
 
-def _all_plugins() -> list[str]:
-    result: set[str] = set()
-    for dist in importlib_metadata.distributions():
-        if any(ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points):
-            result.add(normalize_name(dist.metadata["Name"]))
-    return sorted(result)
+
+def _get_distributions() -> Iterable[Distribution]:
+    return importlib_metadata.distributions()
+
+
+def list_distributions(plugin_only: bool = False) -> list[Distribution]:
+    result: list[Distribution] = []
+    for dist in _get_distributions():
+        if not plugin_only or any(
+            ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points
+        ):
+            result.append(dist)
+    return sorted(result, key=lambda d: d.metadata["Name"] or "UNKNOWN")
 
 
 def run_pip(project: Project, args: list[str]) -> bytes:
@@ -30,15 +39,17 @@ def run_pip(project: Project, args: list[str]) -> bytes:
 
 
 class Command(BaseCommand):
-    """Manage the PDM plugins"""
+    """Manage the PDM program itself (previously known as plugin)"""
 
     arguments = [verbose_option]
+    name = "self"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         subparsers = parser.add_subparsers(title="Sub commands")
         ListCommand.register_to(subparsers)
         AddCommand.register_to(subparsers)
         RemoveCommand.register_to(subparsers)
+        UpdateCommand.register_to(subparsers)
         parser.set_defaults(search_parent=False)
         self.parser = parser
 
@@ -47,29 +58,37 @@ class Command(BaseCommand):
 
 
 class ListCommand(BaseCommand):
-    """List all plugins installed with PDM"""
+    """List all packages installed with PDM"""
 
     arguments = [verbose_option]
     name = "list"
 
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--plugins", action="store_true", help="List plugins only")
+
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        plugins = _all_plugins()
+        distributions = list_distributions(plugin_only=options.plugins)
         echo = project.core.ui.echo
-        if not plugins:
+        if not distributions:
+            # This should not happen when plugin_only is False
             echo("No plugin is installed with PDM", err=True)
             sys.exit(1)
-        echo("Installed plugins:", err=True)
-        for plugin in plugins:
-            metadata = importlib_metadata.metadata(plugin)
-            echo(
-                f"[green]{metadata['Name']}[/] [yellow]{metadata['Version']}[/]",
+        echo("Installed packages:", err=True)
+        rows = []
+        for dist in distributions:
+            metadata = dist.metadata
+            rows.append(
+                (
+                    f"[green]{metadata['Name']}[/]",
+                    f"[yellow]{metadata['Version']}[/]",
+                    metadata["Summary"] or "",
+                ),
             )
-            if metadata["Summary"]:
-                echo(f"    {metadata['Summary']}")
+        project.core.ui.display_columns(rows)
 
 
 class AddCommand(BaseCommand):
-    """Install new plugins with PDM"""
+    """Install packages to the PDM's environment"""
 
     arguments = [verbose_option]
     name = "add"
@@ -83,7 +102,7 @@ class AddCommand(BaseCommand):
         parser.add_argument(
             "packages",
             nargs="+",
-            help="Specify one or many plugin names, "
+            help="Specify one or many package names, "
             "each package can have a version specifier",
         )
 
@@ -95,20 +114,20 @@ class AddCommand(BaseCommand):
         )
         try:
             with project.core.ui.open_spinner(
-                f"Installing plugins: {options.packages}"
+                f"Installing packages: {options.packages}"
             ):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "Installation failed: \n" + e.output.decode("utf8"), err=True
+                "[red]Installation failed:[/]\n" + e.output.decode("utf8"), err=True
             )
             sys.exit(1)
         else:
-            project.core.ui.echo("Installation succeeds.")
+            project.core.ui.echo("[green]Installation succeeds.[/]")
 
 
 class RemoveCommand(BaseCommand):
-    """Remove plugins from PDM's environment"""
+    """Remove packages from PDM's environment"""
 
     arguments = [verbose_option]
     name = "remove"
@@ -123,7 +142,7 @@ class RemoveCommand(BaseCommand):
             "-y", "--yes", action="store_true", help="Answer yes on the question"
         )
         parser.add_argument(
-            "packages", nargs="+", help="Specify one or many plugin names"
+            "packages", nargs="+", help="Specify one or many package names"
         )
 
     def _resolve_dependencies_to_remove(self, packages: list[str]) -> list[str]:
@@ -154,9 +173,7 @@ class RemoveCommand(BaseCommand):
         return sorted(result)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        plugins = _all_plugins()
-        valid_packages = [p for p in options.packages if normalize_name(p) in plugins]
-        packages_to_remove = self._resolve_dependencies_to_remove(valid_packages)
+        packages_to_remove = self._resolve_dependencies_to_remove(options.packages)
         if not packages_to_remove:
             project.core.ui.echo("No package to remove.", err=True)
             sys.exit(1)
@@ -176,13 +193,62 @@ class RemoveCommand(BaseCommand):
         )
         try:
             with project.core.ui.open_spinner(
-                f"Uninstalling plugins: {valid_packages}"
+                f"Uninstalling packages: [green]{', '.join(options.packages)}[/]"
             ):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "Uninstallation failed: \n" + e.output.decode("utf8"), err=True
+                "[red]Uninstallation failed:[/]\n" + e.output.decode("utf8"), err=True
             )
             sys.exit(1)
         else:
-            project.core.ui.echo("Uninstallation succeeds.")
+            project.core.ui.echo("[green]Uninstallation succeeds.[/]")
+
+
+class UpdateCommand(BaseCommand):
+    """Update PDM itself"""
+
+    arguments = [verbose_option]
+    name = "update"
+
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--head",
+            action="store_true",
+            help="Update to the latest commit on the main branch",
+        )
+        parser.add_argument(
+            "--pre",
+            help="Update to the latest prerelease version",
+            action="store_true",
+        )
+        parser.add_argument(
+            "--pip-args",
+            help="Additional arguments that will be passed to pip install",
+            default="",
+        )
+
+    def handle(self, project: Project, options: argparse.Namespace) -> None:
+        if options.head:
+            package = f"pdm @ git+{PDM_REPO}@main"
+        else:
+            package = "pdm"
+        pip_args = (
+            ["install", "--upgrade"]
+            + shlex.split(options.pip_args)
+            + (["--pre"] if options.pre else [])
+            + [package]
+        )
+        project.core.ui.echo(
+            f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
+        )
+        try:
+            with project.core.ui.open_spinner("Updating pdm"):
+                run_pip(project, pip_args)
+        except subprocess.CalledProcessError as e:
+            project.core.ui.echo(
+                "[red]Installation failed:[/]\n" + e.output.decode("utf8"), err=True
+            )
+            sys.exit(1)
+        else:
+            project.core.ui.echo("[green]Installation succeeds.[/]")
