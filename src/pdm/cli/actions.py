@@ -857,6 +857,16 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
     ui.echo(result)
 
 
+def get_latest_pdm_version_from_pypi(
+    project: Project, prereleases: bool = False
+) -> str | None:
+    """Get the latest version of PDM from PyPI."""
+    environment = BareEnvironment(project)
+    with environment.get_finder([project.default_source]) as finder:
+        candidate = finder.find_best_match("pdm", allow_prereleases=prereleases).best
+    return cast(str, candidate.version) if candidate else None
+
+
 def get_latest_version(project: Project) -> str | None:
     """Get the latest version of PDM from PyPI, cache for 7 days"""
     cache_key = hashlib.sha224(sys.executable.encode()).hexdigest()
@@ -870,12 +880,9 @@ def get_latest_version(project: Project) -> str | None:
         and current_time - state["last-check"] < 60 * 60 * 24 * 7
     ):
         return cast(str, state["latest-version"])
-    environment = BareEnvironment(project)
-    with environment.get_finder([project.default_source]) as finder:
-        candidate = finder.find_best_match("pdm").best
-    if not candidate:
+    latest_version = get_latest_pdm_version_from_pypi(project)
+    if latest_version is None:
         return None
-    latest_version = str(candidate.version)
     state.update({"latest-version": latest_version, "last-check": current_time})
     with contextlib.suppress(OSError):
         cache_file.write_text(json.dumps(state))
@@ -884,16 +891,7 @@ def get_latest_version(project: Project) -> str | None:
 
 def check_update(project: Project) -> None:
     """Check if there is a new version of PDM available"""
-    import sys
-    from shlex import quote
-
     from packaging.version import parse as parse_version
-
-    from pdm.cli.utils import (
-        is_homebrew_installation,
-        is_pipx_installation,
-        is_scoop_installation,
-    )
 
     this_version = project.core.version
     latest_version = get_latest_version(project)
@@ -901,15 +899,7 @@ def check_update(project: Project) -> None:
         latest_version
     ):
         return
-    if is_pipx_installation():  # pragma: no cover
-        install_command = "pipx upgrade pdm"
-    elif is_scoop_installation():  # pragma: no cover
-        install_command = "scoop update pdm"
-    elif is_homebrew_installation():  # pragma: no cover
-        install_command = "brew upgrade pdm"
-    else:
-        install_command = f"{quote(sys.executable)} -m pip install -U pdm"
-
+    install_command = "pdm self update"
     disable_command = "pdm config check_update false"
 
     message = [

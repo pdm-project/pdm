@@ -36,6 +36,13 @@ def mock_all_distributions(monkeypatch):
     )
 
 
+@pytest.fixture()
+def mock_latest_pdm_version(mocker):
+    return mocker.patch(
+        "pdm.cli.commands.self_cmd.get_latest_pdm_version_from_pypi",
+    )
+
+
 @pytest.mark.usefixtures("mock_all_distributions")
 def test_self_list(invoke):
     result = invoke(["self", "list"])
@@ -85,15 +92,29 @@ def test_self_remove(invoke, mock_pip, monkeypatch):
 @pytest.mark.parametrize(
     "args,expected",
     [
-        (["self", "update"], ["install", "--upgrade", "pdm"]),
-        (["self", "update", "--pre"], ["install", "--upgrade", "--pre", "pdm"]),
+        (["self", "update"], ["install", "--upgrade", "pdm==99.0.0"]),
+        (["self", "update", "--pre"], ["install", "--upgrade", "pdm==99.0.1b1"]),
         (
             ["self", "update", "--head"],
             ["install", "--upgrade", f"pdm @ git+{self_cmd.PDM_REPO}@main"],
         ),
     ],
 )
-def test_self_update(invoke, mock_pip, args, expected):
+def test_self_update(invoke, mock_pip, mock_latest_pdm_version, args, expected):
+    def mocked_latest_version(project, pre):
+        return "99.0.1b1" if pre else "99.0.0"
+
+    mock_latest_pdm_version.side_effect = mocked_latest_version
+
     result = invoke(args)
     assert result.exit_code == 0, result.stderr
     mock_pip.assert_called_with(ANY, expected)
+
+
+def test_self_update_already_latest(invoke, mock_pip, mock_latest_pdm_version):
+    mock_latest_pdm_version.return_value = "0.0.0"
+
+    result = invoke(["self", "update"])
+    assert result.exit_code == 0, result.stderr
+    assert "Already up-to-date" in result.stdout
+    mock_pip.assert_not_called()
