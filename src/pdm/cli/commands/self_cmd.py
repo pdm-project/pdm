@@ -6,7 +6,10 @@ import subprocess
 import sys
 from typing import Iterable
 
+from packaging.version import parse
+
 from pdm import termui
+from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
@@ -229,26 +232,35 @@ class UpdateCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        from pdm.__version__ import parsed_version
+
         if options.head:
             package = f"pdm @ git+{PDM_REPO}@main"
+            version: str | None = "HEAD"
         else:
-            package = "pdm"
-        pip_args = (
-            ["install", "--upgrade"]
-            + shlex.split(options.pip_args)
-            + (["--pre"] if options.pre else [])
-            + [package]
-        )
+            version = get_latest_pdm_version_from_pypi(project, options.pre)
+            assert version is not None, "No version found"
+            if parsed_version and parsed_version >= parse(version):
+                project.core.ui.echo(f"Already up-to-date: [cyan]{parsed_version}[/]")
+                return
+            package = f"pdm=={version}"
+        pip_args = ["install", "--upgrade"] + shlex.split(options.pip_args) + [package]
         project.core.ui.echo(
             f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
         )
         try:
-            with project.core.ui.open_spinner("Updating pdm"):
+            with project.core.ui.open_spinner(
+                f"Updating pdm to version [cyan]{version}[/]"
+            ):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "[red]Installation failed:[/]\n" + e.output.decode("utf8"), err=True
+                f"[red]Installing version [cyan]{version}[/] failed:[/]\n"
+                + e.output.decode("utf8"),
+                err=True,
             )
             sys.exit(1)
         else:
-            project.core.ui.echo("[green]Installation succeeds.[/]")
+            project.core.ui.echo(
+                f"[green]Installing version [cyan]{version}[/] succeeds.[/]"
+            )
