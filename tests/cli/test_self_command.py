@@ -112,7 +112,7 @@ def test_self_update(invoke, mock_pip, mock_latest_pdm_version, args, expected):
 
 
 def test_self_update_already_latest(invoke, mock_pip, mock_latest_pdm_version):
-    mock_latest_pdm_version.return_value = "1.0.0"
+    mock_latest_pdm_version.return_value = "0.0.0"
 
     result = invoke(["self", "update"])
     assert result.exit_code == 0, result.stderr
