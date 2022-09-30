@@ -60,7 +60,9 @@ class Command(BaseCommand):
                 ):
                     try:
                         path = project._create_virtualenv()
-                        project.python = PythonInfo.from_path(get_venv_python(path))
+                        python = project.python = PythonInfo.from_path(
+                            get_venv_python(path)
+                        )
                     except Exception as e:  # pragma: no cover
                         project.core.ui.echo(
                             f"Error occurred when creating virtualenv: {e}\n"
@@ -69,8 +71,10 @@ class Command(BaseCommand):
                             err=True,
                         )
         else:
-            actions.do_use(project, "3", True, ignore_requires_python=True, hooks=hooks)
-        if get_venv_like_prefix(project.python.executable) is None:
+            python = actions.do_use(
+                project, "3", True, ignore_requires_python=True, save=False, hooks=hooks
+            )
+        if get_venv_like_prefix(python.executable) is None:
             project.core.ui.echo(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"
                 "For more info, please visit https://peps.python.org/pep-0582/",
@@ -92,7 +96,7 @@ class Command(BaseCommand):
         git_user, git_email = get_user_email_from_git()
         author = self.ask("Author name", git_user)
         email = self.ask("Author email", git_email)
-        python_version = f"{project.python.major}.{project.python.minor}"
+        python_version = f"{python.major}.{python.minor}"
         python_requires = self.ask(
             "Python requires('*' to allow any)", f">={python_version}"
         )

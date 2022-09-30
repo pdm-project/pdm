@@ -608,6 +608,7 @@ def do_use(
     first: bool = False,
     ignore_remembered: bool = False,
     ignore_requires_python: bool = False,
+    save: bool = True,
     hooks: HookManager | None = None,
 ) -> PythonInfo:
     """Use the specified python version and save in project config.
@@ -685,7 +686,8 @@ def do_use(
     if not selected_python.valid:
         path = str(selected_python.executable)
         raise InvalidPyVersion(f"Invalid Python interpreter: {path}")
-
+    if not save:
+        return selected_python
     old_python = (
         PythonInfo.from_path(project.config["python.path"])
         if "python.path" in project.config

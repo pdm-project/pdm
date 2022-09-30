@@ -1,8 +1,10 @@
+import sys
 from unittest.mock import ANY
 
 import pytest
 
 from pdm.cli import actions
+from pdm.models.python import PythonInfo
 
 
 def test_init_validate_python_requires(project_no_init):
@@ -63,7 +65,9 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
-    do_use = mocker.patch.object(actions, "do_use")
+    do_use = mocker.patch.object(
+        actions, "do_use", return_value=PythonInfo.from_path(sys.executable)
+    )
     result = invoke(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
@@ -72,6 +76,7 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         ANY,
         True,
         ignore_requires_python=True,
+        save=False,
         hooks=ANY,
     )
     do_init.assert_called_with(
