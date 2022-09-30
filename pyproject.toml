@@ -193,7 +193,7 @@ markers = [
     "path: Tests that compare with the system paths",
     "deprecated: Tests about deprecated features",
 ]
-addopts = "-ra"
+addopts = "-r aR"
 testpaths = [
     "tests/",
 ]
