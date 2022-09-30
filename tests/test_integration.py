@@ -28,6 +28,7 @@ def get_python_versions():
 
 @pytest.mark.integration
 @pytest.mark.network
+@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("python_version", get_python_versions())
 def test_basic_integration(python_version, core, tmp_path, invoke):
     """An e2e test case to ensure PDM works on all supported Python versions"""
