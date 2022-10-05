@@ -235,10 +235,11 @@ class Core:
                 ...
             ```
         """
-        entry_points = importlib_metadata.entry_points()
+        entry_points = importlib_metadata.entry_points
         for plugin in itertools.chain(
-            entry_points.get("pdm", []), entry_points.get("pdm.plugin", [])
+            entry_points(group="pdm"), entry_points(group="pdm.plugin")  # type: ignore
         ):
+            assert isinstance(plugin, importlib_metadata.EntryPoint)
             try:
                 plugin.load()(self)
             except Exception as e:
