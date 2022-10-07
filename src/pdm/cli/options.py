@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
-from typing import Any, Callable, Sequence
+from typing import Any, Sequence
 
 from pdm.compat import Protocol
 from pdm.termui import UI
@@ -85,16 +85,6 @@ class ArgumentGroup(Option):
 
     def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         self.add_to_parser(group)
-
-
-def deprecated(message: str, type_: type = str) -> Callable[[Any], Any]:
-    """Prints deprecation message for the argument"""
-
-    def wrapped_type(obj: Any) -> Any:
-        ui.echo(f"DEPRECATED: {message}", style="red", err=True)
-        return type_(obj)
-
-    return wrapped_type
 
 
 def split_lists(separator: str) -> type[argparse.Action]:
