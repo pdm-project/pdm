@@ -6,6 +6,8 @@ import pytest
 from pdm.cli import actions
 from pdm.models.python import PythonInfo
 
+PYTHON_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
+
 
 def test_init_validate_python_requires(project_no_init):
     with pytest.raises(ValueError):
@@ -96,6 +98,21 @@ def test_init_auto_create_venv(project_no_init, invoke, mocker):
     mocker.patch("pdm.cli.commands.init.get_venv_like_prefix", return_value=None)
     project_no_init.project_config["python.use_venv"] = True
     result = invoke(["init"], input="\n\n\n\n\n\n\n", obj=project_no_init)
+    assert result.exit_code == 0
+    assert (
+        project_no_init.python.executable.parent.parent
+        == project_no_init.root / ".venv"
+    )
+
+
+def test_init_auto_create_venv_specify_python(project_no_init, invoke, mocker):
+    mocker.patch("pdm.cli.commands.init.get_venv_like_prefix", return_value=None)
+    project_no_init.project_config["python.use_venv"] = True
+    result = invoke(
+        ["init", f"--python={PYTHON_VERSION}"],
+        input="\n\n\n\n\n\n",
+        obj=project_no_init,
+    )
     assert result.exit_code == 0
     assert (
         project_no_init.python.executable.parent.parent
