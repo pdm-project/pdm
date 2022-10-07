@@ -181,10 +181,9 @@ class Environment:
     def which(self, command: str) -> str | None:
         """Get the full path of the given executable against this environment."""
         if not os.path.isabs(command) and command.startswith("python"):
-            python = os.path.splitext(command)[0]
-            version = python[6:]
+            match = re.match(r"python(\d(?:\.\d{1,2})?)", command)
             this_version = self.interpreter.version
-            if not version or str(this_version).startswith(version):
+            if not match or str(this_version).startswith(match.group(1)):
                 return str(self.interpreter.executable)
         # Fallback to use shutil.which to find the executable
         this_path = self.get_paths()["scripts"]

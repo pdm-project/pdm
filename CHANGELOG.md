@@ -1,3 +1,14 @@
+Release v2.1.5 (2022-10-05)
+---------------------------
+
+### Bug Fixes
+
+- Ensure `pypi.[ca,client]_cert[s]` config items are passed to distribution builder install steps to allow for custom PyPI index sources with self signed certificates. [#1396](https://github.com/pdm-project/pdm/issues/1396)
+- Fix a crash issue when depending on editable packages with extras. [#1401](https://github.com/pdm-project/pdm/issues/1401)
+- Do not save the python path when using non-interactive mode in `pdm init`. [#1410](https://github.com/pdm-project/pdm/issues/1410)
+- Restrict importlib-metadata (<5.0.0) for Python <3.8 [#1411](https://github.com/pdm-project/pdm/issues/1411)
+
+
 Release v2.1.4 (2022-09-17)
 ---------------------------
 
