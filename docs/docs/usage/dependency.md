@@ -91,6 +91,8 @@ pdm add "git+https://username:password@github.com/username/private-repo.git@mast
 pdm add "pip @ git+https://github.com/pypa/pip.git@22.0"
 # Or use the #egg fragment
 pdm add "git+https://github.com/pypa/pip.git@22.0#egg=pip"
+# Install from a subdirectory
+pdm add "git+https://github.com/owner/repo.git@master#egg=pkg&subdirectory=subpackage"
 ```
 
 ### Add development only dependencies

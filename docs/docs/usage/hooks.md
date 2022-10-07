@@ -21,7 +21,7 @@ To provides full flexibility, PDM allows to [skip some hooks and tasks](#skippin
 
 ## Initialization
 
-The initialization phase should occur only once in a project lifetime by running the [`pdm init`](cli_reference.md#exec-0--init) 
+The initialization phase should occur only once in a project lifetime by running the [`pdm init`](cli_reference.md#exec-0--init)
 command to initialize an existing project (prompt to fill the `pyproject.toml` file).
 
 They trigger the following hooks:
@@ -34,7 +34,7 @@ flowchart LR
     direction LR
     post-init{{Emit post_init}}
     init --> post-init
-  end 
+  end
 ```
 
 ## Dependencies management
@@ -73,14 +73,14 @@ flowchart LR
       post-lock{{Emit post_lock}}
       pre-lock --> lock --> post-lock
     end
-    
+
     subgraph pdm-sync [pdm sync]
       direction TB
       pre-install{{Emit pre_install}}
       post-install{{Emit post_install}}
       pre-install --> sync --> post-install
     end
-    
+
     pdm-lock --> pdm-sync
   end
 ```
@@ -88,7 +88,7 @@ flowchart LR
 ### Switching Python version
 
 This is a special case in dependency management:
-you can switch the current Python version using [`pdm use`](cli_reference.md#exec-0--use) 
+you can switch the current Python version using [`pdm use`](cli_reference.md#exec-0--use)
 and it will emit the [`post_use`][pdm.signals.post_use] signal with the new Python interpreter.
 
 ```mermaid
@@ -97,12 +97,12 @@ flowchart LR
     direction LR
     post-use{{Emit post_use}}
     use --> post-use
-  end 
+  end
 ```
 
 ## Publication
 
-As soon as you are ready to publish your package/app/library, you will require the publication tasks:
+As soon as you are ready to publish your package/library, you will require the publication tasks:
 
 - `build`: build/compile assets requiring it and package everything into a Python package (sdist, wheel)
 - `upload`: upload/publish the package to a remote PyPI index

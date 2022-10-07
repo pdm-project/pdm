@@ -8,6 +8,9 @@ The argument can be either a version specifier of any length, or a relative or a
 python interpreter, but remember the Python interpreter must conform with the `requires-python`
 constraint in the project file.
 
+!!! note "Application or Library"
+    You may have noticed that PDM will ask you whether the project is a library to be uploaded to PyPI. [Here is an good explanation](https://pipenv.pypa.io/en/latest/advanced/#pipfile-vs-setup-py) of the difference between them. PDM knows that by inspecting the `project.name` field in `pyproject.toml`. If it is not empty, it will be considered as a library. A library can be built by `pdm build` or other PEP 517 builders, and itself will be installed in *editable* mode every time you execute `pdm sync` or `pdm install`, unless opted out with `--no-self` option. On the contrary, an application isn't installable because it's missing the project `name`.
+
 ### How `requires-python` controls the project
 
 PDM respects the value of `requires-python` in the way that it tries to pick package candidates that can work

@@ -164,9 +164,9 @@ RUN pip install pdm
 COPY pyproject.toml pdm.lock README.md /project/
 COPY src/ /project/src
 
-# install dependencies and project
+# install dependencies and project into the local packages directory
 WORKDIR /project
-RUN pdm install --prod --no-lock --no-editable
+RUN mkdir __pypackages__ && pdm install --prod --no-lock --no-editable
 
 
 # run stage
