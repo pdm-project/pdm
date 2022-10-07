@@ -658,7 +658,7 @@ def do_use(
         if not matching_interpreters:
             project.core.ui.echo("Interpreters found but not matching:", err=True)
             for py in found_interpreters:
-                project.core.ui.echo(f"  - {py.executable} ({py.identifier})", err=True)
+                project.core.ui.echo(f"  - {py.path} ({py.identifier})", err=True)
             raise NoPythonVersion(
                 "No python is found meeting the requirement "
                 f"[green]python {str(project.python_requires)}[/]"
@@ -669,7 +669,7 @@ def do_use(
             project.core.ui.echo("Please enter the Python interpreter to use")
             for i, py_version in enumerate(matching_interpreters):
                 project.core.ui.echo(
-                    f"{i}. [green]{str(py_version.executable)}[/] "
+                    f"{i}. [green]{str(py_version.path)}[/] "
                     f"({py_version.identifier})"
                 )
             selection = termui.ask(
@@ -684,7 +684,7 @@ def do_use(
             use_cache.set(python, selected_python.path.as_posix())
 
     if not selected_python.valid:
-        path = str(selected_python.executable)
+        path = str(selected_python.path)
         raise InvalidPyVersion(f"Invalid Python interpreter: {path}")
     if not save:
         return selected_python
@@ -695,13 +695,13 @@ def do_use(
     )
     project.core.ui.echo(
         "Using Python interpreter: "
-        f"[green]{str(selected_python.executable)}[/] "
+        f"[green]{str(selected_python.path)}[/] "
         f"({selected_python.identifier})"
     )
     project.python = selected_python
     if (
         old_python
-        and old_python.path != selected_python.path
+        and old_python.executable != selected_python.executable
         and not project.environment.is_global
     ):
         project.core.ui.echo("Updating executable scripts...", style="cyan")
