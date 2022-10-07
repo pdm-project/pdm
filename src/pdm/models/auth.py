@@ -42,8 +42,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
             ui.echo(
                 "The provided credentials will not be saved into your system.\n"
                 "You can enable this by installing keyring:\n"
-                "    pipx inject pdm keyring\n"
-                "or: pip install --user keyring",
+                "    pdm self add keyring",
                 err=True,
                 style="yellow",
             )
