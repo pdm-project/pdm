@@ -33,6 +33,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Don't ask questions but use default values",
         )
+        parser.add_argument("--python", help="Specify the Python version/path to use")
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -48,7 +49,13 @@ class Command(BaseCommand):
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:
-            python = actions.do_use(project, ignore_requires_python=True, hooks=hooks)
+            python = actions.do_use(
+                project,
+                options.python or "",
+                first=bool(options.python),
+                ignore_requires_python=True,
+                hooks=hooks,
+            )
             if (
                 project.config["python.use_venv"]
                 and get_venv_like_prefix(python.executable) is None
@@ -72,7 +79,12 @@ class Command(BaseCommand):
                         )
         else:
             python = actions.do_use(
-                project, "3", True, ignore_requires_python=True, save=False, hooks=hooks
+                project,
+                options.python or "3",
+                True,
+                ignore_requires_python=True,
+                save=False,
+                hooks=hooks,
             )
         if get_venv_like_prefix(python.executable) is None:
             project.core.ui.echo(
