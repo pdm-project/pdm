@@ -129,14 +129,12 @@ class Config(MutableMapping[str, str]):
             False,
             True,
             coerce=ensure_boolean,
-            replace="auto_global",
         ),
         "global_project.fallback_verbose": ConfigItem(
             "If True show message when global project is used implicitly",
             True,
             True,
             coerce=ensure_boolean,
-            replace=None,
         ),
         "global_project.path": ConfigItem(
             "The path to the global project",
@@ -170,18 +168,15 @@ class Config(MutableMapping[str, str]):
             True,
             env_var="PDM_INSTALL_PARALLEL",
             coerce=ensure_boolean,
-            replace="parallel_install",
         ),
         "install.cache": ConfigItem(
             "Cache wheel installation and only put symlinks in the library root",
             False,
             coerce=ensure_boolean,
-            replace="feature.install_cache",
         ),
         "install.cache_method": ConfigItem(
             "`symlink` or `pth` to create links to the cached installation",
             "symlink",
-            replace="feature.install_cache_method",
         ),
         "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
         "python.use_pyenv": ConfigItem(
@@ -192,7 +187,6 @@ class Config(MutableMapping[str, str]):
             True,
             env_var="PDM_USE_VENV",
             coerce=ensure_boolean,
-            replace="use_venv",
         ),
         "pypi.url": ConfigItem(
             "The URL of PyPI mirror, defaults to https://pypi.org/simple",

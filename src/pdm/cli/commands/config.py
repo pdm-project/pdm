@@ -36,7 +36,7 @@ class Command(BaseCommand):
             self._list_config(project, options)
 
     def _get_config(self, project: Project, options: argparse.Namespace) -> None:
-        if options.key in project.project_config.deprecated:
+        if options.key in project.project_config.deprecated:  # pragma: no cover
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{project.project_config.deprecated[options.key]}",
@@ -52,7 +52,7 @@ class Command(BaseCommand):
 
     def _set_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
-        if options.key in config.deprecated:
+        if options.key in config.deprecated:  # pragma: no cover
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             deprecated = ""
             canonical_key = key
             superseded = key in supersedes
-            if key in Config.site.deprecated:
+            if key in Config.site.deprecated:  # pragma: no cover
                 canonical_key = Config.site.deprecated[key]
                 if canonical_key in supersedes:
                     superseded = True
@@ -117,7 +117,7 @@ class Command(BaseCommand):
 
     def _delete_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
-        if options.key in config.deprecated:
+        if options.key in config.deprecated:  # pragma: no cover
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",

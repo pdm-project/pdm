@@ -74,32 +74,6 @@ def test_config_project_global_precedence(project, invoke):
     assert result.output.strip() == "/path/to/bar"
 
 
-@pytest.mark.deprecated
-def test_deprecated_config_name(project, invoke):
-    result = invoke(["config", "use_venv", "true"], obj=project)
-    assert result.exit_code == 0
-    assert "DEPRECATED: the config has been renamed to python.use_venv" in result.stderr
-
-    assert project.config["python.use_venv"] is True
-
-
-@pytest.mark.deprecated
-@pytest.mark.usefixtures("project")
-def test_rename_deprecated_config(tmp_path, invoke):
-    tmp_path.joinpath(".pdm.toml").write_text("use_venv = true\n")
-    with cd(tmp_path):
-        result = invoke(["config"])
-        assert result.exit_code == 0
-        assert "python.use_venv(deprecating: use_venv)" in result.output
-
-        result = invoke(["config", "-l", "python.use_venv", "true"])
-        assert result.exit_code == 0
-        assert (
-            tmp_path.joinpath(".pdm.toml").read_text().strip()
-            == "[python]\nuse_venv = true"
-        )
-
-
 def test_specify_config_file(tmp_path, invoke, monkeypatch):
     tmp_path.joinpath("global_config.toml").write_text("project_max_depth = 9\n")
     with cd(tmp_path):
