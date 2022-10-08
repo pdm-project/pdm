@@ -12,7 +12,7 @@ def install_requirements(
     reqs: list[Requirement],
     environment: Environment,
     use_install_cache: bool = False,
-) -> None:
+) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""
     project = environment.project
     # Rewrite the python requires to only resolve for the current python version.
