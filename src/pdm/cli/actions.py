@@ -764,6 +764,13 @@ def do_import(
         "build-backend": "pdm.pep517.api",
     }
     project.pyproject = cast(dict, pyproject)
+    if "requires-python" not in pyproject["project"]:
+        python_version = f"{project.python.major}.{project.python.minor}"
+        pyproject["project"]["requires-python"] = f">={python_version}"
+        project.core.ui.echo(
+            "The project's [cyan]requires-python[/] has been set to [cyan]>="
+            f"{python_version}[/]. You can change it later if necessary."
+        )
     project.write_pyproject()
 
 
