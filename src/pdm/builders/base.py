@@ -4,7 +4,6 @@ import logging
 import os
 import shutil
 import subprocess
-import tempfile
 import textwrap
 import threading
 from logging import Logger
@@ -15,11 +14,12 @@ from pep517.wrappers import Pep517HookCaller
 
 from pdm.compat import tomllib
 from pdm.exceptions import BuildError
+from pdm.models.environment import PrefixEnvironment
 from pdm.models.in_process import get_sys_config_paths
-from pdm.models.requirements import parse_requirement
+from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.working_set import WorkingSet
 from pdm.termui import logger
-from pdm.utils import create_tracked_tempdir, prepare_pip_source_args
+from pdm.utils import create_tracked_tempdir
 
 if TYPE_CHECKING:
     from pdm.models.environment import Environment
@@ -244,7 +244,7 @@ class EnvBuilder:
             env.update(extra_environ)
         return log_subprocessor(cmd, cwd, extra_environ=env)
 
-    def check_requirements(self, reqs: Iterable[str]) -> Iterable[str]:
+    def check_requirements(self, reqs: Iterable[str]) -> Iterable[Requirement]:
         missing = set()
         conflicting = set()
         project_lib = self._env.get_paths()["purelib"]
@@ -262,7 +262,7 @@ class EnvBuilder:
                     )
                     continue
                 if parsed_req.identify() not in ws:
-                    missing.add(req)
+                    missing.add(parsed_req)
                 elif parsed_req.specifier and not parsed_req.specifier.contains(
                     ws[parsed_req.identify()].version, prereleases=True
                 ):
@@ -272,33 +272,14 @@ class EnvBuilder:
         return missing
 
     def install(self, requirements: Iterable[str], shared: bool = False) -> None:
-        missing = self.check_requirements(requirements)
+        from pdm.installers.core import install_requirements
+
+        missing = list(self.check_requirements(requirements))
         if not missing:
             return
         path = self._prefix.shared if shared else self._prefix.overlay
-
-        with tempfile.NamedTemporaryFile(
-            "w+", prefix="pdm-build-reqs-", suffix=".txt", delete=False
-        ) as req_file:
-            req_file.write(os.linesep.join(missing))
-            req_file.close()
-            cmd = self._env.pip_command + [
-                "install",
-                "--isolated",
-                "--ignore-installed",
-                "--prefix",
-                path,
-            ]
-            ca_certs = self._env.project.config.get("pypi.ca_certs")
-            if ca_certs is not None:
-                cmd.extend(["--cert", ca_certs])
-            client_cert = self._env.project.config.get("pypi.client_cert")
-            if client_cert is not None:
-                cmd.extend(["--client-cert", client_cert])
-            cmd.extend(prepare_pip_source_args(self._env.project.sources))
-            cmd.extend(["-r", req_file.name])
-            self.subprocess_runner(cmd, isolated=False)
-            os.unlink(req_file.name)
+        env = PrefixEnvironment(self._env.project, path)
+        install_requirements(missing, env)
 
         if shared:
             # The shared env is prepared and is safe to be cached now. This is to make

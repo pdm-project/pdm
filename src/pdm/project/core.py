@@ -412,12 +412,14 @@ class Project:
         ]
         return expanded_sources
 
-    def get_repository(self, cls: type[BaseRepository] | None = None) -> BaseRepository:
+    def get_repository(
+        self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True
+    ) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = self.core.repository_class
         sources = self.sources or []
-        return cls(sources, self.environment)
+        return cls(sources, self.environment, ignore_compatibility=ignore_compatibility)
 
     @property
     def locked_repository(self) -> LockedRepository:
@@ -435,6 +437,7 @@ class Project:
         strategy: str = "all",
         tracked_names: Iterable[str] | None = None,
         for_install: bool = False,
+        ignore_compatibility: bool = True,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
@@ -450,7 +453,7 @@ class Project:
             ReusePinProvider,
         )
 
-        repository = self.get_repository()
+        repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         allow_prereleases = self.allow_prereleases
         overrides = {
             normalize_name(k): v

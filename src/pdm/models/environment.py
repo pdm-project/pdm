@@ -275,6 +275,28 @@ class GlobalEnvironment(Environment):
         return None
 
 
+class PrefixEnvironment(Environment):
+    """An environment whose install scheme depends on the given prefix"""
+
+    def __init__(self, project: Project, prefix: str) -> None:
+        super().__init__(project)
+        self.prefix = prefix
+
+    @property
+    def packages_path(self) -> Path | None:  # type: ignore
+        return None
+
+    def get_paths(self) -> dict[str, str]:
+        paths = get_sys_config_paths(
+            str(self.interpreter.executable),
+            {"base": self.prefix, "platbase": self.prefix},
+            kind="prefix",
+        )
+        paths["prefix"] = paths["data"]
+        paths["headers"] = paths["include"]
+        return paths
+
+
 class BareEnvironment(Environment):
     """Bare environment that does not depend on project files."""
 
