@@ -1,17 +1,24 @@
 from __future__ import annotations
 
-import atexit
 import pathlib
+import weakref
 from typing import Any, Iterable
+from urllib.parse import urlparse
 
 import requests
 import requests_toolbelt
 import rich.progress
 
+from pdm import termui
 from pdm.cli.commands.publish.package import PackageFile
-from pdm.models.session import PDMSession
+from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
+
+try:
+    import keyring  # type: ignore
+except ImportError:
+    keyring = None  # type: ignore
 
 
 class Repository:
@@ -24,16 +31,47 @@ class Repository:
         ca_certs: str | None,
     ) -> None:
         self.url = url
-        ca_path = ca_certs if ca_certs is None else pathlib.Path(ca_certs)
-        self.session = PDMSession(
-            cache_dir=project.cache("http"), ca_certificates=ca_path
-        )
-        self.session.auth = (
-            (username or "", password or "") if username or password else None
-        )
+        self.session = project.environment._build_session([], [])
+        if ca_certs is not None:
+            self.session.set_ca_certificates(pathlib.Path(ca_certs))
+        self._credentials_to_save: tuple[str, str, str] | None = None
+        username, password = self._ensure_credentials(username, password)
+        self.session.auth = (username, password)
+        weakref.finalize(self, self.session.close)
         self.ui = project.core.ui
 
-        atexit.register(self.session.close)
+    def _ensure_credentials(
+        self, username: str | None, password: str | None
+    ) -> tuple[str, str]:
+        netloc = urlparse(self.url).netloc
+        if username and password:
+            return username, password
+        if not termui.is_interactive():
+            raise PdmUsageError("Username and password are required")
+        username, password, save = self._prompt_for_credentials(netloc, username)
+        if (
+            save
+            and keyring is not None
+            and termui.confirm("Save credentials to keyring?")
+        ):
+            self._credentials_to_save = (netloc, username, password)
+        return username, password
+
+    def _prompt_for_credentials(
+        self, service: str, username: str | None
+    ) -> tuple[str, str, bool]:
+        if keyring is not None:
+            cred = keyring.get_credential(service, username)
+            if cred is not None:
+                return cred.username, cred.password, False
+        if username is None:
+            username = termui.ask("[cyan]Username")
+        password = termui.ask("[cyan]Password", password=True)
+        return username, password, True
+
+    def _save_credentials(self, service: str, username: str, password: str) -> None:
+        self.ui.echo("Saving credentials to keyring")
+        keyring.set_password(service, username, password)
 
     @staticmethod
     def _convert_to_list_of_tuples(data: dict[str, Any]) -> list[tuple[str, Any]]:
@@ -84,9 +122,12 @@ class Repository:
                 field_parts, callback=on_upload
             )
             job = progress.add_task("", total=monitor.len)
-            return self.session.post(
+            resp = self.session.post(
                 self.url,
                 data=monitor,
                 headers={"Content-Type": monitor.content_type},
                 allow_redirects=False,
             )
+            if resp.status_code < 400 and self._credentials_to_save is not None:
+                self._save_credentials(*self._credentials_to_save)
+            return resp

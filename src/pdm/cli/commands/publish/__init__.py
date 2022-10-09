@@ -113,7 +113,7 @@ class Command(BaseCommand):
         repository = options.repository or os.getenv("PDM_PUBLISH_REPO", "pypi")
         username = options.username or os.getenv("PDM_PUBLISH_USERNAME")
         password = options.password or os.getenv("PDM_PUBLISH_PASSWORD")
-        ca_certs = options.ca_certs or os.getenv("PDM_PUBLISH_CA_CERTS", None)
+        ca_certs = options.ca_certs or os.getenv("PDM_PUBLISH_CA_CERTS")
 
         config = project.global_config.get_repository_config(repository)
         if config is None:
