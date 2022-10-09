@@ -25,6 +25,14 @@ def install_requirements(
         resolver, reqs, environment.python_requires, max_rounds=resolve_max_rounds
     )
     manager = InstallManager(environment, use_install_cache=use_install_cache)
-    for candidate in resolved.values():
+    working_set = environment.get_working_set()
+    for key, candidate in resolved.items():
+        if "[" in key:
+            # This is a candidate with extras, just skip it as it will be handled
+            # by the one without extras.
+            continue
         logger.info("Installing %s %s", candidate.name, candidate.version)
+        if key in working_set:
+            # Force reinstall the package if it's already installed.
+            manager.uninstall(working_set[key])
         manager.install(candidate)
