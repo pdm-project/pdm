@@ -44,13 +44,21 @@ def cache_result(
 class BaseRepository:
     """A Repository acts as the source of packages and metadata."""
 
-    def __init__(self, sources: list[Source], environment: Environment) -> None:
+    def __init__(
+        self,
+        sources: list[Source],
+        environment: Environment,
+        ignore_compatibility: bool = True,
+    ) -> None:
         """
         :param sources: a list of sources to download packages from.
         :param environment: the bound environment instance.
+        :param ignore_compatibility: if True, don't evaluate candidate against
+            the current environment.
         """
         self.sources = sources
         self.environment = environment
+        self.ignore_compatibility = ignore_compatibility
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
 
@@ -94,6 +102,11 @@ class BaseRepository:
         # Store the metadata on the candidate for caching
         candidate.requires_python = requires_python
         candidate.summary = summary
+        if not self.ignore_compatibility:
+            pep508_env = self.environment.marker_environment
+            reqs = [
+                req for req in reqs if not req.marker or req.marker.evaluate(pep508_env)
+            ]
         return reqs, PySpecSet(requires_python), summary
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
@@ -326,7 +339,7 @@ class PyPIRepository(BaseRepository):
     @lru_cache()
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
-        with self.environment.get_finder(sources, True) as finder:
+        with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
             cans = [
                 Candidate.from_installation_candidate(c, requirement)
                 for c in finder.find_all_packages(requirement.project_name)
@@ -373,7 +386,7 @@ class LockedRepository(BaseRepository):
         sources: list[Source],
         environment: Environment,
     ) -> None:
-        super().__init__(sources, environment)
+        super().__init__(sources, environment, ignore_compatibility=False)
         self.packages: dict[tuple, Candidate] = {}
         self.file_hashes: dict[tuple[str, str], dict[Link, str]] = {}
         self.candidate_info: dict[tuple, CandidateInfo] = {}
@@ -424,18 +437,6 @@ class LockedRepository(BaseRepository):
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (self._get_dependencies_from_lockfile,)
-
-    def get_dependencies(
-        self, candidate: Candidate
-    ) -> tuple[list[Requirement], PySpecSet, str]:
-        reqs, python, summary = super().get_dependencies(candidate)
-        reqs = [
-            req
-            for req in reqs
-            if not req.marker
-            or req.marker.evaluate(self.environment.marker_environment)
-        ]
-        return reqs, python, summary
 
     def find_candidates(
         self,

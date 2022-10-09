@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 from dataclasses import dataclass
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -22,8 +23,9 @@ from pdm.cli.actions import do_init
 from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
+from pdm.installers.installers import install_wheel
 from pdm.models.candidates import Candidate
-from pdm.models.environment import Environment
+from pdm.models.environment import Environment, PrefixEnvironment
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import (
     Requirement,
@@ -170,6 +172,22 @@ class TestRepository(BaseRepository):
         self._pypi_data = json.loads(json_file.read_text())
 
 
+@pytest.fixture(scope="session")
+def build_env():
+    with tempfile.TemporaryDirectory("-env", prefix="pdm-test-") as d:
+        p = Core().create_project(d)
+        env = PrefixEnvironment(p, d)
+        for wheel_name in (
+            "pdm_pep517-1.0.0-py3-none-any.whl",
+            "poetry_core-1.0.7-py2.py3-none-any.whl",
+            "setuptools-65.4.1-py3-none-any.whl",
+            "wheel-0.37.1-py2.py3-none-any.whl",
+        ):
+            wheel = FIXTURES / "artifacts" / wheel_name
+            install_wheel(str(wheel), env)
+        yield d
+
+
 class Distribution:
     def __init__(self, key, version, editable=False):
         self.version = version
@@ -272,7 +290,7 @@ def index():
 
 
 @pytest.fixture()
-def project_no_init(tmp_path, mocker, core, index, monkeypatch):
+def project_no_init(tmp_path, mocker, core, index, monkeypatch, build_env):
     test_home = tmp_path / ".pdm-home"
     test_home.mkdir(parents=True)
     test_home.joinpath("config.toml").write_text(
@@ -288,6 +306,7 @@ def project_no_init(tmp_path, mocker, core, index, monkeypatch):
         "pdm.models.environment.PDMSession",
         functools.partial(get_pypi_session, overrides=index),
     )
+    mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=build_env)
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     p.project_config["python.path"] = find_python_in_path(sys.base_prefix).as_posix()
@@ -303,10 +322,8 @@ def project_no_init(tmp_path, mocker, core, index, monkeypatch):
 
 
 @pytest.fixture()
-def local_finder(project_no_init, mocker):
+def local_finder(project_no_init):
     artifacts_dir = str(FIXTURES / "artifacts")
-    return_value = ["--no-index", "--find-links", artifacts_dir]
-    mocker.patch("pdm.builders.base.prepare_pip_source_args", return_value=return_value)
     project_no_init.tool_settings["source"] = [
         {
             "type": "find_links",

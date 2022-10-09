@@ -126,53 +126,6 @@ def test_prod_should_not_be_with_dev(project):
         cli_utils.translate_groups(project, True, False, ("test",))
 
 
-@pytest.mark.parametrize(
-    "sources,pip_args,expected",
-    [
-        ([], None, []),
-        ([], ["-v"], ["-v"]),
-        ([{"url": "https://pypi.org/"}], None, ["--index-url", "https://pypi.org/"]),
-        (
-            [{"url": "https://pypi.org/", "verify_ssl": False}],
-            None,
-            ["--index-url", "https://pypi.org/", "--trusted-host", "pypi.org"],
-        ),
-        (
-            [
-                {"url": "https://pypi.org/", "verify_ssl": False},
-                {"url": "https://other_pypi.org/", "verify_ssl": True},
-            ],
-            None,
-            [
-                "--index-url",
-                "https://pypi.org/",
-                "--trusted-host",
-                "pypi.org",
-                "--extra-index-url",
-                "https://other_pypi.org/",
-            ],
-        ),
-        (
-            [{"url": "some_malformed_url", "verify_ssl": False}],
-            None,
-            ["--index-url", "some_malformed_url"],
-        ),
-        (
-            [{"url": "https://find-links.io", "type": "find_links"}],
-            None,
-            ["--find-links", "https://find-links.io"],
-        ),
-        (
-            [{"url": "/path/to/local/packages", "type": "find_links"}],
-            None,
-            ["--find-links", "/path/to/local/packages"],
-        ),
-    ],
-)
-def test_prepare_pip_source_args(sources, pip_args, expected):
-    assert utils.prepare_pip_source_args(sources, pip_args) == expected
-
-
 def test_deprecation_warning():
     with pytest.warns(DeprecationWarning) as record:
         utils.deprecation_warning("Test warning", raise_since="99.99")

@@ -54,29 +54,6 @@ else:
             return inst.__dict__[self.attr_name]
 
 
-def prepare_pip_source_args(
-    sources: list[Source], pip_args: list[str] | None = None
-) -> list[str]:
-    if pip_args is None:
-        pip_args = []
-    first_index = True
-    for source in sources:
-        if source.get("type") == "find_links":
-            pip_args.extend(["--find-links", source["url"]])
-        else:  # index urls
-            if first_index:
-                pip_args.extend(["--index-url", source["url"]])
-                first_index = False
-            else:
-                pip_args.extend(["--extra-index-url", source["url"]])
-        # Trust the host if it's not verified.
-        if not source.get("verify_ssl", True):
-            hostname = parse.urlparse(source["url"]).hostname
-            if hostname:
-                pip_args.extend(["--trusted-host", hostname])
-    return pip_args
-
-
 def create_tracked_tempdir(
     suffix: str | None = None, prefix: str | None = None, dir: str | None = None
 ) -> str:
