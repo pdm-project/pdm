@@ -170,6 +170,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-n,--non-interactive}"[Don't ask questions but use default values]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
+        '--python[Specify the Python version/path to use]:python:'
       )
       ;;
     install)

@@ -211,7 +211,7 @@ KNOWN_COMMAND_HOOKS = (
     ("lock", "lock", ("pre_lock", "post_lock"), []),
     (
         "publish",
-        "publish",
+        "publish --username abc --password 123",
         ("pre_publish", "pre_build", "post_build", "post_publish"),
         ["mock_publish"],
     ),

@@ -266,7 +266,7 @@ function TabExpansion($line, $lastWord) {
             "init" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("-g", "--global", "--non-interactive", "-n")),
+                        [Option]::new(@("-g", "--global", "--non-interactive", "-n", "--python")),
                         $projectOption,
                         $skipOption
                     ))

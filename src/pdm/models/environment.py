@@ -11,7 +11,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
-import certifi
 import unearth
 
 from pdm import termui
@@ -114,10 +113,27 @@ class Environment:
 
     @cached_property
     def target_python(self) -> unearth.TargetPython:
-        # TODO: get abi, platform and impl from subprocess
         python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
         return unearth.TargetPython(python_version, [python_abi_tag])
+
+    def _build_session(
+        self, index_urls: list[str], trusted_hosts: list[str]
+    ) -> PDMSession:
+        ca_certs = self.project.config.get("pypi.ca_certs")
+        session = PDMSession(
+            cache_dir=self.project.cache("http"),
+            index_urls=index_urls,
+            trusted_hosts=trusted_hosts,
+            ca_certificates=Path(ca_certs) if ca_certs is not None else None,
+        )
+        certfn = self.project.config.get("pypi.client_cert")
+        if certfn:
+            keyfn = self.project.config.get("pypi.client_key")
+            session.cert = (Path(certfn), Path(keyfn) if keyfn else None)
+
+        session.auth = self.auth
+        return session
 
     @contextmanager
     def get_finder(
@@ -136,20 +152,7 @@ class Environment:
 
         index_urls, find_links, trusted_hosts = get_index_urls(sources)
 
-        session = PDMSession(
-            cache_dir=self.project.cache("http"),
-            index_urls=index_urls,
-            trusted_hosts=trusted_hosts,
-            ca_certificates=Path(
-                self.project.config.get("pypi.ca_certs", certifi.where())
-            ),
-        )
-        certfn = self.project.config.get("pypi.client_cert")
-        if certfn:
-            keyfn = self.project.config.get("pypi.client_key")
-            session.cert = (Path(certfn), Path(keyfn) if keyfn else None)
-
-        session.auth = self.auth
+        session = self._build_session(index_urls, trusted_hosts)
         finder = unearth.PackageFinder(
             session=session,
             index_urls=index_urls,

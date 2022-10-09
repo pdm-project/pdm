@@ -76,14 +76,14 @@ def test_repository_get_release_urls(project):
         ]
     ]
     repository = Repository(
-        project, "https://upload.pypi.org/legacy/", None, None, None
+        project, "https://upload.pypi.org/legacy/", "abc", "123", None
     )
     assert repository.get_release_urls(package_files) == {
         "https://pypi.org/project/demo/0.0.1/"
     }
 
     repository = Repository(
-        project, "https://example.pypi.org/legacy/", None, None, None
+        project, "https://example.pypi.org/legacy/", "abc", "123", None
     )
     assert not repository.get_release_urls(package_files)
 
@@ -94,7 +94,11 @@ def test_publish_pick_up_asc_files(project, uploaded, invoke):
         with open(str(p) + ".asc", "w") as f:
             f.write("fake signature")
 
-    invoke(["publish", "--no-build"], obj=project, strict=True)
+    invoke(
+        ["publish", "--no-build", "--username=abc", "--password=123"],
+        obj=project,
+        strict=True,
+    )
     # Test wheels are uploaded first
     assert uploaded[0].base_filename.endswith(".whl")
     for package in uploaded:
@@ -106,7 +110,11 @@ def test_publish_pick_up_asc_files(project, uploaded, invoke):
 
 @pytest.mark.usefixtures("prepare_packages")
 def test_publish_package_with_signature(project, uploaded, invoke):
-    invoke(["publish", "--no-build", "-S"], obj=project, strict=True)
+    invoke(
+        ["publish", "--no-build", "-S", "--username=abc", "--password=123"],
+        obj=project,
+        strict=True,
+    )
     for package in uploaded:
         assert package.gpg_signature == (
             package.base_filename + ".asc",
@@ -117,7 +125,9 @@ def test_publish_package_with_signature(project, uploaded, invoke):
 @pytest.mark.usefixtures("local_finder")
 def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
     project = fixture_project("demo-module")
-    result = invoke(["publish"], obj=project, strict=True).output
+    result = invoke(
+        ["publish", "--username=abc", "--password=123"], obj=project, strict=True
+    ).output
 
     mock_pypi.assert_called()
     assert "Uploading demo_module-0.1.0-py3-none-any.whl" in result
