@@ -130,4 +130,5 @@ class Repository:
             )
             if resp.status_code < 400 and self._credentials_to_save is not None:
                 self._save_credentials(*self._credentials_to_save)
+                self._credentials_to_save = None
             return resp
