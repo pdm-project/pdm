@@ -254,7 +254,7 @@ class FileRequirement(Requirement):
         super().__post_init__()
         self._parse_url()
         if self.path and not self.path.exists():
-            raise RequirementError(f"The local path {self.path} does not exist.")
+            raise RequirementError(f"The local path '{self.path}' does not exist.")
         if self.is_local_dir:
             self._check_installable()
 
@@ -272,21 +272,20 @@ class FileRequirement(Requirement):
         if not self.path:
             return None
         result = self.path.as_posix()
-        if (
-            not self.path.is_absolute()
-            and not result.startswith("./")
-            and not result.startswith("../")
-        ):
+        if not self.path.is_absolute() and not result.startswith(("./", "../")):
             result = "./" + result
         return result
 
     def _parse_url(self) -> None:
         if not self.url:
             if self.path:
-                self.url = path_to_url(self.path.absolute().as_posix())
                 if not self.path.is_absolute():
-                    project_root = Path(".").absolute().as_posix().lstrip("/")
-                    self.url = self.url.replace(project_root, "${PROJECT_ROOT}")
+                    str_path = cast(str, self.str_path)
+                    if str_path.startswith("./"):
+                        str_path = str_path[2:]
+                    self.url = f"file:///${{PROJECT_ROOT}}/{str_path}"
+                else:
+                    self.url = path_to_url(self.path.absolute().as_posix())
         else:
             try:
                 self.path = Path(
