@@ -332,7 +332,7 @@ class PreparedCandidate:
             )
         elif isinstance(req, FileRequirement):
             assert self.link is not None
-            if self.link.file_path.is_dir():
+            if self.link.is_file and self.link.file_path.is_dir():
                 return _filter_none(
                     {
                         "url": url_without_fragments(req.url),

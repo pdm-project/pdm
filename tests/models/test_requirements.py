@@ -96,3 +96,15 @@ def test_convert_req_with_relative_path_from_outside(tmp_path):
         r = parse_requirement("../demo")
         assert r.path.resolve() == tmp_path / "demo"
         assert r.url == "file:///${PROJECT_ROOT}/../demo"
+
+
+def test_file_req_relocate(tmp_path):
+    shutil.copytree(FIXTURES / "projects/demo", tmp_path / "demo")
+    tmp_path.joinpath("project").mkdir()
+    with cd(tmp_path):
+        r = parse_requirement("./demo")
+        assert r.path.resolve() == tmp_path / "demo"
+        assert r.url == "file:///${PROJECT_ROOT}/demo"
+        r.relocate(tmp_path / "project")
+        assert r.str_path == "../demo"
+        assert r.url == "file:///${PROJECT_ROOT}/../demo"
