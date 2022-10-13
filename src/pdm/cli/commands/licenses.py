@@ -1,5 +1,5 @@
-import json
 import argparse
+import json
 from collections import defaultdict
 
 from pdm.cli import actions
@@ -7,7 +7,6 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import check_project_file
 from pdm.compat import Distribution
 from pdm.project import Project
-
 
 # BUG: displaying coloured text can break certain package printouts
 # for example: "cachecontrol[filecache]"
@@ -20,10 +19,12 @@ from pdm.project import Project
 # )
 # show_dependency_graph(project, dep_graph, reverse=reverse, json=json)
 
+
 class LicenseLookup:
-    """ Tool to help finding licence information within package dist-info
+    """Tool to help finding licence information within package dist-info
     and metadata.
     """
+
     def __init__(self, identifier: str, dist: Distribution):
         self.identifier = identifier
         self.dist = dist
@@ -37,7 +38,7 @@ class LicenseLookup:
         return self.dist.metadata.get("Version", None)
 
     def licenses(self, comma=","):
-        """ Comma separated list of license names.
+        """Comma separated list of license names.
 
         Typically, returns the `License` field specified in the dist-info metadata.
         If this is not available or UNKNOWN, then the last part of the
@@ -53,23 +54,22 @@ class LicenseLookup:
         return meta
 
     def classifier_licences(self):
-        """ Find all `Classifier: License ::` entries in the dist-info metadata.
-        """
+        """Find all `Classifier: License ::` entries in the dist-info metadata."""
         for k, v in self.dist.metadata.items():
-            if (k == "Classifier" and v.startswith("License")):
+            if k == "Classifier" and v.startswith("License"):
                 yield v
 
     @property
     def homepage(self):
-        """ `Home-page` as specified in the dist-info metadata.
-        https://packaging.python.org/en/latest/specifications/core-metadata/#home-page """
+        """`Home-page` as specified in the dist-info metadata.
+        https://packaging.python.org/en/latest/specifications/core-metadata/#home-page"""
         # TODO: load from Project-URL instead?
         data = self.dist.metadata.get("Home-Page", None)
         data = None if data == "UNKNOWN" else data
         return data
-    
+
     def find_license_files(self):
-        """ Find and return the paths to all files in the dist-info that might
+        """Find and return the paths to all files in the dist-info that might
         contain license information or other legal notices.
 
         This is not exhaustive, may contain zero or more files, and may offer
@@ -105,7 +105,7 @@ class LicenseLookup:
             "homepage": self.homepage,
             "licenses": self.licenses(),
             "files": self.find_license_files(),
-            **kwargs
+            **kwargs,
         }
 
 
@@ -115,11 +115,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         group = parser.add_mutually_exclusive_group()
 
-        parser.add_argument('--fields',
+        parser.add_argument(
+            "--fields",
             default="identifier,version,licenses",
-            help="Select information to output as a comma separated string. "\
-                 "For example: identifier,name,version,homepage,licenses,group." \
-                 "The `group` field is not used in --working mode."
+            help="Select information to output as a comma separated string. "
+            "For example: identifier,name,version,homepage,licenses,group."
+            "The `group` field is not used in --working mode.",
         )
 
         group.add_argument(
@@ -132,8 +133,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--skip",
             default="",
-            help="Do not export this comma separated list of named groups (see [tool.pdm.dev-dependencies]). " \
-                 "For example: `test,doc,default`",
+            help="Do not export this comma separated list of named groups (see [tool.pdm.dev-dependencies]). "
+            "For example: `test,doc,default`",
         )
 
         parser.add_argument(
@@ -169,20 +170,28 @@ class Command(BaseCommand):
             items = f"{css}".split(",")
             items = [el.strip() for el in items if el]
             return items
-        
+
         # Fields to output and groups to skip.
         fields = _parse_list(options.fields)
         skip = set(_parse_list(options.skip))
 
         # Check we had a valid sort field.
         if options.sort:
-            allowed = ["identifier", "name", "version", "homepage", "licenses", "group"]#, "files"]
+            allowed = [
+                "identifier",
+                "name",
+                "version",
+                "homepage",
+                "licenses",
+                "group",
+            ]  # , "files"]
             if options.sort not in allowed:
-                raise KeyError(f"sort key `{options.sort}` is not a valid field ({allowed})")
-
+                raise KeyError(
+                    f"sort key `{options.sort}` is not a valid field ({allowed})"
+                )
 
         def _format_table(record, fields):
-            """ Output as a PDM table (consistent colours) """
+            """Output as a PDM table (consistent colours)"""
             output = []
             for field in fields:
                 data = f"{record[field]}"
@@ -191,23 +200,23 @@ class Command(BaseCommand):
                 data = data if field != "group" else f"[red]{data}[/]"
                 output.append(data)
             return output
-        
+
         def _format_csv(record, fields, comma):
-            """ Output as a CSV file """
+            """Output as a CSV file"""
             output = []
             for field in fields:
                 output.append(f"{record[field]}")
             return comma.join(output)
-        
+
         def _format_json(record, fields):
-            """ Output as JSON dicts. """
+            """Output as JSON dicts."""
             filtered = {k: v for k, v in record.items() if k in fields}
             if "files" in filtered:
                 raise NotImplementedError()
             return filtered
 
         def _format_markdown(record):
-            """ Output as a section in a markdown file """
+            """Output as a section in a markdown file"""
             s = ""
             s += f"## {record['identifier']}\n"
             s += "\n"
@@ -234,7 +243,9 @@ class Command(BaseCommand):
         # Export the working set of packages (ie. those that are installed).
         if not options.resolve:
             working_set = project.environment.get_working_set()
-            output = [LicenseLookup(k, d).as_record(group="") for k, d in working_set.items()]
+            output = [
+                LicenseLookup(k, d).as_record(group="") for k, d in working_set.items()
+            ]
 
         # Otherwise resolve all the requirements based on the lockfile.
         else:
@@ -255,7 +266,7 @@ class Command(BaseCommand):
             # select different versions. If a package license changes between versions,
             # then the reported license may be different to the one that is distributed.
             candidates = actions.resolve_candidates_from_lockfile(project, requires)
-            
+
             # Prepare distributions for each candidate so we can get the data we need.
             # Use a table to merge duplicates.
             distributions = {}
@@ -263,7 +274,7 @@ class Command(BaseCommand):
                 prepared = candidate.prepare(project.environment)
                 dist = prepared.metadata
                 identifier = prepared.req.identify()
-                group = groups.get(identifier, set(("sub", )))
+                group = groups.get(identifier, set(("sub",)))
                 distributions[identifier] = dist, group
 
             # Find the licenses for each one and produce a record for export.
@@ -298,8 +309,12 @@ class Command(BaseCommand):
                 try:
                     print(_format_markdown(row))
                 except UnicodeEncodeError:
-                    print(_format_markdown(row).encode().decode("ascii", errors="ignore"))
-                    print("A UnicodeEncodeError was encountered.  Some characters may be omit.")
+                    print(
+                        _format_markdown(row).encode().decode("ascii", errors="ignore")
+                    )
+                    print(
+                        "A UnicodeEncodeError was encountered.  Some characters may be omit."
+                    )
 
         # Write fancy table output.
         else:
