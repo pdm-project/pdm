@@ -86,6 +86,7 @@ jobs:
           architecture: ${{ matrix.arch }}
       - name: Set Variables
         id: set_variables
+        shell: bash
         run: |
           echo "PY=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_OUTPUT
           echo "PIP_CACHE=$(pip cache dir)" >> $GITHUB_OUTPUT
