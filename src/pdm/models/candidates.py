@@ -28,6 +28,7 @@ from pdm.models.specifiers import PySpecSet
 from pdm.project.metadata import MutableMetadata, SetupDistribution
 from pdm.utils import (
     cached_property,
+    cd,
     convert_hashes,
     create_tracked_tempdir,
     expand_env_vars_in_auth,
@@ -236,14 +237,15 @@ class Candidate:
             if not self.req.editable:
                 result.update(revision=self.get_revision())
         elif not self.req.is_named:
-            if self.req.is_file_or_url and self.req.is_local_dir:
-                result.update(path=path_replace(root_path, ".", self.req.str_path))
-            else:
-                result.update(
-                    url=path_replace(
-                        root_path.lstrip("/"), "${PROJECT_ROOT}", self.req.url
+            with cd(project_root):
+                if self.req.is_file_or_url and self.req.is_local_dir:
+                    result.update(path=path_replace(root_path, ".", self.req.str_path))
+                else:
+                    result.update(
+                        url=path_replace(
+                            root_path.lstrip("/"), "${PROJECT_ROOT}", self.req.url
+                        )
                     )
-                )
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
@@ -329,7 +331,8 @@ class PreparedCandidate:
                 }
             )
         elif isinstance(req, FileRequirement):
-            if req.is_local_dir:
+            assert self.link is not None
+            if self.link.file_path.is_dir():
                 return _filter_none(
                     {
                         "url": url_without_fragments(req.url),
@@ -337,22 +340,14 @@ class PreparedCandidate:
                         "subdirectory": req.subdirectory,
                     }
                 )
-            url = expand_env_vars_in_auth(
-                req.url.replace(
-                    "${PROJECT_ROOT}",
-                    self.environment.project.root.as_posix().lstrip(  # type: ignore
-                        "/"
-                    ),
-                )
-            )
             with self.environment.get_finder() as finder:
                 hash_cache = self.environment.project.make_hash_cache()
                 return _filter_none(
                     {
-                        "url": url_without_fragments(req.url),
+                        "url": self.link.url_without_fragment,
                         "archive_info": {
                             "hash": hash_cache.get_hash(
-                                Link(url), finder.session
+                                self.link, finder.session
                             ).replace(":", "=")
                         },
                         "subdirectory": req.subdirectory,

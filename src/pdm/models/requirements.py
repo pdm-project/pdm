@@ -274,6 +274,8 @@ class FileRequirement(Requirement):
         result = self.path.as_posix()
         if not self.path.is_absolute() and not result.startswith(("./", "../")):
             result = "./" + result
+        if result.startswith("./../"):
+            result = result[2:]
         return result
 
     def _parse_url(self) -> None:
@@ -299,6 +301,15 @@ class FileRequirement(Requirement):
             except AssertionError:
                 pass
         self._parse_name_from_url()
+
+    def relocate(self, root: str | Path) -> None:
+        """Change the project root to the given path"""
+        if self.path is None or self.path.is_absolute():
+            return
+        # self.path is relative
+        self.path = Path(os.path.relpath(self.path, root))
+        self.url = ""
+        self._parse_url()
 
     @property
     def is_local(self) -> bool:

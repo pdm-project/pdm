@@ -17,7 +17,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.search import SearchResultParser
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import normalize_name, url_without_fragments
+from pdm.utils import cd, normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
     from pdm._types import CandidateInfo, SearchResult, Source
@@ -397,26 +397,27 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
-        for package in lockfile.get("package", []):
-            version = package.get("version")
-            if version:
-                package["version"] = f"=={version}"
-            package_name = package.pop("name")
-            req_dict = {
-                k: v
-                for k, v in package.items()
-                if k not in ("dependencies", "requires_python", "summary")
-            }
-            req = Requirement.from_req_dict(package_name, req_dict)
-            can = make_candidate(req, name=package_name, version=version)
-            can_id = self._identify_candidate(can)
-            self.packages[can_id] = can
-            candidate_info: CandidateInfo = (
-                package.get("dependencies", []),
-                package.get("requires_python", ""),
-                package.get("summary", ""),
-            )
-            self.candidate_info[can_id] = candidate_info
+        with cd(self.environment.project.root):
+            for package in lockfile.get("package", []):
+                version = package.get("version")
+                if version:
+                    package["version"] = f"=={version}"
+                package_name = package.pop("name")
+                req_dict = {
+                    k: v
+                    for k, v in package.items()
+                    if k not in ("dependencies", "requires_python", "summary")
+                }
+                req = Requirement.from_req_dict(package_name, req_dict)
+                can = make_candidate(req, name=package_name, version=version)
+                can_id = self._identify_candidate(can)
+                self.packages[can_id] = can
+                candidate_info: CandidateInfo = (
+                    package.get("dependencies", []),
+                    package.get("requires_python", ""),
+                    package.get("summary", ""),
+                )
+                self.candidate_info[can_id] = candidate_info
 
         for key, hashes in lockfile.get("metadata", {}).get("files", {}).items():
             self.file_hashes[tuple(key.split(None, 1))] = {  # type: ignore
