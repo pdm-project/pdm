@@ -87,8 +87,8 @@ jobs:
       - name: Set Variables
         id: set_variables
         run: |
-          echo "::set-output name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
-          echo "::set-output name=PIP_CACHE::$(pip cache dir)"
+          echo "PY=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_OUTPUT
+          echo "PIP_CACHE=$(pip cache dir)" >> $GITHUB_OUTPUT
       - name: Cache PIP
         uses: actions/cache@v3
         with:
