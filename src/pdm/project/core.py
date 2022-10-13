@@ -103,7 +103,7 @@ class Project:
                     err=True,
                 )
 
-        self.root = Path(root_path or "").absolute()
+        self.root: Path = Path(root_path or "").absolute()
         self.is_global = is_global
         self.init_global_project()
         self._lockfile_file = self.root / "pdm.lock"

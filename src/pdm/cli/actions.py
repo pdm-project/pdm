@@ -48,7 +48,7 @@ from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
-from pdm.utils import normalize_name
+from pdm.utils import cd, normalize_name
 
 PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
@@ -259,6 +259,8 @@ def do_add(
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:
+        if r.is_file_or_url:
+            r.relocate(project.root)  # type: ignore
         key = r.identify()
         r.prerelease = prerelease
         tracked_names.add(key)
@@ -438,18 +440,19 @@ def do_remove(
         f"{'dev-' if dev else ''}dependencies: "
         + ", ".join(f"[bold green]{name}[/]" for name in packages)
     )
-    for name in packages:
-        req = parse_requirement(name)
-        matched_indexes = sorted(
-            (i for i, r in enumerate(deps) if req.matches(r)), reverse=True
-        )
-        if not matched_indexes:
-            raise ProjectError(
-                f"[bold green]{name}[/] does not exist in "
-                f"[bold cyan]{group}[/] dependencies."
+    with cd(project.root):
+        for name in packages:
+            req = parse_requirement(name)
+            matched_indexes = sorted(
+                (i for i, r in enumerate(deps) if req.matches(r)), reverse=True
             )
-        for i in matched_indexes:
-            del deps[i]
+            if not matched_indexes:
+                raise ProjectError(
+                    f"[bold green]{name}[/] does not exist in "
+                    f"[bold cyan]{group}[/] dependencies."
+                )
+            for i in matched_indexes:
+                del deps[i]
     cast(Array, deps).multiline(True)
 
     if not dry_run:
