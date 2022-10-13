@@ -116,8 +116,7 @@ class Command(BaseCommand):
         group = parser.add_mutually_exclusive_group()
 
         parser.add_argument('--fields',
-            default="identifier,version,licenses,group,homepage",
-            # action="store_const",
+            default="identifier,version,licenses",
             help="Select information to output as a comma separated string. "\
                  "For example: identifier,name,version,homepage,licenses,group." \
                  "The `group` field is not used in --working mode."
@@ -177,9 +176,9 @@ class Command(BaseCommand):
 
         # Check we had a valid sort field.
         if options.sort:
-            fields = ["identifier", "name", "version", "homepage", "licenses"]#, "files"]
-            if options.sort not in fields:
-                raise KeyError(f"sort key `{options.sort}` is not a valid field ({fields})")
+            allowed = ["identifier", "name", "version", "homepage", "licenses", "group"]#, "files"]
+            if options.sort not in allowed:
+                raise KeyError(f"sort key `{options.sort}` is not a valid field ({allowed})")
 
 
         def _format_table(record, fields):
