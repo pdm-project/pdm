@@ -11,7 +11,7 @@ It also provides hooks attached to these steps allowing for:
 The built-in commands are currently split into 3 groups:
 
 - the [initialization phase](#initialization)
-- the [dependencies management](#dependencies-managment).
+- the [dependencies management](#dependencies-management).
 - the [publication phase](#publication).
 
 You will most probably need to perform some recurrent tasks between the installation and publication phases (housekeeping, linting, testing, ...)
