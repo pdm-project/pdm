@@ -100,12 +100,18 @@ class Command(BaseCommand):
         # Include everything by default (*) then exclude after.
         # Check to make sure that only valid dep group names are given.
         valid_groups = [g for g in project.iter_groups()] + [SUBDEP_GROUP_LABEL]
-        include = parse_comma_separated_string(options.include, lowercase=False, asterisk_values=valid_groups)
+        include = parse_comma_separated_string(
+            options.include, lowercase=False, asterisk_values=valid_groups
+        )
         if not all(g in valid_groups for g in include):
-            raise PdmUsageError(f"--include groups names must be selected from: {valid_groups}")
+            raise PdmUsageError(
+                f"--include groups names must be selected from: {valid_groups}"
+            )
         exclude = parse_comma_separated_string(options.exclude, lowercase=False)
         if exclude and not all(g in valid_groups for g in exclude):
-            raise PdmUsageError(f"--exclude groups names must be selected from: {valid_groups}")
+            raise PdmUsageError(
+                f"--exclude groups names must be selected from: {valid_groups}"
+            )
         selected_groups = set(g for g in include if g not in exclude)
 
         # Requirements as importtools distributions (eg packages).
@@ -128,7 +134,7 @@ class Command(BaseCommand):
             packages = {p.metadata["Name"]: p for p in packages.values()}
 
         # Filter the set of packages to show by --include and --exclude
-        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL, )))
+        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
         group_in = lambda d: any(g in selected_groups for g in group_of(d))
         packages = {d.metadata["Name"]: d for d in packages.values() if group_in(d)}
 
@@ -137,12 +143,13 @@ class Command(BaseCommand):
             self.handle_graph(packages, project, options)
         else:
             self.handle_list(packages, name_to_groups, project, options)
-            # self.handle_list(packages, name_to_groups, selected_groups, project, options)
 
-    def handle_graph(self,
-                     packages: Dict[str, Distribution],
-                     project: Project,
-                     options: argparse.Namespace) -> None:
+    def handle_graph(
+        self,
+        packages: Dict[str, Distribution],
+        project: Project,
+        options: argparse.Namespace,
+    ) -> None:
         if options.csv:
             raise PdmUsageError("--csv cannot be used with --graph")
         if options.markdown:
@@ -153,14 +160,17 @@ class Command(BaseCommand):
         dep_graph = build_dependency_graph(
             packages, project.environment.marker_environment
         )
-        show_dependency_graph(project, dep_graph, reverse=options.reverse, json=options.json)
-    
-    def handle_list(self,
-                    packages: Dict[str, Distribution],
-                    name_to_groups: Dict[str, Set[str]],
-                    # selected_groups: Set[str],
-                    project: Project,
-                    options: argparse.Namespace) -> None:
+        show_dependency_graph(
+            project, dep_graph, reverse=options.reverse, json=options.json
+        )
+
+    def handle_list(
+        self,
+        packages: Dict[str, Distribution],
+        name_to_groups: Dict[str, Set[str]],
+        project: Project,
+        options: argparse.Namespace,
+    ) -> None:
         if options.reverse:
             raise PdmUsageError("--reverse cannot be used without --graph")
 
@@ -175,7 +185,7 @@ class Command(BaseCommand):
 
         # Wrap each distribution with a Listable (and a groups pairing) to make it easier
         # to filter on later.
-        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL, )))
+        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
         records = [Listable(d, group_of(d)) for d in packages.values()]
 
         # Order based on a field key.
@@ -183,7 +193,7 @@ class Command(BaseCommand):
             key = options.sort.lower()
             if key not in Listable.KEYS:
                 raise PdmUsageError(f"--sort key must be one of: {Listable.KEYS}")
-            records.sort(key=lambda d: getattr(d, options.sort.lower()))
+            records.sort(key=lambda d: d[options.sort.lower()])
 
         # Write CSV
         if options.csv:
@@ -232,8 +242,7 @@ def parse_comma_separated_string(comma_string, lowercase=True, asterisk_values=N
 
 class Listable:
     """Wrapper makes sorting and exporting information about a Distribution
-    a little easier.  It also does some common work to retrieve information
-    about licenses from dist-info metadata.
+    easier.  It also retrieves license information from dist-info metadata.
 
     https://packaging.python.org/en/latest/specifications/core-metadata
     """
