@@ -15,7 +15,6 @@ from pdm.cli.utils import (
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
-
 # Group label for subdependencies
 SUBDEP_GROUP_LABEL = ":sub"
 
@@ -134,7 +133,9 @@ class Command(BaseCommand):
             packages = {p.metadata["Name"]: p for p in packages.values()}
 
         # Filter the set of packages to show by --include and --exclude
-        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
+        group_of = lambda d: name_to_groups.get(
+            d.metadata["Name"], set((SUBDEP_GROUP_LABEL,))
+        )
         group_in = lambda d: any(g in selected_groups for g in group_of(d))
         packages = {d.metadata["Name"]: d for d in packages.values() if group_in(d)}
 
@@ -185,7 +186,9 @@ class Command(BaseCommand):
 
         # Wrap each distribution with a Listable (and a groups pairing) to make it easier
         # to filter on later.
-        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
+        group_of = lambda d: name_to_groups.get(
+            d.metadata["Name"], set((SUBDEP_GROUP_LABEL,))
+        )
         records = [Listable(d, group_of(d)) for d in packages.values()]
 
         # Order based on a field key.
