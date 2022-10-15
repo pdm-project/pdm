@@ -10,11 +10,6 @@ from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.cli.utils import build_dependency_graph, check_project_file, get_dist_location, show_dependency_graph
 
-# TODO: should * be "all" to align with `pdm install -G:all` style?
-# TODO: currently using "sub" to demark subdependanies/other installed deps - suggestions?
-# TODO: should we exlcude the project package?
-# TODO: is there a way of mapping distributions back to package identifiers?  (see CacheControl[...])
-# TODO: Is it better to perform include/exclude BEFORE the reolver or AFTER it (current)
 
 class Command(BaseCommand):
     """List packages installed in the current working set"""
@@ -92,7 +87,19 @@ class Command(BaseCommand):
         for g in project.iter_groups():
             for r in project.get_dependencies(g).values():
                 name_to_groups[r.name].add(g)
-    
+
+        # Set up `--include` and `--exclude` dep groups.
+        # Include everything by default (*) then exclude after.
+        # Check to make sure that only valid dep group names are given.
+        valid_groups = [g for g in project.iter_groups()] + ["sub"]
+        include = parse_comma_separated_string(options.include, lowercase=False, asterisk_values=valid_groups)
+        if not all(g in valid_groups for g in include):
+            raise PdmUsageError(f"--include groups names must be selected from: {valid_groups}")
+        exclude = parse_comma_separated_string(options.exclude, lowercase=False)
+        if exclude and not all(g in valid_groups for g in exclude):
+            raise PdmUsageError(f"--exclude groups names must be selected from: {valid_groups}")
+        selected_groups = set(g for g in include if g not in exclude)
+
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.
         if options.resolve:
@@ -106,13 +113,22 @@ class Command(BaseCommand):
             packages = project.environment.get_working_set()
             packages = {p.metadata["Name"]: p for p in packages.values()}
 
-        # Process as a graph or table.
+        # Filter the set of packages to show by --include and --exclude
+        group_of = lambda d: name_to_groups.get(d.metadata["Name"], set(("sub", )))
+        group_in = lambda d: any(g in selected_groups for g in group_of(d))
+        packages = {d.metadata["Name"]: d for d in packages.values() if group_in(d)}
+
+        # Process as a graph or list.
         if options.graph:
             self.handle_graph(packages, project, options)
         else:
             self.handle_list(packages, name_to_groups, project, options)
+            # self.handle_list(packages, name_to_groups, selected_groups, project, options)
 
-    def handle_graph(self, packages: Dict[str, Distribution], project: Project, options: argparse.Namespace) -> None:
+    def handle_graph(self,
+                     packages: Dict[str, Distribution],
+                     project: Project,
+                     options: argparse.Namespace) -> None:
         if options.csv:
             raise PdmUsageError("--csv cannot be used with --graph")
         if options.markdown:
@@ -125,7 +141,12 @@ class Command(BaseCommand):
         )
         show_dependency_graph(project, dep_graph, reverse=options.reverse, json=options.json)
     
-    def handle_list(self, packages: Dict[str, Distribution], name_to_groups: Dict[str, Set[str]], project: Project, options: argparse.Namespace) -> None:
+    def handle_list(self,
+                    packages: Dict[str, Distribution],
+                    name_to_groups: Dict[str, Set[str]],
+                    # selected_groups: Set[str],
+                    project: Project,
+                    options: argparse.Namespace) -> None:
         if options.reverse:
             raise PdmUsageError("--reverse cannot be used without --graph")
 
@@ -134,27 +155,10 @@ class Command(BaseCommand):
         if not all(field in Listable.KEYS for field in fields):
             raise PdmUsageError(f"--fields must specify one or more of: {Listable.KEYS}")
 
-        # Set up `--include` and `--exclude` dep groups.
-        # Include everything by default (*) then exclude after.
-        # Check to make sure that only valid dep group names are given.
-        valid_groups = [g for g in project.iter_groups()] + ["sub"]
-        include = parse_comma_separated_string(options.include, lowercase=False, asterisk_values=valid_groups)
-        if not all(g in valid_groups for g in include):
-            raise PdmUsageError(f"--include groups names must be selected from: {valid_groups}")
-        exclude = parse_comma_separated_string(options.exclude, lowercase=False)
-        if exclude and not all(g in valid_groups for g in exclude):
-            raise PdmUsageError(f"--exclude groups names must be selected from: {valid_groups}")
-        enabled_groups = set(g for g in include if g not in exclude)
-
-        # Create a list of all the records we want to list (include / excluded
-        # is applied here).  Each distribution is wrapped to make it esaier to
-        # filter and sort on.
-        records = []
+        # Wrap each distribution with a Listable (and a groups pairing) to make it easier
+        # to filter on later.
         group_of = lambda d: name_to_groups.get(d.metadata["Name"], set(("sub", )))
-        for dist in packages.values():
-            groups = group_of(dist)
-            if any(g in enabled_groups for g in groups):
-                records.append(Listable(dist, groups))
+        records = [Listable(d, group_of(d)) for d in packages.values()]
 
         # Order based on a field key.
         if options.sort:
