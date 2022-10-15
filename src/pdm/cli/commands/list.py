@@ -1,14 +1,20 @@
 import argparse
+import json
 from collections import defaultdict
 from importlib.metadata import Distribution
-import json
 from typing import Dict, List, Set
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.utils import (
+    build_dependency_graph,
+    check_project_file,
+    get_dist_location,
+    show_dependency_graph,
+)
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
-from pdm.cli.utils import build_dependency_graph, check_project_file, get_dist_location, show_dependency_graph
+
 
 
 class Command(BaseCommand):
@@ -16,14 +22,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         graph = parser.add_mutually_exclusive_group()
-        
+
         graph.add_argument(
             "--graph", action="store_true", help="Display a graph of dependencies"
         )
         parser.add_argument(
             "-r", "--reverse", action="store_true", help="Reverse the dependency graph"
         )
-
 
         parser.add_argument(
             "--resolve",
@@ -32,10 +37,11 @@ class Command(BaseCommand):
             help="Resolve all requirements to output licenses (instead of just showing those currently installed)",
         )
 
-        parser.add_argument('--fields',
+        parser.add_argument(
+            "--fields",
             default="name,version,location",
-            help="Select information to output as a comma separated string. "\
-                 "For example: name,version,homepage,licenses,group."
+            help="Select information to output as a comma separated string. "
+            "For example: name,version,homepage,licenses,group.",
         )
 
         parser.add_argument(
@@ -43,7 +49,6 @@ class Command(BaseCommand):
             default=None,
             help="Sort the output using a given field name. If nothing is set, no sort is applied.",
         )
-
 
         list_formats = parser.add_mutually_exclusive_group()
 
@@ -81,7 +86,7 @@ class Command(BaseCommand):
 
         # Raise an error if the project is not defined.
         check_project_file(project)
-    
+
         # Map dependency groups to requirements.
         name_to_groups = defaultdict(set)
         for g in project.iter_groups():
@@ -103,11 +108,17 @@ class Command(BaseCommand):
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.
         if options.resolve:
-            requirements = [r for g in project.iter_groups() for r in project.get_dependencies(g).values()]
+            requirements = [
+                r
+                for g in project.iter_groups()
+                for r in project.get_dependencies(g).values()
+            ]
             candidates = actions.resolve_candidates_from_lockfile(project, requirements)
-            packages = set(c.prepare(project.environment).metadata for c in candidates.values())
+            packages = set(
+                c.prepare(project.environment).metadata for c in candidates.values()
+            )
             packages = {p.metadata["Name"]: p for p in packages}
-        
+
         # Use requirements from the working set (currently installed).
         else:
             packages = project.environment.get_working_set()
@@ -151,9 +162,13 @@ class Command(BaseCommand):
             raise PdmUsageError("--reverse cannot be used without --graph")
 
         # Check the fields are specified OK.
-        fields = parse_comma_separated_string(options.fields, asterisk_values=Listable.KEYS)
+        fields = parse_comma_separated_string(
+            options.fields, asterisk_values=Listable.KEYS
+        )
         if not all(field in Listable.KEYS for field in fields):
-            raise PdmUsageError(f"--fields must specify one or more of: {Listable.KEYS}")
+            raise PdmUsageError(
+                f"--fields must specify one or more of: {Listable.KEYS}"
+            )
 
         # Wrap each distribution with a Listable (and a groups pairing) to make it easier
         # to filter on later.
@@ -166,19 +181,19 @@ class Command(BaseCommand):
             if key not in Listable.KEYS:
                 raise PdmUsageError(f"--sort key must be one of: {Listable.KEYS}")
             records.sort(key=lambda d: getattr(d, options.sort.lower()))
-        
-        # Write CSV 
+
+        # Write CSV
         if options.csv:
             comma = ","
             print(comma.join(fields))
             for row in records:
                 print(row.csv(fields, comma=comma))
-        
+
         # Write JSON
         elif options.json:
             formatted = [row.json(fields) for row in records]
             print(json.dumps(formatted, indent=4))
-        
+
         # Write Markdown
         elif options.markdown:
             print(f"# {project.name} licences")
@@ -188,7 +203,9 @@ class Command(BaseCommand):
                     print(section)
                 except UnicodeEncodeError:
                     print(section.encode().decode("ascii", errors="ignore"))
-                    print("A UnicodeEncodeError was encountered.  Some characters may be omit.")
+                    print(
+                        "A UnicodeEncodeError was encountered.  Some characters may be omit."
+                    )
 
         # Write nice table format.
         else:
@@ -221,7 +238,6 @@ class Listable:
     # Fields that users are allowed to sort on.
     KEYS = ["name", "groups", "version", "homepage", "licenses", "location"]
 
-
     def __init__(self, dist: Distribution, groups: Set[str]):
         self.dist = dist
 
@@ -241,13 +257,14 @@ class Listable:
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
         if not self.licenses:
             classifier_licenses = [
-                v for k, v in dist.metadata.items()
+                v
+                for k, v in dist.metadata.items()
                 if k == "Classifier" and v.startswith("License")
             ]
             alternatives = [parts.split("::") for parts in classifier_licenses]
             alternatives = [part[-1].strip() for part in alternatives if part]
             self.licenses = "|".join(alternatives)
-        
+
     @property
     def location(self):
         return get_dist_location(self.dist)
@@ -280,12 +297,12 @@ class Listable:
             raise PdmUsageError(f"list field `{field}` not in: {Listable.KEYS}")
         return getattr(self, field)
 
-    def csv(self, fields:List[str], comma:str):
+    def csv(self, fields: List[str], comma: str):
         return comma.join(f"{self[field]}" for field in fields)
-    
+
     def json(self, fields):
         return {f: self[f] for f in fields}
-    
+
     def pdm(self, fields):
         output = []
         for field in fields:
@@ -295,7 +312,7 @@ class Listable:
             data = data if field != "groups" else f"[red]{data}[/]"
             output.append(data)
         return output
-    
+
     def markdown(self, fields: List[str]):
         nl = "\n"
         section = ""
@@ -312,7 +329,7 @@ class Listable:
                 continue
             section += f"| {field.capitalize()} | {self[field]} | {nl}"
         section += f"{nl}"
-        
+
         # Files
         for path in self.license_files():
             section += f"{path}{nl}"
