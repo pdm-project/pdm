@@ -471,52 +471,6 @@ def do_remove(
         )
 
 
-def do_list(
-    project: Project,
-    graph: bool = False,
-    reverse: bool = False,
-    freeze: bool = False,
-    json: bool = False,
-) -> None:
-    """Display a list of packages installed in the local packages directory."""
-    from pdm.cli.utils import build_dependency_graph, show_dependency_graph
-
-    check_project_file(project)
-    working_set = project.environment.get_working_set()
-    if graph:
-        dep_graph = build_dependency_graph(
-            working_set, project.environment.marker_environment
-        )
-        show_dependency_graph(project, dep_graph, reverse=reverse, json=json)
-    else:
-        if reverse:
-            raise PdmUsageError("--reverse must be used with --graph")
-        if json:
-            raise PdmUsageError("--json must be used with --graph")
-        if freeze:
-            reqs = sorted(
-                (
-                    Requirement.from_dist(dist)
-                    .as_line()
-                    .replace(
-                        "${PROJECT_ROOT}",
-                        project.root.absolute().as_posix().lstrip("/"),
-                    )
-                    for dist in sorted(
-                        working_set.values(), key=lambda d: d.metadata["Name"]
-                    )
-                ),
-                key=lambda x: x.lower(),
-            )
-            project.core.ui.echo("\n".join(reqs))
-            return
-        rows = [
-            (f"[b green]{k}[/]", f"[yellow]{v.version}[/]", get_dist_location(v))
-            for k, v in sorted(working_set.items())
-        ]
-        project.core.ui.display_columns(rows, ["Package", "Version", "Location"])
-
-
 def do_build(
     project: Project,
     sdist: bool = True,
