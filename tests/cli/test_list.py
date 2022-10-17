@@ -8,9 +8,8 @@ from pdm.cli import actions
 from pdm.cli.commands.list import Command
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import path_to_url
-
-from tests.conftest import Distribution
 from tests import FIXTURES
+from tests.conftest import Distribution
 
 
 def test_list_command(project, invoke, mocker):
@@ -49,30 +48,36 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     # Output full graph
     # TODO: Find out why the chardet and idna versions are different?
     result = invoke(["list", "--graph"], obj=project)
-    expects = "demo 0.0.1 [ Not required ]\n" \
-              "├── chardet 3.0.4 [ required: Any ]\n" \
-              "└── idna 2.7 [ required: Any ]\n" \
-              "requests 2.19.1 [ Not required ]\n" \
-              "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n" \
-              "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n" \
-              "├── idna 2.7 [ required: <2.8,>=2.5 ]\n" \
-              "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+    expects = (
+        "demo 0.0.1 [ Not required ]\n"
+        "├── chardet 3.0.4 [ required: Any ]\n"
+        "└── idna 2.7 [ required: Any ]\n"
+        "requests 2.19.1 [ Not required ]\n"
+        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
+        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n"
+        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+    )
     assert expects == result.outputs
 
     # Only include the dev dep
     result = invoke(["list", "--graph", "--include", "dev"], obj=project)
-    expects = "demo 0.0.1 [ Not required ]\n" \
-              "├── chardet [ not installed ] [ required: Any ]\n" \
-              "└── idna [ not installed ] [ required: Any ]\n"
+    expects = (
+        "demo 0.0.1 [ Not required ]\n"
+        "├── chardet [ not installed ] [ required: Any ]\n"
+        "└── idna [ not installed ] [ required: Any ]\n"
+    )
     assert expects == result.outputs
 
     # Now exclude the dev dep.
     result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
-    expects = "requests 2.19.1 [ Not required ]\n" \
-              "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n" \
-              "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n" \
-              "├── idna 2.7 [ required: <2.8,>=2.5 ]\n" \
-              "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+    expects = (
+        "requests 2.19.1 [ Not required ]\n"
+        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
+        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n"
+        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+    )
     assert expects == result.outputs
 
 
@@ -321,6 +326,7 @@ def test_list_json_with_circular_reverse(project, invoke, repository):
     ]
     assert expected == json.loads(result.outputs)
 
+
 # NEW TESTS
 def test_list_field_unknown(project, invoke):
     # unknown list fields flagged to user
@@ -367,16 +373,18 @@ def test_list_multiple_export_formats(project, invoke):
 def test_list_bare(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list"], obj=project)
-    expected = "┌──────────────┬────────────┬──────────┐\n"\
-               "│ name         │ version    │ location │\n"\
-               "├──────────────┼────────────┼──────────┤\n"\
-               "│ certifi      │ 2018.11.17 │          │\n"\
-               "│ chardet      │ 3.0.4      │          │\n"\
-               "│ idna         │ 2.7        │          │\n"\
-               "│ requests     │ 2.19.1     │          │\n"\
-               "│ urllib3      │ 1.22       │          │\n"\
-               "│ test-project │ 0.0.0      │          │\n"\
-               "└──────────────┴────────────┴──────────┘\n"
+    expected = (
+        "┌──────────────┬────────────┬──────────┐\n"
+        "│ name         │ version    │ location │\n"
+        "├──────────────┼────────────┼──────────┤\n"
+        "│ certifi      │ 2018.11.17 │          │\n"
+        "│ chardet      │ 3.0.4      │          │\n"
+        "│ idna         │ 2.7        │          │\n"
+        "│ requests     │ 2.19.1     │          │\n"
+        "│ urllib3      │ 1.22       │          │\n"
+        "│ test-project │ 0.0.0      │          │\n"
+        "└──────────────┴────────────┴──────────┘\n"
+    )
     assert expected == result.output
 
 
@@ -384,16 +392,18 @@ def test_list_bare(project, invoke):
 def test_list_bare_sorted_name(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--sort", "name"], obj=project)
-    expected = "┌──────────────┬────────────┬──────────┐\n"\
-               "│ name         │ version    │ location │\n"\
-               "├──────────────┼────────────┼──────────┤\n"\
-               "│ certifi      │ 2018.11.17 │          │\n"\
-               "│ chardet      │ 3.0.4      │          │\n"\
-               "│ idna         │ 2.7        │          │\n"\
-               "│ requests     │ 2.19.1     │          │\n"\
-               "│ test-project │ 0.0.0      │          │\n"\
-               "│ urllib3      │ 1.22       │          │\n"\
-               "└──────────────┴────────────┴──────────┘\n"
+    expected = (
+        "┌──────────────┬────────────┬──────────┐\n"
+        "│ name         │ version    │ location │\n"
+        "├──────────────┼────────────┼──────────┤\n"
+        "│ certifi      │ 2018.11.17 │          │\n"
+        "│ chardet      │ 3.0.4      │          │\n"
+        "│ idna         │ 2.7        │          │\n"
+        "│ requests     │ 2.19.1     │          │\n"
+        "│ test-project │ 0.0.0      │          │\n"
+        "│ urllib3      │ 1.22       │          │\n"
+        "└──────────────┴────────────┴──────────┘\n"
+    )
     assert expected == result.output
 
 
@@ -401,6 +411,7 @@ def _setup_fake_working_set(working_set):
     """Create fake packages with license data
     for testing.
     """
+
     class _MockPackagePath(pathlib.PurePosixPath):
         def read_text(self, *args, **kwargs):
             return self.license_text
@@ -424,22 +435,26 @@ def _setup_fake_working_set(working_set):
     baz.files = [baz_l]
 
     # missing package- License is set to UNKNOWN, text saved in COPYING
-    unknown = Distribution("unknown", "1.0", metadata={
-        "License": "UNKNOWN",
-        "Classifier" : "License :: OSI Approved :: Apache Software License"
-    })
+    unknown = Distribution(
+        "unknown",
+        "1.0",
+        metadata={
+            "License": "UNKNOWN",
+            "Classifier": "License :: OSI Approved :: Apache Software License",
+        },
+    )
     unknown_l = _MockPackagePath("unknown-1.0.dist-info", "COPYING")
     unknown_l.license_text = "license text for UNKNOWN here"
     unknown.files = [unknown_l]
 
     # missing package- License is set to UNKNOWN, text saved in LICENCE
     # using UK spelling
-    classifier = Distribution("classifier", "1.0", metadata={
-        "Classifier" : "License :: PDM TEST D"
-    })
+    classifier = Distribution(
+        "classifier", "1.0", metadata={"Classifier": "License :: PDM TEST D"}
+    )
     classifier_l = _MockPackagePath("classifier-1.0.dist-info", "LICENCE")
     classifier_l.license_text = "license text for CLASSIFIER here"
-    classifier_l.read_text = lambda *a, **kw: 1 / 0 # make it throw an error
+    classifier_l.read_text = lambda *a, **kw: 1 / 0  # make it throw an error
     classifier.files = [classifier_l]
 
     # Place our fake packages in the working set.
@@ -451,17 +466,20 @@ def _setup_fake_working_set(working_set):
 def test_list_bare_sorted_version(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--sort", "version"], obj=project)
-    expected = "┌──────────────┬────────────┬──────────┐\n"\
-               "│ name         │ version    │ location │\n"\
-               "├──────────────┼────────────┼──────────┤\n"\
-               "│ test-project │ 0.0.0      │          │\n"\
-               "│ urllib3      │ 1.22       │          │\n"\
-               "│ requests     │ 2.19.1     │          │\n"\
-               "│ idna         │ 2.7        │          │\n"\
-               "│ certifi      │ 2018.11.17 │          │\n"\
-               "│ chardet      │ 3.0.4      │          │\n"\
-               "└──────────────┴────────────┴──────────┘\n"
+    expected = (
+        "┌──────────────┬────────────┬──────────┐\n"
+        "│ name         │ version    │ location │\n"
+        "├──────────────┼────────────┼──────────┤\n"
+        "│ test-project │ 0.0.0      │          │\n"
+        "│ urllib3      │ 1.22       │          │\n"
+        "│ requests     │ 2.19.1     │          │\n"
+        "│ idna         │ 2.7        │          │\n"
+        "│ certifi      │ 2018.11.17 │          │\n"
+        "│ chardet      │ 3.0.4      │          │\n"
+        "└──────────────┴────────────┴──────────┘\n"
+    )
     assert expected == result.output
+
 
 # TODO: resolve with graph?
 # TODO: how to fix this?
@@ -487,15 +505,17 @@ def test_list_bare_sorted_version(project, invoke):
 def test_list_bare_fields_licences(project, invoke, working_set):
     _setup_fake_working_set(working_set)
     result = invoke(["list", "--fields", "name,version,groups,licenses"], obj=project)
-    expected = "┌────────────┬─────────┬────────┬─────────────────────────┐\n" \
-               "│ name       │ version │ groups │ licenses                │\n" \
-               "├────────────┼─────────┼────────┼─────────────────────────┤\n" \
-               "│ foo        │ 0.1.0   │ :sub   │ A License               │\n" \
-               "│ bar        │ 3.0.1   │ :sub   │ B License               │\n" \
-               "│ baz        │ 2.7     │ :sub   │ C License               │\n" \
-               "│ unknown    │ 1.0     │ :sub   │ Apache Software License │\n" \
-               "│ classifier │ 1.0     │ :sub   │ PDM TEST D              │\n" \
-               "└────────────┴─────────┴────────┴─────────────────────────┘\n"
+    expected = (
+        "┌────────────┬─────────┬────────┬─────────────────────────┐\n"
+        "│ name       │ version │ groups │ licenses                │\n"
+        "├────────────┼─────────┼────────┼─────────────────────────┤\n"
+        "│ foo        │ 0.1.0   │ :sub   │ A License               │\n"
+        "│ bar        │ 3.0.1   │ :sub   │ B License               │\n"
+        "│ baz        │ 2.7     │ :sub   │ C License               │\n"
+        "│ unknown    │ 1.0     │ :sub   │ Apache Software License │\n"
+        "│ classifier │ 1.0     │ :sub   │ PDM TEST D              │\n"
+        "└────────────┴─────────┴────────┴─────────────────────────┘\n"
+    )
     assert expected == result.output
 
 
@@ -503,45 +523,29 @@ def test_list_bare_fields_licences(project, invoke, working_set):
 def test_list_csv_fields_licences(project, invoke, working_set):
     _setup_fake_working_set(working_set)
     result = invoke(["list", "--csv", "--fields", "name,version,licenses"], obj=project)
-    expected = "name,version,licenses\n" \
-               "foo,0.1.0,A License\n" \
-               "bar,3.0.1,B License\n" \
-               "baz,2.7,C License\n" \
-               "unknown,1.0,Apache Software License\n" \
-               "classifier,1.0,PDM TEST D\n"
+    expected = (
+        "name,version,licenses\n"
+        "foo,0.1.0,A License\n"
+        "bar,3.0.1,B License\n"
+        "baz,2.7,C License\n"
+        "unknown,1.0,Apache Software License\n"
+        "classifier,1.0,PDM TEST D\n"
+    )
     assert expected == result.output
 
 
 @pytest.mark.usefixtures("working_set")
 def test_list_json_fields_licences(project, invoke, working_set):
     _setup_fake_working_set(working_set)
-    result = invoke(["list", "--json", "--fields", "name,version,licenses"], obj=project)
+    result = invoke(
+        ["list", "--json", "--fields", "name,version,licenses"], obj=project
+    )
     expected = [
-        {
-            "name": "foo",
-            "version": "0.1.0",
-            "licenses": "A License"
-        },
-        {
-            "name": "bar",
-            "version": "3.0.1",
-            "licenses": "B License"
-        },
-        {
-            "name": "baz",
-            "version": "2.7",
-            "licenses": "C License"
-        },
-        {
-            "name": "unknown",
-            "version": "1.0",
-            "licenses": "Apache Software License"
-        },
-        {
-            "name": "classifier",
-            "version": "1.0",
-            "licenses": "PDM TEST D"
-        }
+        {"name": "foo", "version": "0.1.0", "licenses": "A License"},
+        {"name": "bar", "version": "3.0.1", "licenses": "B License"},
+        {"name": "baz", "version": "2.7", "licenses": "C License"},
+        {"name": "unknown", "version": "1.0", "licenses": "Apache Software License"},
+        {"name": "classifier", "version": "1.0", "licenses": "PDM TEST D"},
     ]
 
     assert expected == json.loads(result.outputs)
@@ -551,53 +555,57 @@ def test_list_json_fields_licences(project, invoke, working_set):
 def test_list_markdown_fields_licences(project, invoke, working_set):
     _setup_fake_working_set(working_set)
 
-    result = invoke(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
-    expected = "# test_project licenses\n" \
-               "## foo\n\n" \
-               "| Name | foo |\n" \
-               "|----|----|\n" \
-               "| Version | 0.1.0 |\n" \
-               "| Licenses | A License |\n\n" \
-               "foo-0.1.0.dist-info/LICENSE\n\n\n" \
-               "````\n" \
-               "license text for foo here\n" \
-               "````\n\n\n" \
-               "## bar\n\n" \
-               "| Name | bar |\n" \
-               "|----|----|\n" \
-               "| Version | 3.0.1 |\n" \
-               "| Licenses | B License |\n\n" \
-               "bar-3.0.1.dist-info/LICENSE\n\n\n" \
-               "````\n" \
-               "license text for bar here\n" \
-               "````\n\n\n" \
-               "## baz\n\n" \
-               "| Name | baz |\n" \
-               "|----|----|\n" \
-               "| Version | 2.7 |\n" \
-               "| Licenses | C License |\n\n" \
-               "bar-2.7.dist-info/LICENSE\n\n\n" \
-               "````\n" \
-               "license text for baz here\n" \
-               "````\n\n\n" \
-               "## unknown\n\n" \
-               "| Name | unknown |\n" \
-               "|----|----|\n" \
-               "| Version | 1.0 |\n" \
-               "| Licenses | Apache Software License |\n\n" \
-               "unknown-1.0.dist-info/COPYING\n\n\n" \
-               "````\n" \
-               "license text for UNKNOWN here\n" \
-               "````\n\n\n" \
-               "## classifier\n\n" \
-               "| Name | classifier |\n" \
-               "|----|----|\n" \
-               "| Version | 1.0 |\n" \
-               "| Licenses | PDM TEST D |\n\n" \
-               "classifier-1.0.dist-info/LICENCE\n\n\n" \
-               "````\n" \
-               "Problem finding license text: division by zero\n" \
-               "````\n\n\n"
+    result = invoke(
+        ["list", "--markdown", "--fields", "name,version,licenses"], obj=project
+    )
+    expected = (
+        "# test_project licenses\n"
+        "## foo\n\n"
+        "| Name | foo |\n"
+        "|----|----|\n"
+        "| Version | 0.1.0 |\n"
+        "| Licenses | A License |\n\n"
+        "foo-0.1.0.dist-info/LICENSE\n\n\n"
+        "````\n"
+        "license text for foo here\n"
+        "````\n\n\n"
+        "## bar\n\n"
+        "| Name | bar |\n"
+        "|----|----|\n"
+        "| Version | 3.0.1 |\n"
+        "| Licenses | B License |\n\n"
+        "bar-3.0.1.dist-info/LICENSE\n\n\n"
+        "````\n"
+        "license text for bar here\n"
+        "````\n\n\n"
+        "## baz\n\n"
+        "| Name | baz |\n"
+        "|----|----|\n"
+        "| Version | 2.7 |\n"
+        "| Licenses | C License |\n\n"
+        "bar-2.7.dist-info/LICENSE\n\n\n"
+        "````\n"
+        "license text for baz here\n"
+        "````\n\n\n"
+        "## unknown\n\n"
+        "| Name | unknown |\n"
+        "|----|----|\n"
+        "| Version | 1.0 |\n"
+        "| Licenses | Apache Software License |\n\n"
+        "unknown-1.0.dist-info/COPYING\n\n\n"
+        "````\n"
+        "license text for UNKNOWN here\n"
+        "````\n\n\n"
+        "## classifier\n\n"
+        "| Name | classifier |\n"
+        "|----|----|\n"
+        "| Version | 1.0 |\n"
+        "| Licenses | PDM TEST D |\n\n"
+        "classifier-1.0.dist-info/LICENCE\n\n\n"
+        "````\n"
+        "Problem finding license text: division by zero\n"
+        "````\n\n\n"
+    )
     assert expected == result.output
 
 
@@ -619,28 +627,58 @@ def test_list_csv_include_exclude(project, invoke):
     )
 
     # Show all groups.
-    result = invoke(["list", "--csv", "--fields", "name,version,groups", "--sort", "name"], obj=project)
-    expected = "name,version,groups\n" \
-               "certifi,2018.11.17,:sub\n" \
-               "chardet,3.0.4,:sub\n" \
-               "demo,0.0.1,dev\n" \
-               "idna,2.7,:sub\n" \
-               "requests,2.19.1,:sub\n" \
-               "urllib3,1.22,:sub\n"
+    result = invoke(
+        ["list", "--csv", "--fields", "name,version,groups", "--sort", "name"],
+        obj=project,
+    )
+    expected = (
+        "name,version,groups\n"
+        "certifi,2018.11.17,:sub\n"
+        "chardet,3.0.4,:sub\n"
+        "demo,0.0.1,dev\n"
+        "idna,2.7,:sub\n"
+        "requests,2.19.1,:sub\n"
+        "urllib3,1.22,:sub\n"
+    )
     assert expected == result.output
 
     # Show just the dev group
-    result = invoke(["list", "--csv", "--fields", "name,version,groups", "--sort", "name", "--include", "dev"], obj=project)
-    expected = "name,version,groups\n" \
-               "demo,0.0.1,dev\n" 
+    result = invoke(
+        [
+            "list",
+            "--csv",
+            "--fields",
+            "name,version,groups",
+            "--sort",
+            "name",
+            "--include",
+            "dev",
+        ],
+        obj=project,
+    )
+    expected = "name,version,groups\n" "demo,0.0.1,dev\n"
     assert expected == result.output
 
     # Exclude the dev group.
-    result = invoke(["list", "--csv", "--fields", "name,version,groups", "--sort", "name", "--exclude", "dev"], obj=project)
-    expected = "name,version,groups\n" \
-               "certifi,2018.11.17,:sub\n" \
-               "chardet,3.0.4,:sub\n" \
-               "idna,2.7,:sub\n" \
-               "requests,2.19.1,:sub\n" \
-               "urllib3,1.22,:sub\n"
+    result = invoke(
+        [
+            "list",
+            "--csv",
+            "--fields",
+            "name,version,groups",
+            "--sort",
+            "name",
+            "--exclude",
+            "dev",
+        ],
+        obj=project,
+    )
+    expected = (
+        "name,version,groups\n"
+        "certifi,2018.11.17,:sub\n"
+        "chardet,3.0.4,:sub\n"
+        "idna,2.7,:sub\n"
+        "requests,2.19.1,:sub\n"
+        "urllib3,1.22,:sub\n"
+    )
     assert expected == result.output
