@@ -36,8 +36,8 @@ class Command(BaseCommand):
             "--resolve",
             action="store_true",
             default=False,
-            help="Resolve all requirements to output licenses "\
-                 "(instead of just showing those currently installed)",
+            help="Resolve all requirements to output licenses "
+            "(instead of just showing those currently installed)",
         )
 
         parser.add_argument(
@@ -50,8 +50,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--sort",
             default=None,
-            help="Sort the output using a given field name. If nothing is "\
-                 "set, no sort is applied.",
+            help="Sort the output using a given field name. If nothing is "
+            "set, no sort is applied.",
         )
 
         list_formats = parser.add_mutually_exclusive_group()
@@ -71,15 +71,15 @@ class Command(BaseCommand):
         list_formats.add_argument(
             "--markdown",
             action="store_true",
-            help="Output dependencies and legal notices in markdown "\
-                 "document format - best effort basis",
+            help="Output dependencies and legal notices in markdown "
+            "document format - best effort basis",
         )
 
         parser.add_argument(
             "--include",
             default="*",
-            help="Dependency groups to include in the output. By default "\
-                 "all are included",
+            help="Dependency groups to include in the output. By default "
+            "all are included",
         )
 
         parser.add_argument(
@@ -125,12 +125,9 @@ class Command(BaseCommand):
                 for g in project.iter_groups()
                 for r in project.get_dependencies(g).values()
             ]
-            candidates = actions.resolve_candidates_from_lockfile(
-                project, requirements
-            )
+            candidates = actions.resolve_candidates_from_lockfile(project, requirements)
             packages = set(
-                c.prepare(project.environment).metadata
-                for c in candidates.values()
+                c.prepare(project.environment).metadata for c in candidates.values()
             )
             packages = {p.metadata["Name"]: p for p in packages}
 
@@ -226,8 +223,9 @@ class Command(BaseCommand):
                     print(section)
                 except UnicodeEncodeError:
                     print(section.encode().decode("ascii", errors="ignore"))
-                    print("A UnicodeEncodeError was encountered. "\
-                          "Some characters may be omit."
+                    print(
+                        "A UnicodeEncodeError was encountered. "
+                        "Some characters may be omit."
                     )
 
         # Write nice table format.
