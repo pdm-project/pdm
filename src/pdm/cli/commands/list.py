@@ -212,7 +212,7 @@ class Command(BaseCommand):
 
         # Write Markdown
         elif options.markdown:
-            print(f"# {project.name} licences")
+            print(f"# {project.name} licenses")
             for row in records:
                 section = row.markdown(fields)
                 try:
@@ -337,12 +337,12 @@ class Listable:
         section += f"{nl}"
 
         # Table
-        section += f"| Name | {self.name} | {nl}"
+        section += f"| Name | {self.name} |{nl}"
         section += f"|----|----|{nl}"
         for field in fields:
             if field == "name":
                 continue
-            section += f"| {field.capitalize()} | {self[field]} | {nl}"
+            section += f"| {field.capitalize()} | {self[field]} |{nl}"
         section += f"{nl}"
 
         # Files
@@ -353,7 +353,7 @@ class Listable:
             try:
                 section += path.read_text()
             except Exception as err:
-                s += f"Problem finding license text: {err}"
+                section += f"Problem finding license text: {err}"
             section += f"{nl}"
             section += f"````{nl}"
             section += f"{nl}"
