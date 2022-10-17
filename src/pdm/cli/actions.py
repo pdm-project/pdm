@@ -26,7 +26,6 @@ from pdm.cli.utils import (
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
-    get_dist_location,
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
