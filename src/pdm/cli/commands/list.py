@@ -265,24 +265,24 @@ class Listable:
     def __init__(self, dist: Distribution, groups: Set[str]):
         self.dist = dist
 
-        self.name = dist.metadata.get("Name", None)
+        self.name = dist.metadata.get("Name", None)  # type: ignore
         self.groups = "|".join(groups)
 
-        self.version = dist.metadata.get("Version", None)
+        self.version = dist.metadata.get("Version", None)  # type: ignore
         self.version = None if self.version == "UNKNOWN" else self.version
 
-        self.homepage = dist.metadata.get("Home-Page", None)
+        self.homepage = dist.metadata.get("Home-Page", None)  # type: ignore
         self.homepage = None if self.homepage == "UNKNOWN" else self.homepage
 
         # If the License metadata field is empty or UNKNOWN then try to
         # find the license in the Trove classifiers.  There may be more than one
         # so generate a pipe separated list (to avoid complexity with CSV export).
-        self.licenses = dist.metadata.get("License", None)
+        self.licenses = dist.metadata.get("License", None)  # type: ignore
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
         if not self.licenses:
             classifier_licenses = [
                 v
-                for k, v in dist.metadata.items()
+                for k, v in dist.metadata.items()  # type: ignore
                 if k == "Classifier" and v.startswith("License")
             ]
             alternatives = [parts.split("::") for parts in classifier_licenses]
