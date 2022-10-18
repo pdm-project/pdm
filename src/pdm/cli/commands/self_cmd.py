@@ -4,7 +4,7 @@ import argparse
 import shlex
 import subprocess
 import sys
-from typing import Iterable
+from typing import Any, Iterable
 
 from packaging.version import parse
 
@@ -46,6 +46,15 @@ class Command(BaseCommand):
 
     arguments = [verbose_option]
     name = "self"
+
+    @classmethod
+    def register_to(
+        cls,
+        subparsers: argparse._SubParsersAction,
+        name: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        return super().register_to(subparsers, name, aliases=["plugin"], **kwargs)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         subparsers = parser.add_subparsers(title="Sub commands")
