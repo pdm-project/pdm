@@ -7,7 +7,7 @@ from pdm.utils import cd
 def test_config_command(project, invoke):
     result = invoke(["config"], obj=project)
     assert result.exit_code == 0
-    assert "python.use_pyenv = True" in result.output
+    assert "python.use_pyenv                = True" in result.output
 
     result = invoke(["config", "-v"], obj=project)
     assert result.exit_code == 0

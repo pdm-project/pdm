@@ -65,6 +65,10 @@ class Command(BaseCommand):
         self, config: Mapping[str, Any], supersedes: Mapping[str, Any]
     ) -> None:
         assert Config.site is not None
+        key_length_max = 0
+        for key in sorted(config):
+            key_len = len(key)
+            key_length_max = key_len if key_len > key_length_max else key_length_max
         for key in sorted(config):
             deprecated = ""
             canonical_key = key
@@ -84,7 +88,7 @@ class Command(BaseCommand):
                 verbosity=termui.Verbosity.DETAIL,
             )
             self.ui.echo(
-                f"[cyan]{canonical_key}[/]{deprecated} = {config[key]}",
+                f"[cyan]{canonical_key:<{key_length_max}}[/]{deprecated} = {config[key]}",
                 style=extra_style or None,
             )
 
