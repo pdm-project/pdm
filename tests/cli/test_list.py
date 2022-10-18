@@ -610,6 +610,36 @@ def test_list_markdown_fields_licences(project, invoke, working_set):
 
 
 @pytest.mark.usefixtures("working_set", "repository")
+def test_list_csv_include_exclude_valid(project, invoke):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    dep_path = FIXTURES.joinpath("projects/demo").as_posix()
+    actions.do_add(
+        project,
+        dev=True,
+        group="dev",
+        editables=[f"{dep_path}[security]"],
+    )
+    result = invoke(
+        [
+            "list",
+            "--csv",
+            "--fields",
+            "name,version,groups",
+            "--sort",
+            "name",
+            "--include",
+            "notexisting",
+        ],
+        obj=project,
+    )
+    assert "[PdmUsageError]" in result.outputs
+    assert "--include groups must be selected from" in result.outputs
+    assert "dev" in result.outputs
+    assert "default" in result.outputs
+    assert ":sub" in result.outputs
+
+
+@pytest.mark.usefixtures("working_set", "repository")
 def test_list_csv_include_exclude(project, invoke):
     project.environment.python_requires = PySpecSet(">=3.6")
     dep_path = FIXTURES.joinpath("projects/demo").as_posix()

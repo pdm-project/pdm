@@ -1,8 +1,8 @@
 import argparse
 import json
 from collections import defaultdict
-from importlib.metadata import Distribution
-from typing import Dict, List, Set
+from importlib.metadata import Distribution, PackagePath
+from typing import DefaultDict, Dict, List, Optional, Sequence, Set
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
@@ -94,7 +94,7 @@ class Command(BaseCommand):
         check_project_file(project)
 
         # Map dependency groups to requirements.
-        name_to_groups = defaultdict(set)
+        name_to_groups = defaultdict(set)  # type: defaultdict[Optional[str], Set[str]]
         for g in project.iter_groups():
             for r in project.get_dependencies(g).values():
                 name_to_groups[r.name].add(g)
@@ -108,12 +108,12 @@ class Command(BaseCommand):
         )
         if not all(g in valid_groups for g in include):
             raise PdmUsageError(
-                f"--include groups names must be selected from: {valid_groups}"
+                f"--include groups must be selected from: {valid_groups}"
             )
         exclude = parse_comma_separated_string(options.exclude, lowercase=False)
         if exclude and not all(g in valid_groups for g in exclude):
             raise PdmUsageError(
-                f"--exclude groups names must be selected from: {valid_groups}"
+                f"--exclude groups must be selected from: {valid_groups}"
             )
         selected_groups = set(g for g in include if g not in exclude)
 
@@ -126,22 +126,24 @@ class Command(BaseCommand):
                 for r in project.get_dependencies(g).values()
             ]
             candidates = actions.resolve_candidates_from_lockfile(project, requirements)
-            packages = set(
+            resolved_set = set(
                 c.prepare(project.environment).metadata for c in candidates.values()
             )
-            packages = {p.metadata["Name"]: p for p in packages}
+            packages = {p.metadata["Name"]: p for p in resolved_set}
 
         # Use requirements from the working set (currently installed).
         else:
-            packages = project.environment.get_working_set()
-            packages = {p.metadata["Name"]: p for p in packages.values()}
+            working_set = project.environment.get_working_set()
+            packages = {p.metadata["Name"]: p for p in working_set.values()}
 
         # Filter the set of packages to show by --include and --exclude
-        group_of = lambda d: name_to_groups.get(
-            d.metadata["Name"], set((SUBDEP_GROUP_LABEL,))
-        )
-        group_in = lambda d: any(g in selected_groups for g in group_of(d))
-        packages = {d.metadata["Name"]: d for d in packages.values() if group_in(d)}
+        def _group_of(d: Distribution) -> Set[str]:
+            return name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
+
+        def _group_selected(d: Distribution) -> bool:
+            return any(g in selected_groups for g in _group_of(d))
+
+        packages = {name: d for name, d in packages.items() if _group_selected(d)}
 
         # Process as a graph or list.
         if options.graph:
@@ -163,7 +165,7 @@ class Command(BaseCommand):
             raise PdmUsageError("--sort cannot be used with --graph")
 
         dep_graph = build_dependency_graph(
-            packages, project.environment.marker_environment
+            packages, project.environment.marker_environment  # type: ignore
         )
         show_dependency_graph(
             project, dep_graph, reverse=options.reverse, json=options.json
@@ -172,7 +174,7 @@ class Command(BaseCommand):
     def handle_list(
         self,
         packages: Dict[str, Distribution],
-        name_to_groups: Dict[str, Set[str]],
+        name_to_groups: DefaultDict[Optional[str], Set[str]],
         project: Project,
         options: argparse.Namespace,
     ) -> None:
@@ -190,10 +192,10 @@ class Command(BaseCommand):
 
         # Wrap each distribution with a Listable (and a groups pairing)
         # to make it easier to filter on later.
-        group_of = lambda d: name_to_groups.get(
-            d.metadata["Name"], set((SUBDEP_GROUP_LABEL,))
-        )
-        records = [Listable(d, group_of(d)) for d in packages.values()]
+        def _group_of(d: Distribution) -> Set[str]:
+            return name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
+
+        records = [Listable(d, _group_of(d)) for d in packages.values()]
 
         # Order based on a field key.
         if options.sort:
@@ -230,11 +232,13 @@ class Command(BaseCommand):
 
         # Write nice table format.
         else:
-            formatted = [row.pdm(fields) for row in records]
-            project.core.ui.display_columns(formatted, fields)
+            formatted = [row.pdm(fields) for row in records]  # type: ignore
+            project.core.ui.display_columns(formatted, fields)  # type: ignore
 
 
-def parse_comma_separated_string(comma_string, lowercase=True, asterisk_values=None):
+def parse_comma_separated_string(
+    comma_string: str, lowercase: bool = True, asterisk_values: List[str] = None
+) -> List[str]:
     """Parse a CLI comma separated string.
     Apply optional lowercase transformation and if the value given is "*" then
     return a list of pre-defined values (`asterisk_values`).
@@ -286,10 +290,10 @@ class Listable:
             self.licenses = "|".join(alternatives)
 
     @property
-    def location(self):
+    def location(self) -> str:
         return get_dist_location(self.dist)
 
-    def license_files(self):
+    def license_files(self) -> List[PackagePath]:
         """Path to files inside the package that may contain license information
         or other legal notices.
 
@@ -312,18 +316,18 @@ class Listable:
             paths += [path for loc in locations if path.match(loc)]
         return paths
 
-    def __getitem__(self, field):
+    def __getitem__(self, field: str) -> str:
         if field not in Listable.KEYS:
             raise PdmUsageError(f"list field `{field}` not in: {Listable.KEYS}")
         return getattr(self, field)
 
-    def csv(self, fields: List[str], comma: str):
+    def csv(self, fields: Sequence[str], comma: str) -> str:
         return comma.join(f"{self[field]}" for field in fields)
 
-    def json(self, fields):
+    def json(self, fields: Sequence[str]) -> dict:
         return {f: self[f] for f in fields}
 
-    def pdm(self, fields):
+    def pdm(self, fields: Sequence[str]) -> Sequence[str]:
         output = []
         for field in fields:
             data = f"{self[field]}"
@@ -333,7 +337,7 @@ class Listable:
             output.append(data)
         return output
 
-    def markdown(self, fields: List[str]):
+    def markdown(self, fields: Sequence[str]) -> str:
         nl = "\n"
         section = ""
 
