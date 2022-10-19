@@ -5,8 +5,6 @@ from unittest import mock
 from unittest.mock import patch
 
 import pytest
-
-
 from rich.box import ASCII
 
 from pdm.cli import actions
@@ -380,42 +378,42 @@ def test_list_multiple_export_formats(project, invoke):
     assert expected in result.outputs
 
 
-@mock.patch('pdm.termui.ROUNDED', ASCII)
+@mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
 def test_list_bare(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list"], obj=project)
     expected = (
-        "+--------------------------------------+\n" \
-        "| name         | version    | location |\n" \
-        "|--------------+------------+----------|\n" \
-        "| certifi      | 2018.11.17 |          |\n" \
-        "| chardet      | 3.0.4      |          |\n" \
-        "| idna         | 2.7        |          |\n" \
-        "| requests     | 2.19.1     |          |\n" \
-        "| urllib3      | 1.22       |          |\n" \
-        "| test-project | 0.0.0      |          |\n" \
-        "+--------------------------------------+\n" \
+        "+--------------------------------------+\n"
+        "| name         | version    | location |\n"
+        "|--------------+------------+----------|\n"
+        "| certifi      | 2018.11.17 |          |\n"
+        "| chardet      | 3.0.4      |          |\n"
+        "| idna         | 2.7        |          |\n"
+        "| requests     | 2.19.1     |          |\n"
+        "| urllib3      | 1.22       |          |\n"
+        "| test-project | 0.0.0      |          |\n"
+        "+--------------------------------------+\n"
     )
     assert expected == result.output
 
 
-@mock.patch('pdm.termui.ROUNDED', ASCII)
+@mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
 def test_list_bare_sorted_name(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--sort", "name"], obj=project)
     expected = (
-        "+--------------------------------------+\n" \
-        "| name         | version    | location |\n" \
-        "|--------------+------------+----------|\n" \
-        "| certifi      | 2018.11.17 |          |\n" \
-        "| chardet      | 3.0.4      |          |\n" \
-        "| idna         | 2.7        |          |\n" \
-        "| requests     | 2.19.1     |          |\n" \
-        "| test-project | 0.0.0      |          |\n" \
-        "| urllib3      | 1.22       |          |\n" \
-        "+--------------------------------------+\n" \
+        "+--------------------------------------+\n"
+        "| name         | version    | location |\n"
+        "|--------------+------------+----------|\n"
+        "| certifi      | 2018.11.17 |          |\n"
+        "| chardet      | 3.0.4      |          |\n"
+        "| idna         | 2.7        |          |\n"
+        "| requests     | 2.19.1     |          |\n"
+        "| test-project | 0.0.0      |          |\n"
+        "| urllib3      | 1.22       |          |\n"
+        "+--------------------------------------+\n"
     )
     assert expected == result.output
 
@@ -475,21 +473,21 @@ def _setup_fake_working_set(working_set):
         working_set.add_distribution(candidate)
 
 
-@mock.patch('pdm.termui.ROUNDED', ASCII)
+@mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
 def test_list_bare_sorted_version(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--sort", "version"], obj=project)
     expected = (
-        "+--------------------------------------+\n" \
-        "| name         | version    | location |\n" \
-        "|--------------+------------+----------|\n" \
-        "| test-project | 0.0.0      |          |\n" \
-        "| urllib3      | 1.22       |          |\n" \
-        "| requests     | 2.19.1     |          |\n" \
-        "| idna         | 2.7        |          |\n" \
-        "| certifi      | 2018.11.17 |          |\n" \
-        "| chardet      | 3.0.4      |          |\n" \
+        "+--------------------------------------+\n"
+        "| name         | version    | location |\n"
+        "|--------------+------------+----------|\n"
+        "| test-project | 0.0.0      |          |\n"
+        "| urllib3      | 1.22       |          |\n"
+        "| requests     | 2.19.1     |          |\n"
+        "| idna         | 2.7        |          |\n"
+        "| certifi      | 2018.11.17 |          |\n"
+        "| chardet      | 3.0.4      |          |\n"
         "+--------------------------------------+\n"
     )
     assert expected == result.output
@@ -515,20 +513,20 @@ def test_list_bare_sorted_version(project, invoke):
 #     assert expected == result.output
 
 
-@mock.patch('pdm.termui.ROUNDED', ASCII)
+@mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
 def test_list_bare_fields_licences(project, invoke, working_set):
     _setup_fake_working_set(working_set)
     result = invoke(["list", "--fields", "name,version,groups,licenses"], obj=project)
     expected = (
-        "+---------------------------------------------------------+\n" \
-        "| name       | version | groups | licenses                |\n" \
-        "|------------+---------+--------+-------------------------|\n" \
-        "| foo        | 0.1.0   | :sub   | A License               |\n" \
-        "| bar        | 3.0.1   | :sub   | B License               |\n" \
-        "| baz        | 2.7     | :sub   | C License               |\n" \
-        "| unknown    | 1.0     | :sub   | Apache Software License |\n" \
-        "| classifier | 1.0     | :sub   | PDM TEST D              |\n" \
+        "+---------------------------------------------------------+\n"
+        "| name       | version | groups | licenses                |\n"
+        "|------------+---------+--------+-------------------------|\n"
+        "| foo        | 0.1.0   | :sub   | A License               |\n"
+        "| bar        | 3.0.1   | :sub   | B License               |\n"
+        "| baz        | 2.7     | :sub   | C License               |\n"
+        "| unknown    | 1.0     | :sub   | Apache Software License |\n"
+        "| classifier | 1.0     | :sub   | PDM TEST D              |\n"
         "+---------------------------------------------------------+\n"
     )
     assert expected == result.output
