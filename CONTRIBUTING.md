@@ -107,7 +107,7 @@ your change. News fragments are placed in the `news/` directory, and should be n
 - `misc`: Miscellaneous changes that don't fit any of the other categories
 
 The contents of the file should be a single sentence in the imperative
-mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See entries in the [Change Log](/changelog) for more examples.
+mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See entries in the [Change Log](/CHANGELOG.md) for more examples.
 
 ### Preview the documentation
 
