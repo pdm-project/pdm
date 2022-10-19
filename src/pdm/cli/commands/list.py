@@ -1,7 +1,6 @@
 import argparse
 import json
 from collections import defaultdict
-from importlib.metadata import Distribution, PackagePath
 from typing import DefaultDict, Dict, List, Optional, Sequence, Set
 
 from pdm.cli import actions
@@ -12,6 +11,7 @@ from pdm.cli.utils import (
     get_dist_location,
     show_dependency_graph,
 )
+from pdm.compat import importlib_metadata as im
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
@@ -137,10 +137,10 @@ class Command(BaseCommand):
             packages = {p.metadata["Name"]: p for p in working_set.values()}
 
         # Filter the set of packages to show by --include and --exclude
-        def _group_of(d: Distribution) -> Set[str]:
+        def _group_of(d: im.Distribution) -> Set[str]:
             return name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
 
-        def _group_selected(d: Distribution) -> bool:
+        def _group_selected(d: im.Distribution) -> bool:
             return any(g in selected_groups for g in _group_of(d))
 
         packages = {name: d for name, d in packages.items() if _group_selected(d)}
@@ -153,7 +153,7 @@ class Command(BaseCommand):
 
     def handle_graph(
         self,
-        packages: Dict[str, Distribution],
+        packages: Dict[str, im.Distribution],
         project: Project,
         options: argparse.Namespace,
     ) -> None:
@@ -173,7 +173,7 @@ class Command(BaseCommand):
 
     def handle_list(
         self,
-        packages: Dict[str, Distribution],
+        packages: Dict[str, im.Distribution],
         name_to_groups: DefaultDict[Optional[str], Set[str]],
         project: Project,
         options: argparse.Namespace,
@@ -192,7 +192,7 @@ class Command(BaseCommand):
 
         # Wrap each distribution with a Listable (and a groups pairing)
         # to make it easier to filter on later.
-        def _group_of(d: Distribution) -> Set[str]:
+        def _group_of(d: im.Distribution) -> Set[str]:
             return name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
 
         records = [Listable(d, _group_of(d)) for d in packages.values()]
@@ -262,7 +262,7 @@ class Listable:
     # Fields that users are allowed to sort on.
     KEYS = ["name", "groups", "version", "homepage", "licenses", "location"]
 
-    def __init__(self, dist: Distribution, groups: Set[str]):
+    def __init__(self, dist: im.Distribution, groups: Set[str]):
         self.dist = dist
 
         self.name = dist.metadata.get("Name", None)  # type: ignore
@@ -293,7 +293,7 @@ class Listable:
     def location(self) -> str:
         return get_dist_location(self.dist)
 
-    def license_files(self) -> List[PackagePath]:
+    def license_files(self) -> List[im.PackagePath]:
         """Path to files inside the package that may contain license information
         or other legal notices.
 

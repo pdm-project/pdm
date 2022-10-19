@@ -51,5 +51,5 @@ def test_basic_integration(python_version, core, tmp_path, invoke):
 def test_actual_list_freeze(project, local_finder, invoke):
     invoke(["config", "-l", "install.parallel", "false"], obj=project, strict=True)
     invoke(["add", "first"], obj=project, strict=True)
-    r = invoke(["list", "--freeze"], obj=project)
+    r = invoke(["export", "--format", "requirements"], obj=project)
     assert "first==2.0.2" in r.output
