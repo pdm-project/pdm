@@ -58,13 +58,13 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     # TODO: Find out why the chardet and idna versions are different?
     result = invoke(["list", "--graph"], obj=project)
     expects = (
-        "demo 0.0.1 [ Not required ]\n" \
-        "├── chardet 3.0.4 [ required: Any ]\n" \
-        "└── idna 2.7 [ required: Any ]\n" \
-        "requests 2.19.1 [ Not required ]\n" \
-        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n" \
-        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n" \
-        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n" \
+        "demo 0.0.1 [ Not required ]\n"
+        "├── chardet 3.0.4 [ required: Any ]\n"
+        "└── idna 2.7 [ required: Any ]\n"
+        "requests 2.19.1 [ Not required ]\n"
+        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
+        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n"
         "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
     )
     assert expects == result.outputs
@@ -72,19 +72,19 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     # Only include the dev dep
     result = invoke(["list", "--graph", "--include", "dev"], obj=project)
     expects = (
-        "demo 0.0.1 [ Not required ]\n" \
-        "├── chardet [ not installed ] [ required: Any ]\n" \
-        "└── idna [ not installed ] [ required: Any ]\n" \
+        "demo 0.0.1 [ Not required ]\n"
+        "├── chardet [ not installed ] [ required: Any ]\n"
+        "└── idna [ not installed ] [ required: Any ]\n"
     )
     assert expects == result.outputs
 
     # Now exclude the dev dep.
     result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
     expects = (
-        "requests 2.19.1 [ Not required ]\n" \
-        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n" \
-        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n" \
-        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n" \
+        "requests 2.19.1 [ Not required ]\n"
+        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
+        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n"
         "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
     )
     assert expects == result.outputs
