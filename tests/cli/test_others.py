@@ -1,5 +1,3 @@
-from email.policy import strict
-
 import pytest
 
 from pdm.cli import actions
