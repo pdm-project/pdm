@@ -45,16 +45,7 @@ this section.
 
 ## Local development
 
-To make sure the test suites can run correctly, you need to install [Git LFS](https://git-lfs.github.com/), then
-
-```bash
-git lfs install
-# If you have already cloned the repository, execute the below command as well.
-git lfs pull
-```
-
-Then, you need to install base dependencies in a venv. Make sure your `pip` is newer than `21.3` to install PDM in
-develop/editable mode.
+You will need to install base dependencies in a venv. Make sure your `pip` is newer than `21.3` to install PDM in develop/editable mode.
 
 ```bash
 python -m pip install -U "pip>=21.3"
@@ -64,8 +55,7 @@ python -m pip install -e .
 You are free to create a virtualenv with either `venv` module or `virtualenv` tool for the development. If you are doing
 so, you may also need to set `pdm config use_venv true` after installation is done.
 
-Now, all dependencies are installed into the Python environment you choose, which will be used for development
-after this point.
+Now, all dependencies are installed into the Python environment you choose, which will be used for development after this point.
 
 ### Run tests
 
