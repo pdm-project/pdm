@@ -76,16 +76,16 @@ class Command(BaseCommand):
                 deprecated = f"[error](deprecating: {key})[/]"
             elif key not in Config._config_map:
                 continue
-            extra_style = " dim" if superseded else ""
+            extra_style = "dim" if superseded else None
             config_item = Config._config_map[canonical_key]
             self.ui.echo(
-                f"# {config_item.description}",
-                style=f"warning{extra_style}",
+                f"[warning]# {config_item.description}",
+                style=extra_style,
                 verbosity=termui.Verbosity.DETAIL,
             )
             self.ui.echo(
                 f"[primary]{canonical_key}[/]{deprecated} = {config[key]}",
-                style=extra_style or None,
+                style=extra_style,
             )
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
