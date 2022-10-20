@@ -26,8 +26,8 @@ class ActivateCommand(BaseCommand):
             )
             if not venv:
                 project.core.ui.echo(
-                    f"No virtualenv with key [green]{options.env}[/] is found",
-                    style="yellow",
+                    f"No virtualenv with key [success]{options.env}[/] is found",
+                    style="warning",
                     err=True,
                 )
                 raise SystemExit(1)
@@ -37,17 +37,17 @@ class ActivateCommand(BaseCommand):
             if not interpreter:
                 project.core.ui.echo(
                     "The project doesn't have a saved python.path. "
-                    "Run [green]pdm use[/] to pick one.",
-                    style="yellow",
+                    "Run [success]pdm use[/] to pick one.",
+                    style="warning",
                     err=True,
                 )
                 raise SystemExit(1)
             venv = get_venv_like_prefix(interpreter)
             if venv is None:
                 project.core.ui.echo(
-                    f"Can't activate a non-venv Python [green]{interpreter}[/], "
-                    "you can specify one with [green]pdm venv activate <env_name>[/]",
-                    style="yellow",
+                    f"Can't activate a non-venv Python [success]{interpreter}[/], "
+                    "you can specify one with [success]pdm venv activate <env_name>[/]",
+                    style="warning",
                     err=True,
                 )
                 raise SystemExit(1)

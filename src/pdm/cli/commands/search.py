@@ -36,7 +36,7 @@ def print_results(
                 )
         current_width = len(name) + len(latest) + 4
         spaces = " " * (name_column_width - current_width)
-        line = f"[bold green]{name}[/] ([yellow]{latest}[/]){spaces} - {summary}"
+        line = f"[req]{name}[/] ([warning]{latest}[/]){spaces} - {summary}"
         try:
             ui.echo(line)
             if normalize_name(name) in working_set:

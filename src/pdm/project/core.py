@@ -209,7 +209,7 @@ class Project:
 
         def note(message: str) -> None:
             if not self.is_global:
-                self.core.ui.echo(message, style="yellow", err=True)
+                self.core.ui.echo(message, style="warning", err=True)
 
         config = self.config
         if config.get("python.path") and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
@@ -226,7 +226,7 @@ class Project:
                 python = PythonInfo.from_path(get_venv_python(Path(venv_in_env)))
                 if match_version(python):
                     note(
-                        f"Inside an active virtualenv [green]{venv_in_env}[/], "
+                        f"Inside an active virtualenv [success]{venv_in_env}[/], "
                         "reuse it."
                     )
                     return python
@@ -234,7 +234,7 @@ class Project:
             for _, venv in iter_venvs(self):
                 python = PythonInfo.from_path(get_venv_python(venv))
                 if match_version(python):
-                    note(f"Virtualenv [green]{venv}[/] is reused.")
+                    note(f"Virtualenv [success]{venv}[/] is reused.")
                     self.python = python
                     return python
 
@@ -249,7 +249,7 @@ class Project:
 
         for py_version in self.find_interpreters():
             if match_version(py_version):
-                note("[green]__pypackages__[/] is detected, using the PEP 582 mode")
+                note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
                 self.python = py_version
                 return py_version
 
@@ -287,7 +287,7 @@ class Project:
             prompt=self.config["venv.prompt"],
         )
         self.core.ui.echo(
-            f"Virtualenv is created successfully at [green]{path}[/]", err=True
+            f"Virtualenv is created successfully at [success]{path}[/]", err=True
         )
         return path
 
@@ -319,7 +319,7 @@ class Project:
                     f"The {group} group exists in both [optional-dependencies] "
                     "and [dev-dependencies], the former is taken.",
                     err=True,
-                    style="yellow",
+                    style="warning",
                 )
             if group in optional_dependencies:
                 deps = optional_dependencies[group]
@@ -334,10 +334,10 @@ class Project:
                     if in_metadata:
                         self.core.ui.echo(
                             f"WARNING: Skipping editable dependency [b]{line}[/] in the"
-                            r" [green]\[project][/] table. Please move it to the "
-                            r"[green]\[tool.pdm.dev-dependencies][/] table",
+                            r" [success]\[project][/] table. Please move it to the "
+                            r"[success]\[tool.pdm.dev-dependencies][/] table",
                             err=True,
-                            style="yellow",
+                            style="warning",
                         )
                         continue
                     req = parse_requirement(line[3:].strip(), True)
@@ -468,7 +468,7 @@ class Project:
                     raise
                 self.core.ui.echo(
                     "Unable to reuse the lock file as it is not compatible with PDM",
-                    style="yellow",
+                    style="warning",
                     err=True,
                 )
 
@@ -519,7 +519,7 @@ class Project:
             with atomic_open_for_write(self.lockfile_file) as fp:
                 tomlkit.dump(toml_data, fp)  # type: ignore
             if show_message:
-                self.core.ui.echo("Changes are written to [green]pdm.lock[/].")
+                self.core.ui.echo("Changes are written to [success]pdm.lock[/].")
             self._lockfile = None
         else:
             self._lockfile = toml_data
@@ -610,7 +610,7 @@ class Project:
         ) as f:
             tomlkit.dump(self.pyproject, f)  # type: ignore
         if show_message:
-            self.core.ui.echo("Changes are written to [green]pyproject.toml[/].")
+            self.core.ui.echo("Changes are written to [success]pyproject.toml[/].")
         self._pyproject = None
 
     @property

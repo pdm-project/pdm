@@ -180,7 +180,7 @@ class InfoCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         with project.core.ui.open_spinner("Calculating cache files"):
             output = [
-                f"[cyan]Cache Root[/]: {project.cache_dir}, "
+                f"[primary]Cache Root[/]: {project.cache_dir}, "
                 f"Total size: {format_size(directory_size(project.cache_dir))}"
             ]
             for name, description in [
@@ -193,7 +193,7 @@ class InfoCommand(BaseCommand):
                 cache_location = project.cache(name)
                 files = list(find_files(cache_location, "*"))
                 size = directory_size(cache_location)
-                output.append(f"  [cyan]{description}[/]: {cache_location}")
+                output.append(f"  [primary]{description}[/]: {cache_location}")
                 output.append(f"    Files: {len(files)}, Size: {format_size(size)}")
 
         project.core.ui.echo("\n".join(output))
