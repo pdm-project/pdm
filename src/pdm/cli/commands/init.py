@@ -42,10 +42,12 @@ class Command(BaseCommand):
         hooks = HookManager(project, options.skip)
         if project.pyproject_file.exists():
             project.core.ui.echo(
-                "pyproject.toml already exists, update it now.", style="cyan"
+                "pyproject.toml already exists, update it now.", style="primary"
             )
         else:
-            project.core.ui.echo("Creating a pyproject.toml for PDM...", style="cyan")
+            project.core.ui.echo(
+                "Creating a pyproject.toml for PDM...", style="primary"
+            )
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:
@@ -62,7 +64,7 @@ class Command(BaseCommand):
             ):
                 if termui.confirm(
                     "Would you like to create a virtualenv with "
-                    f"[green]{python.executable}[/]?",
+                    f"[success]{python.executable}[/]?",
                     default=True,
                 ):
                     try:
@@ -74,7 +76,7 @@ class Command(BaseCommand):
                         project.core.ui.echo(
                             f"Error occurred when creating virtualenv: {e}\n"
                             "Please fix it and create later.",
-                            style="red",
+                            style="error",
                             err=True,
                         )
         else:
@@ -90,7 +92,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"
                 "For more info, please visit https://peps.python.org/pep-0582/",
-                style="green",
+                style="success",
             )
         is_library = (
             termui.confirm("Is the project a library that will be uploaded to PyPI")

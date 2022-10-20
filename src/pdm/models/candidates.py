@@ -250,7 +250,7 @@ class Candidate:
 
     def format(self) -> str:
         """Format for output."""
-        return f"[bold green]{self.name}[/] [yellow]{self.version}[/]"
+        return f"[req]{self.name}[/] [warning]{self.version}[/]"
 
     def prepare(self, environment: Environment) -> PreparedCandidate:
         """Prepare the candidate for installation."""

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import inspect
 import json
 import os
 import re
@@ -152,7 +153,13 @@ class Requirement:
         version = kwargs.pop("version", None)
         if version:
             kwargs["specifier"] = get_specifier(version)
-        return cls(**kwargs)
+        return cls(
+            **{
+                k: v
+                for k, v in kwargs.items()
+                if k in inspect.signature(cls).parameters
+            }
+        )
 
     @classmethod
     def from_dist(cls, dist: Distribution) -> Requirement:

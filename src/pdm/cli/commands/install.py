@@ -47,12 +47,13 @@ class Command(BaseCommand):
         if strategy:
             if options.check:
                 project.core.ui.echo(
-                    "Please run [green]`pdm lock`[/] to update the lock file", err=True
+                    "Please run [success]`pdm lock`[/] to update the lock file",
+                    err=True,
                 )
                 sys.exit(1)
             if options.lock:
                 project.core.ui.echo(
-                    "Updating the lock file...", style="green", err=True
+                    "Updating the lock file...", style="success", err=True
                 )
                 actions.do_lock(
                     project, strategy=strategy, dry_run=options.dry_run, hooks=hooks

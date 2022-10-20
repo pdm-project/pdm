@@ -69,7 +69,7 @@ class ErrorArgumentParser(argparse.ArgumentParser):
 class PdmFormatter(argparse.RawDescriptionHelpFormatter):
     def start_section(self, heading: str | None) -> None:
         return super().start_section(
-            termui.style(heading.title() if heading else "", style="bold yellow")
+            termui.style(heading.title() if heading else "", style="warning")
         )
 
     def _format_usage(
@@ -83,7 +83,7 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
             prefix = "Usage: "
         result = super()._format_usage(usage, actions, groups, prefix)
         if prefix:
-            return result.replace(prefix, termui.style(prefix, style="bold yellow"))
+            return result.replace(prefix, termui.style(prefix, style="warning"))
         return result
 
     def _format_action(self, action: Action) -> str:
@@ -111,7 +111,7 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
             indent_first = help_position
 
         # collect the pieces of the action help
-        parts = [termui.style(action_header, style="cyan")]
+        parts = [termui.style(action_header, style="primary")]
 
         # if there was help for the action, add lines of help text
         if action.help:
@@ -229,20 +229,20 @@ def add_package_to_tree(
     :param visited: the visited package collection
     """
     version = (
-        "[red][ not installed ][/]"
+        "[error][ not installed ][/]"
         if not package.version
-        else f"[red]{package.version}[/]"
+        else f"[error]{package.version}[/]"
         if required
         and required not in ("Any", "This project")
         and not SpecifierSet(required).contains(package.version)
-        else f"[yellow]{package.version}[/]"
+        else f"[warning]{package.version}[/]"
     )
     # escape deps with extras
     name = package.name.replace("[", r"\[") if "[" in package.name else package.name
     if package.name in visited:
-        version = r"[red]\[circular][/]"
+        version = r"[error]\[circular][/]"
     required = f"[ required: {required} ]" if required else "[ Not required ]"
-    node = root.add(f"[bold green]{name}[/] {version} {required}")
+    node = root.add(f"[req]{name}[/] {version} {required}")
     if package.name in visited:
         return
     children = sorted(graph.iter_children(package), key=lambda p: p.name)
@@ -261,14 +261,14 @@ def add_package_to_reverse_tree(
 ) -> None:
     """Format one package for output reverse dependency graph."""
     version = (
-        "[red][ not installed ][/]"
+        "[error][ not installed ][/]"
         if not package.version
-        else f"[yellow]{package.version}[/]"
+        else f"[warning]{package.version}[/]"
     )
     if package.name in visited:
-        version = r"[red]\[circular][/]"
+        version = r"[error]\[circular][/]"
     requires = (
-        f"[ requires: [red]{requires}[/] ]"
+        f"[ requires: [error]{requires}[/] ]"
         if requires not in ("Any", "")
         and child
         and child.version
@@ -278,7 +278,7 @@ def add_package_to_reverse_tree(
         else f"[ requires: {requires} ]"
     )
     name = package.name.replace("[", r"\[") if "[" in package.name else package.name
-    node = root.add(f"[bold green]{name}[/] {version} {requires}")
+    node = root.add(f"[req]{name}[/] {version} {requires}")
 
     if package.name in visited:
         return
@@ -515,7 +515,7 @@ def check_project_file(project: Project) -> None:
     if not project.meta:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
-            "by running [green]`pdm init`[/]."
+            "by running [success]`pdm init`[/]."
         )
 
 
@@ -576,7 +576,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         result = [
             "Unable to find a resolution because the following dependencies don't work "
             "on all Python versions defined by the project's `requires-python`: "
-            f"[green]{str(project_requires.specifier)}[/]."
+            f"[success]{str(project_requires.specifier)}[/]."
         ]
         for req, parent in conflicting:
             info_lines.add(f"  {req.as_line()} (from {repr(parent)})")
@@ -590,13 +590,13 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     if len(causes) == 1:
         return (
             "Unable to find a resolution for "
-            f"[green]{causes[0].requirement.identify()}[/]\n"
+            f"[success]{causes[0].requirement.identify()}[/]\n"
             "Please make sure the package name is correct."
         )
 
     result = [
         "Unable to find a resolution for "
-        f"[green]{causes[0].requirement.identify()}[/]\n"
+        f"[success]{causes[0].requirement.identify()}[/]\n"
         "because of the following conflicts:"
     ]
     for req, parent in causes:
@@ -638,7 +638,7 @@ def translate_groups(
     invalid_groups = groups_set - set(project.iter_groups())
     if invalid_groups:
         project.core.ui.echo(
-            f"[d]Ignoring non-existing groups: [green]{', '.join(invalid_groups)}[/]",
+            f"[d]Ignoring non-existing groups: [success]{', '.join(invalid_groups)}[/]",
             err=True,
         )
         groups_set -= invalid_groups

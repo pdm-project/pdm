@@ -81,7 +81,7 @@ class FlitMetaConverter(MetaConverter):
             "They are probably imported from other files which is not supported by PDM."
             " You may need to supply their values in pyproject.toml manually."
         )
-        self._ui.echo(message, err=True, style="yellow")
+        self._ui.echo(message, err=True, style="warning")
 
     @convert_from("metadata")
     def name(self, metadata: Dict[str, Any]) -> str:

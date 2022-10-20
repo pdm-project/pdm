@@ -176,7 +176,7 @@ class Command(BaseCommand):
 
         release_urls = repository.get_release_urls(uploaded)
         if release_urls:
-            project.core.ui.echo("\n[green]View at:")
+            project.core.ui.echo("\n[success]View at:")
             for url in release_urls:
                 project.core.ui.echo(url)
 

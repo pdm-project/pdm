@@ -44,9 +44,9 @@ class Executor:
                 **kwargs,
             )
         except subprocess.CalledProcessError as e:
-            echo(f"Run command {e.cmd} failed", style="yellow", err=True)
-            echo(e.stdout.decode(), style="yellow", err=True)
-            echo(e.stderr.decode(), style="red", err=True)
+            echo(f"Run command {e.cmd} failed", style="warning", err=True)
+            echo(e.stdout.decode(), style="warning", err=True)
+            echo(e.stderr.decode(), style="error", err=True)
             sys.exit(1)
 
     def measure(
@@ -55,7 +55,7 @@ class Executor:
         time_start = monotonic()
         proc = self.run(args, **kwargs)
         time_cost = monotonic() - time_start
-        echo(f"[yellow]{(text + ':'):>42s}[/] {time_cost:.2f}s")
+        echo(f"[warning]{(text + ':'):>42s}[/] {time_cost:.2f}s")
         return proc
 
 
@@ -84,7 +84,7 @@ def temp_env() -> Generator[None, None, None]:
 def benchmark(func: TestFunc) -> Any:
     meta = func._meta
     version = subprocess.check_output([meta["cmd"], "--version"]).strip().decode("utf8")
-    echo(f"Running benchmark: {version}", style="green")
+    echo(f"Running benchmark: {version}", style="success")
     project_file = PROJECT_DIR.joinpath(meta["project_file"])
     with tempfile.TemporaryDirectory(prefix="pdm-benchmark-") as tempdir:
         if project_file.name.startswith("pyproject"):

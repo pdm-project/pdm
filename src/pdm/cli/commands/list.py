@@ -331,9 +331,9 @@ class Listable:
         output = []
         for field in fields:
             data = f"{self[field]}"
-            data = data if field != "name" else f"[green]{data}[/]"
-            data = data if field != "version" else f"[yellow]{data}[/]"
-            data = data if field != "groups" else f"[red]{data}[/]"
+            data = data if field != "name" else f"[req]{data}[/]"
+            data = data if field != "version" else f"[warning]{data}[/]"
+            data = data if field != "groups" else f"[error]{data}[/]"
             output.append(data)
         return output
 

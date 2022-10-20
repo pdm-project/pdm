@@ -54,7 +54,9 @@ class Backend(abc.ABC):
 
     def subprocess_call(self, cmd: List[str], **kwargs: Any) -> None:
         self.project.core.ui.echo(
-            f"Run command: [green]{cmd}[/]", verbosity=termui.Verbosity.DETAIL, err=True
+            f"Run command: [success]{cmd}[/]",
+            verbosity=termui.Verbosity.DETAIL,
+            err=True,
         )
         try:
             subprocess.check_call(

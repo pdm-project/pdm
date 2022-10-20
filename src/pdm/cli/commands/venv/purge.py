@@ -31,15 +31,15 @@ class PurgeCommand(BaseCommand):
 
         all_central_venvs = list(iter_central_venvs(project))
         if not all_central_venvs:
-            project.core.ui.echo("No virtualenvs to purge, quitting.", style="green")
+            project.core.ui.echo("No virtualenvs to purge, quitting.", style="success")
             return
 
         if not options.force:
             project.core.ui.echo(
-                "The following Virtualenvs will be purged:", style="red"
+                "The following Virtualenvs will be purged:", style="error"
             )
             for i, venv in enumerate(all_central_venvs):
-                project.core.ui.echo(f"{i}. [green]{venv[0]}[/]")
+                project.core.ui.echo(f"{i}. [success]{venv[0]}[/]")
 
         if not options.interactive:
             if options.force or termui.confirm("continue?", default=True):

@@ -360,6 +360,21 @@ class Installer:
         )
         if not self.skip_add_to_path:
             _add_to_path(bin_path)
+        self._set_github_env(venv_path, script)
+
+    def _set_github_env(self, venv_path: Path, script: Path) -> None:
+        if not os.getenv("GITHUB_ENV"):
+            return
+
+        output = {
+            "pdm_version": self.version,
+            "pdm_bin": str(script),
+            "install_python_version": f"{sys.version_info.major}."
+            f"{sys.version_info.minor}.{sys.version_info.micro}",
+            "install_location": str(venv_path),
+        }
+        with open(os.getenv("GITHUB_ENV"), "a") as f:
+            f.write(f"PDM_INSTALL_SCRIPT_OUTPUT<<EOF\n{json.dumps(output)}\nEOF")
 
     def install(self) -> None:
         venv = self._make_env()

@@ -1,6 +1,6 @@
 import argparse
 from argparse import _SubParsersAction
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.cli.utils import PdmFormatter
@@ -25,7 +25,7 @@ class BaseCommand:
 
     @classmethod
     def register_to(
-        cls, subparsers: _SubParsersAction, name: Optional[str] = None
+        cls, subparsers: _SubParsersAction, name: Optional[str] = None, **kwargs: Any
     ) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
@@ -34,11 +34,14 @@ class BaseCommand:
         name = name or cls.name or ""
         # Remove the existing subparser as it will raises an error on Python 3.11+
         subparsers._name_parser_map.pop(name, None)
+        subactions = subparsers._get_subactions()
+        subactions[:] = [action for action in subactions if action.dest != name]
         parser = subparsers.add_parser(
             name,
             description=help_text,
             help=help_text,
             formatter_class=PdmFormatter,
+            **kwargs,
         )
         command = cls(parser)
         parser.set_defaults(handler=command.handle)
