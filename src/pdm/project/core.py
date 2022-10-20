@@ -99,7 +99,7 @@ class Project:
             if self.global_config["global_project.fallback_verbose"]:
                 self.core.ui.echo(
                     "Project is not found, fallback to the global project",
-                    style="yellow",
+                    style="warning",
                     err=True,
                 )
 

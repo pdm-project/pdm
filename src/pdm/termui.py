@@ -23,9 +23,6 @@ logger.addHandler(logging.NullHandler())
 unearth_logger = logging.getLogger("unearth")
 unearth_logger.setLevel(logging.DEBUG)
 
-_console = Console(highlight=False)
-_err_console = Console(stderr=True)
-
 DEFAULT_THEME = {
     "primary": "cyan",
     "success": "green",
@@ -34,6 +31,8 @@ DEFAULT_THEME = {
     "info": "blue",
     "req": "bold green",
 }
+_console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
+_err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
 
 
 def is_interactive(console: Console | None = None) -> bool:
