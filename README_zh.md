@@ -87,7 +87,7 @@ curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py 
 ```
 
 为安全起见，你应该检查 `install-pdm.py` 文件的正确性。
-SHA256 校验和: `a2fa511cb60bb03c5156de53f89a51ad96e619b969a027f3c382de531d3c239a`
+SHA256 校验和: `d4c1a8c9293b04da8f0782a05337e43d11dec72b0efeea2852ff5e588e500133`
 
 默认情况下，此脚本会将 PDM 安装在 Python 的用户目录下，具体位置取决于当前系统：
 

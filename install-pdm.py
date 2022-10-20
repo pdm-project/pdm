@@ -360,6 +360,7 @@ class Installer:
         )
         if not self.skip_add_to_path:
             _add_to_path(bin_path)
+        self._set_github_env(venv_path, bin_path)
 
     def _set_github_env(self, venv_path: Path, bin_path: Path) -> None:
         if not os.getenv("GITHUB_ENV"):
