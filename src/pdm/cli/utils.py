@@ -69,7 +69,7 @@ class ErrorArgumentParser(argparse.ArgumentParser):
 class PdmFormatter(argparse.RawDescriptionHelpFormatter):
     def start_section(self, heading: str | None) -> None:
         return super().start_section(
-            termui.style(heading.title() if heading else "", style="bold warning")
+            termui.style(heading.title() if heading else "", style="warning")
         )
 
     def _format_usage(
@@ -83,7 +83,7 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
             prefix = "Usage: "
         result = super()._format_usage(usage, actions, groups, prefix)
         if prefix:
-            return result.replace(prefix, termui.style(prefix, style="bold warning"))
+            return result.replace(prefix, termui.style(prefix, style="warning"))
         return result
 
     def _format_action(self, action: Action) -> str:
