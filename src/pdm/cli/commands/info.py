@@ -46,7 +46,7 @@ class Command(BaseCommand):
 
             for name, value in zip(
                 [
-                    f"[bold cyan]{key}[/]:"
+                    f"[primary]{key}[/]:"
                     for key in [
                         "PDM version",
                         "Python Interpreter",

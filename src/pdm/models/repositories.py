@@ -368,7 +368,7 @@ class PyPIRepository(BaseRepository):
                     f"to {self.DEFAULT_INDEX_URL!r} now.\n"
                     "This may take longer depending on your network condition.",
                     err=True,
-                    style="yellow",
+                    style="warning",
                 )
                 resp = session.get(
                     f"{self.DEFAULT_INDEX_URL}/search", params={"q": query}

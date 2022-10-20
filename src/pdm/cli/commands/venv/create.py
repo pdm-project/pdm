@@ -51,9 +51,9 @@ class CreateCommand(BaseCommand):
         backend: str = options.backend or project.config["venv.backend"]
         venv_backend = BACKENDS[backend](project, options.python)
         with project.core.ui.open_spinner(
-            f"Creating virtualenv using [green]{backend}[/]..."
+            f"Creating virtualenv using [success]{backend}[/]..."
         ):
             path = venv_backend.create(
                 options.name, options.venv_args, options.force, in_project, prompt
             )
-        project.core.ui.echo(f"Virtualenv [green]{path}[/] is created successfully")
+        project.core.ui.echo(f"Virtualenv [success]{path}[/] is created successfully")

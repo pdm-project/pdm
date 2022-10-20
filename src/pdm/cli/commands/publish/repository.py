@@ -65,8 +65,8 @@ class Repository:
             if cred is not None:
                 return cred.username, cred.password, False
         if username is None:
-            username = termui.ask("[cyan]Username")
-        password = termui.ask("[cyan]Password", password=True)
+            username = termui.ask("[primary]Username")
+        password = termui.ask("[primary]Password", password=True)
         return username, password, True
 
     def _save_credentials(self, service: str, username: str, password: str) -> None:
@@ -108,7 +108,7 @@ class Repository:
         )
         field_parts = self._convert_to_list_of_tuples(payload)
 
-        progress.live.console.print(f"Uploading [green]{package.base_filename}")
+        progress.live.console.print(f"Uploading [success]{package.base_filename}")
 
         with open(package.filename, "rb") as fp:
             field_parts.append(

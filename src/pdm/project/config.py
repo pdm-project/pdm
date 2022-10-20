@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterator, Mapping, MutableMapping, TypeVar
 
 import platformdirs
+import rich.theme
 import tomlkit
 
 from pdm import termui
@@ -26,13 +27,13 @@ class RepositoryConfig:
     ca_certs: str | None = None
 
     def __rich__(self) -> str:
-        lines = [f"[cyan]url[/] = {self.url}"]
+        lines = [f"[primary]url[/] = {self.url}"]
         if self.username:
-            lines.append(f"[cyan]username[/] = {self.username}")
+            lines.append(f"[primary]username[/] = {self.username}")
         if self.password:
-            lines.append("[cyan]password[/] = <hidden>")
+            lines.append("[primary]password[/] = <hidden>")
         if self.ca_certs:
-            lines.append(f"[cyan]ca_certs[/] = {self.ca_certs}")
+            lines.append(f"[primary]ca_certs[/] = {self.ca_certs}")
         return "\n".join(lines)
 
 
@@ -236,6 +237,10 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_VENV_PROMPT",
         ),
     }
+    _config_map.update(
+        (f"theme.{k}", ConfigItem(f"Theme color for {k}", default=v, global_only=True))
+        for k, v in termui.DEFAULT_THEME.items()
+    )
 
     site: Config | None = None
 
@@ -261,6 +266,13 @@ class Config(MutableMapping[str, str]):
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
             self._file_data, self.get_defaults() if is_global else {}
+        )
+
+    def load_theme(self) -> rich.theme.Theme:
+        if not self.is_global:  # pragma: no cover
+            raise PdmUsageError("Theme can only be loaded from global config")
+        return rich.theme.Theme(
+            {k[6:]: v for k, v in self.items() if k.startswith("theme.")}
         )
 
     @property
@@ -318,7 +330,7 @@ class Config(MutableMapping[str, str]):
         if parts[0] == REPOSITORY:
             if len(parts) < 3:
                 raise PdmUsageError(
-                    "Set repository config with [green]repository.{name}.{attr}"
+                    "Set repository config with [success]repository.{name}.{attr}"
                 )
             self._file_data.setdefault(parts[0], {}).setdefault(
                 parts[1], {}
@@ -340,7 +352,7 @@ class Config(MutableMapping[str, str]):
             ui.echo(
                 "WARNING: the config is shadowed by env var '{}', "
                 "the value set won't take effect.".format(env_var),
-                style="yellow",
+                style="warning",
             )
         self._file_data[config_key] = value
         if config.replace:
@@ -381,7 +393,7 @@ class Config(MutableMapping[str, str]):
             ui.echo(
                 "WARNING: the config is shadowed by env var '{}', "
                 "set value won't take effect.".format(env_var),
-                style="yellow",
+                style="warning",
             )
         self._save_config()
 

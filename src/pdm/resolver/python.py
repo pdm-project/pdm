@@ -11,7 +11,7 @@ from pdm.models.specifiers import PySpecSet
 
 class PythonCandidate(Candidate):
     def format(self) -> str:
-        return f"[bold green]{self.name}[/]" f"[yellow]{str(self.req.specifier)}[/]"
+        return f"[req]{self.name}[/]" f"[warning]{str(self.req.specifier)}[/]"
 
 
 class PythonRequirement(NamedRequirement):

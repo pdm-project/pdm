@@ -89,7 +89,7 @@ def test_run_with_site_packages(project, invoke):
 
 def test_run_command_not_found(invoke):
     result = invoke(["run", "foobar"])
-    assert "Command 'foobar' is not found on your PATH." in result.stderr
+    assert "Command 'foobar' is not found in your PATH." in result.stderr
     assert result.exit_code == 1
 
 

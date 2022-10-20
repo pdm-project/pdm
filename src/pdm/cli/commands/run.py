@@ -53,7 +53,7 @@ class Task(NamedTuple):
     options: TaskOptions
 
     def __str__(self) -> str:
-        return f"<task [cyan]{self.name}[/]>"
+        return f"<task [primary]{self.name}[/]>"
 
     @property
     def short_description(self) -> str:
@@ -140,7 +140,7 @@ class TaskRunner:
             import dotenv
 
             project.core.ui.echo(
-                f"Loading .env file: [green]{env_file}[/]",
+                f"Loading .env file: [success]{env_file}[/]",
                 err=True,
                 verbosity=termui.Verbosity.DETAIL,
             )
@@ -179,7 +179,7 @@ class TaskRunner:
             expanded_command = project_env.which(command)
             if not expanded_command:
                 raise PdmUsageError(
-                    f"Command [green]'{command}'[/] is not found on your PATH.".format()
+                    f"Command [success]'{command}'[/] is not found in your PATH."
                 )
             expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
             expanded_args = [
@@ -246,7 +246,7 @@ class TaskRunner:
             args = list(args)
 
         self.project.core.ui.echo(
-            f"Running {task}: [green]{str(args)}[/]",
+            f"Running {task}: [success]{str(args)}[/]",
             err=True,
             verbosity=termui.Verbosity.DETAIL,
         )
@@ -305,7 +305,7 @@ class TaskRunner:
             assert task is not None
             result.append(
                 (
-                    f"[green]{name}[/]",
+                    f"[success]{name}[/]",
                     task.kind,
                     task.short_description,
                 )
@@ -348,7 +348,7 @@ class Command(BaseCommand):
         if not options.command:
             project.core.ui.echo(
                 "No command is given, default to the Python REPL.",
-                style="yellow",
+                style="warning",
                 err=True,
             )
             options.command = "python"

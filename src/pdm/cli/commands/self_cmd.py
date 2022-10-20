@@ -91,8 +91,8 @@ class ListCommand(BaseCommand):
             metadata = dist.metadata
             rows.append(
                 (
-                    f"[green]{metadata['Name']}[/]",
-                    f"[yellow]{metadata['Version']}[/]",
+                    f"[success]{metadata['Name']}[/]",
+                    f"[warning]{metadata['Version']}[/]",
                     metadata["Summary"] or "",
                 ),
             )
@@ -131,11 +131,11 @@ class AddCommand(BaseCommand):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "[red]Installation failed:[/]\n" + e.output.decode("utf8"), err=True
+                "[error]Installation failed:[/]\n" + e.output.decode("utf8"), err=True
             )
             sys.exit(1)
         else:
-            project.core.ui.echo("[green]Installation succeeds.[/]")
+            project.core.ui.echo("[success]Installation succeeds.[/]")
 
 
 class RemoveCommand(BaseCommand):
@@ -205,16 +205,16 @@ class RemoveCommand(BaseCommand):
         )
         try:
             with project.core.ui.open_spinner(
-                f"Uninstalling packages: [green]{', '.join(options.packages)}[/]"
+                f"Uninstalling packages: [success]{', '.join(options.packages)}[/]"
             ):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "[red]Uninstallation failed:[/]\n" + e.output.decode("utf8"), err=True
+                "[error]Uninstallation failed:[/]\n" + e.output.decode("utf8"), err=True
             )
             sys.exit(1)
         else:
-            project.core.ui.echo("[green]Uninstallation succeeds.[/]")
+            project.core.ui.echo("[success]Uninstallation succeeds.[/]")
 
 
 class UpdateCommand(BaseCommand):
@@ -250,7 +250,9 @@ class UpdateCommand(BaseCommand):
             version = get_latest_pdm_version_from_pypi(project, options.pre)
             assert version is not None, "No version found"
             if parsed_version and parsed_version >= parse(version):
-                project.core.ui.echo(f"Already up-to-date: [cyan]{parsed_version}[/]")
+                project.core.ui.echo(
+                    f"Already up-to-date: [primary]{parsed_version}[/]"
+                )
                 return
             package = f"pdm=={version}"
         pip_args = ["install", "--upgrade"] + shlex.split(options.pip_args) + [package]
@@ -259,17 +261,17 @@ class UpdateCommand(BaseCommand):
         )
         try:
             with project.core.ui.open_spinner(
-                f"Updating pdm to version [cyan]{version}[/]"
+                f"Updating pdm to version [primary]{version}[/]"
             ):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                f"[red]Installing version [cyan]{version}[/] failed:[/]\n"
+                f"[error]Installing version [primary]{version}[/] failed:[/]\n"
                 + e.output.decode("utf8"),
                 err=True,
             )
             sys.exit(1)
         else:
             project.core.ui.echo(
-                f"[green]Installing version [cyan]{version}[/] succeeds.[/]"
+                f"[success]Installing version [primary]{version}[/] succeeds.[/]"
             )

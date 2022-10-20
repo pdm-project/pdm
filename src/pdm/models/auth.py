@@ -44,7 +44,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
                 "You can enable this by installing keyring:\n"
                 "    pdm self add keyring",
                 err=True,
-                style="yellow",
+                style="warning",
             )
         return super()._should_save_password_to_keyring()
 

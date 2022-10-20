@@ -225,12 +225,12 @@ class Synchronizer:
             self.manager.install(can)
         except Exception:
             progress.live.console.print(
-                f"  [red]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
+                f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
             )
             raise
         else:
             progress.live.console.print(
-                f"  [green]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
+                f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
             )
         finally:
             progress.update(job, completed=1, visible=False)
@@ -244,9 +244,9 @@ class Synchronizer:
         dist = self.working_set[strip_extras(key)[0]]
         dist_version = dist.version
         job = progress.add_task(
-            f"Updating [bold green]{key}[/] "
-            f"[yellow]{dist_version}[/] "
-            f"-> [yellow]{can.version}[/]...",
+            f"Updating [req]{key}[/] "
+            f"[warning]{dist_version}[/] "
+            f"-> [warning]{can.version}[/]...",
             total=1,
         )
         try:
@@ -254,16 +254,16 @@ class Synchronizer:
             self.manager.install(can)
         except Exception:
             progress.live.console.print(
-                f"  [red]{termui.Emoji.FAIL}[/] Update [bold green]{key}[/] "
-                f"[yellow]{dist_version}[/] "
-                f"-> [yellow]{can.version}[/] failed",
+                f"  [error]{termui.Emoji.FAIL}[/] Update [req]{key}[/] "
+                f"[warning]{dist_version}[/] "
+                f"-> [warning]{can.version}[/] failed",
             )
             raise
         else:
             progress.live.console.print(
-                f"  [green]{termui.Emoji.SUCC}[/] Update [bold green]{key}[/] "
-                f"[yellow]{dist_version}[/] "
-                f"-> [yellow]{can.version}[/] successful",
+                f"  [success]{termui.Emoji.SUCC}[/] Update [req]{key}[/] "
+                f"[warning]{dist_version}[/] "
+                f"-> [warning]{can.version}[/] successful",
             )
         finally:
             progress.update(job, completed=1, visible=False)
@@ -276,21 +276,21 @@ class Synchronizer:
         dist_version = dist.version
 
         job = progress.add_task(
-            f"Removing [bold green]{key}[/] " f"[yellow]{dist_version}[/]...",
+            f"Removing [req]{key}[/] " f"[warning]{dist_version}[/]...",
             total=1,
         )
         try:
             self.manager.uninstall(dist)
         except Exception:
             progress.live.console.print(
-                f"  [red]{termui.Emoji.FAIL}[/] Remove [bold green]{key}[/] "
-                f"[yellow]{dist_version}[/] failed",
+                f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] "
+                f"[warning]{dist_version}[/] failed",
             )
             raise
         else:
             progress.live.console.print(
-                f"  [green]{termui.Emoji.SUCC}[/] Remove [bold green]{key}[/] "
-                f"[yellow]{dist_version}[/] successful"
+                f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] "
+                f"[warning]{dist_version}[/] successful"
             )
         finally:
             progress.update(job, completed=1, visible=False)
@@ -304,9 +304,9 @@ class Synchronizer:
         results = ["[bold]Synchronizing working set with lock file[/]:"]
         results.extend(
             [
-                f"[green]{len(add)}[/] to add,",
-                f"[yellow]{len(update)}[/] to update,",
-                f"[red]{len(remove)}[/] to remove",
+                f"[success]{len(add)}[/] to add,",
+                f"[warning]{len(update)}[/] to update,",
+                f"[error]{len(remove)}[/] to remove",
             ]
         )
         self.ui.echo(" ".join(results) + "\n")
@@ -326,15 +326,15 @@ class Synchronizer:
             lines.append("[bold]Packages to update[/]:")
             for prev, cur in to_update:
                 lines.append(
-                    f"  - [bold green]{cur.name}[/] "
-                    f"[yellow]{prev.version}[/] -> [yellow]{cur.version}[/]"
+                    f"  - [req]{cur.name}[/] "
+                    f"[warning]{prev.version}[/] -> [warning]{cur.version}[/]"
                 )
         if to_remove:
             lines.append("[bold]Packages to remove[/]:")
             for dist in to_remove:
                 lines.append(
-                    f"  - [bold green]{dist.metadata['Name']}[/] "
-                    f"[yellow]{dist.version}[/]"
+                    f"  - [req]{dist.metadata['Name']}[/] "
+                    f"[warning]{dist.version}[/]"
                 )
         if lines:
             self.ui.echo("\n".join(lines))
@@ -379,14 +379,14 @@ class Synchronizer:
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
                 failed_jobs.append((kind, key))
                 errors.extend(
-                    [f"{kind} [green]{key}[/] failed:\n"]
+                    [f"{kind} [success]{key}[/] failed:\n"]
                     + traceback.format_exception(*exc_info)
                 )
 
         # get rich progress and live handler to deal with multiple spinners
         with self.ui.logging("install"), self.ui.make_progress(
             " ",
-            SpinnerColumn(termui.SPINNER, speed=1, style="bold cyan"),
+            SpinnerColumn(termui.SPINNER, speed=1, style="primary"),
             "{task.description}",
         ) as progress:
             live = progress.live
@@ -407,7 +407,7 @@ class Synchronizer:
 
             if errors:
                 if self.ui.verbosity < termui.Verbosity.DETAIL:
-                    live.console.print("\n[red]ERRORS[/]:")
+                    live.console.print("\n[error]ERRORS[/]:")
                     live.console.print("".join(errors), end="")
                 raise InstallationError("Some package operations are not complete yet")
 

@@ -40,7 +40,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{project.project_config.deprecated[options.key]}",
-                style="yellow",
+                style="warning",
                 err=True,
             )
             options.key = project.project_config.deprecated[options.key]
@@ -56,7 +56,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
-                style="yellow",
+                style="warning",
                 err=True,
             )
         config[options.key] = options.value
@@ -73,26 +73,26 @@ class Command(BaseCommand):
                 canonical_key = Config.site.deprecated[key]
                 if canonical_key in supersedes:
                     superseded = True
-                deprecated = f"[red](deprecating: {key})[/]"
+                deprecated = f"[error](deprecating: {key})[/]"
             elif key not in Config._config_map:
                 continue
-            extra_style = " dim" if superseded else ""
+            extra_style = "dim" if superseded else None
             config_item = Config._config_map[canonical_key]
             self.ui.echo(
-                f"# {config_item.description}",
-                style=f"yellow{extra_style}",
+                f"[warning]# {config_item.description}",
+                style=extra_style,
                 verbosity=termui.Verbosity.DETAIL,
             )
             self.ui.echo(
-                f"[cyan]{canonical_key}[/]{deprecated} = {config[key]}",
-                style=extra_style or None,
+                f"[primary]{canonical_key}[/]{deprecated} = {config[key]}",
+                style=extra_style,
             )
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
         self.ui = project.core.ui
         assert Config.site is not None
         self.ui.echo(
-            f"Site/default configuration ([green]{Config.site.config_file}[/]):",
+            f"Site/default configuration ([success]{Config.site.config_file}[/]):",
             style="bold",
         )
         self._show_config(
@@ -101,7 +101,7 @@ class Command(BaseCommand):
         )
 
         self.ui.echo(
-            f"\nHome configuration ([green]{project.global_config.config_file}[/]):",
+            f"\nHome configuration ([success]{project.global_config.config_file}[/]):",
             style="bold",
         )
         self._show_config(
@@ -109,7 +109,7 @@ class Command(BaseCommand):
         )
 
         self.ui.echo(
-            "\nProject configuration ([green]"
+            "\nProject configuration ([success]"
             f"{project.project_config.config_file}[/]):",
             style="bold",
         )
@@ -121,7 +121,7 @@ class Command(BaseCommand):
             project.core.ui.echo(
                 "DEPRECATED: the config has been renamed to "
                 f"{config.deprecated[options.key]}",
-                style="yellow",
+                style="warning",
                 err=True,
             )
         del config[options.key]

@@ -28,7 +28,7 @@ class RemoveCommand(BaseCommand):
         for ident, venv in iter_venvs(project):
             if ident == options.env:
                 if options.yes or termui.confirm(
-                    f"[yellow]Will remove: [green]{venv}[/], continue?", default=True
+                    f"[warning]Will remove: [success]{venv}[/], continue?", default=True
                 ):
                     shutil.rmtree(venv)
                     if (
@@ -41,8 +41,8 @@ class RemoveCommand(BaseCommand):
                 break
         else:
             project.core.ui.echo(
-                f"No virtualenv with key [green]{options.env}[/] is found",
-                style="yellow",
+                f"No virtualenv with key [success]{options.env}[/] is found",
+                style="warning",
                 err=True,
             )
             raise SystemExit(1)

@@ -5,8 +5,6 @@ import contextlib
 import enum
 import logging
 import os
-import warnings
-from functools import partial
 from tempfile import mktemp
 from typing import Any, Iterator, Sequence
 
@@ -15,6 +13,7 @@ from rich.console import Console
 from rich.progress import Progress, ProgressColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
+from rich.theme import Theme
 
 from pdm._types import Spinner, SpinnerT
 
@@ -24,8 +23,16 @@ logger.addHandler(logging.NullHandler())
 unearth_logger = logging.getLogger("unearth")
 unearth_logger.setLevel(logging.DEBUG)
 
-_console = Console(highlight=False)
-_err_console = Console(stderr=True)
+DEFAULT_THEME = {
+    "primary": "cyan",
+    "success": "green",
+    "warning": "yellow",
+    "error": "red",
+    "info": "blue",
+    "req": "bold green",
+}
+_console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
+_err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
 
 
 def is_interactive(console: Console | None = None) -> bool:
@@ -42,26 +49,13 @@ def is_legacy_windows(console: Console | None = None) -> bool:
     return console.legacy_windows
 
 
-def style(
-    text: str,
-    *args: str,
-    style: str = None,
-    deprecated: bool = False,
-    **kwargs: Any,
-) -> str:
+def style(text: str, *args: str, style: str = None, **kwargs: Any) -> str:
     """return text with ansi codes using rich console
 
     :param text: message with rich markup, defaults to "".
     :param style: rich style to apply to whole string
     :return: string containing ansi codes
     """
-    if deprecated:  # pragma: no cover
-        warnings.warn(
-            "calling color function from termui is deprecated, please use "
-            "rich's console markup",
-            DeprecationWarning,
-            stacklevel=2,
-        )
     with _console.capture() as capture:
         _console.print(text, *args, end="", style=style, **kwargs)
     return capture.get()
@@ -70,15 +64,6 @@ def style(
 def confirm(*args: str, **kwargs: Any) -> str:
     kwargs.setdefault("default", False)
     return Confirm.ask(*args, **kwargs)
-
-
-# For backward-compatiblity
-green = partial(style, style="green", deprecated=True)
-red = partial(style, style="red", deprecated=True)
-yellow = partial(style, style="yellow", deprecated=True)
-blue = partial(style, style="blue", deprecated=True)
-cyan = partial(style, style="cyan", deprecated=True)
-bold = partial(style, style="bold", deprecated=True)
 
 
 def ask(
@@ -159,6 +144,14 @@ class UI:
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = Verbosity(verbosity)
 
+    def set_theme(self, theme: Theme) -> None:
+        """set theme for rich console
+
+        :param theme: dict of theme
+        """
+        _console.push_theme(theme)
+        _err_console.push_theme(theme)
+
     def echo(
         self,
         message: str = "",
@@ -236,8 +229,8 @@ class UI:
             if self.verbosity < Verbosity.DETAIL:
                 logger.exception("Error occurs")
                 self.echo(
-                    f"See [bold yellow]{file_name}[/] for detailed debug log.",
-                    style="red",
+                    f"See [warning]{file_name}[/] for detailed debug log.",
+                    style="error",
                     err=True,
                 )
             raise
@@ -252,7 +245,7 @@ class UI:
         if self.verbosity >= Verbosity.DETAIL or not is_interactive():
             return DummySpinner()
         else:
-            return _console.status(title, spinner=SPINNER, spinner_style="bold cyan")
+            return _console.status(title, spinner=SPINNER, spinner_style="primary")
 
     def make_progress(self, *columns: str | ProgressColumn, **kwargs: Any) -> Progress:
         """create a progress instance for indented spinners"""

@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 project.core.ui.echo(
                     f"No match found for the package {package!r}",
                     err=True,
-                    style="yellow",
+                    style="warning",
                 )
                 return
             latest_stable = next(filter(filter_stable, matches), None)

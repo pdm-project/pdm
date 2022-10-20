@@ -67,7 +67,7 @@ class Core:
             action="version",
             version="{}, version {}".format(
                 termui.style("PDM", style="bold"),
-                termui.style(self.version, style="cyan"),
+                termui.style(self.version, style="success"),
             ),
             help="show the version and exit",
         )
@@ -95,10 +95,12 @@ class Core:
     def __call__(self, *args: Any, **kwargs: Any) -> None:
         return self.main(*args, **kwargs)
 
-    def ensure_project(self, options: argparse.Namespace, obj: Project | None) -> None:
+    def ensure_project(
+        self, options: argparse.Namespace, obj: Project | None
+    ) -> Project:
         if obj is not None:
-            options.project = obj
-        if getattr(options, "project", None) is None:
+            project = obj
+        else:
             global_project = bool(getattr(options, "global_project", None))
 
             default_root = (
@@ -111,9 +113,10 @@ class Core:
                 is_global=global_project,
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
-            options.project = project
+
         if getattr(options, "lockfile", None):
-            options.project.lockfile_file = options.lockfile
+            project.lockfile_file = options.lockfile
+        return project
 
     def create_project(
         self,
@@ -160,6 +163,8 @@ class Core:
                 self.parser.error(str(e.__cause__))
 
         self.ui.set_verbosity(options.verbose)
+        project = self.ensure_project(options, obj)
+        self.ui.set_theme(project.global_config.load_theme())
         if options.ignore_python:
             os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
 
@@ -167,9 +172,7 @@ class Core:
             print_pep582_command(self.ui, options.pep582)
             sys.exit(0)
 
-        self.ensure_project(options, obj)
-
-        if root_script and root_script not in options.project.scripts:
+        if root_script and root_script not in project.scripts:
             self.parser.error(f"Command unknown: {root_script}")
 
         try:
@@ -179,26 +182,26 @@ class Core:
             sys.exit(1)
         else:
             try:
-                f(options.project, options)
+                f(project, options)
             except Exception:
                 etype, err, traceback = sys.exc_info()
                 should_show_tb = not isinstance(err, PdmUsageError)
                 if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
                     raise cast(Exception, err).with_traceback(traceback)
                 self.ui.echo(
-                    rf"[red]\[{etype.__name__}][/]: {err}",  # type: ignore
+                    rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore
                     err=True,
                 )
                 if should_show_tb:
                     self.ui.echo(
                         "Add '-v' to see the detailed traceback",
-                        style="yellow",
+                        style="warning",
                         err=True,
                     )
                 sys.exit(1)
             else:
-                if options.project.config["check_update"]:
-                    check_update(options.project)
+                if project.config["check_update"]:
+                    check_update(project)
 
     def register_command(
         self, command: type[BaseCommand], name: str | None = None
@@ -244,7 +247,7 @@ class Core:
             except Exception as e:
                 self.ui.echo(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
-                    style="red",
+                    style="error",
                     err=True,
                 )
 
