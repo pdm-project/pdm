@@ -1,7 +1,6 @@
 import json
 import pathlib
 from unittest import mock
-from unittest.mock import patch
 
 import pytest
 from rich.box import ASCII
@@ -13,27 +12,24 @@ from pdm.utils import path_to_url
 from tests import FIXTURES
 from tests.conftest import Distribution
 
-# TODO: Finish this one
-# def test_list_project_no_init_error(invoke):
-#     result = invoke(["list"], obj=None)
-#     assert "[ProjectError]" in result.outputs
-#     assert "The pyproject.toml has not been initialized yet" in result.outputs
-
 
 def test_list_command(project, invoke, mocker):
     # Calls the correct handler within the Command
-    with patch.object(Command, "handle_list") as m:
-        invoke(["list"], obj=project)
-        m.assert_called_once()
+    m = mocker.patch.object(Command, "handle_list")
+    invoke(["list"], obj=project)
+    m.assert_called_once()
 
 
 @pytest.mark.usefixtures("repository", "working_set")
-def test_list_dependency_graph(project, invoke, mocker):
+def test_list_graph_command(project, invoke, mocker):
     # Calls the correct handler within the list command
-    with patch.object(Command, "handle_graph") as m:
-        invoke(["list", "--graph"], obj=project)
-        m.assert_called()
+    m = mocker.patch.object(Command, "handle_graph")
+    invoke(["list", "--graph"], obj=project)
+    m.assert_called_once()
 
+
+@pytest.mark.usefixtures("repository", "working_set")
+def test_list_dependency_graph(project, invoke):
     # Shows a line that contains a sub requirement
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--graph"], obj=project)
@@ -57,35 +53,38 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     # TODO: Find out why the chardet and idna versions are different?
     result = invoke(["list", "--graph"], obj=project)
     expects = (
-        "demo 0.0.1 [ Not required ]\n"
-        "├── chardet 3.0.4 [ required: Any ]\n"
-        "└── idna 2.7 [ required: Any ]\n"
-        "requests 2.19.1 [ Not required ]\n"
-        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
-        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
-        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n"
-        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+        "demo 0.0.1 [ Not required ]\n",
+        "├── chardet 3.0.4 [ required: Any ]\n",
+        "└── idna 2.7 [ required: Any ]\n",
+        "requests 2.19.1 [ Not required ]\n",
+        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
+        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
+        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n",
+        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
     )
+    expects = "".join(expects)
     assert expects == result.outputs
 
     # Only include the dev dep
     result = invoke(["list", "--graph", "--include", "dev"], obj=project)
     expects = (
-        "demo 0.0.1 [ Not required ]\n"
-        "├── chardet [ not installed ] [ required: Any ]\n"
-        "└── idna [ not installed ] [ required: Any ]\n"
+        "demo 0.0.1 [ Not required ]\n",
+        "├── chardet [ not installed ] [ required: Any ]\n",
+        "└── idna [ not installed ] [ required: Any ]\n",
     )
+    expects = "".join(expects)
     assert expects == result.outputs
 
     # Now exclude the dev dep.
     result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
     expects = (
-        "requests 2.19.1 [ Not required ]\n"
-        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
-        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
-        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n"
-        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+        "requests 2.19.1 [ Not required ]\n",
+        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
+        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
+        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n",
+        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
     )
+    expects = "".join(expects)
     assert expects == result.outputs
 
 
@@ -382,19 +381,15 @@ def test_list_multiple_export_formats(project, invoke):
 def test_list_bare(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list"], obj=project)
-    expected = (
-        "+--------------------------------------+\n"
-        "| name         | version    | location |\n"
-        "|--------------+------------+----------|\n"
-        "| certifi      | 2018.11.17 |          |\n"
-        "| chardet      | 3.0.4      |          |\n"
-        "| idna         | 2.7        |          |\n"
-        "| requests     | 2.19.1     |          |\n"
-        "| urllib3      | 1.22       |          |\n"
-        "| test-project | 0.0.0      |          |\n"
-        "+--------------------------------------+\n"
-    )
-    assert expected == result.output
+    # Ordering can be different on different platforms
+    # and python versions.
+    assert "| name         | version    | location |\n" in result.output
+    assert "| certifi      | 2018.11.17 |          |\n" in result.output
+    assert "| chardet      | 3.0.4      |          |\n" in result.output
+    assert "| idna         | 2.7        |          |\n" in result.output
+    assert "| requests     | 2.19.1     |          |\n" in result.output
+    assert "| urllib3      | 1.22       |          |\n" in result.output
+    assert "| test-project | 0.0.0      |          |\n" in result.output
 
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
@@ -403,17 +398,18 @@ def test_list_bare_sorted_name(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--sort", "name"], obj=project)
     expected = (
-        "+--------------------------------------+\n"
-        "| name         | version    | location |\n"
-        "|--------------+------------+----------|\n"
-        "| certifi      | 2018.11.17 |          |\n"
-        "| chardet      | 3.0.4      |          |\n"
-        "| idna         | 2.7        |          |\n"
-        "| requests     | 2.19.1     |          |\n"
-        "| test-project | 0.0.0      |          |\n"
-        "| urllib3      | 1.22       |          |\n"
-        "+--------------------------------------+\n"
+        "+--------------------------------------+\n",
+        "| name         | version    | location |\n",
+        "|--------------+------------+----------|\n",
+        "| certifi      | 2018.11.17 |          |\n",
+        "| chardet      | 3.0.4      |          |\n",
+        "| idna         | 2.7        |          |\n",
+        "| requests     | 2.19.1     |          |\n",
+        "| test-project | 0.0.0      |          |\n",
+        "| urllib3      | 1.22       |          |\n",
+        "+--------------------------------------+\n",
     )
+    expected = "".join(expected)
     assert expected == result.output
 
 
@@ -492,24 +488,30 @@ def test_list_bare_sorted_version(project, invoke):
     assert expected == result.output
 
 
-# TODO: resolve with graph?
-# TODO: how to fix this?
-# @pytest.mark.usefixtures("working_set")
-# def test_list_bare_sorted_version_resolve(project, invoke):
-#     actions.do_add(project, packages=["requests"])
-#     actions.do_sync(project, clean=True)
+# # TODO: resolve with graph?
+# # TODO: how to fix this?
+# # "[CandidateNotFound]: No candidate is found for `requests` that
+# # matches the environment or hashes\nAdd '-v' to see the detailed traceback\n"
+# @pytest.mark.usefixtures("working_set", "repository")
+# def test_list_bare_sorted_version_resolve(project, invoke, repository):
+#     # project.environment.python_requires = PySpecSet(">=3.6")
+#     actions.do_add(project, packages=["requests"], no_self=False)
+#     invoke(["list", "--sort", "version", "--resolve"], obj=project)
+
 #     result = invoke(["list", "--sort", "version", "--resolve"], obj=project)
-#     expected = "┌──────────────┬────────────┬──────────┐\n"\
-#                "│ name         │ version    │ location │\n"\
-#                "├──────────────┼────────────┼──────────┤\n"\
-#                "│ test-project │ 0.0.0      │          │\n"\
-#                "│ urllib3      │ 1.22       │          │\n"\
-#                "│ requests     │ 2.19.1     │          │\n"\
-#                "│ idna         │ 2.7        │          │\n"\
-#                "│ certifi      │ 2018.11.17 │          │\n"\
-#                "│ chardet      │ 3.0.4      │          │\n"\
-#                "└──────────────┴────────────┴──────────┘\n"
-#     assert expected == result.output
+#     expected = (
+#         "+--------------------------------------+\n",
+#         "| name         | version    | location |\n",
+#         "|--------------+------------+----------|\n",
+#         "| urllib3      | 1.22       |          |\n",
+#         "| requests     | 2.19.1     |          |\n",
+#         "| idna         | 2.7        |          |\n",
+#         "| certifi      | 2018.11.17 |          |\n",
+#         "| chardet      | 3.0.4      |          |\n",
+#         "+--------------------------------------+\n"
+#     )
+#     expected = "".join(expected)
+#     assert expected == result.outputs
 
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
