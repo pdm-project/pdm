@@ -13,6 +13,7 @@ from pdm.cli.utils import (
 )
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import PdmUsageError
+from pdm.models.requirements import Requirement
 from pdm.project import Project
 
 # Group label for subdependencies
@@ -22,12 +23,21 @@ SUBDEP_GROUP_LABEL = ":sub"
 class Command(BaseCommand):
     """List packages installed in the current working set"""
 
+    DEFAULT_FIELDS = "name,version,location"
+
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         graph = parser.add_mutually_exclusive_group()
+
+        parser.add_argument(
+            "--freeze",
+            action="store_true",
+            help="Show the installed dependencies in pip's requirements.txt format",
+        )
 
         graph.add_argument(
             "--graph", action="store_true", help="Display a graph of dependencies"
         )
+
         parser.add_argument(
             "-r", "--reverse", action="store_true", help="Reverse the dependency graph"
         )
@@ -42,7 +52,7 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "--fields",
-            default="name,version,location",
+            default=Command.DEFAULT_FIELDS,
             help="Select information to output as a comma separated string. "
             "For example: name,version,homepage,licenses,group.",
         )
@@ -92,6 +102,11 @@ class Command(BaseCommand):
 
         # Raise an error if the project is not defined.
         check_project_file(project)
+
+        # Freeze.
+        if options.freeze:
+            self.hande_freeze(project, options)
+            return
 
         # Map dependency groups to requirements.
         name_to_groups = defaultdict(set)  # type: defaultdict[Optional[str], Set[str]]
@@ -150,6 +165,39 @@ class Command(BaseCommand):
             self.handle_graph(packages, project, options)
         else:
             self.handle_list(packages, name_to_groups, project, options)
+
+    def hande_freeze(self, project: Project, options: argparse.Namespace) -> None:
+        if options.graph:
+            raise PdmUsageError("--graph cannot be used with --freeze")
+        if options.reverse:
+            raise PdmUsageError("--reverse cannot be used without --graph")
+        if options.fields != Command.DEFAULT_FIELDS:
+            raise PdmUsageError("--fields cannot be used with --freeze")
+        if options.resolve:
+            raise PdmUsageError("--resolve cannot be used with --freeze")
+        if options.sort:
+            raise PdmUsageError("--sort cannot be used with --freeze")
+        if options.csv:
+            raise PdmUsageError("--csv cannot be used with --freeze")
+        if options.json:
+            raise PdmUsageError("--json cannot be used with --freeze")
+        if options.markdown:
+            raise PdmUsageError("--markdown cannot be used with --freeze")
+        if options.include != "*" or options.exclude:
+            raise PdmUsageError("--include/--exclude cannot be used with --freeze")
+
+        root = project.root.absolute().as_posix().lstrip("/")
+        working_set = project.environment.get_working_set()
+        requirements = sorted(
+            (
+                Requirement.from_dist(dist).as_line().replace("${PROJECT_ROOT}", root)
+                for dist in sorted(
+                    working_set.values(), key=lambda d: d.metadata["Name"]
+                )
+            ),
+            key=lambda x: x.lower(),
+        )
+        project.core.ui.echo("\n".join(requirements))
 
     def handle_graph(
         self,

@@ -334,7 +334,6 @@ def test_list_json_with_circular_reverse(project, invoke, repository):
     assert expected == json.loads(result.outputs)
 
 
-# NEW TESTS
 def test_list_field_unknown(project, invoke):
     # unknown list fields flagged to user
     result = invoke(["list", "--fields", "notvalid"], obj=project)
@@ -347,6 +346,53 @@ def test_list_sort_unknown(project, invoke):
     result = invoke(["list", "--sort", "notvalid"], obj=project)
     assert "[PdmUsageError]" in result.stderr
     assert "--sort key must be one of:" in result.stderr
+
+
+def test_list_freeze_banned_options(project, invoke):
+    # other flags cannot be used with --freeze
+    result = invoke(["list", "--freeze", "--graph"], obj=project)
+    expected = "--graph cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--reverse"], obj=project)
+    expected = "--reverse cannot be used without --graph"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "-r"], obj=project)
+    expected = "--reverse cannot be used without --graph"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--fields", "name"], obj=project)
+    expected = "--fields cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--resolve"], obj=project)
+    expected = "--resolve cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--sort", "name"], obj=project)
+    expected = "--sort cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--csv"], obj=project)
+    expected = "--csv cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--json"], obj=project)
+    expected = "--json cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--markdown"], obj=project)
+    expected = "--markdown cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--include", "dev"], obj=project)
+    expected = "--include/--exclude cannot be used with --freeze"
+    assert expected in result.outputs
+
+    result = invoke(["list", "--freeze", "--exclude", "dev"], obj=project)
+    expected = "--include/--exclude cannot be used with --freeze"
+    assert expected in result.outputs
 
 
 def test_list_multiple_export_formats(project, invoke):
@@ -466,6 +512,22 @@ def _setup_fake_working_set(working_set):
     # Place our fake packages in the working set.
     for candidate in [foo, bar, baz, unknown, classifier]:
         working_set.add_distribution(candidate)
+
+
+@mock.patch("pdm.termui.ROUNDED", ASCII)
+@pytest.mark.usefixtures("working_set")
+def test_list_freeze(project, invoke):
+    actions.do_add(project, packages=["requests"])
+    result = invoke(["list", "--freeze"], obj=project)
+    expected = (
+        "certifi==2018.11.17\n"
+        "chardet==3.0.4\n"
+        "idna==2.7\n"
+        "requests==2.19.1\n"
+        "test-project==0.0.0\n"
+        "urllib3==1.22\n"
+    )
+    assert expected == result.output
 
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
