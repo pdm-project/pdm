@@ -92,7 +92,7 @@ curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py 
 ```
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
-The sha256 checksum is: `6222f16660490dc2bb67ed2c9ae5f641d0283dcc4e91692f64319835529172ed`
+The sha256 checksum is: `ed83f61b7ad3c3fcace57fda31175ad861c4283aeea02ba13b6351a66c2cca60`
 
 The installer will install PDM into the user site and the location depends on the system:
 

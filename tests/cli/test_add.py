@@ -309,7 +309,7 @@ def test_add_editable_package_with_extras(project, working_set):
     )
     assert (
         f"-e {path_to_url(dep_path)}#egg=demo[security]"
-        in project.get_pyproject_dependencies("dev", True)
+        in project.get_pyproject_dependencies("dev", True)[0]
     )
     assert "demo" in working_set
     assert "requests" in working_set
