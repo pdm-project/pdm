@@ -734,12 +734,6 @@ def test_list_csv_include_exclude(project, invoke):
         editables=[f"{dep_path}[security]"],
     )
 
-    # Double check the demo project was added OK to the dev group
-    assert (
-        f"-e {path_to_url(dep_path)}#egg=demo[security]"
-        in project.get_pyproject_dependencies("dev", True)
-    )
-
     # Show all groups.
     result = invoke(
         ["list", "--csv", "--fields", "name,version,groups", "--sort", "name"],
