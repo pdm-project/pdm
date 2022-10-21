@@ -70,8 +70,8 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     result = invoke(["list", "--graph", "--include", "dev"], obj=project)
     expects = (
         "demo 0.0.1 [ Not required ]\n",
-        "+-- chardet [ not installed ] [ required: Any ]\n",
-        "`-- idna [ not installed ] [ required: Any ]\n",
+        "+-- chardet [ not installed ] [ required: Any ]\n",  # installed 3.0.4 ?
+        "`-- idna [ not installed ] [ required: Any ]\n",  # installed 2.7 ?
     )
     expects = "".join(expects)
     assert expects == result.outputs
