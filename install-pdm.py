@@ -197,6 +197,7 @@ class Installer:
     prerelease: bool = False
     additional_deps: Sequence[str] = ()
     skip_add_to_path: bool = False
+    output_path: str | None = None
 
     def __post_init__(self):
         self._path = self._decide_path()
@@ -360,12 +361,12 @@ class Installer:
         )
         if not self.skip_add_to_path:
             _add_to_path(bin_path)
-        self._set_github_env(venv_path, script)
+        self._write_output(venv_path, script)
 
-    def _set_github_env(self, venv_path: Path, script: Path) -> None:
-        if not os.getenv("GITHUB_ENV"):
+    def _write_output(self, venv_path: Path, script: Path) -> None:
+        if not self.output_path:
             return
-
+        print("Writing output to", colored("green", self.output_path))
         output = {
             "pdm_version": self.version,
             "pdm_bin": str(script),
@@ -373,8 +374,8 @@ class Installer:
             f"{sys.version_info.minor}.{sys.version_info.micro}",
             "install_location": str(venv_path),
         }
-        with open(os.getenv("GITHUB_ENV"), "a") as f:
-            f.write(f"PDM_INSTALL_SCRIPT_OUTPUT<<EOF\n{json.dumps(output)}\nEOF")
+        with open(self.output_path, "w") as f:
+            json.dump(output, f, indent=2)
 
     def install(self) -> None:
         venv = self._make_env()
@@ -450,6 +451,9 @@ def main():
         help="Do not add binary to the PATH.",
         default=os.getenv("PDM_SKIP_ADD_TO_PATH"),
     )
+    parser.add_argument(
+        "-o", "--output", help="Output file to write the installation info to"
+    )
 
     options = parser.parse_args()
     installer = Installer(
@@ -458,6 +462,7 @@ def main():
         prerelease=options.prerelease,
         additional_deps=options.dep,
         skip_add_to_path=options.skip_add_to_path,
+        output_path=options.output,
     )
     if options.remove:
         installer.uninstall()

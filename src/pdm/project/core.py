@@ -570,18 +570,23 @@ class Project:
         accepted = get_specifier(f"~={lockfile_version}")
         return accepted.contains(self.LOCKFILE_VERSION)
 
-    def get_pyproject_dependencies(self, group: str, dev: bool = False) -> list[str]:
-        """Get the dependencies array in the pyproject.toml"""
+    def get_pyproject_dependencies(
+        self, group: str, dev: bool = False
+    ) -> tuple[list[str], bool]:
+        """Get the dependencies array in the pyproject.toml
+        Return a tuple of two elements, the first is the dependencies array,
+        and the second tells whether it is a dev-dependencies group.
+        """
         if group == "default":
-            return self.meta.setdefault("dependencies", [])
+            return self.meta.setdefault("dependencies", []), False
         deps_dict = {
             False: self.meta.setdefault("optional-dependencies", {}),
             True: self.tool_settings.setdefault("dev-dependencies", {}),
         }
-        for deps in deps_dict.values():
+        for is_dev, deps in deps_dict.items():
             if group in deps:
-                return deps[group]
-        return deps_dict[dev].setdefault(group, [])
+                return deps[group], is_dev
+        return deps_dict[dev].setdefault(group, []), dev
 
     def add_dependencies(
         self,
@@ -590,18 +595,24 @@ class Project:
         dev: bool = False,
         show_message: bool = True,
     ) -> None:
-        deps = cast(Array, self.get_pyproject_dependencies(to_group, dev))
-        deps.multiline(True)
+        deps, is_dev = self.get_pyproject_dependencies(to_group, dev)
+        cast(Array, deps).multiline(True)
+        has_variable = False
         for _, dep in requirements.items():
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)),
                 None,
             )
+            req = dep.as_line()
+            if "${" in req:
+                has_variable = True
             if matched_index is None:
-                deps.append(dep.as_line())
+                deps.append(req)
             else:
-                req = dep.as_line()
                 deps[matched_index] = req
+        if not is_dev and has_variable:
+            field = "dependencies" if to_group == "default" else "optional-dependencies"
+            self.meta["dynamic"] = sorted(set(self.meta.get("dynamic", []) + [field]))
         self.write_pyproject(show_message)
 
     def write_pyproject(self, show_message: bool = True) -> None:
