@@ -194,7 +194,6 @@ class Distribution:
         self.link_file = "editable" if editable else None
         self.dependencies = []
         self.metadata = {"Name": key, "Version": version}
-        # TODO: consider adding properties for the name/version fields
         if metadata:
             self.metadata = {**self.metadata, **metadata}
         self.name = key
