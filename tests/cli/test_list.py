@@ -8,7 +8,6 @@ from rich.box import ASCII
 from pdm.cli import actions
 from pdm.cli.commands.list import Command
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import path_to_url
 from tests import FIXTURES
 from tests.conftest import Distribution
 
