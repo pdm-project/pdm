@@ -54,7 +54,7 @@ class Command(BaseCommand):
             "--fields",
             default=Command.DEFAULT_FIELDS,
             help="Select information to output as a comma separated string. "
-            "For example: name,version,homepage,licenses,group.",
+            "For example: name,version,homepage,licenses,groups.",
         )
 
         parser.add_argument(
