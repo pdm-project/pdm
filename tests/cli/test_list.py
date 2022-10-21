@@ -28,15 +28,17 @@ def test_list_graph_command(project, invoke, mocker):
     m.assert_called_once()
 
 
+@mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("repository", "working_set")
 def test_list_dependency_graph(project, invoke):
-    # Shows a line that contains a sub requirement
+    # Shows a line that contains a sub requirement (any order).
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--graph"], obj=project)
-    expected = "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in result.outputs
+    expected = "-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in result.outputs
     assert expected
 
 
+@mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("repository", "working_set")
 def test_list_dependency_graph_include_exclude(project, invoke):
     # Just include dev packages in the graph
@@ -54,13 +56,13 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     result = invoke(["list", "--graph"], obj=project)
     expects = (
         "demo 0.0.1 [ Not required ]\n",
-        "├── chardet 3.0.4 [ required: Any ]\n",
-        "└── idna 2.7 [ required: Any ]\n",
+        "+-- chardet 3.0.4 [ required: Any ]\n",
+        "`-- idna 2.7 [ required: Any ]\n",
         "requests 2.19.1 [ Not required ]\n",
-        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
-        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
-        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n",
-        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
+        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
+        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
+        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
     )
     expects = "".join(expects)
     assert expects == result.outputs
@@ -69,8 +71,8 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     result = invoke(["list", "--graph", "--include", "dev"], obj=project)
     expects = (
         "demo 0.0.1 [ Not required ]\n",
-        "├── chardet [ not installed ] [ required: Any ]\n",
-        "└── idna [ not installed ] [ required: Any ]\n",
+        "+-- chardet [ not installed ] [ required: Any ]\n",
+        "`-- idna [ not installed ] [ required: Any ]\n",
     )
     expects = "".join(expects)
     assert expects == result.outputs
@@ -79,10 +81,10 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
     expects = (
         "requests 2.19.1 [ Not required ]\n",
-        "├── certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
-        "├── chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
-        "├── idna 2.7 [ required: <2.8,>=2.5 ]\n",
-        "└── urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
+        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
+        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
+        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
     )
     expects = "".join(expects)
     assert expects == result.outputs
@@ -101,6 +103,7 @@ def test_list_dependency_graph_with_circular_forward(project, invoke, repository
     assert circular_found
 
 
+@mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("working_set")
 def test_list_dependency_graph_with_circular_reverse(project, invoke, repository):
     repository.add_candidate("foo", "0.1.0")
@@ -113,10 +116,14 @@ def test_list_dependency_graph_with_circular_reverse(project, invoke, repository
 
     # --reverse flag shows packages reversed and with [circular]
     result = invoke(["list", "--graph", "--reverse"], obj=project)
-    expected = """
-    └── foo 0.1.0 [ requires: Any ]
-        ├── foo-bar [circular] [ requires: Any ]
-        └── test-project 0.0.0 [ requires: ~=0.1 ]"""
+    expected = (
+        "baz 0.1.0 \n",
+        "`-- foo-bar 0.1.0 [ requires: Any ]\n",
+        "    `-- foo 0.1.0 [ requires: Any ]\n",
+        "        +-- foo-bar [circular] [ requires: Any ]\n",
+        "        `-- test-project 0.0.0 [ requires: ~=0.1 ]\n"
+    )
+    expected = "".join(expected)
     assert expected in result.outputs
 
     # -r flag shows packages reversed and with [circular]
@@ -135,12 +142,13 @@ def test_list_reverse_without_graph_flag(project, invoke):
     assert "--reverse cannot be used without --graph" in result.stderr
 
 
+@mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("repository", "working_set")
 def test_list_reverse_dependency_graph(project, invoke):
     # requests visible on leaf node
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--graph", "--reverse"], obj=project)
-    assert "└── requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in result.outputs
+    assert "`-- requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in result.outputs
 
 
 @pytest.mark.usefixtures("repository", "working_set")
