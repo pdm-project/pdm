@@ -66,9 +66,8 @@ def test_uncaught_error(invoke, mocker):
     result = invoke(["lock"])
     assert "[RuntimeError]: test error" in result.stderr
 
-    with pytest.raises(RuntimeError) as err:
-        result = invoke(["lock"], strict=True)
-    assert "test error" in str(err)
+    result = invoke(["lock", "-v"])
+    assert isinstance(result.exception, RuntimeError)
 
 
 @pytest.mark.parametrize(
