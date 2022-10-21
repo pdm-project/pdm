@@ -62,7 +62,7 @@ def test_list_dependency_graph_include_exclude(project, invoke):
         "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
         "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
         "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
     )
     expects = "".join(expects)
     assert expects == result.outputs
@@ -84,7 +84,7 @@ def test_list_dependency_graph_include_exclude(project, invoke):
         "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
         "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
         "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
     )
     expects = "".join(expects)
     assert expects == result.outputs
@@ -121,7 +121,7 @@ def test_list_dependency_graph_with_circular_reverse(project, invoke, repository
         "`-- foo-bar 0.1.0 [ requires: Any ]\n",
         "    `-- foo 0.1.0 [ requires: Any ]\n",
         "        +-- foo-bar [circular] [ requires: Any ]\n",
-        "        `-- test-project 0.0.0 [ requires: ~=0.1 ]\n"
+        "        `-- test-project 0.0.0 [ requires: ~=0.1 ]\n",
     )
     expected = "".join(expected)
     assert expected in result.outputs
