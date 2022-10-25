@@ -1,12 +1,12 @@
 import argparse
 import sys
 
+from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import lockfile_option, no_isolation_option, skip_option
 from pdm.project import Project
-from pdm.termui import Verbosity
 
 
 class Command(BaseCommand):
@@ -38,14 +38,14 @@ class Command(BaseCommand):
                 project.core.ui.echo(
                     f"{termui.Emoji.FAIL} Lockfile is [error]out of date[/].",
                     err=True,
-                    verbosity=Verbosity.DETAIL,
+                    verbosity=termui.Verbosity.DETAIL,
                 )
                 sys.exit(1)
             else:
                 project.core.ui.echo(
                     f"{termui.Emoji.SUCC} Lockfile is [success]up to date[/].",
                     err=True,
-                    verbosity=Verbosity.DETAIL,
+                    verbosity=termui.Verbosity.DETAIL,
                 )
                 sys.exit(0)
 
