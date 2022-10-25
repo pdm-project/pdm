@@ -28,7 +28,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--check",
             action="store_true",
-            help="Check if the lock file is up to date",
+            help="Check if the lock file is up to date and quit",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
