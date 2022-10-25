@@ -36,7 +36,7 @@ class Command(BaseCommand):
             strategy = actions.check_lockfile(project, False)
             if strategy:
                 project.core.ui.echo(
-                    "Lockfile is [error]out of date[/].",
+                    f"{termui.Emoji.FAIL} Lockfile is [error]out of date[/].",
                     err=True,
                     verbosity=Verbosity.DETAIL,
                 )
