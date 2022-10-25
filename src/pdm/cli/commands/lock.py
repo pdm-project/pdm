@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 sys.exit(1)
             else:
                 project.core.ui.echo(
-                    "Lockfile is [success]up to date[/].",
+                    f"{termui.Emoji.SUCC} Lockfile is [success]up to date[/].",
                     err=True,
                     verbosity=Verbosity.DETAIL,
                 )
