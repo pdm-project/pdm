@@ -31,6 +31,9 @@ class CreateCommand(BaseCommand):
         )
         parser.add_argument("-n", "--name", help="Specify the name of the virtualenv")
         parser.add_argument(
+            "--with-pip", action="store_true", help="Install pip with the virtualenv"
+        )
+        parser.add_argument(
             "python",
             nargs="?",
             help="Specify which python should be used to create the virtualenv",
@@ -54,6 +57,11 @@ class CreateCommand(BaseCommand):
             f"Creating virtualenv using [success]{backend}[/]..."
         ):
             path = venv_backend.create(
-                options.name, options.venv_args, options.force, in_project, prompt
+                options.name,
+                options.venv_args,
+                options.force,
+                in_project,
+                prompt,
+                options.with_pip,
             )
         project.core.ui.echo(f"Virtualenv [success]{path}[/] is created successfully")

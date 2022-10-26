@@ -24,8 +24,8 @@ class Backend(abc.ABC):
         self.project = project
         self.python = python
 
-    @abc.abstractproperty
-    def pip_args(self) -> Iterable[str]:
+    @abc.abstractmethod
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
         pass
 
     @cached_property
@@ -95,11 +95,13 @@ class Backend(abc.ABC):
         force: bool = False,
         in_project: bool = False,
         prompt: Optional[str] = None,
+        with_pip: bool = False,
     ) -> Path:
         if in_project:
             location = self.project.root / ".venv"
         else:
             location = self.get_location(name)
+        args = (*self.pip_args(with_pip), *args)
         if prompt is not None:
             prompt_string = prompt.format(
                 project_name=self.project.root.name.lower() or "virtualenv",
@@ -116,9 +118,8 @@ class Backend(abc.ABC):
 
 
 class VirtualenvBackend(Backend):
-    @property
-    def pip_args(self) -> Iterable[str]:
-        if self.project.config["venv.with_pip"]:
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip or self.project.config["venv.with_pip"]:
             return ()
         return ("--no-pip", "--no-setuptools", "--no-wheel")
 
@@ -127,7 +128,6 @@ class VirtualenvBackend(Backend):
             sys.executable,
             "-m",
             "virtualenv",
-            *self.pip_args,
             str(location),
             "-p",
             str(self._resolved_interpreter.executable),
@@ -137,9 +137,8 @@ class VirtualenvBackend(Backend):
 
 
 class VenvBackend(VirtualenvBackend):
-    @property
-    def pip_args(self) -> Iterable[str]:
-        if self.project.config["venv.with_pip"]:
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip or self.project.config["venv.with_pip"]:
             return ()
         return ("--without-pip",)
 
@@ -148,7 +147,6 @@ class VenvBackend(VirtualenvBackend):
             str(self._resolved_interpreter.executable),
             "-m",
             "venv",
-            *self.pip_args,
             str(location),
             *args,
         ]
@@ -164,9 +162,8 @@ class CondaBackend(Backend):
             return self.python
         return super().ident
 
-    @property
-    def pip_args(self) -> Iterable[str]:
-        if self.project.config["venv.with_pip"]:
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip or self.project.config["venv.with_pip"]:
             return ("pip",)
         return ()
 
@@ -184,7 +181,6 @@ class CondaBackend(Backend):
             "--yes",
             "--prefix",
             str(location),
-            *self.pip_args,
             f"python={python_ver}",
             *args,
         ]
