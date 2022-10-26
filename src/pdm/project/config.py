@@ -236,6 +236,12 @@ class Config(MutableMapping[str, str]):
             default="{project_name}-{python_version}",
             env_var="PDM_VENV_PROMPT",
         ),
+        "venv.with_pip": ConfigItem(
+            "Install pip when creating a new venv",
+            default=False,
+            env_var="PDM_VENV_WITH_PIP",
+            coerce=ensure_boolean,
+        ),
     }
     _config_map.update(
         (f"theme.{k}", ConfigItem(f"Theme color for {k}", default=v, global_only=True))
