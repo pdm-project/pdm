@@ -10,6 +10,11 @@ from pdm.cli.commands.venv import backends
 from pdm.cli.commands.venv.utils import get_venv_prefix
 
 
+@pytest.fixture(params=[True, False])
+def with_pip(request):
+    return request.param
+
+
 @pytest.fixture()
 def fake_create(monkeypatch):
     def fake_create(self, location, *args):
@@ -118,7 +123,7 @@ def test_venv_activate_custom_prompt(invoke, mocker, project):
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     creator.assert_called_once_with(
-        None, [], False, False, project.project_config["venv.prompt"]
+        None, [], False, False, project.project_config["venv.prompt"], False
     )
 
 
@@ -208,51 +213,60 @@ def test_venv_purge_interactive(invoke, user_choices, is_path_exists, project):
     assert os.path.exists(venv_path) == is_path_exists
 
 
-def test_virtualenv_backend_create(project, mocker):
+def test_virtualenv_backend_create(project, mocker, with_pip):
     backend = backends.VirtualenvBackend(project, None)
     assert backend.ident
     mock_call = mocker.patch("subprocess.check_call")
-    location = backend.create()
+    location = backend.create(with_pip=with_pip)
+    pip_args = [] if with_pip else ["--no-pip", "--no-setuptools", "--no-wheel"]
     mock_call.assert_called_once_with(
         [
             sys.executable,
             "-m",
             "virtualenv",
-            "--no-pip",
-            "--no-setuptools",
-            "--no-wheel",
             str(location),
             "-p",
             str(backend._resolved_interpreter.executable),
+            *pip_args,
         ],
         stdout=ANY,
     )
 
 
-def test_venv_backend_create(project, mocker):
+def test_venv_backend_create(project, mocker, with_pip):
     backend = backends.VenvBackend(project, None)
     assert backend.ident
     mock_call = mocker.patch("subprocess.check_call")
-    location = backend.create()
+    location = backend.create(with_pip=with_pip)
+    pip_args = [] if with_pip else ["--without-pip"]
     mock_call.assert_called_once_with(
         [
             str(backend._resolved_interpreter.executable),
             "-m",
             "venv",
-            "--without-pip",
             str(location),
+            *pip_args,
         ],
         stdout=ANY,
     )
 
 
-def test_conda_backend_create(project, mocker):
+def test_conda_backend_create(project, mocker, with_pip):
     backend = backends.CondaBackend(project, "3.8")
     assert backend.ident == "3.8"
     mock_call = mocker.patch("subprocess.check_call")
-    location = backend.create()
+    location = backend.create(with_pip=with_pip)
+    pip_args = ["pip"] if with_pip else []
     mock_call.assert_called_once_with(
-        ["conda", "create", "--yes", "--prefix", str(location), "python=3.8"],
+        [
+            "conda",
+            "create",
+            "--yes",
+            "--prefix",
+            str(location),
+            "python=3.8",
+            *pip_args,
+        ],
         stdout=ANY,
     )
 
