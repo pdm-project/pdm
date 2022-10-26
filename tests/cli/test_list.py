@@ -51,41 +51,43 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     )
 
     # Output full graph
-    # TODO: Find out why the chardet and idna versions are different?
     result = invoke(["list", "--graph"], obj=project)
     expects = (
-        "demo 0.0.1 [ Not required ]\n",
-        "+-- chardet 3.0.4 [ required: Any ]\n",
-        "`-- idna 2.7 [ required: Any ]\n",
-        "requests 2.19.1 [ Not required ]\n",
-        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
-        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
-        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
+        "demo 0.0.1 [ Not required ]\n"
+        "+-- chardet 3.0.4 [ required: Any ]\n"
+        "`-- idna 2.7 [ required: Any ]\n"
+        "requests 2.19.1 [ Not required ]\n"
+        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
+        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n"
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
     )
-    expects = "".join(expects)
-    assert expects == result.outputs
-
-    # Only include the dev dep
-    result = invoke(["list", "--graph", "--include", "dev"], obj=project)
-    expects = (
-        "demo 0.0.1 [ Not required ]\n",
-        "+-- chardet [ not installed ] [ required: Any ]\n",  # installed 3.0.4 ?
-        "`-- idna [ not installed ] [ required: Any ]\n",  # installed 2.7 ?
-    )
-    expects = "".join(expects)
     assert expects == result.outputs
 
     # Now exclude the dev dep.
     result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
     expects = (
-        "requests 2.19.1 [ Not required ]\n",
-        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
-        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
-        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
+        "requests 2.19.1 [ Not required ]\n"
+        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
+        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n"
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
     )
-    expects = "".join(expects)
+    assert expects == result.outputs
+
+    # Add chardet and idna explicitly so we have the metadata installed
+    # even though we are only showing the dev deps.
+    actions.do_add(project, dev=True, group="dev", packages=["chardet", "idna"])
+
+    # Only include the dev dep
+    result = invoke(
+        ["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project
+    )
+    expects = (
+        "demo 0.0.1 [ Not required ]\n"
+        "+-- chardet 3.0.4 [ required: Any ]\n"
+        "`-- idna 2.7 [ required: Any ]\n"
+    )
     assert expects == result.outputs
 
 
@@ -116,13 +118,12 @@ def test_list_dependency_graph_with_circular_reverse(project, invoke, repository
     # --reverse flag shows packages reversed and with [circular]
     result = invoke(["list", "--graph", "--reverse"], obj=project)
     expected = (
-        "baz 0.1.0 \n",
-        "`-- foo-bar 0.1.0 [ requires: Any ]\n",
-        "    `-- foo 0.1.0 [ requires: Any ]\n",
-        "        +-- foo-bar [circular] [ requires: Any ]\n",
-        "        `-- test-project 0.0.0 [ requires: ~=0.1 ]\n",
+        "baz 0.1.0 \n"
+        "`-- foo-bar 0.1.0 [ requires: Any ]\n"
+        "    `-- foo 0.1.0 [ requires: Any ]\n"
+        "        +-- foo-bar [circular] [ requires: Any ]\n"
+        "        `-- test-project 0.0.0 [ requires: ~=0.1 ]\n"
     )
-    expected = "".join(expected)
     assert expected in result.outputs
 
     # -r flag shows packages reversed and with [circular]
@@ -451,18 +452,17 @@ def test_list_bare_sorted_name(project, invoke):
     actions.do_add(project, packages=["requests"])
     result = invoke(["list", "--sort", "name"], obj=project)
     expected = (
-        "+--------------------------------------+\n",
-        "| name         | version    | location |\n",
-        "|--------------+------------+----------|\n",
-        "| certifi      | 2018.11.17 |          |\n",
-        "| chardet      | 3.0.4      |          |\n",
-        "| idna         | 2.7        |          |\n",
-        "| requests     | 2.19.1     |          |\n",
-        "| test-project | 0.0.0      |          |\n",
-        "| urllib3      | 1.22       |          |\n",
-        "+--------------------------------------+\n",
+        "+--------------------------------------+\n"
+        "| name         | version    | location |\n"
+        "|--------------+------------+----------|\n"
+        "| certifi      | 2018.11.17 |          |\n"
+        "| chardet      | 3.0.4      |          |\n"
+        "| idna         | 2.7        |          |\n"
+        "| requests     | 2.19.1     |          |\n"
+        "| test-project | 0.0.0      |          |\n"
+        "| urllib3      | 1.22       |          |\n"
+        "+--------------------------------------+\n"
     )
-    expected = "".join(expected)
     assert expected == result.output
 
 
@@ -557,29 +557,40 @@ def test_list_bare_sorted_version(project, invoke):
     assert expected == result.output
 
 
-# # TODO: resolve with graph?
-# # TODO: how to fix this?
-# # "[CandidateNotFound]: No candidate is found for `requests` that
-# # matches the environment or hashes\nAdd '-v' to see the detailed traceback\n"
+# TODO: resolve with graph?
+# TODO: how to fix this?
+# "[CandidateNotFound]: No candidate is found for `requests` that
+# matches the environment or hashes\nAdd '-v' to see the detailed traceback\n"
+# @mock.patch("pdm.termui.ROUNDED", ASCII)
 # @pytest.mark.usefixtures("working_set", "repository")
-# def test_list_bare_sorted_version_resolve(project, invoke, repository):
-#     # project.environment.python_requires = PySpecSet(">=3.6")
-#     actions.do_add(project, packages=["requests"], no_self=False)
-#     invoke(["list", "--sort", "version", "--resolve"], obj=project)
+# def test_list_bare_sorted_version_resolve(project, invoke, repository, working_set):
+#     project.environment.python_requires = PySpecSet(">=3.6")
+#     actions.do_add(project, packages=["requests"])
+#     locked_candidates = project.locked_repository.all_candidates
+#     repository.add_candidate("chardet", "3.0.2")
+#     repository.add_candidate("requests", "2.20.0")
+#     repository.add_candidate("certifi", "2017.4.17")
+#     repository.add_candidate("idna", "2.7")
+#     repository.add_candidate("urllib3", "1.22.1")
+#     repository.add_dependencies(
+#         "requests",
+#         "2.20.0",
+#         [
+#             "certifi>=2017.4.17",
+#             "chardet<3.1.0,>=3.0.2",
+#             "idna<2.8,>=2.5",
+#             "urllib3<1.24,>=1.21.1",
+#         ],
+#     )
 
 #     result = invoke(["list", "--sort", "version", "--resolve"], obj=project)
 #     expected = (
-#         "+--------------------------------------+\n",
-#         "| name         | version    | location |\n",
-#         "|--------------+------------+----------|\n",
-#         "| urllib3      | 1.22       |          |\n",
-#         "| requests     | 2.19.1     |          |\n",
-#         "| idna         | 2.7        |          |\n",
-#         "| certifi      | 2018.11.17 |          |\n",
-#         "| chardet      | 3.0.4      |          |\n",
+#         "+--------------------------------------+\n"
+#         "| name         | version    | location |\n"
+#         "|--------------+------------+----------|\n"
+#         "| urllib3      | 1.22       |          |\n"
 #         "+--------------------------------------+\n"
 #     )
-#     expected = "".join(expected)
 #     assert expected == result.outputs
 
 
@@ -760,6 +771,8 @@ def test_list_csv_include_exclude(project, invoke):
             "name",
             "--include",
             "dev",
+            "--exclude",
+            "*",
         ],
         obj=project,
     )

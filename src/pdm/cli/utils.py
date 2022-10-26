@@ -27,6 +27,7 @@ from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
 from pdm import termui
+from pdm.compat import importlib_metadata as im
 from pdm.exceptions import PdmArgumentError, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
@@ -38,7 +39,6 @@ from pdm.models.requirements import (
     strip_extras,
 )
 from pdm.models.specifiers import get_specifier
-from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 from pdm.utils import is_path_relative_to, url_to_path
 
@@ -156,7 +156,7 @@ class Package:
 
 
 def build_dependency_graph(
-    working_set: WorkingSet, marker_env: dict[str, str] | None = None
+    working_set: Mapping[str, im.Distribution], marker_env: dict[str, str] | None = None
 ) -> DirectedGraph:
     """Build a dependency graph from locked result."""
     graph: DirectedGraph[Package | None] = DirectedGraph()

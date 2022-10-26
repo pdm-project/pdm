@@ -87,7 +87,7 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "--include",
-            default="*",
+            default="",
             help="Dependency groups to include in the output. By default "
             "all are included",
         )
@@ -125,12 +125,15 @@ class Command(BaseCommand):
             raise PdmUsageError(
                 f"--include groups must be selected from: {valid_groups}"
             )
-        exclude = parse_comma_separated_string(options.exclude, lowercase=False)
+        exclude = parse_comma_separated_string(
+            options.exclude, lowercase=False, asterisk_values=valid_groups
+        )
         if exclude and not all(g in valid_groups for g in exclude):
             raise PdmUsageError(
                 f"--exclude groups must be selected from: {valid_groups}"
             )
-        selected_groups = set(g for g in include if g not in exclude)
+
+        selected_groups = (set(valid_groups) - set(exclude)) | set(include)
 
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.
@@ -144,6 +147,7 @@ class Command(BaseCommand):
             resolved_set = set(
                 c.prepare(project.environment).metadata for c in candidates.values()
             )
+            print(resolved_set)
             packages = {p.metadata["Name"]: p for p in resolved_set}
 
         # Use requirements from the working set (currently installed).
@@ -183,7 +187,7 @@ class Command(BaseCommand):
             raise PdmUsageError("--json cannot be used with --freeze")
         if options.markdown:
             raise PdmUsageError("--markdown cannot be used with --freeze")
-        if options.include != "*" or options.exclude:
+        if options.include or options.exclude:
             raise PdmUsageError("--include/--exclude cannot be used with --freeze")
 
         root = project.root.absolute().as_posix().lstrip("/")
@@ -213,7 +217,7 @@ class Command(BaseCommand):
             raise PdmUsageError("--sort cannot be used with --graph")
 
         dep_graph = build_dependency_graph(
-            packages, project.environment.marker_environment  # type: ignore
+            packages, project.environment.marker_environment
         )
         show_dependency_graph(
             project, dep_graph, reverse=options.reverse, json=options.json
