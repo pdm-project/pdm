@@ -231,13 +231,16 @@ def test_create_venv_first_time(invoke, project, local_finder):
     assert Path(project.project_config["python.path"]).relative_to(venv_path)
 
 
-@pytest.mark.usefixtures("venv_backends")
-def test_create_venv_in_project(invoke, project, local_finder):
-    project.project_config.update({"venv.in_project": True})
+@pytest.mark.usefixtures("venv_backends", "local_finder")
+@pytest.mark.parametrize("with_pip", [True, False])
+def test_create_venv_in_project(invoke, project, with_pip):
+    project.project_config.update({"venv.in_project": True, "venv.with_pip": with_pip})
     del project.project_config["python.path"]
     result = invoke(["install"], obj=project)
     assert result.exit_code == 0
     assert project.root.joinpath(".venv").exists()
+    working_set = project.environment.get_working_set()
+    assert ("pip" in working_set) is with_pip
 
 
 @pytest.mark.usefixtures("venv_backends")

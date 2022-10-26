@@ -60,6 +60,27 @@ def test_lock_refresh_keep_consistent(invoke, project, repository):
     assert project.lockfile_file.read_text() == previous
 
 
+def test_lock_check_no_change_success(invoke, project, repository):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    assert project.is_lockfile_hash_match()
+
+    result = invoke(["lock", "--check"], obj=project)
+    assert result.exit_code == 0
+
+
+def test_lock_check_change_fails(invoke, project, repository):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    result = invoke(["lock"], obj=project)
+    assert result.exit_code == 0
+    assert project.is_lockfile_hash_match()
+
+    project.add_dependencies({"pyyaml": parse_requirement("pyyaml")})
+    result = invoke(["lock", "--check"], obj=project)
+    assert result.exit_code == 1
+
+
 @pytest.mark.usefixtures("repository")
 def test_innovations_with_specified_lockfile(invoke, project, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")})

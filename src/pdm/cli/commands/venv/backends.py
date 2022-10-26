@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Tuple, Type
+from typing import Any, Iterable, List, Mapping, Optional, Tuple, Type
 
 from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
@@ -23,6 +23,10 @@ class Backend(abc.ABC):
     def __init__(self, project: Project, python: Optional[str]) -> None:
         self.project = project
         self.python = python
+
+    @abc.abstractmethod
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        pass
 
     @cached_property
     def _resolved_interpreter(self) -> PythonInfo:
@@ -91,11 +95,13 @@ class Backend(abc.ABC):
         force: bool = False,
         in_project: bool = False,
         prompt: Optional[str] = None,
+        with_pip: bool = False,
     ) -> Path:
         if in_project:
             location = self.project.root / ".venv"
         else:
             location = self.get_location(name)
+        args = (*self.pip_args(with_pip), *args)
         if prompt is not None:
             prompt_string = prompt.format(
                 project_name=self.project.root.name.lower() or "virtualenv",
@@ -112,30 +118,38 @@ class Backend(abc.ABC):
 
 
 class VirtualenvBackend(Backend):
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip or self.project.config["venv.with_pip"]:
+            return ()
+        return ("--no-pip", "--no-setuptools", "--no-wheel")
+
     def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
         cmd = [
             sys.executable,
             "-m",
             "virtualenv",
-            "--no-pip",
-            "--no-setuptools",
-            "--no-wheel",
             str(location),
+            "-p",
+            str(self._resolved_interpreter.executable),
+            *args,
         ]
-        cmd.extend(["-p", str(self._resolved_interpreter.executable)])
-        cmd.extend(args)
         self.subprocess_call(cmd)
 
 
 class VenvBackend(VirtualenvBackend):
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip or self.project.config["venv.with_pip"]:
+            return ()
+        return ("--without-pip",)
+
     def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
         cmd = [
             str(self._resolved_interpreter.executable),
             "-m",
             "venv",
-            "--without-pip",
             str(location),
-        ] + list(args)
+            *args,
+        ]
         self.subprocess_call(cmd)
 
 
@@ -147,6 +161,11 @@ class CondaBackend(Backend):
         if self.python:
             return self.python
         return super().ident
+
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip or self.project.config["venv.with_pip"]:
+            return ("pip",)
+        return ()
 
     def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
         if self.python:

@@ -206,6 +206,7 @@ _pdm() {
         "--no-isolation[Do not isolate the build in a clean environment]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--refresh[Don't update pinned versions, only refresh the lock file]"
+        "--check[Check if the lock file is up to date and quit]"
       )
       ;;
     self)
