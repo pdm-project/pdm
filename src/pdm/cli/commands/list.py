@@ -117,23 +117,31 @@ class Command(BaseCommand):
         # Set up `--include` and `--exclude` dep groups.
         # Include everything by default (*) then exclude after.
         # Check to make sure that only valid dep group names are given.
-        valid_groups = [g for g in project.iter_groups()] + [SUBDEP_GROUP_LABEL]
-        include = parse_comma_separated_string(
-            options.include, lowercase=False, asterisk_values=valid_groups
+        valid_groups = set([g for g in project.iter_groups()] + [SUBDEP_GROUP_LABEL])
+        include = set(
+            parse_comma_separated_string(
+                options.include, lowercase=False, asterisk_values=valid_groups
+            )
         )
         if not all(g in valid_groups for g in include):
             raise PdmUsageError(
                 f"--include groups must be selected from: {valid_groups}"
             )
-        exclude = parse_comma_separated_string(
-            options.exclude, lowercase=False, asterisk_values=valid_groups
+        exclude = set(
+            parse_comma_separated_string(
+                options.exclude, lowercase=False, asterisk_values=valid_groups
+            )
         )
         if exclude and not all(g in valid_groups for g in exclude):
             raise PdmUsageError(
                 f"--exclude groups must be selected from: {valid_groups}"
             )
 
-        selected_groups = (set(valid_groups) - set(exclude)) | set(include)
+        # Include selects only certain groups when set, but always selects :sub
+        # unless it is explicitly unset.
+        selected_groups = valid_groups if len(include) == 0 else include
+        selected_groups = selected_groups | set([SUBDEP_GROUP_LABEL])
+        selected_groups = selected_groups - (exclude - include)
 
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.

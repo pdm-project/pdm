@@ -1,4 +1,5 @@
 import json
+import os
 import pathlib
 from unittest import mock
 
@@ -53,15 +54,16 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     # Output full graph
     result = invoke(["list", "--graph"], obj=project)
     expects = (
-        "demo 0.0.1 [ Not required ]\n"
-        "+-- chardet 3.0.4 [ required: Any ]\n"
-        "`-- idna 2.7 [ required: Any ]\n"
-        "requests 2.19.1 [ Not required ]\n"
-        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
-        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
-        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n"
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+        "demo 0.0.1 [ Not required ]\n",
+        "+-- chardet 3.0.4 [ required: Any ]\n" if os.name == "nt" else "",
+        "`-- idna 2.7 [ required: Any ]\n",
+        "requests 2.19.1 [ Not required ]\n",
+        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n",
+        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
+        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n",
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
     )
+    expects = "".join(expects)
     assert expects == result.outputs
 
     # Now exclude the dev dep.
@@ -69,14 +71,18 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     expects = (
         "requests 2.19.1 [ Not required ]\n"
         "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
-        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n"
+        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
         "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n"
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n"
+        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
     )
+    expects = "".join(expects)
     assert expects == result.outputs
 
     # Add chardet and idna explicitly so we have the metadata installed
-    # even though we are only showing the dev deps.
+    # even though we are only showing the dev deps.  Note that the demo
+    # package installs it is a sub-dep on windows, and that it is explicitly
+    # installed below on posix systems, so the graph output is slightly
+    # different.
     actions.do_add(project, dev=True, group="dev", packages=["chardet", "idna"])
 
     # Only include the dev dep
@@ -84,10 +90,12 @@ def test_list_dependency_graph_include_exclude(project, invoke):
         ["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project
     )
     expects = (
-        "demo 0.0.1 [ Not required ]\n"
-        "+-- chardet 3.0.4 [ required: Any ]\n"
-        "`-- idna 2.7 [ required: Any ]\n"
+        "chardet 3.0.4 [ required: ~=3.0 ]\n" if os.name != "nt" else "",
+        "demo 0.0.1 [ Not required ]\n",
+        "+-- chardet 3.0.4 [ required: Any ]\n" if os.name == "nt" else "",
+        "`-- idna 2.7 [ required: Any ]\n",
     )
+    expects = "".join(expects)
     assert expects == result.outputs
 
 
@@ -758,6 +766,48 @@ def test_list_csv_include_exclude(project, invoke):
         "requests,2.19.1,:sub\n"
         "urllib3,1.22,:sub\n"
     )
+    assert expected == result.output
+
+    # Sub always included.
+    result = invoke(
+        [
+            "list",
+            "--csv",
+            "--fields",
+            "name,groups",
+            "--sort",
+            "name",
+            "--include",
+            "dev",
+        ],
+        obj=project,
+    )
+    expected = (
+        "name,groups\n"
+        "certifi,:sub\n"
+        "chardet,:sub\n"
+        "demo,dev\n"
+        "idna,:sub\n"
+        "requests,:sub\n"
+        "urllib3,:sub\n"
+    )
+    assert expected == result.output
+
+    # Include all (default) except sub
+    result = invoke(
+        [
+            "list",
+            "--csv",
+            "--fields",
+            "name,groups",
+            "--sort",
+            "name",
+            "--exclude",
+            ":sub",
+        ],
+        obj=project,
+    )
+    expected = "name,groups\n" "demo,dev\n"
     assert expected == result.output
 
     # Show just the dev group
