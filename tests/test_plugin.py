@@ -38,7 +38,7 @@ def test_plugin_new_command(invoke, mocker, project, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
-        return_value={"pdm": [make_entry_point(new_command)]},
+        return_value=[make_entry_point(new_command)],
     )
     core.init_parser()
     core.load_plugins()
@@ -56,7 +56,7 @@ def test_plugin_replace_command(invoke, mocker, project, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
-        return_value={"pdm": [make_entry_point(replace_command)]},
+        return_value=[make_entry_point(replace_command)],
     )
     core.init_parser()
     core.load_plugins()
@@ -72,9 +72,7 @@ def test_load_multiple_plugings(invoke, mocker, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
-        return_value={
-            "pdm": [make_entry_point(new_command), make_entry_point(add_new_config)]
-        },
+        return_value=[make_entry_point(new_command), make_entry_point(add_new_config)],
     )
     core.init_parser()
     core.load_plugins()
@@ -87,13 +85,15 @@ def test_load_multiple_plugings(invoke, mocker, core):
 
 
 def test_old_entry_point_compatibility(invoke, mocker, core):
+    def get_entry_points(group):
+        if group == "pdm":
+            return [make_entry_point(new_command)]
+        if group == "pdm.plugin":
+            return [make_entry_point(add_new_config)]
+        return []
+
     mocker.patch.object(
-        importlib_metadata,
-        "entry_points",
-        return_value={
-            "pdm": [make_entry_point(new_command)],
-            "pdm.plugin": [make_entry_point(add_new_config)],
-        },
+        importlib_metadata, "entry_points", side_effect=get_entry_points
     )
     core.init_parser()
     core.load_plugins()
