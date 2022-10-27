@@ -14,7 +14,7 @@ import os
 import pkgutil
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Iterable, cast
 
 from resolvelib import Resolver
 
@@ -238,10 +238,11 @@ class Core:
                 ...
             ```
         """
-        entry_points = importlib_metadata.entry_points()
-        for plugin in itertools.chain(
-            entry_points.get("pdm", []), entry_points.get("pdm.plugin", [])
-        ):
+        entry_points: Iterable[importlib_metadata.EntryPoint] = itertools.chain(
+            importlib_metadata.entry_points(group="pdm"),
+            importlib_metadata.entry_points(group="pdm.plugin"),
+        )
+        for plugin in entry_points:
             try:
                 plugin.load()(self)
             except Exception as e:
