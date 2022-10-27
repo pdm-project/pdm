@@ -98,10 +98,11 @@ class Requirement:
         if not self.specifier:
             return False
 
-        return len(self.specifier) == 1 and next(iter(self.specifier)).operator in (
-            "==",
-            "===",
-        )
+        if len(self.specifier) != 1:
+            return False
+
+        sp = next(iter(self.specifier))
+        return sp.operator == "===" or sp.operator == "==" and "*" not in sp.version
 
     def as_pinned_version(self: T, other_version: str | None) -> T:
         """Return a new requirement with the given pinned version."""
