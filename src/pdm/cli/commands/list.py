@@ -155,7 +155,6 @@ class Command(BaseCommand):
             resolved_set = set(
                 c.prepare(project.environment).metadata for c in candidates.values()
             )
-            print(resolved_set)
             packages = {p.metadata["Name"]: p for p in resolved_set}
 
         # Use requirements from the working set (currently installed).
@@ -299,14 +298,14 @@ class Command(BaseCommand):
 def parse_comma_separated_string(
     comma_string: str,
     lowercase: bool = True,
-    asterisk_values: Optional[Sequence[str]] = None,
+    asterisk_values: Optional[Set[str]] = None,
 ) -> List[str]:
     """Parse a CLI comma separated string.
     Apply optional lowercase transformation and if the value given is "*" then
     return a list of pre-defined values (`asterisk_values`).
     """
     if asterisk_values and comma_string.strip() == "*":
-        return asterisk_values
+        return list(asterisk_values)
     items = f"{comma_string}".split(",")
     items = [el.strip() for el in items if el]
     if lowercase:
@@ -322,7 +321,7 @@ class Listable:
     """
 
     # Fields that users are allowed to sort on.
-    KEYS = ["name", "groups", "version", "homepage", "licenses", "location"]
+    KEYS = set(["name", "groups", "version", "homepage", "licenses", "location"])
 
     def __init__(self, dist: im.Distribution, groups: Set[str]):
         self.dist = dist
