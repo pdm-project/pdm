@@ -7,11 +7,15 @@ else:
 
 
 if sys.version_info >= (3, 8):
-    import importlib.metadata as importlib_metadata
     from typing import Literal, Protocol, TypedDict
 else:
-    import importlib_metadata
     from typing_extensions import Literal, Protocol, TypedDict
+
+if sys.version_info >= (3, 10):
+    import importlib.metadata as importlib_metadata
+else:
+    import importlib_metadata
+
 
 Distribution = importlib_metadata.Distribution
 
