@@ -299,7 +299,7 @@ class Command(BaseCommand):
 def parse_comma_separated_string(
     comma_string: str,
     lowercase: bool = True,
-    asterisk_values: Optional[List[str]] = None,
+    asterisk_values: Optional[Sequence[str]] = None,
 ) -> List[str]:
     """Parse a CLI comma separated string.
     Apply optional lowercase transformation and if the value given is "*" then
