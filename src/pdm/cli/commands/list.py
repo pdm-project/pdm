@@ -327,19 +327,19 @@ class Listable:
     def __init__(self, dist: im.Distribution, groups: set[str]):
         self.dist = dist
 
-        self.name: str | None = dist.metadata.get("Name")
+        self.name: str | None = dist.metadata["Name"]
         self.groups = "|".join(groups)
 
-        self.version: str | None = dist.metadata.get("Version")
+        self.version: str | None = dist.metadata["Version"]
         self.version = None if self.version == "UNKNOWN" else self.version
 
-        self.homepage: str | None = dist.metadata.get("Home-Page")
+        self.homepage: str | None = dist.metadata["Home-Page"]
         self.homepage = None if self.homepage == "UNKNOWN" else self.homepage
 
         # If the License metadata field is empty or UNKNOWN then try to
         # find the license in the Trove classifiers.  There may be more than one
         # so generate a pipe separated list (to avoid complexity with CSV export).
-        self.licenses: str | None = dist.metadata.get("License")
+        self.licenses: str | None = dist.metadata["License"]
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
         if not self.licenses:
             classifier_licenses = [
