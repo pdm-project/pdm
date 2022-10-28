@@ -21,7 +21,6 @@ def test_project_no_init_error(project_no_init):
 
     for handler in (
         actions.do_add,
-        actions.do_list,
         actions.do_lock,
         actions.do_update,
     ):
@@ -63,11 +62,11 @@ def test_global_project_other_location(invoke, project):
 
 
 def test_uncaught_error(invoke, mocker):
-    mocker.patch.object(actions, "do_list", side_effect=RuntimeError("test error"))
-    result = invoke(["list"])
+    mocker.patch.object(actions, "do_lock", side_effect=RuntimeError("test error"))
+    result = invoke(["lock"])
     assert "[RuntimeError]: test error" in result.stderr
 
-    result = invoke(["list", "-v"])
+    result = invoke(["lock", "-v"])
     assert isinstance(result.exception, RuntimeError)
 
 

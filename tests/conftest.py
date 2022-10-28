@@ -189,11 +189,13 @@ def build_env():
 
 
 class Distribution:
-    def __init__(self, key, version, editable=False):
+    def __init__(self, key, version, editable=False, metadata=None):
         self.version = version
         self.link_file = "editable" if editable else None
         self.dependencies = []
-        self.metadata = {"Name": key}
+        self.metadata = {"Name": key, "Version": version}
+        if metadata:
+            self.metadata = {**self.metadata, **metadata}
         self.name = key
 
     def as_req(self):

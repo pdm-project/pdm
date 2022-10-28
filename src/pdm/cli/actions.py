@@ -26,7 +26,6 @@ from pdm.cli.utils import (
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
-    get_dist_location,
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
@@ -468,52 +467,6 @@ def do_remove(
             dry_run=dry_run,
             hooks=hooks,
         )
-
-
-def do_list(
-    project: Project,
-    graph: bool = False,
-    reverse: bool = False,
-    freeze: bool = False,
-    json: bool = False,
-) -> None:
-    """Display a list of packages installed in the local packages directory."""
-    from pdm.cli.utils import build_dependency_graph, show_dependency_graph
-
-    check_project_file(project)
-    working_set = project.environment.get_working_set()
-    if graph:
-        dep_graph = build_dependency_graph(
-            working_set, project.environment.marker_environment
-        )
-        show_dependency_graph(project, dep_graph, reverse=reverse, json=json)
-    else:
-        if reverse:
-            raise PdmUsageError("--reverse must be used with --graph")
-        if json:
-            raise PdmUsageError("--json must be used with --graph")
-        if freeze:
-            reqs = sorted(
-                (
-                    Requirement.from_dist(dist)
-                    .as_line()
-                    .replace(
-                        "${PROJECT_ROOT}",
-                        project.root.absolute().as_posix().lstrip("/"),
-                    )
-                    for dist in sorted(
-                        working_set.values(), key=lambda d: d.metadata["Name"]
-                    )
-                ),
-                key=lambda x: x.lower(),
-            )
-            project.core.ui.echo("\n".join(reqs))
-            return
-        rows = [
-            (f"[req]{k}[/]", f"[warning]{v.version}[/]", get_dist_location(v))
-            for k, v in sorted(working_set.items())
-        ]
-        project.core.ui.display_columns(rows, ["Package", "Version", "Location"])
 
 
 def do_build(
