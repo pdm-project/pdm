@@ -530,9 +530,12 @@ class Project:
         return make_candidate(req, name=self.meta.name, version=self.meta.version)
 
     def get_content_hash(self, algo: str = "md5") -> str:
-        # Only calculate sources and dependencies groups. Otherwise lock file is
+        # Generate a hash based on the external dependencies, as well
+        # as the identity of the project. Otherwise lock file is
         # considered as unchanged.
         dump_data = {
+            "version": self.meta.version,
+            "name": self.meta.name,
             "sources": self.tool_settings.get("source", []),
             "dependencies": self.meta.get("dependencies", []),
             "dev-dependencies": self.tool_settings.get("dev-dependencies", {}),
