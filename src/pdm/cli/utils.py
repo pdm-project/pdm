@@ -180,10 +180,9 @@ def build_dependency_graph(
                     include_default=True,
                 )
             )
-            if include_sub:
-                for req in requirements:
-                    if not req.marker or req.marker.evaluate(marker_env):
-                        reqs[req.identify()] = req
+            for req in requirements:
+                if not req.marker or req.marker.evaluate(marker_env):
+                    reqs[req.identify()] = req
             version: str | None = dist.version
         else:
             version = None
@@ -193,10 +192,10 @@ def build_dependency_graph(
             if extras:
                 node_with_extras.add(name)
             graph.add(node)
-
-            for k in reqs:
-                child = add_package(k, working_set.get(strip_extras(k)[0]))
-                graph.connect(node, child)
+            if include_sub:
+                for k in reqs:
+                    child = add_package(k, working_set.get(strip_extras(k)[0]))
+                    graph.connect(node, child)
 
         return node
 
