@@ -268,3 +268,31 @@ def test_iter_project_venvs(project):
     dot_venv_python.touch()
     venv_keys = [key for key, _ in utils.iter_venvs(project)]
     assert sorted(venv_keys) == ["bar", "baz", "foo", "in-project"]
+
+
+def test_lockfile_hash_is_idempotent(project):
+    '''Base case for hashing ensuring no randomness or ordering issues.'''
+    assert project.get_content_hash() == project.get_content_hash()
+
+
+def test_lockfile_hash_uses_self_name(project):
+    '''Validates that if the project is renamed the hash changes. This
+    ensures that any self-referential extras have to be refreshed.'''
+    original_hash = project.get_content_hash()
+
+    project.pyproject['project']['name'] = "this-is-different"
+
+    assert original_hash != project.get_content_hash(), "hash must change when name changes"
+
+def test_lockfile_hash_uses_self_version(project):
+    '''Validates that if the project has a version changes the hash
+    changes. This ensures that the local requirement encoded into
+    lockfile is regenerated. Otherwise the project fails to install as
+    there's e.g. 1.2.3 in the pyproject but only 1.2.2 in the
+    lockfile.
+    '''
+    original_hash = project.get_content_hash()
+
+    project.pyproject['project']['version'] = "11.22.33"
+
+    assert original_hash != project.get_content_hash(), "hash must change when version changes"
