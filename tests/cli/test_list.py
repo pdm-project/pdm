@@ -20,7 +20,7 @@ def test_list_command(project, invoke, mocker):
     m.assert_called_once()
 
 
-@pytest.mark.usefixtures("repository", "working_set")
+@pytest.mark.usefixtures("working_set")
 def test_list_graph_command(project, invoke, mocker):
     # Calls the correct handler within the list command
     m = mocker.patch.object(Command, "handle_graph")
@@ -29,7 +29,7 @@ def test_list_graph_command(project, invoke, mocker):
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
-@pytest.mark.usefixtures("repository", "working_set")
+@pytest.mark.usefixtures("working_set")
 def test_list_dependency_graph(project, invoke):
     # Shows a line that contains a sub requirement (any order).
     actions.do_add(project, packages=["requests"])
@@ -39,7 +39,7 @@ def test_list_dependency_graph(project, invoke):
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
-@pytest.mark.usefixtures("repository", "working_set")
+@pytest.mark.usefixtures("working_set")
 def test_list_dependency_graph_include_exclude(project, invoke):
     # Just include dev packages in the graph
     project.environment.python_requires = PySpecSet(">=3.6")
@@ -68,33 +68,14 @@ def test_list_dependency_graph_include_exclude(project, invoke):
 
     # Now exclude the dev dep.
     result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
-    expects = (
-        "requests 2.19.1 [ Not required ]\n"
-        "+-- certifi 2018.11.17 [ required: >=2017.4.17 ]\n"
-        "+-- chardet 3.0.4 [ required: <3.1.0,>=3.0.2 ]\n",
-        "+-- idna 2.7 [ required: <2.8,>=2.5 ]\n"
-        "`-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]\n",
-    )
-    expects = "".join(expects)
+    expects = ""
     assert expects == result.outputs
-
-    # Add chardet and idna explicitly so we have the metadata installed
-    # even though we are only showing the dev deps.  Note that the demo
-    # package installs it is a sub-dep on windows, and that it is explicitly
-    # installed below on posix systems, so the graph output is slightly
-    # different.
-    actions.do_add(project, dev=True, group="dev", packages=["chardet", "idna"])
 
     # Only include the dev dep
     result = invoke(
         ["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project
     )
-    expects = (
-        "chardet 3.0.4 [ required: ~=3.0 ]\n" if os.name != "nt" else "",
-        "demo 0.0.1 [ Not required ]\n",
-        "+-- chardet 3.0.4 [ required: Any ]\n" if os.name == "nt" else "",
-        "`-- idna 2.7 [ required: Any ]\n",
-    )
+    expects = "demo[security] 0.0.1 [ required: Any ]\n"
     expects = "".join(expects)
     assert expects == result.outputs
 
@@ -151,7 +132,7 @@ def test_list_reverse_without_graph_flag(project, invoke):
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
-@pytest.mark.usefixtures("repository", "working_set")
+@pytest.mark.usefixtures("working_set")
 def test_list_reverse_dependency_graph(project, invoke):
     # requests visible on leaf node
     actions.do_add(project, packages=["requests"])
@@ -159,7 +140,7 @@ def test_list_reverse_dependency_graph(project, invoke):
     assert "`-- requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in result.outputs
 
 
-@pytest.mark.usefixtures("repository", "working_set")
+@pytest.mark.usefixtures("working_set")
 def test_list_json(project, invoke):
     # check json output matches graph output
     actions.do_add(project, packages=["requests"], no_self=True)
@@ -201,7 +182,7 @@ def test_list_json(project, invoke):
     assert expected == json.loads(result.outputs)
 
 
-@pytest.mark.usefixtures("repository", "working_set")
+@pytest.mark.usefixtures("working_set")
 def test_list_json_reverse(project, invoke):
     # check json output matches reversed graph
     actions.do_add(project, packages=["requests"], no_self=True)
@@ -474,7 +455,8 @@ def test_list_bare_sorted_name(project, invoke):
     assert expected == result.output
 
 
-def _setup_fake_working_set(working_set):
+@pytest.fixture()
+def fake_working_set(working_set):
     """Create fake packages with license data
     for testing.
     """
@@ -527,6 +509,21 @@ def _setup_fake_working_set(working_set):
     # Place our fake packages in the working set.
     for candidate in [foo, bar, baz, unknown, classifier]:
         working_set.add_distribution(candidate)
+    return working_set
+
+
+@pytest.fixture()
+def fake_metadata(mocker, repository):
+    def prepare_metadata(self):
+        can = self.candidate
+        dist = Distribution(can.name, can.version, can.req.editable)
+        dist.dependencies = repository.get_raw_dependencies(can)
+        return dist
+
+    return mocker.patch(
+        "pdm.models.candidates.PreparedCandidate.prepare_metadata",
+        prepare_metadata,
+    )
 
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
@@ -565,47 +562,33 @@ def test_list_bare_sorted_version(project, invoke):
     assert expected == result.output
 
 
-# TODO: resolve with graph?
-# TODO: how to fix this?
-# "[CandidateNotFound]: No candidate is found for `requests` that
-# matches the environment or hashes\nAdd '-v' to see the detailed traceback\n"
-# @mock.patch("pdm.termui.ROUNDED", ASCII)
-# @pytest.mark.usefixtures("working_set", "repository")
-# def test_list_bare_sorted_version_resolve(project, invoke, repository, working_set):
-#     project.environment.python_requires = PySpecSet(">=3.6")
-#     actions.do_add(project, packages=["requests"])
-#     locked_candidates = project.locked_repository.all_candidates
-#     repository.add_candidate("chardet", "3.0.2")
-#     repository.add_candidate("requests", "2.20.0")
-#     repository.add_candidate("certifi", "2017.4.17")
-#     repository.add_candidate("idna", "2.7")
-#     repository.add_candidate("urllib3", "1.22.1")
-#     repository.add_dependencies(
-#         "requests",
-#         "2.20.0",
-#         [
-#             "certifi>=2017.4.17",
-#             "chardet<3.1.0,>=3.0.2",
-#             "idna<2.8,>=2.5",
-#             "urllib3<1.24,>=1.21.1",
-#         ],
-#     )
+@mock.patch("pdm.termui.ROUNDED", ASCII)
+@pytest.mark.usefixtures("fake_metadata")
+def test_list_bare_sorted_version_resolve(project, invoke, working_set):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    actions.do_add(project, packages=["requests"], sync=False)
 
-#     result = invoke(["list", "--sort", "version", "--resolve"], obj=project)
-#     expected = (
-#         "+--------------------------------------+\n"
-#         "| name         | version    | location |\n"
-#         "|--------------+------------+----------|\n"
-#         "| urllib3      | 1.22       |          |\n"
-#         "+--------------------------------------+\n"
-#     )
-#     assert expected == result.outputs
+    result = invoke(
+        ["list", "--sort", "version", "--resolve", "-v"], obj=project, strict=True
+    )
+    assert "requests" not in working_set
+    expected = (
+        "+----------------------------------+\n"
+        "| name     | version    | location |\n"
+        "|----------+------------+----------|\n"
+        "| urllib3  | 1.22       |          |\n"
+        "| requests | 2.19.1     |          |\n"
+        "| idna     | 2.7        |          |\n"
+        "| certifi  | 2018.11.17 |          |\n"
+        "| chardet  | 3.0.4      |          |\n"
+        "+----------------------------------+\n"
+    )
+    assert expected == result.outputs, result.outputs
 
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
-@pytest.mark.usefixtures("working_set")
-def test_list_bare_fields_licences(project, invoke, working_set):
-    _setup_fake_working_set(working_set)
+@pytest.mark.usefixtures("fake_working_set")
+def test_list_bare_fields_licences(project, invoke):
     result = invoke(["list", "--fields", "name,version,groups,licenses"], obj=project)
     expected = (
         "+---------------------------------------------------------+\n"
@@ -621,9 +604,8 @@ def test_list_bare_fields_licences(project, invoke, working_set):
     assert expected == result.output
 
 
-@pytest.mark.usefixtures("working_set")
-def test_list_csv_fields_licences(project, invoke, working_set):
-    _setup_fake_working_set(working_set)
+@pytest.mark.usefixtures("fake_working_set")
+def test_list_csv_fields_licences(project, invoke):
     result = invoke(["list", "--csv", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "name,version,licenses\n"
@@ -636,9 +618,8 @@ def test_list_csv_fields_licences(project, invoke, working_set):
     assert expected == result.output
 
 
-@pytest.mark.usefixtures("working_set")
-def test_list_json_fields_licences(project, invoke, working_set):
-    _setup_fake_working_set(working_set)
+@pytest.mark.usefixtures("fake_working_set")
+def test_list_json_fields_licences(project, invoke):
     result = invoke(
         ["list", "--json", "--fields", "name,version,licenses"], obj=project
     )
@@ -653,10 +634,8 @@ def test_list_json_fields_licences(project, invoke, working_set):
     assert expected == json.loads(result.outputs)
 
 
-@pytest.mark.usefixtures("working_set")
-def test_list_markdown_fields_licences(project, invoke, working_set):
-    _setup_fake_working_set(working_set)
-
+@pytest.mark.usefixtures("fake_working_set")
+def test_list_markdown_fields_licences(project, invoke):
     result = invoke(
         ["list", "--markdown", "--fields", "name,version,licenses"], obj=project
     )
@@ -843,12 +822,5 @@ def test_list_csv_include_exclude(project, invoke):
         ],
         obj=project,
     )
-    expected = (
-        "name,version,groups\n"
-        "certifi,2018.11.17,:sub\n"
-        "chardet,3.0.4,:sub\n"
-        "idna,2.7,:sub\n"
-        "requests,2.19.1,:sub\n"
-        "urllib3,1.22,:sub\n"
-    )
+    expected = "name,version,groups\n"
     assert expected == result.output

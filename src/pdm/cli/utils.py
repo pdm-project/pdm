@@ -156,7 +156,10 @@ class Package:
 
 
 def build_dependency_graph(
-    working_set: Mapping[str, im.Distribution], marker_env: dict[str, str] | None = None
+    working_set: Mapping[str, im.Distribution],
+    marker_env: dict[str, str] | None = None,
+    selected: set[str] | None = None,
+    include_sub: bool = True,
 ) -> DirectedGraph:
     """Build a dependency graph from locked result."""
     graph: DirectedGraph[Package | None] = DirectedGraph()
@@ -177,9 +180,10 @@ def build_dependency_graph(
                     include_default=True,
                 )
             )
-            for req in requirements:
-                if not req.marker or req.marker.evaluate(marker_env):
-                    reqs[req.identify()] = req
+            if include_sub:
+                for req in requirements:
+                    if not req.marker or req.marker.evaluate(marker_env):
+                        reqs[req.identify()] = req
             version: str | None = dist.version
         else:
             version = None
@@ -196,7 +200,18 @@ def build_dependency_graph(
 
         return node
 
+    selected_map: dict[str, str] = {}
+    for key in selected or ():
+        name = key.split("[")[0]
+        if len(key) >= len(selected_map.get(name, "")):
+            # Ensure key with extras remains
+            selected_map[name] = key
     for k, dist in working_set.items():
+        if selected is not None:
+            name = k.split("[")[0]
+            if name not in selected_map:
+                continue
+            k = selected_map[name]
         add_package(k, dist)
     for node in list(graph):
         if node is not None and not list(graph.iter_parents(node)):

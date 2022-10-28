@@ -119,6 +119,14 @@ class TestRepository(BaseRepository):
         self._pypi_data = {}
         self.load_fixtures()
 
+    def get_raw_dependencies(self, candidate):
+        try:
+            pypi_data = self._pypi_data[candidate.req.key][candidate.version]
+        except KeyError:
+            return candidate.prepare(self.environment).metadata.requires or []
+        else:
+            return pypi_data.get("dependencies", [])
+
     def add_candidate(self, name, version, requires_python=""):
         pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(
             version, {}
@@ -188,15 +196,27 @@ def build_env():
         yield d
 
 
+class Metadata(dict):
+    def get_all(self, name, fallback=None):
+        return [self[name]] if name in self else fallback
+
+    def __getitem__(self, __key):
+        return dict.get(self, __key)
+
+
 class Distribution:
     def __init__(self, key, version, editable=False, metadata=None):
         self.version = version
         self.link_file = "editable" if editable else None
         self.dependencies = []
-        self.metadata = {"Name": key, "Version": version}
+        self._metadata = {"Name": key, "Version": version}
         if metadata:
-            self.metadata = {**self.metadata, **metadata}
+            self._metadata.update(metadata)
         self.name = key
+
+    @property
+    def metadata(self):
+        return Metadata(self._metadata)
 
     def as_req(self):
         return parse_requirement(f"{self.name}=={self.version}")
@@ -239,10 +259,9 @@ def working_set(mocker, repository):
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate):
-        dependencies = repository.get_dependencies(candidate)[0]
         key = normalize_name(candidate.name)
         dist = Distribution(key, candidate.version, candidate.req.editable)
-        dist.dependencies = [dep.as_line() for dep in dependencies]
+        dist.dependencies = repository.get_raw_dependencies(candidate)
         rv.add_distribution(dist)
 
     def uninstall(dist):

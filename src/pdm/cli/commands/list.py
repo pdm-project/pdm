@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import argparse
+import csv
+import io
 import json
 from collections import defaultdict
-from typing import DefaultDict, Dict, List, Optional, Sequence, Set
+from typing import Iterable, Mapping, Sequence
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import (
+    DirectedGraph,
+    Package,
     build_dependency_graph,
     check_project_file,
     get_dist_location,
@@ -61,7 +67,7 @@ class Command(BaseCommand):
             "--sort",
             default=None,
             help="Sort the output using a given field name. If nothing is "
-            "set, no sort is applied.",
+            "set, no sort is applied. Multiple fields can be combined with ','.",
         )
 
         list_formats = parser.add_mutually_exclusive_group()
@@ -109,10 +115,12 @@ class Command(BaseCommand):
             return
 
         # Map dependency groups to requirements.
-        name_to_groups = defaultdict(set)  # type: defaultdict[Optional[str], Set[str]]
+        name_to_groups: Mapping[str, set[str]] = defaultdict(set)
         for g in project.iter_groups():
-            for r in project.get_dependencies(g).values():
-                name_to_groups[r.name].add(g)
+            for k in project.get_dependencies(g):
+                if "[" in k:
+                    k = k.split("[")[0]
+                name_to_groups[k].add(g)
 
         # Set up `--include` and `--exclude` dep groups.
         # Include everything by default (*) then exclude after.
@@ -139,42 +147,43 @@ class Command(BaseCommand):
 
         # Include selects only certain groups when set, but always selects :sub
         # unless it is explicitly unset.
-        selected_groups = valid_groups if len(include) == 0 else include
-        selected_groups = selected_groups | set([SUBDEP_GROUP_LABEL])
+        selected_groups = include if include else valid_groups
+        selected_groups = selected_groups | {SUBDEP_GROUP_LABEL}
         selected_groups = selected_groups - (exclude - include)
 
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.
+        requirements = [
+            r
+            for g in selected_groups
+            if g != SUBDEP_GROUP_LABEL
+            for r in project.get_dependencies(g).values()
+        ]
         if options.resolve:
-            requirements = [
-                r
-                for g in project.iter_groups()
-                for r in project.get_dependencies(g).values()
-            ]
             candidates = actions.resolve_candidates_from_lockfile(project, requirements)
-            resolved_set = set(
-                c.prepare(project.environment).metadata for c in candidates.values()
-            )
-            packages = {p.metadata["Name"]: p for p in resolved_set}
+            packages: Mapping[str, im.Distribution] = {
+                k: c.prepare(project.environment).metadata
+                for k, c in candidates.items()
+            }
 
         # Use requirements from the working set (currently installed).
         else:
-            working_set = project.environment.get_working_set()
-            packages = {p.metadata["Name"]: p for p in working_set.values()}
+            packages = project.environment.get_working_set()
 
-        # Filter the set of packages to show by --include and --exclude
-        def _group_of(d: im.Distribution) -> Set[str]:
-            return name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
-
-        def _group_selected(d: im.Distribution) -> bool:
-            return any(g in selected_groups for g in _group_of(d))
-
-        packages = {name: d for name, d in packages.items() if _group_selected(d)}
+        selected_keys = {r.identify() for r in requirements}
+        dep_graph = build_dependency_graph(
+            packages,
+            project.environment.marker_environment,
+            None if not (include or exclude) else selected_keys,
+            include_sub=SUBDEP_GROUP_LABEL in selected_groups,
+        )
 
         # Process as a graph or list.
         if options.graph:
-            self.handle_graph(packages, project, options)
+            self.handle_graph(dep_graph, project, options)
         else:
+            selected_packages = [k.name.split("[")[0] for k in dep_graph if k]
+            packages = {k: v for k, v in packages.items() if k in selected_packages}
             self.handle_list(packages, name_to_groups, project, options)
 
     def hande_freeze(self, project: Project, options: argparse.Namespace) -> None:
@@ -202,9 +211,7 @@ class Command(BaseCommand):
         requirements = sorted(
             (
                 Requirement.from_dist(dist).as_line().replace("${PROJECT_ROOT}", root)
-                for dist in sorted(
-                    working_set.values(), key=lambda d: d.metadata["Name"]
-                )
+                for dist in working_set.values()
             ),
             key=lambda x: x.lower(),
         )
@@ -212,7 +219,7 @@ class Command(BaseCommand):
 
     def handle_graph(
         self,
-        packages: Dict[str, im.Distribution],
+        dep_graph: DirectedGraph[Package | None],
         project: Project,
         options: argparse.Namespace,
     ) -> None:
@@ -223,17 +230,14 @@ class Command(BaseCommand):
         if options.sort:
             raise PdmUsageError("--sort cannot be used with --graph")
 
-        dep_graph = build_dependency_graph(
-            packages, project.environment.marker_environment
-        )
         show_dependency_graph(
             project, dep_graph, reverse=options.reverse, json=options.json
         )
 
     def handle_list(
         self,
-        packages: Dict[str, im.Distribution],
-        name_to_groups: DefaultDict[Optional[str], Set[str]],
+        packages: Mapping[str, im.Distribution],
+        name_to_groups: Mapping[str, set[str]],
         project: Project,
         options: argparse.Namespace,
     ) -> None:
@@ -251,60 +255,57 @@ class Command(BaseCommand):
 
         # Wrap each distribution with a Listable (and a groups pairing)
         # to make it easier to filter on later.
-        def _group_of(d: im.Distribution) -> Set[str]:
-            return name_to_groups.get(d.metadata["Name"], set((SUBDEP_GROUP_LABEL,)))
+        def _group_of(name: str) -> set[str]:
+            return name_to_groups.get(name, {SUBDEP_GROUP_LABEL})
 
-        records = [Listable(d, _group_of(d)) for d in packages.values()]
+        records = [Listable(d, _group_of(k)) for k, d in packages.items()]
+        ui = project.core.ui
 
         # Order based on a field key.
         if options.sort:
-            key = options.sort.lower()
-            if key not in Listable.KEYS:
-                raise PdmUsageError(f"--sort key must be one of: {Listable.KEYS}")
-            records.sort(key=lambda d: d[options.sort.lower()])
+            keys = parse_comma_separated_string(options.sort)
+            if not all(key in Listable.KEYS for key in keys):
+                raise PdmUsageError(
+                    f"--sort key must be one of: {','.join(Listable.KEYS)}"
+                )
+            records.sort(key=lambda d: tuple(d[key] for key in keys))
 
         # Write CSV
         if options.csv:
-            comma = ","
-            print(comma.join(fields))
+            buffer = io.StringIO()
+            writer = csv.DictWriter(buffer, fieldnames=fields)
+            writer.writeheader()
             for row in records:
-                print(row.csv(fields, comma=comma))
+                writer.writerow(row.json(fields))
+            ui.echo(buffer.getvalue(), highlight=True, end="")
 
         # Write JSON
         elif options.json:
-            formatted = [row.json(fields) for row in records]
-            print(json.dumps(formatted, indent=4))
+            json_row = [row.json(fields) for row in records]
+            ui.echo(json.dumps(json_row, indent=4), highlight=True)
 
         # Write Markdown
         elif options.markdown:
-            print(f"# {project.name} licenses")
-            for row in records:
-                section = row.markdown(fields)
-                try:
-                    print(section)
-                except UnicodeEncodeError:
-                    print(section.encode().decode("ascii", errors="ignore"))
-                    print(
-                        "A UnicodeEncodeError was encountered. "
-                        "Some characters may be omit."
-                    )
+            body = [f"# {project.name} licenses"]
+            body.extend(row.markdown(fields) for row in records)
+            ui.echo("\n".join(body), highlight=True)
 
         # Write nice table format.
         else:
-            formatted = [row.pdm(fields) for row in records]  # type: ignore
-            project.core.ui.display_columns(formatted, fields)  # type: ignore
+            formatted = [row.rich(fields) for row in records]
+            ui.display_columns(formatted, fields)
 
 
 def parse_comma_separated_string(
     comma_string: str,
     lowercase: bool = True,
-    asterisk_values: Optional[Set[str]] = None,
-) -> List[str]:
+    asterisk_values: Iterable[str] | None = None,
+) -> list[str]:
     """Parse a CLI comma separated string.
     Apply optional lowercase transformation and if the value given is "*" then
     return a list of pre-defined values (`asterisk_values`).
     """
-    if asterisk_values and comma_string.strip() == "*":
+    if asterisk_values is not None and comma_string.strip() == "*":
         return list(asterisk_values)
     items = f"{comma_string}".split(",")
     items = [el.strip() for el in items if el]
@@ -321,30 +322,30 @@ class Listable:
     """
 
     # Fields that users are allowed to sort on.
-    KEYS = set(["name", "groups", "version", "homepage", "licenses", "location"])
+    KEYS = frozenset(["name", "groups", "version", "homepage", "licenses", "location"])
 
-    def __init__(self, dist: im.Distribution, groups: Set[str]):
+    def __init__(self, dist: im.Distribution, groups: set[str]):
         self.dist = dist
 
-        self.name = dist.metadata.get("Name", None)  # type: ignore
+        self.name: str | None = dist.metadata.get("Name")
         self.groups = "|".join(groups)
 
-        self.version = dist.metadata.get("Version", None)  # type: ignore
+        self.version: str | None = dist.metadata.get("Version")
         self.version = None if self.version == "UNKNOWN" else self.version
 
-        self.homepage = dist.metadata.get("Home-Page", None)  # type: ignore
+        self.homepage: str | None = dist.metadata.get("Home-Page")
         self.homepage = None if self.homepage == "UNKNOWN" else self.homepage
 
         # If the License metadata field is empty or UNKNOWN then try to
         # find the license in the Trove classifiers.  There may be more than one
         # so generate a pipe separated list (to avoid complexity with CSV export).
-        self.licenses = dist.metadata.get("License", None)  # type: ignore
+        self.licenses: str | None = dist.metadata.get("License")
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
         if not self.licenses:
             classifier_licenses = [
                 v
-                for k, v in dist.metadata.items()  # type: ignore
-                if k == "Classifier" and v.startswith("License")
+                for v in dist.metadata.get_all("Classifier", [])  # type: ignore
+                if v.startswith("License")
             ]
             alternatives = [parts.split("::") for parts in classifier_licenses]
             alternatives = [part[-1].strip() for part in alternatives if part]
@@ -354,7 +355,7 @@ class Listable:
     def location(self) -> str:
         return get_dist_location(self.dist)
 
-    def license_files(self) -> List[im.PackagePath]:
+    def license_files(self) -> list[im.PackagePath]:
         """Path to files inside the package that may contain license information
         or other legal notices.
 
@@ -382,13 +383,10 @@ class Listable:
             raise PdmUsageError(f"list field `{field}` not in: {Listable.KEYS}")
         return getattr(self, field)
 
-    def csv(self, fields: Sequence[str], comma: str) -> str:
-        return comma.join(f"{self[field]}" for field in fields)
-
     def json(self, fields: Sequence[str]) -> dict:
         return {f: self[f] for f in fields}
 
-    def pdm(self, fields: Sequence[str]) -> Sequence[str]:
+    def rich(self, fields: Sequence[str]) -> Sequence[str]:
         output = []
         for field in fields:
             data = f"{self[field]}"
