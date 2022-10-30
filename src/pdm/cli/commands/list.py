@@ -419,7 +419,9 @@ class Listable:
             section += f"{nl}{nl}"
             section += f"````{nl}"
             try:
-                section += path.read_text()
+                section += path.read_text("utf-8")
+            except UnicodeDecodeError:
+                section += "Problem decoding file as UTF-8"
             except Exception as err:
                 section += f"Problem finding license text: {err}"
             section += f"{nl}"
