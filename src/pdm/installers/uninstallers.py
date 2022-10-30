@@ -122,9 +122,11 @@ class BaseRemovePaths(abc.ABC):
     def remove(self) -> None:
         """Remove the files"""
 
+    @abc.abstractmethod
     def commit(self) -> None:
         """Commit the removal"""
 
+    @abc.abstractmethod
     def rollback(self) -> None:
         """Roll back the removal operations"""
 
