@@ -40,7 +40,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
-from pdm.utils import is_path_relative_to, url_to_path
+from pdm.utils import is_path_relative_to, normalize_name, url_to_path
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
@@ -466,6 +466,15 @@ def format_lockfile(
     packages = tomlkit.aot()
     file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
+        # we don't want the local package in the lockfile; as that causes issues with
+        # self-referential dependencies, i.e., extras.  Thus, we drop it here right before writing
+        # when we're sure that all resolution is finished and valid. Then we add it back again when
+        # running with a LockedRepository.
+        if project.name is not None and strip_extras(k)[0] == normalize_name(
+            project.meta.name
+        ):
+            continue
+
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))  # type: ignore
         base.add("summary", v.summary or "")
