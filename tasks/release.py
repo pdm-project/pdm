@@ -34,7 +34,7 @@ def bump_version(pre=None, major=False, minor=False, patch=True):
     if len([v for v in [major, minor, patch] if v]) > 1:
         echo(
             "Only one option should be provided among " "(--major, --minor, --patch)",
-            style="error",
+            style="red",
             err=True,
         )
         sys.exit(1)
@@ -54,7 +54,7 @@ def bump_version(pre=None, major=False, minor=False, patch=True):
 
 def release(dry_run=False, commit=True, pre=None, major=False, minor=False, patch=True):
     new_version = bump_version(pre, major, minor, patch)
-    echo(f"Bump version to: {new_version}", style="warning")
+    echo(f"Bump version to: {new_version}", style="yellow")
     if dry_run:
         subprocess.check_call(
             ["towncrier", "build", "--version", new_version, "--draft"]

@@ -1,3 +1,46 @@
+Release v2.2.0 (2022-10-31)
+---------------------------
+
+### Features & Improvements
+
+- Add `venv.prompt` configuration to allow customizing prompt when a virtualenv is activated [#1332](https://github.com/pdm-project/pdm/issues/1332)
+- Allow the use of custom CA certificates per publish repository using `ca_certs` or from the command line via `pdm publish --ca-certs <path> ...`. [#1392](https://github.com/pdm-project/pdm/issues/1392)
+- Rename the `plugin` command to `self`, and it can not only manage plugins but also all dependencies. Add a subcommand `self update` to update PDM itself. [#1406](https://github.com/pdm-project/pdm/issues/1406)
+- Allow `pdm init` to receive a Python path or version via `--python` option. [#1412](https://github.com/pdm-project/pdm/issues/1412)
+- Add a default value for `requires-python` when importing from other formats. [#1426](https://github.com/pdm-project/pdm/issues/1426)
+- Use `pdm` instead of `pip` to resolve and install build requirements. So that PDM configurations can control the process. [#1429](https://github.com/pdm-project/pdm/issues/1429)
+- Customizable color theme via `pdm config` command. [#1450](https://github.com/pdm-project/pdm/issues/1450)
+- A new `pdm lock --check` flag to validate whether the lock is up to date. [#1459](https://github.com/pdm-project/pdm/issues/1459)
+- Add both option and config item to ship `pip` when creating a new venv. [#1463](https://github.com/pdm-project/pdm/issues/1463)
+- Issue warning and skip the requirement if it has the same name as the current project. [#1466](https://github.com/pdm-project/pdm/issues/1466)
+- Enhance the `pdm list` command with new formats: `--csv,--markdown` and add options `--fields,--sort` to control the output contents. Users can also include `licenses` in the `--fields` option to display the package licenses. [#1469](https://github.com/pdm-project/pdm/issues/1469)
+- A new pre-commit hook to run `pdm lock --check` in pre-commit. [#1471](https://github.com/pdm-project/pdm/issues/1471)
+
+### Bug Fixes
+
+- Fix the issue that relative paths don't work well with `--project` argument. [#1220](https://github.com/pdm-project/pdm/issues/1220)
+- It is now possible to refer to a package from outside the project with relative paths in dependencies. [#1381](https://github.com/pdm-project/pdm/issues/1381)
+- Ensure `pypi.[ca,client]_cert[s]` config items are passed to distribution builder install steps to allow for custom PyPI index sources with self signed certificates. [#1396](https://github.com/pdm-project/pdm/issues/1396)
+- Fix a crash issue when depending on editable packages with extras. [#1401](https://github.com/pdm-project/pdm/issues/1401)
+- Do not save the python path when using non-interactive mode in `pdm init`. [#1410](https://github.com/pdm-project/pdm/issues/1410)
+- Fix the matching of `python*` command in `pdm run`. [#1414](https://github.com/pdm-project/pdm/issues/1414)
+- Show the Python path, instead of the real executable, in the Python selection menu. [#1418](https://github.com/pdm-project/pdm/issues/1418)
+- Fix the HTTP client of package publishment to prompt for password and read PDM configurations correctly. [#1430](https://github.com/pdm-project/pdm/issues/1430)
+- Ignore the unknown fields when constructing a requirement object. [#1445](https://github.com/pdm-project/pdm/issues/1445)
+- Fix a bug of unrelated candidates being fetched if the requirement is matching wildcard versions(e.g. `==1.*`). [#1465](https://github.com/pdm-project/pdm/issues/1465)
+- Use `importlib-metadata` from PyPI for Python < 3.10. [#1467](https://github.com/pdm-project/pdm/issues/1467)
+
+### Documentation
+
+- Clarify the difference between a library and an application. Update the guide of multi-stage docker build. [#1371](https://github.com/pdm-project/pdm/issues/1371)
+
+### Removals and Deprecations
+
+- Remove all top-level imports, users should import from the submodules instead. [#1404](https://github.com/pdm-project/pdm/issues/1404)
+- Remove the usages of old config names deprecated since 2.0. [#1422](https://github.com/pdm-project/pdm/issues/1422)
+- Remove the deprecated color functions, use [rich's console markup](https://rich.readthedocs.io/en/latest/markup.html) instead. [#1452](https://github.com/pdm-project/pdm/issues/1452)
+
+
 Release v2.1.5 (2022-10-05)
 ---------------------------
 
