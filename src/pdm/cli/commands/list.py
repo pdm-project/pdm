@@ -288,7 +288,22 @@ class Command(BaseCommand):
         elif options.markdown:
             body = [f"# {project.name} licenses"]
             body.extend(row.markdown(fields) for row in records)
-            ui.echo("\n".join(body), highlight=True)
+            text_body = "\n".join(body)
+            try:
+                ui.echo(text_body, highlight=True)
+            except UnicodeEncodeError:
+                ui.echo(
+                    "Markdown output contains non-ASCII characters. "
+                    "Setting env var PYTHONIOENCODING to 'utf8' may fix this.",
+                    err=True,
+                    style="error",
+                )
+                ui.echo(
+                    text_body.encode().decode("ascii", errors="ignore"), highlight=True
+                )
+                ui.echo(
+                    "**Problem decoding file as UTF-8.  Some characters may be omit.**"
+                )
 
         # Write nice table format.
         else:
