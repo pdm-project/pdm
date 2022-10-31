@@ -1,3 +1,11 @@
+- id: pdm-lock-check
+  name: pdm-lock-check
+  description: run pdm lock --check to validate config
+  entry: pdm lock --check
+  language: python
+  language_version: python3
+  pass_filenames: false
+  files: ^pyproject.toml$
 - id: pdm-export
   name: pdm-export-lock
   description: export locked packages to requirements.txt or setup.py
