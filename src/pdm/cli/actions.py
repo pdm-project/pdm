@@ -258,12 +258,21 @@ def do_add(
     for r in [parse_requirement(line, True) for line in editables] + [
         parse_requirement(line) for line in packages
     ]:
+        if project.name and normalize_name(project.name) == r.key and not r.extras:
+            project.core.ui.echo(
+                f"Package [req]{project.name}[/] is the project itself.",
+                err=True,
+                style="warning",
+            )
+            continue
         if r.is_file_or_url:
             r.relocate(project.root)  # type: ignore
         key = r.identify()
         r.prerelease = prerelease
         tracked_names.add(key)
         requirements[key] = r
+    if not requirements:
+        return
     project.core.ui.echo(
         f"Adding packages to [primary]{group}[/] "
         f"{'dev-' if dev else ''}dependencies: "
