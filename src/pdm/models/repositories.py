@@ -442,21 +442,18 @@ class LockedRepository(BaseRepository):
         if candidate.name != self.environment.project.name:
             raise CandidateInfoNotFound(candidate) from None
 
-        if candidate.req.extras is None:
-            return (
-                self.environment.project.meta.dependencies,
-                str(self.environment.python_requires),
-                self.environment.project.meta.description,
-            )
-
-        return (
-            sum(
+        reqs = self.environment.project.meta.dependencies
+        if candidate.req.extras is not None:
+            reqs = sum(
                 (
                     self.environment.project.meta.optional_dependencies[g]
                     for g in candidate.req.extras
                 ),
                 [],
-            ),
+            )
+
+        return (
+            reqs,
             str(self.environment.python_requires),
             self.environment.project.meta.description,
         )
