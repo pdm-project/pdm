@@ -467,9 +467,9 @@ def format_lockfile(
     file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
         # we don't want the local package in the lockfile; as that causes issues with
-        # self-referential dependencies, i.e., extras.  Thus, we drop it here right before writing
-        # when we're sure that all resolution is finished and valid. Then we add it back again when
-        # running with a LockedRepository.
+        # self-referential dependencies, i.e., extras.  Thus, we drop it here right
+        # before writing when we're sure that all resolution is finished and valid. Then
+        # we add it back again when running with a LockedRepository.
         if project.name is not None and strip_extras(k)[0] == normalize_name(
             project.meta.name
         ):
