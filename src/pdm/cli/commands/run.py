@@ -202,13 +202,11 @@ class TaskRunner:
         def forward_signal(signum: int, frame: FrameType | None) -> None:
             process.send_signal(signum)
 
-        handle_int = signal.signal(signal.SIGINT, forward_signal)
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
         process = subprocess.Popen(
             expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0
         )
         process.wait()
-        signal.signal(signal.SIGINT, handle_int)
         signal.signal(signal.SIGTERM, handle_term)
         return process.returncode
 
