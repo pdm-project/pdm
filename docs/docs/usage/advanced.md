@@ -241,12 +241,11 @@ This hook wraps the command `pdm export` along with any valid argument. It can b
       files: ^pdm.lock$
 ```
 
-### Check `.pdm.lock` is up to date
+### Check `pdm.lock` is up to date with pyproject.toml
 
 This hook wraps the command `pdm lock --check` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that whenever `pyproject.toml` has a dependency added/changed/removed, that `.pdm.lock` is also up to date.
 
 ```yaml
-# export python requirements
 - repo: https://github.com/pdm-project/pdm
   rev: 2.x.y # a PDM release exposing the hook
   hooks:
