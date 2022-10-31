@@ -27,6 +27,7 @@ from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
 from pdm import termui
+from pdm.compat import importlib_metadata as im
 from pdm.exceptions import PdmArgumentError, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
@@ -38,7 +39,6 @@ from pdm.models.requirements import (
     strip_extras,
 )
 from pdm.models.specifiers import get_specifier
-from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 from pdm.utils import is_path_relative_to, url_to_path
 
@@ -156,7 +156,10 @@ class Package:
 
 
 def build_dependency_graph(
-    working_set: WorkingSet, marker_env: dict[str, str] | None = None
+    working_set: Mapping[str, im.Distribution],
+    marker_env: dict[str, str] | None = None,
+    selected: set[str] | None = None,
+    include_sub: bool = True,
 ) -> DirectedGraph:
     """Build a dependency graph from locked result."""
     graph: DirectedGraph[Package | None] = DirectedGraph()
@@ -189,14 +192,25 @@ def build_dependency_graph(
             if extras:
                 node_with_extras.add(name)
             graph.add(node)
-
-            for k in reqs:
-                child = add_package(k, working_set.get(strip_extras(k)[0]))
-                graph.connect(node, child)
+            if include_sub:
+                for k in reqs:
+                    child = add_package(k, working_set.get(strip_extras(k)[0]))
+                    graph.connect(node, child)
 
         return node
 
+    selected_map: dict[str, str] = {}
+    for key in selected or ():
+        name = key.split("[")[0]
+        if len(key) >= len(selected_map.get(name, "")):
+            # Ensure key with extras remains
+            selected_map[name] = key
     for k, dist in working_set.items():
+        if selected is not None:
+            name = k.split("[")[0]
+            if name not in selected_map:
+                continue
+            k = selected_map[name]
         add_package(k, dist)
     for node in list(graph):
         if node is not None and not list(graph.iter_parents(node)):

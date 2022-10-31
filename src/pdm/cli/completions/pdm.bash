@@ -69,7 +69,7 @@ _pdm_25182a7ef85b840e_complete()
             ;;
 
             (list)
-            opts="--freeze --global --graph --help --json --project --reverse --verbose"
+            opts="--csv --exclude --fields --freeze --global --graph --help --include --json --markdown --project --resolve --reverse --sort --verbose"
             ;;
 
             (lock)

@@ -159,13 +159,20 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l skip -d 'Skip som
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # list
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l csv -d 'Output dependencies in CSV document format'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l exclude -d 'Exclude dependency groups from the output'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l fields -d 'Select information to output as a comma separated string. For example: name,version,homepage,licenses,groups.'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l freeze -d 'Show the installed dependencies in pip\'s requirements.txt format'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l graph -d 'Display a graph of dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l help -d 'show this help message and exit'
-complete -c pdm -A -n '__fish_seen_subcommand_from list' -l json -d 'Show the installed dependencies in JSON document format'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l include -d 'Dependency groups to include in the output. By default all are included'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l json -d 'Output dependencies in JSON document format'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l markdown -d 'Output dependencies and legal notices in markdown document format - best effort basis'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l resolve -d 'Resolve all requirements to output licenses (instead of just showing those currently installed)'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l reverse -d 'Reverse the dependency graph'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l sort -d 'Sort the output using a given field name. If nothing is set, no sort is applied. Multiple fields can be combined with \',\'.'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # lock
