@@ -250,5 +250,5 @@ This hook wraps the command `pdm lock --check` along with any valid argument. It
 - repo: https://github.com/pdm-project/pdm
   rev: 2.x.y # a PDM release exposing the hook
   hooks:
-    - id: pdm-check
+    - id: pdm-lock-check
 ```

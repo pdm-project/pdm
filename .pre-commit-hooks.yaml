@@ -1,5 +1,5 @@
-- id: pdm-check
-  name: pdm-check
+- id: pdm-lock-check
+  name: pdm-lock-check
   description: run pdm lock --check to validate config
   entry: pdm lock --check
   language: python
