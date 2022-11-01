@@ -136,6 +136,8 @@ def _build_pyspec_from_marker(markers: List[Any]) -> PySpecSet:
             if key == "python_version":
                 if op == ">":
                     int_versions = [int(ver) for ver in version.split(".")]
+                    if len(int_versions) < 2:
+                        int_versions.append(0)
                     int_versions[-1] += 1
                     version = ".".join(str(v) for v in int_versions)
                     op = ">="
