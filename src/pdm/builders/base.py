@@ -206,9 +206,6 @@ class EnvBuilder:
             overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
         )
 
-        if build_system["build-backend"].startswith("setuptools"):
-            self.ensure_setup_py()
-
     @property
     def _env_vars(self) -> dict[str, str]:
         paths = self._prefix.bin_dirs
@@ -307,16 +304,3 @@ class EnvBuilder:
         return the absolute path of the built result.
         """
         raise NotImplementedError("Should be implemented in subclass")
-
-    def ensure_setup_py(self) -> str:
-        from pdm.pep517.base import Builder
-        from pdm.project.metadata import MutableMetadata
-
-        builder = Builder(self.src_dir)
-        project_file = os.path.join(self.src_dir, "pyproject.toml")
-        if os.path.exists(project_file):
-            try:
-                builder._meta = MutableMetadata.from_file(project_file)
-            except ValueError:
-                builder._meta = None
-        return builder.ensure_setup_py().as_posix()
