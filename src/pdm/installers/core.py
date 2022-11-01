@@ -22,7 +22,10 @@ def install_requirements(
     resolver = project.core.resolver_class(provider, reporter)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     resolved, _ = resolve(
-        resolver, reqs, environment.python_requires, max_rounds=resolve_max_rounds
+        resolver,
+        reqs,
+        environment.python_requires,
+        max_rounds=resolve_max_rounds,
     )
     manager = InstallManager(environment, use_install_cache=use_install_cache)
     working_set = environment.get_working_set()
