@@ -3,13 +3,13 @@ import site
 import sys
 
 
-def get_pypackages_path(maxdepth=5):
+def get_pypackages_path():
     def find_pypackage(path, version):
         if not os.path.exists(path):
             return None
 
         packages_name = f"__pypackages__/{version}/lib"
-        for _ in range(maxdepth):
+        for _ in range(int(os.getenv("PDM_PROJECT_MAX_DEPTH", "5"))):
             if os.path.exists(os.path.join(path, packages_name)):
                 return os.path.join(path, packages_name)
             if os.path.dirname(path) == path:
