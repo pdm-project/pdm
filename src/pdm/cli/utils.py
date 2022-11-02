@@ -40,7 +40,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
-from pdm.utils import is_path_relative_to, normalize_name, url_to_path
+from pdm.utils import is_path_relative_to, url_to_path
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
