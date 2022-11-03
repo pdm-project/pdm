@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, cast
 
-from pdm.cli.utils import normalize_name, strip_extras
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
+from pdm.models.requirements import strip_extras
 from pdm.resolver.providers import BaseProvider
 from pdm.resolver.python import PythonRequirement
+from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Resolver
