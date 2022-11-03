@@ -436,8 +436,33 @@ class LockedRepository(BaseRepository):
     def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
         return self.candidate_info[self._identify_candidate(candidate)]
 
+    def _get_dependency_from_local_package(self, candidate: Candidate) -> CandidateInfo:
+        """Adds the local package as a candidate only if the candidate
+        name is the same as the local package."""
+        if candidate.name != self.environment.project.name:
+            raise CandidateInfoNotFound(candidate) from None
+
+        reqs = self.environment.project.meta.dependencies
+        if candidate.req.extras is not None:
+            reqs = sum(
+                (
+                    self.environment.project.meta.optional_dependencies[g]
+                    for g in candidate.req.extras
+                ),
+                [],
+            )
+
+        return (
+            reqs,
+            str(self.environment.python_requires),
+            self.environment.project.meta.description,
+        )
+
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
-        return (self._get_dependencies_from_lockfile,)
+        return (
+            self._get_dependency_from_local_package,
+            self._get_dependencies_from_lockfile,
+        )
 
     def find_candidates(
         self,
