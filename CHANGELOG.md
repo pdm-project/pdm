@@ -1,3 +1,15 @@
+Release v2.2.1 (2022-11-03)
+---------------------------
+
+### Features & Improvements
+
+- Make `sitecustomize.py` respect the `PDM_PROJECT_MAX_DEPTH` environment variable [#1471](https://github.com/pdm-project/pdm/issues/1471)
+
+### Bug Fixes
+
+- Fix the comparison of `python_version` in the environment marker. When the version contains only one digit, the result was incorrect. [#1484](https://github.com/pdm-project/pdm/issues/1484)
+
+
 Release v2.2.0 (2022-10-31)
 ---------------------------
 
