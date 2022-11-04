@@ -63,7 +63,7 @@ class Project:
 
     PYPROJECT_FILENAME = "pyproject.toml"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    LOCKFILE_VERSION = "4.0"
+    LOCKFILE_VERSION = "4.1"
 
     def __init__(
         self,
@@ -558,6 +558,9 @@ class Project:
         return content_hash == hash_value
 
     def is_lockfile_compatible(self) -> bool:
+        """Within the same major version, the higher lockfile generator can work with
+        lower lockfile but not vice versa.
+        """
         if not self.lockfile_file.exists():
             return True
         lockfile_version = str(
@@ -567,7 +570,7 @@ class Project:
             return False
         if "." not in lockfile_version:
             lockfile_version += ".0"
-        accepted = get_specifier(f"~={lockfile_version}")
+        accepted = get_specifier(f"~={lockfile_version},>={lockfile_version}")
         return accepted.contains(self.LOCKFILE_VERSION)
 
     def get_pyproject_dependencies(
