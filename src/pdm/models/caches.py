@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
 
 import requests
-from cachecontrol.cache import BaseCache
+from cachecontrol.cache import SeparateBodyBaseCache
 from cachecontrol.caches import FileCache
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
@@ -234,7 +234,7 @@ class WheelCache:
         return min(candidates, key=lambda x: x[0])[1]
 
 
-class SafeFileCache(BaseCache):
+class SafeFileCache(SeparateBodyBaseCache):
     """
     A file based cache which is safe to use even when the target directory may
     not be accessible or writable.
@@ -255,15 +255,34 @@ class SafeFileCache(BaseCache):
     def get(self, key: str) -> bytes | None:
         path = self._get_cache_path(key)
         with contextlib.suppress(OSError):
-            with open(path, "rb") as f:
+            with open(f"{path}.metadata", "rb") as f:
                 return f.read()
+
+        return None
+
+    def get_body(self, key):
+        path = self._get_cache_path(key)
+        with contextlib.suppress(OSError):
+            return open(path, "rb")
+
         return None
 
     def set(self, key: str, value: bytes, expires: int | None = None) -> None:
         path = self._get_cache_path(key)
         with contextlib.suppress(OSError):
-            with atomic_open_for_write(path, mode="wb") as f:
+            with atomic_open_for_write(f"{path}.metadata", mode="wb") as f:
                 cast(BinaryIO, f).write(value)
+
+    def set_body(self, key: str, body: bytes) -> None:
+        # TODO[TSolberg]: Re-evaluate with cachecontrol 0.13 if it
+        # still writes empty bodies when updating headers.
+        if body is None:
+            return
+
+        path = self._get_cache_path(key)
+        with contextlib.suppress(OSError):
+            with atomic_open_for_write(path, mode="wb") as f:
+                cast(BinaryIO, f).write(body)
 
     def delete(self, key: str) -> None:
         path = self._get_cache_path(key)
