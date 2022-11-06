@@ -23,7 +23,7 @@ dependencies = [
     "resolvelib>=0.8,<0.9",
     "installer>=0.5.1,<0.6",
     "pdm-pep517>=1.0.0,<2.0.0",
-    "cachecontrol[filecache]>=0.12.11",
+    "cachecontrol[filecache] @ git+https://github.com/ionrock/cachecontrol",
     "tomli>=1.1.0; python_version < \"3.11\"",
     "typing-extensions; python_version < \"3.8\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
