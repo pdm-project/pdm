@@ -14,7 +14,7 @@ from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.environment import Environment
-from pdm.models.requirements import parse_requirement, strip_extras
+from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable
 
 if TYPE_CHECKING:
@@ -183,8 +183,12 @@ class Synchronizer:
             return True
         if is_editable(dist):  # only update editable if no_editable is True
             return bool(self.no_editable)
-        else:
-            return dist.version != can.version
+        if not can.req.is_named:
+            dreq = Requirement.from_dist(dist)
+            return getattr(dreq, "url", None) != can.req.url  # type: ignore
+        specifier = can.req.as_pinned_version(can.version).specifier
+        assert specifier is not None
+        return not specifier.contains(dist.version, prereleases=True)
 
     def compare_with_working_set(self) -> tuple[list[str], list[str], list[str]]:
         """Compares the candidates and return (to_add, to_update, to_remove)"""
