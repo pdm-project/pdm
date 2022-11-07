@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -260,7 +261,7 @@ class SafeFileCache(SeparateBodyBaseCache):
 
         return None
 
-    def get_body(self, key):
+    def get_body(self, key) -> io.FileIO | None:
         path = self._get_cache_path(key)
         with contextlib.suppress(OSError):
             return open(path, "rb")
