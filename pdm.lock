@@ -25,6 +25,8 @@ summary = "Fast, simple object-to-object and broadcast signaling"
 name = "cachecontrol"
 version = "0.12.11"
 requires_python = ">=3.6"
+git = "https://github.com/ionrock/cachecontrol"
+revision = "c05ef9eff1c9ac176481fb99e7a7188aa5b4e17b"
 summary = "httplib2 caching for requests"
 dependencies = [
     "msgpack>=0.5.2",
@@ -36,10 +38,12 @@ name = "cachecontrol"
 version = "0.12.11"
 extras = ["filecache"]
 requires_python = ">=3.6"
+git = "https://github.com/ionrock/cachecontrol"
+revision = "c05ef9eff1c9ac176481fb99e7a7188aa5b4e17b"
 summary = "httplib2 caching for requests"
 dependencies = [
-    "cachecontrol==0.12.11",
-    "lockfile>=0.9",
+    "cachecontrol @ git+https://github.com/ionrock/cachecontrol",
+    "filelock>=3.8.0",
 ]
 
 [[package]]
@@ -118,7 +122,7 @@ summary = "execnet: rapid multi-Python deployment"
 
 [[package]]
 name = "filelock"
-version = "3.7.1"
+version = "3.8.0"
 requires_python = ">=3.7"
 summary = "A platform independent file lock."
 
@@ -188,11 +192,6 @@ summary = "A very fast and expressive template engine."
 dependencies = [
     "MarkupSafe>=2.0",
 ]
-
-[[package]]
-name = "lockfile"
-version = "0.12.2"
-summary = "Platform-independent file locking module"
 
 [[package]]
 name = "markdown"
@@ -678,8 +677,8 @@ requires_python = ">=3.7"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
-lock_version = "4.0"
-content_hash = "sha256:7fa3a9a57646b14e66d07f50ce0ca798d47856f7fa901203db8d703b131c1853"
+lock_version = "4.1"
+content_hash = "sha256:a7391d64ac55042a0568037e58cde1437d81da2cad361bba5cf8e3daff984370"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -696,10 +695,6 @@ content_hash = "sha256:7fa3a9a57646b14e66d07f50ce0ca798d47856f7fa901203db8d703b1
 "blinker 1.5" = [
     {url = "https://files.pythonhosted.org/packages/2b/12/82786486cefb68685bb1c151730f510b0f4e5d621d77f245bc0daf9a6c64/blinker-1.5.tar.gz", hash = "sha256:923e5e2f69c155f2cc42dafbbd70e16e3fde24d2d4aa2ab72fbe386238892462"},
     {url = "https://files.pythonhosted.org/packages/30/41/caa5da2dbe6d26029dfe11d31dfa8132b4d6d30b6d6b61a24824075a5f06/blinker-1.5-py2.py3-none-any.whl", hash = "sha256:1eb563df6fdbc39eeddc177d953203f99f097e9bf0e2b8f9f3cf18b6ca425e36"},
-]
-"cachecontrol 0.12.11" = [
-    {url = "https://files.pythonhosted.org/packages/46/9b/34215200b0c2b2229d7be45c1436ca0e8cad3b10de42cfea96983bd70248/CacheControl-0.12.11.tar.gz", hash = "sha256:a5b9fcc986b184db101aa280b42ecdcdfc524892596f606858e0b7a8b4d9e144"},
-    {url = "https://files.pythonhosted.org/packages/83/63/15ce47ede5b03657e920f3f006e56ca9a16f7873978146f2f77e297bdd22/CacheControl-0.12.11-py2.py3-none-any.whl", hash = "sha256:2c75d6a8938cb1933c75c50184549ad42728a27e9f6b92fd677c3151aa72555b"},
 ]
 "cached-property 1.5.2" = [
     {url = "https://files.pythonhosted.org/packages/48/19/f2090f7dad41e225c7f2326e4cfe6fff49e57dedb5b53636c9551f86b069/cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
@@ -779,9 +774,9 @@ content_hash = "sha256:7fa3a9a57646b14e66d07f50ce0ca798d47856f7fa901203db8d703b1
     {url = "https://files.pythonhosted.org/packages/7a/3c/b5ac9fc61e1e559ced3e40bf5b518a4142536b34eb274aa50dff29cb89f5/execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
     {url = "https://files.pythonhosted.org/packages/81/c0/3072ecc23f4c5e0a1af35e3a222855cfd9c80a1a105ca67be3b6172637dd/execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
 ]
-"filelock 3.7.1" = [
-    {url = "https://files.pythonhosted.org/packages/a6/d5/17f02b379525d1ff9678bfa58eb9548f561c8826deb0b85797aa0eed582d/filelock-3.7.1-py3-none-any.whl", hash = "sha256:37def7b658813cda163b56fc564cdc75e86d338246458c4c28ae84cabefa2404"},
-    {url = "https://files.pythonhosted.org/packages/f3/c7/5c1aef87f1197d2134a096c0264890969213c9cbfb8a4102087e8d758b5c/filelock-3.7.1.tar.gz", hash = "sha256:3a0fd85166ad9dbab54c9aec96737b744106dc5f15c0b09a6744a445299fcf04"},
+"filelock 3.8.0" = [
+    {url = "https://files.pythonhosted.org/packages/94/b3/ff2845971788613e646e667043fdb5f128e2e540aefa09a3c55be8290d6d/filelock-3.8.0-py3-none-any.whl", hash = "sha256:617eb4e5eedc82fc5f47b6d61e4d11cb837c56cb4544e39081099fa17ad109d4"},
+    {url = "https://files.pythonhosted.org/packages/95/55/b897882bffb8213456363e646bf9e9fa704ffda5a7d140edf935a9e02c7b/filelock-3.8.0.tar.gz", hash = "sha256:55447caa666f2198c5b6b13a26d2084d26fa5b115c00d065664b2124680c4edc"},
 ]
 "findpython 0.2.0" = [
     {url = "https://files.pythonhosted.org/packages/17/16/7e7e7f6ae157e903c3285533f5d52f34fa8f25c8f4745699294b154e83fc/findpython-0.2.0.tar.gz", hash = "sha256:c2099ee0b71fc2714b64f68fd1f40bc0ee47f49dfe9547fb64d7cbcc02fe0871"},
@@ -818,10 +813,6 @@ content_hash = "sha256:7fa3a9a57646b14e66d07f50ce0ca798d47856f7fa901203db8d703b1
 "jinja2 3.1.2" = [
     {url = "https://files.pythonhosted.org/packages/7a/ff/75c28576a1d900e87eb6335b063fab47a8ef3c8b4d88524c4bf78f670cce/Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
     {url = "https://files.pythonhosted.org/packages/bc/c3/f068337a370801f372f2f8f6bad74a5c140f6fda3d9de154052708dd3c65/Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
-]
-"lockfile 0.12.2" = [
-    {url = "https://files.pythonhosted.org/packages/17/47/72cb04a58a35ec495f96984dddb48232b551aafb95bde614605b754fe6f7/lockfile-0.12.2.tar.gz", hash = "sha256:6aed02de03cba24efabcd600b30540140634fc06cfa603822d508d5361e9f799"},
-    {url = "https://files.pythonhosted.org/packages/c8/22/9460e311f340cb62d26a38c419b1381b8593b0bb6b5d1f056938b086d362/lockfile-0.12.2-py2.py3-none-any.whl", hash = "sha256:6c3cb24f344923d30b2785d5ad75182c8ea7ac1b6171b08657258ec7429d50fa"},
 ]
 "markdown 3.3.7" = [
     {url = "https://files.pythonhosted.org/packages/d6/58/79df20de6e67a83f0d0bbfe6c19bb82adf68cdf362885257eb01099f930a/Markdown-3.3.7.tar.gz", hash = "sha256:cbb516f16218e643d8e0a95b309f77eb118cb138d39a4f27851e6a63581db874"},
