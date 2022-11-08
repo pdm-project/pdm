@@ -15,7 +15,7 @@ from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.environment import Environment
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
-from pdm.utils import is_editable
+from pdm.utils import is_editable, normalize_name
 
 if TYPE_CHECKING:
     from rich.progress import Progress
@@ -130,8 +130,8 @@ class Synchronizer:
             keys = []
             if (
                 self.install_self
-                and getattr(
-                    self.environment.project.meta.config, "editable_backend", "path"
+                and self.environment.project.pyproject.settings.get("build", {}).get(
+                    "editable_backend", "path"
                 )
                 == "editables"
                 and "editables" not in candidates
@@ -174,7 +174,7 @@ class Synchronizer:
     def self_key(self) -> str | None:
         name = self.environment.project.name
         if name:
-            return self.environment.project.meta.project_name.lower()
+            return normalize_name(name)
         return name
 
     def _should_update(self, dist: Distribution, can: Candidate) -> bool:

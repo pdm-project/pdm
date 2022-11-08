@@ -115,7 +115,7 @@ class Core:
             )
 
         if getattr(options, "lockfile", None):
-            project.lockfile_file = options.lockfile
+            project.set_lockfile(options.lockfile)
         return project
 
     def create_project(

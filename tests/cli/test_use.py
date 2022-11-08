@@ -20,9 +20,7 @@ def test_use_command(project, invoke):
 
     result = invoke(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
-
-    project.meta["requires-python"] = ">=3.6"
-    project.write_pyproject()
+    project.pyproject.metadata["requires-python"] = ">=3.6"
     result = invoke(["use", "2.7"], obj=project)
     assert result.exit_code == 1
 

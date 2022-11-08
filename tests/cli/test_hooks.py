@@ -14,11 +14,11 @@ pytestmark = pytest.mark.usefixtures("repository", "working_set", "local_finder"
 
 
 def test_pre_script_fail_fast(project, invoke, capfd, mocker):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "pre_install": "python -c \"print('PRE INSTALL CALLED'); exit(1)\"",
         "post_install": "python -c \"print('POST INSTALL CALLED')\"",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     synchronize = mocker.patch("pdm.installers.synchronizers.Synchronizer.synchronize")
     result = invoke(["install"], obj=project)
     assert result.exit_code == 1
@@ -29,7 +29,7 @@ def test_pre_script_fail_fast(project, invoke, capfd, mocker):
 
 
 def test_pre_and_post_scripts(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "pre_script": "python echo.py pre_script",
         "post_script": "python echo.py post_script",
         "pre_test": "python echo.py pre_test",
@@ -38,7 +38,7 @@ def test_pre_and_post_scripts(project, invoke, capfd, _echo):
         "pre_run": "python echo.py pre_run",
         "post_run": "python echo.py post_run",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -57,7 +57,7 @@ def test_pre_and_post_scripts(project, invoke, capfd, _echo):
 
 
 def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
         "post_test": "python echo.py Post-Test",
@@ -70,7 +70,7 @@ def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
         "pre_run": "python echo.py Pre-Run",
         "post_run": "python echo.py Post-Run",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -97,7 +97,7 @@ def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
 
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
 def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
         "post_test": "python echo.py Post-Test",
@@ -112,7 +112,7 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
         "pre_run": "python echo.py Pre-Run",
         "post_run": "python echo.py Post-Run",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", f"--skip={option}", "first"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -150,7 +150,7 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
     ],
 )
 def test_skip_option(project, invoke, capfd, args, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
         "post_test": "python echo.py Post-Test",
@@ -161,7 +161,7 @@ def test_skip_option(project, invoke, capfd, args, _echo):
         "pre_second": "python echo.py Pre-Second",
         "post_second": "python echo.py Post-Second",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", *shlex.split(args), "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -241,10 +241,10 @@ parametrize_with_hooks = pytest.mark.parametrize(
 
 @pytest.fixture
 def hooked_project(project, capfd, specs, request):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         hook: f"python -c \"print('{hook} CALLED')\"" for hook in KNOWN_HOOKS
     }
-    project.write_pyproject()
+    project.pyproject.write()
     for fixture in specs.fixtures:
         request.getfixturevalue(fixture)
     capfd.readouterr()

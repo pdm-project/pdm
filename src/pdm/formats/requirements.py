@@ -190,7 +190,7 @@ def export(
             for item in sorted(set(candidate.hashes.values())):  # type: ignore
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
-    sources = project.tool_settings.get("source", [])
+    sources = project.pyproject.settings.get("source", [])
     for source in sources:
         url = expand_env_vars_in_auth(source["url"])
         prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"

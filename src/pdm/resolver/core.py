@@ -38,7 +38,7 @@ def resolve(
     mapping.pop("python", None)
 
     local_name = (
-        normalize_name(repository.environment.project.meta.name)
+        normalize_name(repository.environment.project.name)
         if repository.environment.project.name
         else None
     )

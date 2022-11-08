@@ -20,7 +20,7 @@ def resolve(project, repository):
     ):
         repository.environment.python_requires = PySpecSet(requires_python)
         if allow_prereleases is not None:
-            project.tool_settings["allow_prereleases"] = allow_prereleases
+            project.pyproject.settings["allow_prereleases"] = allow_prereleases
         requirements = []
         for line in lines:
             if line.startswith("-e "):
@@ -170,7 +170,7 @@ def test_resolve_conflicting_dependencies_with_overrides(
     repository.add_dependencies("bar", "0.1.0", ["hoho~=1.1"])
     repository.add_candidate("hoho", "2.1")
     repository.add_candidate("hoho", "1.5")
-    project.tool_settings["overrides"] = {"hoho": overrides}
+    project.pyproject.settings["overrides"] = {"hoho": overrides}
     result = resolve(["foo", "bar"])
     assert result["hoho"].version == "2.1"
 
@@ -239,32 +239,34 @@ def test_resolve_circular_dependencies(resolve, repository):
 
 
 def test_resolve_candidates_to_install(project):
-    project.lockfile = {
-        "package": [
-            {
-                "name": "pytest",
-                "version": "4.6.0",
-                "summary": "pytest module",
-                "dependencies": ["py>=3.0", "configparser; sys_platform=='win32'"],
-            },
-            {
-                "name": "configparser",
-                "version": "1.2.0",
-                "summary": "configparser module",
-                "dependencies": ["backports"],
-            },
-            {
-                "name": "py",
-                "version": "3.6.0",
-                "summary": "py module",
-            },
-            {
-                "name": "backports",
-                "version": "2.2.0",
-                "summary": "backports module",
-            },
-        ]
-    }
+    project.lockfile.set_data(
+        {
+            "package": [
+                {
+                    "name": "pytest",
+                    "version": "4.6.0",
+                    "summary": "pytest module",
+                    "dependencies": ["py>=3.0", "configparser; sys_platform=='win32'"],
+                },
+                {
+                    "name": "configparser",
+                    "version": "1.2.0",
+                    "summary": "configparser module",
+                    "dependencies": ["backports"],
+                },
+                {
+                    "name": "py",
+                    "version": "3.6.0",
+                    "summary": "py module",
+                },
+                {
+                    "name": "backports",
+                    "version": "2.2.0",
+                    "summary": "backports module",
+                },
+            ]
+        }
+    )
     project.environment.marker_environment["sys_platform"] = "linux"
     reqs = [parse_requirement("pytest")]
     result = resolve_candidates_from_lockfile(project, reqs)

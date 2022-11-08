@@ -345,7 +345,7 @@ def project_no_init(tmp_path, mocker, core, index, monkeypatch, build_env):
 @pytest.fixture()
 def local_finder(project_no_init):
     artifacts_dir = str(FIXTURES / "artifacts")
-    project_no_init.tool_settings["source"] = [
+    project_no_init.pyproject.settings["source"] = [
         {
             "type": "find_links",
             "verify_ssl": False,
@@ -353,7 +353,7 @@ def local_finder(project_no_init):
             "name": "pypi",
         }
     ]
-    project_no_init.write_pyproject()
+    project_no_init.pyproject.write()
 
 
 @pytest.fixture()

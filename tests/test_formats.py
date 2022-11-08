@@ -150,10 +150,9 @@ def test_import_requirements_with_group(project):
 def test_export_expand_env_vars_in_source(project, monkeypatch):
     monkeypatch.setenv("USER", "foo")
     monkeypatch.setenv("PASSWORD", "bar")
-    project.tool_settings["source"] = [
+    project.pyproject.settings["source"] = [
         {"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}
     ]
-    project.write_pyproject()
     result = requirements.export(project, [], Namespace())
     assert (
         result.strip().splitlines()[-1]

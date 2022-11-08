@@ -38,7 +38,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        if not project.meta and termui.is_interactive():
+        if not project.pyproject.is_valid and termui.is_interactive():
             actions.ask_for_import(project)
 
         hooks = HookManager(project, options.skip)

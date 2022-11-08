@@ -153,7 +153,7 @@ def resolve_candidates_from_lockfile(
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
     """Check if the lock file exists and is up to date. Return the update strategy."""
-    if not project.lockfile_file.exists():
+    if not project.lockfile.exists:
         if raise_not_exist:
             raise ProjectError("Lock file does not exist, nothing to install")
         project.core.ui.echo("Lock file does not exist", style="warning", err=True)
@@ -249,7 +249,7 @@ def do_add(
     if (
         group == "default"
         or not dev
-        and group not in project.tool_settings.get("dev-dependencies", {})
+        and group not in project.pyproject.settings.get("dev-dependencies", {})
     ):
         if editables:
             raise PdmUsageError(
@@ -463,7 +463,7 @@ def do_remove(
     cast(Array, deps).multiline(True)
 
     if not dry_run:
-        project.write_pyproject()
+        project.pyproject.write()
     do_lock(project, "reuse", dry_run=dry_run, hooks=hooks)
     if sync:
         do_sync(
@@ -557,12 +557,8 @@ def do_init(
             readme.write_text(f"# {name}\n\n{description}\n")
         data["project"]["readme"] = readme.name  # type: ignore
     get_specifier(python_requires)
-    if not project.pyproject:
-        project._pyproject = data
-    else:
-        project._pyproject["project"] = data["project"]  # type: ignore
-        project._pyproject["build-system"] = data["build-system"]  # type: ignore
-    project.write_pyproject()
+    project.pyproject._data.update(data)
+    project.pyproject.write()
     hooks.try_emit("post_init")
 
 
@@ -701,7 +697,7 @@ def do_import(
     if options is None:
         options = Namespace(dev=False, group=None)
     project_data, settings = FORMATS[key].convert(project, filename, options)
-    pyproject = project.pyproject or tomlkit.document()
+    pyproject = project.pyproject._data
 
     if "tool" not in pyproject or "pdm" not in pyproject["tool"]:  # type: ignore
         pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
@@ -727,7 +723,7 @@ def do_import(
         "requires": ["pdm-pep517>=1.0.0"],
         "build-backend": "pdm.pep517.api",
     }
-    project.pyproject = cast(dict, pyproject)
+
     if "requires-python" not in pyproject["project"]:
         python_version = f"{project.python.major}.{project.python.minor}"
         pyproject["project"]["requires-python"] = f">={python_version}"
@@ -735,7 +731,7 @@ def do_import(
             "The project's [primary]requires-python[/] has been set to [primary]>="
             f"{python_version}[/]. You can change it later if necessary."
         )
-    project.write_pyproject()
+    project.pyproject.write()
 
 
 def ask_for_import(project: Project) -> None:

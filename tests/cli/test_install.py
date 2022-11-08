@@ -120,9 +120,9 @@ def test_sync_without_self(project, working_set):
 
 def test_sync_with_index_change(project, index):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
-    project.meta["requires-python"] = ">=3.6"
-    project.meta["dependencies"] = ["future-fstrings"]
-    project.write_pyproject()
+    project.pyproject.metadata["requires-python"] = ">=3.6"
+    project.pyproject.metadata["dependencies"] = ["future-fstrings"]
+    project.pyproject.write()
     index[
         "/simple/future-fstrings/"
     ] = b"""

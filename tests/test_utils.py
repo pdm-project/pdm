@@ -89,16 +89,16 @@ def test_merge_dictionary():
 
 
 def setup_dependencies(project):
-    project.pyproject["project"].update(
+    project.pyproject.metadata.update(
         {
             "dependencies": ["requests"],
             "optional-dependencies": {"web": ["flask"], "auth": ["passlib"]},
         }
     )
-    project.tool_settings.update(
+    project.pyproject.settings.update(
         {"dev-dependencies": {"test": ["pytest"], "doc": ["mkdocs"]}}
     )
-    project.write_pyproject()
+    project.pyproject.write()
 
 
 @pytest.mark.parametrize(

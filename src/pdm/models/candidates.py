@@ -15,7 +15,7 @@ from unearth import Link, vcs_support
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
-from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion
+from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, ProjectError
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -25,7 +25,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet
-from pdm.project.metadata import MutableMetadata, SetupDistribution
+from pdm.project.project_file import PyProject
 from pdm.utils import (
     cached_property,
     cd,
@@ -451,11 +451,13 @@ class PreparedCandidate:
         pyproject_toml = self._unpacked_dir / "pyproject.toml"
         if pyproject_toml.exists():
             try:
-                metadata = MutableMetadata.from_file(pyproject_toml)
-            except ValueError:
+                metadata = PyProject(
+                    pyproject_toml, ui=self.environment.project.core.ui
+                ).metadata.unwrap()
+            except ProjectError:
                 termui.logger.warn("Failed to parse pyproject.toml")
             else:
-                dynamic_fields = metadata.dynamic or []
+                dynamic_fields = metadata.get("dynamic", [])
                 # Use the parse result only when all are static
                 if set(dynamic_fields).isdisjoint(
                     {
@@ -467,14 +469,14 @@ class PreparedCandidate:
                     }
                 ):
                     setup = Setup(
-                        name=metadata.name,
-                        summary=metadata.description,
-                        version=metadata.version,
-                        install_requires=metadata.dependencies or [],
-                        extras_require=metadata.optional_dependencies or {},
-                        python_requires=metadata.requires_python or None,
+                        name=metadata.get("name"),
+                        summary=metadata.get("description"),
+                        version=metadata.get("version"),
+                        install_requires=metadata.get("dependencies", []),
+                        extras_require=metadata.get("optional_dependencies", {}),
+                        python_requires=metadata.get("requires_python"),
                     )
-                    return SetupDistribution(setup)
+                    return setup.as_dist()
         # If all fail, try building the source to get the metadata
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
@@ -495,7 +497,7 @@ class PreparedCandidate:
                 termui.logger.warn(message)
                 warnings.warn(message, RuntimeWarning)
                 setup = Setup()
-            return SetupDistribution(setup)
+            return setup.as_dist()
         else:
             return im.PathDistribution(Path(cast(str, self._metadata_dir)))
 

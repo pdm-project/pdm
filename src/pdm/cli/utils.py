@@ -40,7 +40,7 @@ from pdm.models.requirements import (
 )
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
-from pdm.utils import is_path_relative_to, url_to_path
+from pdm.utils import is_path_relative_to, normalize_name, url_to_path
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
@@ -310,8 +310,8 @@ def add_package_to_reverse_tree(
 def package_is_project(package: Package, project: Project) -> bool:
     return (
         not project.environment.is_global
-        and bool(project.name)
-        and package.name == project.meta.project_name.lower()
+        and project.name is not None
+        and package.name == normalize_name(project.name)
     )
 
 
@@ -526,11 +526,11 @@ def save_version_specifiers(
 
 def check_project_file(project: Project) -> None:
     """Check the existence of the project file and throws an error on failure."""
-    if not project.meta:
+    if not project.pyproject.is_valid:
         raise ProjectError(
             "The pyproject.toml has not been initialized yet. You can do this "
             "by running [success]`pdm init`[/]."
-        )
+        ) from None
 
 
 def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
@@ -630,8 +630,8 @@ def translate_groups(
     project: Project, default: bool, dev: bool, groups: Iterable[str]
 ) -> list[str]:
     """Translate default, dev and groups containing ":all" into a list of groups"""
-    optional_groups = set(project.meta.optional_dependencies or [])
-    dev_groups = set(project.tool_settings.get("dev-dependencies", []))
+    optional_groups = set(project.pyproject.metadata.get("optional-dependencies", {}))
+    dev_groups = set(project.pyproject.settings.get("dev-dependencies", {}))
     groups_set = set(groups)
     if dev is None:
         dev = True

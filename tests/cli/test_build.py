@@ -31,7 +31,7 @@ def test_build_global_project_forbidden(invoke):
 
 def test_build_single_module(fixture_project):
     project = fixture_project("demo-module")
-    assert project.meta.version == "0.1.0"
+    assert project.pyproject.metadata["version"] == "0.1.0"
 
     actions.do_build(project)
     tar_names = get_tarball_names(project.root / "dist/demo-module-0.1.0.tar.gz")
@@ -56,8 +56,8 @@ def test_build_single_module(fixture_project):
 
 def test_build_single_module_with_readme(fixture_project):
     project = fixture_project("demo-module")
-    project.meta["readme"] = "README.md"
-    project.write_pyproject()
+    project.pyproject.metadata["readme"] = "README.md"
+    project.pyproject.write()
     actions.do_build(project)
     assert "demo-module-0.1.0/README.md" in get_tarball_names(
         project.root / "dist/demo-module-0.1.0.tar.gz"
@@ -100,13 +100,13 @@ def test_build_src_package(fixture_project):
 
 def test_build_package_include(fixture_project):
     project = fixture_project("demo-package")
-    project.tool_settings["includes"] = [
+    project.pyproject.settings["includes"] = [
         "my_package/",
         "single_module.py",
         "data_out.json",
     ]
-    project.tool_settings["excludes"] = ["my_package/*.json"]
-    project.write_pyproject()
+    project.pyproject.settings["excludes"] = ["my_package/*.json"]
+    project.pyproject.write()
     actions.do_build(project)
 
     tar_names = get_tarball_names(project.root / "dist/demo-package-0.1.0.tar.gz")
@@ -126,8 +126,8 @@ def test_build_package_include(fixture_project):
 
 def test_build_src_package_by_include(fixture_project):
     project = fixture_project("demo-src-package")
-    project.includes = ["src/my_package"]
-    project.write_pyproject()
+    project.pyproject.settings["includes"] = ["src/my_package"]
+    project.pyproject.write()
     actions.do_build(project)
 
     tar_names = get_tarball_names(project.root / "dist/demo-package-0.1.0.tar.gz")
@@ -159,8 +159,8 @@ def test_cli_build_with_config_settings(fixture_project, invoke):
 @pytest.mark.parametrize("isolated", (True, False))
 def test_build_with_no_isolation(fixture_project, invoke, isolated):
     project = fixture_project("demo-failure")
-    project.pyproject = {"project": {"name": "demo", "version": "0.1.0"}}
-    project.write_pyproject()
+    project.pyproject.set_data({"project": {"name": "demo", "version": "0.1.0"}})
+    project.pyproject.write()
     invoke(["add", "first"], obj=project)
     args = ["build"]
     if not isolated:
