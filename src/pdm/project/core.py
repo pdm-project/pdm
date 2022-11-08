@@ -263,7 +263,10 @@ class Project:
 
     @property
     def python_requires(self) -> PySpecSet:
-        return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
+        try:
+            return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
+        except ProjectError:
+            return PySpecSet()
 
     def get_dependencies(self, group: str | None = None) -> dict[str, Requirement]:
         metadata = self.pyproject.metadata
