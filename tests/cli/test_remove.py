@@ -20,8 +20,8 @@ def test_remove_editable_packages_while_keeping_normal(project):
         True,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    dev_group = project.tool_settings["dev-dependencies"]["dev"]
-    default_group = project.meta["dependencies"]
+    dev_group = project.pyproject.settings["dev-dependencies"]["dev"]
+    default_group = project.pyproject.metadata["dependencies"]
     actions.do_remove(project, True, packages=["demo"])
     assert not dev_group
     assert len(default_group) == 1
@@ -72,7 +72,7 @@ def test_remove_package_exist_in_multi_groups(project, working_set):
     actions.do_remove(project, dev=True, packages=["urllib3"])
     assert all(
         "urllib3" not in line
-        for line in project.tool_settings["dev-dependencies"]["dev"]
+        for line in project.pyproject.settings["dev-dependencies"]["dev"]
     )
     assert "urllib3" in working_set
     assert "requests" in working_set
@@ -89,7 +89,7 @@ def test_add_remove_no_package(project):
 
 @pytest.mark.usefixtures("repository", "working_set")
 def test_remove_package_wont_break_toml(project_no_init):
-    project_no_init.pyproject_file.write_text(
+    project_no_init.pyproject._path.write_text(
         """
 [project]
 dependencies = [
@@ -98,6 +98,6 @@ dependencies = [
 ]
 """
     )
-    project_no_init.pyproject = None
+    project_no_init.pyproject.reload()
     actions.do_remove(project_no_init, packages=["requests"])
-    assert project_no_init.pyproject["project"]["dependencies"] == []
+    assert project_no_init.pyproject.metadata["dependencies"] == []

@@ -4,20 +4,15 @@ import itertools
 from email.message import Message
 from typing import TYPE_CHECKING, Any, Iterator, cast
 
-from pdm.pep517.metadata import Metadata
-
 if TYPE_CHECKING:
     from pdm.compat import Distribution
 
 
 class ProjectInfo:
-    def __init__(self, metadata: Distribution | Metadata) -> None:
+    def __init__(self, metadata: Distribution) -> None:
         self.latest_stable_version = ""
         self.installed_version = ""
-        if isinstance(metadata, Metadata):
-            self._parsed = self._parse_self(metadata)
-        else:
-            self._parsed = self._parse(metadata)
+        self._parsed = self._parse(metadata)
 
     def _parse(self, data: Distribution) -> dict[str, Any]:
         metadata = cast(Message, data.metadata)
@@ -46,26 +41,6 @@ class ProjectInfo:
             "keywords": keywords,
             "homepage": metadata.get("Home-page", ""),
             "project-urls": [": ".join(parts) for parts in project_urls.items()],
-        }
-
-    def _parse_self(self, metadata: Metadata) -> dict[str, Any]:
-        license_expression = getattr(metadata, "license_expression", None)
-        if license_expression is None:
-            license_expression = getattr(metadata, "license", "")
-        return {
-            "name": str(metadata.name),
-            "version": str(metadata.version),
-            "summary": str(metadata.description),
-            "author": str(metadata.author),
-            "email": str(metadata.author_email),
-            "license": str(license_expression),
-            "requires-python": str(metadata.requires_python),
-            "platform": "",
-            "keywords": ", ".join(metadata.keywords or []),
-            "homepage": "",
-            "project-urls": [
-                ": ".join(parts) for parts in (metadata.project_urls or {}).items()
-            ],
         }
 
     def __getitem__(self, key: str) -> Any:

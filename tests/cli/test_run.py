@@ -65,13 +65,13 @@ def test_auto_isolate_site_packages(project, invoke):
 
 
 def test_run_with_site_packages(project, invoke):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "foo": {
             "cmd": ["python", "-c", "import sys;print(sys.path, sep='\\n')"],
             "site_packages": True,
         }
     }
-    project.write_pyproject()
+    project.pyproject.write()
     result = invoke(
         [
             "run",
@@ -99,30 +99,30 @@ def test_run_pass_exit_code(invoke):
 
 
 def test_run_cmd_script(project, invoke):
-    project.tool_settings["scripts"] = {"test_script": "python -V"}
-    project.write_pyproject()
+    project.pyproject.settings["scripts"] = {"test_script": "python -V"}
+    project.pyproject.write()
     result = invoke(["run", "test_script"], obj=project)
     assert result.exit_code == 0
 
 
 def test_run_cmd_script_with_array(project, invoke):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_script": ["python", "-c", "import sys; sys.exit(22)"]
     }
-    project.write_pyproject()
+    project.pyproject.write()
     result = invoke(["run", "test_script"], obj=project)
     assert result.exit_code == 22
 
 
 def test_run_script_pass_project_root(project, invoke, capfd):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_script": [
             "python",
             "-c",
             "import os;print(os.getenv('PDM_PROJECT_ROOT'))",
         ]
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     result = invoke(["run", "test_script"], obj=project)
     assert result.exit_code == 0
@@ -131,13 +131,13 @@ def test_run_script_pass_project_root(project, invoke, capfd):
 
 
 def test_run_shell_script(project, invoke):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_script": {
             "shell": "echo hello > output.txt",
             "help": "test it won't fail",
         }
     }
-    project.write_pyproject()
+    project.pyproject.write()
     with cd(project.root):
         result = invoke(["run", "test_script"], obj=project)
     assert result.exit_code == 0
@@ -159,11 +159,11 @@ def test_run_call_script(project, invoke):
             """
         )
     )
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_script": {"call": "test_script:main"},
         "test_script_with_args": {"call": "test_script:main(['-c', '9'])"},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     with cd(project.root):
         result = invoke(["run", "test_script", "-c", "8"], obj=project)
         assert result.exit_code == 8
@@ -181,8 +181,8 @@ def test_run_script_with_extra_args(project, invoke, capfd):
             """
         )
     )
-    project.tool_settings["scripts"] = {"test_script": "python test_script.py"}
-    project.write_pyproject()
+    project.pyproject.settings["scripts"] = {"test_script": "python test_script.py"}
+    project.pyproject.write()
     with cd(project.root):
         invoke(["run", "test_script", "-a", "-b", "-c"], obj=project)
     out, _ = capfd.readouterr()
@@ -191,14 +191,14 @@ def test_run_script_with_extra_args(project, invoke, capfd):
 
 def test_run_expand_env_vars(project, invoke, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_cmd": 'python -c "foo, bar = 0, 1;print($FOO)"',
         "test_cmd_no_expand": "python -c 'print($FOO)'",
         "test_script": "python test_script.py",
         "test_cmd_array": ["python", "test_script.py"],
         "test_shell": {"shell": "echo $FOO"},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     with cd(project.root):
         monkeypatch.setenv("FOO", "bar")
@@ -220,10 +220,10 @@ def test_run_expand_env_vars(project, invoke, capfd, monkeypatch):
 
 def test_run_script_with_env_defined(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_script": {"cmd": "python test_script.py", "env": {"FOO": "bar"}}
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     with cd(project.root):
         invoke(["run", "test_script"], obj=project)
@@ -234,14 +234,14 @@ def test_run_script_with_dotenv_file(project, invoke, capfd, monkeypatch):
     (project.root / "test_script.py").write_text(
         "import os; print(os.getenv('FOO'), os.getenv('BAR'))"
     )
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_override": {
             "cmd": "python test_script.py",
             "env_file": {"override": ".env"},
         },
         "test_default": {"cmd": "python test_script.py", "env_file": ".env"},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     monkeypatch.setenv("BAR", "foo")
     (project.root / ".env").write_text("FOO=bar\nBAR=override")
     capfd.readouterr()
@@ -254,12 +254,12 @@ def test_run_script_with_dotenv_file(project, invoke, capfd, monkeypatch):
 
 def test_run_script_override_global_env(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "_": {"env": {"FOO": "bar"}},
         "test_env": {"cmd": "python test_script.py"},
         "test_env_override": {"cmd": "python test_script.py", "env": {"FOO": "foobar"}},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     with cd(project.root):
         invoke(["run", "test_env"], obj=project)
@@ -269,7 +269,7 @@ def test_run_script_override_global_env(project, invoke, capfd):
 
 
 def test_run_show_list_of_scripts(project, invoke):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test_composite": {"composite": ["test_cmd", "test_script", "test_shell"]},
         "test_cmd": "flask db upgrade",
         "test_multi": """\
@@ -279,7 +279,7 @@ def test_run_show_list_of_scripts(project, invoke):
         "test_script": {"call": "test_script:main", "help": "call a python function"},
         "test_shell": {"shell": "echo $FOO", "help": "shell command"},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     result = invoke(["run", "--list"], obj=project)
     result_lines = result.output.splitlines()[3:]
     assert (
@@ -302,8 +302,8 @@ def test_run_show_list_of_scripts(project, invoke):
 
 
 def test_run_with_another_project_root(project, local_finder, invoke, capfd):
-    project.meta["requires-python"] = ">=3.6"
-    project.write_pyproject()
+    project.pyproject.metadata["requires-python"] = ">=3.6"
+    project.pyproject.write()
     invoke(["add", "first"], obj=project)
     with TemporaryDirectory(prefix="pytest-run-") as tmp_dir:
         Path(tmp_dir).joinpath("main.py").write_text(
@@ -318,8 +318,8 @@ def test_run_with_another_project_root(project, local_finder, invoke, capfd):
 
 
 def test_import_another_sitecustomize(project, invoke, capfd):
-    project.meta["requires-python"] = ">=2.7"
-    project.write_pyproject()
+    project.pyproject.metadata["requires-python"] = ">=2.7"
+    project.pyproject.write()
     # a script for checking another sitecustomize is imported
     project.root.joinpath("foo.py").write_text("import os;print(os.getenv('FOO'))")
     # ensure there have at least one sitecustomize can be imported
@@ -358,12 +358,12 @@ print(json.dumps(sysconfig.get_paths()))
 
 
 def test_run_composite(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "first": "python echo.py First",
         "second": "python echo.py Second",
         "test": {"composite": ["first", "second"]},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -372,13 +372,13 @@ def test_run_composite(project, invoke, capfd, _echo):
 
 
 def test_composite_stops_on_first_failure(project, invoke, capfd):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
         "fail": "python -c 'raise Exception'",
         "second": "echo 'Second CALLED'",
         "test": {"composite": ["first", "fail", "second"]},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     result = invoke(["run", "test"], obj=project)
     assert result.exit_code == 1
@@ -388,7 +388,7 @@ def test_composite_stops_on_first_failure(project, invoke, capfd):
 
 
 def test_composite_inherit_env(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "first": {
             "cmd": "python echo.py First VAR",
             "env": {"VAR": "42"},
@@ -399,7 +399,7 @@ def test_composite_inherit_env(project, invoke, capfd, _echo):
         },
         "test": {"composite": ["first", "second"], "env": {"VAR": "overriden"}},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -408,12 +408,12 @@ def test_composite_inherit_env(project, invoke, capfd, _echo):
 
 
 def test_composite_fail_on_first_missing_task(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "first": "python echo.py First",
         "second": "python echo.py Second",
         "test": {"composite": ["first", "fail", "second"]},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     result = invoke(["run", "test"], obj=project)
     assert result.exit_code == 1
@@ -423,7 +423,7 @@ def test_composite_fail_on_first_missing_task(project, invoke, capfd, _echo):
 
 
 def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
         "post_test": "python echo.py Post-Test",
@@ -432,7 +432,7 @@ def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
         "second": "python echo.py Second",
         "post_second": "python echo.py Post-Second",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -445,7 +445,7 @@ def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
 
 
 def test_composite_pass_parameters_to_subtasks(project, invoke, capfd, _args):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python args.py Pre-Test",
         "post_test": "python args.py Post-Test",
@@ -454,7 +454,7 @@ def test_composite_pass_parameters_to_subtasks(project, invoke, capfd, _args):
         "second": "python args.py Second",
         "post_second": "python args.py Post-Second",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test", "param=value"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -467,7 +467,7 @@ def test_composite_pass_parameters_to_subtasks(project, invoke, capfd, _args):
 
 
 def test_composite_can_pass_parameters(project, invoke, capfd, _args):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first param=first", "second param=second"]},
         "pre_test": "python args.py Pre-Test",
         "post_test": "python args.py Post-Test",
@@ -476,7 +476,7 @@ def test_composite_can_pass_parameters(project, invoke, capfd, _args):
         "second": "python args.py Second",
         "post_second": "python args.py Post-Second",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -489,13 +489,13 @@ def test_composite_can_pass_parameters(project, invoke, capfd, _args):
 
 
 def test_composite_hooks_inherit_env(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "pre_task": {"cmd": "python echo.py Pre-Task VAR", "env": {"VAR": "42"}},
         "task": "python echo.py Task",
         "post_task": {"cmd": "python echo.py Post-Task VAR", "env": {"VAR": "42"}},
         "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -505,7 +505,7 @@ def test_composite_hooks_inherit_env(project, invoke, capfd, _echo):
 
 
 def test_composite_inherit_env_in_cascade(project, invoke, capfd, _echo):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "_": {"env": {"FOO": "BAR", "TIK": "TOK"}},
         "pre_task": {
             "cmd": "python echo.py Pre-Task VAR FOO TIK",
@@ -521,7 +521,7 @@ def test_composite_inherit_env_in_cascade(project, invoke, capfd, _echo):
         },
         "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -533,13 +533,13 @@ def test_composite_inherit_env_in_cascade(project, invoke, capfd, _echo):
 def test_composite_inherit_dotfile(project, invoke, capfd, _echo):
     (project.root / ".env").write_text("VAR=42")
     (project.root / "override.env").write_text("VAR=overriden")
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "pre_task": {"cmd": "python echo.py Pre-Task VAR", "env_file": ".env"},
         "task": {"cmd": "python echo.py Task VAR", "env_file": ".env"},
         "post_task": {"cmd": "python echo.py Post-Task VAR", "env_file": ".env"},
         "test": {"composite": ["task"], "env_file": "override.env"},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -549,11 +549,11 @@ def test_composite_inherit_dotfile(project, invoke, capfd, _echo):
 
 
 def test_composite_can_have_commands(project, invoke, capfd):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "task": {"cmd": ["python", "-c", 'print("Task CALLED")']},
         "test": {"composite": ["task", "python -c 'print(\"Command CALLED\")'"]},
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     invoke(["run", "-v", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
@@ -562,10 +562,10 @@ def test_composite_can_have_commands(project, invoke, capfd):
 
 
 def test_run_shortcut(project, invoke, capfd):
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "test": "echo 'Everything is fine'",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     result = invoke(["test"], obj=project, strict=True)
     assert result.exit_code == 0
@@ -576,10 +576,10 @@ def test_run_shortcut(project, invoke, capfd):
 def test_run_shortcuts_dont_override_commands(project, invoke, capfd, mocker):
     do_lock = mocker.patch.object(actions, "do_lock")
     do_sync = mocker.patch.object(actions, "do_sync")
-    project.tool_settings["scripts"] = {
+    project.pyproject.settings["scripts"] = {
         "install": "echo 'Should not run'",
     }
-    project.write_pyproject()
+    project.pyproject.write()
     capfd.readouterr()
     result = invoke(["install"], obj=project, strict=True)
     assert result.exit_code == 0

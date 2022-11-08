@@ -121,21 +121,16 @@ class BaseRepository:
             and requirement.key == normalize_name(project.name)
         )
 
-    def make_this_candidate(self, requirement: Requirement) -> Candidate | None:
-        """Make a candidate for this package, or None if the requirement doesn't match.
+    def make_this_candidate(self, requirement: Requirement) -> Candidate:
+        """Make a candidate for this package.
         In this case the finder will look for a candidate from the package sources
         """
         project = self.environment.project
         assert project.name
         link = Link.from_path(project.root)  # type: ignore
-        version: str = project.meta.version
-        if (
-            not version
-            or requirement.specifier
-            and not requirement.specifier.contains(version, True)
-        ):
-            return None
-        return make_candidate(requirement, project.name, version, link)
+        candidate = make_candidate(requirement, project.name, link=link)
+        candidate.prepare(self.environment).metadata
+        return candidate
 
     def find_candidates(
         self,
@@ -150,9 +145,7 @@ class BaseRepository:
         # include prereleases
 
         if self.is_this_package(requirement):
-            candidate = self.make_this_candidate(requirement)
-            if candidate is not None:
-                return [candidate]
+            return [self.make_this_candidate(requirement)]
         requires_python = requirement.requires_python & self.environment.python_requires
         cans = list(self._find_candidates(requirement))
         applicable_cans = [
@@ -442,20 +435,20 @@ class LockedRepository(BaseRepository):
         if candidate.name != self.environment.project.name:
             raise CandidateInfoNotFound(candidate) from None
 
-        reqs = self.environment.project.meta.dependencies
+        reqs = self.environment.project.pyproject.metadata.get("dependencies", [])
+        optional_dependencies = self.environment.project.pyproject.metadata.get(
+            "optional-dependencies", {}
+        )
         if candidate.req.extras is not None:
             reqs = sum(
-                (
-                    self.environment.project.meta.optional_dependencies[g]
-                    for g in candidate.req.extras
-                ),
+                (optional_dependencies.get(g, []) for g in candidate.req.extras),
                 [],
             )
 
         return (
             reqs,
             str(self.environment.python_requires),
-            self.environment.project.meta.description,
+            self.environment.project.pyproject.metadata.get("description", "UNKNOWN"),
         )
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:

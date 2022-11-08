@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import ast
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field, fields
+import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, no_type_check
+from typing import Any, Iterable, no_type_check
+
+from pdm.compat import Distribution
 
 
 @dataclass
@@ -11,12 +16,12 @@ class Setup:
     Abstraction of a Python project setup file.
     """
 
-    name: Optional[str] = None
-    version: Optional[str] = None
-    install_requires: List[str] = field(default_factory=list)
-    extras_require: Dict[str, List[str]] = field(default_factory=dict)
-    python_requires: Optional[str] = None
-    summary: Optional[str] = None
+    name: str | None = None
+    version: str | None = None
+    install_requires: list[str] = field(default_factory=list)
+    extras_require: dict[str, list[str]] = field(default_factory=dict)
+    python_requires: str | None = None
+    summary: str | None = None
 
     def update(self, other: "Setup") -> None:
         for f in fields(self):
@@ -24,12 +29,15 @@ class Setup:
             if other_field:
                 setattr(self, f.name, other_field)
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_directory(cls, dir: Path) -> "Setup":
         return _SetupReader.read_from_directory(dir)
+
+    def as_dist(self) -> Distribution:
+        return SetupDistribution(self)
 
 
 class _SetupReader:
@@ -58,18 +66,21 @@ class _SetupReader:
 
     @staticmethod
     def read_pyproject_toml(file: Path) -> Setup:
-        from pdm.project.metadata import MutableMetadata
+        from pdm import termui
+        from pdm.exceptions import ProjectError
+        from pdm.project.project_file import PyProject
 
         try:
-            metadata = MutableMetadata.from_file(file)
-        except ValueError:
+            metadata = PyProject(file, ui=termui.UI()).metadata.unwrap()
+        except ProjectError:
             return Setup()
         return Setup(
-            name=metadata.name,
-            version=metadata.version,
-            install_requires=metadata.dependencies or [],
-            extras_require=metadata.optional_dependencies or {},
-            python_requires=metadata.requires_python,
+            name=metadata.get("name"),
+            summary=metadata.get("description"),
+            version=metadata.get("version"),
+            install_requires=metadata.get("dependencies", []),
+            extras_require=metadata.get("optional-dependencies", {}),
+            python_requires=metadata.get("requires-python"),
         )
 
     @no_type_check
@@ -112,7 +123,7 @@ class _SetupReader:
                 version = meta_version
 
         install_requires = []
-        extras_require: Dict[str, List[str]] = {}
+        extras_require: dict[str, list[str]] = {}
         python_requires = None
         if parser.has_section("options"):
             if parser.has_option("options", "install_requires"):
@@ -147,8 +158,8 @@ class _SetupReader:
 
     @classmethod
     def _find_setup_call(
-        cls, elements: List[Any]
-    ) -> Tuple[Optional[ast.Call], Optional[List[Any]]]:
+        cls, elements: list[Any]
+    ) -> tuple[ast.Call | None, list[Any | None]]:
         funcdefs = []
         for i, element in enumerate(elements):
             if isinstance(element, ast.If) and i == len(elements) - 1:
@@ -198,8 +209,8 @@ class _SetupReader:
     @no_type_check
     @classmethod
     def _find_sub_setup_call(
-        cls, elements: List[Any]
-    ) -> Tuple[Optional[ast.Call], Optional[List[Any]]]:
+        cls, elements: list[Any]
+    ) -> tuple[ast.Call | None, list[Any | None]]:
         for element in elements:
             if not isinstance(element, (ast.FunctionDef, ast.If)):
                 continue
@@ -216,8 +227,8 @@ class _SetupReader:
 
     @no_type_check
     @classmethod
-    def _find_install_requires(cls, call: ast.Call, body: Iterable[Any]) -> List[str]:
-        install_requires: List[str] = []
+    def _find_install_requires(cls, call: ast.Call, body: Iterable[Any]) -> list[str]:
+        install_requires: list[str] = []
         value = cls._find_in_call(call, "install_requires")
         if value is None:
             # Trying to find in kwargs
@@ -260,8 +271,8 @@ class _SetupReader:
     @classmethod
     def _find_extras_require(
         cls, call: ast.Call, body: Iterable[Any]
-    ) -> Dict[str, List[str]]:
-        extras_require: Dict[str, List[str]] = {}
+    ) -> dict[str, list[str]]:
+        extras_require: dict[str, list[str]] = {}
         value = cls._find_in_call(call, "extras_require")
         if value is None:
             # Trying to find in kwargs
@@ -312,8 +323,8 @@ class _SetupReader:
 
     @classmethod
     def _find_single_string(
-        cls, call: ast.Call, body: List[Any], name: str
-    ) -> Optional[str]:
+        cls, call: ast.Call, body: list[Any], name: str
+    ) -> str | None:
         value = cls._find_in_call(call, name)
         if value is None:
             # Trying to find in kwargs
@@ -351,14 +362,14 @@ class _SetupReader:
         return None
 
     @staticmethod
-    def _find_in_call(call: ast.Call, name: str) -> Optional[Any]:
+    def _find_in_call(call: ast.Call, name: str) -> Any | None:
         for keyword in call.keywords:
             if keyword.arg == name:
                 return keyword.value
         return None
 
     @staticmethod
-    def _find_call_kwargs(call: ast.Call) -> Optional[Any]:
+    def _find_call_kwargs(call: ast.Call) -> Any | None:
         kwargs = None
         for keyword in call.keywords:
             if keyword.arg is None:
@@ -367,7 +378,7 @@ class _SetupReader:
         return kwargs
 
     @staticmethod
-    def _find_variable_in_body(body: Iterable[Any], name: str) -> Optional[Any]:
+    def _find_variable_in_body(body: Iterable[Any], name: str) -> Any | None:
         for elem in body:
 
             if not isinstance(elem, ast.Assign):
@@ -382,8 +393,50 @@ class _SetupReader:
         return None
 
     @staticmethod
-    def _find_in_dict(dict_: ast.Dict, name: str) -> Optional[Any]:
+    def _find_in_dict(dict_: ast.Dict, name: str) -> Any | None:
         for key, val in zip(dict_.keys, dict_.values):
             if isinstance(key, ast.Str) and key.s == name:
                 return val
         return None
+
+
+class SetupDistribution(Distribution):
+    def __init__(self, data: Setup) -> None:
+        self._data = data
+
+    def read_text(self, filename: str) -> str | None:
+        return None
+
+    def locate_file(self, path: str | os.PathLike[str]) -> os.PathLike[str]:
+        return Path()
+
+    @property
+    def metadata(self) -> dict[str, Any]:  # type: ignore
+        return {
+            "Name": self._data.name,
+            "Version": self._data.version,
+            "Summary": self._data.summary,
+            "Requires-Python": self._data.python_requires,
+        }
+
+    @property
+    def requires(self) -> list[str] | None:
+        from pdm.models.requirements import parse_requirement
+        from pdm.models.markers import Marker
+
+        result = self._data.install_requires
+        for extra, reqs in self._data.extras_require.items():
+            extra_marker = f"extra == '{extra}'"
+            for req in reqs:
+                parsed = parse_requirement(req)
+                old_marker = str(parsed.marker) if parsed.marker else None
+                if old_marker:
+                    if " or " in old_marker:
+                        new_marker = f"({old_marker}) and {extra_marker}"
+                    else:
+                        new_marker = f"{old_marker} and {extra_marker}"
+                else:
+                    new_marker = extra_marker
+                parsed.marker = Marker(new_marker)
+                result.append(parsed.as_line())
+        return result

@@ -17,7 +17,7 @@ def test_lock_command(project, invoke, mocker):
 def test_lock_dependencies(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
     actions.do_lock(project)
-    assert project.lockfile_file.exists()
+    assert project.lockfile.exists
     locked = project.locked_repository.all_candidates
     for package in ("requests", "idna", "chardet", "certifi"):
         assert package in locked
@@ -54,10 +54,10 @@ def test_lock_refresh_keep_consistent(invoke, project, repository):
     result = invoke(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
-    previous = project.lockfile_file.read_text()
+    previous = project.lockfile._path.read_text()
     result = invoke(["lock", "--refresh"], obj=project)
     assert result.exit_code == 0
-    assert project.lockfile_file.read_text() == previous
+    assert project.lockfile._path.read_text() == previous
 
 
 def test_lock_check_no_change_success(invoke, project, repository):
@@ -86,7 +86,7 @@ def test_innovations_with_specified_lockfile(invoke, project, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")})
     lockfile = str(project.root / "mylock.lock")
     invoke(["lock", "--lockfile", lockfile], strict=True, obj=project)
-    assert project.lockfile_file == project.root / "mylock.lock"
+    assert project.lockfile._path == project.root / "mylock.lock"
     assert project.is_lockfile_hash_match()
     locked = project.locked_repository.all_candidates
     assert "requests" in locked
@@ -96,10 +96,9 @@ def test_innovations_with_specified_lockfile(invoke, project, working_set):
 
 @pytest.mark.usefixtures("repository", "vcs")
 def test_skip_editable_dependencies_in_metadata(project, capsys):
-    project.meta["dependencies"] = [
+    project.pyproject.metadata["dependencies"] = [
         "-e git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
     ]
-    project.write_pyproject()
     actions.do_lock(project)
     _, err = capsys.readouterr()
     assert "WARNING: Skipping editable dependency" in err

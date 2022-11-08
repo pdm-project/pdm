@@ -20,15 +20,15 @@ def test_update_command(project, invoke, mocker):
 @pytest.mark.usefixtures("working_set")
 def test_update_ignore_constraints(project, repository):
     actions.do_add(project, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz~=2019.3"]
+    assert project.pyproject.metadata["dependencies"] == ["pytz~=2019.3"]
     repository.add_candidate("pytz", "2020.2")
 
     actions.do_update(project, unconstrained=False, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz~=2019.3"]
+    assert project.pyproject.metadata["dependencies"] == ["pytz~=2019.3"]
     assert project.locked_repository.all_candidates["pytz"].version == "2019.3"
 
     actions.do_update(project, unconstrained=True, packages=("pytz",))
-    assert project.meta.dependencies == ["pytz~=2020.2"]
+    assert project.pyproject.metadata["dependencies"] == ["pytz~=2020.2"]
     assert project.locked_repository.all_candidates["pytz"].version == "2020.2"
 
 
@@ -82,12 +82,12 @@ def test_update_dry_run(project, repository, capsys):
         ],
     )
     actions.do_update(project, dry_run=True)
-    project.lockfile = None
+    out, _ = capsys.readouterr()
+    project.lockfile.reload()
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
-    out, _ = capsys.readouterr()
     assert "requests 2.19.1 -> 2.20.0" in out
 
 
@@ -180,17 +180,17 @@ def test_update_with_prerelease_without_package_argument(project):
 @pytest.mark.usefixtures("repository")
 def test_update_existing_package_with_prerelease(project, working_set):
     actions.do_add(project, packages=["urllib3"])
-    assert project.meta.dependencies[0] == "urllib3~=1.22"
+    assert project.pyproject.metadata["dependencies"][0] == "urllib3~=1.22"
     assert working_set["urllib3"].version == "1.22"
 
     actions.do_update(project, packages=["urllib3"], prerelease=True)
-    assert project.meta.dependencies[0] == "urllib3~=1.22"
+    assert project.pyproject.metadata["dependencies"][0] == "urllib3~=1.22"
     assert working_set["urllib3"].version == "1.23b0"
 
     actions.do_update(
         project, packages=["urllib3"], prerelease=True, unconstrained=True
     )
-    assert project.meta.dependencies[0] == "urllib3<2,>=1.23b0"
+    assert project.pyproject.metadata["dependencies"][0] == "urllib3<2,>=1.23b0"
     assert working_set["urllib3"].version == "1.23b0"
 
 

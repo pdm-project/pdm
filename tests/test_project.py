@@ -56,7 +56,7 @@ def test_project_sources_overriding(project):
     project.project_config["pypi.url"] = "https://test.pypi.org/simple"
     assert project.sources[0]["url"] == "https://test.pypi.org/simple"
 
-    project.tool_settings["source"] = [
+    project.pyproject.settings["source"] = [
         {"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}
     ]
     assert project.sources[0]["url"] == "https://example.org/simple"
@@ -76,7 +76,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
         == "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
     )
 
-    project.tool_settings["source"] = [
+    project.pyproject.settings["source"] = [
         {
             "url": "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple",
             "name": "pypi",
@@ -87,11 +87,11 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
     assert project.sources[0]["url"] == "https://user:password@example.org/simple"
     # not expanded in tool settings
     assert (
-        project.tool_settings["source"][0]["url"]
+        project.pyproject.settings["source"][0]["url"]
         == "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple"
     )
 
-    project.tool_settings["source"] = [
+    project.pyproject.settings["source"] = [
         {
             "url": "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple",
             "name": "example2",
@@ -102,7 +102,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
     assert project.sources[1]["url"] == "https://user:password@example2.org/simple"
     # not expanded in tool settings
     assert (
-        project.tool_settings["source"][0]["url"]
+        project.pyproject.settings["source"][0]["url"]
         == "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple"
     )
 
@@ -178,12 +178,15 @@ def test_ignore_saved_python(project, monkeypatch):
 
 
 def test_select_dependencies(project):
-    project.meta["dependencies"] = ["requests"]
-    project.meta["optional-dependencies"] = {
+    project.pyproject.metadata["dependencies"] = ["requests"]
+    project.pyproject.metadata["optional-dependencies"] = {
         "security": ["cryptography"],
         "venv": ["virtualenv"],
     }
-    project.tool_settings["dev-dependencies"] = {"test": ["pytest"], "doc": ["mkdocs"]}
+    project.pyproject.settings["dev-dependencies"] = {
+        "test": ["pytest"],
+        "doc": ["mkdocs"],
+    }
     assert sorted(project.get_dependencies()) == ["requests"]
     assert sorted(project.dependencies) == ["requests"]
 

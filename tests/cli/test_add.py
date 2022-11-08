@@ -14,9 +14,9 @@ from tests import FIXTURES
 def test_add_package(project, working_set, is_dev):
     actions.do_add(project, is_dev, packages=["requests"])
     group = (
-        project.tool_settings["dev-dependencies"]["dev"]
+        project.pyproject.settings["dev-dependencies"]["dev"]
         if is_dev
-        else project.meta["dependencies"]
+        else project.pyproject.metadata["dependencies"]
     )
 
     assert group[0] == "requests~=2.19"
@@ -36,7 +36,7 @@ def test_add_command(project, invoke, mocker):
 def test_add_package_to_custom_group(project, working_set):
     actions.do_add(project, group="test", packages=["requests"])
 
-    assert "requests" in project.meta.optional_dependencies["test"][0]
+    assert "requests" in project.pyproject.metadata["optional-dependencies"]["test"][0]
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
@@ -47,7 +47,7 @@ def test_add_package_to_custom_group(project, working_set):
 def test_add_package_to_custom_dev_group(project, working_set):
     actions.do_add(project, dev=True, group="test", packages=["requests"])
 
-    dependencies = project.tool_settings["dev-dependencies"]["test"]
+    dependencies = project.pyproject.settings["dev-dependencies"]["test"]
     assert "requests" in dependencies[0]
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
@@ -65,7 +65,7 @@ def test_add_editable_package(project, working_set):
         True,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
-    group = project.tool_settings["dev-dependencies"]["dev"]
+    group = project.pyproject.settings["dev-dependencies"]["dev"]
     assert group == ["-e git+https://github.com/test-root/demo.git#egg=demo"]
     locked_candidates = project.locked_repository.all_candidates
     assert (
@@ -122,9 +122,9 @@ def test_add_remote_package_url(project, is_dev):
         packages=["http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"],
     )
     group = (
-        project.tool_settings["dev-dependencies"]["dev"]
+        project.pyproject.settings["dev-dependencies"]["dev"]
         if is_dev
-        else project.meta["dependencies"]
+        else project.pyproject.metadata["dependencies"]
     )
     assert (
         group[0]
@@ -142,19 +142,19 @@ def test_add_no_install(project, working_set):
 @pytest.mark.usefixtures("repository")
 def test_add_package_save_exact(project):
     actions.do_add(project, sync=False, save="exact", packages=["requests"])
-    assert project.meta.dependencies[0] == "requests==2.19.1"
+    assert project.pyproject.metadata["dependencies"][0] == "requests==2.19.1"
 
 
 @pytest.mark.usefixtures("repository")
 def test_add_package_save_wildcard(project):
     actions.do_add(project, sync=False, save="wildcard", packages=["requests"])
-    assert project.meta.dependencies[0] == "requests"
+    assert project.pyproject.metadata["dependencies"][0] == "requests"
 
 
 @pytest.mark.usefixtures("repository")
 def test_add_package_save_minimum(project):
     actions.do_add(project, sync=False, save="minimum", packages=["requests"])
-    assert project.meta.dependencies[0] == "requests>=2.19.1"
+    assert project.pyproject.metadata["dependencies"][0] == "requests>=2.19.1"
 
 
 def test_add_package_update_reuse(project, repository):
@@ -250,14 +250,14 @@ def test_add_package_unconstrained_rewrite_specifier(project):
     actions.do_add(project, packages=["django"], no_self=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "2.2.9"
-    assert project.meta.dependencies[0] == "django~=2.2"
+    assert project.pyproject.metadata["dependencies"][0] == "django~=2.2"
 
     actions.do_add(
         project, packages=["django-toolbar"], no_self=True, unconstrained=True
     )
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "1.11.8"
-    assert project.meta.dependencies[0] == "django~=1.11"
+    assert project.pyproject.metadata["dependencies"][0] == "django~=1.11"
 
 
 @pytest.mark.usefixtures("repository", "working_set", "vcs")
@@ -294,7 +294,7 @@ def test_add_with_dry_run(project, capsys):
 def test_add_with_prerelease(project, working_set):
     actions.do_add(project, packages=["urllib3"], prerelease=True)
     assert working_set["urllib3"].version == "1.23b0"
-    assert project.meta.dependencies[0] == "urllib3<2,>=1.23b0"
+    assert project.pyproject.metadata["dependencies"][0] == "urllib3<2,>=1.23b0"
 
 
 @pytest.mark.usefixtures("repository")

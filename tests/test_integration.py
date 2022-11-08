@@ -4,16 +4,10 @@ import pytest
 from pdm.utils import cd
 
 PYTHON_VERSIONS = ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
-PYPROJECT = """\
-[project]
-name = "test-project"
-version = "0.1.0"
-requires-python = ">=3.6"
-
-[build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
-"""
+PYPROJECT = {
+    "project": {"name": "test-project", "version": "0.1.0", "requires-python": ">=3.6"},
+    "build-system": {"requires": ["pdm-pep517"], "build-backend": "pdm.pep517.api"},
+}
 
 
 def get_python_versions():
@@ -33,9 +27,9 @@ def get_python_versions():
 def test_basic_integration(python_version, core, tmp_path, invoke):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = core.create_project(tmp_path)
-    project.pyproject_file.write_text(PYPROJECT)
+    project.pyproject.set_data(PYPROJECT)
     project.root.joinpath("foo.py").write_text("import django\n")
-    project._environment = project.pyproject = None
+    project._environment = None
     invoke(["use", "-f", python_version], obj=project, strict=True)
     invoke(["add", "django", "-v"], obj=project, strict=True)
     with cd(project.root):

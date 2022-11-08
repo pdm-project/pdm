@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import re
 import shutil
@@ -14,6 +13,7 @@ import platformdirs
 import tomlkit
 from findpython import Finder
 from tomlkit.items import Array
+from unearth import Link
 
 from pdm import termui
 from pdm._types import Source
@@ -26,9 +26,9 @@ from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.project.config import Config
-from pdm.project.metadata import MutableMetadata as Metadata
+from pdm.project.lockfile import Lockfile
+from pdm.project.project_file import PyProject
 from pdm.utils import (
-    atomic_open_for_write,
     cached_property,
     cd,
     deprecation_warning,
@@ -62,8 +62,8 @@ class Project:
     """
 
     PYPROJECT_FILENAME = "pyproject.toml"
+    LOCKFILE_FILENAME = "pdm.lock"
     DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
-    LOCKFILE_VERSION = "4.1"
 
     def __init__(
         self,
@@ -72,8 +72,7 @@ class Project:
         is_global: bool = False,
         global_config: str | Path | None = None,
     ) -> None:
-        self._pyproject: dict | None = None
-        self._lockfile: dict | None = None
+        self._lockfile: Lockfile | None = None
         self._environment: Environment | None = None
         self._python: PythonInfo | None = None
         self.core = core
@@ -106,61 +105,24 @@ class Project:
         self.root: Path = Path(root_path or "").absolute()
         self.is_global = is_global
         self.init_global_project()
-        self._lockfile_file = self.root / "pdm.lock"
 
     def __repr__(self) -> str:
         return f"<Project '{self.root.as_posix()}'>"
 
-    @property
-    def pyproject_file(self) -> Path:
-        return self.root / self.PYPROJECT_FILENAME
+    @cached_property
+    def pyproject(self) -> PyProject:
+        return PyProject(self.root / self.PYPROJECT_FILENAME, ui=self.core.ui)
 
     @property
-    def lockfile_file(self) -> Path:
-        return self._lockfile_file
-
-    @lockfile_file.setter
-    def lockfile_file(self, path: str) -> None:
-        self._lockfile_file = Path(path).absolute()
-        self._lockfile = None
-
-    @property
-    def pyproject(self) -> dict | None:
-        if not self._pyproject:
-            if self.pyproject_file.exists():
-                data = tomlkit.parse(self.pyproject_file.read_text("utf-8"))
-                self._pyproject = cast(dict, data)
-            else:
-                self._pyproject = cast(dict, tomlkit.document())
-        return self._pyproject
-
-    @pyproject.setter
-    def pyproject(self, data: dict[str, Any]) -> None:
-        self._pyproject = data
-
-    @property
-    def tool_settings(self) -> dict:
-        data = self.pyproject
-        if not data:
-            return {}
-        return data.setdefault("tool", {}).setdefault("pdm", {})
-
-    @property
-    def name(self) -> str | None:
-        return self.meta.get("name")
-
-    @property
-    def lockfile(self) -> dict:
-        if not self._lockfile:
-            if not self.lockfile_file.is_file():
-                raise ProjectError("Lock file does not exist.")
-            data = tomlkit.parse(self.lockfile_file.read_text("utf-8"))
-            self._lockfile = cast(dict, data)
+    def lockfile(self) -> Lockfile:
+        if self._lockfile is None:
+            self._lockfile = Lockfile(
+                self.root / self.LOCKFILE_FILENAME, ui=self.core.ui
+            )
         return self._lockfile
 
-    @lockfile.setter
-    def lockfile(self, data: dict[str, Any]) -> None:
-        self._lockfile = data
+    def set_lockfile(self, path: str | Path) -> None:
+        self._lockfile = Lockfile(path, ui=self.core.ui)
 
     @property
     def config(self) -> dict[str, Any]:
@@ -171,12 +133,16 @@ class Project:
 
     @property
     def scripts(self) -> dict[str, str | dict[str, str]]:
-        return self.tool_settings.get("scripts", {})  # type: ignore
+        return self.pyproject.settings.get("scripts", {})  # type: ignore
 
     @cached_property
     def project_config(self) -> Config:
         """Read-and-writable configuration dict for project settings"""
         return Config(self.root / ".pdm.toml")
+
+    @property
+    def name(self) -> str | None:
+        return self.pyproject.metadata.get("name")
 
     @property
     def python(self) -> PythonInfo:
@@ -194,11 +160,6 @@ class Project:
     def python(self, value: PythonInfo) -> None:
         self._python = value
         self.project_config["python.path"] = value.path
-
-    @property
-    def python_executable(self) -> str:
-        """For backward compatibility"""
-        return str(self.python.executable)
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
@@ -303,13 +264,16 @@ class Project:
 
     @property
     def python_requires(self) -> PySpecSet:
-        return PySpecSet(self.meta.requires_python)
+        try:
+            return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
+        except ProjectError:
+            return PySpecSet()
 
     def get_dependencies(self, group: str | None = None) -> dict[str, Requirement]:
-        metadata = self.meta
+        metadata = self.pyproject.metadata
         group = group or "default"
         optional_dependencies = metadata.get("optional-dependencies", {})
-        dev_dependencies = self.tool_settings.get("dev-dependencies", {})
+        dev_dependencies = self.pyproject.settings.get("dev-dependencies", {})
         in_metadata = group == "default" or group in optional_dependencies
         if group == "default":
             deps = metadata.get("dependencies", [])
@@ -354,7 +318,7 @@ class Project:
     @property
     def dev_dependencies(self) -> dict[str, Requirement]:
         """All development dependencies"""
-        dev_group = self.tool_settings.get("dev-dependencies", {})
+        dev_group = self.pyproject.settings.get("dev-dependencies", {})
         if not dev_group:
             return {}
         result = {}
@@ -370,10 +334,10 @@ class Project:
 
     def iter_groups(self) -> Iterable[str]:
         groups = {"default"}
-        if self.meta.optional_dependencies:
-            groups.update(self.meta.optional_dependencies.keys())
-        if self.tool_settings.get("dev-dependencies"):
-            groups.update(self.tool_settings["dev-dependencies"].keys())
+        if self.pyproject.metadata.get("optional-dependencies"):
+            groups.update(self.pyproject.metadata["optional-dependencies"].keys())
+        if self.pyproject.settings.get("dev-dependencies"):
+            groups.update(self.pyproject.settings["dev-dependencies"].keys())
         return groups
 
     @property
@@ -382,7 +346,7 @@ class Project:
 
     @property
     def allow_prereleases(self) -> bool | None:
-        return self.tool_settings.get("allow_prereleases")
+        return self.pyproject.settings.get("allow_prereleases")
 
     @property
     def default_source(self) -> Source:
@@ -398,7 +362,7 @@ class Project:
 
     @property
     def sources(self) -> list[Source]:
-        sources = list(self.tool_settings.get("source", []))
+        sources = list(self.pyproject.settings.get("source", []))
         if all(source.get("name") != "pypi" for source in sources):
             sources.insert(0, self.default_source)
         expanded_sources: list[Source] = [
@@ -423,10 +387,8 @@ class Project:
 
     @property
     def locked_repository(self) -> LockedRepository:
-        import copy
-
         try:
-            lockfile = copy.deepcopy(self.lockfile)
+            lockfile = self.lockfile._data.unwrap()
         except ProjectError:
             lockfile = {}
 
@@ -457,7 +419,7 @@ class Project:
         allow_prereleases = self.allow_prereleases
         overrides = {
             normalize_name(k): v
-            for k, v in self.tool_settings.get("overrides", {}).items()
+            for k, v in self.pyproject.settings.get("overrides", {}).items()
         }
         locked_repository: LockedRepository | None = None
         if strategy != "all" or for_install:
@@ -506,72 +468,51 @@ class Project:
         return SpinnerReporter(spinner or termui.DummySpinner(), requirements)
 
     def get_lock_metadata(self) -> dict[str, Any]:
-        content_hash = tomlkit.string("sha256:" + self.get_content_hash("sha256"))
+        content_hash = tomlkit.string("sha256:" + self.pyproject.content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
-        return {"lock_version": self.LOCKFILE_VERSION, "content_hash": content_hash}
+        return {
+            "lock_version": self.lockfile.spec_version,
+            "content_hash": content_hash,
+        }
 
     def write_lockfile(
         self, toml_data: dict, show_message: bool = True, write: bool = True
     ) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
+        self.lockfile.set_data(toml_data)
 
         if write:
-            with atomic_open_for_write(self.lockfile_file) as fp:
-                tomlkit.dump(toml_data, fp)  # type: ignore
-            if show_message:
-                self.core.ui.echo("Changes are written to [success]pdm.lock[/].")
-            self._lockfile = None
-        else:
-            self._lockfile = toml_data
+            self.lockfile.write(show_message)
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
-        req.name = self.meta.name
-        return make_candidate(req, name=self.meta.name, version=self.meta.version)
-
-    def get_content_hash(self, algo: str = "md5") -> str:
-        # Only calculate sources and dependencies groups. Otherwise lock file is
-        # considered as unchanged.
-        dump_data = {
-            "sources": self.tool_settings.get("source", []),
-            "dependencies": self.meta.get("dependencies", []),
-            "dev-dependencies": self.tool_settings.get("dev-dependencies", {}),
-            "optional-dependencies": self.meta.get("optional-dependencies", {}),
-            "requires-python": self.meta.get("requires-python", ""),
-            "overrides": self.tool_settings.get("overrides", {}),
-        }
-        pyproject_content = json.dumps(dump_data, sort_keys=True)
-        hasher = hashlib.new(algo)
-        hasher.update(pyproject_content.encode("utf-8"))
-        return hasher.hexdigest()
+        assert self.name
+        req.name = self.name
+        can = make_candidate(req, name=self.name, link=Link.from_path(self.root))
+        can.prepare(self.environment).metadata
+        return can
 
     def is_lockfile_hash_match(self) -> bool:
-        if not self.lockfile_file.exists():
-            return False
-        hash_in_lockfile = str(
-            self.lockfile.get("metadata", {}).get("content_hash", "")
-        )
+        hash_in_lockfile = str(self.lockfile.hash)
         if not hash_in_lockfile:
             return False
         algo, hash_value = hash_in_lockfile.split(":")
-        content_hash = self.get_content_hash(algo)
+        content_hash = self.pyproject.content_hash(algo)
         return content_hash == hash_value
 
     def is_lockfile_compatible(self) -> bool:
         """Within the same major version, the higher lockfile generator can work with
         lower lockfile but not vice versa.
         """
-        if not self.lockfile_file.exists():
+        if not self.lockfile.exists:
             return True
-        lockfile_version = str(
-            self.lockfile.get("metadata", {}).get("lock_version", "")
-        )
+        lockfile_version = str(self.lockfile.file_version)
         if not lockfile_version:
             return False
         if "." not in lockfile_version:
             lockfile_version += ".0"
         accepted = get_specifier(f"~={lockfile_version},>={lockfile_version}")
-        return accepted.contains(self.LOCKFILE_VERSION)
+        return accepted.contains(self.lockfile.spec_version)
 
     def get_pyproject_dependencies(
         self, group: str, dev: bool = False
@@ -580,16 +521,26 @@ class Project:
         Return a tuple of two elements, the first is the dependencies array,
         and the second tells whether it is a dev-dependencies group.
         """
+        metadata, settings = self.pyproject.metadata, self.pyproject.settings
         if group == "default":
-            return self.meta.setdefault("dependencies", []), False
+            return metadata.setdefault("dependencies", []), False
         deps_dict = {
-            False: self.meta.setdefault("optional-dependencies", {}),
-            True: self.tool_settings.setdefault("dev-dependencies", {}),
+            False: metadata.get("optional-dependencies", {}),
+            True: settings.get("dev-dependencies", {}),
         }
         for is_dev, deps in deps_dict.items():
             if group in deps:
                 return deps[group], is_dev
-        return deps_dict[dev].setdefault(group, []), dev
+        if dev:
+            return (
+                settings.setdefault("dev-dependencies", {}).setdefault(group, []),
+                dev,
+            )
+        else:
+            return (
+                metadata.setdefault("optional-dependencies", {}).setdefault(group, []),
+                dev,
+            )
 
     def add_dependencies(
         self,
@@ -615,36 +566,18 @@ class Project:
                 deps[matched_index] = req
         if not is_dev and has_variable:
             field = "dependencies" if to_group == "default" else "optional-dependencies"
-            self.meta["dynamic"] = sorted(set(self.meta.get("dynamic", []) + [field]))
-        self.write_pyproject(show_message)
-
-    def write_pyproject(self, show_message: bool = True) -> None:
-        with atomic_open_for_write(
-            self.pyproject_file.as_posix(), encoding="utf-8"
-        ) as f:
-            tomlkit.dump(self.pyproject, f)  # type: ignore
-        if show_message:
-            self.core.ui.echo("Changes are written to [success]pyproject.toml[/].")
-        self._pyproject = None
-
-    @property
-    def meta(self) -> Metadata:
-        if not self.pyproject:
-            self.pyproject = {"project": tomlkit.table()}
-        return Metadata(self.root, self.pyproject)
+            metadata = self.pyproject.metadata
+            metadata["dynamic"] = sorted(set(metadata.get("dynamic", []) + [field]))
+        self.pyproject.write(show_message)
 
     def init_global_project(self) -> None:
-        if not self.is_global:
+        if not self.is_global or not self.pyproject.empty:
             return
-        if not self.pyproject_file.exists():
-            self.root.mkdir(parents=True, exist_ok=True)
-            self.pyproject_file.write_text(
-                """\
-[project]
-dependencies = ["pip", "setuptools", "wheel"]
-"""
-            )
-            self._pyproject = None
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.pyproject.set_data(
+            {"project": {"dependencies": ["pip", "setuptools", "wheel"]}}
+        )
+        self.pyproject.write()
 
     @property
     def cache_dir(self) -> Path:
@@ -723,3 +656,19 @@ dependencies = ["pip", "setuptools", "wheel"]
         if self.config["python.use_venv"]:
             finder._providers.insert(0, VenvProvider(self))
         return finder
+
+    # compatibility, shouldn't be used directly
+    @property
+    def meta(self) -> dict[str, Any]:
+        deprecation_warning(
+            "project.meta is deprecated, use project.pyproject.metadata instead"
+        )
+        return self.pyproject.metadata
+
+    @property
+    def tool_settings(self) -> dict[str, Any]:
+        deprecation_warning(
+            "project.tool_settings is deprecated, "
+            "use project.pyproject.settings instead"
+        )
+        return self.pyproject.settings
