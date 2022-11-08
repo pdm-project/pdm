@@ -16,7 +16,7 @@ class PyProject(TOMLBase):
         from pdm.formats import flit, poetry
 
         data = super().read()
-        if "project" not in data:
+        if "project" not in data and self._path.exists():
             # Try converting from flit and poetry
             for converter in (flit, poetry):
                 if converter.check_fingerprint(None, self._path):
