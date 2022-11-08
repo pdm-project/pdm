@@ -8,7 +8,7 @@ import textwrap
 import threading
 from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 
 from pep517.wrappers import Pep517HookCaller
 
@@ -42,6 +42,7 @@ class LoggerWrapper(threading.Thread):
         self.fd_read, self.fd_write = os.pipe()
 
         self.start()
+        self._output_buffer: list[str] = []
 
     def fileno(self) -> int:
         return self.fd_write
@@ -57,10 +58,30 @@ class LoggerWrapper(threading.Thread):
 
     def _write(self, message: str) -> None:
         self.logger.log(self.level, message)
+        self._output_buffer.append(message)
+        self._output_buffer[:-10] = []
 
     def stop(self) -> None:
         os.close(self.fd_write)
         self.join()
+
+
+def build_error(e: subprocess.CalledProcessError) -> BuildError:
+    """Get a build error with meaningful error message
+    from the subprocess output.
+    """
+    output = cast("list[str]", e.output)
+    errors: list[str] = []
+    if output[-1].strip().startswith("ModuleNotFoundError"):
+        package = output[-1].strip().split()[-1]
+        errors.append(
+            f"Module {package} is missing, please make sure it is specified in the "
+            "'build-system.requires' section. If it is not possible, "
+            "add it to the project and use '--no-isolation' option."
+        )
+    errors.extend(["Showing the last 10 lines of the build output:", *output])
+    error_message = "\n".join(errors)
+    return BuildError(f"Build backend raised error: {error_message}")
 
 
 def log_subprocessor(
@@ -81,11 +102,8 @@ def log_subprocessor(
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        raise BuildError(
-            f"Call command {cmd} return non-zero status({e.returncode}). "
-            "Make sure the package is PEP 517-compliant, or you can add "
-            "`--no-isolation` to the command."
-        ) from None
+        e.output = outstream._output_buffer
+        raise build_error(e) from None
     finally:
         outstream.stop()
 
