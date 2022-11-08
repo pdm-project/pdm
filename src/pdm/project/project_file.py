@@ -5,7 +5,6 @@ import json
 
 from tomlkit import TOMLDocument, items
 
-from pdm.exceptions import ProjectError
 from pdm.project.toml_file import TOMLBase
 
 
@@ -41,9 +40,7 @@ class PyProject(TOMLBase):
 
     @property
     def metadata(self) -> items.Table:
-        if not self.is_valid:
-            raise ProjectError("No [project] table found in pyproject.toml")
-        return self._data["project"]
+        return self._data.setdefault("project", {})
 
     @property
     def settings(self) -> items.Table:
