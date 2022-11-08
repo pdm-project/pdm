@@ -128,7 +128,9 @@ class BaseRepository:
         project = self.environment.project
         assert project.name
         link = Link.from_path(project.root)  # type: ignore
-        return make_candidate(requirement, project.name, link)
+        candidate = make_candidate(requirement, project.name, link=link)
+        candidate.prepare(self.environment).metadata
+        return candidate
 
     def find_candidates(
         self,

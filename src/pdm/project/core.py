@@ -13,6 +13,7 @@ import platformdirs
 import tomlkit
 from findpython import Finder
 from tomlkit.items import Array
+from unearth import Link
 
 from pdm import termui
 from pdm._types import Source
@@ -487,7 +488,9 @@ class Project:
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         assert self.name
         req.name = self.name
-        return make_candidate(req, name=self.name)
+        can = make_candidate(req, name=self.name, link=Link.from_path(self.root))
+        can.prepare(self.environment).metadata
+        return can
 
     def is_lockfile_hash_match(self) -> bool:
         hash_in_lockfile = str(self.lockfile.hash)

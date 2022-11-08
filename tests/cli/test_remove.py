@@ -100,4 +100,4 @@ dependencies = [
     )
     project_no_init.pyproject.reload()
     actions.do_remove(project_no_init, packages=["requests"])
-    assert project_no_init.pyproject["project"]["dependencies"] == []
+    assert project_no_init.pyproject.metadata["dependencies"] == []

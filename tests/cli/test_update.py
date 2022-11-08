@@ -82,11 +82,12 @@ def test_update_dry_run(project, repository, capsys):
         ],
     )
     actions.do_update(project, dry_run=True)
+    out, _ = capsys.readouterr()
+    project.lockfile.reload()
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
-    out, _ = capsys.readouterr()
     assert "requests 2.19.1 -> 2.20.0" in out
 
 

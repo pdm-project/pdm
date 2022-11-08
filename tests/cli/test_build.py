@@ -31,7 +31,6 @@ def test_build_global_project_forbidden(invoke):
 
 def test_build_single_module(fixture_project):
     project = fixture_project("demo-module")
-    assert project.pyproject.metadata["version"] == "0.1.0"
 
     actions.do_build(project)
     tar_names = get_tarball_names(project.root / "dist/demo-module-0.1.0.tar.gz")

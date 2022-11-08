@@ -16,3 +16,6 @@ class Lockfile(TOMLBase):
         super().write()
         if show_message:
             self.ui.echo(f"Changes are written to [success]{self._path.name}[/].")
+
+    def __getitem__(self, key: str) -> dict:
+        return self._data[key]
