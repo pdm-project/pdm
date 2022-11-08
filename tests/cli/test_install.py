@@ -177,6 +177,7 @@ def test_install_with_lockfile(project, invoke, working_set, repository):
 def test_install_with_dry_run(project, invoke, repository):
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
     result = invoke(["install", "--dry-run"], obj=project)
+    project.lockfile.reload()
     assert "pytz" not in project.locked_repository.all_candidates
     assert "pytz 2019.3" in result.output
 
