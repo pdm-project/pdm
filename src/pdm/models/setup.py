@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field, fields
+import os
 from pathlib import Path
 from typing import Any, Iterable, no_type_check
 
@@ -78,8 +79,8 @@ class _SetupReader:
             summary=metadata.get("description"),
             version=metadata.get("version"),
             install_requires=metadata.get("dependencies", []),
-            extras_require=metadata.get("optional_dependencies", {}),
-            python_requires=metadata.get("requires_python"),
+            extras_require=metadata.get("optional-dependencies", {}),
+            python_requires=metadata.get("requires-python"),
         )
 
     @no_type_check
@@ -406,8 +407,8 @@ class SetupDistribution(Distribution):
     def read_text(self, filename: str) -> str | None:
         return None
 
-    def locate_file(self, path: str | Path) -> str | Path:
-        return Path("")
+    def locate_file(self, path: str | os.PathLike[str]) -> os.PathLike[str]:
+        return Path()
 
     @property
     def metadata(self) -> dict[str, Any]:  # type: ignore

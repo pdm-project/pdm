@@ -473,8 +473,8 @@ class PreparedCandidate:
                         summary=metadata.get("description"),
                         version=metadata.get("version"),
                         install_requires=metadata.get("dependencies", []),
-                        extras_require=metadata.get("optional_dependencies", {}),
-                        python_requires=metadata.get("requires_python"),
+                        extras_require=metadata.get("optional-dependencies", {}),
+                        python_requires=metadata.get("requires-python"),
                     )
                     return setup.as_dist()
         # If all fail, try building the source to get the metadata

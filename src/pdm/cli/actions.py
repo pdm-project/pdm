@@ -295,7 +295,7 @@ def do_add(
     save_version_specifiers({group: deps_to_update}, resolved, save)
     if not dry_run:
         project.add_dependencies(deps_to_update, group, dev)
-        project.write_lockfile(project.lockfile, False)
+        project.write_lockfile(project.lockfile._data, False)
         hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
     _populate_requirement_names(group_deps)
     if sync:
@@ -400,8 +400,7 @@ def do_update(
         save_version_specifiers(updated_deps, resolved, save)
         for group, deps in updated_deps.items():
             project.add_dependencies(deps, group, dev or False)
-        lockfile = project.lockfile
-        project.write_lockfile(lockfile, False)
+        project.write_lockfile(project.lockfile._data, False)
     if sync or dry_run:
         do_sync(
             project,
