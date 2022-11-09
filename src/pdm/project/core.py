@@ -415,8 +415,7 @@ class Project:
         repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         allow_prereleases = self.allow_prereleases
         overrides = {
-            normalize_name(k): v
-            for k, v in self.pyproject.settings.get("overrides", {}).items()
+            normalize_name(k): v for k, v in self.pyproject.resolution_overrides.items()
         }
         locked_repository: LockedRepository | None = None
         if strategy != "all" or for_install:
