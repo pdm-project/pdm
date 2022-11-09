@@ -59,7 +59,8 @@ class LoggerWrapper(threading.Thread):
     def _write(self, message: str) -> None:
         self.logger.log(self.level, message)
         self._output_buffer.append(message)
-        self._output_buffer[:-10] = []
+        if len(self._output_buffer) > 10:
+            self._output_buffer[:-10] = []
 
     def stop(self) -> None:
         os.close(self.fd_write)

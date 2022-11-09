@@ -170,7 +170,7 @@ def test_resolve_conflicting_dependencies_with_overrides(
     repository.add_dependencies("bar", "0.1.0", ["hoho~=1.1"])
     repository.add_candidate("hoho", "2.1")
     repository.add_candidate("hoho", "1.5")
-    project.pyproject.settings["overrides"] = {"hoho": overrides}
+    project.pyproject.settings["resolution"] = {"overrides": {"hoho": overrides}}
     result = resolve(["foo", "bar"])
     assert result["hoho"].version == "2.1"
 

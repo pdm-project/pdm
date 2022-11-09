@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+from typing import Mapping
 
 from tomlkit import TOMLDocument, items
 
 from pdm.project.toml_file import TOMLBase
+from pdm.utils import deprecation_warning
 
 
 class PyProject(TOMLBase):
@@ -46,6 +48,21 @@ class PyProject(TOMLBase):
     def settings(self) -> items.Table:
         return self._data.setdefault("tool", {}).setdefault("pdm", {})
 
+    @property
+    def resolution_overrides(self) -> Mapping[str, str]:
+        """A compatible getter method for the resolution overrides
+        in the pyproject.toml file.
+        """
+        settings = self.settings
+        if "overrides" in settings:
+            deprecation_warning(
+                "The 'tool.pdm.overrides' table has been renamed to "
+                "'tool.pdm.resolution.overrides', please update the "
+                "setting accordingly."
+            )
+            return settings["overrides"]
+        return settings.get("resolution", {}).get("overrides", {})
+
     def content_hash(self, algo: str = "sha256") -> str:
         """Generate a hash of the sensible content of the pyproject.toml file.
         When the hash changes, it means the project needs to be relocked.
@@ -56,7 +73,7 @@ class PyProject(TOMLBase):
             "dev-dependencies": self.settings.get("dev-dependencies", {}),
             "optional-dependencies": self.metadata.get("optional-dependencies", {}),
             "requires-python": self.metadata.get("requires-python", ""),
-            "overrides": self.settings.get("overrides", {}),
+            "overrides": self.resolution_overrides,
         }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)

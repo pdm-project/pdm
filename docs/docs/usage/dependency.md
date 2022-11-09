@@ -332,7 +332,7 @@ pdm django==3.1.4 "asgiref<3"
 Unable to find a resolution for asgiref because of the following conflicts:
   asgiref<3 (from project)
   asgiref<4,>=3.2.10 (from <Candidate django 3.1.4 from https://pypi.org/simple/django/>)
-To fix this, you could loosen the dependency version constraints in pyproject.toml. If that is not possible, you could also override the resolved version in [tool.pdm.overrides] table.
+To fix this, you could loosen the dependency version constraints in pyproject.toml. If that is not possible, you could also override the resolved version in `[tool.pdm.resolution.overrides]` table.
 ```
 
 You can either change to a lower version of `django` or remove the upper bound of `asgiref`. But if it is not eligible for your project,
@@ -341,7 +341,7 @@ you can tell PDM to forcedly resolve `asgiref` to a specific version by adding t
 _New in version 1.12.0_
 
 ```toml
-[tool.pdm.overrides]
+[tool.pdm.resolution.overrides]
 asgiref = "3.2.10"  # exact version
 urllib3 = ">=1.26.2"  # version range
 pytz = "file:///${PROJECT_ROOT}/pytz-2020.9-py3-none-any.whl"  # absolute URL
@@ -351,8 +351,7 @@ Each entry of that table is a package name with the wanted version.
 In this example, PDM will resolve the above packages into the given versions no matter whether there is any other resolution available.
 
 !!! NOTE
-    By using `[tool.pdm.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be
-    used if there is no valid resolution for your requirements and you know the specific version works.
+    By using `[tool.pdm.resolution.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be used if there is no valid resolution for your requirements and you know the specific version works.
     Most of the time, you can just add any transient constraints to the `dependencies` array.
 
 ## Environment variables expansion
