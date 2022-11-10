@@ -188,7 +188,7 @@ def build_env():
         env = PrefixEnvironment(p, d)
         for wheel_name in (
             "pdm_pep517-1.0.0-py3-none-any.whl",
-            "poetry_core-1.0.7-py2.py3-none-any.whl",
+            "poetry_core-1.3.2-py3-none-any.whl",
             "setuptools-65.4.1-py3-none-any.whl",
             "wheel-0.37.1-py2.py3-none-any.whl",
             "flit_core-3.6.0-py3-none-any.whl",
