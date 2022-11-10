@@ -297,7 +297,8 @@ class FileRequirement(Requirement):
                     pass
             else:
                 self.path = Path(path)
-        self._parse_name_from_url()
+        if self.url:
+            self._parse_name_from_url()
 
     def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
