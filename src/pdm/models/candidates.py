@@ -14,8 +14,9 @@ from unearth import Link, vcs_support
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
+from pdm.compat import cached_property
 from pdm.compat import importlib_metadata as im
-from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, ProjectError
+from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -27,15 +28,12 @@ from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet
 from pdm.project.project_file import PyProject
 from pdm.utils import (
-    cached_property,
     cd,
     convert_hashes,
     create_tracked_tempdir,
-    expand_env_vars_in_auth,
     get_rev_from_url,
     get_venv_like_prefix,
     normalize_name,
-    path_replace,
     path_to_url,
     url_without_fragments,
 )
@@ -219,7 +217,6 @@ class Candidate:
     @no_type_check
     def as_lockfile_entry(self, project_root: Path) -> dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""
-        root_path = project_root.as_posix()
         result = {
             "name": normalize_name(self.name),
             "version": str(self.version),
@@ -238,14 +235,10 @@ class Candidate:
                 result.update(revision=self.get_revision())
         elif not self.req.is_named:
             with cd(project_root):
-                if self.req.is_file_or_url and self.req.is_local_dir:
-                    result.update(path=path_replace(root_path, ".", self.req.str_path))
+                if self.req.is_file_or_url and self.req.is_local:
+                    result.update(path=self.req.str_path)
                 else:
-                    result.update(
-                        url=path_replace(
-                            root_path.lstrip("/"), "${PROJECT_ROOT}", self.req.url
-                        )
-                    )
+                    result.update(url=self.req.url)
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
@@ -284,10 +277,7 @@ class PreparedCandidate:
     def _replace_url_vars(self, link: Link | None) -> Link | None:
         if link is None:
             return None
-        project_root = self.environment.project.root.as_posix()  # type: ignore
-        url = expand_env_vars_in_auth(link.normalized).replace(
-            "${PROJECT_ROOT}", project_root.lstrip("/")
-        )
+        url = self.environment.project.backend.expand_line(link.normalized)
         return Link(url)
 
     @cached_property
@@ -335,7 +325,7 @@ class PreparedCandidate:
             if self.link.is_file and self.link.file_path.is_dir():
                 return _filter_none(
                     {
-                        "url": url_without_fragments(req.url),
+                        "url": self.link.url_without_fragment,
                         "dir_info": _filter_none({"editable": req.editable or None}),
                         "subdirectory": req.subdirectory,
                     }
@@ -450,11 +440,10 @@ class PreparedCandidate:
         # Try getting from PEP 621 metadata
         pyproject_toml = self._unpacked_dir / "pyproject.toml"
         if pyproject_toml.exists():
-            try:
-                metadata = PyProject(
-                    pyproject_toml, ui=self.environment.project.core.ui
-                ).metadata.unwrap()
-            except ProjectError:
+            metadata = PyProject(
+                pyproject_toml, ui=self.environment.project.core.ui
+            ).metadata.unwrap()
+            if not metadata:
                 termui.logger.warn("Failed to parse pyproject.toml")
             else:
                 dynamic_fields = metadata.get("dynamic", [])

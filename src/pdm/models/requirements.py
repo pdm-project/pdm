@@ -22,6 +22,7 @@ from unearth import Link
 
 from pdm.compat import Distribution
 from pdm.exceptions import ExtrasWarning, RequirementError
+from pdm.models.backends import BuildBackend, get_relative_path
 from pdm.models.markers import Marker, get_marker, split_marker_extras
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, get_specifier
@@ -261,8 +262,6 @@ class FileRequirement(Requirement):
     def __post_init__(self) -> None:
         super().__post_init__()
         self._parse_url()
-        if self.path and not self.path.exists():
-            raise RequirementError(f"The local path '{self.path}' does not exist.")
         if self.is_local_dir:
             self._check_installable()
 
@@ -272,7 +271,7 @@ class FileRequirement(Requirement):
     @classmethod
     def create(cls: type[T], **kwargs: Any) -> T:
         if kwargs.get("path"):
-            kwargs["path"] = Path(kwargs["path"].replace("${PROJECT_ROOT}", "."))
+            kwargs["path"] = Path(kwargs["path"])
         return super().create(**kwargs)  # type: ignore
 
     @property
@@ -287,37 +286,26 @@ class FileRequirement(Requirement):
         return result
 
     def _parse_url(self) -> None:
-        if not self.url:
-            if self.path:
-                if not self.path.is_absolute():
-                    str_path = cast(str, self.str_path)
-                    if str_path.startswith("./"):
-                        str_path = str_path[2:]
-                    self.url = f"file:///${{PROJECT_ROOT}}/{str_path}"
-                else:
-                    self.url = path_to_url(self.path.absolute().as_posix())
-        else:
-            try:
-                self.path = Path(
-                    url_to_path(
-                        self.url.replace(
-                            "${PROJECT_ROOT}",
-                            Path(".").absolute().as_posix().lstrip("/"),
-                        )
-                    )
-                )
-            except AssertionError:
-                pass
+        if not self.url and self.path and self.path.is_absolute():
+            self.url = path_to_url(self.path.as_posix())
+        if not self.path:
+            path = get_relative_path(self.url)
+            if path is None:
+                try:
+                    self.path = Path(url_to_path(self.url))
+                except AssertionError:
+                    pass
+            else:
+                self.path = Path(path)
         self._parse_name_from_url()
 
-    def relocate(self, root: str | Path) -> None:
+    def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
         if self.path is None or self.path.is_absolute():
             return
         # self.path is relative
-        self.path = Path(os.path.relpath(self.path, root))
-        self.url = ""
-        self._parse_url()
+        self.path = Path(os.path.relpath(self.path, backend.root))
+        self.url = backend.relative_path_to_url(self.path.as_posix())
 
     @property
     def is_local(self) -> bool:
@@ -479,6 +467,15 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
     if m is not None:
         r = VcsRequirement.create(**m.groupdict())
     else:
+        # Special handling for hatch local references:
+        # https://hatch.pypa.io/latest/config/dependency/#local
+        # We replace the {root.uri} temporarily with a dummy URL header
+        # to make it pass through the packaging.requirement parser
+        # and then revert it.
+        root_url = path_to_url(Path().as_posix())
+        replaced = "{root:uri}" in line
+        if replaced:
+            line = line.replace("{root:uri}", root_url)
         try:
             package_req = PackageRequirement(line)  # type: ignore
         except InvalidRequirement as e:
@@ -488,6 +485,10 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             r = FileRequirement.create(**m.groupdict())
         else:
             r = Requirement.from_pkg_requirement(package_req)
+        if replaced:
+            assert isinstance(r, FileRequirement)
+            r.url = r.url.replace(root_url, "{root:uri}")
+            r.path = Path(r.url[len("{root:uri}/") :])
 
     if editable:
         if r.is_vcs or r.is_file_or_url and r.is_local_dir:  # type: ignore

@@ -124,7 +124,7 @@ def test_parse_abnormal_specifiers(project):
         "/demo-0.0.1-py2.py3-none-any.whl",
         "demo @ file:///${PROJECT_ROOT}/tests/fixtures/artifacts/demo-0.0.1.tar.gz",
         "demo @ file:///${PROJECT_ROOT}/tests/fixtures/projects/demo",
-        "-e ${PROJECT_ROOT}/tests/fixtures/projects/demo",
+        "-e ./tests/fixtures/projects/demo",
     ],
 )
 def test_expand_project_root_in_url(req_str, core):
@@ -133,6 +133,7 @@ def test_expand_project_root_in_url(req_str, core):
         req = parse_requirement(req_str[3:], True)
     else:
         req = parse_requirement(req_str)
+    req.relocate(project.backend)
     candidate = Candidate(req)
     assert candidate.prepare(project.environment).get_dependencies_from_metadata() == [
         "idna",

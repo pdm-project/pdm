@@ -7,7 +7,6 @@ from blinker import Signal
 
 from pdm import signals
 from pdm.project.core import Project
-from pdm.utils import cached_property
 
 KNOWN_HOOKS = tuple(
     name for name, obj in signals.__dict__.items() if isinstance(obj, Signal)
@@ -29,15 +28,15 @@ class HookManager:
         yield
         self.skip = old_skip
 
-    @cached_property
+    @property
     def skip_all(self) -> bool:
         return ":all" in self.skip
 
-    @cached_property
+    @property
     def skip_pre(self) -> bool:
         return ":pre" in self.skip
 
-    @cached_property
+    @property
     def skip_post(self) -> bool:
         return ":post" in self.skip
 

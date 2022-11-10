@@ -7,7 +7,7 @@ from typing import Any
 from findpython import PythonVersion
 from packaging.version import Version
 
-from pdm.utils import cached_property
+from pdm.compat import cached_property
 
 
 class PythonInfo:

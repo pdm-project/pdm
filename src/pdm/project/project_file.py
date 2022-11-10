@@ -49,6 +49,10 @@ class PyProject(TOMLBase):
         return self._data.setdefault("tool", {}).setdefault("pdm", {})
 
     @property
+    def build_system(self) -> dict:
+        return self._data.get("build-system", {})
+
+    @property
     def resolution_overrides(self) -> Mapping[str, str]:
         """A compatible getter method for the resolution overrides
         in the pyproject.toml file.

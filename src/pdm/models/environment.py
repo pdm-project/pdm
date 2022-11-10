@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Generator
 import unearth
 
 from pdm import termui
+from pdm.compat import cached_property
 from pdm.exceptions import BuildError
 from pdm.models.auth import make_basic_auth
 from pdm.models.in_process import (
@@ -25,7 +26,6 @@ from pdm.models.python import PythonInfo
 from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
 from pdm.utils import (
-    cached_property,
     get_index_urls,
     get_venv_like_prefix,
     is_pip_compatible_with_python,

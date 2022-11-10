@@ -24,6 +24,7 @@ from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers.installers import install_wheel
+from pdm.models.backends import get_backend
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, PrefixEnvironment
 from pdm.models.repositories import BaseRepository
@@ -359,7 +360,13 @@ def local_finder(project_no_init):
 @pytest.fixture()
 def project(project_no_init):
     hooks = HookManager(project_no_init, ["post_init"])
-    do_init(project_no_init, "test_project", "0.0.0", hooks=hooks)
+    do_init(
+        project_no_init,
+        "test_project",
+        "0.0.0",
+        hooks=hooks,
+        build_backend=get_backend("pdm-pep517"),
+    )
     # Clean the cached property
     project_no_init._environment = None
     return project_no_init

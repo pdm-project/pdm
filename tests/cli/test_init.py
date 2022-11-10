@@ -4,6 +4,7 @@ from unittest.mock import ANY
 import pytest
 
 from pdm.cli import actions
+from pdm.models.backends import get_backend
 from pdm.models.python import PythonInfo
 
 PYTHON_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
@@ -31,6 +32,7 @@ def test_init_command(project_no_init, invoke, mocker):
         author="Testing",
         email="me@example.org",
         python_requires=f">={python_version}",
+        build_backend=None,
         hooks=ANY,
     )
 
@@ -43,7 +45,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
     do_init = mocker.patch.object(actions, "do_init")
     result = invoke(
         ["init"],
-        input="\ny\ntest-project\n\nTest Project\n\n\n\n\n",
+        input="\ny\ntest-project\n\nTest Project\n1\n\n\n\n\n",
         obj=project_no_init,
     )
     assert result.exit_code == 0
@@ -57,6 +59,7 @@ def test_init_command_library(project_no_init, invoke, mocker):
         author="Testing",
         email="me@example.org",
         python_requires=f">={python_version}",
+        build_backend=get_backend("setuptools"),
         hooks=ANY,
     )
 
@@ -90,6 +93,7 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         author="Testing",
         email="me@example.org",
         python_requires=f">={python_version}",
+        build_backend=None,
         hooks=ANY,
     )
 

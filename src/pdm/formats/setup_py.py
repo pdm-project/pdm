@@ -61,7 +61,4 @@ def convert(
 
 
 def export(project: Project, candidates: List, options: Optional[Any]) -> str:
-    from pdm.pep517.base import Builder
-
-    builder = Builder(project.root)
-    return builder.format_setup_py()
+    raise NotImplementedError()
