@@ -18,40 +18,12 @@ import urllib.parse as parse
 import warnings
 from pathlib import Path
 from re import Match
-from typing import IO, Any, Callable, Generic, Iterator, TypeVar, overload
+from typing import IO, Any, Iterator
 
 from packaging.version import Version
 
 from pdm._types import Source
 from pdm.compat import Distribution
-
-if sys.version_info >= (3, 8):
-    from functools import cached_property
-else:
-
-    _T = TypeVar("_T")
-    _C = TypeVar("_C")
-
-    class cached_property(Generic[_T]):
-        def __init__(self, func: Callable[[Any], _T]):
-            self.func = func
-            self.attr_name = func.__name__
-            self.__doc__ = func.__doc__
-
-        @overload
-        def __get__(self: _C, inst: None, cls: Any = ...) -> _C:
-            ...
-
-        @overload
-        def __get__(self, inst: object, cls: Any = ...) -> _T:
-            ...
-
-        def __get__(self, inst, cls=None):
-            if inst is None:
-                return self
-            if self.attr_name not in inst.__dict__:
-                inst.__dict__[self.attr_name] = self.func(inst)
-            return inst.__dict__[self.attr_name]
 
 
 def create_tracked_tempdir(

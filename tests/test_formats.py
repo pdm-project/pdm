@@ -126,12 +126,6 @@ def test_convert_flit(project):
     assert build["excludes"] == ["doc/*.html"]
 
 
-def test_export_setup_py(fixture_project):
-    project = fixture_project("demo-package")
-    content = setup_py.export(project, [], None)
-    assert content == project.root.joinpath("setup.txt").read_text()
-
-
 def test_import_requirements_with_group(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)

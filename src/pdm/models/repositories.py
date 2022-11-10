@@ -391,6 +391,7 @@ class LockedRepository(BaseRepository):
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
         with cd(self.environment.project.root):
+            backend = self.environment.project.backend
             for package in lockfile.get("package", []):
                 version = package.get("version")
                 if version:
@@ -402,6 +403,10 @@ class LockedRepository(BaseRepository):
                     if k not in ("dependencies", "requires_python", "summary")
                 }
                 req = Requirement.from_req_dict(package_name, req_dict)
+                if req.is_file_or_url and req.path and not req.url:  # type: ignore
+                    req.url = backend.relative_path_to_url(  # type: ignore
+                        req.path.as_posix()  # type: ignore
+                    )
                 can = make_candidate(req, name=package_name, version=version)
                 can_id = self._identify_candidate(can)
                 self.packages[can_id] = can

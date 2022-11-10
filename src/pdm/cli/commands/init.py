@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 
 from pdm import termui
@@ -5,6 +7,7 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
+from pdm.models.backends import _BACKENDS, BuildBackend, get_backend
 from pdm.models.python import PythonInfo
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git, get_venv_like_prefix
@@ -34,6 +37,9 @@ class Command(BaseCommand):
             help="Don't ask questions but use default values",
         )
         parser.add_argument("--python", help="Specify the Python version/path to use")
+        parser.add_argument(
+            "--backend", choices=list(_BACKENDS), help="Specify the build backend"
+        )
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -99,10 +105,28 @@ class Command(BaseCommand):
             if self.interactive
             else False
         )
+        build_backend: type[BuildBackend] | None = None
         if is_library:
             name = self.ask("Project name", project.root.name)
             version = self.ask("Project version", "0.1.0")
             description = self.ask("Project description", "")
+            if options.backend:
+                build_backend = get_backend(options.backend)
+            elif self.interactive:
+                all_backends = list(_BACKENDS)
+                project.core.ui.echo("Which build backend to use?")
+                for i, backend in enumerate(all_backends):
+                    project.core.ui.echo(f"{i}. [success]{backend}[/]")
+                selected_backend = termui.ask(
+                    "Please select",
+                    prompt_type=int,
+                    choices=[str(i) for i in range(len(all_backends))],
+                    show_choices=False,
+                    default=all_backends.index("pdm-pep517"),
+                )
+                build_backend = get_backend(all_backends[int(selected_backend)])
+            else:
+                build_backend = get_backend("pdm-pep517")
         else:
             name, version, description = "", "", ""
         license = self.ask("License(SPDX name)", "MIT")
@@ -124,6 +148,7 @@ class Command(BaseCommand):
             author=author,
             email=email,
             python_requires=python_requires,
+            build_backend=build_backend,
             hooks=hooks,
         )
         if self.interactive:

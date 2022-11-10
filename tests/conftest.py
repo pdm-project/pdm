@@ -24,6 +24,7 @@ from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers.installers import install_wheel
+from pdm.models.backends import get_backend
 from pdm.models.candidates import Candidate
 from pdm.models.environment import Environment, PrefixEnvironment
 from pdm.models.repositories import BaseRepository
@@ -187,9 +188,10 @@ def build_env():
         env = PrefixEnvironment(p, d)
         for wheel_name in (
             "pdm_pep517-1.0.0-py3-none-any.whl",
-            "poetry_core-1.0.7-py2.py3-none-any.whl",
+            "poetry_core-1.3.2-py3-none-any.whl",
             "setuptools-65.4.1-py3-none-any.whl",
             "wheel-0.37.1-py2.py3-none-any.whl",
+            "flit_core-3.6.0-py3-none-any.whl",
         ):
             wheel = FIXTURES / "artifacts" / wheel_name
             install_wheel(str(wheel), env)
@@ -359,7 +361,13 @@ def local_finder(project_no_init):
 @pytest.fixture()
 def project(project_no_init):
     hooks = HookManager(project_no_init, ["post_init"])
-    do_init(project_no_init, "test_project", "0.0.0", hooks=hooks)
+    do_init(
+        project_no_init,
+        "test_project",
+        "0.0.0",
+        hooks=hooks,
+        build_backend=get_backend("pdm-pep517"),
+    )
     # Clean the cached property
     project_no_init._environment = None
     return project_no_init
@@ -475,10 +483,10 @@ def invoke(core, monkeypatch):
     return caller
 
 
-BACKENDS = ["virtualenv", "venv"]
+VENV_BACKENDS = ["virtualenv", "venv"]
 
 
-@pytest.fixture(params=BACKENDS)
+@pytest.fixture(params=VENV_BACKENDS)
 def venv_backends(project, request):
     project.project_config["venv.backend"] = request.param
     project.project_config["venv.prompt"] = "{project_name}-{python_version}"

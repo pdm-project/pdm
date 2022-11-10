@@ -15,9 +15,10 @@ from installer.exceptions import InvalidWheelSource
 from installer.records import RecordEntry
 from installer.sources import WheelFile as _WheelFile
 
+from pdm.compat import cached_property
 from pdm.installers.packages import CachedPackage
 from pdm.termui import logger
-from pdm.utils import cached_property, fs_supports_symlink
+from pdm.utils import fs_supports_symlink
 
 if TYPE_CHECKING:
     from typing import Any, BinaryIO, Callable, Iterable

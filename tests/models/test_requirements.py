@@ -1,10 +1,9 @@
 import os
-import shutil
 
 import pytest
 
 from pdm.models.requirements import RequirementError, parse_requirement
-from pdm.utils import cd, path_to_url
+from pdm.utils import path_to_url
 from tests import FIXTURES
 
 FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
@@ -52,10 +51,6 @@ REQUIREMENTS = [
         "git+git@github.com:pypa/pip.git#egg=pip",
         "pip @ git+ssh://git@github.com/pypa/pip.git",
     ),
-    (
-        "./tests/fixtures/projects/demo",
-        "demo @ file:///${PROJECT_ROOT}/tests/fixtures/projects/demo",
-    ),
 ]
 
 
@@ -70,7 +65,6 @@ def test_convert_req_dict_to_req_line(req, result):
     "line,expected",
     [
         ("requests; os_name=>'nt'", "Invalid marker:"),
-        ("./nonexist", r"The local path (.+)? does not exist"),
         ("./tests", r"The local path (.+)? is not installable"),
     ],
 )
@@ -87,24 +81,3 @@ def test_not_supported_editable_requirement(line):
         RequirementError, match="Editable requirement is only supported"
     ):
         parse_requirement(line, True)
-
-
-def test_convert_req_with_relative_path_from_outside(tmp_path):
-    shutil.copytree(FIXTURES / "projects/demo", tmp_path / "demo")
-    tmp_path.joinpath("project").mkdir()
-    with cd(tmp_path / "project"):
-        r = parse_requirement("../demo")
-        assert r.path.resolve() == tmp_path / "demo"
-        assert r.url == "file:///${PROJECT_ROOT}/../demo"
-
-
-def test_file_req_relocate(tmp_path):
-    shutil.copytree(FIXTURES / "projects/demo", tmp_path / "demo")
-    tmp_path.joinpath("project").mkdir()
-    with cd(tmp_path):
-        r = parse_requirement("./demo")
-        assert r.path.resolve() == tmp_path / "demo"
-        assert r.url == "file:///${PROJECT_ROOT}/demo"
-        r.relocate(tmp_path / "project")
-        assert r.str_path == "../demo"
-        assert r.url == "file:///${PROJECT_ROOT}/../demo"

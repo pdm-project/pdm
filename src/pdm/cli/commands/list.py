@@ -206,13 +206,9 @@ class Command(BaseCommand):
         if options.include or options.exclude:
             raise PdmUsageError("--include/--exclude cannot be used with --freeze")
 
-        root = project.root.absolute().as_posix().lstrip("/")
         working_set = project.environment.get_working_set()
         requirements = sorted(
-            (
-                Requirement.from_dist(dist).as_line().replace("${PROJECT_ROOT}", root)
-                for dist in working_set.values()
-            ),
+            (Requirement.from_dist(dist).as_line() for dist in working_set.values()),
             key=lambda x: x.lower(),
         )
         project.core.ui.echo("\n".join(requirements))

@@ -39,6 +39,7 @@ from pdm.exceptions import (
 )
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+from pdm.models.backends import BuildBackend
 from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import BareEnvironment
@@ -266,7 +267,7 @@ def do_add(
             )
             continue
         if r.is_file_or_url:
-            r.relocate(project.root)  # type: ignore
+            r.relocate(project.backend)  # type: ignore
         key = r.identify()
         r.prerelease = prerelease
         tracked_names.add(key)
@@ -529,6 +530,7 @@ def do_init(
     author: str = "",
     email: str = "",
     python_requires: str = "",
+    build_backend: type[BuildBackend] | None = None,
     hooks: HookManager | None = None,
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
@@ -542,11 +544,9 @@ def do_init(
             "license": make_inline_table({"text": license}),
             "dependencies": make_array([], True),
         },
-        "build-system": {
-            "requires": ["pdm-pep517>=1.0.0"],
-            "build-backend": "pdm.pep517.api",
-        },
     }
+    if build_backend is not None:
+        data["build-system"] = build_backend.build_system()
     if python_requires and python_requires != "*":
         data["project"]["requires-python"] = python_requires  # type: ignore
     if name and version:

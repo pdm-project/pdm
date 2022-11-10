@@ -7,10 +7,10 @@ from typing import Any, Iterable, List, Mapping, Optional, Tuple, Type
 
 from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
+from pdm.compat import cached_property
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.python import PythonInfo
 from pdm.project import Project
-from pdm.utils import cached_property
 
 
 class VirtualenvCreateError(ProjectError):

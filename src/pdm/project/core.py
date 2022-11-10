@@ -17,7 +17,9 @@ from unearth import Link
 
 from pdm import termui
 from pdm._types import Source
+from pdm.compat import cached_property
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
+from pdm.models.backends import BuildBackend, get_backend_by_spec
 from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.environment import Environment, GlobalEnvironment
@@ -29,7 +31,6 @@ from pdm.project.config import Config
 from pdm.project.lockfile import Lockfile
 from pdm.project.project_file import PyProject
 from pdm.utils import (
-    cached_property,
     cd,
     deprecation_warning,
     expand_env_vars_in_auth,
@@ -547,23 +548,16 @@ class Project:
     ) -> None:
         deps, is_dev = self.get_pyproject_dependencies(to_group, dev)
         cast(Array, deps).multiline(True)
-        has_variable = False
         for _, dep in requirements.items():
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)),
                 None,
             )
             req = dep.as_line()
-            if "${" in req:
-                has_variable = True
             if matched_index is None:
                 deps.append(req)
             else:
                 deps[matched_index] = req
-        if not is_dev and has_variable:
-            field = "dependencies" if to_group == "default" else "optional-dependencies"
-            metadata = self.pyproject.metadata
-            metadata["dynamic"] = sorted(set(metadata.get("dynamic", []) + [field]))
         self.pyproject.write(show_message)
 
     def init_global_project(self) -> None:
@@ -574,6 +568,10 @@ class Project:
             {"project": {"dependencies": ["pip", "setuptools", "wheel"]}}
         )
         self.pyproject.write()
+
+    @property
+    def backend(self) -> BuildBackend:
+        return get_backend_by_spec(self.pyproject.build_system)(self.root)
 
     @property
     def cache_dir(self) -> Path:

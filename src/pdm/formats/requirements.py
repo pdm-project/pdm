@@ -181,11 +181,7 @@ def export(
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
-        lines.append(
-            req.as_line().replace(
-                "${PROJECT_ROOT}", project.root.absolute().as_posix().lstrip("/")
-            )
-        )
+        lines.append(project.backend.expand_line(req.as_line()))
         if options.hashes and getattr(candidate, "hashes", None):
             for item in sorted(set(candidate.hashes.values())):  # type: ignore
                 lines.append(f" \\\n    --hash={item}")

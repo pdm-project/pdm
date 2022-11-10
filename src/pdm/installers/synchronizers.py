@@ -121,6 +121,11 @@ class Synchronizer:
         self.all_candidate_keys = list(locked_repository.all_candidates)
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
+        self.self_candidate: Candidate | None = None
+        if self.install_self:
+            self.self_candidate = self.environment.project.make_self_candidate(
+                not self.no_editable
+            )
 
         if isinstance(self.no_editable, Collection):
             keys = self.no_editable
@@ -128,14 +133,7 @@ class Synchronizer:
             keys = candidates.keys()
         else:
             keys = []
-            if (
-                self.install_self
-                and self.environment.project.pyproject.settings.get("build", {}).get(
-                    "editable_backend", "path"
-                )
-                == "editables"
-                and "editables" not in candidates
-            ):
+            if self.should_install_editables() and "editables" not in candidates:
                 # Install `editables` as well as required by self project
                 editables = editables_candidate(environment)
                 if editables is not None:
@@ -150,6 +148,12 @@ class Synchronizer:
                 )
         self.candidates = candidates
         self._manager: InstallManager | None = None
+
+    def should_install_editables(self) -> bool:
+        if self.self_candidate is None:
+            return False
+        metadata = self.self_candidate.prepare(self.environment).metadata
+        return any(req.startswith("editables") for req in metadata.requires or [])
 
     def create_executor(
         self,
@@ -179,13 +183,16 @@ class Synchronizer:
 
     def _should_update(self, dist: Distribution, can: Candidate) -> bool:
         """Check if the candidate should be updated"""
+        backend = self.environment.project.backend
         if self.reinstall or can.req.editable:  # Always update if incoming is editable
             return True
         if is_editable(dist):  # only update editable if no_editable is True
             return bool(self.no_editable)
         if not can.req.is_named:
             dreq = Requirement.from_dist(dist)
-            return getattr(dreq, "url", None) != can.req.url  # type: ignore
+            return getattr(dreq, "url", None) != backend.expand_line(
+                can.req.url  # type: ignore
+            )
         specifier = can.req.as_pinned_version(can.version).specifier
         assert specifier is not None
         return not specifier.contains(dist.version, prereleases=True)
@@ -416,12 +423,9 @@ class Synchronizer:
                 raise InstallationError("Some package operations are not complete yet")
 
             if self.install_self:
-                self_candidate = self.environment.project.make_self_candidate(
-                    not self.no_editable
-                )
                 self_key = self.self_key
-                assert self_key
-                self.candidates[self_key] = self_candidate
+                assert self_key and self.self_candidate
+                self.candidates[self_key] = self.self_candidate
                 word = "a" if self.no_editable else "an editable"
                 live.console.print(f"Installing the project as {word} package...")
                 if self_key in self.working_set:
