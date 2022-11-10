@@ -781,7 +781,7 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
     if shell == "AUTO":
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
-    if shell in ("zsh", "bash"):
+    if shell in ("zsh", "bash", "sh", "dash"):
         result = textwrap.dedent(
             f"""
             if [ -n "$PYTHONPATH" ]; then
