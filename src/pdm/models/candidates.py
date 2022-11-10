@@ -17,7 +17,7 @@ from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import cached_property
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion
-from pdm.models.backends import get_backend_by_spec
+from pdm.models.backends import get_backend, get_backend_by_spec
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -460,28 +460,28 @@ class PreparedCandidate:
                     try:
                         backend_cls = get_backend_by_spec(pyproject.build_system)
                     except Exception:
-                        termui.logger.warn("Unsupported build backend")
-                    else:
-                        backend = backend_cls(self._unpacked_dir)
-                        setup = Setup(
-                            name=metadata.get("name"),
-                            summary=metadata.get("description"),
-                            version=metadata.get("version"),
-                            install_requires=list(
-                                map(
-                                    backend.expand_line,
-                                    metadata.get("dependencies", []),
-                                )
-                            ),
-                            extras_require={
-                                k: list(map(backend.expand_line, v))
-                                for k, v in metadata.get(
-                                    "optional-dependencies", {}
-                                ).items()
-                            },
-                            python_requires=metadata.get("requires-python"),
-                        )
-                        return setup.as_dist()
+                        # no variable expansion
+                        backend_cls = get_backend("setuptools")
+                    backend = backend_cls(self._unpacked_dir)
+                    setup = Setup(
+                        name=metadata.get("name"),
+                        summary=metadata.get("description"),
+                        version=metadata.get("version"),
+                        install_requires=list(
+                            map(
+                                backend.expand_line,
+                                metadata.get("dependencies", []),
+                            )
+                        ),
+                        extras_require={
+                            k: list(map(backend.expand_line, v))
+                            for k, v in metadata.get(
+                                "optional-dependencies", {}
+                            ).items()
+                        },
+                        python_requires=metadata.get("requires-python"),
+                    )
+                    return setup.as_dist()
         # If all fail, try building the source to get the metadata
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
