@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import os
+import urllib.parse
 from pathlib import Path
 
 from pdm.exceptions import ProjectError
@@ -47,13 +48,13 @@ class SetuptoolsBackend(BuildBackend):
 class PDMBackend(BuildBackend):
     def expand_line(self, req: str) -> str:
         return expand_env_vars(req).replace(
-            "${PROJECT_ROOT}", self.root.absolute().as_posix().lstrip("/")
+            "file:///${PROJECT_ROOT}", path_to_url(self.root.as_posix())
         )
 
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
             return path_to_url(path)
-        return f"file:///${{PROJECT_ROOT}}/{path}"
+        return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path)}"
 
     @classmethod
     def build_system(cls) -> dict:
@@ -101,7 +102,7 @@ class HatchBackend(BuildBackend):
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
             return path_to_url(path)
-        return f"{{root:uri}}/{path}"
+        return f"{{root:uri}}/{urllib.parse.quote(path)}"
 
     @classmethod
     def build_system(cls) -> dict:
@@ -139,7 +140,7 @@ def get_backend_by_spec(spec: dict) -> type[BuildBackend]:
 
 def get_relative_path(url: str) -> str | None:
     if url.startswith("file:///${PROJECT_ROOT}"):
-        return url[len("file:///${PROJECT_ROOT}/") :]
+        return urllib.parse.unquote(url[len("file:///${PROJECT_ROOT}/") :])
     if url.startswith("{root:uri}"):
-        return url[len("{root:uri}/") :]
+        return urllib.parse.unquote(url[len("{root:uri}/") :])
     return None

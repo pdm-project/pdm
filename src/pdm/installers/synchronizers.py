@@ -133,7 +133,7 @@ class Synchronizer:
             keys = candidates.keys()
         else:
             keys = []
-            if self.should_install_editables():
+            if self.should_install_editables() and "editables" not in candidates:
                 # Install `editables` as well as required by self project
                 editables = editables_candidate(environment)
                 if editables is not None:

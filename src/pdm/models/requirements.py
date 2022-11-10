@@ -488,7 +488,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         if replaced:
             assert isinstance(r, FileRequirement)
             r.url = r.url.replace(root_url, "{root:uri}")
-            r.path = Path(r.url[len("{root:uri}/") :])
+            r.path = Path(get_relative_path(r.url) or "")
 
     if editable:
         if r.is_vcs or r.is_file_or_url and r.is_local_dir:  # type: ignore

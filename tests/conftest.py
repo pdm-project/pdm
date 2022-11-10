@@ -191,6 +191,7 @@ def build_env():
             "poetry_core-1.0.7-py2.py3-none-any.whl",
             "setuptools-65.4.1-py3-none-any.whl",
             "wheel-0.37.1-py2.py3-none-any.whl",
+            "flit_core-3.6.0-py3-none-any.whl",
         ):
             wheel = FIXTURES / "artifacts" / wheel_name
             install_wheel(str(wheel), env)
@@ -482,10 +483,10 @@ def invoke(core, monkeypatch):
     return caller
 
 
-BACKENDS = ["virtualenv", "venv"]
+VENV_BACKENDS = ["virtualenv", "venv"]
 
 
-@pytest.fixture(params=BACKENDS)
+@pytest.fixture(params=VENV_BACKENDS)
 def venv_backends(project, request):
     project.project_config["venv.backend"] = request.param
     project.project_config["venv.prompt"] = "{project_name}-{python_version}"
