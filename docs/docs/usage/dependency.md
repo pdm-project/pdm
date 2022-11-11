@@ -344,7 +344,7 @@ _New in version 1.12.0_
 [tool.pdm.resolution.overrides]
 asgiref = "3.2.10"  # exact version
 urllib3 = ">=1.26.2"  # version range
-pytz = "file:///${PROJECT_ROOT}/pytz-2020.9-py3-none-any.whl"  # absolute URL
+pytz = "https://mypypi.org/packages/pytz-2020.9-py3-none-any.whl"  # absolute URL
 ```
 
 Each entry of that table is a package name with the wanted version.
@@ -353,15 +353,3 @@ In this example, PDM will resolve the above packages into the given versions no 
 !!! NOTE
     By using `[tool.pdm.resolution.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be used if there is no valid resolution for your requirements and you know the specific version works.
     Most of the time, you can just add any transient constraints to the `dependencies` array.
-
-## Environment variables expansion
-
-For convenience, PDM supports environment variables expansion in the dependency specification under some circumstances:
-
-- Environment variables in the URL auth part will be expanded: `https://${USERNAME}:${PASSWORD}/artifacts.io/Flask-1.1.2.tar.gz`.
-  It is also okay to not give the auth part in the URL directly, PDM will ask for them when `-v/--verbose` is on.
-- `${PROJECT_ROOT}` will be expanded with the absolute path of the project root, in POSIX style(i.e. forward slash `/`, even on Windows).
-  For consistency, URLs that refer to a local path under `${PROJECT_ROOT}` must start with `file:///`(three slashes), e.g.
-  `file:///${PROJECT_ROOT}/artifacts/Flask-1.1.2.tar.gz`.
-
-Don't worry about credential leakage, the environment variables will be expanded when needed and kept untouched in the lock file.

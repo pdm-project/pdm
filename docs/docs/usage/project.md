@@ -247,11 +247,10 @@ Also, when you are executing [`pdm init`](cli_reference.md#exec-0--init) or [`pd
 ## Export locked packages to alternative formats
 
 You can also export [`pdm lock`](cli_reference.md#exec-0--lock) to other formats, to ease the CI flow or image building process. Currently,
-only `requirements.txt` and `setup.py` format is supported:
+only `requirements.txt` format is supported:
 
 ```bash
 pdm export -o requirements.txt
-pdm export -f setuppy -o setup.py
 ```
 
 !!! NOTE
