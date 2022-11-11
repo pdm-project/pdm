@@ -211,7 +211,10 @@ class Project:
 
         for py_version in self.find_interpreters():
             if match_version(py_version):
-                note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
+                if config.get("python.use_venv"):
+                    note(
+                        "[success]__pypackages__[/] is detected, using the PEP 582 mode"
+                    )
                 self.python = py_version
                 return py_version
 
