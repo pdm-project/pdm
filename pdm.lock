@@ -124,7 +124,7 @@ summary = "A platform independent file lock."
 
 [[package]]
 name = "findpython"
-version = "0.2.0"
+version = "0.2.2"
 requires_python = ">=3.7"
 summary = "A utility to find python versions on your system"
 dependencies = [
@@ -783,9 +783,9 @@ content_hash = "sha256:8254688e0619bf5e694bcd7ac7033d800b93c1764234994273a0bc459
     {url = "https://files.pythonhosted.org/packages/a6/d5/17f02b379525d1ff9678bfa58eb9548f561c8826deb0b85797aa0eed582d/filelock-3.7.1-py3-none-any.whl", hash = "sha256:37def7b658813cda163b56fc564cdc75e86d338246458c4c28ae84cabefa2404"},
     {url = "https://files.pythonhosted.org/packages/f3/c7/5c1aef87f1197d2134a096c0264890969213c9cbfb8a4102087e8d758b5c/filelock-3.7.1.tar.gz", hash = "sha256:3a0fd85166ad9dbab54c9aec96737b744106dc5f15c0b09a6744a445299fcf04"},
 ]
-"findpython 0.2.0" = [
-    {url = "https://files.pythonhosted.org/packages/17/16/7e7e7f6ae157e903c3285533f5d52f34fa8f25c8f4745699294b154e83fc/findpython-0.2.0.tar.gz", hash = "sha256:c2099ee0b71fc2714b64f68fd1f40bc0ee47f49dfe9547fb64d7cbcc02fe0871"},
-    {url = "https://files.pythonhosted.org/packages/6f/a5/538cce025f4eae09f138c4fcab5eb3c8fe4584006b0c9759e2554a274efc/findpython-0.2.0-py3-none-any.whl", hash = "sha256:110ec222a43aca3fcd154fd90b911f465c70e86787ae0532bab2266a95870fc9"},
+"findpython 0.2.2" = [
+    {url = "https://files.pythonhosted.org/packages/19/b4/6c35b7e741c18fb6d5be35e2d9099dc1a05a8525b45ebbb6985d101f2b62/findpython-0.2.2-py3-none-any.whl", hash = "sha256:62717187e728c3d38b2754dfd7e6b5cfa503ed3608b9ad93cb80dbf2497e92e0"},
+    {url = "https://files.pythonhosted.org/packages/28/96/ec16612c4384cfca9381239d06e9285ca41d749d4a5003df73e3a96255e7/findpython-0.2.2.tar.gz", hash = "sha256:80557961c04cf1c8c4ba4ca3ac7cf76ec27fa92788a6af42cb701e3450c49430"},
 ]
 "ghp-import 2.1.0" = [
     {url = "https://files.pythonhosted.org/packages/d9/29/d40217cbe2f6b1359e00c6c307bb3fc876ba74068cbab3dde77f03ca0dc4/ghp-import-2.1.0.tar.gz", hash = "sha256:9c535c4c61193c2df8871222567d7fd7e5014d835f97dc7b7439069e2413d343"},

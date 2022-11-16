@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from findpython import PythonVersion
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from pdm.compat import cached_property
 
@@ -72,6 +72,9 @@ class PythonInfo:
 
     @property
     def identifier(self) -> str:
-        if os.name == "nt" and self.is_32bit:
-            return f"{self.major}.{self.minor}-32"
-        return f"{self.major}.{self.minor}"
+        try:
+            if os.name == "nt" and self.is_32bit:
+                return f"{self.major}.{self.minor}-32"
+            return f"{self.major}.{self.minor}"
+        except InvalidVersion:
+            return "unknown"
