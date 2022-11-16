@@ -163,10 +163,11 @@ class BaseProvider(AbstractProvider):
         elif candidate.identify() in self.overrides:
             return True
         if not requirement.is_named:
-            return not candidate.req.is_named and url_without_fragments(
-                candidate.req.url  # type: ignore
-            ) == url_without_fragments(
-                requirement.url  # type: ignore
+            backend = self.repository.environment.project.backend
+            return not candidate.req.is_named and backend.expand_line(
+                url_without_fragments(candidate.req.url)  # type: ignore
+            ) == backend.expand_line(
+                url_without_fragments(requirement.url)  # type: ignore
             )
         version = candidate.version
         if version is None:
