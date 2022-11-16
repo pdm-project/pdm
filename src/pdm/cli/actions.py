@@ -31,12 +31,7 @@ from pdm.cli.utils import (
     set_env_in_reg,
     translate_groups,
 )
-from pdm.exceptions import (
-    InvalidPyVersion,
-    NoPythonVersion,
-    PdmUsageError,
-    ProjectError,
-)
+from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.backends import BuildBackend
@@ -579,8 +574,10 @@ def do_use(
         python = python.strip()
 
     def version_matcher(py_version: PythonInfo) -> bool:
-        return ignore_requires_python or project.python_requires.contains(
-            str(py_version.version), True
+        return (
+            ignore_requires_python
+            or py_version.valid
+            and project.python_requires.contains(str(py_version.version), True)
         )
 
     if not project.cache_dir.exists():
@@ -642,9 +639,6 @@ def do_use(
         if python:
             use_cache.set(python, selected_python.path.as_posix())
 
-    if not selected_python.valid:
-        path = str(selected_python.path)
-        raise InvalidPyVersion(f"Invalid Python interpreter: {path}")
     if not save:
         return selected_python
     old_python = (

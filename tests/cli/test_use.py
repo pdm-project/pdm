@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from pdm.cli import actions
-from pdm.exceptions import InvalidPyVersion
+from pdm.exceptions import NoPythonVersion
 from pdm.models.caches import JSONFileCache
 
 
@@ -54,7 +54,7 @@ echo hello
     shim_path = project.root.joinpath("python_shim.sh")
     shim_path.write_text(wrapper_script)
     shim_path.chmod(0o755)
-    with pytest.raises(InvalidPyVersion):
+    with pytest.raises(NoPythonVersion):
         actions.do_use(project, shim_path.as_posix())
 
 
