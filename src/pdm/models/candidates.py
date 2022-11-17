@@ -178,8 +178,15 @@ class Candidate:
         return self._prepared.revision if self._prepared else "unknown"
 
     def __repr__(self) -> str:
-        source = getattr(self.link, "comes_from", "unknown")
-        return f"<Candidate {self.name} {self.version} from {source}>"
+        source = getattr(self.link, "comes_from", None)
+        from_source = f" from {source}" if source else ""
+        return f"<Candidate {self}{from_source}>"
+
+    def __str__(self) -> str:
+        if self.req.is_named:
+            return f"{self.name}@{self.version}"
+        assert self.link is not None
+        return f"{self.name}@{self.link.url_without_fragment}"
 
     @classmethod
     def from_installation_candidate(

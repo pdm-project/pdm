@@ -81,7 +81,7 @@ class BaseProvider(AbstractProvider):
                 self._known_depth[parent.identify()] if parent is not None else 0
                 for _, parent in information[identifier]
             )
-            dep_depth = min(parent_depths) + 1
+            dep_depth = min(parent_depths, default=0) + 1
         # Use the REAL identifier as it may be updated after candidate preparation.
         self._known_depth[self.identify(next(candidates[identifier]))] = dep_depth
         is_file_or_url = any(

@@ -8,7 +8,7 @@ from resolvelib import BaseReporter
 from pdm import termui
 
 if TYPE_CHECKING:
-    from resolvelib.resolvers import RequirementInformation, State  # type: ignore
+    from resolvelib.resolvers import Criterion, RequirementInformation, State
     from rich.status import Status
 
     from pdm.models.candidates import Candidate
@@ -75,9 +75,18 @@ class SpinnerReporter(BaseReporter):
         parent_line = f"(from {parent.name} {parent.version})" if parent else ""
         logger.info("  Adding requirement %s%s", requirement.as_line(), parent_line)
 
-    def backtracking(self, candidate: Candidate) -> None:
-        """Called when rejecting a candidate during backtracking."""
-        logger.info("Candidate rejected: %s %s", candidate.name, candidate.version)
+    def rejecting_candidate(self, criterion: Criterion, candidate: Candidate) -> None:
+        *others, last = criterion.information
+        logger.info(
+            "Candidate rejected: %s because it introduces a new requirement %s"
+            " that conflicts with other requirements:\n  %s",
+            candidate,
+            last.requirement.as_line(),  # type: ignore
+            "  \n".join(
+                f"  {req.as_line()} (from {parent if parent else 'project'})"
+                for req, parent in others
+            ),
+        )
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
@@ -86,7 +95,7 @@ class SpinnerReporter(BaseReporter):
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
         conflicts = [
-            f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
+            f"  {req.as_line()} (from {parent if parent else 'project'})"
             for req, parent in causes
         ]
         logger.info("Conflicts detected: \n%s", "\n".join(conflicts))
