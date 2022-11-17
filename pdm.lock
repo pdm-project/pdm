@@ -534,7 +534,7 @@ dependencies = [
 
 [[package]]
 name = "resolvelib"
-version = "0.8.1"
+version = "0.9.0"
 summary = "Resolve abstract dependencies into concrete ones"
 
 [[package]]
@@ -679,7 +679,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:8254688e0619bf5e694bcd7ac7033d800b93c1764234994273a0bc45969f04ba"
+content_hash = "sha256:05c8744fa3fa84ebbbe5e866cd9b6029091d27f0563d6a5aab82490df2de0c89"
 
 [metadata.files]
 "arpeggio 1.10.2" = [
@@ -1092,9 +1092,9 @@ content_hash = "sha256:8254688e0619bf5e694bcd7ac7033d800b93c1764234994273a0bc459
     {url = "https://files.pythonhosted.org/packages/28/30/7bf7e5071081f761766d46820e52f4b16c8a08fef02d2eb4682ca7534310/requests-toolbelt-0.9.1.tar.gz", hash = "sha256:968089d4584ad4ad7c171454f0a5c6dac23971e9472521ea3b6d49d610aa6fc0"},
     {url = "https://files.pythonhosted.org/packages/60/ef/7681134338fc097acef8d9b2f8abe0458e4d87559c689a8c306d0957ece5/requests_toolbelt-0.9.1-py2.py3-none-any.whl", hash = "sha256:380606e1d10dc85c3bd47bf5a6095f815ec007be7a8b69c878507068df059e6f"},
 ]
-"resolvelib 0.8.1" = [
-    {url = "https://files.pythonhosted.org/packages/98/c0/46cfa3f56e43033b705965120058c018375600fa8fdb44c4e53d75820673/resolvelib-0.8.1-py2.py3-none-any.whl", hash = "sha256:d9b7907f055c3b3a2cfc56c914ffd940122915826ff5fb5b1de0c99778f4de98"},
-    {url = "https://files.pythonhosted.org/packages/ac/20/9541749d77aebf66dd92e2b803f38a50e3a5c76e7876f45eb2b37e758d82/resolvelib-0.8.1.tar.gz", hash = "sha256:c6ea56732e9fb6fca1b2acc2ccc68a0b6b8c566d8f3e78e0443310ede61dbd37"},
+"resolvelib 0.9.0" = [
+    {url = "https://files.pythonhosted.org/packages/67/b4/4f785cf7ac402e84acef7f450912cc673f0862839196832342be97869d87/resolvelib-0.9.0-py2.py3-none-any.whl", hash = "sha256:597adcbdf81d62d0cde55d90faa8e79187ec0f18e5012df30bd7a751b26343ae"},
+    {url = "https://files.pythonhosted.org/packages/73/51/36f96ad70dd8c71274ac77739cda0794fee3ba45640373e7f8c5da7c9455/resolvelib-0.9.0.tar.gz", hash = "sha256:40ab05117c3281b1b160105e10075094c5ab118315003c922b77673a365290e1"},
 ]
 "rich 12.5.1" = [
     {url = "https://files.pythonhosted.org/packages/bb/2d/c902484141330ded63c6c40d66a9725f8da5e818770f67241cf429eef825/rich-12.5.1.tar.gz", hash = "sha256:63a5c5ce3673d3d5fbbf23cd87e11ab84b6b451436f1b7f19ec54b6bc36ed7ca"},

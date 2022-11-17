@@ -614,9 +614,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "because of the following conflicts:"
     ]
     for req, parent in causes:
-        info_lines.add(
-            f"  {req.as_line()} (from {repr(parent) if parent else 'project'})"
-        )
+        info_lines.add(f"  {req.as_line()} (from {parent if parent else 'project'})")
     result.extend(sorted(info_lines))
     result.append(
         "To fix this, you could loosen the dependency version constraints in "
