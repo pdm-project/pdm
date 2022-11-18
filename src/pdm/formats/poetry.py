@@ -29,6 +29,8 @@ from pdm.utils import cd
 
 
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
+    if Path(filename).name != "pyproject.toml":
+        return False
     with open(filename, "rb") as fp:
         try:
             data = tomllib.load(fp)
