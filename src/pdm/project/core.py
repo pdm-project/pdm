@@ -632,10 +632,9 @@ class Project:
                     python = find_python_in_path(python_spec)
                     if python:
                         yield PythonInfo.from_path(python)
-                else:
-                    python = shutil.which(python_spec)
-                    if python:
-                        yield PythonInfo.from_path(python)
+                python = shutil.which(python_spec)
+                if python:
+                    yield PythonInfo.from_path(python)
                 return
             args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = self._get_python_finder()
