@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
-from pep517.wrappers import HookMissing
+from pyproject_hooks import HookMissing
 
 from pdm.builders.base import EnvBuilder
 from pdm.models.environment import Environment

@@ -2,18 +2,19 @@
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
 authors = [
-    {name = "frostming", email = "mianghong@gmail.com"},
+    {name = "Frost Ming", email = "mianghong@gmail.com"},
 ]
 dynamic = ["version"]
 requires-python = ">=3.7"
 license = {text = "MIT"}
 dependencies = [
     "blinker",
+    "certifi",
     "packaging>=20.9",
     "platformdirs",
     "rich>=12.3.0",
     "virtualenv>=20",
-    "pep517>=0.11.0",
+    "pyproject-hooks",
     "requests-toolbelt",
     "unearth>=0.6.0",
     "findpython>=0.2.0",
@@ -26,7 +27,6 @@ dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
     "typing-extensions; python_version < \"3.8\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
-    "certifi>=2022.6.15",
 ]
 name = "pdm"
 description = "A modern Python package and dependency manager supporting the latest PEP standards"
@@ -39,6 +39,7 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 [project.urls]
@@ -71,7 +72,6 @@ tox = "tox"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
-benchmark = "python tasks/benchmarks/main.py"
 
 [tool.pdm.dev-dependencies]
 test = [
