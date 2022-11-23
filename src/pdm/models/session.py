@@ -31,3 +31,15 @@ class PDMSession(PyPISession):
             .include_implementation()
             .build()
         )
+
+    # HACK: make the sessions identical to functools.lru_cache
+    # so that the same index page won't be fetched twice.
+    # See unearth/collector.py:fetch_page
+    def __hash__(self) -> int:
+        return hash(self.headers["User-Agent"])
+
+    def __eq__(self, __o: Any) -> bool:
+        return (
+            isinstance(__o, PDMSession)
+            and self.headers["User-Agent"] == __o.headers["User-Agent"]
+        )

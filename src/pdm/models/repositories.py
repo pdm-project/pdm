@@ -197,7 +197,7 @@ class BaseRepository:
             termui.logger.debug("\t" + title)
             logged_lines = set()
             for can in candidates:
-                new_line = f"\t  {can}"
+                new_line = f"\t  {can!r}"
                 if new_line not in logged_lines:
                     logged_lines.add(new_line)
                     if len(logged_lines) > max_lines:
