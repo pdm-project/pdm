@@ -54,7 +54,7 @@ def test_convert_requirements_file_without_name(project, vcs):
 
 
 def test_convert_poetry(project):
-    golden_file = FIXTURES / "pyproject-poetry.toml"
+    golden_file = FIXTURES / "pyproject.toml"
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
         result, settings = poetry.convert(

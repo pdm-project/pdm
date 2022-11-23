@@ -75,7 +75,7 @@ def test_uncaught_error(invoke, mocker):
     [
         "requirements.txt",
         "Pipfile",
-        "pyproject-poetry.toml",
+        "pyproject.toml",
         "projects/flit-demo/pyproject.toml",
     ],
 )

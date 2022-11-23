@@ -632,7 +632,7 @@ summary = "Backported and Experimental Type Hints for Python 3.7+"
 
 [[package]]
 name = "unearth"
-version = "0.6.0"
+version = "0.6.2"
 requires_python = ">=3.7"
 summary = "A utility to fetch and download python packages"
 dependencies = [
@@ -1140,9 +1140,9 @@ content_hash = "sha256:05c8744fa3fa84ebbbe5e866cd9b6029091d27f0563d6a5aab82490df
     {url = "https://files.pythonhosted.org/packages/9e/1d/d128169ff58c501059330f1ad96ed62b79114a2eb30b8238af63a2e27f70/typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
     {url = "https://files.pythonhosted.org/packages/ed/d6/2afc375a8d55b8be879d6b4986d4f69f01115e795e36827fd3a40166028b/typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
 ]
-"unearth 0.6.0" = [
-    {url = "https://files.pythonhosted.org/packages/17/1f/f7b6d7a68345005479959aeb198ddab97cb8c020eefec792b39d629875e8/unearth-0.6.0-py3-none-any.whl", hash = "sha256:ab4002862ec3c67bd6b503aa617192b278a4fab5eb6dccd2bd160eddd40bab0c"},
-    {url = "https://files.pythonhosted.org/packages/41/78/0ac44608c4559f92c724b062a316b53826150ab7a2a6750621733411f98b/unearth-0.6.0.tar.gz", hash = "sha256:9fee43440a77542b95ac3869ab62812d6b36ef191593a238c4c54675fa2b48e7"},
+"unearth 0.6.2" = [
+    {url = "https://files.pythonhosted.org/packages/1e/7e/d7c8d3b50c6b122ccdb89ab00320490ec0c00adab0c45c20f2c91c31c755/unearth-0.6.2-py3-none-any.whl", hash = "sha256:9abce31d89af4e5369a3ac3c439c0c677400e1447d3c178e3e46d2ccc41b5c27"},
+    {url = "https://files.pythonhosted.org/packages/b4/5b/2751a23560b6148f3dfe8072f03e0a18102df7b2a531d495596912d20c5e/unearth-0.6.2.tar.gz", hash = "sha256:130d0c59159795ae66986c1dcbe5d2ddd1da19841972d8d73510d5204b3817ea"},
 ]
 "urllib3 1.26.10" = [
     {url = "https://files.pythonhosted.org/packages/25/36/f056e5f1389004cf886bb7a8514077f24224238a7534497c014a6b9ac770/urllib3-1.26.10.tar.gz", hash = "sha256:879ba4d1e89654d9769ce13121e0f94310ea32e8d2f8cf587b77c08bbcdb30d6"},
