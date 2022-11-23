@@ -10,7 +10,7 @@ from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 
-from pep517.wrappers import Pep517HookCaller
+from pyproject_hooks import BuildBackendHookCaller
 
 from pdm.compat import tomllib
 from pdm.exceptions import BuildError
@@ -160,7 +160,7 @@ class EnvBuilder:
     _overlay_envs: dict[str, str] = {}
 
     if TYPE_CHECKING:
-        _hook: Pep517HookCaller
+        _hook: BuildBackendHookCaller
         _requires: list[str]
         _prefix: _Prefix
 
@@ -209,7 +209,7 @@ class EnvBuilder:
 
     def init_build_system(self, build_system: dict[str, Any]) -> None:
         """Initialize the build system and requires list from the PEP 517 spec"""
-        self._hook = Pep517HookCaller(
+        self._hook = BuildBackendHookCaller(
             self.src_dir,
             build_system["build-backend"],
             backend_path=build_system.get("backend-path"),
