@@ -95,6 +95,10 @@ excludes = [
 ]
 ```
 
+!!! note
+
+	When using `includes` the default includes will be overriden. You have to add the package paths manually.
+
 In case you may want some files to be included in source distributions only, use the `source-includes` field:
 
 ```toml
