@@ -59,6 +59,15 @@ class PDMBackend(BuildBackend):
     @classmethod
     def build_system(cls) -> dict:
         return {
+            "requires": ["pdm-backend"],
+            "build-backend": "pdm.backend",
+        }
+
+
+class PDMLegacyBackend(PDMBackend):
+    @classmethod
+    def build_system(cls) -> dict:
+        return {
             "requires": ["pdm-pep517>=1.0"],
             "build-backend": "pdm.pep517.api",
         }
@@ -113,10 +122,11 @@ class HatchBackend(BuildBackend):
 
 
 _BACKENDS: dict[str, type[BuildBackend]] = {
-    "pdm-pep517": PDMBackend,
+    "pdm-pep517": PDMLegacyBackend,
     "setuptools": SetuptoolsBackend,
     "flit": FlitBackend,
     "hatchling": HatchBackend,
+    "pdm-backend": PDMBackend,
 }
 
 

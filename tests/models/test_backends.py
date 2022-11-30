@@ -40,14 +40,14 @@ def test_project_backend(project, working_set, backend, invoke):
         dep = project.pyproject.metadata["dependencies"][0]
         demo_path = project.root.joinpath("demo").as_posix()
         demo_url = path_to_url(demo_path)
-        if backend == "pdm-pep517":
+        if backend in ("pdm-pep517", "pdm-backend"):
             assert dep == "demo @ file:///${PROJECT_ROOT}/demo"
         elif backend == "hatchling":
             assert dep == "demo @ {root:uri}/demo"
         else:
             assert dep == f"demo @ {demo_url}"
         assert project.backend.expand_line(dep) == f"demo @ {demo_url}"
-        if backend != "hatchling":
+        if backend not in ("hatchling", "pdm-backend"):
             candidate = project.make_self_candidate()
             # We skip hatchling here to avoid installing hatchling into the build env
             metadata_dependency = candidate.prepare(
