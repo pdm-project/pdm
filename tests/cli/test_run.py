@@ -144,6 +144,50 @@ def test_run_shell_script(project, invoke):
     assert (project.root / "output.txt").read_text().strip() == "hello"
 
 
+@pytest.mark.parametrize(
+    "args,expected",
+    (
+        pytest.param(["hello"], "ok hello", id="with-args"),
+        pytest.param([], "ok", id="without-args"),
+    ),
+)
+def test_run_shell_script_with_args_placeholder(project, invoke, args, expected):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "echo ok {args} > output.txt",
+            "help": "test it won't fail",
+        }
+    }
+    project.pyproject.write()
+    with cd(project.root):
+        result = invoke(["run", "test_script", *args], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip() == expected
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    (
+        pytest.param(["hello"], "hello", id="with-args"),
+        pytest.param([], "default", id="with-default"),
+    ),
+)
+def test_run_shell_script_with_args_placeholder_with_default(
+    project, invoke, args, expected
+):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "echo {args:default} > output.txt",
+            "help": "test it won't fail",
+        }
+    }
+    project.pyproject.write()
+    with cd(project.root):
+        result = invoke(["run", "test_script", *args], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip() == expected
+
+
 def test_run_call_script(project, invoke):
     (project.root / "test_script.py").write_text(
         textwrap.dedent(
@@ -187,6 +231,74 @@ def test_run_script_with_extra_args(project, invoke, capfd):
         invoke(["run", "test_script", "-a", "-b", "-c"], obj=project)
     out, _ = capfd.readouterr()
     assert out.splitlines()[-3:] == ["-a", "-b", "-c"]
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    (
+        pytest.param(["-a", "-b", "-c"], ["-a", "-b", "-c", "-x"], id="with-args"),
+        pytest.param([], ["-x"], id="without-args"),
+    ),
+)
+@pytest.mark.parametrize(
+    "script",
+    (
+        pytest.param("python test_script.py {args} -x", id="as-str"),
+        pytest.param(["python", "test_script.py", "{args}", "-x"], id="as-list"),
+    ),
+)
+def test_run_script_with_args_placeholder(
+    project, invoke, capfd, script, args, expected
+):
+    (project.root / "test_script.py").write_text(
+        textwrap.dedent(
+            """
+            import sys
+            print(*sys.argv[1:], sep='\\n')
+            """
+        )
+    )
+    project.pyproject.settings["scripts"] = {"test_script": script}
+    project.pyproject.write()
+    with cd(project.root):
+        invoke(["run", "-v", "test_script", *args], obj=project)
+    out, _ = capfd.readouterr()
+    assert out.strip().splitlines()[1:] == expected
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    (
+        pytest.param(["-a", "-b", "-c"], ["-a", "-b", "-c", "-x"], id="with-args"),
+        pytest.param([], ["--default", "--value", "-x"], id="default"),
+    ),
+)
+@pytest.mark.parametrize(
+    "script",
+    (
+        pytest.param("python test_script.py {args:--default --value} -x", id="as-str"),
+        pytest.param(
+            ["python", "test_script.py", "{args:--default --value}", "-x"], id="as-list"
+        ),
+    ),
+)
+def test_run_script_with_args_placeholder_with_default(
+    project, invoke, capfd, script, args, expected
+):
+    (project.root / "test_script.py").write_text(
+        textwrap.dedent(
+            """
+            import sys
+            print(*sys.argv[1:], sep='\\n')
+            """
+        )
+    )
+    project.pyproject.settings["scripts"] = {"test_script": script}
+    project.pyproject.write()
+    with cd(project.root):
+        invoke(["run", "-v", "test_script", *args], obj=project)
+    out, _ = capfd.readouterr()
+    assert out.strip().splitlines()[1:] == expected
 
 
 def test_run_expand_env_vars(project, invoke, capfd, monkeypatch):
@@ -486,6 +598,52 @@ def test_composite_can_pass_parameters(project, invoke, capfd, _args):
     assert "Second CALLED with param=second" in out
     assert "Post-Second CALLED" in out
     assert "Post-Test CALLED" in out
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    (
+        pytest.param(["-a"], "-a, ", id="with-args"),
+        pytest.param([], "", id="without-args"),
+    ),
+)
+def test_composite_only_pass_parameters_to_subtasks_with_args(
+    project, invoke, capfd, _args, args, expected
+):
+    project.pyproject.settings["scripts"] = {
+        "test": {"composite": ["first", "second {args} key=value"]},
+        "first": "python args.py First",
+        "second": "python args.py Second",
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    invoke(["run", "-v", "test", *args], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED" in out
+    assert f"Second CALLED with {expected}key=value" in out
+
+
+@pytest.mark.parametrize(
+    "args,expected",
+    (
+        pytest.param(["-a"], "-a", id="with-args"),
+        pytest.param([], "--default", id="default"),
+    ),
+)
+def test_composite_only_pass_parameters_to_subtasks_with_args_with_default(
+    project, invoke, capfd, _args, args, expected
+):
+    project.pyproject.settings["scripts"] = {
+        "test": {"composite": ["first", "second {args:--default} key=value"]},
+        "first": "python args.py First",
+        "second": "python args.py Second",
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    invoke(["run", "-v", "test", *args], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED" in out
+    assert f"Second CALLED with {expected}, key=value" in out
 
 
 def test_composite_hooks_inherit_env(project, invoke, capfd, _echo):

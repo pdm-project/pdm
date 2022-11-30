@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import os
 import re
 import shlex
@@ -8,7 +9,7 @@ import signal
 import subprocess
 import sys
 from types import FrameType
-from typing import Any, Callable, Mapping, NamedTuple, Sequence, cast
+from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, cast
 
 from pdm import signals, termui
 from pdm.cli.actions import PEP582_PATH
@@ -44,6 +45,20 @@ def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
             if k not in ("env", "help")
         },
     )
+
+
+RE_ARGS_PLACEHOLDER = re.compile(r"{args(?::(?P<default>[^}]*))?}")
+
+
+def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
+    """Interpolate the `{args:[defaults]} placeholder in a string"""
+
+    def replace(m: re.Match[str]) -> str:
+        default = m.group("default") or ""
+        return " ".join(args) if args else default
+
+    interpolated, count = RE_ARGS_PLACEHOLDER.subn(replace, script)
+    return interpolated, count > 0
 
 
 class Task(NamedTuple):
@@ -216,12 +231,24 @@ class TaskRunner:
         kind, _, value, options = task
         shell = False
         if kind == "cmd":
-            if not isinstance(value, list):
-                value = shlex.split(str(value))
-            args = value + list(args)
+            if isinstance(value, str):
+                cmd, interpolated = interpolate(value, args)
+                value = shlex.split(cmd)
+            else:
+                agg = [interpolate(part, args) for part in value]
+                interpolated = any(row[1] for row in agg)
+                # In case of multiple default, we need to split the resulting string.
+                parts: Iterator[list[str]] = (
+                    shlex.split(part) if interpolated else [part]
+                    for part, interpolated in agg
+                )
+                # We flatten the nested list to obtain a list of arguments
+                value = list(itertools.chain(*parts))
+            args = value if interpolated else [*value, *args]
         elif kind == "shell":
             assert isinstance(value, str)
-            args = " ".join([value] + list(args))  # type: ignore
+            script, interpolated = interpolate(value, args)
+            args = script if interpolated else " ".join([script, *args])
             shell = True
         elif kind == "call":
             assert isinstance(value, str)
@@ -241,7 +268,6 @@ class TaskRunner:
             ] + list(args)
         elif kind == "composite":
             assert isinstance(value, list)
-            args = list(args)
 
         self.project.core.ui.echo(
             f"Running {task}: [success]{str(args)}[/]",
@@ -249,10 +275,16 @@ class TaskRunner:
             verbosity=termui.Verbosity.DETAIL,
         )
         if kind == "composite":
+            args = list(args)
+            should_interpolate = any(
+                (RE_ARGS_PLACEHOLDER.search(script) for script in value)
+            )
             for script in value:
+                if should_interpolate:
+                    script, _ = interpolate(script, args)
                 split = shlex.split(script)
                 cmd = split[0]
-                subargs = split[1:] + args  # type: ignore
+                subargs = split[1:] + ([] if should_interpolate else args)
                 code = self.run(cmd, subargs, options)
                 if code != 0:
                     return code

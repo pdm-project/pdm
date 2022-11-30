@@ -183,6 +183,66 @@ migrate_db = "flask db upgrade"
 
 Besides, inside the tasks, `PDM_PROJECT_ROOT` environment variable will be set to the project root.
 
+### Arguments placeholder
+
+By default, all user provided extra arguments are simply appended to the command (or to all the commands for `composite` tasks).
+
+If you want more control over the user provided extra arguments, you can use the `{args}` placeholder.
+It is available for all script types and will be interpolated properly for each:
+
+```toml
+[tool.pdm.scripts]
+cmd = "echo '--before {args} --after'"
+shell = {shell = "echo '--before {args} --after'"}
+composite = {composite = ["cmd --something", "shell {args}"]}
+```
+
+will produce the following interpolations (those are not real scripts, just here to illustrate the interpolation):
+
+```shell
+$ pdm run cmd --user --provided
+--before --user --provided --after
+$ pdm run cmd
+--before --after
+$ pdm run shell --user --provided
+--before --user --provided --after
+$ pdm run shell
+--before --after
+$ pdm run composite --user --provided
+cmd --something
+shell --before --user --provided --after
+$ pdm run composite
+cmd --something
+shell --before --after
+```
+
+You may optionally provide default values that will be used if no user arguments are provided:
+
+```toml
+[tool.pdm.scripts]
+test = "echo '--before {args:--default --value} --after'"
+```
+
+will produce the following:
+
+```shell
+$ pdm run test --user --provided
+--before --user --provided --after
+$ pdm run test
+--before --default --value --after
+```
+
+!!! note
+    As soon a placeholder is detected, arguments are not appended anymore.
+    This is important for `composite` scripts because if a placeholder
+    is detected on one of the subtasks, none for the subtasks will have
+    the arguments appended, you need to explicitly pass the placeholder
+    to every nested command requiring it.
+
+!!! note
+    `call` scripts don't support the `{args}` placeholder as they have
+    access to `sys.argv` directly to handle such complexe cases and more.
+
 ## Show the List of Scripts
 
 Use `pdm run --list/-l` to show the list of available script shortcuts:
