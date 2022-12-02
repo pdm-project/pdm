@@ -17,6 +17,9 @@ A modern Python package and dependency manager supporting the latest PEP standar
 [![Packaging status](https://repology.org/badge/tiny-repos/pdm.svg)](https://repology.org/project/pdm/versions)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+<a href="https://trackgit.com">
+<img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/l4eztudjnh9bfay668fl" alt="trackgit-views" />
+</a>
 
 [![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
