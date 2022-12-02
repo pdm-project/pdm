@@ -1,3 +1,31 @@
+Release v2.3.0 (2022-12-02)
+---------------------------
+
+### Features & Improvements
+
+- Beautify the error message of build errors. Default to showing the last 10 lines of the build output. [#1491](https://github.com/pdm-project/pdm/issues/1491)
+- Rename the `tool.pdm.overrides` table to `tool.pdm.resolution.overrides`. The old name is deprecated at the same time. [#1503](https://github.com/pdm-project/pdm/issues/1503)
+- Add backend selection and `--backend` option to `pdm init` command, users can choose a favorite backend from `setuptools`, `flit`, `hatchling` and `pdm-pep517`(default), since they all support PEP 621 standards. [#1504](https://github.com/pdm-project/pdm/issues/1504)
+- Allows specifying the insertion position of user provided arguments in scripts with the `{args[:default]}` placeholder. [#1507](https://github.com/pdm-project/pdm/issues/1507)
+
+### Bug Fixes
+
+- The local package is now treated specially during installation and locking. This means it will no longer be included in the lockfile, and should never be installed twice even when using nested extras. This will ensure the lockdown stays relevant when the version changes. [#1481](https://github.com/pdm-project/pdm/issues/1481)
+- Fix the version diff algorithm of installed packages to consider local versions as compatible. [#1497](https://github.com/pdm-project/pdm/issues/1497)
+- Fix the confusing message when detecting a Python interpreter under `python.use_venv=False` [#1508](https://github.com/pdm-project/pdm/issues/1508)
+- Fix the test failure with the latest `findpython` installed. [#1516](https://github.com/pdm-project/pdm/issues/1516)
+- Fix the module missing error of pywin32 in a virtualenv with `install.cache` set to `true` and caching method is `pth`. [#863](https://github.com/pdm-project/pdm/issues/863)
+
+### Dependencies
+
+- Drop the dependency `pdm-pep517`. [#1504](https://github.com/pdm-project/pdm/issues/1504)
+- Replace `pep517` with `pyproject-hooks` because of the rename. [#1528](https://github.com/pdm-project/pdm/issues/1528)
+
+### Removals and Deprecations
+
+- Remove the support for exporting the project file to a `setup.py` format, users are encouraged to migrate to the PEP 621 metadata. [#1504](https://github.com/pdm-project/pdm/issues/1504)
+
+
 Release v2.2.1 (2022-11-03)
 ---------------------------
 
