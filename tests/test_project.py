@@ -259,6 +259,17 @@ def test_find_interpreters_from_venv(invoke, project, local_finder):
     assert any(venv_python == p.executable for p in project.find_interpreters())
 
 
+@pytest.mark.usefixtures("local_finder")
+def test_find_interpreters_without_duplicate_relative_paths(invoke, project):
+    del project.project_config["python.path"]
+    venv.create(project.root / ".venv", clear=True)
+    with cd(project.root):
+        bin_dir = "Scripts" if os.name == "nt" else "bin"
+        suffix = ".exe" if os.name == "nt" else ""
+        found = list(project.find_interpreters(f".venv/{bin_dir}/python{suffix}"))
+        assert len(found) == 1
+
+
 def test_iter_project_venvs(project):
     from pdm.cli.commands.venv import utils
 

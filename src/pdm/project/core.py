@@ -628,13 +628,15 @@ class Project:
             args = []
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
-                if Path(python_spec).exists():
+                path = Path(python_spec)
+                if path.exists():
                     python = find_python_in_path(python_spec)
                     if python:
                         yield PythonInfo.from_path(python)
-                python = shutil.which(python_spec)
-                if python:
-                    yield PythonInfo.from_path(python)
+                if len(path.parts) == 1:  # only check for spec with only one part
+                    python = shutil.which(python_spec)
+                    if python:
+                        yield PythonInfo.from_path(python)
                 return
             args = [int(v) for v in python_spec.split(".") if v != ""]
         finder = self._get_python_finder()
