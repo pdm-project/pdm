@@ -170,8 +170,9 @@ class BaseProvider(AbstractProvider):
                 url_without_fragments(requirement.url)  # type: ignore
             )
         version = candidate.version
-        if version is None:
-            # This should be a URL candidate, consider it to be matching
+        this_name = self.repository.environment.project.name
+        if version is None or candidate.name == this_name:
+            # This should be a URL candidate or self package, consider it to be matching
             return True
         # Allow prereleases if: 1) it is not specified in the tool settings or
         # 2) the candidate doesn't come from PyPI index.
