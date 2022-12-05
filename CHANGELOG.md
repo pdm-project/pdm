@@ -1,3 +1,12 @@
+Release v2.3.1 (2022-12-05)
+---------------------------
+
+### Bug Fixes
+
+- Fix a resolution loop issue when the current project depends on itself and it uses the dynamic version from SCM. [#1541](https://github.com/pdm-project/pdm/issues/1541)
+- Don't give duplicate results when specifying a relative path for `pdm use`. [#1542](https://github.com/pdm-project/pdm/issues/1542)
+
+
 Release v2.3.0 (2022-12-02)
 ---------------------------
 
