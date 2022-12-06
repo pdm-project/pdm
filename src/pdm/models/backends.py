@@ -5,7 +5,6 @@ import os
 import urllib.parse
 from pathlib import Path
 
-from pdm.exceptions import ProjectError
 from pdm.utils import expand_env_vars, path_to_url
 
 
@@ -145,7 +144,7 @@ def get_backend_by_spec(spec: dict) -> type[BuildBackend]:
     for backend_cls in _BACKENDS.values():
         if backend_cls.build_system()["build-backend"] == spec["build-backend"]:
             return backend_cls
-    raise ProjectError(f"Unsupported custom build backend: {spec['build-backend']}")
+    return PDMLegacyBackend  # Fallback to pdm.pep517 backend
 
 
 def get_relative_path(url: str) -> str | None:
