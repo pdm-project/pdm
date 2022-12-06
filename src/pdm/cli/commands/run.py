@@ -102,7 +102,7 @@ class TaskRunner:
         self.global_options = global_options.copy()
         self.hooks = hooks
 
-    def _get_task(self, script_name: str) -> Task | None:
+    def get_task(self, script_name: str) -> Task | None:
         if script_name not in self.project.scripts:
             return None
         script = cast(
@@ -225,7 +225,7 @@ class TaskRunner:
         signal.signal(signal.SIGTERM, handle_term)
         return process.returncode
 
-    def _run_task(
+    def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None
     ) -> int:
         kind, _, value, options = task
@@ -301,20 +301,20 @@ class TaskRunner:
     ) -> int:
         if command in self.hooks.skip:
             return 0
-        task = self._get_task(command)
+        task = self.get_task(command)
         if task is not None:
             self.hooks.try_emit("pre_script", script=command, args=args)
-            pre_task = self._get_task(f"pre_{command}")
+            pre_task = self.get_task(f"pre_{command}")
             if pre_task is not None and self.hooks.should_run(pre_task.name):
-                code = self._run_task(pre_task, opts=opts)
+                code = self.run_task(pre_task, opts=opts)
                 if code != 0:
                     return code
-            code = self._run_task(task, args, opts=opts)
+            code = self.run_task(task, args, opts=opts)
             if code != 0:
                 return code
-            post_task = self._get_task(f"post_{command}")
+            post_task = self.get_task(f"post_{command}")
             if post_task is not None and self.hooks.should_run(post_task.name):
-                code = self._run_task(post_task, opts=opts)
+                code = self.run_task(post_task, opts=opts)
             self.hooks.try_emit("post_script", script=command, args=args)
             return code
         else:
@@ -331,7 +331,7 @@ class TaskRunner:
         for name in sorted(self.project.scripts):
             if name == "_":
                 continue
-            task = self._get_task(name)
+            task = self.get_task(name)
             assert task is not None
             result.append(
                 (
@@ -345,6 +345,8 @@ class TaskRunner:
 
 class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
+
+    runner_cls: type[TaskRunner] = TaskRunner
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         skip_option.add_to_parser(parser)
@@ -370,7 +372,7 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
         hooks = HookManager(project, options.skip)
-        runner = TaskRunner(project, hooks=hooks)
+        runner = self.runner_cls(project, hooks=hooks)
         if options.list:
             return runner.show_list()
         if options.site_packages:
@@ -393,10 +395,10 @@ def run_script_if_present(script_name: str) -> Callable:
 
     def handler(sender: Project, hooks: HookManager, **kwargs: Any) -> None:
         runner = TaskRunner(sender, hooks)
-        task = runner._get_task(script_name)
+        task = runner.get_task(script_name)
         if task is None:
             return
-        exit_code = runner._run_task(task)
+        exit_code = runner.run_task(task)
         if exit_code != 0:
             sys.exit(exit_code)
 
