@@ -10,7 +10,9 @@ from pdm import termui
 _T = TypeVar("_T", bound=Callable)
 
 
-def convert_from(field: str = None, name: str = None) -> Callable[[_T], _T]:
+def convert_from(
+    field: str | None = None, name: str | None = None
+) -> Callable[[_T], _T]:
     def wrapper(func: _T) -> _T:
         func._convert_from = field  # type: ignore
         func._convert_to = name  # type: ignore

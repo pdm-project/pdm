@@ -23,7 +23,7 @@ class Setup:
     python_requires: str | None = None
     summary: str | None = None
 
-    def update(self, other: "Setup") -> None:
+    def update(self, other: Setup) -> None:
         for f in fields(self):
             other_field = getattr(other, f.name)
             if other_field:
@@ -33,7 +33,7 @@ class Setup:
         return asdict(self)
 
     @classmethod
-    def from_directory(cls, dir: Path) -> "Setup":
+    def from_directory(cls, dir: Path) -> Setup:
         return _SetupReader.read_from_directory(dir)
 
     def as_dist(self) -> Distribution:

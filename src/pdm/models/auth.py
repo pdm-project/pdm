@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from __future__ import annotations
 
 from unearth.auth import MultiDomainBasicAuth
 
@@ -22,14 +22,12 @@ class PdmBasicAuth(MultiDomainBasicAuth):
     """
 
     def __init__(
-        self, prompting: bool = True, index_urls: Optional[List[str]] = None
+        self, prompting: bool = True, index_urls: list[str] | None = None
     ) -> None:
         super().__init__(prompting=True, index_urls=index_urls)
         self._real_prompting = prompting
 
-    def _prompt_for_password(
-        self, netloc: str
-    ) -> Tuple[Optional[str], Optional[str], bool]:
+    def _prompt_for_password(self, netloc: str) -> tuple[str | None, str | None, bool]:
         if not self._real_prompting:
             raise PdmException(
                 f"The credentials for {netloc} are not provided. "
@@ -49,7 +47,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         return super()._should_save_password_to_keyring()
 
 
-def make_basic_auth(sources: List[Source], prompting: bool) -> PdmBasicAuth:
+def make_basic_auth(sources: list[Source], prompting: bool) -> PdmBasicAuth:
     return PdmBasicAuth(
         prompting,
         [source["url"] for source in sources if source.get("type", "index") == "index"],

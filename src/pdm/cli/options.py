@@ -61,7 +61,7 @@ class ArgumentGroup(Option):
         self,
         name: str,
         is_mutually_exclusive: bool = False,
-        required: bool = None,
+        required: bool | None = None,
     ) -> None:
         self.name = name
         self.options: list[Option] = []

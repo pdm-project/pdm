@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import argparse
 from argparse import _SubParsersAction
-from typing import Any, List, Optional
+from typing import Any
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.cli.utils import PdmFormatter
@@ -11,12 +13,12 @@ class BaseCommand:
     """A CLI subcommand"""
 
     # The subcommand's name
-    name: Optional[str] = None
+    name: str | None = None
     # The subcommand's help string, if not given, __doc__ will be used.
-    description: Optional[str] = None
+    description: str | None = None
     # A list of pre-defined options which will be loaded on initializing
     # Rewrite this if you don't want the default ones
-    arguments: List[Option] = [verbose_option, global_option, project_option]
+    arguments: list[Option] = [verbose_option, global_option, project_option]
 
     def __init__(self, parser: argparse.ArgumentParser) -> None:
         for arg in self.arguments:
@@ -25,7 +27,7 @@ class BaseCommand:
 
     @classmethod
     def register_to(
-        cls, subparsers: _SubParsersAction, name: Optional[str] = None, **kwargs: Any
+        cls, subparsers: _SubParsersAction, name: str | None = None, **kwargs: Any
     ) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.

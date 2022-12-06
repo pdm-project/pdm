@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import argparse
 import sys
 import textwrap
 from shutil import get_terminal_size
-from typing import Optional
 
 from pdm import termui
 from pdm._types import SearchResult
@@ -17,7 +18,7 @@ def print_results(
     ui: termui.UI,
     hits: SearchResult,
     working_set: WorkingSet,
-    terminal_width: Optional[int] = None,
+    terminal_width: int | None = None,
 ) -> None:
     if not hits:
         return

@@ -6,7 +6,7 @@ import os
 import re
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, List, Mapping, cast
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 
 from pdm._types import RequirementDict, Source
 from pdm.compat import tomllib
@@ -67,7 +67,7 @@ def _convert_python(python: str) -> PySpecSet:
 
 
 def _convert_req(
-    name: str, req_dict: RequirementDict | List[RequirementDict]
+    name: str, req_dict: RequirementDict | list[RequirementDict]
 ) -> Iterable[str]:
     if isinstance(req_dict, list):
         for req in req_dict:

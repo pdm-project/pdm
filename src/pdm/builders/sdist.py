@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 from pdm.builders.base import EnvBuilder
 
@@ -10,8 +12,8 @@ class SdistBuilder(EnvBuilder):
     def build(
         self,
         out_dir: str,
-        config_settings: Optional[Mapping[str, Any]] = None,
-        metadata_directory: Optional[str] = None,
+        config_settings: Mapping[str, Any] | None = None,
+        metadata_directory: str | None = None,
     ) -> str:
         self.install(self._requires, shared=True)
         requires = self._hook.get_requires_for_build_sdist(config_settings)

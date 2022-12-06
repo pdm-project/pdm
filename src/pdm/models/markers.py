@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import copy
 import itertools
 import operator
 from functools import reduce
-from typing import Any, List, Optional, Set, Tuple, Union
+from typing import Any
 
 from packaging.markers import Marker as PackageMarker
 
@@ -13,7 +15,7 @@ from pdm.utils import join_list_with
 class Marker(PackageMarker):
     """A subclass of Marker that supports union and intersection merging."""
 
-    def copy(self) -> "Marker":
+    def copy(self) -> Marker:
         inst = self.__class__('os_name == "nt"')
         inst._markers = copy.deepcopy(self._markers)
         return inst
@@ -23,7 +25,7 @@ class Marker(PackageMarker):
             return False
         return str(self) == str(other)
 
-    def split_pyspec(self) -> Tuple[Optional["Marker"], PySpecSet]:
+    def split_pyspec(self) -> tuple[Marker | None, PySpecSet]:
         """Split `python_version` and `python_full_version` from marker string"""
         if _only_contains_python_keys(self._markers):
             return None, _build_pyspec_from_marker(self._markers)
@@ -48,17 +50,17 @@ class Marker(PackageMarker):
         return marker, _build_pyspec_from_marker(join_list_with(py_markers, "and"))
 
 
-def get_marker(marker: Union[PackageMarker, Marker, None]) -> Optional[Marker]:
+def get_marker(marker: PackageMarker | Marker | None) -> Marker | None:
     return Marker(str(marker)) if marker else None
 
 
-def split_marker_extras(marker: str) -> Tuple[Set[str], str]:
+def split_marker_extras(marker: str) -> tuple[set[str], str]:
     """An element can be stripped from the marker only if all parts are connected
     with `and` operator. The rest part are returned as a string or `None` if all are
     stripped.
     """
 
-    def extract_extras(submarker: Union[tuple, list]) -> Set[str]:
+    def extract_extras(submarker: tuple | list) -> set[str]:
         if isinstance(submarker, tuple):
             if submarker[0].value == "extra":
                 if submarker[1].value == "==":
@@ -88,7 +90,7 @@ def split_marker_extras(marker: str) -> Tuple[Set[str], str]:
         return set(), marker
 
     extras = set()
-    submarkers_no_extras: List[Union[tuple, list]] = []
+    submarkers_no_extras: list[tuple | list] = []
     # Below this point the submarkers are connected with 'and'
     for submarker in submarkers:
         if submarker == "and":
@@ -108,7 +110,7 @@ def split_marker_extras(marker: str) -> Tuple[Set[str], str]:
     return extras, str(new_marker)
 
 
-def _only_contains_python_keys(markers: List[Any]) -> bool:
+def _only_contains_python_keys(markers: list[Any]) -> bool:
     if isinstance(markers, tuple):
         return markers[0].value in ("python_version", "python_full_version")
 
@@ -120,8 +122,8 @@ def _only_contains_python_keys(markers: List[Any]) -> bool:
     return True
 
 
-def _build_pyspec_from_marker(markers: List[Any]) -> PySpecSet:
-    def split_version(version: str) -> List[str]:
+def _build_pyspec_from_marker(markers: list[Any]) -> PySpecSet:
+    def split_version(version: str) -> list[str]:
         if "," in version:
             return [v.strip() for v in version.split(",")]
         return version.split()
