@@ -351,7 +351,7 @@ def build_forward_dependency_json_subtree(
     root: Package,
     project: Project,
     graph: DirectedGraph[Package | None],
-    required_by: Package = None,
+    required_by: Package | None = None,
     visited: frozenset[str] = frozenset(),
 ) -> dict:
     if not package_is_project(root, project):
@@ -390,7 +390,7 @@ def build_reverse_dependency_json_subtree(
     root: Package,
     project: Project,
     graph: DirectedGraph[Package | None],
-    requires: Package = None,
+    requires: Package | None = None,
     visited: frozenset[str] = frozenset(),
 ) -> dict:
     parents = graph.iter_parents(root) if root.name not in visited else []

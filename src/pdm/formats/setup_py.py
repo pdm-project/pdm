@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Mapping
 
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.project import Project
@@ -11,15 +13,15 @@ def check_fingerprint(project: Project, filename: Path) -> bool:
 
 
 def convert(
-    project: Project, filename: Path, options: Optional[Any]
-) -> Tuple[Mapping[str, Any], Mapping[str, Any]]:
+    project: Project, filename: Path, options: Any | None
+) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     from pdm.models.in_process import parse_setup_py
 
     parsed = parse_setup_py(
         str(project.environment.interpreter.executable), str(filename)
     )
-    metadata: Dict[str, Any] = {}
-    settings: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
+    settings: dict[str, Any] = {}
     for name in [
         "name",
         "version",
@@ -60,5 +62,5 @@ def convert(
     return metadata, settings
 
 
-def export(project: Project, candidates: List, options: Optional[Any]) -> str:
+def export(project: Project, candidates: list, options: Any | None) -> str:
     raise NotImplementedError()

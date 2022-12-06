@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Mapping
 
 from pyproject_hooks import HookMissing
 
@@ -17,7 +19,7 @@ class EditableBuilder(EnvBuilder):
         "requires": ["setuptools_pep660"],
     }
 
-    def __init__(self, src_dir: Union[str, Path], environment: Environment) -> None:
+    def __init__(self, src_dir: str | Path, environment: Environment) -> None:
         super().__init__(src_dir, environment)
         if self._hook.build_backend.startswith(
             "pdm.pep517"
@@ -26,7 +28,7 @@ class EditableBuilder(EnvBuilder):
             self.init_build_system(self.FALLBACK_BACKEND)
 
     def prepare_metadata(
-        self, out_dir: str, config_settings: Optional[Mapping[str, Any]] = None
+        self, out_dir: str, config_settings: Mapping[str, Any] | None = None
     ) -> str:
         self.install(self._requires, shared=True)
         try:
@@ -43,8 +45,8 @@ class EditableBuilder(EnvBuilder):
     def build(
         self,
         out_dir: str,
-        config_settings: Optional[Mapping[str, Any]] = None,
-        metadata_directory: Optional[str] = None,
+        config_settings: Mapping[str, Any] | None = None,
+        metadata_directory: str | None = None,
     ) -> str:
         self.install(self._requires, shared=True)
         try:

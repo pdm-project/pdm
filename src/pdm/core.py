@@ -138,8 +138,8 @@ class Core:
 
     def main(
         self,
-        args: list[str] = None,
-        prog_name: str = None,
+        args: list[str] | None = None,
+        prog_name: str | None = None,
         obj: Project | None = None,
         **extra: Any,
     ) -> None:

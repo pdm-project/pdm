@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import base64
 import hashlib
 import sys
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, Type, TypeVar
+from typing import Iterable, TypeVar
 from findpython import PythonVersion
 
 from findpython.providers import BaseProvider
@@ -20,7 +22,7 @@ def hash_path(path: str) -> str:
     ).decode()[:8]
 
 
-def get_in_project_venv_python(root: Path) -> Optional[Path]:
+def get_in_project_venv_python(root: Path) -> Path | None:
     """Get the python interpreter path of venv-in-project"""
     for possible_dir in (".venv", "venv", "env"):
         venv_python = get_venv_python(root / possible_dir)
@@ -36,7 +38,7 @@ def get_venv_prefix(project: Project) -> str:
     return f"{path.name}-{name_hash}-"
 
 
-def iter_venvs(project: Project) -> Iterable[Tuple[str, Path]]:
+def iter_venvs(project: Project) -> Iterable[tuple[str, Path]]:
     """Return an iterable of venv paths associated with the project"""
     in_project_venv_python = get_in_project_venv_python(project.root)
     if in_project_venv_python is not None:
@@ -54,7 +56,7 @@ def get_venv_python(venv: Path) -> Path:
     return venv / BIN_DIR / f"python{suffix}"
 
 
-def iter_central_venvs(project: Project) -> Iterable[Tuple[str, Path]]:
+def iter_central_venvs(project: Project) -> Iterable[tuple[str, Path]]:
     """Return an iterable of all managed venvs and their paths."""
     venv_parent = Path(project.config["venv.location"])
     for venv in venv_parent.glob("*"):
@@ -72,7 +74,7 @@ class VenvProvider(BaseProvider):
         self.project = project
 
     @classmethod
-    def create(cls: Type[T]) -> Optional[T]:  # pragma: no cover
+    def create(cls: type[T]) -> T | None:  # pragma: no cover
         return None
 
     def find_pythons(self) -> Iterable[PythonVersion]:

@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import argparse
-from typing import List
 
 from pdm.project import Project
 from pdm.cli.commands.base import BaseCommand
@@ -15,7 +16,7 @@ class Command(BaseCommand):
     """Virtualenv management"""
 
     name = "venv"
-    arguments: List[Option] = []
+    arguments: list[Option] = []
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         subparser = parser.add_subparsers()

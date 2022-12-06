@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import ast
 import os
 from argparse import Namespace
 from os import PathLike
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Tuple, cast
+from typing import Any, List, Mapping, cast
 
 from pdm.compat import tomllib
 from pdm.formats.base import (
@@ -18,7 +20,7 @@ from pdm.project import Project
 from pdm.utils import cd
 
 
-def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
+def check_fingerprint(project: Project | None, filename: PathLike) -> bool:
     with open(filename, "rb") as fp:
         try:
             data = tomllib.load(fp)
@@ -28,7 +30,7 @@ def check_fingerprint(project: Optional[Project], filename: PathLike) -> bool:
     return "tool" in data and "flit" in data["tool"]
 
 
-def _get_author(metadata: Dict[str, Any], type_: str = "author") -> List[str]:
+def _get_author(metadata: dict[str, Any], type_: str = "author") -> list[str]:
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
     return cast(List[str], array_of_inline_tables([{"name": name, "email": email}]))
@@ -36,7 +38,7 @@ def _get_author(metadata: Dict[str, Any], type_: str = "author") -> List[str]:
 
 def get_docstring_and_version_via_ast(
     target: Path,
-) -> Tuple[Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None]:
     """
     This function is borrowed from flit's implementation, but does not attempt to import
     that file. If docstring or version can't be retrieved by this function,
@@ -55,7 +57,7 @@ def get_docstring_and_version_via_ast(
             and isinstance(child.value, ast.Str)
         )
         if is_version_str:
-            version: Optional[str] = cast(ast.Str, cast(ast.Assign, child).value).s
+            version: str | None = cast(ast.Str, cast(ast.Assign, child).value).s
             break
     else:
         version = None
@@ -84,7 +86,7 @@ class FlitMetaConverter(MetaConverter):
         self._ui.echo(message, err=True, style="warning")
 
     @convert_from("metadata")
-    def name(self, metadata: Dict[str, Any]) -> str:
+    def name(self, metadata: dict[str, Any]) -> str:
         # name
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
@@ -128,12 +130,12 @@ class FlitMetaConverter(MetaConverter):
 
     @convert_from("entrypoints", name="entry-points")
     def entry_points(
-        self, value: Dict[str, Dict[str, str]]
-    ) -> Dict[str, Dict[str, str]]:
+        self, value: dict[str, dict[str, str]]
+    ) -> dict[str, dict[str, str]]:
         return value
 
     @convert_from("sdist")
-    def includes(self, value: Dict[str, List[str]]) -> None:
+    def includes(self, value: dict[str, list[str]]) -> None:
         self.settings.setdefault("build", {}).update(
             {"excludes": value.get("exclude"), "includes": value.get("include")}
         )
@@ -141,8 +143,8 @@ class FlitMetaConverter(MetaConverter):
 
 
 def convert(
-    project: Optional[Project], filename: PathLike, options: Optional[Namespace]
-) -> Tuple[Mapping, Mapping]:
+    project: Project | None, filename: PathLike, options: Namespace | None
+) -> tuple[Mapping, Mapping]:
     with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         converter = FlitMetaConverter(
             tomllib.load(fp)["tool"]["flit"], project.core.ui if project else None
@@ -150,5 +152,5 @@ def convert(
         return converter.convert()
 
 
-def export(project: Project, candidates: List, options: Optional[Namespace]) -> None:
+def export(project: Project, candidates: list, options: Namespace | None) -> None:
     raise NotImplementedError()

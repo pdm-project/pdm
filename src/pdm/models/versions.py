@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import re
-from typing import Any, List, Optional, Tuple, Union, overload
+from typing import Any, Union, overload
 
 from pdm.compat import Literal
 from pdm.exceptions import InvalidPyVersion
@@ -21,16 +23,16 @@ class Version:
     focused on supporting PEP 440 version identifiers, not specifiers.
     """
 
-    MIN: "Version"
-    MAX: "Version"
+    MIN: Version
+    MAX: Version
     # Pre-release may follow version with {a|b|rc}N
     # https://docs.python.org/3/faq/general.html#how-does-the-python-version-numbering-scheme-work
-    pre: Optional[Tuple[str, int]] = None
+    pre: tuple[str, int] | None = None
 
-    def __init__(self, version: Union[Tuple[VersionBit, ...], str]) -> None:
+    def __init__(self, version: tuple[VersionBit, ...] | str) -> None:
         if isinstance(version, str):
             version_str = re.sub(r"(?<!\.)\*", ".*", version)
-            bits: List[VersionBit] = []
+            bits: list[VersionBit] = []
             for v in version_str.split(".")[:3]:
                 try:
                     bits.append(int(v))
@@ -51,9 +53,9 @@ class Version:
                             "for python version specifiers."
                         ) from None
             version = tuple(bits)
-        self._version: Tuple[VersionBit, ...] = version
+        self._version: tuple[VersionBit, ...] = version
 
-    def complete(self, complete_with: VersionBit = 0, max_bits: int = 3) -> "Version":
+    def complete(self, complete_with: VersionBit = 0, max_bits: int = 3) -> Version:
         """
         Complete the version with the given bit if the version has less than max parts
         """
@@ -63,7 +65,7 @@ class Version:
         ret.pre = self.pre
         return ret
 
-    def bump(self, idx: int = -1) -> "Version":
+    def bump(self, idx: int = -1) -> Version:
         """Bump version by incrementing 1 on the given index of version part.
         If index is not provided: increment the last version bit unless version
         is a pre-release, in which case, increment the pre-release number.
@@ -78,7 +80,7 @@ class Version:
             ret.pre = None
         return ret
 
-    def startswith(self, other: "Version") -> bool:
+    def startswith(self, other: Version) -> bool:
         """Check if the version begins with another version."""
         return self._version[: len(other._version)] == other._version
 
@@ -113,8 +115,8 @@ class Version:
         if not isinstance(other, Version):
             return NotImplemented
 
-        def comp_key(version: Version) -> List[float]:
-            ret: List[float] = [-1 if v == "*" else v for v in version._version]
+        def comp_key(version: Version) -> list[float]:
+            ret: list[float] = [-1 if v == "*" else v for v in version._version]
             if version.pre:
                 # Get the ascii value of first character, a < b < r[c]
                 ret += [ord(version.pre[0][0]), version.pre[1]]
@@ -139,10 +141,10 @@ class Version:
         ...
 
     @overload
-    def __getitem__(self, idx: slice) -> "Version":
+    def __getitem__(self, idx: slice) -> Version:
         ...
 
-    def __getitem__(self, idx: Union[int, slice]) -> Union[VersionBit, "Version"]:
+    def __getitem__(self, idx: int | slice) -> VersionBit | Version:
         if isinstance(idx, slice):
             return type(self)(self._version[idx])
         else:

@@ -49,7 +49,7 @@ def is_legacy_windows(console: Console | None = None) -> bool:
     return console.legacy_windows
 
 
-def style(text: str, *args: str, style: str = None, **kwargs: Any) -> str:
+def style(text: str, *args: str, style: str | None = None, **kwargs: Any) -> str:
     """return text with ansi codes using rich console
 
     :param text: message with rich markup, defaults to "".

@@ -31,7 +31,7 @@ class BaseProvider(AbstractProvider):
         self,
         repository: BaseRepository,
         allow_prereleases: bool | None = None,
-        overrides: dict[str, str] = None,
+        overrides: dict[str, str] | None = None,
     ) -> None:
         self.repository = repository
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value

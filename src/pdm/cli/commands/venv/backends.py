@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import abc
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Iterable, List, Mapping, Optional, Tuple, Type
+from typing import Any, Iterable, Mapping
 
 from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
@@ -20,7 +22,7 @@ class VirtualenvCreateError(ProjectError):
 class Backend(abc.ABC):
     """The base class for virtualenv backends"""
 
-    def __init__(self, project: Project, python: Optional[str]) -> None:
+    def __init__(self, project: Project, python: str | None) -> None:
         self.project = project
         self.python = python
 
@@ -56,7 +58,7 @@ class Backend(abc.ABC):
         """
         return self._resolved_interpreter.identifier
 
-    def subprocess_call(self, cmd: List[str], **kwargs: Any) -> None:
+    def subprocess_call(self, cmd: list[str], **kwargs: Any) -> None:
         self.project.core.ui.echo(
             f"Run command: [success]{cmd}[/]",
             verbosity=termui.Verbosity.DETAIL,
@@ -82,7 +84,7 @@ class Backend(abc.ABC):
         )
         shutil.rmtree(location)
 
-    def get_location(self, name: Optional[str]) -> Path:
+    def get_location(self, name: str | None) -> Path:
         venv_parent = Path(self.project.config["venv.location"])
         if not venv_parent.is_dir():
             venv_parent.mkdir(exist_ok=True, parents=True)
@@ -90,11 +92,11 @@ class Backend(abc.ABC):
 
     def create(
         self,
-        name: Optional[str] = None,
-        args: Tuple[str, ...] = (),
+        name: str | None = None,
+        args: tuple[str, ...] = (),
         force: bool = False,
         in_project: bool = False,
-        prompt: Optional[str] = None,
+        prompt: str | None = None,
         with_pip: bool = False,
     ) -> Path:
         if in_project:
@@ -113,7 +115,7 @@ class Backend(abc.ABC):
         return location
 
     @abc.abstractmethod
-    def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
         pass
 
 
@@ -123,7 +125,7 @@ class VirtualenvBackend(Backend):
             return ()
         return ("--no-pip", "--no-setuptools", "--no-wheel")
 
-    def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
         cmd = [
             sys.executable,
             "-m",
@@ -142,7 +144,7 @@ class VenvBackend(VirtualenvBackend):
             return ()
         return ("--without-pip",)
 
-    def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
         cmd = [
             str(self._resolved_interpreter.executable),
             "-m",
@@ -167,7 +169,7 @@ class CondaBackend(Backend):
             return ("pip",)
         return ()
 
-    def perform_create(self, location: Path, args: Tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
         if self.python:
             python_ver = self.python
         else:
@@ -188,7 +190,7 @@ class CondaBackend(Backend):
         self.subprocess_call(cmd)
 
 
-BACKENDS: Mapping[str, Type[Backend]] = {
+BACKENDS: Mapping[str, type[Backend]] = {
     "virtualenv": VirtualenvBackend,
     "venv": VenvBackend,
     "conda": CondaBackend,
