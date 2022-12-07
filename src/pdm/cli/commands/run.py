@@ -215,14 +215,18 @@ class TaskRunner:
         cwd = project.root if chdir else None
 
         def forward_signal(signum: int, frame: FrameType | None) -> None:
+            if sys.platform == "win32" and signum == signal.SIGINT:
+                signum = signal.CTRL_C_EVENT
             process.send_signal(signum)
 
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
+        handle_int = signal.signal(signal.SIGINT, forward_signal)
         process = subprocess.Popen(
             expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0
         )
         process.wait()
         signal.signal(signal.SIGTERM, handle_term)
+        signal.signal(signal.SIGINT, handle_int)
         return process.returncode
 
     def run_task(
