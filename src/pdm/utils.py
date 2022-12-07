@@ -25,6 +25,8 @@ from packaging.version import Version
 from pdm._types import Source
 from pdm.compat import Distribution
 
+_egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
+
 
 def create_tracked_tempdir(
     suffix: str | None = None, prefix: str | None = None, dir: str | None = None
@@ -414,4 +416,7 @@ def is_pip_compatible_with_python(python_version: Version | str) -> bool:
 
 def path_without_fragments(path: str) -> Path:
     """Remove egg fragment from path"""
-    return Path(path.split("#")[0])
+    match = _egg_fragment_re.search(path)
+    if not match:
+        return Path(path)
+    return Path(match.group(1))

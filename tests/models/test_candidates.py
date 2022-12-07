@@ -126,6 +126,7 @@ def test_parse_abnormal_specifiers(project):
         "demo @ file:///${PROJECT_ROOT}/tests/fixtures/projects/demo",
         "-e ./tests/fixtures/projects/demo",
         "-e file:///${PROJECT_ROOT}/tests/fixtures/projects/demo#egg=demo",
+        "-e file:///${PROJECT_ROOT}/tests/fixtures/projects/demo-#-with-hash#egg=demo",
     ],
 )
 def test_expand_project_root_in_url(req_str, core):
