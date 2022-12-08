@@ -30,6 +30,7 @@ from pdm.utils import (
     add_ssh_scheme_to_git_uri,
     normalize_name,
     path_to_url,
+    path_without_fragments,
     url_to_path,
     url_without_fragments,
 )
@@ -292,11 +293,11 @@ class FileRequirement(Requirement):
             path = get_relative_path(self.url)
             if path is None:
                 try:
-                    self.path = Path(url_to_path(self.url))
+                    self.path = path_without_fragments(url_to_path(self.url))
                 except AssertionError:
                     pass
             else:
-                self.path = Path(path)
+                self.path = path_without_fragments(path)
         if self.url:
             self._parse_name_from_url()
 
@@ -305,7 +306,7 @@ class FileRequirement(Requirement):
         if self.path is None or self.path.is_absolute():
             return
         # self.path is relative
-        self.path = Path(os.path.relpath(self.path, backend.root))
+        self.path = path_without_fragments(os.path.relpath(self.path, backend.root))
         self.url = backend.relative_path_to_url(self.path.as_posix())
 
     @property
