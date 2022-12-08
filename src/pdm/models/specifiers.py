@@ -6,7 +6,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Any, Iterable, cast
 
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
 from pdm.exceptions import InvalidPyVersion
 from pdm.models.versions import Version
@@ -60,7 +60,10 @@ class PySpecSet(SpecifierSet):
     def __init__(self, version_str: str = "", analyze: bool = True) -> None:
         if version_str == "*":
             version_str = ""
-        super().__init__(version_str)
+        try:
+            super().__init__(version_str)
+        except InvalidSpecifier as e:
+            raise InvalidPyVersion(str(e)) from e
         self._lower_bound = Version.MIN
         self._upper_bound = Version.MAX
         self._excludes: list[Version] = []
