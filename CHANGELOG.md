@@ -1,3 +1,19 @@
+Release v2.3.2 (2022-12-08)
+---------------------------
+
+### Bug Fixes
+
+- Fix an installation failure when the RECORD file contains commas in the file path. [#1010](https://github.com/pdm-project/pdm/issues/1010)
+- Fallback to `pdm.pep517` as the metadata transformer for unknown custom build backends. [#1546](https://github.com/pdm-project/pdm/issues/1546)
+- Fix a bug that Ctrl + C kills the python interactive session instead of clearing the current line. [#1547](https://github.com/pdm-project/pdm/issues/1547)
+- Fix a bug with egg segment for local dependency [#1552](https://github.com/pdm-project/pdm/issues/1552)
+
+### Dependencies
+
+- Update `installer` to `0.6.0`. [#1550](https://github.com/pdm-project/pdm/issues/1550)
+- Update minimum version of `unearth` to `0.6.3` and test against `packaging==22.0`. [#1555](https://github.com/pdm-project/pdm/issues/1555)
+
+
 Release v2.3.1 (2022-12-05)
 ---------------------------
 
