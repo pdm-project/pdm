@@ -21,9 +21,10 @@ def install_requirements(
     reporter = project.get_reporter(reqs)
     resolver = project.core.resolver_class(provider, reporter)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
+    backend = project.backend
     for req in reqs:
         if req.is_file_or_url:
-            req.relocate(environment.project.backend)  # type: ignore
+            req.relocate(backend)  # type: ignore
     resolved, _ = resolve(
         resolver,
         reqs,
