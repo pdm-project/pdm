@@ -325,6 +325,8 @@ class FileRequirement(Requirement):
         return Link(url)
 
     def get_full_url(self) -> str:
+        if not self.url:
+            raise InvalidRequirement("Missing URL for file requirement")
         return url_without_fragments(self.url)
 
     def as_line(self) -> str:
