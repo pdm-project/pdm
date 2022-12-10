@@ -241,7 +241,7 @@ class UpdateCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        from pdm.__version__ import parsed_version
+        from pdm.__version__ import parsed_version, read_version
 
         if options.head:
             package = f"pdm @ git+{PDM_REPO}@main"
@@ -275,3 +275,5 @@ class UpdateCommand(BaseCommand):
             project.core.ui.echo(
                 f"[success]Installing version [primary]{version}[/] succeeds.[/]"
             )
+            # Update the version value to avoid check update print wrong message
+            project.core.version = read_version()
