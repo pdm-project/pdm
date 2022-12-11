@@ -314,3 +314,11 @@ def test_add_editable_package_with_extras(project, working_set):
     assert "demo" in working_set
     assert "requests" in working_set
     assert "urllib3" in working_set
+
+
+def test_add_package_with_local_version(project, repository, working_set):
+    repository.add_candidate("foo", "1.0-alpha.0+local")
+    actions.do_add(project, packages=["foo"], save="minimum")
+    assert working_set["foo"].version == "1.0-alpha.0+local"
+    dependencies, _ = project.get_pyproject_dependencies("default")
+    assert dependencies[0] == "foo>=1.0a0"

@@ -22,7 +22,6 @@ from typing import (
 
 import tomlkit
 from packaging.specifiers import SpecifierSet
-from packaging.version import parse as parse_version
 from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
@@ -40,9 +39,15 @@ from pdm.models.requirements import (
 )
 from pdm.models.specifiers import get_specifier
 from pdm.project import Project
-from pdm.utils import is_path_relative_to, normalize_name, url_to_path
+from pdm.utils import (
+    comparable_version,
+    is_path_relative_to,
+    normalize_name,
+    url_to_path,
+)
 
 if TYPE_CHECKING:
+    from packaging.version import Version
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.compat import Distribution
@@ -508,20 +513,30 @@ def save_version_specifiers(
     :param resolved: the resolved mapping
     :param save_strategy: compatible/wildcard/exact
     """
+
+    def candidate_version(c: Candidate) -> Version:
+        assert c.version is not None
+        return comparable_version(c.version)
+
     for reqs in requirements.values():
         for name, r in reqs.items():
             if r.is_named and not r.specifier:
                 if save_strategy == "exact":
-                    r.specifier = get_specifier(f"=={resolved[name].version}")
+                    r.specifier = get_specifier(
+                        f"=={candidate_version(resolved[name])}"
+                    )
                 elif save_strategy == "compatible":
-                    version = str(resolved[name].version)
-                    parsed = parse_version(version)
-                    if parsed.is_prerelease or parsed.is_devrelease:
-                        r.specifier = get_specifier(f">={version},<{parsed.major + 1}")
+                    version = candidate_version(resolved[name])
+                    if version.is_prerelease or version.is_devrelease:
+                        r.specifier = get_specifier(f">={version},<{version.major + 1}")
                     else:
-                        r.specifier = get_specifier(f"~={parsed.major}.{parsed.minor}")
+                        r.specifier = get_specifier(
+                            f"~={version.major}.{version.minor}"
+                        )
                 elif save_strategy == "minimum":
-                    r.specifier = get_specifier(f">={resolved[name].version}")
+                    r.specifier = get_specifier(
+                        f">={candidate_version(resolved[name])}"
+                    )
 
 
 def check_project_file(project: Project) -> None:

@@ -17,7 +17,6 @@ from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
-from packaging.version import parse as parse_version
 from unearth import Link
 
 from pdm.compat import Distribution
@@ -28,6 +27,7 @@ from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
     add_ssh_scheme_to_git_uri,
+    comparable_version,
     normalize_name,
     path_to_url,
     path_without_fragments,
@@ -110,11 +110,7 @@ class Requirement:
         """Return a new requirement with the given pinned version."""
         if self.is_pinned or not other_version:
             return self
-        version = parse_version(other_version)
-        normalized = str(version)
-        if version.local:
-            # Remove the local part to accept wider range of prereleases.
-            normalized = normalized.rsplit("+", 1)[0]
+        normalized = comparable_version(other_version)
         return dataclasses.replace(self, specifier=get_specifier(f"=={normalized}"))
 
     def _hash_key(self) -> tuple:
