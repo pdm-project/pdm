@@ -67,20 +67,20 @@ def test_resolve_requires_python(resolve):
 
 def test_resolve_allow_prereleases(resolve, repository):
     repository.add_candidate("foo", "1.0.0")
-    repository.add_candidate("foo", "1.1.0a0")
-    repository.add_candidate("bar", "1.0.0b0")
+    repository.add_candidate("foo", "1.1.0-alpha")
+    repository.add_candidate("bar", "1.0.0-beta")
 
     result = resolve(["foo"])
     assert result["foo"].version == "1.0.0"
 
     result = resolve(["foo"], allow_prereleases=True)
-    assert result["foo"].version == "1.1.0a0"
+    assert result["foo"].version == "1.1.0-alpha"
 
     result = resolve(["foo==1.1.0a0"])
-    assert result["foo"].version == "1.1.0a0"
+    assert result["foo"].version == "1.1.0-alpha"
 
     result = resolve(["bar"])
-    assert result["bar"].version == "1.0.0b0"
+    assert result["bar"].version == "1.0.0-beta"
 
     with pytest.raises(Exception):
         resolve(["bar"], allow_prereleases=False)

@@ -334,6 +334,15 @@ def normalize_name(name: str, lowercase: bool = True) -> str:
     return name.lower() if lowercase else name
 
 
+def comparable_version(version: str) -> Version:
+    """Normalize a version to make it valid in a specifier."""
+    parsed = Version(version)
+    if parsed.local is not None:
+        # strip the local part
+        parsed._version = parsed._version._replace(local=None)
+    return parsed
+
+
 def is_egg_link(dist: Distribution) -> bool:
     """Check if the distribution is an egg-link install"""
     return getattr(dist, "link_file", None) is not None
