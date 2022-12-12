@@ -724,3 +724,15 @@ def get_dist_location(dist: Distribution) -> str:
         editable = direct_url_data.get("dir_info", {}).get("editable", False)
         return f"{'-e ' if editable else ''}{path}"
     return ""
+
+
+def get_pep582_path(project: Project) -> str:
+    import importlib.resources
+
+    script_dir = project.global_config.config_file.parent / "pep582"
+    if script_dir.joinpath("sitecustomize.py").exists():
+        return str(script_dir)
+    script_dir.mkdir(parents=True, exist_ok=True)
+    with importlib.resources.open_binary("pdm.pep582", "sitecustomize.py") as f:
+        script_dir.joinpath("sitecustomize.py").write_bytes(f.read())
+    return str(script_dir)

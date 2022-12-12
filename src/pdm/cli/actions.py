@@ -26,6 +26,7 @@ from pdm.cli.utils import (
     find_importable_files,
     format_lockfile,
     format_resolution_impossible,
+    get_pep582_path,
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
@@ -44,8 +45,6 @@ from pdm.models.specifiers import get_specifier
 from pdm.project import Project
 from pdm.resolver import resolve
 from pdm.utils import cd, normalize_name
-
-PEP582_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pep582")
 
 
 def do_lock(
@@ -752,13 +751,16 @@ def ask_for_import(project: Project) -> None:
     do_import(project, str(filepath), key)
 
 
-def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
+def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
     """Print the export PYTHONPATH line to be evaluated by the shell."""
     import shellingham
 
+    pep582_path = get_pep582_path(project)
+    ui = project.core.ui
+
     if os.name == "nt":
         try:
-            set_env_in_reg("PYTHONPATH", PEP582_PATH)
+            set_env_in_reg("PYTHONPATH", pep582_path)
         except PermissionError:
             ui.echo(
                 "Permission denied, please run the terminal as administrator.",
@@ -771,7 +773,7 @@ def print_pep582_command(ui: termui.UI, shell: str = "AUTO") -> None:
             style="success",
         )
         return
-    lib_path = PEP582_PATH.replace("'", "\\'")
+    lib_path = pep582_path.replace("'", "\\'")
     if shell == "AUTO":
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()

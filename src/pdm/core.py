@@ -169,7 +169,7 @@ class Core:
             os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
 
         if options.pep582:
-            print_pep582_command(self.ui, options.pep582)
+            print_pep582_command(project, options.pep582)
             sys.exit(0)
 
         if root_script and root_script not in project.scripts:
