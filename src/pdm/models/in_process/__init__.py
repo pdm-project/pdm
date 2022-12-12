@@ -9,20 +9,13 @@ import importlib.resources
 import json
 import os
 import subprocess
-import tempfile
 from typing import Any, Generator
 
 
 @contextlib.contextmanager
 def _in_process_script(name: str) -> Generator[str, None, None]:
-    with importlib.resources.open_binary(__name__, name) as f:
-        fp, name = tempfile.mkstemp(".py", prefix="pdm_in_process_")
-        with os.fdopen(fp, "wb") as tmp:
-            tmp.write(f.read())
-    try:
-        yield name
-    finally:
-        os.remove(name)
+    with importlib.resources.path(__name__, name) as script:
+        yield str(script)
 
 
 @functools.lru_cache()
