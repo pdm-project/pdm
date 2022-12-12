@@ -462,6 +462,23 @@ class LockedRepository(BaseRepository):
             self._get_dependencies_from_lockfile,
         )
 
+    def _matching_keys(self, requirement: Requirement) -> Iterable[tuple]:
+        for key in self.candidate_info:
+            if requirement.name:
+                if key[0] != requirement.identify():
+                    continue
+            elif key[2] is not None:
+                if key[2] != url_without_fragments(
+                    getattr(requirement, "url", "")  # type: ignore
+                ):
+                    continue
+            else:
+                can_req = self.packages[key].req
+                if can_req.path != getattr(requirement, "path", None):  # type: ignore
+                    continue
+
+            yield key
+
     def find_candidates(
         self,
         requirement: Requirement,
@@ -473,9 +490,8 @@ class LockedRepository(BaseRepository):
             if candidate is not None:
                 yield candidate
                 return
-        for key, info in self.candidate_info.items():
-            if key[0] != requirement.identify():
-                continue
+        for key in self._matching_keys(requirement):
+            info = self.candidate_info[key]
             if not PySpecSet(info[1]).contains(
                 str(self.environment.interpreter.version), True
             ):
