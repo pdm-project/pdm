@@ -10,7 +10,7 @@ license = {text = "MIT"}
 dependencies = [
     "blinker",
     "certifi",
-    "packaging>=20.9",
+    "packaging>=20.9,!=22.0",
     "platformdirs",
     "rich>=12.3.0",
     "virtualenv>=20",
