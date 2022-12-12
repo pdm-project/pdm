@@ -12,11 +12,10 @@ from types import FrameType
 from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, cast
 
 from pdm import signals, termui
-from pdm.cli.actions import PEP582_PATH
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import KNOWN_HOOKS, HookManager
 from pdm.cli.options import skip_option
-from pdm.cli.utils import check_project_file
+from pdm.cli.utils import check_project_file, get_pep582_path
 from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
@@ -165,7 +164,7 @@ class TaskRunner:
             else:
                 process_env = {**dotenv_env, **process_env}
         pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
-        pythonpath = [PEP582_PATH] + [
+        pythonpath = [get_pep582_path(project)] + [
             p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")
         ]
         project_env = project.environment

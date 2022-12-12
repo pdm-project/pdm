@@ -241,7 +241,7 @@ class UpdateCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        from pdm.__version__ import parsed_version, read_version
+        from pdm.__version__ import __version__, read_version
 
         if options.head:
             package = f"pdm @ git+{PDM_REPO}@main"
@@ -249,10 +249,8 @@ class UpdateCommand(BaseCommand):
         else:
             version = get_latest_pdm_version_from_pypi(project, options.pre)
             assert version is not None, "No version found"
-            if parsed_version and parsed_version >= parse(version):
-                project.core.ui.echo(
-                    f"Already up-to-date: [primary]{parsed_version}[/]"
-                )
+            if parse(__version__) >= parse(version):
+                project.core.ui.echo(f"Already up-to-date: [primary]{__version__}[/]")
                 return
             package = f"pdm=={version}"
         pip_args = ["install", "--upgrade"] + shlex.split(options.pip_args) + [package]

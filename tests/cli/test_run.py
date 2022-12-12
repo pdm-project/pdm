@@ -9,7 +9,7 @@ import pytest
 
 from pdm import termui
 from pdm.cli import actions
-from pdm.cli.actions import PEP582_PATH
+from pdm.cli.utils import get_pep582_path
 from pdm.utils import cd
 
 
@@ -35,7 +35,7 @@ def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
     result = invoke(["add", "first"], obj=project)
     assert result.exit_code == 0, result.stderr
     env = os.environ.copy()
-    env.update({"PYTHONPATH": PEP582_PATH})
+    env.update({"PYTHONPATH": get_pep582_path(project)})
     output = subprocess.check_output(
         [str(project.python.executable), str(project.root.joinpath("main.py"))],
         env=env,
@@ -45,7 +45,7 @@ def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
 
 def test_auto_isolate_site_packages(project, invoke):
     env = os.environ.copy()
-    env.update({"PYTHONPATH": PEP582_PATH})
+    env.update({"PYTHONPATH": get_pep582_path(project)})
     proc = subprocess.run(
         [str(project.python.executable), "-c", "import sys;print(sys.path, sep='\\n')"],
         env=env,

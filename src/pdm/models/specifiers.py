@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from operator import attrgetter
-from pathlib import Path
 from typing import Any, Iterable, cast
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
@@ -11,7 +10,12 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from pdm.exceptions import InvalidPyVersion
 from pdm.models.versions import Version
 
-MAX_VERSIONS_FILE = Path(__file__).with_name("python_max_versions.json")
+
+def _read_max_versions() -> dict[Version, int]:
+    from importlib.resources import open_binary
+
+    with open_binary("pdm.models", "python_max_versions.json") as fp:
+        return {Version(k): v for k, v in json.load(fp).items()}
 
 
 @lru_cache()
@@ -51,10 +55,7 @@ def _normalize_op_specifier(op: str, version_str: str) -> tuple[str, Version]:
 class PySpecSet(SpecifierSet):
     """A custom SpecifierSet that supports merging with logic operators (&, |)."""
 
-    PY_MAX_MINOR_VERSION = {
-        Version(key): value
-        for key, value in json.loads(MAX_VERSIONS_FILE.read_text()).items()
-    }
+    PY_MAX_MINOR_VERSION = _read_max_versions()
     MAX_MAJOR_VERSION = max(PY_MAX_MINOR_VERSION)[:1].bump()
 
     def __init__(self, version_str: str = "", analyze: bool = True) -> None:

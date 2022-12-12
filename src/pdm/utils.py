@@ -405,10 +405,10 @@ def deprecation_warning(
     """Show a deprecation warning with the given message and raise an error
     after a specified version.
     """
-    from pdm.__version__ import parsed_version
+    from pdm.__version__ import __version__
 
-    if raise_since is not None and parsed_version:
-        if parsed_version >= Version(raise_since):
+    if raise_since is not None:
+        if Version(__version__) >= Version(raise_since):
             raise DeprecationWarning(message)
     warnings.warn(message, DeprecationWarning, stacklevel=stacklevel + 1)
 
