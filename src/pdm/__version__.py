@@ -1,11 +1,13 @@
+import importlib.resources
+
 from pdm.compat import importlib_metadata
 
 
 def read_version() -> str:
-    return importlib_metadata.version(__package__ or "pdm")
+    try:
+        return importlib_metadata.version(__package__ or "pdm")
+    except importlib_metadata.PackageNotFoundError:
+        return importlib.resources.read_text("pdm.models", "VERSION").strip()
 
 
-try:
-    __version__ = read_version()
-except importlib_metadata.PackageNotFoundError:
-    __version__ = "0.0.0+local"
+__version__ = read_version()

@@ -53,8 +53,9 @@ Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
 [project.scripts]
 pdm = "pdm.core:main"
 
-[tool.pdm]
-version = {source = "scm"}
+[tool.pdm.version]
+source = "scm"
+write_to = "pdm/models/VERSION"
 
 [tool.pdm.build]
 excludes = ["./**/.git"]
