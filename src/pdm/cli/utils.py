@@ -729,6 +729,10 @@ def get_dist_location(dist: Distribution) -> str:
 def get_pep582_path(project: Project) -> str:
     import importlib.resources
 
+    script_dir = Path(__file__).parent.parent / "pep582"
+    if script_dir.exists():
+        return str(script_dir)
+
     script_dir = project.global_config.config_file.parent / "pep582"
     if script_dir.joinpath("sitecustomize.py").exists():
         return str(script_dir)

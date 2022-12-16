@@ -6,6 +6,7 @@ Release v2.3.3 (2022-12-15)
 - Allow relative paths in `build-system.requires`, since `build` and `hatch` both support it. Be aware it is not allowed in the standard. [#1560](https://github.com/pdm-project/pdm/issues/1560)
 - Strip the local part when building a specifier for comparison with the package version. This is not permitted by PEP 508 as implemented by `packaging 22.0`. [#1562](https://github.com/pdm-project/pdm/issues/1562)
 - Update the version for check_update after self update [#1563](https://github.com/pdm-project/pdm/issues/1563)
+- Replace the `__file__` usages with `importlib.resources`, to make PDM usable in a zipapp. [#1567](https://github.com/pdm-project/pdm/issues/1567)
 - Fix the matching problem of packages in the lockfile. [#1569](https://github.com/pdm-project/pdm/issues/1569)
 
 ### Dependencies
