@@ -16,7 +16,7 @@ from pdm.cli.utils import Package, build_dependency_graph
 from pdm.compat import Distribution, importlib_metadata
 from pdm.models.environment import BareEnvironment, WorkingSet
 from pdm.project import Project
-from pdm.utils import normalize_name
+from pdm.utils import is_in_zipapp, normalize_name
 
 PDM_REPO = "https://github.com/pdm-project/pdm"
 
@@ -59,9 +59,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         subparsers = parser.add_subparsers(title="Sub commands")
         ListCommand.register_to(subparsers)
-        AddCommand.register_to(subparsers)
-        RemoveCommand.register_to(subparsers)
-        UpdateCommand.register_to(subparsers)
+        if not is_in_zipapp():
+            AddCommand.register_to(subparsers)
+            RemoveCommand.register_to(subparsers)
+            UpdateCommand.register_to(subparsers)
         parser.set_defaults(search_parent=False)
         self.parser = parser
 

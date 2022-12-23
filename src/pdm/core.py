@@ -30,6 +30,7 @@ from pdm.installers import InstallManager, Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
+from pdm.utils import is_in_zipapp
 
 COMMANDS_MODULE_PATH: str = importlib.import_module(
     "pdm.cli.commands"
@@ -200,7 +201,7 @@ class Core:
                     )
                 sys.exit(1)
             else:
-                if project.config["check_update"]:
+                if project.config["check_update"] and not is_in_zipapp():
                     check_update(project)
 
     def register_command(

@@ -429,3 +429,8 @@ def path_without_fragments(path: str) -> Path:
     if not match:
         return Path(path)
     return Path(match.group(1))
+
+
+def is_in_zipapp() -> bool:
+    """Check if the current process is running in a zipapp"""
+    return not os.path.exists(__file__)
