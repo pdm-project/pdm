@@ -5,9 +5,6 @@ import os
 from typing import Any, Sequence
 
 from pdm.compat import Protocol
-from pdm.termui import UI
-
-ui = UI()
 
 
 class ActionCallback(Protocol):
