@@ -186,8 +186,7 @@ known_third_party = [
 
 [tool.pytest.ini_options]
 filterwarnings = [
-  "ignore::DeprecationWarning",
-  "ignore::coverage.exceptions.CoverageWarning"
+  "ignore::DeprecationWarning"
 ]
 markers = [
     "network: Tests that require network",
