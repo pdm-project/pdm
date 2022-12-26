@@ -48,8 +48,7 @@ def compress_for_rename(paths: Iterable[str]) -> set[str]:
     unchecked = sorted({os.path.split(p)[0] for p in case_map.values()}, key=len)
     wildcards: set[str] = set()
 
-    def norm_join(*a):
-        # type: (str) -> str
+    def norm_join(*a: str) -> str:
         return os.path.normcase(os.path.join(*a))
 
     for root in unchecked:
@@ -58,10 +57,13 @@ def compress_for_rename(paths: Iterable[str]) -> set[str]:
             continue
 
         all_files: set[str] = set()
-        all_subdirs: set[str] = set()
         for dirname, subdirs, files in os.walk(root):
-            all_subdirs.update(norm_join(root, dirname, d) for d in subdirs)
             all_files.update(norm_join(root, dirname, f) for f in files)
+            for d in subdirs:
+                norm_path = norm_join(root, dirname, d)
+                if os.path.islink(norm_path):
+                    all_files.add(norm_path)
+
         # If all the files we found are in our remaining set of files to
         # remove, then remove them from the latter set and add a wildcard
         # for the directory.
