@@ -1,3 +1,16 @@
+Release v2.3.4 (2022-12-27)
+---------------------------
+
+### Features & Improvements
+
+- Detect PDM inside a zipapp and disable some functions. [#1578](https://github.com/pdm-project/pdm/issues/1578)
+
+### Bug Fixes
+
+- Don't write `sitecustomize` to the home directory if it exists in the filesystem(not packed in a zipapp). [#1572](https://github.com/pdm-project/pdm/issues/1572)
+- Fix a bug that a directory is incorrectly marked as to be deleted when it contains symlinks. [#1580](https://github.com/pdm-project/pdm/issues/1580)
+
+
 Release v2.3.3 (2022-12-15)
 ---------------------------
 
