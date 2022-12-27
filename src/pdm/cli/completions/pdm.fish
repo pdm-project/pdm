@@ -305,3 +305,9 @@ complete -c pdm -A -n '__fish_seen_subcommand_from use' -l verbose -d '-v for de
 
 # venv
 complete -c pdm -A -n '__fish_seen_subcommand_from venv' -l help -d 'show this help message and exit'
+set -l venv_subcommands create list remove activate purge
+complete -f -c pdm -n '__fish_seen_subcommand_from venv' -n 'not __fish_seen_subcommand_from $venv_subcommands' -a create -d "Create a virtualenv"
+complete -f -c pdm -n '__fish_seen_subcommand_from venv' -n 'not __fish_seen_subcommand_from $venv_subcommands' -a list -d "List all virtualenvs associated with this project"
+complete -f -c pdm -n '__fish_seen_subcommand_from venv' -n 'not __fish_seen_subcommand_from $venv_subcommands' -a remove -d "Remove the virtualenv with the given name"
+complete -f -c pdm -n '__fish_seen_subcommand_from venv' -n 'not __fish_seen_subcommand_from $venv_subcommands' -a activate -d "Activate the virtualenv with the given name"
+complete -f -c pdm -n '__fish_seen_subcommand_from venv' -n 'not __fish_seen_subcommand_from $venv_subcommands' -a purge -d "Purge selected/all created Virtualenvs"
