@@ -189,7 +189,7 @@ class Project:
                 if match_version(python):
                     note(
                         f"Inside an active virtualenv [success]{venv_in_env}[/], "
-                        "reuse it."
+                        "reusing it."
                     )
                     return python
             # otherwise, get a venv associated with the project
@@ -351,7 +351,7 @@ class Project:
 
     @property
     def default_source(self) -> Source:
-        """Get the default source of from the pypi setting"""
+        """Get the default source from the pypi setting"""
         return cast(
             "Source",
             {
