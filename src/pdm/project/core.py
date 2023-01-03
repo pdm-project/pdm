@@ -150,10 +150,9 @@ class Project:
         if not self._python:
             self._python = self.resolve_interpreter()
             if self._python.major < 3:
-                deprecation_warning(
-                    "Python 2.7 has reached EOL and PDM will remove the support "
-                    "in version 2.0. Please upgrade your Python to 3.6 or later.",
-                    raise_since="2.0",
+                raise PdmUsageError(
+                    "Python 2.7 has reached EOL and PDM no longer supports it. "
+                    "Please upgrade your Python to 3.6 or later.",
                 )
         return self._python
 
