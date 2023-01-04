@@ -1,99 +1,46 @@
 from __future__ import annotations
 
-import collections
-import functools
-import json
 import os
 import shutil
-import sys
-import tempfile
-from dataclasses import dataclass
-from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Callable, Iterable, Mapping
+from typing import TYPE_CHECKING, Iterable
 from urllib.parse import unquote, urlparse
 
 import pytest
-import requests
-from packaging.version import parse as parse_version
 from unearth.vcs import Git, vcs_support
 
-from pdm._types import CandidateInfo
-from pdm.cli.actions import do_init
-from pdm.cli.hooks import HookManager
-from pdm.core import Core
-from pdm.exceptions import CandidateInfoNotFound
-from pdm.installers.installers import install_wheel
-from pdm.models.backends import get_backend
-from pdm.models.candidates import Candidate
-from pdm.models.environment import Environment, PrefixEnvironment
-from pdm.models.repositories import BaseRepository
-from pdm.models.requirements import (
-    Requirement,
-    filter_requirements_with_extras,
-    parse_requirement,
-)
-from pdm.models.session import PDMSession
-from pdm.project.config import Config
-from pdm.project.core import Project
-from pdm.utils import find_python_in_path, normalize_name, path_to_url
 from tests import FIXTURES
+
+if TYPE_CHECKING:
+    from pdm.pytest import IndexesDefinition, PDMCallable
+
 
 os.environ.update(CI="1", PDM_CHECK_UPDATE="0")
 
+pytest_plugins = [
+    "pdm.pytest",
+]
 
-class LocalFileAdapter(requests.adapters.BaseAdapter):
-    def __init__(self, aliases, overrides=None, strip_suffix=False):
-        super().__init__()
-        self.aliases = sorted(
-            aliases.items(), key=lambda item: len(item[0]), reverse=True
-        )
-        self.overrides = overrides if overrides is not None else {}
-        self.strip_suffix = strip_suffix
-        self._opened_files = []
 
-    def get_file_path(self, path):
-        for prefix, base_path in self.aliases:
-            if path.startswith(prefix):
-                file_path = base_path / path[len(prefix) :].lstrip("/")
-                if not self.strip_suffix:
-                    return file_path
-                return next(
-                    (p for p in file_path.parent.iterdir() if p.stem == file_path.name),
-                    None,
-                )
-        return None
+@pytest.fixture
+def index() -> dict[str, str]:
+    return {}
 
-    def send(
-        self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None
-    ):
-        request_path = urlparse(request.url).path
-        file_path = self.get_file_path(request_path)
-        response = requests.models.Response()
-        response.url = request.url
-        response.request = request
-        if request_path in self.overrides:
-            response.status_code = 200
-            response.reason = "OK"
-            response.raw = BytesIO(self.overrides[request_path])
-            response.headers["Content-Type"] = "text/html"
-        elif file_path is None or not file_path.exists():
-            response.status_code = 404
-            response.reason = "Not Found"
-            response.raw = BytesIO(b"Not Found")
-        else:
-            response.status_code = 200
-            response.reason = "OK"
-            response.raw = file_path.open("rb")
-            if file_path.suffix == ".html":
-                response.headers["Content-Type"] = "text/html"
-        self._opened_files.append(response.raw)
-        return response
 
-    def close(self):
-        for fp in self._opened_files:
-            fp.close()
-        self._opened_files.clear()
+@pytest.fixture
+def pypi_indexes(index) -> IndexesDefinition:
+    return {
+        "http://fixtures.test/": {
+            "/": FIXTURES,
+        },
+        "https://my.pypi.org/": (
+            {
+                "/simple": FIXTURES / "index",
+            },
+            index,
+            True,
+        ),
+    }
 
 
 class MockGit(Git):
@@ -110,267 +57,28 @@ class MockGit(Git):
         return rev == "1234567890abcdef"
 
 
-class _FakeLink:
-    is_wheel = False
-
-
-class TestRepository(BaseRepository):
-    def __init__(self, sources, environment):
-        super().__init__(sources, environment)
-        self._pypi_data = {}
-        self.load_fixtures()
-
-    def get_raw_dependencies(self, candidate):
-        try:
-            pypi_data = self._pypi_data[candidate.req.key][candidate.version]
-        except KeyError:
-            return candidate.prepare(self.environment).metadata.requires or []
-        else:
-            return pypi_data.get("dependencies", [])
-
-    def add_candidate(self, name, version, requires_python=""):
-        pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(
-            version, {}
-        )
-        pypi_data["requires_python"] = requires_python
-
-    def add_dependencies(self, name, version, requirements):
-        pypi_data = self._pypi_data[normalize_name(name)][version]
-        pypi_data.setdefault("dependencies", []).extend(requirements)
-
-    def _get_dependencies_from_fixture(
-        self, candidate: Candidate
-    ) -> tuple[list[str], str, str]:
-        try:
-            pypi_data = self._pypi_data[candidate.req.key][candidate.version]
-        except KeyError:
-            raise CandidateInfoNotFound(candidate)
-        deps = pypi_data.get("dependencies", [])
-        deps = filter_requirements_with_extras(
-            candidate.req.name, deps, candidate.req.extras or ()
-        )
-        return deps, pypi_data.get("requires_python", ""), ""
-
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
-        return (
-            self._get_dependencies_from_cache,
-            self._get_dependencies_from_fixture,
-            self._get_dependencies_from_metadata,
-        )
-
-    def get_hashes(self, candidate: Candidate) -> dict[str, str] | None:
-        return {}
-
-    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
-        for version, candidate in sorted(
-            self._pypi_data.get(requirement.key, {}).items(),
-            key=lambda item: parse_version(item[0]),
-            reverse=True,
-        ):
-            c = Candidate(
-                requirement,
-                name=requirement.project_name,
-                version=version,
-            )
-            c.requires_python = candidate.get("requires_python", "")
-            c.link = _FakeLink()
-            yield c
-
-    def load_fixtures(self):
-        json_file = FIXTURES / "pypi.json"
-        self._pypi_data = json.loads(json_file.read_text())
+@pytest.fixture
+def repository_pypi_json() -> Path:
+    return FIXTURES / "pypi.json"
 
 
 @pytest.fixture(scope="session")
-def build_env():
-    with tempfile.TemporaryDirectory("-env", prefix="pdm-test-") as d:
-        p = Core().create_project(d)
-        env = PrefixEnvironment(p, d)
+def build_env_wheels() -> Iterable[Path]:
+    return [
+        FIXTURES / "artifacts" / wheel_name
         for wheel_name in (
             "pdm_pep517-1.0.0-py3-none-any.whl",
             "poetry_core-1.3.2-py3-none-any.whl",
             "setuptools-65.4.1-py3-none-any.whl",
             "wheel-0.37.1-py2.py3-none-any.whl",
             "flit_core-3.6.0-py3-none-any.whl",
-        ):
-            wheel = FIXTURES / "artifacts" / wheel_name
-            install_wheel(str(wheel), env)
-        yield d
-
-
-class Metadata(dict):
-    def get_all(self, name, fallback=None):
-        return [self[name]] if name in self else fallback
-
-    def __getitem__(self, __key):
-        return dict.get(self, __key)
-
-
-class Distribution:
-    def __init__(self, key, version, editable=False, metadata=None):
-        self.version = version
-        self.link_file = "editable" if editable else None
-        self.dependencies = []
-        self._metadata = {"Name": key, "Version": version}
-        if metadata:
-            self._metadata.update(metadata)
-        self.name = key
-
-    @property
-    def metadata(self):
-        return Metadata(self._metadata)
-
-    def as_req(self):
-        return parse_requirement(f"{self.name}=={self.version}")
-
-    @property
-    def requires(self):
-        return self.dependencies
-
-    def read_text(self, path):
-        return None
-
-
-class MockWorkingSet(collections.abc.MutableMapping):
-    def __init__(self, *args, **kwargs):
-        self._data = {}
-
-    def add_distribution(self, dist):
-        self._data[dist.name] = dist
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __setitem__(self, key, value):
-        self._data[key] = value
-
-    def __delitem__(self, key):
-        del self._data[key]
-
-
-@pytest.fixture()
-def working_set(mocker, repository):
-
-    rv = MockWorkingSet()
-    mocker.patch.object(Environment, "get_working_set", return_value=rv)
-
-    def install(candidate):
-        key = normalize_name(candidate.name)
-        dist = Distribution(key, candidate.version, candidate.req.editable)
-        dist.dependencies = repository.get_raw_dependencies(candidate)
-        rv.add_distribution(dist)
-
-    def uninstall(dist):
-        del rv[dist.name]
-
-    install_manager = mocker.MagicMock()
-    install_manager.install.side_effect = install
-    install_manager.uninstall.side_effect = uninstall
-    mocker.patch(
-        "pdm.installers.Synchronizer.get_manager", return_value=install_manager
-    )
-
-    yield rv
-
-
-def get_pypi_session(*args, overrides=None, **kwargs):
-    session = PDMSession(*args, **kwargs)
-    session.mount("http://fixtures.test/", LocalFileAdapter({"/": FIXTURES}))
-    session.mount(
-        "https://my.pypi.org/",
-        LocalFileAdapter({"/simple": FIXTURES / "index"}, overrides, strip_suffix=True),
-    )
-    return session
-
-
-def remove_pep582_path_from_pythonpath(pythonpath):
-    """Remove all pep582 paths of PDM from PYTHONPATH"""
-    paths = pythonpath.split(os.pathsep)
-    paths = [path for path in paths if "pdm/pep582" not in path]
-    return os.pathsep.join(paths)
-
-
-@pytest.fixture()
-def core():
-    old_config_map = Config._config_map.copy()
-    # Turn off use_venv by default, for testing
-    Config._config_map["python.use_venv"].default = False
-    main = Core()
-    yield main
-    # Restore the config items
-    Config._config_map = old_config_map
-
-
-@pytest.fixture()
-def index():
-    return {}
-
-
-@pytest.fixture()
-def project_no_init(tmp_path, mocker, core, index, monkeypatch, build_env):
-    test_home = tmp_path / ".pdm-home"
-    test_home.mkdir(parents=True)
-    test_home.joinpath("config.toml").write_text(
-        '[global_project]\npath = "{}"\n'.format(
-            test_home.joinpath("global-project").as_posix()
         )
-    )
-    p = core.create_project(
-        tmp_path, global_config=test_home.joinpath("config.toml").as_posix()
-    )
-    p.global_config["venv.location"] = str(tmp_path / "venvs")
-    mocker.patch(
-        "pdm.models.environment.PDMSession",
-        functools.partial(get_pypi_session, overrides=index),
-    )
-    mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=build_env)
-    tmp_path.joinpath("caches").mkdir(parents=True)
-    p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
-    p.project_config["python.path"] = find_python_in_path(sys.base_prefix).as_posix()
-    monkeypatch.delenv("VIRTUAL_ENV", raising=False)
-    monkeypatch.delenv("CONDA_PREFIX", raising=False)
-    monkeypatch.delenv("PEP582_PACKAGES", raising=False)
-    monkeypatch.delenv("NO_SITE_PACKAGES", raising=False)
-    pythonpath = os.getenv("PYTHONPATH", "")
-    pythonpath = remove_pep582_path_from_pythonpath(pythonpath)
-    if pythonpath:
-        monkeypatch.setenv("PYTHONPATH", pythonpath)
-    yield p
-
-
-@pytest.fixture()
-def local_finder(project_no_init):
-    artifacts_dir = str(FIXTURES / "artifacts")
-    project_no_init.pyproject.settings["source"] = [
-        {
-            "type": "find_links",
-            "verify_ssl": False,
-            "url": path_to_url(artifacts_dir),
-            "name": "pypi",
-        }
     ]
-    project_no_init.pyproject.write()
 
 
-@pytest.fixture()
-def project(project_no_init):
-    hooks = HookManager(project_no_init, ["post_init"])
-    do_init(
-        project_no_init,
-        "test_project",
-        "0.0.0",
-        hooks=hooks,
-        build_backend=get_backend("pdm-pep517"),
-    )
-    # Clean the cached property
-    project_no_init._environment = None
-    return project_no_init
+@pytest.fixture
+def local_finder_artifacts() -> Path():
+    return FIXTURES / "artifacts"
 
 
 def copytree(src: Path, dst: Path) -> None:
@@ -397,13 +105,6 @@ def fixture_project(project_no_init):
 
 
 @pytest.fixture()
-def repository(project, mocker, local_finder):
-    rv = TestRepository([], project.environment)
-    mocker.patch.object(project, "get_repository", return_value=rv)
-    return rv
-
-
-@pytest.fixture()
 def vcs(monkeypatch):
     monkeypatch.setattr(vcs_support, "_registry", {"git": MockGit})
     return
@@ -419,76 +120,6 @@ def is_dev(request):
     return request.param
 
 
-@dataclass
-class RunResult:
-    exit_code: int
-    stdout: str
-    stderr: str
-    exception: Exception | None = None
-
-    @property
-    def output(self) -> str:
-        return self.stdout
-
-    @property
-    def outputs(self) -> str:
-        return self.stdout + self.stderr
-
-    def print(self):
-        print("# exit code:", self.exit_code)
-        print("# stdout:", self.stdout, sep="\n")
-        print("# stderr:", self.stderr, sep="\n")
-
-
-@pytest.fixture()
-def invoke(core, monkeypatch):
-    def caller(
-        args,
-        strict: bool = False,
-        input: str | None = None,
-        obj: Project | None = None,
-        env: Mapping[str, str] | None = None,
-        **kwargs,
-    ):
-        __tracebackhide__ = True
-
-        stdin = StringIO(input)
-        stdout = StringIO()
-        stderr = StringIO()
-        exit_code = 0
-        exception = None
-
-        with monkeypatch.context() as m:
-            m.setattr("sys.stdin", stdin)
-            m.setattr("sys.stdout", stdout)
-            m.setattr("sys.stderr", stderr)
-            for key, value in (env or {}).items():
-                m.setenv(key, value)
-            try:
-                core.main(args, "pdm", obj=obj, **kwargs)
-            except SystemExit as e:
-                exit_code = e.code
-            except Exception as e:
-                exit_code = 1
-                exception = e
-
-        result = RunResult(exit_code, stdout.getvalue(), stderr.getvalue(), exception)
-
-        if strict and result.exit_code != 0:
-            raise RuntimeError(
-                f"Call command {args} failed({result.exit_code}): {result.stderr}"
-            )
-        return result
-
-    return caller
-
-
-VENV_BACKENDS = ["virtualenv", "venv"]
-
-
-@pytest.fixture(params=VENV_BACKENDS)
-def venv_backends(project, request):
-    project.project_config["venv.backend"] = request.param
-    project.project_config["venv.prompt"] = "{project_name}-{python_version}"
-    project.project_config["python.use_venv"] = True
-    shutil.rmtree(project.root / "__pypackages__", ignore_errors=True)
+@pytest.fixture
+def invoke(pdm: PDMCallable) -> PDMCallable:
+    return pdm
