@@ -368,9 +368,11 @@ class Project:
             if all(source.get("name") != "pypi" for source in sources):
                 sources.insert(0, self.default_source)
             sources.extend(self.global_config.iter_sources())
-        for source in sources:
-            source["url"] = expand_env_vars_in_auth(source["url"])
-        return sources
+        expanded_sources = [
+            cast("Source", {**source, "url": expand_env_vars_in_auth(source["url"])})
+            for source in sources
+        ]
+        return expanded_sources
 
     def get_repository(
         self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True

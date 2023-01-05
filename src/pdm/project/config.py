@@ -447,7 +447,7 @@ class Config(MutableMapping[str, str]):
     def get_repository_config(self, name_or_url: str) -> RepositoryConfig | None:
         """Get a repository by name or url."""
         if not self.is_global:  # pragma: no cover
-            raise PdmUsageError("No repository config in project config.")
+            raise NoConfigError("repository")
         repositories: Mapping[str, Mapping[str, str | None]] = self._data.get(
             REPOSITORY, {}
         )
