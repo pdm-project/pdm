@@ -4,16 +4,16 @@ import collections
 import dataclasses
 import os
 from pathlib import Path
-from typing import Any, Callable, Iterator, Mapping, MutableMapping, TypeVar
+from typing import Any, Callable, Iterator, Mapping, MutableMapping, cast
 
 import platformdirs
 import rich.theme
 import tomlkit
 
 from pdm import termui
+from pdm._types import Source
 from pdm.exceptions import NoConfigError, PdmUsageError
 
-T = TypeVar("T")
 ui = termui.UI()
 
 REPOSITORY = "repository"
@@ -50,9 +50,11 @@ def load_config(file_path: Path) -> dict[str, Any]:
     """
 
     def get_item(sub_data: Mapping[str, Any]) -> Mapping[str, Any]:
-        result = {}
+        result: dict[str, Any] = {}
         for k, v in sub_data.items():
-            if k != REPOSITORY and isinstance(v, Mapping):
+            if k == "pypi":
+                result.update((f"{k}.{sub_k}", sub_v) for sub_k, sub_v in v.items())
+            elif k != REPOSITORY and isinstance(v, Mapping):
                 result.update(
                     {f"{k}.{sub_k}": sub_v for sub_k, sub_v in get_item(v).items()}
                 )
@@ -197,9 +199,21 @@ class Config(MutableMapping[str, str]):
         "pypi.verify_ssl": ConfigItem(
             "Verify SSL certificate when query PyPI", True, coerce=ensure_boolean
         ),
+        "pypi.username": ConfigItem(
+            "The username to access PyPI", env_var="PDM_PYPI_USERNAME"
+        ),
+        "pypi.password": ConfigItem(
+            "The password to access PyPI", env_var="PDM_PYPI_PASSWORD"
+        ),
         "pypi.ca_certs": ConfigItem(
             "Path to a CA certificate bundle used for verifying the identity "
             "of the PyPI server",
+        ),
+        "pypi.ignore_stored_index": ConfigItem(
+            "Ignore the configured indexes",
+            False,
+            env_var="PDM_IGNORE_STORED_INDEX",
+            coerce=ensure_boolean,
         ),
         "pypi.client_cert": ConfigItem(
             "Path to client certificate file, or combined cert/key file",
@@ -285,6 +299,11 @@ class Config(MutableMapping[str, str]):
     def self_data(self) -> dict[str, Any]:
         return dict(self._file_data)
 
+    def iter_sources(self) -> Iterator[Source]:
+        for name, data in self._data.items():
+            if name.startswith("pypi.") and name not in self._config_map:
+                yield cast(Source, dict(data, name=name))
+
     def _save_config(self) -> None:
         """Save the changed to config file."""
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -314,6 +333,12 @@ class Config(MutableMapping[str, str]):
             if len(parts) >= 3 and parts[2] == "password" and value:
                 return "<hidden>"
             return value
+        elif parts[0] == "pypi" and key not in self._config_map:
+            index_key = ".".join(parts[:2])
+            if index_key not in self._data:
+                raise KeyError(f"No PyPI index named {parts[1]}")
+            source = self._data[index_key]
+            return source[parts[2]] if len(parts) >= 3 else source
 
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
@@ -341,6 +366,13 @@ class Config(MutableMapping[str, str]):
             self._file_data.setdefault(parts[0], {}).setdefault(
                 parts[1], {}
             ).setdefault(parts[2], value)
+            self._save_config()
+            return
+        if parts[0] == "pypi" and key not in self._config_map:
+            if len(parts) < 3:
+                raise PdmUsageError("Set index config with [success]pypi.{name}.{attr}")
+            index_key = ".".join(parts[:2])
+            self._file_data.setdefault(index_key, {})[parts[2]] = value
             self._save_config()
             return
         if key not in self._config_map and key not in self.deprecated:
@@ -371,10 +403,10 @@ class Config(MutableMapping[str, str]):
     def __iter__(self) -> Iterator[str]:
         keys: set[str] = set()
         for key in self._data:
-            if key in self._config_map:
-                keys.add(key)
-            elif key in self.deprecated:
+            if key in self.deprecated:
                 keys.add(self.deprecated[key])
+            elif key != REPOSITORY:
+                keys.add(key)
         return iter(keys)
 
     def __delitem__(self, key: str) -> None:
@@ -386,6 +418,15 @@ class Config(MutableMapping[str, str]):
                 del self._file_data.get(REPOSITORY, {}).get(parts[1], {})[parts[2]]
             else:
                 del self._file_data.get(REPOSITORY, {})[parts[1]]
+            self._save_config()
+            return
+        if parts[0] == "pypi" and key not in self._config_map:
+            if len(parts) < 2:
+                raise PdmUsageError("Should specify the name of index")
+            if len(parts) >= 3:
+                del self._file_data.get("pypi", {}).get(parts[1], {})[parts[2]]
+            else:
+                del self._file_data.get("pypi", {})[parts[1]]
             self._save_config()
             return
         config_key = self.deprecated.get(key, key)
@@ -406,7 +447,7 @@ class Config(MutableMapping[str, str]):
     def get_repository_config(self, name_or_url: str) -> RepositoryConfig | None:
         """Get a repository by name or url."""
         if not self.is_global:  # pragma: no cover
-            raise PdmUsageError("No repository config in project config.")
+            raise NoConfigError("repository")
         repositories: Mapping[str, Mapping[str, str | None]] = self._data.get(
             REPOSITORY, {}
         )

@@ -44,10 +44,10 @@ class Command(BaseCommand):
                 err=True,
             )
             options.key = project.project_config.deprecated[options.key]
-        if options.key.split(".")[0] == "repository":
+        try:
+            value = project.project_config[options.key]
+        except KeyError:
             value = project.global_config[options.key]
-        else:
-            value = project.config[options.key]
         project.core.ui.echo(value)
 
     def _set_config(self, project: Project, options: argparse.Namespace) -> None:
@@ -77,6 +77,8 @@ class Command(BaseCommand):
             elif key not in Config._config_map:
                 continue
             extra_style = "dim" if superseded else None
+            if canonical_key not in Config._config_map:
+                continue
             config_item = Config._config_map[canonical_key]
             self.ui.echo(
                 f"[warning]# {config_item.description}",

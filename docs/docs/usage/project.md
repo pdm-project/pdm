@@ -98,6 +98,47 @@ If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROO
 
 You can find all available configuration items in [Configuration Page](configuration.md).
 
+## Configure PyPI indexes
+
+From 2.4.0, PDM supports multiple PyPI indexes in the configuration file. To add a new index, include the following in the configuration file:
+
+```toml
+[pypi.extra]
+url = "https://extra.pypi.org/simple"
+verify_ssl = false
+```
+
+The available options are:
+
+- `url`: The URL of the index
+- `verify_ssl`: (Optional)Whether to verify SSL certificates, default to `true`
+- `username`: (Optional)The username for the index
+- `password`: (Optional)The password for the index
+- `type`: (Optional) `index` or `find_links`, default to `index`
+
+To configure the **main** index, omit the name of the index:
+
+```toml
+[pypi]
+url = "https://pypi.org/simple"
+verify_ssl = true
+```
+
+The index config can be also retrieved or updated via `pdm config` command:
+
+```bash
+# Get the url of the index named "extra"
+pdm config pypi.extra.url
+# Set the username and password of the index named "extra"
+pdm config pypi.extra.username "foo"
+pdm config pypi.extra.password "password4foo"
+```
+
+!!! NOTE
+    Configured indexes will be tried **after** the sources in `pyproject.toml`, if you want to completely ignore the
+    locally configured indexes, including the main index, set the config value `pypi.ignore_stored_index`
+    to `False` and only the sources in `pyproject.toml` will be honored.
+
 ## Publish the project to PyPI
 
 With PDM, you can build and then upload your project to PyPI in one step.
@@ -140,9 +181,11 @@ ca_certs = "/path/to/custom-cacerts.pem"
 A PEM-encoded Certificate Authority bundle (`ca_certs`) can be used for local / custom PyPI repositories where the server certificate is not signed by the standard [certifi](https://github.com/certifi/python-certifi/blob/master/certifi/cacert.pem) CA bundle.
 
 !!! NOTE
-    You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
+    Repositories are different from indexes in the previous section. Repositories are for publishing while indexes are for locking
+    and resolving. They don't share the configuration.
 
 !!! TIP
+    You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
     The username, password, and certificate authority bundle can be passed in from the command line for `pdm publish` via `--username`, `--password`, and `--ca-certs`, respectively.
 
 To change the repository config from the command line, use the [`pdm config`](cli_reference.md#exec-0--config) command:
