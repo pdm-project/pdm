@@ -100,7 +100,7 @@ You can find all available configuration items in [Configuration Page](configura
 
 ## Configure PyPI indexes
 
-From 2.4.0, PDM supports multiple PyPI indexes in the system/home configuration. To add a new index, include the following in the configuration file:
+From 2.4.0, PDM supports multiple PyPI indexes in the configuration file. To add a new index, include the following in the configuration file:
 
 ```toml
 [pypi.extra]
