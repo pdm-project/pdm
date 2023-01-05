@@ -15,8 +15,8 @@ import unearth
 
 from pdm import termui
 from pdm.compat import cached_property
-from pdm.exceptions import BuildError
-from pdm.models.auth import make_basic_auth
+from pdm.exceptions import BuildError, PdmUsageError
+from pdm.models.auth import PdmBasicAuth
 from pdm.models.in_process import (
     get_pep508_environment,
     get_python_abi_tag,
@@ -82,7 +82,7 @@ class Environment:
         self.python_requires = project.python_requires
         self.project = project
         self.interpreter = project.python
-        self.auth = make_basic_auth(
+        self.auth = PdmBasicAuth(
             self.project.sources,
             self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )
@@ -149,6 +149,12 @@ class Environment:
         """
         if sources is None:
             sources = self.project.sources
+        if not sources:
+            raise PdmUsageError(
+                "You must specify at least one index in pyproject.toml or config.\n"
+                "The 'pypi.ignore_stored_index' config value is "
+                f"{self.project.config['pypi.ignore_stored_index']}"
+            )
 
         index_urls, find_links, trusted_hosts = get_index_urls(sources)
 
@@ -307,7 +313,7 @@ class BareEnvironment(Environment):
         self.python_requires = project.python_requires
         self.project = project
         self.interpreter = PythonInfo.from_path(sys.executable)
-        self.auth = make_basic_auth(
+        self.auth = PdmBasicAuth(
             self.project.sources,
             self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )

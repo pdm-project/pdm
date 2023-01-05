@@ -10,6 +10,8 @@ class Source(TypedDict, total=False):
     verify_ssl: bool
     name: str
     type: Literal["index", "find_links"]
+    username: str
+    password: str
 
 
 RequirementDict = Union[str, Dict[str, Union[str, bool]]]

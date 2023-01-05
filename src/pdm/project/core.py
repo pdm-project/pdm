@@ -7,7 +7,6 @@ import shutil
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, cast
-from urllib.parse import urlparse
 
 import platformdirs
 import tomlkit
@@ -357,24 +356,21 @@ class Project:
                 "url": self.config["pypi.url"],
                 "verify_ssl": self.config["pypi.verify_ssl"],
                 "name": "pypi",
+                "username": self.config.get("pypi.username"),
+                "password": self.config.get("pypi.password"),
             },
         )
 
     @property
     def sources(self) -> list[Source]:
         sources = list(self.pyproject.settings.get("source", []))
-        if all(source.get("name") != "pypi" for source in sources):
-            sources.insert(0, self.default_source)
-        expanded_sources: list[Source] = [
-            Source(
-                url=expand_env_vars_in_auth(s["url"]),
-                verify_ssl=s.get("verify_ssl", True),
-                name=s.get("name", urlparse(s["url"]).hostname),
-                type=s.get("type", "index"),
-            )
-            for s in sources
-        ]
-        return expanded_sources
+        if not self.global_config["pypi.ignore_stored_index"]:
+            if all(source.get("name") != "pypi" for source in sources):
+                sources.insert(0, self.default_source)
+            sources.extend(self.global_config.iter_sources())
+        for source in sources:
+            source["url"] = expand_env_vars_in_auth(source["url"])
+        return sources
 
     def get_repository(
         self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True

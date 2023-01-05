@@ -282,3 +282,44 @@ def test_iter_project_venvs(project):
     dot_venv_python.touch()
     venv_keys = [key for key, _ in utils.iter_venvs(project)]
     assert sorted(venv_keys) == ["bar", "baz", "foo", "in-project"]
+
+
+def test_load_extra_sources(project):
+    project.pyproject.settings["source"] = [
+        {
+            "name": "custom",
+            "url": "https://custom.pypi.org/simple",
+        }
+    ]
+    project.global_config["pypi.extra.url"] = "https://extra.pypi.org/simple"
+    sources = project.sources
+    assert len(sources) == 3
+    assert [item["name"] for item in sources] == ["pypi", "custom", "pypi.extra"]
+
+    project.global_config["pypi.ignore_stored_index"] = True
+    sources = project.sources
+    assert len(sources) == 1
+    assert [item["name"] for item in sources] == ["custom"]
+
+
+def test_no_index_raise_error(project):
+    project.global_config["pypi.ignore_stored_index"] = True
+    with pytest.raises(Exception, match="You must specify at least one index"):
+        with project.environment.get_finder():
+            pass
+
+
+@pytest.mark.internet
+def test_access_index_with_auth(project):
+    url = "https://httpbin.org/basic-auth/foo/bar"
+    project.global_config.update(
+        {
+            "pypi.extra.url": "https://httpbin.org",
+            "pypi.extra.username": "foo",
+            "pypi.extra.password": "bar",
+        }
+    )
+    with project.environment.get_finder() as finder:
+        session = finder.session
+        resp = session.get(url)
+        assert resp.ok

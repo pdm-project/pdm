@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 err=True,
             )
             options.key = project.project_config.deprecated[options.key]
-        if options.key.split(".")[0] == "repository":
+        if options.key.split(".")[0] in ("pypi", "repository"):
             value = project.global_config[options.key]
         else:
             value = project.config[options.key]

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from unearth.auth import MultiDomainBasicAuth
+import urllib.parse
+
+from unearth.auth import MaybeAuth, MultiDomainBasicAuth
+from unearth.utils import split_auth_from_netloc
 
 from pdm._types import Source
 from pdm.exceptions import PdmException
@@ -21,11 +24,22 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         - It shows an error message when credentials are not provided or correct.
     """
 
-    def __init__(
-        self, prompting: bool = True, index_urls: list[str] | None = None
-    ) -> None:
-        super().__init__(prompting=True, index_urls=index_urls)
+    def __init__(self, sources: list[Source], prompting: bool = True) -> None:
+        super().__init__(prompting=True)
         self._real_prompting = prompting
+        self.sources = sources
+
+    def _get_auth_from_index_url(self, netloc: str) -> tuple[MaybeAuth, str | None]:
+        if not self.sources:
+            return None, None
+        for source in self.sources:
+            parsed = urllib.parse.urlparse(source["url"])
+            auth, index_netloc = split_auth_from_netloc(parsed.netloc)
+            if index_netloc == netloc:
+                if not auth and "username" in source:
+                    auth = (source["username"], source.get("password"))
+                return auth, source["url"]
+        return None, None
 
     def _prompt_for_password(self, netloc: str) -> tuple[str | None, str | None, bool]:
         if not self._real_prompting:
@@ -45,10 +59,3 @@ class PdmBasicAuth(MultiDomainBasicAuth):
                 style="warning",
             )
         return super()._should_save_password_to_keyring()
-
-
-def make_basic_auth(sources: list[Source], prompting: bool) -> PdmBasicAuth:
-    return PdmBasicAuth(
-        prompting,
-        [source["url"] for source in sources if source.get("type", "index") == "index"],
-    )
