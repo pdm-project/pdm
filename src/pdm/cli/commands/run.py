@@ -195,7 +195,9 @@ class TaskRunner:
                 raise PdmUsageError(
                     f"Command [success]'{command}'[/] is not found in your PATH."
                 )
-            expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
+            expanded_command = os.path.realpath(
+                os.path.expanduser(os.path.expandvars(expanded_command))
+            )
             expanded_args = [
                 os.path.expandvars(arg) for arg in [expanded_command] + args
             ]
@@ -203,7 +205,7 @@ class TaskRunner:
                 not project_env.is_global
                 and not site_packages
                 and (
-                    command.startswith("python")
+                    os.path.basename(expanded_command).startswith("python")
                     or is_path_relative_to(expanded_command, this_path)
                 )
             ):
