@@ -573,10 +573,9 @@ def do_use(
         python = python.strip()
 
     def version_matcher(py_version: PythonInfo) -> bool:
-        return (
+        return py_version.valid and (
             ignore_requires_python
-            or py_version.valid
-            and project.python_requires.contains(str(py_version.version), True)
+            or project.python_requires.contains(str(py_version.version), True)
         )
 
     if not project.cache_dir.exists():
@@ -613,7 +612,8 @@ def do_use(
         if not matching_interpreters:
             project.core.ui.echo("Interpreters found but not matching:", err=True)
             for py in found_interpreters:
-                project.core.ui.echo(f"  - {py.path} ({py.identifier})", err=True)
+                info = py.identifier if py.valid else "Invalid"
+                project.core.ui.echo(f"  - {py.path} ({info})", err=True)
             raise NoPythonVersion(
                 "No python is found meeting the requirement "
                 f"[success]python {str(project.python_requires)}[/]"
