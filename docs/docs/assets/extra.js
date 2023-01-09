@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const expansionRepo = 'https://github.com/pdm-project/pdm-expansions';
   const expansionsApi = 'https://pdm-expansions.vercel.app/api/sample';
-  const element = document.querySelector('a.pdm-expansions');
+  const el = document.querySelector('a.pdm-expansions');
 
   function loadExpansions() {
     fetch(expansionsApi, { mode: 'cors', redirect: 'follow' })
@@ -23,10 +23,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const expansion = expansionList[expansionList.length - 1];
     expansionList.splice(expansionList.length - 1, 1);
-    element.innerText = expansion;
+    el.innerText = expansion;
+    if (el.style.display == 'none') {
+      el.style.display = '';
+    }
   }
   loadExpansions();
-  element.addEventListener('click', function (e) {
+  el.addEventListener('click', function (e) {
     e.preventDefault();
     setExpansion();
   });
