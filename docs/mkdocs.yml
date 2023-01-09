@@ -62,6 +62,7 @@ nav:
       - dev/contributing.md
       - dev/changelog.md
       - dev/benchmark.md
+  - Sponsor: https://github.com/sponsors/pdm-project
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -93,7 +94,10 @@ extra:
       link: https://twitter.com/pdm_project
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Phn8smztpv
-
+extra_css:
+  - assets/extra.css
+extra_javascript:
+  - assets/extra.js
 
 watch:
   - ../src

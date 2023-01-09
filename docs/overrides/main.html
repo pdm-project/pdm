@@ -1,20 +1,8 @@
 {% extends 'base.html' %}
 
 {% block announce %}
-  <span>
-    For updates follow <a href="https://twitter.com/pdm_project" style="color: currentColor"><strong>@PDM</strong> on
-    <span class="twemoji">
-      {% include ".icons/fontawesome/brands/twitter.svg" %}
-    </span>
-    <strong>Twitter</strong></a>.
-  </span>
-  <span>
-    Consider sponsoring us on
-    <a href="https://github.com/sponsors/pdm-project" style="color: currentColor">
-      <span class="twemoji">
-        {% include ".icons/fontawesome/regular/heart.svg" %}
-      </span>
-      <strong>GitHub</strong>
-    </a>.
-  </span>
+<span class="twemoji" style="vertical-align: middle;">
+  {% include ".icons/octicons/heart-fill-24.svg" %} 
+</span>
+<a class="pdm-expansions">Python Dependency Manager</a>
 {% endblock %}
