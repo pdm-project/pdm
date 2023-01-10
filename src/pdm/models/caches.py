@@ -122,6 +122,7 @@ class HashCache:
 
     def _get_file_hash(self, link: Link, session: requests.Session) -> str:
         h = hashlib.new(self.FAVORITE_HASH)
+        logger.debug("Downloading link %s for calculating hash", link.redacted)
         for chunk in self._read_from_link(link, session):
             h.update(chunk)
         return ":".join([h.name, h.hexdigest()])
@@ -132,6 +133,7 @@ class HashCache:
         hash_value = self.get(link.url_without_fragment)
         if not hash_value:
             if link.hash and link.hash_name in self.STRONG_HASHES:
+                logger.debug("Using hash in link for %s", link.redacted)
                 hash_value = f"{link.hash_name}:{link.hash}"
             else:
                 hash_value = self._get_file_hash(link, session)

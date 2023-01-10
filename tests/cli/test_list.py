@@ -569,7 +569,7 @@ def test_list_bare_sorted_version_resolve(project, invoke, working_set):
     actions.do_add(project, packages=["requests"], sync=False)
 
     result = invoke(
-        ["list", "--sort", "version", "--resolve", "-v"], obj=project, strict=True
+        ["list", "--sort", "version", "--resolve"], obj=project, strict=True
     )
     assert "requests" not in working_set
     expected = (

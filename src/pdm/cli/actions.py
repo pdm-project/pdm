@@ -71,7 +71,8 @@ def do_lock(
                 candidate.requires_python = python_requires
                 mapping[candidate.identify()] = candidate
                 dependencies[candidate.dep_key] = list(map(parse_requirement, reqs))
-            fetch_hashes(repo, mapping)
+            with project.core.ui.logging("lock"):
+                fetch_hashes(repo, mapping)
             lockfile = format_lockfile(project, mapping, dependencies)
         project.write_lockfile(lockfile)
         return mapping
