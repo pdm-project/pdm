@@ -97,6 +97,7 @@ def do_lock(
                     project.environment.python_requires,
                     resolve_max_rounds,
                 )
+                spin.update("Fetching hashes for resolved packages...")
                 fetch_hashes(provider.repository, mapping)
         except ResolutionTooDeep:
             ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
@@ -132,7 +133,7 @@ def resolve_candidates_from_lockfile(
         if not req.marker or req.marker.evaluate(project.environment.marker_environment)
     ]
     with ui.logging("install-resolve"):
-        with ui.open_spinner("Resolving packages from lockfile..."):
+        with ui.open_spinner("Resolving packages from lockfile...") as spinner:
             reporter = BaseReporter()
             provider = project.get_provider(for_install=True)
             resolver: Resolver = project.core.resolver_class(provider, reporter)
@@ -142,6 +143,7 @@ def resolve_candidates_from_lockfile(
                 project.environment.python_requires,
                 resolve_max_rounds,
             )
+            spinner.update("Fetching hashes for resolved packages...")
             fetch_hashes(provider.repository, mapping)
     return mapping
 

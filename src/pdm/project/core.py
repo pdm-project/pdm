@@ -462,7 +462,7 @@ class Project:
         """
         from pdm.resolver.reporters import SpinnerReporter
 
-        return SpinnerReporter(spinner or termui.DummySpinner(), requirements)
+        return SpinnerReporter(spinner or termui.DummySpinner(""), requirements)
 
     def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.pyproject.content_hash("sha256"))

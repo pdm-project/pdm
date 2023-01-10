@@ -9,7 +9,6 @@ from pdm import termui
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Criterion, RequirementInformation, State
-    from rich.status import Status
 
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
@@ -24,14 +23,13 @@ def log_title(title: str) -> None:
 
 class SpinnerReporter(BaseReporter):
     def __init__(
-        self, spinner: Status | termui.DummySpinner, requirements: list[Requirement]
+        self, spinner: termui.Spinner, requirements: list[Requirement]
     ) -> None:
         self.spinner = spinner
         self.requirements = requirements
         self._previous: dict[str, Candidate] | None = None
 
     def starting_round(self, index: int) -> None:
-        # self.spinner.hide_and_write(f"Resolving ROUND {index}")
         log_title(f"Starting round {index}")
 
     def starting(self) -> None:

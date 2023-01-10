@@ -424,9 +424,10 @@ class Config(MutableMapping[str, str]):
             if len(parts) < 2:
                 raise PdmUsageError("Should specify the name of index")
             if len(parts) >= 3:
-                del self._file_data.get("pypi", {}).get(parts[1], {})[parts[2]]
+                index_key, attr = key.rsplit(".", 1)
+                del self._file_data.get(index_key, {})[attr]
             else:
-                del self._file_data.get("pypi", {})[parts[1]]
+                del self._file_data[key]
             self._save_config()
             return
         config_key = self.deprecated.get(key, key)

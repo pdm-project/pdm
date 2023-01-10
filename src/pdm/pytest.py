@@ -610,6 +610,8 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
     Returns:
         A `pdm` fixture command.
     """
+    # Hide the spinner text from testing output to not break existing tests
+    monkeypatch.setattr("pdm.termui.DummySpinner._show", lambda self: None)
 
     def caller(
         args: str | list[str],

@@ -125,10 +125,18 @@ class DummySpinner:
     But only display text onto screen.
     """
 
-    def update(self, text: str) -> None:
+    def __init__(self, text: str) -> None:
         self.text = text
 
+    def _show(self) -> None:
+        _console.print(f"[primary]STATUS:[/] {self.text}")
+
+    def update(self, text: str) -> None:
+        self.text = text
+        self._show()
+
     def __enter__(self: SpinnerT) -> SpinnerT:
+        self._show()  # type: ignore
         return self
 
     def __exit__(self, *args: Any) -> None:
@@ -243,7 +251,7 @@ class UI:
     def open_spinner(self, title: str) -> Spinner:
         """Open a spinner as a context manager."""
         if self.verbosity >= Verbosity.DETAIL or not is_interactive():
-            return DummySpinner()
+            return DummySpinner(title)
         else:
             return _console.status(title, spinner=SPINNER, spinner_style="primary")
 
