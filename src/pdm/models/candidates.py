@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import os
 import re
 import warnings
@@ -286,7 +287,7 @@ class PreparedCandidate:
         if link is None:
             return None
         url = self.environment.project.backend.expand_line(link.normalized)
-        return Link(url)
+        return dataclasses.replace(link, url=url)
 
     @cached_property
     def revision(self) -> str:

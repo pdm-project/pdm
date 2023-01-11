@@ -132,7 +132,11 @@ class HashCache:
         # to store it.
         hash_value = self.get(link.url_without_fragment)
         if not hash_value:
-            if link.hash and link.hash_name in self.STRONG_HASHES:
+            if link.hashes and link.hashes.keys() & self.STRONG_HASHES:
+                logger.debug("Using hash in link for %s", link.redacted)
+                hash_name = next(k for k in self.STRONG_HASHES if k in link.hashes)
+                hash_value = f"{hash_name}:{link.hashes[hash_name]}"
+            elif link.hash and link.hash_name in self.STRONG_HASHES:
                 logger.debug("Using hash in link for %s", link.redacted)
                 hash_value = f"{link.hash_name}:{link.hash}"
             else:
