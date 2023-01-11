@@ -35,10 +35,18 @@ def list_distributions(plugin_only: bool = False) -> list[Distribution]:
     return sorted(result, key=lambda d: d.metadata["Name"] or "UNKNOWN")
 
 
-def run_pip(project: Project, args: list[str]) -> bytes:
+def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[str]:
     env = BareEnvironment(project)
     project.environment = env
-    return subprocess.check_output(env.pip_command + args, stderr=subprocess.STDOUT)
+    run_args = env.pip_command + args
+
+    return subprocess.run(
+        run_args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=True,
+        text=True,
+    )
 
 
 class Command(BaseCommand):
@@ -132,7 +140,7 @@ class AddCommand(BaseCommand):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "[error]Installation failed:[/]\n" + e.output.decode("utf8"), err=True
+                "[error]Installation failed:[/]\n" + e.output, err=True
             )
             sys.exit(1)
         else:
@@ -211,7 +219,7 @@ class RemoveCommand(BaseCommand):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                "[error]Uninstallation failed:[/]\n" + e.output.decode("utf8"), err=True
+                "[error]Uninstallation failed:[/]\n" + e.output, err=True
             )
             sys.exit(1)
         else:
@@ -266,7 +274,7 @@ class UpdateCommand(BaseCommand):
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
                 f"[error]Installing version [primary]{version}[/] failed:[/]\n"
-                + e.output.decode("utf8"),
+                + e.output,
                 err=True,
             )
             sys.exit(1)
