@@ -35,7 +35,7 @@ class Command(BaseCommand):
             "-t",
             "--top",
             action="store_true",
-            help="Only update those list in pyproject.toml",
+            help="Only update those listed in pyproject.toml",
         )
         parser.add_argument(
             "--dry-run",
