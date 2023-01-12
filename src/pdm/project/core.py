@@ -15,7 +15,6 @@ from tomlkit.items import Array
 from unearth import Link
 
 from pdm import termui
-from pdm._types import Source
 from pdm.compat import cached_property
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
@@ -42,8 +41,8 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
-    from rich.status import Status
 
+    from pdm._types import Source, Spinner
     from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
 
@@ -451,7 +450,7 @@ class Project:
         self,
         requirements: list[Requirement],
         tracked_names: Iterable[str] | None = None,
-        spinner: Status | termui.DummySpinner | None = None,
+        spinner: Spinner | None = None,
     ) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 
@@ -462,7 +461,10 @@ class Project:
         """
         from pdm.resolver.reporters import SpinnerReporter
 
-        return SpinnerReporter(spinner or termui.DummySpinner(""), requirements)
+        if spinner is None:
+            spinner = termui.SilentSpinner("")
+
+        return SpinnerReporter(spinner, requirements)
 
     def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.pyproject.content_hash("sha256"))

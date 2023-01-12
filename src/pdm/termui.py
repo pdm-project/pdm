@@ -143,6 +143,11 @@ class DummySpinner:
         pass
 
 
+class SilentSpinner(DummySpinner):
+    def _show(self) -> None:
+        pass
+
+
 class UI:
     """Terminal UI object"""
 
