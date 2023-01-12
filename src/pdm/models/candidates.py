@@ -87,7 +87,9 @@ def _find_best_match_link(
     # the package sources.
     def attempt_to_find() -> Link | None:
         if hashes is None:
-            best = finder.find_best_match(req.as_line()).best
+            best = finder.find_best_match(
+                req.as_line(), allow_yanked=req.is_pinned
+            ).best
             return best.link if best is not None else None
         # We don't evaluate against the hashes, they will be validated later.
         evaluator = finder.build_evaluator(req.name)

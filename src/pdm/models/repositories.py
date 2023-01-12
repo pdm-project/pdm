@@ -335,7 +335,9 @@ class PyPIRepository(BaseRepository):
         with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
             cans = [
                 Candidate.from_installation_candidate(c, requirement)
-                for c in finder.find_all_packages(requirement.project_name)
+                for c in finder.find_all_packages(
+                    requirement.project_name, allow_yanked=requirement.is_pinned
+                )
             ]
         if not cans:
             raise CandidateNotFound(
