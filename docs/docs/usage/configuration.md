@@ -60,7 +60,7 @@ The following configuration items can be retrieved and modified by [`pdm config`
 | `venv.location`                   | Parent directory for virtualenvs                                          | `<default data location on OS>/venvs`                                 | No                   |                           |
 | `venv.backend`                    | Default backend to create virtualenv                                      | `virtualenv`                                                          | Yes                  | `PDM_VENV_BACKEND`        |
 | `venv.prompt`                     | Formatted string to be displayed in the prompt when virtualenv is active  | `{project_name}-{python_version}`                                     | Yes                  | `PDM_VENV_PROMPT`         |
-| `venv.in-project`                 | Create virtualenv in `.venv` under project root                           | `False`                                                               | Yes                  | `PDM_VENV_IN_PROJECT`     |
+| `venv.in_project`                 | Create virtualenv in `.venv` under project root                           | `False`                                                               | Yes                  | `PDM_VENV_IN_PROJECT`     |
 | `venv.with_pip`                   | Install pip when creating a new venv                                      | `False`                                                               | Yes                  | `PDM_VENV_WITH_PIP`       |
 
 _If the corresponding env var is set, the value will take precedence over what is saved in the config file._
