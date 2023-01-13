@@ -284,7 +284,7 @@ update_strategy_group.add_argument(
     action="store_const",
     dest="update_strategy",
     const="all",
-    help="Update all dependencies and sub-depenencies",
+    help="Update all dependencies and sub-dependencies",
 )
 
 project_option = Option(
