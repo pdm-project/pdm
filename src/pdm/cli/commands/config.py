@@ -4,7 +4,7 @@ from typing import Any, Mapping
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.project import Project
-from pdm.project.config import Config
+from pdm.project.config import Config, RegistryConfig, RepositoryConfig, REPOSITORY
 
 
 class Command(BaseCommand):
@@ -74,10 +74,36 @@ class Command(BaseCommand):
                 if canonical_key in supersedes:
                     superseded = True
                 deprecated = f"[error](deprecating: {key})[/]"
-            elif key not in Config._config_map:
+            elif key not in Config._config_map and not (
+                key.startswith("pypi.") or key.startswith(REPOSITORY)
+            ):
                 continue
             extra_style = "dim" if superseded else None
             if canonical_key not in Config._config_map:
+                if key.startswith("pypi."):
+                    index_name = key.split(".")[1]
+                    self.ui.echo(
+                        f"[warning]# Configuration of non-default Pypi index `{index_name}`",
+                        style=extra_style,
+                        verbosity=termui.Verbosity.DETAIL,
+                    )
+                    self.ui.echo(
+                        RegistryConfig(**config[key], config_prefix=key).__rich__()
+                    )
+                    continue
+                if key.startswith(REPOSITORY):
+                    for item in config[key]:
+                        self.ui.echo(
+                            f"[warning]# Configuration of custom repository `{item}`",
+                            style=extra_style,
+                            verbosity=termui.Verbosity.DETAIL,
+                        )
+                        self.ui.echo(
+                            RepositoryConfig(
+                                **config[key][item], config_prefix=f"{key}.{item}"
+                            ).__rich__()
+                        )
+                    continue
                 continue
             config_item = Config._config_map[canonical_key]
             self.ui.echo(

@@ -26,14 +26,46 @@ class RepositoryConfig:
     password: str | None = None
     ca_certs: str | None = None
 
+    config_prefix: str | None = None
+
     def __rich__(self) -> str:
-        lines = [f"[primary]url[/] = {self.url}"]
+        config_prefix = (
+            f"{self.config_prefix}." if self.config_prefix is not None else ""
+        )
+        lines = [f"[primary]{config_prefix}url[/] = {self.url}"]
         if self.username:
-            lines.append(f"[primary]username[/] = {self.username}")
+            lines.append(f"[primary]{config_prefix}username[/] = {self.username}")
         if self.password:
-            lines.append("[primary]password[/] = <hidden>")
+            lines.append(f"[primary]{config_prefix}password[/] = [i]<hidden>[/]")
         if self.ca_certs:
-            lines.append(f"[primary]ca_certs[/] = {self.ca_certs}")
+            lines.append(f"[primary]{config_prefix}ca_certs[/] = {self.ca_certs}")
+        return "\n".join(lines)
+
+
+@dataclasses.dataclass
+class RegistryConfig:
+
+    url: str
+    username: str | None = None
+    password: str | None = None
+    verify_ssl: bool | None = None
+    type: str | None = None
+
+    config_prefix: str | None = None
+
+    def __rich__(self) -> str:
+        config_prefix = (
+            f"{self.config_prefix}." if self.config_prefix is not None else ""
+        )
+        lines = [f"[primary]{config_prefix}url[/] = {self.url}"]
+        if self.username:
+            lines.append(f"[primary]{config_prefix}username[/] = {self.username}")
+        if self.password:
+            lines.append(f"[primary]{config_prefix}password[/] = [i]<hidden>[/]")
+        if self.verify_ssl:
+            lines.append(f"[primary]{config_prefix}verify_ssl[/] = {self.verify_ssl}")
+        if self.type:
+            lines.append(f"[primary]{config_prefix}type[/] = {self.type}")
         return "\n".join(lines)
 
 
@@ -338,7 +370,13 @@ class Config(MutableMapping[str, str]):
             if index_key not in self._data:
                 raise KeyError(f"No PyPI index named {parts[1]}")
             source = self._data[index_key]
-            return source[parts[2]] if len(parts) >= 3 else source
+            if len(parts) >= 3 and parts[2] == "password":
+                return "<hidden>"
+            return (
+                source[parts[2]]
+                if len(parts) >= 3
+                else RegistryConfig(**self._data[index_key])
+            )
 
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
