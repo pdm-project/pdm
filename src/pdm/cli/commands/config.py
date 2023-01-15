@@ -4,7 +4,7 @@ from typing import Any, Mapping
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.project import Project
-from pdm.project.config import Config, RegistryConfig, RepositoryConfig, REPOSITORY
+from pdm.project.config import REPOSITORY, Config, RegistryConfig, RepositoryConfig
 
 
 class Command(BaseCommand):
