@@ -211,7 +211,10 @@ class BaseProvider(AbstractProvider):
         new_requires_python = (
             candidate.req.requires_python & self.repository.environment.python_requires
         )
-        if not requires_python.is_superset(new_requires_python):
+        if (
+            candidate.identify() not in self.overrides
+            and not requires_python.is_superset(new_requires_python)
+        ):
             valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))
         return valid_deps
 
