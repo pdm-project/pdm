@@ -4,11 +4,9 @@ import functools
 import operator
 import os
 import re
-from argparse import Namespace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 
-from pdm._types import RequirementDict, Source
 from pdm.compat import tomllib
 from pdm.formats.base import (
     MetaConverter,
@@ -24,6 +22,8 @@ from pdm.models.specifiers import PySpecSet
 
 if TYPE_CHECKING:
     from pdm.project.core import Project
+    from argparse import Namespace
+    from pdm._types import RequirementDict, Source
 
 from pdm.utils import cd
 

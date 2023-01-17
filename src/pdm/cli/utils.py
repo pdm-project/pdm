@@ -4,7 +4,6 @@ import argparse
 import json
 import os
 import sys
-from argparse import Action, _ArgumentGroup
 from collections import ChainMap, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from json import dumps
@@ -26,11 +25,9 @@ from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
 from pdm import termui
-from pdm.compat import importlib_metadata as im
 from pdm.exceptions import PdmArgumentError, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
-from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -38,7 +35,6 @@ from pdm.models.requirements import (
     strip_extras,
 )
 from pdm.models.specifiers import get_specifier
-from pdm.project import Project
 from pdm.utils import (
     comparable_version,
     is_path_relative_to,
@@ -47,11 +43,16 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from argparse import Action, _ArgumentGroup
+
     from packaging.version import Version
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
     from pdm.compat import Distribution
+    from pdm.compat import importlib_metadata as im
     from pdm.models.candidates import Candidate
+    from pdm.models.repositories import BaseRepository
+    from pdm.project import Project
 
 
 class ErrorArgumentParser(argparse.ArgumentParser):
@@ -677,6 +678,7 @@ def merge_dictionary(
 ) -> None:
     """Merge the input dict with the target while preserving the existing values
     properly. This will update the target dictionary in place.
+    List values will be extended, but only if the value is not already in the list.
     """
     for key, value in input.items():
         if key not in target:
@@ -684,7 +686,7 @@ def merge_dictionary(
         elif isinstance(value, dict):
             target[key].update(value)
         elif isinstance(value, list):
-            target[key].extend(value)
+            target[key].extend([x for x in value if x not in target[key]])
         else:
             target[key] = value
 
