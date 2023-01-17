@@ -82,7 +82,7 @@ def test_resolve_allow_prereleases(resolve, repository):
     result = resolve(["bar"])
     assert result["bar"].version == "1.0.0-beta"
 
-    with pytest.raises(Exception):
+    with pytest.raises(ResolutionImpossible):
         resolve(["bar"], allow_prereleases=False)
 
 

@@ -7,6 +7,7 @@ import pytest
 from packaging.version import parse
 
 from pdm.cli.commands.venv.utils import get_venv_python
+from pdm.exceptions import PdmException
 from pdm.utils import cd
 
 
@@ -304,7 +305,7 @@ def test_load_extra_sources(project):
 
 def test_no_index_raise_error(project):
     project.global_config["pypi.ignore_stored_index"] = True
-    with pytest.raises(Exception, match="You must specify at least one index"):
+    with pytest.raises(PdmException, match="You must specify at least one index"):
         with project.environment.get_finder():
             pass
 
