@@ -676,6 +676,7 @@ def merge_dictionary(
 ) -> None:
     """Merge the input dict with the target while preserving the existing values
     properly. This will update the target dictionary in place.
+    List values will be extended, but only if the value is not already in the list.
     """
     for key, value in input.items():
         if key not in target:
@@ -683,7 +684,7 @@ def merge_dictionary(
         elif isinstance(value, dict):
             target[key].update(value)
         elif isinstance(value, list):
-            target[key].extend(value)
+            target[key].extend([x for x in value if x not in target[key]])
         else:
             target[key] = value
 
