@@ -28,7 +28,6 @@ from pdm import termui
 from pdm.exceptions import PdmArgumentError, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
-
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -44,15 +43,18 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from packaging.version import Version
-    from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
     from argparse import Action, _ArgumentGroup
 
+    from packaging.version import Version
+    from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
+
     from pdm.compat import Distribution
-    from pdm.models.candidates import Candidate
-    from pdm.project import Project
     from pdm.compat import importlib_metadata as im
+    from pdm.models.candidates import Candidate
     from pdm.models.repositories import BaseRepository
+    from pdm.project import Project
+
+
 class ErrorArgumentParser(argparse.ArgumentParser):
     """A subclass of argparse.ArgumentParser that raises
     parsing error rather than exiting.
