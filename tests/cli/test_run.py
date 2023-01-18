@@ -413,7 +413,9 @@ def test_run_show_list_of_scripts(project, invoke):
     assert result_lines[4][1:-1].strip() == "test_shell     │ shell     │ shell command"
 
 
-def test_run_with_another_project_root(project, local_finder, invoke, capfd):
+@pytest.mark.usefixtures("local_finder")
+@pytest.mark.parametrize("explict_python", [True, False])
+def test_run_with_another_project_root(project, invoke, capfd, explict_python):
     project.pyproject.metadata["requires-python"] = ">=3.6"
     project.pyproject.write()
     invoke(["add", "first"], obj=project)
@@ -423,7 +425,10 @@ def test_run_with_another_project_root(project, local_finder, invoke, capfd):
         )
         capfd.readouterr()
         with cd(tmp_dir):
-            ret = invoke(["run", "-p", str(project.root), "python", "main.py"])
+            args = ["run", "-p", str(project.root), "main.py"]
+            if explict_python:
+                args.insert(len(args) - 1, "python")
+            ret = invoke(args)
             out, err = capfd.readouterr()
             assert ret.exit_code == 0, err
             assert out.strip() == "1"
