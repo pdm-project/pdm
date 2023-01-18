@@ -190,12 +190,16 @@ class TaskRunner:
         else:
             assert isinstance(args, Sequence)
             command, *args = args
+            if command.endswith(".py"):
+                args = [command] + args
+                command = str(project.python.executable)
             expanded_command = project_env.which(command)
             if not expanded_command:
                 raise PdmUsageError(
                     f"Command [success]'{command}'[/] is not found in your PATH."
                 )
             expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
+            real_command = os.path.realpath(expanded_command)
             expanded_args = [
                 os.path.expandvars(arg) for arg in [expanded_command] + args
             ]
@@ -203,9 +207,7 @@ class TaskRunner:
                 not project_env.is_global
                 and not site_packages
                 and (
-                    os.path.basename(os.path.realpath(expanded_command)).startswith(
-                        "python"
-                    )
+                    os.path.basename(real_command).startswith("python")
                     or is_path_relative_to(expanded_command, this_path)
                 )
             ):
