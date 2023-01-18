@@ -477,6 +477,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         try:
             package_req = PackageRequirement(line)  # type: ignore
         except InvalidRequirement as e:
+            warnings.warn(f"\"{line}\" is not a valid requirement syntax, trying to parse it as a local file path.", SyntaxWarning)
             m = _file_req_re.match(line)
             if m is None:
                 raise RequirementError(str(e)) from None
