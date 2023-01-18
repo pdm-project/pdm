@@ -138,8 +138,9 @@ def test_hide_password_in_output_repository(project, invoke):
     result = invoke(["config", "repository.pypi.password"], obj=project, strict=True)
     assert "<hidden>" == result.output.strip()
 
+
 def test_hide_password_in_output_pypi(project, invoke):
-    with pytest.raises( KeyError):
+    with pytest.raises(KeyError):
         assert project.global_config["pypi.extra.password"] is None
     project.global_config["pypi.extra.username"] = "testuser"
     project.global_config["pypi.extra.password"] = "secret"
