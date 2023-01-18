@@ -1,7 +1,7 @@
 import pytest
 
 from pdm.models.specifiers import PySpecSet
-from tests import PACKAGING_22
+from pdm.utils import PACKAGING_22
 
 
 @pytest.mark.parametrize(
