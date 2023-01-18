@@ -111,8 +111,9 @@ class Command(BaseCommand):
                 style=extra_style,
                 verbosity=termui.Verbosity.DETAIL,
             )
+            value = "[i]<hidden>[/]" if key.endswith("password") else config[key]
             self.ui.echo(
-                f"[primary]{canonical_key}[/]{deprecated} = {config[key]}",
+                f"[primary]{canonical_key}[/]{deprecated} = {value}",
                 style=extra_style,
             )
 

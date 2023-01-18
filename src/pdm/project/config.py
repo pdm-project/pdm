@@ -377,6 +377,8 @@ class Config(MutableMapping[str, str]):
                 if len(parts) >= 3
                 else RegistryConfig(**self._data[index_key])
             )
+        elif key == "pypi.password":
+            return "<hidden>"
 
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
