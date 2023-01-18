@@ -129,7 +129,7 @@ def test_repository_overwrite_default(project):
     assert repository.url == "https://example.pypi.org/legacy/"
 
 
-def test_hide_password_in_output(project, invoke):
+def test_hide_password_in_output_repository(project, invoke):
     assert project.global_config["repository.pypi.password"] is None
     project.global_config["repository.pypi.username"] = "testuser"
     project.global_config["repository.pypi.password"] = "secret"
@@ -137,6 +137,20 @@ def test_hide_password_in_output(project, invoke):
     assert "password = <hidden>" in result.output
     result = invoke(["config", "repository.pypi.password"], obj=project, strict=True)
     assert "<hidden>" == result.output.strip()
+
+def test_hide_password_in_output_pypi(project, invoke):
+    with pytest.raises( KeyError):
+        assert project.global_config["pypi.extra.password"] is None
+    project.global_config["pypi.extra.username"] = "testuser"
+    project.global_config["pypi.extra.password"] = "secret"
+    project.global_config["pypi.extra.url"] = "https://test/simple"
+    result = invoke(["config", "pypi.extra"], obj=project, strict=True)
+    assert "password = <hidden>" in result.output
+    result = invoke(["config", "pypi.extra.password"], obj=project, strict=True)
+    assert "<hidden>" == result.output.strip()
+    result = invoke(["config"], obj=project)
+    assert "pypi.extra.password" in result.output
+    assert "<hidden>" in result.output
 
 
 def test_config_get_repository(project, invoke):
