@@ -101,7 +101,11 @@ class Command(BaseCommand):
                 style="success",
             )
         is_library = (
-            termui.confirm("Is the project a library that will be uploaded to PyPI")
+            termui.confirm(
+                "Is the project a library that is installable?\n"
+                "A few more questions will be asked to include a project name "
+                "and build backend"
+            )
             if self.interactive
             else False
         )
