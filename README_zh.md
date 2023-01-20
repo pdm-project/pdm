@@ -41,30 +41,27 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 [pep 621]: https://www.python.org/dev/peps/pep-0621
 [pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
-## 为什么不用虚拟环境?
+## 与其他包管理器的比较
 
-现在大部分的 Python 包管理器也同时管理虚拟环境，这主要是为了隔离项目开发环境。但如果涉及到虚拟
-环境嵌套虚拟环境的时候，问题就来了：你可能用一个虚拟环境的 Python 安装了某个虚拟环境管理工具，
-然后又用这个工具去创建更多虚拟环境。当某一天你升级了新版本的 Python 你必须一个一个去检查这些
-虚拟环境，没准哪个就用不了了。
+### [Pipenv](https://pipenv.pypa.io)
 
-然而 [PEP 582] 提供了一个能把 Python 解释器和项目开发环境解耦的方法。这是一个相对比较新的提案，
-没有很多相关的工具实现它，这其中就有 [pyflow]。但 pyflow 又是用 Rust 写的，不是所有 Python 的社区
-都会用 Rust，这样就没法贡献代码，而且，基于同样的原因，pyflow 并不支持 [PEP 517] 构建。
+Pipenv 是一个依赖管理器，它结合了 `pip` 和 `venv`，正如其名称所暗示的。它可以从一种自定义格式文件 `Pipfile.lock` 或 `Pipfile` 中安装软件包。
+然而，Pipenv 并不处理任何与构建、打包和发布相关的工作。所以它只适用于开发不可安装的应用程序（例如 Django 网站）。
+如果你是一个库的开发者，无论如何你都需要 `setuptools`。
 
-[PEP 582] 提出下面这种项目的目录结构：
+### [Poetry](https://python-poetry.org)
 
-```
-foo
-    __pypackages__
-        3.8
-            lib
-                bottle
-    myscript.py
-```
+Poetry 以类似于 Pipenv 的方式管理环境和依赖，它也可以从你的代码构建 `.whl` 文件，并且可以将轮子和源码发行版上传到 PyPI。
+它有一个漂亮的用户界面，用户可以通过贡献插件来定制它。Poetry 使用 `pyproject.toml` 标准。但它并不遵循指定元数据应如何在 `pyproject.toml` 文件中表示的标准（[PEP 621]）。而是使用一个自定义的 `[tool.poetry]` 表。这部分是因为 Poetry 诞生在 PEP 621 出现之前。
 
-项目目录中包含一个`__pypackages__`目录，用来放置所有依赖的库文件，就像`npm`的`node_modules`一样。
-你可以在[这里](https://www.python.org/dev/peps/pep-0582/#specification)阅读更多提案的细节。
+### [Hatch](https://hatch.pypa.io)
+
+Hatch 也可以管理环境（它允许每个项目有多个环境，但不允许把它们放在项目目录中），并且可以管理包（但不支持 lockfile）。Hatch 也可以用来打包一个项目（用符合 PEP 621 标准的 `pyproject.toml` 文件）并上传到 PyPI。
+
+### 本项目
+
+PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从一个标准化的 `pyproject.toml` 文件中读取项目元数据，并支持 lockfile。用户可以在插件中添加更多的功能，并将其作为一个发行版上传，以供分享。
+此外，PDM有一个实验性的 [PEP 582] 支持（[docs](https://pdm.fming.dev/latest/usage/pep582/)），这意味着你可以在不创建虚拟环境的情况下安装包。此外，与 Poetry 和 Hatch 不同，PDM 并没有被和一个特定的构建后端绑定，你可以选择任何你喜欢的构建后端。
 
 ## 安装
 
@@ -163,41 +160,6 @@ pdm add requests flask
 
 你可以在同一条命令中添加多个依赖。稍等片刻完成之后，你可以查看`pdm.lock`文件看看有哪些依赖以及对应版本。
 
-**在 [PEP 582] 加持下运行你的脚本**
-
-默认情况下，当你在一个项目中第一次运行 `pdm install`, PDM 会为你在项目根目录的 `.venv` 中创建一个虚拟环境，和其他包管理器一样。
-但你也可以把 PEP 582 设为默认，只需要运行 `pdm config python.use_venv false` 就可以了。除此之外，你还需要一点点的配置，让 Python 解释器
-可以用 PEP 582 的 `__pypackages__` 目录来查找包。
-
-````bash
-
-假设你在`__pypackages__`同级的目录下有一个`app.py`脚本，内容如下（从 Flask 的官网例子复制而来）：
-
-```python
-from flask import Flask
-app = Flask(__name__)
-
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
-
-if __name__ == '__main__':
-    app.run()
-````
-
-如果你使用的是 Bash，可以通过执行`eval "$(pdm --pep582)"`设置环境变量，现在你可以用你最熟悉的 **Python 解释器** 运行脚本了：
-
-```bash
-$ python /home/frostming/workspace/flask_app/app.py
- * Serving Flask app "app" (lazy loading)
- ...
- * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-```
-
-当当当当！你已经把应用运行起来了，而它的依赖全被安装在一个项目独立的文件夹下，而我们完全没有创建虚拟环境。
-
-如果你是 Windows 用户，请参考[文档](https://pdm.fming.dev/latest/usage/pep582/#enable-pep-582-globally)获取设置的方法。里面也简短解释了这是如何工作的。
-
 ## 徽章
 
 在 README.md 中加入以下 Markdown 代码，向大家展示项目正在使用 PDM:
@@ -215,26 +177,6 @@ $ python /home/frostming/workspace/flask_app/app.py
 ## PDM 生态
 
 [Awesome PDM](https://github.com/pdm-project/awesome-pdm) 这个项目收集了一些非常有用的 PDM 插件及相关资源。
-
-## 常见问题
-
-### 1. `__pypackages__` 里都包含什么?
-
-[PEP 582] 尚处于草案阶段，还需要补充很多细节，比如提案中并未说明可执行程序应该如何存放。PDM 会把 `bin`(可执行程序), `include`(头文件),
-以及 `lib` 都放在 `__pypackages__/X.Y` 下面。
-
-### 2. 如何运行 `__pypackages__` 下的可执行程序?
-
-推荐的方式是在你的命令前面加上 `pdm run`, 你也可以直接运行 `bin` 下面的可执行程序。PDM 的安装器已经在可执行程序里面注入了本地包路径了。
-
-### 3. 使用 PDM 时会载入哪些三方库路径?
-
-本项目的 `__pypackages__` 中的包会在系统的`site-packages`之前被载入，这样能更好地隔离包的环境。
-
-### 4. 我能把 `__pypackages__` 保存下来用来部署到别的机器上吗?
-
-最好别这样搞，`__pypackages__` 下面安装的包是和操作系统相关的，所以除非是纯 Python 的包，都会有兼容性的问题。你应该把 `pdm.lock`
-纳入版本管理，然后在目标环境中执行 `pdm sync`。
 
 ## 赞助
 
