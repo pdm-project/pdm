@@ -15,7 +15,7 @@ from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 from rich.theme import Theme
 
-from pdm._types import Spinner, SpinnerT, RichProtocol
+from pdm._types import RichProtocol, Spinner, SpinnerT
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -33,8 +33,6 @@ DEFAULT_THEME = {
 }
 _console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
 _err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
-
-
 
 
 def is_interactive(console: Console | None = None) -> bool:
