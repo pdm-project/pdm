@@ -126,5 +126,5 @@ $ eval $(pdm venv activate test-prompt)
 
 ## Disable virtualenv mode
 
-You can disable the auto-creation and auto-detection for virtualenv by `pdm config python.use_venv` false.
+You can disable the auto-creation and auto-detection for virtualenv by `pdm config python.use_venv false`.
 **If venv is disabled, PEP 582 mode will always be used even if the selected interpreter is from a virtualenv.**

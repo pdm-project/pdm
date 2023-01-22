@@ -51,6 +51,8 @@ REQUIREMENTS = [
         "git+git@github.com:pypa/pip.git#egg=pip",
         "pip @ git+ssh://git@github.com/pypa/pip.git",
     ),
+    ("foo >=4.*, <=5.*", "foo<5.0,>=4.0"),
+    ("foo (>=4.*, <=5.*)", "foo<5.0,>=4.0"),
 ]
 
 

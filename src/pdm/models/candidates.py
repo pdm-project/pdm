@@ -234,6 +234,7 @@ class Candidate:
             "extras": sorted(self.req.extras or ()),
             "requires_python": str(self.requires_python),
             "editable": self.req.editable,
+            "subdirectory": getattr(self.req, "subdirectory", None),
         }
         if self.req.is_vcs:
             result.update(

@@ -48,31 +48,32 @@ you can probably find some goodness in `pdm`.
 [pep 621]: https://www.python.org/dev/peps/pep-0621
 [pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
-## What is PEP 582?
+## Comparisons to other alternatives
 
-The majority of Python packaging tools also act as virtualenv managers to gain the ability
-to isolate project environments. But things get tricky when it comes to nested venvs: One
-installs the virtualenv manager using a venv encapsulated Python, and create more venvs using the tool
-which is based on an encapsulated Python. One day a minor release of Python is released and one has to check
-all those venvs and upgrade them if required.
+### [Pipenv](https://pipenv.pypa.io)
 
-[PEP 582], on the other hand, introduces a way to decouple the Python interpreter from project
-environments. It is a relatively new proposal and there are not many tools supporting it (one that does
-is [pyflow], but it is written with Rust and thus can't get much help from the big Python community and for the same reason it can't act as a [PEP 517] backend).
+Pipenv is a dependency manager that combines `pip` and `venv`, as the name implies.
+It can install packages from a non-standard `Pipfile.lock` or `Pipfile`.
+However, Pipenv does not handle any packages related to packaging your code,
+so it’s useful only for developing non-installable applications (Django sites, for example).
+If you’re a library developer, you need `setuptools` anyway.
 
-[PEP 582] proposes a project structure as below:
+### [Poetry](https://python-poetry.org)
 
-```
-foo
-    __pypackages__
-        3.8
-            lib
-                bottle
-    myscript.py
-```
+Poetry manages environments and dependencies in a similar way to Pipenv,
+but it can also build .whl files with your code, and it can upload wheels and source distributions to PyPI.
+It has a pretty user interface and users can customize it via a plugin. Poetry uses the `pyproject.toml` standard,
+but it does not follow the standard specifying how metadata should be represented in a pyproject.toml file ([PEP 621]),
+instead using a custom `[tool.poetry]` table. This is partly because Poetry came out before PEP 621.
 
-There is a `__pypackages__` directory in the project root to hold all dependent libraries, just like what `npm` does.
-Read more about the specification [here](https://www.python.org/dev/peps/pep-0582/#specification).
+### [Hatch](https://hatch.pypa.io)
+
+Hatch can also manage environments (it allows multiple environments per project, but it does not allow to put them in the project directory), and it can manage packages (but without lockfile support). Hatch can also be used to package a project (with PEP 621-compliant pyproject.toml files) and upload it to PyPI.
+
+### This project
+
+PDM also can manage venvs, both in project and centralized location as Pipenv does. It reads the project metadata from a standardized `pyproject.toml` file, and has lockfile support. Users can add more functionalities in a plugin and upload it as a distribution for sharing.
+Besides, PDM has an experimental [PEP 582] support([docs](https://pdm.fming.dev/latest/usage/pep582/)), which means you can install packages without creating a virtual environment. Moreover, unlike Poetry and Hatch, PDM isn't locked to a specific build backend, you can choose any build backend you like.
 
 ## Installation
 
@@ -171,39 +172,6 @@ pdm add requests flask
 
 You can add multiple dependencies in the same command. After a while, check the `pdm.lock` file to see what is locked for each package.
 
-**Run your script with [PEP 582] support**
-
-By default, PDM will create `.venv` in the project root, when doing `pdm install` on an existing project, as other package managers do.
-But you can make PEP 582 the default by `pdm config python.use_venv false`. To enable the full power of PEP 582, do the following steps to make the Python interpreter use it.
-
-Suppose you have a script `app.py` placed next to the `__pypackages__` directory with the following content(taken from Flask's website):
-
-```python
-from flask import Flask
-app = Flask(__name__)
-
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
-
-if __name__ == '__main__':
-    app.run()
-```
-
-If you are a Bash user, set the environment variable by `eval "$(pdm --pep582)"`. Now you can run the app directly with your familiar **Python interpreter**:
-
-```bash
-$ python /home/frostming/workspace/flask_app/app.py
- * Serving Flask app "app" (lazy loading)
- ...
- * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
-```
-
-Ta-da! You are running an app with its dependencies installed in an isolated place, while no virtualenv is involved.
-
-For Windows users, please refer to [the doc](https://pdm.fming.dev/latest/usage/pep582/#enable-pep-582-globally) about how to make it work, it also includes a simple explanation of how
-it works.
-
 ## Badges
 
 Tell people you are using PDM in your project by including the markdown code in README.md:
@@ -222,27 +190,6 @@ Tell people you are using PDM in your project by including the markdown code in 
 ## PDM Eco-system
 
 [Awesome PDM](https://github.com/pdm-project/awesome-pdm) is a curated list of awesome PDM plugins and resources.
-
-## FAQ
-
-### 1. What is put in `__pypackages__`?
-
-[PEP 582] is a draft proposal which still needs a lot of polishing. For instance, it doesn't mention how to manage
-CLI executables. PDM makes the decision to put `bin` and `include` together with `lib` under `__pypackages__/X.Y`.
-
-### 2. How do I run CLI scripts in the local package directory?
-
-The recommended way is to prefix your command with `pdm run`. It is also possible to run CLI scripts directly from
-the outside. PDM's installer has already injected the package path to the `sys.path` in the entry script file.
-
-### 3. What site-packages will be loaded when using PDM?
-
-Packages in the local `__pypackages__` directory will be loaded before the system-level `site-packages` for isolation.
-
-### 4. Can I relocate or move the `__pypackages__` folder for deployment?
-
-You'd better not. The packages installed inside `__pypackages__` are OS dependent. Instead, you should keep `pdm.lock`
-in VCS and do `pdm sync` on the target environment to deploy.
 
 ## Sponsors
 
