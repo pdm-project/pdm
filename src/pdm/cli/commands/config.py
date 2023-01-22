@@ -81,9 +81,9 @@ class Command(BaseCommand):
             extra_style = "dim" if superseded else None
             if canonical_key not in Config._config_map:
                 if key.startswith("pypi."):
-                    index_name = key.split(".")[1]
+                    index = key.split(".")[1]
                     self.ui.echo(
-                        f"[warning]# Configuration of non-default Pypi index `{index_name}`",
+                        f"[warning]# Configuration of non-default Pypi index `{index}`",
                         style=extra_style,
                         verbosity=termui.Verbosity.DETAIL,
                     )
