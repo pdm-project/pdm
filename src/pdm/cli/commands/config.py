@@ -87,9 +87,7 @@ class Command(BaseCommand):
                         style=extra_style,
                         verbosity=termui.Verbosity.DETAIL,
                     )
-                    self.ui.echo(
-                        RegistryConfig(**config[key], config_prefix=key)
-                    )
+                    self.ui.echo(RegistryConfig(**config[key], config_prefix=key))
                     continue
                 if key.startswith(REPOSITORY):
                     for item in config[key]:
