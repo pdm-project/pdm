@@ -43,4 +43,9 @@ class Spinner(Protocol):
         ...
 
 
+class RichProtocol(Protocol):
+    def __rich__(self) -> str:
+        ...
+
+
 SearchResult = List[Package]

@@ -6,7 +6,7 @@ import enum
 import logging
 import os
 from tempfile import mktemp
-from typing import Any, Iterator, Protocol, Sequence
+from typing import Any, Iterator, Sequence
 
 from rich.box import ROUNDED
 from rich.console import Console
@@ -15,7 +15,7 @@ from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 from rich.theme import Theme
 
-from pdm._types import Spinner, SpinnerT
+from pdm._types import Spinner, SpinnerT, RichProtocol
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -35,9 +35,6 @@ _console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
 _err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
 
 
-class RichProtocol(Protocol):
-    def __rich__(self) -> str:
-        ...
 
 
 def is_interactive(console: Console | None = None) -> bool:
