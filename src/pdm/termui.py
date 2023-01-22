@@ -6,7 +6,7 @@ import enum
 import logging
 import os
 from tempfile import mktemp
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterator, Protocol, Sequence
 
 from rich.box import ROUNDED
 from rich.console import Console
@@ -33,6 +33,11 @@ DEFAULT_THEME = {
 }
 _console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
 _err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
+
+
+class RichProtocol(Protocol):
+    def __rich__(self) -> str:
+        ...
 
 
 def is_interactive(console: Console | None = None) -> bool:
@@ -167,7 +172,7 @@ class UI:
 
     def echo(
         self,
-        message: str = "",
+        message: str | RichProtocol = "",
         err: bool = False,
         verbosity: Verbosity = Verbosity.NORMAL,
         **kwargs: Any,

@@ -88,7 +88,7 @@ class Command(BaseCommand):
                         verbosity=termui.Verbosity.DETAIL,
                     )
                     self.ui.echo(
-                        RegistryConfig(**config[key], config_prefix=key).__rich__()
+                        RegistryConfig(**config[key], config_prefix=key)
                     )
                     continue
                 if key.startswith(REPOSITORY):
@@ -101,7 +101,7 @@ class Command(BaseCommand):
                         self.ui.echo(
                             RepositoryConfig(
                                 **config[key][item], config_prefix=f"{key}.{item}"
-                            ).__rich__()
+                            )
                         )
                     continue
                 continue
