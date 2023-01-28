@@ -163,6 +163,11 @@ class BaseProvider(AbstractProvider):
         elif candidate.identify() in self.overrides:
             return True
         if not requirement.is_named:
+            print(
+                ">>>>DEBUG<<<<",
+                candidate.req.get_full_url(),  # type: ignore
+                requirement.get_full_url(),  # type: ignore
+            )
             backend = self.repository.environment.project.backend
             return not candidate.req.is_named and backend.expand_line(
                 url_without_fragments(candidate.req.get_full_url())  # type: ignore
