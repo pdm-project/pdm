@@ -165,9 +165,9 @@ class BaseProvider(AbstractProvider):
         if not requirement.is_named:
             backend = self.repository.environment.project.backend
             return not candidate.req.is_named and backend.expand_line(
-                url_without_fragments(candidate.req.url)  # type: ignore
+                url_without_fragments(candidate.req.get_full_url())  # type: ignore
             ) == backend.expand_line(
-                url_without_fragments(requirement.url)  # type: ignore
+                url_without_fragments(requirement.get_full_url())  # type: ignore
             )
         version = candidate.version
         this_name = self.repository.environment.project.name

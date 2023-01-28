@@ -310,7 +310,7 @@ def test_no_index_raise_error(project):
             pass
 
 
-@pytest.mark.internet
+@pytest.mark.network
 def test_access_index_with_auth(project):
     url = "https://httpbin.org/basic-auth/foo/bar"
     project.global_config.update(
