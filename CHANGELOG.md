@@ -1,3 +1,21 @@
+Release v2.4.1 (2023-01-28)
+---------------------------
+
+### Features & Improvements
+
+- Add proper display for the extra pypi sources in `pdm config`. [#1622](https://github.com/pdm-project/pdm/issues/1622)
+- Support running python scripts without prefixing with `python`. [#1626](https://github.com/pdm-project/pdm/issues/1626)
+
+### Bug Fixes
+
+- Ignore the python requirement for overriden packages. [#1575](https://github.com/pdm-project/pdm/issues/1575)
+- Fix the wildcards in requirement specifiers to make it pass the new parser of `packaging>=22`. [#1619](https://github.com/pdm-project/pdm/issues/1619)
+- Add the missing `subdirectory` attribute to the lockfile entry. [#1630](https://github.com/pdm-project/pdm/issues/1630)
+- Fix a bug that VCS locks don't update when the rev part changes. [#1640](https://github.com/pdm-project/pdm/issues/1640)
+- Redirect the spinner output to stderr. [#1646](https://github.com/pdm-project/pdm/issues/1646)
+- Ensure the destination directory exists before building the packages. [#1647](https://github.com/pdm-project/pdm/issues/1647)
+
+
 Release v2.4.0 (2023-01-12)
 ---------------------------
 
