@@ -4,7 +4,13 @@ from typing import Any, Mapping
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.project import Project
-from pdm.project.config import Config
+from pdm.project.config import (
+    DEFAULT_REPOSITORIES,
+    REPOSITORY,
+    Config,
+    RegistryConfig,
+    RepositoryConfig,
+)
 
 
 class Command(BaseCommand):
@@ -74,10 +80,35 @@ class Command(BaseCommand):
                 if canonical_key in supersedes:
                     superseded = True
                 deprecated = f"[error](deprecating: {key})[/]"
-            elif key not in Config._config_map:
+            elif key not in Config._config_map and not (
+                key.startswith("pypi.") or key.startswith(REPOSITORY)
+            ):
                 continue
             extra_style = "dim" if superseded else None
             if canonical_key not in Config._config_map:
+                if key.startswith("pypi."):
+                    index = key.split(".")[1]
+                    self.ui.echo(
+                        f"[warning]# Configuration of non-default Pypi index `{index}`",
+                        style=extra_style,
+                        verbosity=termui.Verbosity.DETAIL,
+                    )
+                    self.ui.echo(RegistryConfig(**config[key], config_prefix=key))
+                elif key.startswith(REPOSITORY):
+                    for item in config[key]:
+                        self.ui.echo(
+                            f"[warning]# Configuration of custom repository `{item}`",
+                            style=extra_style,
+                            verbosity=termui.Verbosity.DETAIL,
+                        )
+                        repository = dict(config[key][item])
+                        if "url" not in repository and item in DEFAULT_REPOSITORIES:
+                            repository["url"] = DEFAULT_REPOSITORIES[item].url
+                        self.ui.echo(
+                            RepositoryConfig(
+                                **repository, config_prefix=f"{key}.{item}"
+                            )
+                        )
                 continue
             config_item = Config._config_map[canonical_key]
             self.ui.echo(
@@ -85,8 +116,9 @@ class Command(BaseCommand):
                 style=extra_style,
                 verbosity=termui.Verbosity.DETAIL,
             )
+            value = "[i]<hidden>[/]" if key.endswith("password") else config[key]
             self.ui.echo(
-                f"[primary]{canonical_key}[/]{deprecated} = {config[key]}",
+                f"[primary]{canonical_key}[/]{deprecated} = {value}",
                 style=extra_style,
             )
 

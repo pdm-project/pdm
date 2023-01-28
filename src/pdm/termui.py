@@ -15,7 +15,7 @@ from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 from rich.theme import Theme
 
-from pdm._types import Spinner, SpinnerT
+from pdm._types import RichProtocol, Spinner, SpinnerT
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -167,7 +167,7 @@ class UI:
 
     def echo(
         self,
-        message: str = "",
+        message: str | RichProtocol = "",
         err: bool = False,
         verbosity: Verbosity = Verbosity.NORMAL,
         **kwargs: Any,

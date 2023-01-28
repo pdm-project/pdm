@@ -53,7 +53,7 @@ python -m pip install -e .
 ```
 
 You are free to create a virtualenv with either `venv` module or `virtualenv` tool for the development. If you are doing
-so, you may also need to set `pdm config use_venv true` after installation is done.
+so, you may also need to set `pdm config python.use_venv true` after installation is done.
 
 Now, all dependencies are installed into the Python environment you choose, which will be used for development after this point.
 
