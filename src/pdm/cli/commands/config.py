@@ -88,8 +88,7 @@ class Command(BaseCommand):
                         verbosity=termui.Verbosity.DETAIL,
                     )
                     self.ui.echo(RegistryConfig(**config[key], config_prefix=key))
-                    continue
-                if key.startswith(REPOSITORY):
+                elif key.startswith(REPOSITORY):
                     for item in config[key]:
                         self.ui.echo(
                             f"[warning]# Configuration of custom repository `{item}`",
@@ -101,7 +100,6 @@ class Command(BaseCommand):
                                 **config[key][item], config_prefix=f"{key}.{item}"
                             )
                         )
-                    continue
                 continue
             config_item = Config._config_map[canonical_key]
             self.ui.echo(
