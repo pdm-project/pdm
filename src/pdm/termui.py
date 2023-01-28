@@ -129,7 +129,7 @@ class DummySpinner:
         self.text = text
 
     def _show(self) -> None:
-        _console.print(f"[primary]STATUS:[/] {self.text}")
+        _err_console.print(f"[primary]STATUS:[/] {self.text}")
 
     def update(self, text: str) -> None:
         self.text = text
@@ -258,7 +258,7 @@ class UI:
         if self.verbosity >= Verbosity.DETAIL or not is_interactive():
             return DummySpinner(title)
         else:
-            return _console.status(title, spinner=SPINNER, spinner_style="primary")
+            return _err_console.status(title, spinner=SPINNER, spinner_style="primary")
 
     def make_progress(self, *columns: str | ProgressColumn, **kwargs: Any) -> Progress:
         """create a progress instance for indented spinners"""
