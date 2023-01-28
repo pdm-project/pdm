@@ -87,6 +87,10 @@ copyright: Copyright &copy; 2019 <a href="https://frostming.com">Frost Ming</a>
 extra:
   version:
     provider: mike
+  analytics:
+    provider: custom
+    umami_site_id: d41bc972-79a4-4ce3-8c24-33026a8cdd9b
+    umami_script: https://umami.fming.dev/umami.js
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/pdm-project/pdm
