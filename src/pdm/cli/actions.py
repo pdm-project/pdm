@@ -498,6 +498,8 @@ def do_build(
         dest = project.root.joinpath(dest).as_posix()
     if clean:
         shutil.rmtree(dest, ignore_errors=True)
+    if not os.path.exists(dest):
+        os.makedirs(dest, exist_ok=True)
     hooks.try_emit("pre_build", dest=dest, config_settings=config_settings)
     artifacts: list[str] = []
     with project.core.ui.logging("build"):
