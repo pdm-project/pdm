@@ -266,7 +266,7 @@ class FileRequirement(Requirement):
             self._check_installable()
 
     def _hash_key(self) -> tuple:
-        return super()._hash_key() + (self.url, self.editable)
+        return super()._hash_key() + (self.get_full_url(), self.editable)
 
     @classmethod
     def create(cls: type[T], **kwargs: Any) -> T:
