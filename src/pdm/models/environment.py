@@ -112,6 +112,13 @@ class Environment:
         return pypackages
 
     @cached_property
+    def venv_path(self) -> Path | None:
+        """The path of the venv (None if this isn't a venv)"""
+        if not self.is_global:
+            return None
+        return get_venv_like_prefix(self.interpreter.executable)
+
+    @cached_property
     def target_python(self) -> unearth.TargetPython:
         python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
