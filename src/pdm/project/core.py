@@ -363,10 +363,17 @@ class Project:
     @property
     def sources(self) -> list[Source]:
         sources = list(self.pyproject.settings.get("source", []))
-        if not self.global_config["pypi.ignore_stored_index"]:
+        if not self.config.get("pypi.ignore_stored_index", False):
             if all(source.get("name") != "pypi" for source in sources):
                 sources.insert(0, self.default_source)
-            sources.extend(self.global_config.iter_sources())
+            stored_sources = dict(self.project_config.iter_sources())
+            stored_sources.update(
+                (k, v)
+                for k, v in self.global_config.iter_sources()
+                if k not in stored_sources
+            )
+            # The order is kept as project sources -> global sources
+            sources.extend(stored_sources.values())
         expanded_sources = [
             cast("Source", {**source, "url": expand_env_vars_in_auth(source["url"])})
             for source in sources
