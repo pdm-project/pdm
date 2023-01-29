@@ -331,10 +331,10 @@ class Config(MutableMapping[str, str]):
     def self_data(self) -> dict[str, Any]:
         return dict(self._file_data)
 
-    def iter_sources(self) -> Iterator[Source]:
+    def iter_sources(self) -> Iterator[tuple[str, Source]]:
         for name, data in self._data.items():
             if name.startswith("pypi.") and name not in self._config_map:
-                yield cast(Source, dict(data, name=name))
+                yield name[5:], cast(Source, dict(data, name=name))
 
     def _save_config(self) -> None:
         """Save the changed to config file."""
