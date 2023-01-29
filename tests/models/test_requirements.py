@@ -3,7 +3,7 @@ import os
 import pytest
 
 from pdm.models.requirements import RequirementError, parse_requirement
-from pdm.utils import path_to_url
+from pdm.utils import PACKAGING_22, path_to_url
 from tests import FIXTURES
 
 FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
@@ -51,8 +51,16 @@ REQUIREMENTS = [
         "git+git@github.com:pypa/pip.git#egg=pip",
         "pip @ git+ssh://git@github.com/pypa/pip.git",
     ),
-    ("foo >=4.*, <=5.*", "foo<5.0,>=4.0"),
-    ("foo (>=4.*, <=5.*)", "foo<5.0,>=4.0"),
+    pytest.param(
+        "foo >=4.*, <=5.*",
+        "foo<5.0,>=4.0",
+        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
+    ),
+    pytest.param(
+        "foo (>=4.*, <=5.*)",
+        "foo<5.0,>=4.0",
+        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
+    ),
 ]
 
 
