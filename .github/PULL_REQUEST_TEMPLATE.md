@@ -1,4 +1,4 @@
-## Pull Request Check List
+## Pull Request Checklist
 
 - [ ] A news fragment is added in `news/` describing what is new.
 - [ ] Test cases added for changed code.
