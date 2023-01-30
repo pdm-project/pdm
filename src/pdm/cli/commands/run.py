@@ -182,6 +182,8 @@ class TaskRunner:
         )
         if project_env.packages_path:
             process_env.update({"PEP582_PACKAGES": str(project_env.packages_path)})
+        if project_env.venv_path:
+            process_env.update({"VIRTUAL_ENV": str(project_env.venv_path)})
         if env:
             process_env.update(env)
         if shell:
