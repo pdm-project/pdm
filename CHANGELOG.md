@@ -1,3 +1,13 @@
+Release v2.4.2 (2023-01-31)
+---------------------------
+
+### Bug Fixes
+
+- Skip some tests on packaging < 22. [#1649](https://github.com/pdm-project/pdm/issues/1649)
+- Fix a bug that sources from the project config are not loaded. [#1651](https://github.com/pdm-project/pdm/issues/1651)
+- Set VIRTUAL_ENV in `pdm run`. [#1652](https://github.com/pdm-project/pdm/issues/1652)
+
+
 Release v2.4.1 (2023-01-28)
 ---------------------------
 
