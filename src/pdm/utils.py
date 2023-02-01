@@ -34,6 +34,7 @@ except Exception as _:
 
 PACKAGING_22 = Version(_packaging_version) >= Version("22")
 
+
 def create_tracked_tempdir(
     suffix: str | None = None, prefix: str | None = None, dir: str | None = None
 ) -> str:
