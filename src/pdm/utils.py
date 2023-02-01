@@ -28,9 +28,9 @@ from pdm.compat import Distribution, importlib_metadata
 _egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
 
 try:
-    _packaging_version = Version(importlib_metadata.version("packaging"))
+    _packaging_version = importlib_metadata.version("packaging")
 except Exception as _:
-    from packaging import __version__ as Version(_packaging_version)
+    from packaging import __version__ as _packaging_version
 
 PACKAGING_22 = Version(_packaging_version) >= Version("22")
 
