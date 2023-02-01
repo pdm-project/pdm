@@ -26,8 +26,13 @@ from pdm._types import Source
 from pdm.compat import Distribution, importlib_metadata
 
 _egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
-PACKAGING_22 = Version(importlib_metadata.version("packaging")) >= Version("22")
 
+try:
+    _packaging_version = Version(importlib_metadata.version("packaging"))
+except Exception as e:
+    from packaging import __version__ as _packaging_version
+
+PACKAGING_22 = Version(_packaging_version) >= Version("22")
 
 def create_tracked_tempdir(
     suffix: str | None = None, prefix: str | None = None, dir: str | None = None
