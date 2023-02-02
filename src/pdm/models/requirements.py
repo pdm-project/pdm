@@ -469,14 +469,17 @@ def parse_as_pkg_requirement(line: str) -> PackageRequirement:
 
     def fix_wildcard(match: Match[str]) -> str:
         operator, _, version = match.groups()
-        if ".*" not in version or operator in ("==", "!="):
-            return match.group(0)
-        version = version.replace(".*", ".0")
-        if operator in ("<", "<="):  # <4.* and <=4.* are equivalent to <4.0
-            operator = "<"
-        elif operator in (">", ">="):  # >4.* and >=4.* are equivalent to >=4.0
-            operator = ">="
-        return f"{operator}{version}"
+        rval = match.group(0)
+        if ".*" in version:
+            version = version.replace(".*", ".0")
+            if operator in ("<", "<="):  # <4.* and <=4.* are equivalent to <4.0
+                operator = "<"
+            elif operator in (">", ">="):  # >4.* and >=4.* are equivalent to >=4.0
+                operator = ">="
+            rval = f"{operator}{version}"
+        if operator in ("<", "<=", ">", ">="):
+            rval = rval.split("+")[0]
+        return rval
 
     try:
         return PackageRequirement(line)

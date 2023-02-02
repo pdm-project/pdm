@@ -61,6 +61,11 @@ REQUIREMENTS = [
         "foo<5.0,>=4.0",
         marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
     ),
+    pytest.param(
+        "foo (>=4.0+gabcde, <=5.0.dev0+gabcde)",
+        "foo<=5.0.dev0,>=4.0",
+        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
+    ),
 ]
 
 
