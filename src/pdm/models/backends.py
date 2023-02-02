@@ -127,6 +127,8 @@ _BACKENDS: dict[str, type[BuildBackend]] = {
     "hatchling": HatchBackend,
     "pdm-backend": PDMBackend,
 }
+# Fallback to the first backend
+DEFAULT_BACKEND = next(iter(_BACKENDS.values()))
 
 
 def get_backend(name: str) -> type[BuildBackend]:
@@ -139,12 +141,11 @@ def get_backend_by_spec(spec: dict) -> type[BuildBackend]:
     The parameter passed in is the 'build-system' section in pyproject.toml.
     """
     if "build-backend" not in spec:
-        # default to setuptools
-        return SetuptoolsBackend
+        return DEFAULT_BACKEND
     for backend_cls in _BACKENDS.values():
         if backend_cls.build_system()["build-backend"] == spec["build-backend"]:
             return backend_cls
-    return PDMLegacyBackend  # Fallback to pdm.pep517 backend
+    return DEFAULT_BACKEND
 
 
 def get_relative_path(url: str) -> str | None:
