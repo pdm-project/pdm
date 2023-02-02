@@ -1,9 +1,36 @@
+import importlib.resources
 import sys
+from pathlib import Path
+from typing import BinaryIO, ContextManager
 
 if sys.version_info >= (3, 11):
     import tomllib
 else:
     import tomli as tomllib
+
+
+if sys.version_info >= (3, 9):
+
+    def importlib_open_binary(package: str, resource: str) -> BinaryIO:
+        return (importlib.resources.files(package) / resource).open("rb")
+
+    def importlib_read_text(
+        package: str, resource: str, encoding: str = "utf-8", errors: str = "strict"
+    ) -> str:
+        with (importlib.resources.files(package) / resource).open(
+            "r", encoding=encoding, errors=errors
+        ) as f:
+            return f.read()
+
+    def importlib_path(package: str, resource: str) -> ContextManager[Path]:
+        return importlib.resources.as_file(
+            importlib.resources.files(package) / resource
+        )
+
+else:
+    importlib_open_binary = importlib.resources.open_binary
+    importlib_read_text = importlib.resources.read_text
+    importlib_path = importlib.resources.path
 
 
 if sys.version_info >= (3, 8):
