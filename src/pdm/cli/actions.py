@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import textwrap
+import warnings
 from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
@@ -847,7 +848,11 @@ def get_latest_version(project: Project) -> str | None:
         and current_time - state["last-check"] < 60 * 60 * 24 * 7
     ):
         return cast(str, state["latest-version"])
-    latest_version = get_latest_pdm_version_from_pypi(project)
+    try:
+        latest_version = get_latest_pdm_version_from_pypi(project)
+    except Exception as e:
+        warnings.warn(f"Failed to get latest version: {e}", RuntimeWarning)
+        latest_version = None
     if latest_version is None:
         return None
     state.update({"latest-version": latest_version, "last-check": current_time})
