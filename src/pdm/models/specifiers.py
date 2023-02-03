@@ -12,9 +12,9 @@ from pdm.models.versions import Version
 
 
 def _read_max_versions() -> dict[Version, int]:
-    from importlib.resources import open_binary
+    from pdm.compat import resources_open_binary
 
-    with open_binary("pdm.models", "python_max_versions.json") as fp:
+    with resources_open_binary("pdm.models", "python_max_versions.json") as fp:
         return {Version(k): v for k, v in json.load(fp).items()}
 
 

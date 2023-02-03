@@ -5,16 +5,17 @@ from __future__ import annotations
 
 import contextlib
 import functools
-import importlib.resources
 import json
 import os
 import subprocess
 from typing import Any, Generator
 
+from pdm.compat import resources_path
+
 
 @contextlib.contextmanager
 def _in_process_script(name: str) -> Generator[str, None, None]:
-    with importlib.resources.path(__name__, name) as script:
+    with resources_path(__name__, name) as script:
         yield str(script)
 
 
