@@ -9,7 +9,11 @@ else:
     import tomli as tomllib
 
 
-if sys.version_info >= (3, 9):
+if (
+    sys.version_info >= (3, 9)
+    and not (sys.version_info[:2] == (3, 9) and sys.platform == "win32")
+    # a bug on windows+py39 that zipfile path is not normalized
+):
 
     def resources_open_binary(package: str, resource: str) -> BinaryIO:
         return (importlib.resources.files(package) / resource).open("rb")
