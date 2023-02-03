@@ -121,7 +121,7 @@ jobs:
         run: pdm run pytest -n auto --cov=pdm --cov-config=setup.cfg --cov-report=xml tests
       - name: pack pdm
         run: |
-          python -m pip install -U pdm-packer
+          pdm self add pdm-packer
           pdm pack
           python pdm.pyz --version
       - name: Upload coverage to Codecov

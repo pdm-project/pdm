@@ -730,7 +730,7 @@ def get_dist_location(dist: Distribution) -> str:
 
 
 def get_pep582_path(project: Project) -> str:
-    from pdm.compat import importlib_open_binary
+    from pdm.compat import resources_open_binary
 
     script_dir = Path(__file__).parent.parent / "pep582"
     if script_dir.exists():
@@ -740,6 +740,6 @@ def get_pep582_path(project: Project) -> str:
     if script_dir.joinpath("sitecustomize.py").exists():
         return str(script_dir)
     script_dir.mkdir(parents=True, exist_ok=True)
-    with importlib_open_binary("pdm.pep582", "sitecustomize.py") as f:
+    with resources_open_binary("pdm.pep582", "sitecustomize.py") as f:
         script_dir.joinpath("sitecustomize.py").write_bytes(f.read())
     return str(script_dir)
