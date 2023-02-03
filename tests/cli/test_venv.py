@@ -42,10 +42,11 @@ def test_venv_create(invoke, project):
 def test_venv_create_in_project(invoke, project):
     project.project_config["venv.in_project"] = True
     invoke(["venv", "create"], obj=project, strict=True)
-    invoke(["venv", "create"], obj=project, strict=True)
     venv_path = project.root / ".venv"
     assert venv_path.exists()
-    assert len(os.listdir(project.root / "venvs")) == 1
+    result = invoke(["venv", "create"], obj=project)
+    assert result.exit_code == 1
+    assert "is not empty" in result.stderr
 
 
 @pytest.mark.usefixtures("fake_create")

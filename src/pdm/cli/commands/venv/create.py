@@ -45,11 +45,7 @@ class CreateCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        in_project = (
-            project.config["venv.in_project"]
-            and not options.name
-            and not project.root.joinpath(".venv").exists()
-        )
+        in_project = project.config["venv.in_project"] and not options.name
         prompt = project.config["venv.prompt"]
         backend: str = options.backend or project.config["venv.backend"]
         venv_backend = BACKENDS[backend](project, options.python)

@@ -78,11 +78,17 @@ class Backend(abc.ABC):
         if not location.exists():
             return
         if not force:
-            raise VirtualenvCreateError(f"The location {location} is not empty")
-        self.project.core.ui.echo(
-            f"Cleaning existing target directory {location}", err=True
-        )
-        shutil.rmtree(location)
+            raise VirtualenvCreateError(
+                f"The location {location} is not empty, add --force to overwrite it."
+            )
+        if location.is_file():
+            self.project.core.ui.echo(f"Removing existing file {location}", err=True)
+            location.unlink()
+        else:
+            self.project.core.ui.echo(
+                f"Cleaning existing target directory {location}", err=True
+            )
+            shutil.rmtree(location)
 
     def get_location(self, name: str | None) -> Path:
         venv_parent = Path(self.project.config["venv.location"])
