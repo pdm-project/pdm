@@ -35,6 +35,6 @@ FORMATS: Mapping[str, _Format] = {
     "pipfile": cast(_Format, pipfile),
     "poetry": cast(_Format, poetry),
     "flit": cast(_Format, flit),
-    "requirements": cast(_Format, requirements),
     "setuppy": cast(_Format, setup_py),
+    "requirements": cast(_Format, requirements),
 }
