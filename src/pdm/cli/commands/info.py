@@ -26,12 +26,13 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
         interpreter = project.python
+        packages_path = project.environment.get_paths()["purelib"]
         if options.python:
             project.core.ui.echo(str(interpreter.executable))
         elif options.where:
             project.core.ui.echo(str(project.root))
         elif options.packages:
-            project.core.ui.echo(str(project.environment.packages_path))
+            project.core.ui.echo(str(packages_path))
         elif options.env:
             project.core.ui.echo(json.dumps(project.environment.marker_environment, indent=2))
         else:
@@ -49,7 +50,7 @@ class Command(BaseCommand):
                     project.core.version,
                     f"{interpreter.executable} ({interpreter.identifier})",
                     project.root.as_posix(),
-                    str(project.environment.packages_path),
+                    str(packages_path),
                 ],
             ):
                 project.core.ui.echo(f"{name}\n  {value}")

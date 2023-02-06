@@ -43,7 +43,7 @@ from pdm.utils import (
 if TYPE_CHECKING:
     from unearth import Package, PackageFinder
 
-    from pdm.models.environment import Environment
+    from pdm.environments import BaseEnvironment
 
 
 def _dist_info_files(whl_zip: ZipFile) -> list[str]:
@@ -257,7 +257,7 @@ class Candidate:
         """Format for output."""
         return f"[req]{self.name}[/] [warning]{self.version}[/]"
 
-    def prepare(self, environment: Environment) -> PreparedCandidate:
+    def prepare(self, environment: BaseEnvironment) -> PreparedCandidate:
         """Prepare the candidate for installation."""
         if self._prepared is None:
             self._prepared = PreparedCandidate(self, environment)
@@ -269,7 +269,7 @@ class PreparedCandidate:
     The metadata and built wheel are available.
     """
 
-    def __init__(self, candidate: Candidate, environment: Environment) -> None:
+    def __init__(self, candidate: Candidate, environment: BaseEnvironment) -> None:
         self.candidate = candidate
         self.environment = environment
         self.req = candidate.req
@@ -548,14 +548,14 @@ class PreparedCandidate:
         if self.req.editable:
             # In this branch the requirement must be an editable VCS requirement.
             # The repository will be unpacked into a *persistent* src directory.
-            if self.environment.packages_path:
-                src_dir = self.environment.packages_path / "src"
+            if self.environment.is_local:
+                prefix = self.environment.prefix  # type: ignore[attr-defined]
             else:
-                venv_prefix = get_venv_like_prefix(self.environment.interpreter.executable)
-                if venv_prefix is not None:
-                    src_dir = venv_prefix / "src"
-                else:
-                    src_dir = Path("src")
+                prefix = get_venv_like_prefix(self.environment.interpreter.executable)
+            if prefix is not None:
+                src_dir = prefix / "src"
+            else:
+                src_dir = Path("src")
             src_dir.mkdir(exist_ok=True, parents=True)
             dirname = self.candidate.name or self.req.name
             if not dirname:

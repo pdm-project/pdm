@@ -30,7 +30,10 @@ def test_install_with_file_existing(project):
         req,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
-    (project.environment.packages_path / "lib/demo.py").touch()
+    lib_path = project.environment.get_paths()["purelib"]
+    os.makedirs(lib_path, exist_ok=True)
+    with open(os.path.join(lib_path, "demo.py"), "w") as fp:
+        fp.write("print('hello')\n")
     installer = InstallManager(project.environment)
     installer.install(candidate)
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from pdm.environments import BaseEnvironment
 from pdm.installers.manager import InstallManager
-from pdm.models.environment import Environment
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver.core import resolve
@@ -10,7 +10,7 @@ from pdm.termui import logger
 
 def install_requirements(
     reqs: list[Requirement],
-    environment: Environment,
+    environment: BaseEnvironment,
     use_install_cache: bool = False,
 ) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""

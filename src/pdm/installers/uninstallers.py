@@ -15,7 +15,7 @@ from pdm.utils import is_egg_link, is_path_relative_to
 
 if TYPE_CHECKING:
     from pdm.compat import Distribution
-    from pdm.models.environment import Environment
+    from pdm.environments import BaseEnvironment
 
 _T = TypeVar("_T", bound="BaseRemovePaths")
 
@@ -113,7 +113,7 @@ def _get_file_root(path: str, base: str) -> str | None:
 class BaseRemovePaths(abc.ABC):
     """A collection of paths and/or pth entries to remove"""
 
-    def __init__(self, dist: Distribution, environment: Environment) -> None:
+    def __init__(self, dist: Distribution, environment: BaseEnvironment) -> None:
         self.dist = dist
         self.environment = environment
         self._paths: set[str] = set()
@@ -133,7 +133,9 @@ class BaseRemovePaths(abc.ABC):
         """Roll back the removal operations"""
 
     @classmethod
-    def from_dist(cls: type[_T], dist: Distribution, environment: Environment) -> _T:
+    def from_dist(
+        cls: type[_T], dist: Distribution, environment: BaseEnvironment
+    ) -> _T:
         """Create an instance from the distribution"""
         scheme = environment.get_paths()
         instance = cls(dist, environment)
@@ -203,7 +205,7 @@ class StashedRemovePaths(BaseRemovePaths):
 
     PTH_REGISTRY = "easy-install.pth"
 
-    def __init__(self, dist: Distribution, environment: Environment) -> None:
+    def __init__(self, dist: Distribution, environment: BaseEnvironment) -> None:
         super().__init__(dist, environment)
         self._pth_file = os.path.join(self.environment.get_paths()["purelib"], self.PTH_REGISTRY)
         self._saved_pth: bytes | None = None

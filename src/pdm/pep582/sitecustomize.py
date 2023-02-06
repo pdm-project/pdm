@@ -1,44 +1,36 @@
 import os
 import site
 import sys
+import sysconfig
 
 
 def get_pypackages_path():
-    def find_pypackage(path, version):
-        if not os.path.exists(path):
-            return None
-
-        packages_name = f"__pypackages__/{version}/lib"
+    def find_pypackage(path):
         for _ in range(int(os.getenv("PDM_PROJECT_MAX_DEPTH", "5"))):
-            if os.path.exists(os.path.join(path, packages_name)):
-                return os.path.join(path, packages_name)
+            pypackages = os.path.join(path, "__pypackages__")
+            if not os.path.exists(pypackages):
+                continue
+            lib_path = sysconfig.get_path("purelib", vars={"base": pypackages, "platbase": pypackages})
+            if os.path.exists(lib_path):
+                return pypackages, lib_path
             if os.path.dirname(path) == path:
                 # Root path is reached
                 break
             path = os.path.dirname(path)
-        return None
-
-    if "PEP582_PACKAGES" in os.environ:
-        return os.path.join(os.getenv("PEP582_PACKAGES"), "lib")
-    find_paths = [os.getcwd()]
-    version = bare_version = ".".join(map(str, sys.version_info[:2]))
-    if os.name == "nt" and sys.maxsize <= 2**32:
-        version += "-32"
+        return None, None
 
     if getattr(sys, "argv", None) and sys.argv[0]:
         script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-        find_paths.insert(0, script_dir)
+        find_paths = [script_dir]
+    else:
+        # This is a REPL session
+        find_paths = [os.getcwd()]
 
     for path in find_paths:
-        result = find_pypackage(path, version)
-        if result:
+        result = find_pypackage(path)
+        if result[0] is not None:
             return result
-
-    if bare_version != version:
-        for path in find_paths:
-            result = find_pypackage(path, bare_version)
-            if result:
-                return result
+    return None, None
 
 
 def load_next_sitecustomize_py2():
@@ -66,43 +58,13 @@ def load_next_sitecustomize_py3():
         sys.modules["sitecustomize"] = old_module
 
 
-def patch_sysconfig(libpath):
+def patch_sysconfig(prefix):
     """This is a hack to make sure that the sysconfig.get_paths()
     returns PEP 582 scheme.
     """
-    import functools
-    import sysconfig
-
-    bin_prefix = "Scripts" if os.name == "nt" else "bin"
-    pep582_base = os.path.dirname(libpath)
-    pep582_scheme = {
-        "stdlib": "{pep582_base}/lib",
-        "platstdlib": "{pep582_base}/lib",
-        "purelib": "{pep582_base}/lib",
-        "platlib": "{pep582_base}/lib",
-        "include": "{pep582_base}/include",
-        "scripts": "{pep582_base}/%s" % bin_prefix,
-        "data": "{pep582_base}",
-        "prefix": "{pep582_base}",
-        "headers": "{pep582_base}/include",
-    }
-
-    def patch_pep582(get_paths):
-        @functools.wraps(get_paths)
-        def wrapper(scheme=None, vars=None, expand=True):
-            default_scheme = get_paths.__defaults__[0]
-            if not vars and scheme is None:
-                scheme = "pep582"
-            else:
-                scheme = scheme or default_scheme
-            return get_paths(scheme, vars, expand)
-
-        return wrapper
-
     # This returns a global variable, just update it in place.
-    sysconfig.get_config_vars()["pep582_base"] = pep582_base
-    sysconfig.get_paths = patch_pep582(sysconfig.get_paths)
-    sysconfig._INSTALL_SCHEMES["pep582"] = pep582_scheme
+    config_vars = sysconfig.get_config_vars()
+    config_vars["base"] = config_vars["platbase"] = prefix
 
 
 def main():
@@ -114,7 +76,7 @@ def main():
     else:
         load_next_sitecustomize_py3()
 
-    libpath = get_pypackages_path()
+    prefix, libpath = get_pypackages_path()
     if not libpath:
         return
 
@@ -134,8 +96,8 @@ def main():
         known_paths.clear()
         site.addusersitepackages(known_paths)
         site.addsitepackages(known_paths)
-    if "PEP582_PACKAGES" in os.environ:
-        patch_sysconfig(libpath)
+
+    patch_sysconfig(prefix)
 
 
 main()

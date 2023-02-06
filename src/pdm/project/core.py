@@ -18,11 +18,11 @@ from unearth import Link
 from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.compat import cached_property
+from pdm.environments import BaseEnvironment, PythonEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
 from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
 from pdm.models.candidates import Candidate, make_candidate
-from pdm.models.environment import Environment, GlobalEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -36,7 +36,6 @@ from pdm.utils import (
     expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
-    get_venv_like_prefix,
     normalize_name,
     path_to_url,
 )
@@ -74,7 +73,7 @@ class Project:
         global_config: str | Path | None = None,
     ) -> None:
         self._lockfile: Lockfile | None = None
-        self._environment: Environment | None = None
+        self._environment: BaseEnvironment | None = None
         self._python: PythonInfo | None = None
         self.core = core
 
@@ -236,20 +235,20 @@ class Project:
 
         raise NoPythonVersion(f"No Python that satisfies {self.python_requires} is found on the system.")
 
-    def get_environment(self) -> Environment:
+    def get_environment(self) -> BaseEnvironment:
         """Get the environment selected by this project"""
 
         if self.is_global:
-            env = GlobalEnvironment(self)
+            env = PythonEnvironment(self)
             # Rewrite global project's python requires to be
             # compatible with the exact version
             env.python_requires = PySpecSet(f"=={self.python.version}")
             return env
 
         return (
-            GlobalEnvironment(self)
-            if self.config["python.use_venv"] and get_venv_like_prefix(self.python.executable) is not None
-            else Environment(self)
+            PythonEnvironment(self)
+            if self.config["python.use_venv"] and self.python.is_venv
+            else PythonLocalEnvironment(self)
         )
 
     def _create_virtualenv(self) -> Path:
@@ -267,13 +266,13 @@ class Project:
         return path
 
     @property
-    def environment(self) -> Environment:
+    def environment(self) -> BaseEnvironment:
         if not self._environment:
             self._environment = self.get_environment()
         return self._environment
 
     @environment.setter
-    def environment(self, value: Environment) -> None:
+    def environment(self, value: BaseEnvironment) -> None:
         self._environment = value
 
     @property

@@ -14,7 +14,8 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
 from pdm.compat import Distribution, importlib_metadata
-from pdm.models.environment import BareEnvironment, WorkingSet
+from pdm.environments import BareEnvironment
+from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 from pdm.utils import is_in_zipapp, normalize_name
 
