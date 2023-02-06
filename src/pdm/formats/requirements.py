@@ -146,7 +146,7 @@ def convert(
     if dev_deps:
         dev_group = options.group if options.group and options.dev else "dev"
         settings["dev-dependencies"] = {dev_group: dev_deps}
-    if options.group:
+    if options.group and deps:
         data["optional-dependencies"] = {options.group: deps}
     else:
         data["dependencies"] = deps

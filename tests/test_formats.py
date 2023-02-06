@@ -29,11 +29,14 @@ def test_convert_requirements_file(project, is_dev):
     options = Namespace(dev=is_dev, group=None)
     result, settings = requirements.convert(project, golden_file, options)
     group = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
+    dev_group = settings["dev-dependencies"]["dev"]
 
     assert len(settings["source"]) == 2
     assert "webassets==2.0" in group
     assert 'whoosh==2.7.4; sys_platform == "win32"' in group
-    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
+    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in dev_group
+    if not is_dev:
+        assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" not in group
     assert (
         "pep508-package @ git+https://github.com/techalchemy/test-project.git"
         "@master#subdirectory=parent_folder/pep508-package" in group
