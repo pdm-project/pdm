@@ -643,6 +643,12 @@ def do_use(
         f"Using Python interpreter: [success]{str(selected_python.path)}[/] ({selected_python.identifier})"
     )
     project.python = selected_python
+    if project.environment.is_local:
+        project.core.ui.echo(
+            "Using __pypackages__ because non-venv Python is used.",
+            style="primary",
+            err=True,
+        )
     if (
         old_python
         and old_python.executable != selected_python.executable

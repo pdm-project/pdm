@@ -23,7 +23,7 @@ from pdm.models.working_set import WorkingSet
 from pdm.utils import get_index_urls, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
-    from pdm._types import Source
+    from pdm._types import RepositoryConfig
     from pdm.models.python import PythonInfo
     from pdm.project import Project
 
@@ -31,7 +31,6 @@ if TYPE_CHECKING:
 class BaseEnvironment(abc.ABC):
     """Environment dependent stuff related to the selected Python interpreter."""
 
-    interpreter: PythonInfo
     is_local = False
 
     def __init__(self, project: Project) -> None:
@@ -40,11 +39,14 @@ class BaseEnvironment(abc.ABC):
         """
         self.python_requires = project.python_requires
         self.project = project
-        self.interpreter = project.python
         self.auth = PdmBasicAuth(
             self.project.sources,
             self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )
+
+    @property
+    def interpreter(self) -> PythonInfo:
+        return self.project.python
 
     @abc.abstractmethod
     def get_paths(self) -> dict[str, str]:
@@ -87,7 +89,7 @@ class BaseEnvironment(abc.ABC):
     @contextmanager
     def get_finder(
         self,
-        sources: list[Source] | None = None,
+        sources: list[RepositoryConfig] | None = None,
         ignore_compatibility: bool = False,
     ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.
@@ -204,11 +206,14 @@ class BareEnvironment(BaseEnvironment):
     def __init__(self, project: Project) -> None:
         self.python_requires = project.python_requires
         self.project = project
-        self.interpreter = PythonInfo.from_path(sys.executable)
         self.auth = PdmBasicAuth(
             self.project.sources,
             self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )
+
+    @property
+    def interpreter(self) -> PythonInfo:
+        return PythonInfo.from_path(sys.executable)
 
     def get_paths(self) -> dict[str, str]:
         return {}

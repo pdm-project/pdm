@@ -2,11 +2,24 @@ import os
 
 from pdm.environments.base import BaseEnvironment
 from pdm.models.in_process import get_sys_config_paths
+from pdm.models.python import PythonInfo
+from pdm.project import Project
 from pdm.utils import get_venv_like_prefix
 
 
 class PythonEnvironment(BaseEnvironment):
     """A project environment that is directly derived from a Python interpreter"""
+
+    def __init__(self, project: Project, *, python: str | None = None) -> None:
+        super().__init__(project)
+        if python is None:
+            self._interpreter = project.python
+        else:
+            self._interpreter = PythonInfo.from_path(python)
+
+    @property
+    def interpreter(self) -> PythonInfo:
+        return self._interpreter
 
     def get_paths(self) -> dict[str, str]:
         is_venv = self.interpreter.is_venv

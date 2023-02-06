@@ -19,12 +19,10 @@ def get_pypackages_path():
             path = os.path.dirname(path)
         return None, None
 
-    if getattr(sys, "argv", None) and sys.argv[0]:
+    find_paths = [os.getcwd()]
+    if getattr(sys, "argv", None):
         script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-        find_paths = [script_dir]
-    else:
-        # This is a REPL session
-        find_paths = [os.getcwd()]
+        find_paths.insert(0, script_dir)
 
     for path in find_paths:
         result = find_pypackage(path)
