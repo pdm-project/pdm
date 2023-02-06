@@ -1,3 +1,20 @@
+Release v2.4.3 (2023-02-06)
+---------------------------
+
+### Features & Improvements
+
+- Allow creating venv in project forcely if it already exists. [#1666](https://github.com/pdm-project/pdm/issues/1666)
+- Always ignore remembered selection in pdm init. [#1672](https://github.com/pdm-project/pdm/issues/1672)
+
+### Bug Fixes
+
+- Fix the fallback build backend to `pdm-pep517` instead of `setuptools`. [#1658](https://github.com/pdm-project/pdm/issues/1658)
+- Eliminate the deprecation warnings from `importlib.resources`. [#1660](https://github.com/pdm-project/pdm/issues/1660)
+- Don't crash when failed to get the latest version of PDM for checking update. [#1663](https://github.com/pdm-project/pdm/issues/1663)
+- Fix the priorities of importable formats to make sure the correct format is used. [#1669](https://github.com/pdm-project/pdm/issues/1669)
+- Import editable requirements into dev dependencies. [#1674](https://github.com/pdm-project/pdm/issues/1674)
+
+
 Release v2.4.2 (2023-01-31)
 ---------------------------
 
