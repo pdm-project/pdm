@@ -61,6 +61,7 @@ class Command(BaseCommand):
                 project,
                 options.python or "",
                 first=bool(options.python),
+                ignore_remembered=True,
                 ignore_requires_python=True,
                 hooks=hooks,
             )
@@ -89,7 +90,8 @@ class Command(BaseCommand):
             python = actions.do_use(
                 project,
                 options.python or "3",
-                True,
+                first=True,
+                ignore_remembered=True,
                 ignore_requires_python=True,
                 save=False,
                 hooks=hooks,

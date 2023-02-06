@@ -79,7 +79,8 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
     do_use.assert_called_once_with(
         project_no_init,
         ANY,
-        True,
+        first=True,
+        ignore_remembered=True,
         ignore_requires_python=True,
         save=False,
         hooks=ANY,
