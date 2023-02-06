@@ -129,13 +129,24 @@ def convert(
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     parser = RequirementParser()
     parser.parse(str(filename))
+    backend = project.backend
 
-    deps = make_array([r.as_line() for r in parser.requirements], True)
+    deps = make_array([], True)
+    dev_deps = make_array([], True)
+
+    for req in parser.requirements:
+        if req.is_file_or_url:
+            req.relocate(backend)  # type: ignore[attr-defined]
+        if req.editable or options.dev:
+            dev_deps.append(req.as_line())
+        else:
+            deps.append(req.as_line())
     data: dict[str, Any] = {}
     settings: dict[str, Any] = {}
-    if options.dev:
-        settings["dev-dependencies"] = {options.group or "dev": deps}
-    elif options.group:
+    if dev_deps:
+        dev_group = options.group if options.group and options.dev else "dev"
+        settings["dev-dependencies"] = {dev_group: dev_deps}
+    if options.group and deps:
         data["optional-dependencies"] = {options.group: deps}
     else:
         data["dependencies"] = deps

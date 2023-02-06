@@ -29,11 +29,14 @@ def test_convert_requirements_file(project, is_dev):
     options = Namespace(dev=is_dev, group=None)
     result, settings = requirements.convert(project, golden_file, options)
     group = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
+    dev_group = settings["dev-dependencies"]["dev"]
 
     assert len(settings["source"]) == 2
     assert "webassets==2.0" in group
     assert 'whoosh==2.7.4; sys_platform == "win32"' in group
-    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
+    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in dev_group
+    if not is_dev:
+        assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" not in group
     assert (
         "pep508-package @ git+https://github.com/techalchemy/test-project.git"
         "@master#subdirectory=parent_folder/pep508-package" in group
@@ -129,16 +132,17 @@ def test_convert_flit(project):
 def test_import_requirements_with_group(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    result, _ = requirements.convert(
+    result, settings = requirements.convert(
         project, golden_file, Namespace(dev=False, group="test")
     )
 
     group = result["optional-dependencies"]["test"]
+    dev_group = settings["dev-dependencies"]["dev"]
     assert "webassets==2.0" in group
     assert 'whoosh==2.7.4; sys_platform == "win32"' in group
-    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in group
+    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" not in group
+    assert "-e git+https://github.com/pypa/pip.git@main#egg=pip" in dev_group
     assert not result.get("dependencies")
-    assert not result.get("dev-dependencies", {}).get("dev")
 
 
 def test_export_expand_env_vars_in_source(project, monkeypatch):
