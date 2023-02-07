@@ -18,7 +18,10 @@ def with_pip(request):
 @pytest.fixture()
 def fake_create(monkeypatch):
     def fake_create(self, location, *args):
-        location.mkdir(parents=True)
+        bin_dir = "Scripts" if sys.platform == "win32" else "bin"
+        suffix = ".exe" if sys.platform == "win32" else ""
+        (location / bin_dir).mkdir(parents=True)
+        (location / bin_dir / f"python{suffix}").touch()
 
     monkeypatch.setattr(backends.VirtualenvBackend, "perform_create", fake_create)
     monkeypatch.setattr(backends.VenvBackend, "perform_create", fake_create)
@@ -47,6 +50,19 @@ def test_venv_create_in_project(invoke, project):
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 1
     assert "is not empty" in result.stderr
+
+
+@pytest.mark.usefixtures("fake_create")
+def test_venv_show_path(invoke, project):
+    project.project_config["venv.in_project"] = True
+    invoke(["venv", "create"], obj=project, strict=True)
+    invoke(["venv", "create", "--name", "test"], obj=project, strict=True)
+    result = invoke(["venv", "--path", "in-project"], obj=project, strict=True)
+    assert result.output.strip() == str(project.root / ".venv")
+    result = invoke(["venv", "--path", "test"], obj=project)
+    assert result.exit_code == 0
+    result = invoke(["venv", "--path", "foo"], obj=project)
+    assert result.exit_code == 1
 
 
 @pytest.mark.usefixtures("fake_create")

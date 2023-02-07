@@ -54,6 +54,13 @@ Virtualenvs created with this project:
 -  3.9.1: C:\Users\Frost Ming\AppData\Local\pdm\pdm\venvs\test-project-8Sgn_62n-3.9.1
 ```
 
+## Show the path or python interpreter of a virtualenv
+
+```bash
+$ pdm venv --path for-test
+$ pdm venv --python for-test
+```
+
 ## Remove a virtualenv
 
 ```bash
