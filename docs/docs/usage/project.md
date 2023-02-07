@@ -134,6 +134,9 @@ pdm config pypi.extra.username "foo"
 pdm config pypi.extra.password "password4foo"
 ```
 
+The index parameters can be put in different levels of configuration files. That is, you can only put the `url` in `pyproject.toml`,
+and store the credentials in `~/.config/pdm/config.toml` under the `[pypi.<name>]` section of which the name must match.
+
 !!! NOTE
     Configured indexes will be tried **after** the sources in `pyproject.toml`, if you want to completely ignore the
     locally configured indexes, including the main index, set the config value `pypi.ignore_stored_index`

@@ -50,12 +50,12 @@ def test_project_config_set_invalid_key(project):
         config["foo"] = "bar"
 
 
-def test_project_sources_overriding(project):
+def test_project_sources_overriding_pypi(project):
     project.project_config["pypi.url"] = "https://test.pypi.org/simple"
-    assert project.sources[0]["url"] == "https://test.pypi.org/simple"
+    assert project.sources[0].url == "https://test.pypi.org/simple"
 
     project.pyproject.settings["source"] = [{"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}]
-    assert project.sources[0]["url"] == "https://example.org/simple"
+    assert project.sources[0].url == "https://example.org/simple"
 
 
 def test_project_sources_env_var_expansion(project, monkeypatch):
@@ -63,7 +63,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
     monkeypatch.setenv("PYPI_PASS", "password")
     project.project_config["pypi.url"] = "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
     # expanded in sources
-    assert project.sources[0]["url"] == "https://user:password@test.pypi.org/simple"
+    assert project.sources[0].url == "https://user:password@test.pypi.org/simple"
     # not expanded in project config
     assert project.project_config["pypi.url"] == "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
 
@@ -75,7 +75,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
         }
     ]
     # expanded in sources
-    assert project.sources[0]["url"] == "https://user:password@example.org/simple"
+    assert project.sources[0].url == "https://user:password@example.org/simple"
     # not expanded in tool settings
     assert project.pyproject.settings["source"][0]["url"] == "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple"
 
@@ -87,7 +87,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
         }
     ]
     # expanded in sources
-    assert project.sources[1]["url"] == "https://user:password@example2.org/simple"
+    assert project.sources[1].url == "https://user:password@example2.org/simple"
     # not expanded in tool settings
     assert project.pyproject.settings["source"][0]["url"] == "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple"
 
@@ -267,12 +267,12 @@ def test_load_extra_sources(project):
     project.global_config["pypi.extra.url"] = "https://extra.pypi.org/simple"
     sources = project.sources
     assert len(sources) == 3
-    assert [item["name"] for item in sources] == ["pypi", "custom", "pypi.extra"]
+    assert [item.name for item in sources] == ["pypi", "custom", "extra"]
 
     project.global_config["pypi.ignore_stored_index"] = True
     sources = project.sources
     assert len(sources) == 1
-    assert [item["name"] for item in sources] == ["custom"]
+    assert [item.name for item in sources] == ["custom"]
 
 
 def test_no_index_raise_error(project):
@@ -296,3 +296,23 @@ def test_access_index_with_auth(project):
         session = finder.session
         resp = session.get(url)
         assert resp.ok
+
+
+def test_configured_source_overwriting(project):
+    project.pyproject.settings["source"] = [
+        {
+            "name": "custom",
+            "url": "https://custom.pypi.org/simple",
+        }
+    ]
+    project.global_config["pypi.custom.url"] = "https://extra.pypi.org/simple"
+    project.global_config["pypi.custom.verify_ssl"] = False
+    project.project_config["pypi.custom.username"] = "foo"
+    project.project_config["pypi.custom.password"] = "bar"
+    sources = project.sources
+    assert [source.name for source in sources] == ["pypi", "custom"]
+    custom_source = sources[1]
+    assert custom_source.url == "https://custom.pypi.org/simple"
+    assert custom_source.verify_ssl is False
+    assert custom_source.username == "foo"
+    assert custom_source.password == "bar"

@@ -15,6 +15,7 @@ from tomlkit.items import Array
 from unearth import Link
 
 from pdm import termui
+from pdm._types import RepositoryConfig
 from pdm.compat import cached_property
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
@@ -42,7 +43,7 @@ from pdm.utils import (
 if TYPE_CHECKING:
     from resolvelib.reporters import BaseReporter
 
-    from pdm._types import Source, Spinner
+    from pdm._types import Spinner
     from pdm.core import Core
     from pdm.resolver.providers import BaseProvider
 
@@ -326,33 +327,41 @@ class Project:
         return self.pyproject.settings.get("allow_prereleases")
 
     @property
-    def default_source(self) -> Source:
+    def default_source(self) -> RepositoryConfig:
         """Get the default source from the pypi setting"""
-        return cast(
-            "Source",
-            {
-                "url": self.config["pypi.url"],
-                "verify_ssl": self.config["pypi.verify_ssl"],
-                "name": "pypi",
-                "username": self.config.get("pypi.username"),
-                "password": self.config.get("pypi.password"),
-            },
+        return RepositoryConfig(
+            name="pypi",
+            url=self.config["pypi.url"],
+            verify_ssl=self.config["pypi.verify_ssl"],
+            username=self.config.get("pypi.username"),
+            password=self.config.get("pypi.password"),
         )
 
     @property
-    def sources(self) -> list[Source]:
-        sources = list(self.pyproject.settings.get("source", []))
+    def sources(self) -> list[RepositoryConfig]:
+        result: dict[str, RepositoryConfig] = {}
+        for source in self.pyproject.settings.get("source", []):
+            result[source["name"]] = RepositoryConfig(**source)
+
+        def merge_sources(other_sources: Iterable[tuple[str, RepositoryConfig]]) -> None:
+            for name, source in other_sources:
+                source.name = name
+                if name in result:
+                    result[name].passive_update(source)
+                else:
+                    result[name] = source
+
         if not self.config.get("pypi.ignore_stored_index", False):
-            if all(source.get("name") != "pypi" for source in sources):
-                sources.insert(0, self.default_source)
-            stored_sources = dict(self.project_config.iter_sources())
-            stored_sources.update((k, v) for k, v in self.global_config.iter_sources() if k not in stored_sources)
-            # The order is kept as project sources -> global sources
-            sources.extend(stored_sources.values())
-        expanded_sources = [
-            cast("Source", {**source, "url": expand_env_vars_in_auth(source["url"])}) for source in sources
-        ]
-        return expanded_sources
+            if "pypi" not in result:  # put pypi source at the beginning
+                result = {"pypi": self.default_source, **result}
+            else:
+                result["pypi"].passive_update(self.default_source)
+            merge_sources(self.project_config.iter_sources())
+            merge_sources(self.global_config.iter_sources())
+        for source in result.values():
+            assert source.url, "Source URL must not be empty"
+            source.url = expand_env_vars_in_auth(source.url)
+        return list(result.values())
 
     def get_repository(
         self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True
