@@ -4,75 +4,23 @@ import collections
 import dataclasses
 import os
 from pathlib import Path
-from typing import Any, Callable, Iterator, Mapping, MutableMapping, cast
+from typing import Any, Callable, Iterator, Mapping, MutableMapping
 
 import platformdirs
 import rich.theme
 import tomlkit
 
 from pdm import termui
-from pdm._types import Source
+from pdm._types import RepositoryConfig
 from pdm.exceptions import NoConfigError, PdmUsageError
 
-ui = termui.UI()
-
 REPOSITORY = "repository"
-
-
-@dataclasses.dataclass
-class RepositoryConfig:
-    url: str
-    username: str | None = None
-    password: str | None = None
-    ca_certs: str | None = None
-
-    config_prefix: str | None = None
-
-    def __rich__(self) -> str:
-        config_prefix = (
-            f"{self.config_prefix}." if self.config_prefix is not None else ""
-        )
-        lines = [f"[primary]{config_prefix}url[/] = {self.url}"]
-        if self.username:
-            lines.append(f"[primary]{config_prefix}username[/] = {self.username}")
-        if self.password:
-            lines.append(f"[primary]{config_prefix}password[/] = [i]<hidden>[/]")
-        if self.ca_certs:
-            lines.append(f"[primary]{config_prefix}ca_certs[/] = {self.ca_certs}")
-        return "\n".join(lines)
-
-
-@dataclasses.dataclass
-class RegistryConfig:
-
-    url: str
-    username: str | None = None
-    password: str | None = None
-    verify_ssl: bool | None = None
-    type: str | None = None
-
-    config_prefix: str | None = None
-
-    def __rich__(self) -> str:
-        config_prefix = (
-            f"{self.config_prefix}." if self.config_prefix is not None else ""
-        )
-        lines = [f"[primary]{config_prefix}url[/] = {self.url}"]
-        if self.username:
-            lines.append(f"[primary]{config_prefix}username[/] = {self.username}")
-        if self.password:
-            lines.append(f"[primary]{config_prefix}password[/] = [i]<hidden>[/]")
-        if self.verify_ssl:
-            lines.append(f"[primary]{config_prefix}verify_ssl[/] = {self.verify_ssl}")
-        if self.type:
-            lines.append(f"[primary]{config_prefix}type[/] = {self.type}")
-        return "\n".join(lines)
-
-
 DEFAULT_REPOSITORIES = {
-    "pypi": RepositoryConfig("https://upload.pypi.org/legacy/"),
-    "testpypi": RepositoryConfig("https://test.pypi.org/legacy/"),
+    "pypi": "https://upload.pypi.org/legacy/",
+    "testpypi": "https://test.pypi.org/legacy/",
 }
+
+ui = termui.UI()
 
 
 def load_config(file_path: Path) -> dict[str, Any]:
@@ -331,10 +279,10 @@ class Config(MutableMapping[str, str]):
     def self_data(self) -> dict[str, Any]:
         return dict(self._file_data)
 
-    def iter_sources(self) -> Iterator[tuple[str, Source]]:
+    def iter_sources(self) -> Iterator[tuple[str, RepositoryConfig]]:
         for name, data in self._data.items():
             if name.startswith("pypi.") and name not in self._config_map:
-                yield name[5:], cast(Source, dict(data, name=name))
+                yield name[5:], RepositoryConfig(**data)
 
     def _save_config(self) -> None:
         """Save the changed to config file."""
@@ -375,7 +323,7 @@ class Config(MutableMapping[str, str]):
             return (
                 source[parts[2]]
                 if len(parts) >= 3
-                else RegistryConfig(**self._data[index_key])
+                else RepositoryConfig(**self._data[index_key])
             )
         elif key == "pypi.password":
             return "<hidden>"
@@ -489,22 +437,22 @@ class Config(MutableMapping[str, str]):
         """Get a repository by name or url."""
         if not self.is_global:  # pragma: no cover
             raise NoConfigError("repository")
-        repositories: Mapping[str, Source] = self._data.get(REPOSITORY, {})
-        repo: RepositoryConfig | None = None
+        repositories: Mapping[str, RepositoryConfig] = {
+            k: RepositoryConfig(**v) for k, v in self._data.get(REPOSITORY, {}).items()
+        }
         if "://" in name_or_url:
-            config: Source = next(
-                (v for v in repositories.values() if v.get("url") == name_or_url), {}
-            )
-            repo = next(
-                (r for r in DEFAULT_REPOSITORIES.values() if r.url == name_or_url),
-                RepositoryConfig(name_or_url),
+            config = next(
+                (v for v in repositories.values() if v.url == name_or_url), None
             )
         else:
-            config = repositories.get(name_or_url, {})
-            if name_or_url in DEFAULT_REPOSITORIES:
-                repo = DEFAULT_REPOSITORIES[name_or_url]
-        if repo:
-            return dataclasses.replace(repo, **config)
-        if not config:
-            return None
-        return RepositoryConfig(**config)  # type: ignore
+            config = repositories.get(name_or_url)
+
+        if name_or_url in DEFAULT_REPOSITORIES:
+            if config is None:
+                return RepositoryConfig(DEFAULT_REPOSITORIES[name_or_url])
+            config.passive_update(url=DEFAULT_REPOSITORIES[name_or_url])
+        if name_or_url in DEFAULT_REPOSITORIES.values():
+            if config is None:
+                return RepositoryConfig(name_or_url)
+            config.passive_update(url=name_or_url)
+        return config

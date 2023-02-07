@@ -295,12 +295,12 @@ def test_load_extra_sources(project):
     project.global_config["pypi.extra.url"] = "https://extra.pypi.org/simple"
     sources = project.sources
     assert len(sources) == 3
-    assert [item["name"] for item in sources] == ["pypi", "custom", "pypi.extra"]
+    assert [item.name for item in sources] == ["pypi", "custom", "extra"]
 
     project.global_config["pypi.ignore_stored_index"] = True
     sources = project.sources
     assert len(sources) == 1
-    assert [item["name"] for item in sources] == ["custom"]
+    assert [item.name for item in sources] == ["custom"]
 
 
 def test_no_index_raise_error(project):
@@ -324,3 +324,23 @@ def test_access_index_with_auth(project):
         session = finder.session
         resp = session.get(url)
         assert resp.ok
+
+
+def test_configured_source_overwriting(project):
+    project.pyproject.settings["source"] = [
+        {
+            "name": "custom",
+            "url": "https://custom.pypi.org/simple",
+        }
+    ]
+    project.global_config["pypi.custom.url"] = "https://extra.pypi.org/simple"
+    project.global_config["pypi.custom.verify_ssl"] = False
+    project.project_config["pypi.custom.username"] = "foo"
+    project.project_config["pypi.custom.password"] = "bar"
+    sources = project.sources
+    assert [source.name for source in sources] == ["pypi", "custom"]
+    custom_source = sources[1]
+    assert custom_source.url == "https://custom.pypi.org/simple"
+    assert custom_source.verify_ssl is False
+    assert custom_source.username == "foo"
+    assert custom_source.password == "bar"
