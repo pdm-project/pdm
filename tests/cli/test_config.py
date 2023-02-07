@@ -37,7 +37,6 @@ def test_config_set_command(project, invoke):
 
 
 def test_config_del_command(project, invoke):
-
     result = invoke(["config", "-l", "python.use_pyenv", "false"], obj=project)
     assert result.exit_code == 0
 

@@ -20,7 +20,6 @@ MARKER_KEYS = list(default_environment().keys())
 
 
 def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
-
     if isinstance(req, dict):
         markers: list[Marker] = []
         if "markers" in req:

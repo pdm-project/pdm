@@ -81,6 +81,7 @@ def _find_best_match_link(
     ignore_compatibility: bool = False,
 ) -> Link | None:
     """Get the best matching link for a requirement"""
+
     # This function is called when a lock file candidate is given or incompatible wheel
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
     # If hashes are not empty, find the best match from the links, otherwise find from

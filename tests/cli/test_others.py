@@ -18,7 +18,6 @@ def test_build_distributions(tmp_path, core):
 
 
 def test_project_no_init_error(project_no_init):
-
     for handler in (
         actions.do_add,
         actions.do_lock,

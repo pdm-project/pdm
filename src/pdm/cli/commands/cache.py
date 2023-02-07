@@ -107,7 +107,6 @@ class ClearCommand(BaseCommand):
         return len(files)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-
         types: Iterable[str] = ()
         if not options.type:
             pass

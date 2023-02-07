@@ -490,7 +490,6 @@ def parse_as_pkg_requirement(line: str) -> PackageRequirement:
 
 
 def parse_requirement(line: str, editable: bool = False) -> Requirement:
-
     m = _vcs_req_re.match(line)
     r: Requirement
     if m is not None:

@@ -28,7 +28,6 @@ class PurgeCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-
         all_central_venvs = list(iter_central_venvs(project))
         if not all_central_venvs:
             project.core.ui.echo("No virtualenvs to purge, quitting.", style="success")

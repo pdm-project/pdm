@@ -43,7 +43,6 @@ class Command(BaseCommand):
                 json.dumps(project.environment.marker_environment, indent=2)
             )
         else:
-
             for name, value in zip(
                 [
                     f"[primary]{key}[/]:"
