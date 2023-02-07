@@ -2,15 +2,10 @@ import argparse
 from typing import Any, Mapping
 
 from pdm import termui
+from pdm._types import RepositoryConfig
 from pdm.cli.commands.base import BaseCommand
 from pdm.project import Project
-from pdm.project.config import (
-    DEFAULT_REPOSITORIES,
-    REPOSITORY,
-    Config,
-    RegistryConfig,
-    RepositoryConfig,
-)
+from pdm.project.config import DEFAULT_REPOSITORIES, REPOSITORY, Config
 
 
 class Command(BaseCommand):
@@ -93,7 +88,7 @@ class Command(BaseCommand):
                         style=extra_style,
                         verbosity=termui.Verbosity.DETAIL,
                     )
-                    self.ui.echo(RegistryConfig(**config[key], config_prefix=key))
+                    self.ui.echo(RepositoryConfig(**config[key], config_prefix=key))
                 elif key.startswith(REPOSITORY):
                     for item in config[key]:
                         self.ui.echo(
@@ -103,7 +98,7 @@ class Command(BaseCommand):
                         )
                         repository = dict(config[key][item])
                         if "url" not in repository and item in DEFAULT_REPOSITORIES:
-                            repository["url"] = DEFAULT_REPOSITORIES[item].url
+                            repository["url"] = DEFAULT_REPOSITORIES[item]
                         self.ui.echo(
                             RepositoryConfig(
                                 **repository, config_prefix=f"{key}.{item}"

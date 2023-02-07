@@ -85,9 +85,9 @@ class Repository:
         return result
 
     def get_release_urls(self, packages: list[PackageFile]) -> Iterable[str]:
-        if self.url.startswith(DEFAULT_REPOSITORIES["pypi"].url.rstrip("/")):
+        if self.url.startswith(DEFAULT_REPOSITORIES["pypi"].rstrip("/")):
             base = "https://pypi.org/"
-        elif self.url.startswith(DEFAULT_REPOSITORIES["testpypi"].url.rstrip("/")):
+        elif self.url.startswith(DEFAULT_REPOSITORIES["testpypi"].rstrip("/")):
             base = "https://test.pypi.org/"
         else:
             return set()

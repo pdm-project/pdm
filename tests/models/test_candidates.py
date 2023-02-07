@@ -3,6 +3,7 @@ import shutil
 import pytest
 from unearth import Link
 
+from pdm._types import RepositoryConfig
 from pdm.exceptions import ExtrasWarning
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
@@ -337,11 +338,11 @@ def test_ignore_invalid_py_version(project):
 def test_find_candidates_from_find_links(project):
     repo = project.get_repository()
     repo.sources = [
-        {
-            "url": "http://fixtures.test/index/demo.html",
-            "verify_ssl": False,
-            "type": "find_links",
-        }
+        RepositoryConfig(
+            url="http://fixtures.test/index/demo.html",
+            verify_ssl=False,
+            type="find_links",
+        )
     ]
     candidates = list(repo.find_candidates(parse_requirement("demo")))
     assert len(candidates) == 2

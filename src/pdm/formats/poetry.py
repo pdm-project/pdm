@@ -23,7 +23,7 @@ from pdm.models.specifiers import PySpecSet
 if TYPE_CHECKING:
     from pdm.project.core import Project
     from argparse import Namespace
-    from pdm._types import RequirementDict, Source
+    from pdm._types import RequirementDict
 
 from pdm.utils import cd
 
@@ -193,7 +193,7 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("source")
-    def sources(self, value: list[Source]) -> None:
+    def sources(self, value: list[dict[str, Any]]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
