@@ -72,6 +72,8 @@ def build_env_wheels() -> Iterable[Path]:
             "setuptools-65.4.1-py3-none-any.whl",
             "wheel-0.37.1-py2.py3-none-any.whl",
             "flit_core-3.6.0-py3-none-any.whl",
+            "pdm_backend-2.0.1-py3-none-any.whl",
+            "importlib_metadata-4.8.3-py3-none-any.whl",
         )
     ]
 
