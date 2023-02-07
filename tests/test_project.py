@@ -53,14 +53,14 @@ def test_project_config_set_invalid_key(project):
         config["foo"] = "bar"
 
 
-def test_project_sources_overriding(project):
+def test_project_sources_overriding_pypi(project):
     project.project_config["pypi.url"] = "https://test.pypi.org/simple"
-    assert project.sources[0]["url"] == "https://test.pypi.org/simple"
+    assert project.sources[0].url == "https://test.pypi.org/simple"
 
     project.pyproject.settings["source"] = [
         {"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}
     ]
-    assert project.sources[0]["url"] == "https://example.org/simple"
+    assert project.sources[0].url == "https://example.org/simple"
 
 
 def test_project_sources_env_var_expansion(project, monkeypatch):

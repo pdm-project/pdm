@@ -440,9 +440,11 @@ class Config(MutableMapping[str, str]):
         repositories: Mapping[str, RepositoryConfig] = {
             k: RepositoryConfig(**v) for k, v in self._data.get(REPOSITORY, {}).items()
         }
+        config: RepositoryConfig | None = None
         if "://" in name_or_url:
             config = next(
-                (v for v in repositories.values() if v.url == name_or_url), None
+                (v for v in repositories.values() if v.url == name_or_url),
+                RepositoryConfig(name_or_url),
             )
         else:
             config = repositories.get(name_or_url)
