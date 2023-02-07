@@ -70,7 +70,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
         "pypi.url"
     ] = "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
     # expanded in sources
-    assert project.sources[0]["url"] == "https://user:password@test.pypi.org/simple"
+    assert project.sources[0].url == "https://user:password@test.pypi.org/simple"
     # not expanded in project config
     assert (
         project.project_config["pypi.url"]
@@ -85,7 +85,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
         }
     ]
     # expanded in sources
-    assert project.sources[0]["url"] == "https://user:password@example.org/simple"
+    assert project.sources[0].url == "https://user:password@example.org/simple"
     # not expanded in tool settings
     assert (
         project.pyproject.settings["source"][0]["url"]
@@ -100,7 +100,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
         }
     ]
     # expanded in sources
-    assert project.sources[1]["url"] == "https://user:password@example2.org/simple"
+    assert project.sources[1].url == "https://user:password@example2.org/simple"
     # not expanded in tool settings
     assert (
         project.pyproject.settings["source"][0]["url"]
