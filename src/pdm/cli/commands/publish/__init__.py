@@ -110,6 +110,7 @@ class Command(BaseCommand):
         config = project.global_config.get_repository_config(repository)
         if config is None:
             raise PdmUsageError(f"Missing repository config of {repository}")
+        assert config.url is not None
         if username is not None:
             config.username = username
         if password is not None:

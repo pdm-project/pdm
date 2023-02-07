@@ -27,7 +27,7 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from pdm._types import CandidateInfo, SearchResult, Source
+    from pdm._types import CandidateInfo, RepositoryConfig, SearchResult
     from pdm.models.environment import Environment
 
 ALLOW_ALL_PYTHON = PySpecSet()
@@ -51,7 +51,7 @@ class BaseRepository:
 
     def __init__(
         self,
-        sources: list[Source],
+        sources: list[RepositoryConfig],
         environment: Environment,
         ignore_compatibility: bool = True,
     ) -> None:
@@ -67,7 +67,7 @@ class BaseRepository:
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
 
-    def get_filtered_sources(self, req: Requirement) -> list[Source]:
+    def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
         return self.sources
 
@@ -274,7 +274,7 @@ class PyPIRepository(BaseRepository):
         sources = self.get_filtered_sources(candidate.req)
         url_prefixes = [
             proc_url[:-7]  # Strip "/simple".
-            for proc_url in (raw_url.rstrip("/") for raw_url in (source.get("url", "") for source in sources))
+            for proc_url in (raw_url.rstrip("/") for raw_url in (source.url for source in sources) if raw_url)
             if proc_url.endswith("/simple")
         ]
         with self.environment.get_finder(sources) as finder:
@@ -323,7 +323,7 @@ class PyPIRepository(BaseRepository):
         return cans
 
     def search(self, query: str) -> SearchResult:
-        pypi_simple = self.sources[0]["url"].rstrip("/")
+        pypi_simple = self.sources[0].url.rstrip("/")  # type: ignore[union-attr]
 
         if pypi_simple.endswith("/simple"):
             search_url = pypi_simple[:-6] + "search"
@@ -352,7 +352,7 @@ class LockedRepository(BaseRepository):
     def __init__(
         self,
         lockfile: Mapping[str, Any],
-        sources: list[Source],
+        sources: list[RepositoryConfig],
         environment: Environment,
     ) -> None:
         super().__init__(sources, environment, ignore_compatibility=False)

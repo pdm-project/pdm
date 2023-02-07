@@ -22,7 +22,7 @@ from typing import IO, Any, Iterator
 
 from packaging.version import Version
 
-from pdm._types import Source
+from pdm._types import RepositoryConfig
 from pdm.compat import Distribution, importlib_metadata
 
 _egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
@@ -46,21 +46,24 @@ def create_tracked_tempdir(suffix: str | None = None, prefix: str | None = None,
     return name
 
 
-def get_index_urls(sources: list[Source]) -> tuple[list[str], list[str], list[str]]:
+def get_index_urls(
+    sources: list[RepositoryConfig],
+) -> tuple[list[str], list[str], list[str]]:
     """Parse the project sources and return
     (index_urls, find_link_urls, trusted_hosts)
     """
     index_urls, find_link_urls, trusted_hosts = [], [], []
     for source in sources:
-        url = source["url"]
+        assert source.url
+        url = source.url
         netloc = parse.urlparse(url).netloc
         host = netloc.rsplit("@", 1)[-1]
-        if host not in trusted_hosts and not source.get("verify_ssl", True):
+        if host not in trusted_hosts and source.verify_ssl is False:
             trusted_hosts.append(host)
-        if source.get("type", "index") == "index":
-            index_urls.append(url)
-        else:
+        if source.type == "find_links":
             find_link_urls.append(url)
+        else:
+            index_urls.append(url)
     return index_urls, find_link_urls, trusted_hosts
 
 

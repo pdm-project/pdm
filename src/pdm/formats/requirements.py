@@ -7,16 +7,13 @@ import shlex
 import urllib.parse
 from argparse import Namespace
 from os import PathLike
-from typing import TYPE_CHECKING, Any, Mapping, cast
+from typing import Any, Mapping
 
 from pdm.formats.base import make_array
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
 from pdm.utils import expand_env_vars_in_auth
-
-if TYPE_CHECKING:
-    from pdm._types import Source
 
 
 class RequirementParser:
@@ -109,7 +106,7 @@ def _is_url_trusted(url: str, trusted_hosts: list[str]) -> bool:
     return False
 
 
-def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], type: str = "index") -> Source:
+def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], type: str = "index") -> dict[str, Any]:
     if not name:
         name = hashlib.sha1(url.encode("utf-8")).hexdigest()[:6]
     source = {
@@ -119,7 +116,7 @@ def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], 
     }
     if type != "index":
         source["type"] = type
-    return cast("Source", source)
+    return source
 
 
 def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
@@ -146,7 +143,7 @@ def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[M
         data["optional-dependencies"] = {options.group: deps}
     else:
         data["dependencies"] = deps
-    sources: list[Source] = []
+    sources: list[dict[str, Any]] = []
     if parser.index_url and not parser.no_index:
         sources.append(convert_url_to_source(parser.index_url, "pypi", parser.trusted_hosts))
     if not parser.no_index:
