@@ -117,11 +117,11 @@ class HatchBackend(BuildBackend):
 
 
 _BACKENDS: dict[str, type[BuildBackend]] = {
-    "pdm-pep517": PDMLegacyBackend,
+    "pdm-backend": PDMBackend,
     "setuptools": SetuptoolsBackend,
     "flit-core": FlitBackend,
     "hatchling": HatchBackend,
-    "pdm-backend": PDMBackend,
+    "pdm-pep517": PDMLegacyBackend,
 }
 # Fallback to the first backend
 DEFAULT_BACKEND = next(iter(_BACKENDS.values()))

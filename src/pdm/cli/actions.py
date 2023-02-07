@@ -36,7 +36,7 @@ from pdm.cli.utils import (
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
-from pdm.models.backends import BuildBackend
+from pdm.models.backends import DEFAULT_BACKEND, BuildBackend
 from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
 from pdm.models.environment import BareEnvironment
@@ -650,10 +650,7 @@ def do_import(
 
     merge_dictionary(pyproject["project"], project_data)
     merge_dictionary(pyproject["tool"]["pdm"], settings)
-    pyproject["build-system"] = {
-        "requires": ["pdm-pep517>=1.0.0"],
-        "build-backend": "pdm.pep517.api",
-    }
+    pyproject["build-system"] = DEFAULT_BACKEND.build_system()
 
     if "requires-python" not in pyproject["project"]:
         python_version = f"{project.python.major}.{project.python.minor}"

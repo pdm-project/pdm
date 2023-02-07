@@ -7,7 +7,7 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
-from pdm.models.backends import _BACKENDS, BuildBackend, get_backend
+from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
 from pdm.models.python import PythonInfo
 from pdm.project import Project
 from pdm.utils import get_user_email_from_git, get_venv_like_prefix
@@ -115,11 +115,11 @@ class Command(BaseCommand):
                     prompt_type=int,
                     choices=[str(i) for i in range(len(all_backends))],
                     show_choices=False,
-                    default=all_backends.index("pdm-pep517"),
+                    default=0,
                 )
                 build_backend = get_backend(all_backends[int(selected_backend)])
             else:
-                build_backend = get_backend("pdm-pep517")
+                build_backend = DEFAULT_BACKEND
         else:
             name, version, description = "", "", ""
         license = self.ask("License(SPDX name)", "MIT")
