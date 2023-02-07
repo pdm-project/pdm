@@ -44,7 +44,6 @@ class RepositoryConfig:
 
 @dataclasses.dataclass
 class RegistryConfig:
-
     url: str
     username: str | None = None
     password: str | None = None

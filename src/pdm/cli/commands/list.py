@@ -105,7 +105,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-
         # Raise an error if the project is not defined.
         check_project_file(project)
 

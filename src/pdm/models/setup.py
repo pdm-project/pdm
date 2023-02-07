@@ -47,7 +47,6 @@ class _SetupReader:
 
     @classmethod
     def read_from_directory(cls, directory: Path) -> Setup:
-
         result = Setup()
 
         for filename, file_reader in [
@@ -86,7 +85,6 @@ class _SetupReader:
     @no_type_check
     @classmethod
     def read_setup_py(cls, file: Path) -> Setup:
-
         with file.open(encoding="utf-8") as f:
             content = f.read()
 
@@ -380,7 +378,6 @@ class _SetupReader:
     @staticmethod
     def _find_variable_in_body(body: Iterable[Any], name: str) -> Any | None:
         for elem in body:
-
             if not isinstance(elem, ast.Assign):
                 continue
 

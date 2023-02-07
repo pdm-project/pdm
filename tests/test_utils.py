@@ -55,7 +55,6 @@ def compare_python_paths(path1, path2):
 
 @pytest.mark.path
 def test_find_python_in_path(tmp_path):
-
     assert (
         utils.find_python_in_path(sys.executable)
         == pathlib.Path(sys.executable).absolute()

@@ -12,7 +12,6 @@ from pdm.utils import cd
 
 
 def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
-
     del project.project_config["python.path"]
     project._python = None
     monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
@@ -149,7 +148,6 @@ def test_project_packages_path(project):
 
 
 def test_project_auto_detect_venv(project):
-
     venv.create(project.root / "test_venv")
 
     scripts = "Scripts" if os.name == "nt" else "bin"
