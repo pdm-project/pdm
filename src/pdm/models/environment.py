@@ -33,7 +33,7 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from pdm._types import Source
+    from pdm._types import RepositoryConfig
     from pdm.project import Project
 
 
@@ -147,7 +147,7 @@ class Environment:
     @contextmanager
     def get_finder(
         self,
-        sources: list[Source] | None = None,
+        sources: list[RepositoryConfig] | None = None,
         ignore_compatibility: bool = False,
     ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.

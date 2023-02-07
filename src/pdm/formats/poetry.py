@@ -19,14 +19,12 @@ from pdm.formats.base import (
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import cd
 
 if TYPE_CHECKING:
     from argparse import Namespace
 
-    from pdm._types import RequirementDict, Source
-    from pdm.project.core import Project
-
-from pdm.utils import cd
+    from pdm._types import RequirementDict
 
 
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
@@ -178,7 +176,7 @@ class PoetryMetaConverter(MetaConverter):
         raise Unset()
 
     @convert_from("source")
-    def sources(self, value: list[Source]) -> None:
+    def sources(self, value: list[dict[str, Any]]) -> None:
         self.settings["source"] = [
             {
                 "name": item.get("name", ""),
