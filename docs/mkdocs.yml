@@ -53,7 +53,6 @@ nav:
       - usage/pep582.md
   - References:
       - references/pep621.md
-      - references/tool-pdm.md
       - references/configuration.md
       - references/build.md
       - references/cli.md
