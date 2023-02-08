@@ -38,6 +38,15 @@ plugins:
         python:
           options:
             docstring_style: google
+  - redirects:
+      redirect_maps:
+        'plugin/fixtures.md': 'dev/fixtures.md'
+        'plugin/write.md': 'dev/write.md'
+        'pyproject/build.md': 'reference/build.md'
+        'plugin/reference.md': 'reference/api.md'
+        'usage/cli_reference.md': 'reference/cli.md'
+        'usage/configuration.md': 'reference/configuration.md'
+        'pyproject/pep621.md': 'reference/pep621.md'
 
 nav:
   - Usage:
@@ -71,12 +80,11 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
+  - pymdownx.snippets
   - admonition
   - tables
   - toc:
       permalink: "#"
-  - markdown_include.include:
-      base_path: docs
   - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
