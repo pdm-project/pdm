@@ -1,6 +1,6 @@
 # Working with virtualenv
 
-When you run [`pdm init`](cli_reference.md#exec-0--init) command, PDM will [ask for the Python interpreter to use](project.md#choose-a-python-interpreter) in the project, which is the base interpreter to install dependencies and run tasks.
+When you run [`pdm init`](../references/cli.md#exec-0--init) command, PDM will [ask for the Python interpreter to use](./project.md#choose-a-python-interpreter) in the project, which is the base interpreter to install dependencies and run tasks.
 
 Compared to [PEP 582](https://www.python.org/dev/peps/pep-0582/), virtual environments are considered more mature and have better support in the Python ecosystem as well as IDEs. Therefore, virtualenv is the default mode if not configured otherwise.
 
@@ -105,7 +105,7 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` do
 !!! NOTE
     `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the forementioned purpose, use the `pdm use` command.
 
-For more CLI usage, see the [`pdm venv`](cli_reference.md#exec-0--venv) documentation.
+For more CLI usage, see the [`pdm venv`](../references/cli.md#exec-0--venv) documentation.
 
 ## Prompt customization
 
@@ -119,7 +119,7 @@ $ eval $(pdm venv activate for-test)
 (test-project-3.10) $  # {project_name} == test-project and {python_version} == 3.10
 ```
 
-The format can be customized before virtualenv creation with the [`venv.prompt`](configuration.md) configuration or `PDM_VENV_PROMPT` environment variable (before a `pdm init` or `pdm venv create`).
+The format can be customized before virtualenv creation with the [`venv.prompt`](../references/configuration.md) configuration or `PDM_VENV_PROMPT` environment variable (before a `pdm init` or `pdm venv create`).
 Available variables are:
 
  - `project_name`: name of your project

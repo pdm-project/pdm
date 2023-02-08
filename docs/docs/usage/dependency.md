@@ -3,42 +3,18 @@
 PDM provides a bunch of handful commands to help manage your project and dependencies.
 The following examples are run on Ubuntu 18.04, a few changes must be done if you are using Windows.
 
-## Initialize a project
-
-```bash
-mkdir pdm-test && cd pdm-test
-pdm init
-```
-
-Answer several questions asked by PDM and a `pyproject.toml` will be created for you in the project root:
-
-```toml
-[project]
-name = "pdm-test"
-version = "0.0.0"
-description = ""
-authors = [
-    {name = "Frost Ming", email = "mianghong@gmail.com"}
-]
-license = {text = "MIT"}
-requires-python = ">=3.7"
-
-dependencies = []
-```
-
-If `pyproject.toml` is already present, it will be updated with the metadata. The metadata format follows the
-[PEP 621 specification](https://www.python.org/dev/peps/pep-0621/)
-
-For details of the meaning of each field in `pyproject.toml`, please refer to [Project File](../pyproject/pep621.md).
-
 ## Add dependencies
 
-```bash
-pdm add requests
-```
+[`pdm add`](../references/cli.md#exec-0--add) can be followed by one or several dependencies, and the dependency specification is described in [PEP 508](https://www.python.org/dev/peps/pep-0508/).
 
-[`pdm add`](cli_reference.md#exec-0--add) can be followed by one or several dependencies, and the dependency specification is described in
-[PEP 508](https://www.python.org/dev/peps/pep-0508/).
+Examples:
+
+```bash
+pdm add requests   # add requests
+pdm add requests==2.25.1   # add requests with version constraint
+pdm add requests[socks]   # add requests with extra dependency
+pdm add "flask>=1.0" flask-sqlalchemy   # add multiple dependencies with different specifiers
+```
 
 PDM also allows extra dependency groups by providing `-G/--group <name>` option, and those dependencies will go to
 `[project.optional-dependencies.<name>]` table in the project file, respectively.
@@ -67,7 +43,24 @@ pdm add ./sub-package
 pdm add ./first-1.0.0-py2.py3-none-any.whl
 ```
 
-The paths MUST start with a `.`, otherwise it will be recognized as a normal named requirement.
+The paths MUST start with a `.`, otherwise it will be recognized as a normal named requirement. The local dependencies will be written to the `pyproject.toml` file with the URL format:
+
+```toml
+[project]
+dependencies = [
+    "sub-package @ file:///${PROJECT_ROOT}/sub-package",
+    "first @ file:///${PROJECT_ROOT}/first-1.0.0-py2.py3-none-any.whl",
+]
+```
+
+??? note "Using other build backends"
+    If you are using `hatchling` instead of the pdm backend, the URLs would be as follows:
+
+    ```
+    sub-package @ {root:uri}/sub-package
+    first @ {root:uri}/first-1.0.0-py2.py3-none-any.whl
+    ```
+    Other backends doesn't support encoding relative paths in the URL and will write the absolute path instead.
 
 ### VCS dependencies
 
@@ -95,6 +88,19 @@ pdm add "git+https://github.com/pypa/pip.git@22.0#egg=pip"
 pdm add "git+https://github.com/owner/repo.git@master#egg=pkg&subdirectory=subpackage"
 ```
 
+### Hide credentials in the URL
+
+You can hide the credentials in the URL by using the `${ENV_VAR}` variable syntax:
+
+```toml
+[project]
+dependencies = [
+  "mypackage @ git+http://${VCS_USER}:${VCS_PASSWD}@test.git.com/test/mypackage.git@master"
+]
+```
+
+These variables will be read from the environment variables when installing the project.
+
 ### Add development only dependencies
 
 _New in 1.5.0_
@@ -114,6 +120,18 @@ This will result in a pyproject.toml as following:
 test = ["pytest"]
 ```
 
+You can have several groups of development only dependencies. Unlike `optional-dependencies`, they won't appear in the package distribution metadata such as `PKG-INFO` or `METADATA`.
+The package index won't be aware of these dependencies. The schema is similar to that of `optional-dependencies`, except that it is in `tool.pdm` table.
+
+```toml
+[tool.pdm.dev-dependencies]
+lint = [
+    "flake8",
+    "black"
+]
+test = ["pytest", "pytest-cov"]
+doc = ["mkdocs"]
+```
 For backward-compatibility, if only `-d` or `--dev` is specified, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
@@ -148,7 +166,7 @@ for the dependency):
 
 ### Add prereleases
 
-One can give `--pre/--prerelease` option to [`pdm add`](cli_reference.md#exec-0--add) so that prereleases are allowed to be pinned for the given packages.
+One can give `--pre/--prerelease` option to [`pdm add`](../references/cli.md#exec-0--add) so that prereleases are allowed to be pinned for the given packages.
 
 ## Update existing dependencies
 
@@ -199,7 +217,7 @@ which is given by `--update-<strategy>` option:
 ### Update packages to the versions that break the version specifiers
 
 One can give `-u/--unconstrained` to tell PDM to ignore the version specifiers in the `pyproject.toml`.
-This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](cli_reference.md#exec-0--update) also supports the
+This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](../references/cli.md#exec-0--update) also supports the
 `--pre/--prerelease` option.
 
 ## Remove existing dependencies
@@ -219,9 +237,9 @@ pdm remove -dG test pytest-cov
 
 There are a few similar commands to do this job with slight differences:
 
-- [`pdm sync`](cli_reference.md#exec-0--sync) installs packages from the lock file.
-- [`pdm update`](cli_reference.md#exec-0--update) will update the lock file, then `sync`.
-- [`pdm install`](cli_reference.md#exec-0--install) will check the project file for changes, update the lock file if needed, then `sync`.
+- [`pdm sync`](../references/cli.md#exec-0--sync) installs packages from the lock file.
+- [`pdm update`](../references/cli.md#exec-0--update) will update the lock file, then `sync`.
+- [`pdm install`](../references/cli.md#exec-0--install) will check the project file for changes, update the lock file if needed, then `sync`.
 
 `sync` also has a few options to manage installed packages:
 
@@ -230,7 +248,7 @@ There are a few similar commands to do this job with slight differences:
 
 ## Specify the lockfile to use
 
-You can specify another lockfile than the default [`pdm lock`](cli_reference.md#exec-0--lock) by using the `-L/--lockfile <filepath>` option or the `PDM_LOCKFILE` environment variable.
+You can specify another lockfile than the default [`pdm lock`](../references/cli.md#exec-0--lock) by using the `-L/--lockfile <filepath>` option or the `PDM_LOCKFILE` environment variable.
 
 ### Select a subset of dependencies with CLI options
 
@@ -289,14 +307,6 @@ black 19.10b0
 bump2version 1.0.0
 ```
 
-## Set PyPI index URL
-
-You can specify a PyPI mirror URL by following commands:
-
-```bash
-pdm config pypi.url https://test.pypi.org/simple
-```
-
 ## Allow prerelease versions to be installed
 
 Include the following setting in `pyproject.toml` to enable:
@@ -335,21 +345,37 @@ Unable to find a resolution for asgiref because of the following conflicts:
 To fix this, you could loosen the dependency version constraints in pyproject.toml. If that is not possible, you could also override the resolved version in `[tool.pdm.resolution.overrides]` table.
 ```
 
-You can either change to a lower version of `django` or remove the upper bound of `asgiref`. But if it is not eligible for your project,
-you can tell PDM to forcedly resolve `asgiref` to a specific version by adding the following lines to `pyproject.toml`:
+You can either change to a lower version of `django` or remove the upper bound of `asgiref`. But if it is not eligible for your project, you can try [overriding the resolved package versions](./config.md#override-the-resolved-package-versions) in `pyproject.toml`.
 
-_New in version 1.12.0_
+## Manage global project
 
-```toml
-[tool.pdm.resolution.overrides]
-asgiref = "3.2.10"  # exact version
-urllib3 = ">=1.26.2"  # version range
-pytz = "https://mypypi.org/packages/pytz-2020.9-py3-none-any.whl"  # absolute URL
+Sometimes users may want to keep track of the dependencies of global Python interpreter as well.
+It is easy to do so with PDM, via `-g/--global` option which is supported by most subcommands.
+
+If the option is passed, `<CONFIG_ROOT>/global-project` will be used as the project directory, which is
+almost the same as normal project except that `pyproject.toml` will be created automatically for you
+and it doesn't support build features. The idea is taken from Haskell's [stack](https://docs.haskellstack.org).
+
+However, unlike `stack`, by default, PDM won't use global project automatically if a local project is not found.
+Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
+But PDM also leave the decision to users, just set the config `global_project.fallback` to `true`.
+
+By default, when `pdm` uses global project implicitly the following message is printed: `Project is not found, fallback to the global project`. To disable this message set the config `global_project.fallback_verbose` to `false`.
+
+If you want global project to track another project file other than `<CONFIG_ROOT>/global-project`, you can provide the
+project path via `-p/--project <path>` option.
+
+!!! warning
+    Be careful with `remove` and `sync --clean/--pure` commands when global project is used, because it may remove packages installed in your system Python.
+
+## Export locked packages to alternative formats
+
+You can also export [`pdm lock`](../references/cli.md#exec-0--lock) to other formats, to ease the CI flow or image building process. Currently,
+only `requirements.txt` format is supported:
+
+```bash
+pdm export -o requirements.txt
 ```
 
-Each entry of that table is a package name with the wanted version.
-In this example, PDM will resolve the above packages into the given versions no matter whether there is any other resolution available.
-
 !!! NOTE
-    By using `[tool.pdm.resolution.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be used if there is no valid resolution for your requirements and you know the specific version works.
-    Most of the time, you can just add any transient constraints to the `dependencies` array.
+    You can also run `pdm export` with a [`.pre-commit` hook](./advanced.md#hooks-for-pre-commit).
