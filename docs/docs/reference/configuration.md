@@ -1,5 +1,7 @@
 # Configurations
 
+[pdm-config]: ../reference/cli.md#exec-0--config
+
 ## Color Theme
 
 The default theme used by PDM is as follows:
@@ -13,7 +15,7 @@ The default theme used by PDM is as follows:
 | `info`    | <span style="color:blue">blue</span>                         |
 | `req`     | <span style="color:green;font-weight:bold">bold green</span> |
 
-You can change the theme colors with `pdm config` command. For example, to change the `primary` color to `magenta`:
+You can change the theme colors with [`pdm config`][pdm-config] command. For example, to change the `primary` color to `magenta`:
 
 ```bash
 pdm config theme.primary magenta
@@ -27,7 +29,7 @@ pdm config theme.success '#51c7bd'
 
 ## Available Configurations
 
-The following configuration items can be retrieved and modified by [`pdm config`](../usage/cli_reference.md#exec-0--config) command.
+The following configuration items can be retrieved and modified by [`pdm config`][pdm-config] command.
 
 | Config Item                       | Description                                                               | Default Value                                                         | Available in Project | Env var                   |
 | --------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------- | ------------------------- |
@@ -54,7 +56,7 @@ The following configuration items can be retrieved and modified by [`pdm config`
 | `pypi.client_key`                 | Path to a PEM-encoded client cert private key, if not in pypi.client_cert |                                                                       | Yes                  |                           |
 | `pypi.verify_ssl`                 | Verify SSL certificate when query PyPI                                    | `True`                                                                | Yes                  |                           |
 | `pypi.json_api`                   | Consult PyPI's JSON API for package metadata                              | `False`                                                               | Yes                  | `PDM_PYPI_JSON_API`       |
-| `strategy.save`                   | Specify how to save versions when a package is added                      | `minimum`(can be: `exact`, `wildcard`, `minimum`)                  | Yes                  |                           |
+| `strategy.save`                   | Specify how to save versions when a package is added                      | `minimum`(can be: `exact`, `wildcard`, `minimum`)                     | Yes                  |                           |
 | `strategy.update`                 | The default strategy for updating packages                                | `reuse`(can be : `eager`)                                             | Yes                  |                           |
 | `strategy.resolve_max_rounds`     | Specify the max rounds of resolution process                              | 10000                                                                 | Yes                  | `PDM_RESOLVE_MAX_ROUNDS`  |
 | `venv.location`                   | Parent directory for virtualenvs                                          | `<default data location on OS>/venvs`                                 | No                   |                           |

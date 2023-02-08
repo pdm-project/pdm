@@ -28,10 +28,10 @@ commands =
 ```
 
 To use the virtualenv created by Tox, you should make sure you have set `pdm config python.use_venv true`. PDM then will install
-dependencies from [`pdm lock`](cli_reference.md#exec-0--lock) into the virtualenv. In the dedicated venv you can directly run tools by `pytest tests/` instead
+dependencies from [`pdm lock`](../reference/cli.md#exec-0--lock) into the virtualenv. In the dedicated venv you can directly run tools by `pytest tests/` instead
 of `pdm run pytest tests/`.
 
-You should also make sure you don't run `pdm add/pdm remove/pdm update/pdm lock` in the test commands, otherwise the [`pdm lock`](cli_reference.md#exec-0--lock)
+You should also make sure you don't run `pdm add/pdm remove/pdm update/pdm lock` in the test commands, otherwise the [`pdm lock`](../reference/cli.md#exec-0--lock)
 file will be modified unexpectedly. Additional dependencies can be supplied with the `deps` config. Besides, `isolated_buid` and `passenv`
 config should be set as the above example to make PDM work properly.
 
@@ -94,7 +94,7 @@ Before running nox, you should also ensure configuration item `python.use_venv` 
 
 ### About PEP 582 `__pypackages__` directory
 
-By default, if you run tools by [`pdm run`](cli_reference.md#exec-0--run), `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
+By default, if you run tools by [`pdm run`](../reference/cli.md#exec-0--run), `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
 For `nox`, you can avoid this by adding a line in `noxfile.py`:
 
 ```python
@@ -228,7 +228,7 @@ Below is a sample code snippet showing how to make PDM work with [lsp-python-ms]
 
 ### Export `requirements.txt` or `setup.py`
 
-This hook wraps the command `pdm export` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that you are going to check in the codebase a `requirements.txt` or a `setup.py` file, which reflects the actual content of [`pdm lock`](cli_reference.md#exec-0--lock).
+This hook wraps the command `pdm export` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that you are going to check in the codebase a `requirements.txt` or a `setup.py` file, which reflects the actual content of [`pdm lock`](../reference/cli.md#exec-0--lock).
 
 ```yaml
 # export python requirements

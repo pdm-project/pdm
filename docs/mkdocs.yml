@@ -24,6 +24,7 @@ theme:
   logo: assets/logo.svg
   favicon: assets/logo.svg
   features:
+    - content.code.copy
     - navigation.tabs
     - navigation.tabs.sticky
   custom_dir: overrides
@@ -40,25 +41,25 @@ plugins:
 
 nav:
   - Usage:
-      - Home: index.md
+      - Introduction: index.md
       - usage/project.md
-      - usage/venv.md
-      - usage/pep582.md
       - usage/dependency.md
+      - usage/publish.md
+      - usage/config.md
       - usage/scripts.md
       - usage/hooks.md
       - usage/advanced.md
-      - usage/cli_reference.md
-      - usage/configuration.md
-  - Writing pyproject.toml:
-      - pyproject/pep621.md
-      - pyproject/tool-pdm.md
-      - pyproject/build.md
-  - Plugins:
-      - plugin/write.md
-      - plugin/reference.md
-      - plugin/fixtures.md
+      - usage/venv.md
+      - usage/pep582.md
+  - Reference:
+      - reference/pep621.md
+      - reference/configuration.md
+      - reference/build.md
+      - reference/cli.md
+      - reference/api.md
   - Development:
+      - dev/write.md
+      - dev/fixtures.md
       - dev/contributing.md
       - dev/changelog.md
       - dev/benchmark.md
@@ -76,6 +77,10 @@ markdown_extensions:
       permalink: "#"
   - markdown_include.include:
       base_path: docs
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

@@ -120,7 +120,7 @@ where `ConfigItem` class takes 4 parameters, in the following order:
 
 Besides of commands and configurations, the `core` object exposes some other methods and attributes to override.
 PDM also provides some signals you can listen to.
-Please read the [API reference](reference.md) for more details.
+Please read the [API reference](../reference/api.md) for more details.
 
 ### Tips about developing a PDM plugin
 
