@@ -1,5 +1,7 @@
 # Configurations
 
+[pdm-config]: ../reference/cli.md#exec-0--config
+
 ## Color Theme
 
 The default theme used by PDM is as follows:
@@ -13,7 +15,7 @@ The default theme used by PDM is as follows:
 | `info`    | <span style="color:blue">blue</span>                         |
 | `req`     | <span style="color:green;font-weight:bold">bold green</span> |
 
-You can change the theme colors with `pdm config` command. For example, to change the `primary` color to `magenta`:
+You can change the theme colors with [`pdm config`][pdm-config] command. For example, to change the `primary` color to `magenta`:
 
 ```bash
 pdm config theme.primary magenta
@@ -27,7 +29,7 @@ pdm config theme.success '#51c7bd'
 
 ## Available Configurations
 
-The following configuration items can be retrieved and modified by [`pdm config`](../usage/cli_reference.md#exec-0--config) command.
+The following configuration items can be retrieved and modified by [`pdm config`][pdm-config] command.
 
 | Config Item                       | Description                                                               | Default Value                                                         | Available in Project | Env var                   |
 | --------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------- | ------------------------- |
