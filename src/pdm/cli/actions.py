@@ -202,7 +202,7 @@ def do_sync(
         candidates = {
             name: c for name, c in candidates.items() if name in tracked_names
         }
-    handler = project.core.synchronizer_class(
+    synchronizer = project.core.synchronizer_class(
         candidates,
         project.environment,
         clean,
@@ -213,9 +213,10 @@ def do_sync(
         reinstall=reinstall,
         only_keep=only_keep,
     )
-    hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
-    handler.synchronize()
-    hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
+    with project.core.ui.logging("install"):
+        hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
+        synchronizer.synchronize()
+        hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
 
 
 def do_add(
