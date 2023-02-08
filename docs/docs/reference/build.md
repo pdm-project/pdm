@@ -4,7 +4,7 @@
 
 A build backend is what drives the build system to build source distributions and wheels from arbitrary source trees.
 
-If you run [`pdm init`](../references/cli.md#exec-0--init), PDM will let you choose the build backend to use. Unlike other package managers, PDM does not force you to use a specific build backend. You can choose the one you like. Here is a list of build backends and corresponding configurations initially supported by PDM:
+If you run [`pdm init`](../reference/cli.md#exec-0--init), PDM will let you choose the build backend to use. Unlike other package managers, PDM does not force you to use a specific build backend. You can choose the one you like. Here is a list of build backends and corresponding configurations initially supported by PDM:
 
 === "pdm-backend"
 

@@ -23,7 +23,7 @@ You can also build the package and upload it in two steps, to allow you to inspe
 pdm build
 ```
 
-There are many options to control the build process, depending on the backend used. Refer to the [build configuration](../references/build.md) section for more details.
+There are many options to control the build process, depending on the backend used. Refer to the [build configuration](../reference/build.md) section for more details.
 
 The artifacts will be created at `dist/` and able to upload to PyPI.
 

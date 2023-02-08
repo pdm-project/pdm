@@ -1,6 +1,6 @@
 # New Project
 
-To start with, create a new project with [`pdm init`](../references/cli.md#exec-0--init):
+To start with, create a new project with [`pdm init`](../reference/cli.md#exec-0--init):
 
 ```bash
 mkdir my-project && cd my-project
@@ -12,7 +12,7 @@ You will need to answer a few questions, to help PDM to create a `pyproject.toml
 ## Choose a Python interpreter
 
 At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. The interpreter path
-will be stored in the project config `.pdm.toml` and used by subsequent commands. You can also change it later with [`pdm use`](../references/cli.md#exec-0--use).
+will be stored in the project config `.pdm.toml` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#exec-0--use).
 
 ## Virtualenv or not
 
@@ -33,7 +33,7 @@ For the difference between these two approaches, please refer to the correspondi
 A library and an application differ in many ways, [here is a good explanation](https://pipenv.pypa.io/en/latest/advanced/#pipfile-vs-setup-py) for them. In short, a library is a package that is intended to be installed and used by other projects.
 Usually it also needs to be uploaded to PyPI. An application, on the other hand, is one that is directly facing end users and may need to be deployed into production.
 
-In PDM, if you choose to create a library, PDM will add a `name`, `version` field to the `pyproject.toml` file, as well as a `[build-system]` table for the [build backend](../references/build.md), which is only useful if your project needs to be built and distributed. So you need to manually add these fields to `pyproject.toml` if you want to change the project from an application to a library. Also, a library project will be installed into the environment when you run `pdm install` or `pdm sync`, unless `--no-self` is specified.
+In PDM, if you choose to create a library, PDM will add a `name`, `version` field to the `pyproject.toml` file, as well as a `[build-system]` table for the [build backend](../reference/build.md), which is only useful if your project needs to be built and distributed. So you need to manually add these fields to `pyproject.toml` if you want to change the project from an application to a library. Also, a library project will be installed into the environment when you run `pdm install` or `pdm sync`, unless `--no-self` is specified.
 
 ## Set `requires-python` value
 
@@ -62,7 +62,7 @@ The value of `requires-python` is a [version specifier as defined in PEP 440](ht
 
 ## Working with Python < 3.7
 
-Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-pep517` only works on Python 3.7+, so if you run [`pdm build`](../references/cli.md#exec-0--build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
+Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-pep517` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#exec-0--build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
 
 | Backend               | Supported Python | Support PEP 621 |
 | --------------------- | ---------------- | --------------- |
@@ -85,7 +85,7 @@ PDM provides `import` command so that you don't have to initialize the project m
 4. `requirements.txt` format used by pip
 5. setuptools `setup.py`(It requires `setuptools` to be installed in the project environment. You can do this by configuring `venv.with_pip` to `true` for venv and `pdm add setuptools` for `__pypackages__`)
 
-Also, when you are executing [`pdm init`](../references/cli.md#exec-0--init) or [`pdm install`](../references/cli.md#exec-0--install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
+Also, when you are executing [`pdm init`](../reference/cli.md#exec-0--init) or [`pdm install`](../reference/cli.md#exec-0--install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
 
 !!! info
     Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
@@ -134,10 +134,10 @@ $ pdm info --env
 }
 ```
 
-[This command](../references/cli.md#exec-0--info) is useful for checking which mode is being used by the project:
+[This command](../reference/cli.md#exec-0--info) is useful for checking which mode is being used by the project:
 
 - If *Project Packages* is `None`, [virtualenv mode](./venv.md) is enabled.
 - Otherwise, [PEP 582 mode](./pep582.md) is enabled.
 
-Now, you have setup a new PDM project and get a `pyproject.toml` file. Refer to [metadata section](../references/pep621.md)
+Now, you have setup a new PDM project and get a `pyproject.toml` file. Refer to [metadata section](../reference/pep621.md)
 about how to write `pyproject.toml` properly.

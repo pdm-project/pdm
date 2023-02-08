@@ -51,12 +51,12 @@ nav:
       - usage/advanced.md
       - usage/venv.md
       - usage/pep582.md
-  - References:
-      - references/pep621.md
-      - references/configuration.md
-      - references/build.md
-      - references/cli.md
-      - references/api.md
+  - Reference:
+      - reference/pep621.md
+      - reference/configuration.md
+      - reference/build.md
+      - reference/cli.md
+      - reference/api.md
   - Development:
       - dev/write.md
       - dev/fixtures.md
