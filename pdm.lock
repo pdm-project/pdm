@@ -230,15 +230,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "markdown-include"
-version = "0.8.0"
-requires_python = ">=3.7"
-summary = "A Python-Markdown extension which provides an 'include' function"
-dependencies = [
-    "markdown>=3.0",
-]
-
-[[package]]
 name = "markupsafe"
 version = "2.1.1"
 requires_python = ">=3.7"
@@ -313,6 +304,15 @@ name = "mkdocs-material-extensions"
 version = "1.1.1"
 requires_python = ">=3.7"
 summary = "Extension pack for Python Markdown and MkDocs Material."
+
+[[package]]
+name = "mkdocs-redirects"
+version = "1.2.0"
+requires_python = ">=3.6"
+summary = "A MkDocs plugin for dynamic page redirects to prevent broken links."
+dependencies = [
+    "mkdocs>=1.1.1",
+]
 
 [[package]]
 name = "mkdocstrings"
@@ -692,7 +692,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:3573097107d6cf81f6a30eff58707084307ada33ef53200e28424340e5d57cec"
+content_hash = "sha256:1ddea2924c2b5a57986d65734dc7c80bf286c4bb05e0ac714268312a8b1e43f5"
 
 [metadata.files]
 "arpeggio 2.0.0" = [
@@ -863,10 +863,6 @@ content_hash = "sha256:3573097107d6cf81f6a30eff58707084307ada33ef53200e28424340e
     {url = "https://files.pythonhosted.org/packages/94/62/d62f92260dfb1659411e0063d7711bb0bf03d6f9453a0e88cf65854d28ef/markdown_exec-1.0.0-py3-none-any.whl", hash = "sha256:1a7e74266dd26fab3b38fe1564fbfe73d215be35208b67a8ca023d34fb23d511"},
     {url = "https://files.pythonhosted.org/packages/c2/f5/c5ebd5a8956c7e4b023baa25b5e75fe96dad912cbb6d2a99aef69a2b70a9/markdown-exec-1.0.0.tar.gz", hash = "sha256:2d74b3c00d2a961e00f387fe91e15f8a87637700fdd22925d4c074bf64e74f63"},
 ]
-"markdown-include 0.8.0" = [
-    {url = "https://files.pythonhosted.org/packages/14/cc/b58c19b6c7993a2f374740615defb420571dbce2cea0c0a644ed6c98261c/markdown_include-0.8.0-py3-none-any.whl", hash = "sha256:d12fb51500c46334a53608635035c78b7d8ad7f772566f70b8a6a9b2ef2ddbf5"},
-    {url = "https://files.pythonhosted.org/packages/73/4e/8800455294918541c4692cbe4755954e8df61c125083044d143da4786e56/markdown-include-0.8.0.tar.gz", hash = "sha256:b8f6b6f4e8b506cbe773d7e26c74a97d1354c35f3a3452d3449140a8f578d665"},
-]
 "markupsafe 2.1.1" = [
     {url = "https://files.pythonhosted.org/packages/06/7f/d5e46d7464360b6ac39c5b0b604770dba937e3d7cab485d2f3298454717b/MarkupSafe-2.1.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:e04e26803c9c3851c931eac40c695602c6295b8d432cbe78609649ad9bd2da8a"},
     {url = "https://files.pythonhosted.org/packages/0f/53/b14de4ede9c2bd76d28e7911033b065ac42896f1cfb258d3ff65cf0332d2/MarkupSafe-2.1.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:8e3dcf21f367459434c18e71b2a9532d96547aef8a871872a5bd69a715c15f96"},
@@ -932,6 +928,9 @@ content_hash = "sha256:3573097107d6cf81f6a30eff58707084307ada33ef53200e28424340e
 "mkdocs-material-extensions 1.1.1" = [
     {url = "https://files.pythonhosted.org/packages/cd/3f/e5e3c9bfbb42e4cb661f71bcec787ae6bdf4a161b8c4bb68fd7d991c436c/mkdocs_material_extensions-1.1.1.tar.gz", hash = "sha256:9c003da71e2cc2493d910237448c672e00cefc800d3d6ae93d2fc69979e3bd93"},
     {url = "https://files.pythonhosted.org/packages/fd/c9/35af8ceabace3e33d1fb64b1749c6f4dac6129faa32f8a4229791f89f56a/mkdocs_material_extensions-1.1.1-py3-none-any.whl", hash = "sha256:e41d9f38e4798b6617ad98ca8f7f1157b1e4385ac1459ca1e4ea219b556df945"},
+]
+"mkdocs-redirects 1.2.0" = [
+    {url = "https://files.pythonhosted.org/packages/48/7c/ee2b4f6d632c6b93bd6fc49aadfffea75904cf56cb27e0008a0a57a4fddf/mkdocs-redirects-1.2.0.tar.gz", hash = "sha256:ddd38267d49fdfa19fb2f25b4aed2fb53f0496c818bf3018009c8eaf6676a327"},
 ]
 "mkdocstrings 0.19.1" = [
     {url = "https://files.pythonhosted.org/packages/7e/37/e0c600f2e57c7c86d7639a9612e3985cec11eccd298daef2730730fab0a5/mkdocstrings-0.19.1.tar.gz", hash = "sha256:d1037cacb4b522c1e8c164ed5d00d724a82e49dcee0af80db8fb67b384faeef9"},

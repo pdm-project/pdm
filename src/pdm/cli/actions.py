@@ -437,7 +437,7 @@ def do_remove(
     if not group:
         group = "dev" if dev else "default"
     if group not in list(project.iter_groups()):
-        raise ProjectError(f"No-exist group {group}")
+        raise ProjectError(f"Non-exist group {group}")
 
     deps, _ = project.get_pyproject_dependencies(group, dev)
     project.core.ui.echo(
