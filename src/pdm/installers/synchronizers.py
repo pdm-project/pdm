@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
 from rich.progress import SpinnerColumn
 
 from pdm import termui
+from pdm.compat import cached_property
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
@@ -106,6 +107,7 @@ class Synchronizer:
         reinstall: bool = False,
         only_keep: bool = False,
     ) -> None:
+        self.requested_candidates = candidates
         self.environment = environment
         self.clean = clean
         self.dry_run = dry_run
@@ -115,39 +117,45 @@ class Synchronizer:
         self.use_install_cache = use_install_cache
         self.reinstall = reinstall
         self.only_keep = only_keep
-
         self.parallel = environment.project.config["install.parallel"]
-        locked_repository = environment.project.locked_repository
-        self.all_candidate_keys = list(locked_repository.all_candidates)
+
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
-        self.self_candidate: Candidate | None = None
-        if self.install_self:
-            self.self_candidate = self.environment.project.make_self_candidate(not self.no_editable)
+        self._manager: InstallManager | None = None
 
+    @cached_property
+    def self_candidate(self) -> Candidate:
+        """Return the candidate for self project"""
+        return self.environment.project.make_self_candidate(not self.no_editable)
+
+    @cached_property
+    def candidates(self) -> dict[str, Candidate]:
+        """Return the candidates to be installed"""
+        candidates = self.requested_candidates.copy()
         if isinstance(self.no_editable, Collection):
             keys = self.no_editable
         elif self.no_editable:
             keys = candidates.keys()
         else:
             keys = []
-            if self.should_install_editables() and "editables" not in candidates:
+            if self.should_install_editables():
                 # Install `editables` as well as required by self project
-                editables = editables_candidate(environment)
+                editables = editables_candidate(self.environment)
                 if editables is not None:
                     candidates["editables"] = editables
         for key in keys:
             if key in candidates and candidates[key].req.editable:
-                # We do not do in-place update, which will break the caches
                 candidate = candidates[key]
+                # Create a new candidate with editable=False
                 req = dataclasses.replace(candidate.req, editable=False)
                 candidates[key] = make_candidate(req, candidate.name, candidate.version, candidate.link)
-        self.candidates = candidates
-        self._manager: InstallManager | None = None
+        return candidates
 
     def should_install_editables(self) -> bool:
-        if self.self_candidate is None:
+        """Return whether to add editables"""
+        if not self.install_self or "editables" in self.requested_candidates:
             return False
+        # As editables may be added by the backend, we need to check the metadata
         metadata = self.self_candidate.prepare(self.environment).metadata
         return any(req.startswith("editables") for req in metadata.requires or [])
 
@@ -200,6 +208,8 @@ class Synchronizer:
         candidates = self.candidates.copy()
         to_update: set[str] = set()
         to_remove: set[str] = set()
+        locked_repository = self.environment.project.locked_repository
+        all_candidate_keys = list(locked_repository.all_candidates)
 
         for key, dist in working_set.items():
             if key == self.self_key:
@@ -209,7 +219,7 @@ class Synchronizer:
                 if self._should_update(dist, can):
                     to_update.add(key)
             elif (
-                self.only_keep or self.clean and key not in self.all_candidate_keys
+                self.only_keep or self.clean and key not in all_candidate_keys
             ) and key not in self.SEQUENTIAL_PACKAGES:
                 # Remove package only if it is not required by any group
                 # Packages for packaging will never be removed
@@ -371,7 +381,7 @@ class Synchronizer:
                 errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
 
         # get rich progress and live handler to deal with multiple spinners
-        with self.ui.logging("install"), self.ui.make_progress(
+        with self.ui.make_progress(
             " ",
             SpinnerColumn(termui.SPINNER, speed=1, style="primary"),
             "{task.description}",
