@@ -188,6 +188,7 @@ def do_sync(
     no_self: bool = False,
     reinstall: bool = False,
     only_keep: bool = False,
+    fail_fast: bool = False,
     hooks: HookManager | None = None,
 ) -> None:
     """Synchronize project"""
@@ -205,13 +206,14 @@ def do_sync(
     synchronizer = project.core.synchronizer_class(
         candidates,
         project.environment,
-        clean,
-        dry_run,
+        clean=clean,
+        dry_run=dry_run,
         no_editable=no_editable,
         install_self=not no_self and "default" in groups and bool(project.name),
         use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
         only_keep=only_keep,
+        fail_fast=fail_fast,
     )
     with project.core.ui.logging("install"):
         hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
@@ -221,6 +223,7 @@ def do_sync(
 
 def do_add(
     project: Project,
+    *,
     dev: bool = False,
     group: str | None = None,
     sync: bool = True,
@@ -233,6 +236,7 @@ def do_add(
     no_self: bool = False,
     dry_run: bool = False,
     prerelease: bool = False,
+    fail_fast: bool = False,
     hooks: HookManager | None = None,
 ) -> None:
     """Add packages and install"""
@@ -307,6 +311,7 @@ def do_add(
             no_self=no_self,
             requirements=list(group_deps.values()),
             dry_run=dry_run,
+            fail_fast=fail_fast,
             hooks=hooks,
         )
 
@@ -335,6 +340,7 @@ def do_update(
     no_editable: bool = False,
     no_self: bool = False,
     prerelease: bool = False,
+    fail_fast: bool = False,
     hooks: HookManager | None = None,
 ) -> None:
     """Update specified packages or all packages"""
@@ -415,6 +421,7 @@ def do_update(
             else None,
             no_editable=no_editable,
             no_self=no_self,
+            fail_fast=fail_fast,
             hooks=hooks,
         )
 
@@ -428,6 +435,7 @@ def do_remove(
     no_editable: bool = False,
     no_self: bool = False,
     dry_run: bool = False,
+    fail_fast: bool = False,
     hooks: HookManager | None = None,
 ) -> None:
     """Remove packages from working set and pyproject.toml"""
@@ -473,6 +481,7 @@ def do_remove(
             no_editable=no_editable,
             no_self=no_self,
             dry_run=dry_run,
+            fail_fast=fail_fast,
             hooks=hooks,
         )
 
