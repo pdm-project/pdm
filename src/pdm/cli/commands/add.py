@@ -68,5 +68,6 @@ class Command(BaseCommand):
             no_self=options.no_self,
             dry_run=options.dry_run,
             prerelease=options.prerelease,
+            fail_fast=options.fail_fast,
             hooks=HookManager(project, options.skip),
         )

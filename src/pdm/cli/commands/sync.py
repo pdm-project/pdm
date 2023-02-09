@@ -17,19 +17,22 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Synchronize the current working set with lock file"""
 
+    arguments = BaseCommand.arguments + [
+        groups_group,
+        dry_run_option,
+        lockfile_option,
+        skip_option,
+        clean_group,
+        install_group,
+    ]
+
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        groups_group.add_to_parser(parser)
-        dry_run_option.add_to_parser(parser)
-        lockfile_option.add_to_parser(parser)
         parser.add_argument(
             "-r",
             "--reinstall",
             action="store_true",
             help="Force reinstall existing dependencies",
         )
-        skip_option.add_to_parser(parser)
-        clean_group.add_to_parser(parser)
-        install_group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.check_lockfile(project)

@@ -17,12 +17,12 @@ def test_remove_editable_packages_while_keeping_normal(project):
     actions.do_add(project, packages=["demo"])
     actions.do_add(
         project,
-        True,
+        dev=True,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
     dev_group = project.pyproject.settings["dev-dependencies"]["dev"]
     default_group = project.pyproject.metadata["dependencies"]
-    actions.do_remove(project, True, packages=["demo"])
+    actions.do_remove(project, dev=True, packages=["demo"])
     assert not dev_group
     assert len(default_group) == 1
     assert not project.locked_repository.all_candidates["demo"].req.editable

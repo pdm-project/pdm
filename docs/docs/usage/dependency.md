@@ -188,6 +188,12 @@ To update multiple groups of dependencies:
 pdm update -G security -G http
 ```
 
+Or using comma-separated list:
+
+```bash
+pdm update -G "security,http"
+```
+
 To update a given package in the specified group:
 
 ```bash
