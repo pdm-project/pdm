@@ -11,7 +11,7 @@ GENERATED_COMMENTS = [
 
 
 class Lockfile(TOMLBase):
-    spec_version = "4.1"
+    spec_version = "4.2"
 
     @property
     def hash(self) -> str:
