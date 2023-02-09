@@ -243,6 +243,7 @@ class BaseRepository:
                     and prepared_link.file_path.is_dir()
                 ):
                     continue
+                termui.logger.info("Fetching hashes for %s", candidate)
                 result[c.link] = self._hash_cache.get_hash(prepared_link, finder.session)
         return result or None
 
