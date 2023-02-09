@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Mapping
 
 import tomlkit
@@ -20,6 +22,10 @@ class Lockfile(TOMLBase):
     @property
     def file_version(self) -> str:
         return self._data.get("metadata", {}).get("lock_version", "")
+
+    @property
+    def groups(self) -> list[str] | None:
+        return self._data.get("metadata", {}).get("groups")
 
     def set_data(self, data: Mapping[str, Any]) -> None:
         self._data = tomlkit.document()
