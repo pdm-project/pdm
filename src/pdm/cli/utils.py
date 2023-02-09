@@ -646,7 +646,6 @@ def fetch_hashes(repository: BaseRepository, mapping: Mapping[str, Candidate]) -
     """Fetch hashes for candidates in parallel"""
 
     def do_fetch(candidate: Candidate) -> None:
-        termui.logger.info("Fetching hashes for %s", candidate)
         candidate.hashes = repository.get_hashes(candidate)
 
     with ThreadPoolExecutor() as executor:
