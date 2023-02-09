@@ -72,5 +72,6 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             prerelease=options.prerelease,
+            fail_fast=options.fail_fast,
             hooks=HookManager(project, options.skip),
         )
