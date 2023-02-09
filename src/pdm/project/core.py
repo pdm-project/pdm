@@ -452,16 +452,22 @@ class Project:
 
         return SpinnerReporter(spinner, requirements)
 
-    def get_lock_metadata(self) -> dict[str, Any]:
+    def get_lock_metadata(self, groups: Iterable[str] | None = None) -> dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.pyproject.content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
+        if groups is None:
+            groups = self.iter_groups()
         return {
             "lock_version": self.lockfile.spec_version,
             "content_hash": content_hash,
+            "groups": sorted(groups, key=lambda x: (x != "default", x)),
         }
 
-    def write_lockfile(self, toml_data: dict, show_message: bool = True, write: bool = True) -> None:
-        toml_data["metadata"].update(self.get_lock_metadata())
+    def write_lockfile(
+        self, toml_data: dict, show_message: bool = True, write: bool = True, groups: Iterable[str] | None = None
+    ) -> None:
+        """Write the lock file to disk."""
+        toml_data["metadata"].update(self.get_lock_metadata(groups))
         self.lockfile.set_data(toml_data)
 
         if write:
