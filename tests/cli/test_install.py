@@ -220,3 +220,44 @@ def test_install_monorepo_with_rel_paths(fixture_project, invoke, working_set):
         invoke(["install"], obj=project, strict=True)
     for package in ("package-a", "package-b", "core"):
         assert package in working_set
+
+
+@pytest.mark.usefixtures("repository")
+def test_install_retry(project, invoke, mocker):
+    invoke(["add", "certifi", "chardet", "--no-sync"], obj=project)
+    handler = mocker.patch(
+        "pdm.installers.synchronizers.Synchronizer.install_candidate",
+        side_effect=RuntimeError,
+    )
+    result = invoke(["install"], obj=project)
+    assert result.exit_code == 1
+    handler.assert_has_calls(
+        [
+            mocker.call("certifi", mocker.ANY),
+            mocker.call("chardet", mocker.ANY),
+            mocker.call("certifi", mocker.ANY),
+            mocker.call("chardet", mocker.ANY),
+        ],
+        any_order=True,
+    )
+
+
+@pytest.mark.usefixtures("repository")
+def test_install_fail_fast(project, invoke, mocker):
+    project.project_config["install.parallel"] = True
+    invoke(["add", "certifi", "chardet", "pytz", "--no-sync"], obj=project)
+
+    handler = mocker.patch(
+        "pdm.installers.synchronizers.Synchronizer.install_candidate",
+        side_effect=RuntimeError,
+    )
+    mocker.patch("multiprocessing.cpu_count", return_value=1)
+    result = invoke(["install", "--fail-fast"], obj=project)
+    assert result.exit_code == 1
+    handler.assert_has_calls(
+        [
+            mocker.call("certifi", mocker.ANY),
+            mocker.call("chardet", mocker.ANY),
+        ],
+        any_order=True,
+    )

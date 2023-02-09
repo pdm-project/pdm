@@ -161,6 +161,9 @@ install_group.add_argument(
     dest="no_self",
     help="Don't install the project itself",
 )
+install_group.add_argument(
+    "--fail-fast", "-x", action="store_true", help="Abort on first installation error"
+)
 
 
 def no_isolation_callback(
@@ -188,8 +191,8 @@ groups_group.add_argument(
     "--group",
     dest="groups",
     metavar="GROUP",
-    action="append",
-    help="Select group of optional-dependencies "
+    action=split_lists(","),
+    help="Select group of optional-dependencies separated by comma "
     "or dev-dependencies(with -d). Can be supplied multiple times, "
     'use ":all" to include all groups under the same species.',
     default=[],

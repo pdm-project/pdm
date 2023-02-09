@@ -12,7 +12,7 @@ from tests import FIXTURES
 
 @pytest.mark.usefixtures("repository")
 def test_add_package(project, working_set, is_dev):
-    actions.do_add(project, is_dev, packages=["requests"])
+    actions.do_add(project, dev=is_dev, packages=["requests"])
     group = (
         project.pyproject.settings["dev-dependencies"]["dev"] if is_dev else project.pyproject.metadata["dependencies"]
     )
@@ -57,10 +57,10 @@ def test_add_package_to_custom_dev_group(project, working_set):
 def test_add_editable_package(project, working_set):
     # Ensure that correct python version is used.
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, True, packages=["demo"])
+    actions.do_add(project, dev=True, packages=["demo"])
     actions.do_add(
         project,
-        True,
+        dev=True,
         editables=["git+https://github.com/test-root/demo.git#egg=demo"],
     )
     group = project.pyproject.settings["dev-dependencies"]["dev"]
@@ -111,7 +111,7 @@ def test_add_remote_package_url(project, is_dev):
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(
         project,
-        is_dev,
+        dev=is_dev,
         packages=["http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"],
     )
     group = (

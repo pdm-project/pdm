@@ -18,12 +18,15 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Install dependencies from lock file"""
 
+    arguments = BaseCommand.arguments + [
+        groups_group,
+        install_group,
+        dry_run_option,
+        lockfile_option,
+        skip_option,
+    ]
+
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        groups_group.add_to_parser(parser)
-        install_group.add_to_parser(parser)
-        dry_run_option.add_to_parser(parser)
-        lockfile_option.add_to_parser(parser)
-        skip_option.add_to_parser(parser)
         parser.add_argument(
             "--no-lock",
             dest="lock",
@@ -63,5 +66,6 @@ class Command(BaseCommand):
             no_editable=options.no_editable,
             no_self=options.no_self,
             dry_run=options.dry_run,
+            fail_fast=options.fail_fast,
             hooks=hooks,
         )
