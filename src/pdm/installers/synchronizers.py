@@ -5,6 +5,7 @@ import functools
 import multiprocessing
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
 
 from rich.progress import SpinnerColumn
@@ -49,6 +50,9 @@ class DummyFuture:
     def add_done_callback(self: _T, func: Callable[[_T], Any]) -> None:
         func(self)
 
+    def cancel(self) -> bool:
+        return False
+
 
 class DummyExecutor:
     """A synchronous pool class to mimic ProcessPoolExecuter's interface.
@@ -90,6 +94,7 @@ class Synchronizer:
     :param use_install_cache: whether to use install cache
     :param reinstall: whether to reinstall all packages
     :param only_keep: If true, only keep the selected candidates
+    :param fail_fast: If true, stop the installation on first error
     """
 
     SEQUENTIAL_PACKAGES = ("pip", "setuptools", "wheel")
@@ -98,6 +103,7 @@ class Synchronizer:
         self,
         candidates: dict[str, Candidate],
         environment: Environment,
+        *,
         clean: bool = False,
         dry_run: bool = False,
         retry_times: int = 1,
@@ -106,6 +112,7 @@ class Synchronizer:
         use_install_cache: bool = False,
         reinstall: bool = False,
         only_keep: bool = False,
+        fail_fast: bool = False,
     ) -> None:
         self.requested_candidates = candidates
         self.environment = environment
@@ -118,6 +125,7 @@ class Synchronizer:
         self.reinstall = reinstall
         self.only_keep = only_keep
         self.parallel = environment.project.config["install.parallel"]
+        self.fail_fast = fail_fast
 
         self.working_set = environment.get_working_set()
         self.ui = environment.project.core.ui
@@ -369,16 +377,19 @@ class Synchronizer:
                 else:
                     parallel_jobs.append((kind, key))
 
-        errors: list[str] = []
-        failed_jobs: list[tuple[str, str]] = []
+        state = SimpleNamespace(errors=[], failed_jobs=[], jobs=[], mark_failed=False)
 
         def update_progress(future: Future | DummyFuture, kind: str, key: str) -> None:
             error = future.exception()
             if error:
                 exc_info = (type(error), error, error.__traceback__)
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
-                failed_jobs.append((kind, key))
-                errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
+                state.failed_jobs.append((kind, key))
+                state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
+                if self.fail_fast:
+                    for future in state.jobs:
+                        future.cancel()
+                    state.mark_failed = True
 
         # get rich progress and live handler to deal with multiple spinners
         with self.ui.make_progress(
@@ -390,25 +401,27 @@ class Synchronizer:
             for kind, key in sequential_jobs:
                 handlers[kind](key, progress)
             for i in range(self.retry_times + 1):
+                state.jobs.clear()
                 with self.create_executor() as executor:
                     for kind, key in parallel_jobs:
                         future = executor.submit(handlers[kind], key, progress)
                         future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
-                if not failed_jobs or i == self.retry_times:
+                        state.jobs.append(future)
+                if state.mark_failed or not state.failed_jobs or i == self.retry_times:
                     break
-                parallel_jobs, failed_jobs = failed_jobs, []
-                errors.clear()
+                parallel_jobs, state.failed_jobs = state.failed_jobs, []
+                state.errors.clear()
                 live.console.print("Retry failed jobs")
 
-            if errors:
+            if state.errors:
                 if self.ui.verbosity < termui.Verbosity.DETAIL:
                     live.console.print("\n[error]ERRORS[/]:")
-                    live.console.print("".join(errors), end="")
+                    live.console.print("".join(state.errors), end="")
                 raise InstallationError("Some package operations are not complete yet")
 
             if self.install_self:
                 self_key = self.self_key
-                assert self_key and self.self_candidate
+                assert self_key
                 self.candidates[self_key] = self.self_candidate
                 word = "a" if self.no_editable else "an editable"
                 live.console.print(f"Installing the project as {word} package...")
