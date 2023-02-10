@@ -69,6 +69,14 @@ def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
         return contents.replace(match.group(1), new_executable, 1)
 
 
+class PackageFinder(unearth.PackageFinder):
+    def _sort_key(self, package: unearth.Package) -> tuple:
+        key = super()._sort_key(package)
+        *front, last = key
+        # prefer wheel if all others are equal
+        return (*front, package.link.is_wheel, last)
+
+
 class Environment:
     """Environment dependent stuff related to the selected Python interpreter."""
 
@@ -166,13 +174,12 @@ class Environment:
         index_urls, find_links, trusted_hosts = get_index_urls(sources)
 
         session = self._build_session(index_urls, trusted_hosts)
-        finder = unearth.PackageFinder(
+        finder = PackageFinder(
             session=session,
             index_urls=index_urls,
             find_links=find_links,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
-            prefer_binary=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
             only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
             respect_source_order=self.project.pyproject.settings.get(

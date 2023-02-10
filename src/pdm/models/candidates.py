@@ -100,11 +100,11 @@ def _find_best_match_link(
     found = attempt_to_find()
     if ignore_compatibility and (found is None or not found.is_wheel):
         # try to find a wheel for easy metadata extraction
-        finder.ignore_compatibility = finder.prefer_binary = True
+        finder.ignore_compatibility = True
         new_found = attempt_to_find()
         if new_found is not None:
             found = new_found
-        finder.ignore_compatibility = finder.prefer_binary = False
+        finder.ignore_compatibility = False
     return found
 
 
