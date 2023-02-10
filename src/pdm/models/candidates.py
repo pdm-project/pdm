@@ -77,34 +77,35 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
 def _find_best_match_link(
     finder: PackageFinder,
     req: Requirement,
-    hashes: dict[Link, str] | None,
+    links: Iterable[Link] | None = None,
     ignore_compatibility: bool = False,
 ) -> Link | None:
     """Get the best matching link for a requirement"""
 
     # This function is called when a lock file candidate is given or incompatible wheel
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
-    # If hashes are not empty, find the best match from the links, otherwise find from
+    # If links are not empty, find the best match from the links, otherwise find from
     # the package sources.
     def attempt_to_find() -> Link | None:
-        if hashes is None:
-            best = finder.find_best_match(
-                req.as_line(), allow_yanked=req.is_pinned
-            ).best
-            return best.link if best is not None else None
-        # We don't evaluate against the hashes, they will be validated later.
-        evaluator = finder.build_evaluator(req.name)
-        packages: Iterable[Package] = filter(None, map(evaluator.evaluate_link, hashes))
-        best = max(packages, key=finder._sort_key, default=None)
+        if links is None:
+            best = finder.find_best_match(req.as_line()).best
+        else:
+            # this branch won't be executed twice if ignore_compatibility is True
+            evaluator = finder.build_evaluator(req.name)
+            packages = finder._evaluate_links(links, evaluator)
+            best = max(packages, key=finder._sort_key, default=None)
         return best.link if best is not None else None
 
-    original_ignore = finder.ignore_compatibility
-    link = attempt_to_find()
-    if link is None and ignore_compatibility and not original_ignore:
-        finder.ignore_compatibility = ignore_compatibility
-        link = attempt_to_find()
-        finder.ignore_compatibility = original_ignore
-    return link
+    assert finder.ignore_compatibility is False
+    found = attempt_to_find()
+    if ignore_compatibility and (found is None or not found.is_wheel):
+        # try to find a wheel for easy metadata extraction
+        finder.ignore_compatibility = finder.prefer_binary = True
+        new_found = attempt_to_find()
+        if new_found is not None:
+            found = new_found
+        finder.ignore_compatibility = finder.prefer_binary = False
+    return found
 
 
 class Candidate:

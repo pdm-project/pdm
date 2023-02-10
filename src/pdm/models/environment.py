@@ -172,6 +172,7 @@ class Environment:
             find_links=find_links,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
+            prefer_binary=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
             only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
             respect_source_order=self.project.pyproject.settings.get(
