@@ -1,3 +1,11 @@
+Release v2.4.5 (2023-02-10)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that built wheels are prioritized over source distributions with higher version number. [#1698](https://github.com/pdm-project/pdm/issues/1698)
+
+
 Release v2.4.4 (2023-02-10)
 ---------------------------
 
