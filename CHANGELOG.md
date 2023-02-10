@@ -1,3 +1,15 @@
+Release v2.4.4 (2023-02-10)
+---------------------------
+
+### Features & Improvements
+
+- Add more intuitive error message when the `requires-python` doesn't work for all dependencies. [#1690](https://github.com/pdm-project/pdm/issues/1690)
+
+### Bug Fixes
+
+- Prefer built distributions when finding packages for metadata extraction. [#1535](https://github.com/pdm-project/pdm/issues/1535)
+
+
 Release v2.4.3 (2023-02-06)
 ---------------------------
 
