@@ -34,7 +34,7 @@ from pdm.models.requirements import (
     parse_requirement,
     strip_extras,
 )
-from pdm.models.specifiers import get_specifier
+from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import (
     comparable_version,
     is_path_relative_to,
@@ -594,27 +594,35 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     causes: list[RequirementInformation] = err.causes
     info_lines: set[str] = set()
     if all(isinstance(cause.requirement, PythonRequirement) for cause in causes):
-        project_requires = next(
+        project_requires: PythonRequirement = next(
             cause.requirement for cause in causes if cause.parent is None
         )
+        pyspec = cast(PySpecSet, project_requires.specifier)
         conflicting = [
             cause
             for cause in causes
             if cause.parent is not None
-            and not cause.requirement.specifier.is_superset(project_requires.specifier)
+            and not cause.requirement.specifier.is_superset(pyspec)
         ]
         result = [
             "Unable to find a resolution because the following dependencies don't work "
-            "on all Python versions defined by the project's `requires-python`: "
-            f"[success]{str(project_requires.specifier)}[/]."
+            "on all Python versions in the range of the project's `requires-python`: "
+            f"[success]{pyspec}[/]."
         ]
         for req, parent in conflicting:
+            pyspec &= req.specifier
             info_lines.add(f"  {req.as_line()} (from {repr(parent)})")
         result.extend(sorted(info_lines))
-        result.append(
-            "To fix this, you can change the value of `requires-python` "
-            "in pyproject.toml."
-        )
+        if pyspec.is_impossible:
+            result.append(
+                "Consider changing the version specifiers of the dependencies to "
+                "be compatible"
+            )
+        else:
+            result.append(
+                "A possible solution is to change the value of `requires-python` "
+                f"in pyproject.toml to [success]{pyspec}[/]."
+            )
         return "\n".join(result)
 
     if len(causes) == 1:
