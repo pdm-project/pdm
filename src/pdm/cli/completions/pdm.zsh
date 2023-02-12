@@ -36,6 +36,7 @@ _pdm() {
     'sync:Synchronize the current working set with lock file'
     'update:Update package(s) in pyproject.toml'
     'use:Use the given python version or path as base interpreter'
+    'venv:Virtualenv management'
   )
 
   _arguments -s -C -A '-*' \
@@ -75,6 +76,7 @@ _pdm() {
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         {-e+,--editable+}'[Specify editable packages]:packages'
+        {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
         '*:packages:_pdm_pip_packages'
@@ -170,6 +172,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-n,--non-interactive}"[Don't ask questions but use default values]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
+        '--backend[Specify the build backend]:backend:(pdm-backend setuptools hatchling flit pdm-pep517)'
         '--python[Specify the Python version/path to use]:python:'
       )
       ;;
@@ -185,6 +188,7 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lock file content]"
         "--check[Check if the lock file is up to date and fail otherwise]"
@@ -288,6 +292,7 @@ _pdm() {
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
         "*:packages:_pdm_packages"
@@ -338,6 +343,7 @@ _pdm() {
         '--clean[Clean unused packages]'
         "--only-keep[Only keep the selected packages]"
         "--no-default[Don\'t include dependencies from the default group]"
+        {-x,--fail-fast}'[Abort on first installation error]'
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
@@ -367,6 +373,7 @@ _pdm() {
         {-t,--top}'[Only update those list in pyproject.toml]'
         "--dry-run[Show the difference only without modifying the lockfile content]"
         "--outdated[Show the difference only without modifying the lockfile content]"
+        {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
         "*:packages:_pdm_packages"
       )
@@ -377,6 +384,54 @@ _pdm() {
         {-i,--ignore-remembered}'[Ignore the remembered selection]'
         '*:python:_files'
       )
+      ;;
+    venv)
+      _arguments -C \
+        $arguments \
+        ': :->command' \
+        '*:: :->args' && ret=0
+      case $state in
+        command)
+          local -a actions=(
+            "create:Create a virtualenv"
+            "list:List all virtualenvs associated with this project"
+            "remove:Remove the virtualenv with the given name"
+            "activate:Activate the virtualenv with the given name"
+            "purge:Purge selected/all created Virtualenvs"
+          )
+          arguments+=(
+            '--path[Show the path to the given virtualenv]'
+            '--python[Show the Python interpreter path of the given virtualenv]'
+          )
+          _describe -t command 'pdm venv actions' actions && ret=0
+          ;;
+        args)
+          case $words[1] in
+            create)
+              arguments+=(
+                {-w,--with}'[Specify the backend to create the virtualenv]:backend:(virtualenv venv conda)'
+                '--with-pip[Install pip with the virtualenv]'
+                {-n,--name}'[Specify the name of the virtualenv]:name:'
+                {-f,--force}'[Recreate if the virtualenv already exists]'
+              )
+              ;;
+            remove)
+              arguments+=(
+                {-y,--yes}'[Answer yes on the following question]'
+              )
+              ;;
+            purge)
+              arguments+=(
+                {-f,--force}'[Force purging without prompting for confirmation]'
+                {-i,--interactive}'[Interactively purge selected Virtualenvs]'
+              )
+              ;;
+            *)
+              ;;
+          esac
+          ;;
+      esac
+      return $ret
       ;;
   esac
 
