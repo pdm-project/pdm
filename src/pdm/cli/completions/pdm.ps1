@@ -206,7 +206,12 @@ function TabExpansion($line, $lastWord) {
 
             "add" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation", "--pre", "--prerelease", "-L", "--lockfile")),
+                        [Option]::new((
+                            "-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact",
+                            "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global",
+                            "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation",
+                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x"
+                        )),
                         $sectionOption,
                         $projectOption,
                         $skipOption
@@ -222,11 +227,12 @@ function TabExpansion($line, $lastWord) {
                     "clear" {
                         $completer.AddParams(@("wheels", "http", "hashes", "metadata"), $false)
                         $command = $subCommand
-                        break
                     }
-                    Default {
+                    "remove" {$command = $subCommand}
+                    "info" {$command = $subCommand}
+                    "list" {$command = $subCommand}
+                    default {
                         $completer.AddParams(@("clear", "remove", "info", "list"), $false)
-                        break
                     }
                 }
                 break
@@ -268,13 +274,18 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@("-g", "--global", "--non-interactive", "-n", "--python")),
                         $projectOption,
-                        $skipOption
+                        $skipOption,
+                        [Option]::new(@("--backend")).WithValues(@("pdm-backend", "setuptools", "flit", "hatching", "pdm-pep517"))
                     ))
                 break
             }
             "install" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "--check", "-L", "--lockfile")),
+                        [Option]::new((
+                            "-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod",
+                            "--production", "--no-editable", "--no-self", "--no-isolation", "--check", "-L",
+                            "--lockfile", "--fail-fast", "-x"
+                        )),
                         $sectionOption,
                         $skipOption,
                         $projectOption
@@ -305,26 +316,21 @@ function TabExpansion($line, $lastWord) {
                         $completer.AddOpts(([Option]::new(("--pip-args"))))
                         $completer.AddParams(@(getPyPIPackages), $true)
                         $command = $subCommand
-                        break
                     }
                     "remove" {
                         $completer.AddOpts(([Option]::new(("--pip-args", "-y", "--yes"))))
                         $command = $subCommand
-                        break
                     }
                     "list" {
                         $completer.AddOpts(([Option]::new(("--plugins"))))
                         $command = $subCommand
-                        break
                     }
                     "update" {
                         $completer.AddOpts(([Option]::new(("--pip-args", "--head", "--pre"))))
                         $command = $subCommand
-                        break
                     }
                     Default {
                         $completer.AddParams(@("add", "remove", "list", "update"), $false)
-                        break
                     }
                 }
                 break
@@ -341,7 +347,10 @@ function TabExpansion($line, $lastWord) {
             "remove" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
+                        [Option]::new(@(
+                            "--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self",
+                            "--no-isolation", "-L", "--lockfile", "--fail-fast", "-x"
+                        )),
                         $projectOption,
                         $skipOption,
                         $sectionOption
@@ -370,7 +379,11 @@ function TabExpansion($line, $lastWord) {
             }
             "sync" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "-g", "--global", "--no-default", "--clean", "--only-keep", "--dry-run", "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation", "-L", "--lockfile")),
+                        [Option]::new((
+                            "-d", "--dev", "-g", "--global", "--no-default", "--clean", "--only-keep", "--dry-run",
+                            "-r", "--reinstall", "--prod", "--production", "--no-editable", "--no-self", "--no-isolation",
+                            "-L", "--lockfile", "--fail-fast", "-x"
+                        )),
                         $sectionOption,
                         $skipOption,
                         $projectOption
@@ -379,7 +392,12 @@ function TabExpansion($line, $lastWord) {
             }
             "update" {
                 $completer.AddOpts(@(
-                        [Option]::new(("-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact", "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run", "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation", "--no-sync", "--pre", "--prerelease", "-L", "--lockfile")),
+                        [Option]::new((
+                            "-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact",
+                            "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run",
+                            "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation",
+                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x"
+                        )),
                         $sectionOption,
                         $skipOption,
                         $projectOption
@@ -393,6 +411,35 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new(@("--global", "-g", "-f", "--first", "-i", "--ignore-remembered", "--skip")),
                         $projectOption
                     ))
+                break
+            }
+            "venv" {
+                $subCommand = $commands[1]
+                switch ($subCommand) {
+                    "create" {
+                        $command = $subCommand
+                        $completer.AddOpts((
+                            [Option]::new(("--with", "-w")).WithValues(@("venv", "virtualenv", "conda")),
+                            [Option]::new(("--name", "-n")).WithValues(@()),
+                            [Option]::new(("--with-pip", "-f", "--force")),
+                        ))
+                    }
+                    "list" {$command = $subCommand}
+                    "remove" {
+                        $command = $subCommand
+                        $completer.AddOpts(([Option]::new(("-y", "--yes"))))
+                    }
+                    "activate" {$command = $subCommand}
+                    "purge" {
+                        $command = $subCommand
+                        $completer.AddOpts(([Option]::new(("-i", "--interactive", "--force", "-f"))))
+                    }
+                    Default {
+                        $completer.AddOpts(([Option]::new(("--python", "--path"))
+                        $completer.AddParams(@("create", "list", "remove", "activate", "purge"), $false)
+                        break
+                    }
+                }
                 break
             }
 
