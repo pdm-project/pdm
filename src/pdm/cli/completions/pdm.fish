@@ -136,6 +136,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the p
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l backend -d 'Specify the build backend'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'show this help message and exit'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l lib -d 'Create a library project'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don\'t ask questions but use default values'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l python -d 'Specify the Python version/path to use'

@@ -23,9 +23,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("--path", help="Show the path to the given virtualenv")
-        parser.add_argument(
-            "--python", help="Show the python interpreter path for the given virtualenv"
-        )
+        parser.add_argument("--python", help="Show the python interpreter path for the given virtualenv")
         subparser = parser.add_subparsers()
         CreateCommand.register_to(subparser, "create")
         ListCommand.register_to(subparser, "list")
