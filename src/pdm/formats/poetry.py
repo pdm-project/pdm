@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from argparse import Namespace
 
     from pdm._types import RequirementDict
+    from pdm.project import Project
 
 
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:

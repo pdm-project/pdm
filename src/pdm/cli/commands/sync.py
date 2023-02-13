@@ -17,7 +17,8 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Synchronize the current working set with lock file"""
 
-    arguments = BaseCommand.arguments + [
+    arguments = [
+        *BaseCommand.arguments,
         groups_group,
         dry_run_option,
         lockfile_option,

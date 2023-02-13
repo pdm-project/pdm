@@ -173,6 +173,7 @@ _pdm() {
         {-n,--non-interactive}"[Don't ask questions but use default values]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         '--backend[Specify the build backend]:backend:(pdm-backend setuptools hatchling flit pdm-pep517)'
+        '--lib[Create a library project]'
         '--python[Specify the Python version/path to use]:python:'
       )
       ;;
