@@ -10,12 +10,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Remove packages from pyproject.toml"""
 
-    arguments = BaseCommand.arguments + [
-        install_group,
-        dry_run_option,
-        lockfile_option,
-        skip_option,
-    ]
+    arguments = [*BaseCommand.arguments, install_group, dry_run_option, lockfile_option, skip_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

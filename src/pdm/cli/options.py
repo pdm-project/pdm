@@ -161,9 +161,7 @@ install_group.add_argument(
     dest="no_self",
     help="Don't install the project itself",
 )
-install_group.add_argument(
-    "--fail-fast", "-x", action="store_true", help="Abort on first installation error"
-)
+install_group.add_argument("--fail-fast", "-x", action="store_true", help="Abort on first installation error")
 
 
 def no_isolation_callback(

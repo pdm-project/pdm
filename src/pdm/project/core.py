@@ -460,8 +460,8 @@ class Project:
             groups = self.iter_groups()
         return {
             "lock_version": self.lockfile.spec_version,
-            "content_hash": content_hash,
             "groups": sorted(groups, key=lambda x: (x != "default", x)),
+            "content_hash": content_hash,
         }
 
     def write_lockfile(
