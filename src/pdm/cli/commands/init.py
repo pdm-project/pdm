@@ -40,6 +40,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--backend", choices=list(_BACKENDS), help="Specify the build backend"
         )
+        parser.add_argument(
+            "--lib", action="store_true", help="Create a library project"
+        )
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -102,15 +105,13 @@ class Command(BaseCommand):
                 "For more info, please visit https://peps.python.org/pep-0582/",
                 style="success",
             )
-        is_library = (
-            termui.confirm(
+        is_library = options.lib
+        if not is_library and self.interactive:
+            is_library = termui.confirm(
                 "Is the project a library that is installable?\n"
                 "A few more questions will be asked to include a project name "
                 "and build backend"
             )
-            if self.interactive
-            else False
-        )
         build_backend: type[BuildBackend] | None = None
         if is_library:
             name = self.ask("Project name", project.root.name)

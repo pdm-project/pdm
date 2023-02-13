@@ -61,7 +61,7 @@ def style(text: str, *args: str, style: str | None = None, **kwargs: Any) -> str
     return capture.get()
 
 
-def confirm(*args: str, **kwargs: Any) -> str:
+def confirm(*args: str, **kwargs: Any) -> bool:
     kwargs.setdefault("default", False)
     return Confirm.ask(*args, **kwargs)
 

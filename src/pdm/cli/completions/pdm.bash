@@ -61,7 +61,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (init)
-            opts="--backend --global --help --non-interactive --project --python --skip --verbose"
+            opts="--backend --global --help --lib --non-interactive --project --python --skip --verbose"
             ;;
 
             (install)

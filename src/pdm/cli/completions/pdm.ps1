@@ -272,7 +272,7 @@ function TabExpansion($line, $lastWord) {
             "init" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("-g", "--global", "--non-interactive", "-n", "--python")),
+                        [Option]::new(@("-g", "--global", "--non-interactive", "-n", "--python", "--lib")),
                         $projectOption,
                         $skipOption,
                         [Option]::new(@("--backend")).WithValues(@("pdm-backend", "setuptools", "flit", "hatching", "pdm-pep517"))
