@@ -63,10 +63,10 @@ def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
     match = re.search(_complex_shebang_re, contents, flags=re.M)
     if match:
         return contents.replace(match.group(1), new_executable, 1)
-    else:
-        match = re.search(_simple_shebang_re, contents, flags=re.M)
-        assert match is not None
+    match = re.search(_simple_shebang_re, contents, flags=re.M)
+    if match:
         return contents.replace(match.group(1), new_executable, 1)
+    return contents
 
 
 class PackageFinder(unearth.PackageFinder):
