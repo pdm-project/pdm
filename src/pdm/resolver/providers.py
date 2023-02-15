@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Callable, cast
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
@@ -7,7 +8,7 @@ from resolvelib import AbstractProvider
 
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.repositories import LockedRepository
-from pdm.models.requirements import parse_requirement, strip_extras
+from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
 from pdm.resolver.python import (
     PythonCandidate,
     PythonRequirement,
@@ -157,18 +158,23 @@ class BaseProvider(AbstractProvider):
 
         return matches_gen
 
+    def _compare_file_reqs(self, req1: FileRequirement, req2: FileRequirement) -> bool:
+        backend = self.repository.environment.project.backend
+        if req1.path and req2.path:
+            return os.path.normpath(req1.path) == os.path.normpath(req2.path)
+        left = backend.expand_line(url_without_fragments(req1.get_full_url()))
+        right = backend.expand_line(url_without_fragments(req2.get_full_url()))
+        return left == right
+
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if isinstance(requirement, PythonRequirement):
             return is_python_satisfied_by(requirement, candidate)
         elif candidate.identify() in self.overrides:
             return True
         if not requirement.is_named:
-            backend = self.repository.environment.project.backend
-            return not candidate.req.is_named and backend.expand_line(
-                url_without_fragments(candidate.req.get_full_url())  # type: ignore
-            ) == backend.expand_line(
-                url_without_fragments(requirement.get_full_url())  # type: ignore
-            )
+            if candidate.req.is_named:
+                return False
+            return self._compare_file_reqs(requirement, candidate.req)  # type: ignore
         version = candidate.version
         this_name = self.repository.environment.project.name
         if version is None or candidate.name == this_name:

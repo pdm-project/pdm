@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import posixpath
 import sys
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
@@ -17,7 +18,13 @@ from pdm.models.requirements import (
 )
 from pdm.models.search import SearchResultParser
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import cd, normalize_name, url_without_fragments
+from pdm.utils import (
+    cd,
+    normalize_name,
+    path_to_url,
+    url_to_path,
+    url_without_fragments,
+)
 
 if TYPE_CHECKING:
     from pdm._types import CandidateInfo, SearchResult, Source
@@ -392,8 +399,8 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
-        with cd(self.environment.project.root):
-            backend = self.environment.project.backend
+        root = self.environment.project.root
+        with cd(root):
             for package in lockfile.get("package", []):
                 version = package.get("version")
                 if version:
@@ -406,8 +413,8 @@ class LockedRepository(BaseRepository):
                 }
                 req = Requirement.from_req_dict(package_name, req_dict)
                 if req.is_file_or_url and req.path and not req.url:  # type: ignore
-                    req.url = backend.relative_path_to_url(  # type: ignore
-                        req.path.as_posix()  # type: ignore
+                    req.url = path_to_url(  # type: ignore
+                        posixpath.join(root, req.path)  # type: ignore
                     )
                 can = make_candidate(req, name=package_name, version=version)
                 can_id = self._identify_candidate(can)
@@ -426,10 +433,16 @@ class LockedRepository(BaseRepository):
 
     def _identify_candidate(self, candidate: Candidate) -> tuple:
         url = getattr(candidate.req, "url", None)
+        if url is not None:
+            url = url_without_fragments(url)
+            url = self.environment.project.backend.expand_line(url)
+            if url.startswith("file://"):
+                path = posixpath.normpath(url_to_path(url))
+                url = path_to_url(path)
         return (
             candidate.identify(),
             candidate.version if not url else None,
-            url_without_fragments(url) if url else None,
+            url,
             candidate.req.editable,
         )
 

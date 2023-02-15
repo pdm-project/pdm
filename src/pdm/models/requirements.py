@@ -5,6 +5,7 @@ import functools
 import inspect
 import json
 import os
+import posixpath
 import re
 import secrets
 import urllib.parse as urlparse
@@ -278,8 +279,15 @@ class FileRequirement(Requirement):
     def str_path(self) -> str | None:
         if not self.path:
             return None
-        result = self.path.as_posix()
-        if not self.path.is_absolute() and not result.startswith(("./", "../")):
+        if self.path.is_absolute():
+            try:
+                result = self.path.relative_to(Path.cwd()).as_posix()
+            except ValueError:
+                return self.path.as_posix()
+        else:
+            result = self.path.as_posix()
+        result = posixpath.normpath(result)
+        if not result.startswith(("./", "../")):
             result = "./" + result
         if result.startswith("./../"):
             result = result[2:]
