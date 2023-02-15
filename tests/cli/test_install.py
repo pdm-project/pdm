@@ -3,6 +3,7 @@ import pytest
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
 from pdm.pytest import Distribution
+from pdm.utils import cd
 
 
 @pytest.mark.usefixtures("repository")
@@ -206,7 +207,6 @@ def test_sync_with_pure_option(project, working_set, invoke):
     assert "django" not in working_set
 
 
-@pytest.mark.usefixtures("repository")
 def test_install_referencing_self_package(project, working_set, invoke):
     project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
     project.add_dependencies({"urllib3": parse_requirement("urllib3")}, to_group="web")
@@ -216,3 +216,11 @@ def test_install_referencing_self_package(project, working_set, invoke):
     invoke(["install", "-Gall"], obj=project, strict=True)
     assert "pytz" in working_set
     assert "urllib3" in working_set
+
+
+def test_install_monorepo_with_rel_paths(fixture_project, invoke, working_set):
+    project = fixture_project("test-monorepo")
+    with cd(project.root):
+        invoke(["install"], obj=project, strict=True)
+    for package in ("package-a", "package-b", "core"):
+        assert package in working_set

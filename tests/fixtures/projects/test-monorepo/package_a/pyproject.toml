@@ -1,0 +1,12 @@
+[project]
+name = "package_a"
+version = "0.0.1"
+description = ""
+requires-python = ">= 3.7"
+dependencies = [
+    "core @ file:///${PROJECT_ROOT}/../core",
+]
+
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"

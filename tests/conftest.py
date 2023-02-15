@@ -99,6 +99,7 @@ def fixture_project(project_no_init):
         source = FIXTURES / "projects" / project_name
         copytree(source, project_no_init.root)
         project_no_init.pyproject.reload()
+        project_no_init.environment = None
         return project_no_init
 
     return func
