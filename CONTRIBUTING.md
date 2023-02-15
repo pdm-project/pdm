@@ -45,17 +45,37 @@ this section.
 
 ## Local development
 
-You will need to install base dependencies in a venv. Make sure your `pip` is newer than `21.3` to install PDM in develop/editable mode.
+We recommend working in a virtual environment.
+Feel free to create a virtual environment with either the `venv` module or the `virtualenv` tool.
+For example:
+
+```bash
+python -m venv .venv
+. .venv/bin/activate  # linux
+.venv/Scripts/activate  # windows
+```
+
+Make sure your `pip` is newer than `21.3` to install PDM in develop/editable mode.
 
 ```bash
 python -m pip install -U "pip>=21.3"
 python -m pip install -e .
 ```
 
-You are free to create a virtualenv with either `venv` module or `virtualenv` tool for the development. If you are doing
-so, you may also need to set `pdm config python.use_venv true` after installation is done.
+Make sure PDM uses the virtual environment you just created:
 
-Now, all dependencies are installed into the Python environment you choose, which will be used for development after this point.
+```bash
+pdm config -l python.use_venv true
+pdm config -l venv.in_project true
+```
+
+Install PDM development dependencies:
+
+```bash
+pdm install
+```
+
+Now, all dependencies are installed into the Python environment you chose, which will be used for development after this point.
 
 ### Run tests
 
@@ -81,10 +101,25 @@ The test suite is still simple and needs expansion! Please help write more test 
 
 ### Code style
 
-PDM uses `pre-commit` for linting. Install `pre-commit` first, then:
+PDM uses `pre-commit` for linting. Install `pre-commit` first, for example with pip or [pipx](https://github.com/pypa/pipx):
+
+```bash
+python -m pip install pre-commit
+```
+
+```bash
+pipx install pre-commit
+```
+
+Then initialize `pre-commit`:
 
 ```bash
 pre-commit install
+```
+
+You can now lint the code with:
+
+```bash
 pdm run lint
 ```
 
@@ -117,7 +152,6 @@ If you make some changes to the `docs/` and you want to preview the build result
 pdm run doc
 ```
 
-
 ## Release
 
 Once all changes are done and ready to release, you can preview the changelog contents by running:
@@ -129,7 +163,6 @@ pdm run release --dry-run
 Make sure the next version and the changelog are as expected in the output.
 
 Then cut a release on the **main** branch:
-
 
 ```bash
 pdm run release
