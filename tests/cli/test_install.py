@@ -261,3 +261,16 @@ def test_install_fail_fast(project, invoke, mocker):
         ],
         any_order=True,
     )
+
+
+@pytest.mark.usefixtures("working_set")
+def test_install_groups_not_in_lockfile(project, invoke):
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")}, to_group="web")
+    invoke(["install", "-vv"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default"]
+    all_locked_packages = project.locked_repository.all_candidates
+    for package in ["pytz", "urllib3"]:
+        assert package not in all_locked_packages
+    with pytest.raises(RuntimeError, match="Requested groups not in lockfile"):
+        invoke(["install", "-Gtz"], obj=project, strict=True)
