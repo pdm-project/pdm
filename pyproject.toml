@@ -112,7 +112,6 @@ target-version = ["py37", "py38", "py39", "py310"]
 
 [tool.ruff]
 line-length = 120
-exclude = []
 select = [
   "B",    # flake8-bugbear
   "C4",   # flake8-comprehensions
