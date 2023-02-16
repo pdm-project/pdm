@@ -19,7 +19,8 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Update package(s) in pyproject.toml"""
 
-    arguments = BaseCommand.arguments + [
+    arguments = [
+        *BaseCommand.arguments,
         groups_group,
         install_group,
         lockfile_option,
@@ -51,9 +52,7 @@ class Command(BaseCommand):
             action="store_false",
             help="Only update lock file but do not sync packages",
         )
-        parser.add_argument(
-            "packages", nargs="*", help="If packages are given, only update them"
-        )
+        parser.add_argument("packages", nargs="*", help="If packages are given, only update them")
         parser.set_defaults(dev=None)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

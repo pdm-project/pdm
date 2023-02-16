@@ -87,9 +87,7 @@ class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
         # so use them for cache key. Local directories won't be cached.
         if not obj.name or not obj.version:
             raise KeyError("The package is missing a name or version")
-        extras = (
-            "[{}]".format(",".join(sorted(obj.req.extras))) if obj.req.extras else ""
-        )
+        extras = "[{}]".format(",".join(sorted(obj.req.extras))) if obj.req.extras else ""
         return f"{obj.name}{extras}-{obj.version}"
 
 
@@ -174,9 +172,7 @@ class WheelCache:
     def __init__(self, directory: Path) -> None:
         self.directory = directory
 
-    def _get_candidates(
-        self, link: Link, target_python: TargetPython
-    ) -> Iterable[Path]:
+    def _get_candidates(self, link: Link, target_python: TargetPython) -> Iterable[Path]:
         path = self.get_path_for_link(link, target_python)
         if not path.exists():
             return
@@ -197,22 +193,16 @@ class WheelCache:
         if link.hash:
             hash_key[link.hash_name] = link.hash
         hashed = hashlib.sha224(
-            json.dumps(
-                hash_key, sort_keys=True, separators=(",", ":"), ensure_ascii=True
-            ).encode("utf-8")
+            json.dumps(hash_key, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
         ).hexdigest()
         parts = (hashed[:2], hashed[2:4], hashed[4:6], hashed[6:])
         return self.directory.joinpath(*parts)
 
-    def get(
-        self, link: Link, project_name: str | None, target_python: TargetPython
-    ) -> Path | None:
+    def get(self, link: Link, project_name: str | None, target_python: TargetPython) -> Path | None:
         if not project_name:
             return None
         canonical_name = canonicalize_name(project_name)
-        tags_priorities = {
-            tag: i for i, tag in enumerate(target_python.supported_tags())
-        }
+        tags_priorities = {tag: i for i, tag in enumerate(target_python.supported_tags())}
         candidates: list[tuple[int, Path]] = []
         for candidate in self._get_candidates(link, target_python):
             try:
@@ -222,8 +212,7 @@ class WheelCache:
                 continue
             if canonical_name != canonicalize_name(name):
                 logger.debug(
-                    "Ignoring cached wheel %s with invalid project name %s, "
-                    "expected: %s",
+                    "Ignoring cached wheel %s with invalid project name %s, expected: %s",
                     candidate.name,
                     name,
                     canonical_name,
@@ -231,9 +220,7 @@ class WheelCache:
                 continue
             if tags.isdisjoint(tags_priorities):
                 continue
-            support_min = min(
-                tags_priorities[tag] for tag in tags if tag in tags_priorities
-            )
+            support_min = min(tags_priorities[tag] for tag in tags if tag in tags_priorities)
             candidates.append((support_min, candidate))
         if not candidates:
             return None
@@ -255,7 +242,7 @@ class SafeFileCache(BaseCache):
         # class for backwards-compatibility and to avoid using a non-public
         # method.
         hashed = FileCache.encode(name)
-        parts = list(hashed[:5]) + [hashed]
+        parts = [*list(hashed[:5]), hashed]
         return os.path.join(self.directory, *parts)
 
     def get(self, key: str) -> bytes | None:

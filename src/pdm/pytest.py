@@ -89,9 +89,7 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
         strip_suffix: bool = False,
     ):
         super().__init__()
-        self.aliases = sorted(
-            aliases.items(), key=lambda item: len(item[0]), reverse=True
-        )
+        self.aliases = sorted(aliases.items(), key=lambda item: len(item[0]), reverse=True)
         self.overrides = overrides if overrides is not None else {}
         self.strip_suffix = strip_suffix
         self._opened_files: list[BytesIO | BufferedReader | BinaryIO] = []
@@ -155,9 +153,7 @@ class TestRepository(BaseRepository):
     A mock repository to ease testing dependencies
     """
 
-    def __init__(
-        self, sources: list[Source], environment: Environment, pypi_json: Path
-    ):
+    def __init__(self, sources: list[Source], environment: Environment, pypi_json: Path):
         super().__init__(sources, environment)
         self._pypi_data: dict[str, Any] = {}
         self._pypi_json = pypi_json
@@ -165,39 +161,27 @@ class TestRepository(BaseRepository):
 
     def get_raw_dependencies(self, candidate: Candidate) -> list[str]:
         try:
-            pypi_data = self._pypi_data[cast(str, candidate.req.key)][
-                cast(str, candidate.version)
-            ]
+            pypi_data = self._pypi_data[cast(str, candidate.req.key)][cast(str, candidate.version)]
         except KeyError:
             return candidate.prepare(self.environment).metadata.requires or []
         else:
             return pypi_data.get("dependencies", [])
 
     def add_candidate(self, name: str, version: str, requires_python: str = "") -> None:
-        pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(
-            version, {}
-        )
+        pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(version, {})
         pypi_data["requires_python"] = requires_python
 
-    def add_dependencies(
-        self, name: str, version: str, requirements: list[str]
-    ) -> None:
+    def add_dependencies(self, name: str, version: str, requirements: list[str]) -> None:
         pypi_data = self._pypi_data[normalize_name(name)][version]
         pypi_data.setdefault("dependencies", []).extend(requirements)
 
-    def _get_dependencies_from_fixture(
-        self, candidate: Candidate
-    ) -> tuple[list[str], str, str]:
+    def _get_dependencies_from_fixture(self, candidate: Candidate) -> tuple[list[str], str, str]:
         try:
-            pypi_data = self._pypi_data[cast(str, candidate.req.key)][
-                cast(str, candidate.version)
-            ]
+            pypi_data = self._pypi_data[cast(str, candidate.req.key)][cast(str, candidate.version)]
         except KeyError:
-            raise CandidateInfoNotFound(candidate)
+            raise CandidateInfoNotFound(candidate) from None
         deps = pypi_data.get("dependencies", [])
-        deps = filter_requirements_with_extras(
-            cast(str, candidate.req.name), deps, candidate.req.extras or ()
-        )  # type: ignore
+        deps = filter_requirements_with_extras(cast(str, candidate.req.name), deps, candidate.req.extras or ())
         return deps, pypi_data.get("requires_python", ""), ""
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -323,9 +307,7 @@ def build_env_wheels() -> Iterable[Path]:
 
 
 @pytest.fixture(scope="session")
-def build_env(
-    build_env_wheels: Iterable[Path], tmp_path_factory: pytest.TempPathFactory
-) -> Path:
+def build_env(build_env_wheels: Iterable[Path], tmp_path_factory: pytest.TempPathFactory) -> Path:
     """
     A fixture build environment
 
@@ -359,12 +341,8 @@ def pdm_session(pypi_indexes: IndexesDefinition) -> Callable[[Any], PDMSession]:
     def get_pypi_session(*args: Any, **kwargs: Any) -> PDMSession:
         session = PDMSession(*args, **kwargs)
         for root, specs in pypi_indexes.items():
-            index, overrides, strip = (
-                specs if isinstance(specs, tuple) else (specs, None, False)
-            )
-            session.mount(
-                root, LocalFileAdapter(index, overrides=overrides, strip_suffix=strip)
-            )
+            index, overrides, strip = specs if isinstance(specs, tuple) else (specs, None, False)
+            session.mount(root, LocalFileAdapter(index, overrides=overrides, strip_suffix=strip))
         return session
 
     return get_pypi_session
@@ -406,18 +384,12 @@ def project_no_init(
     test_home = tmp_path / ".pdm-home"
     test_home.mkdir(parents=True)
     test_home.joinpath("config.toml").write_text(
-        '[global_project]\npath = "{}"\n'.format(
-            test_home.joinpath("global-project").as_posix()
-        )
+        '[global_project]\npath = "{}"\n'.format(test_home.joinpath("global-project").as_posix())
     )
-    p = core.create_project(
-        tmp_path, global_config=test_home.joinpath("config.toml").as_posix()
-    )
+    p = core.create_project(tmp_path, global_config=test_home.joinpath("config.toml").as_posix())
     p.global_config["venv.location"] = str(tmp_path / "venvs")
     mocker.patch("pdm.models.environment.PDMSession", pdm_session)
-    mocker.patch(
-        "pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env)
-    )
+    mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     python_path = find_python_in_path(sys.base_prefix)
@@ -468,7 +440,7 @@ def working_set(mocker: MockerFixture, repository: TestRepository) -> MockWorkin
     mocker.patch.object(Environment, "get_working_set", return_value=rv)
 
     def install(candidate: Candidate) -> None:
-        key = normalize_name(candidate.name)  # type: ignore
+        key = normalize_name(candidate.name or "")
         dist = Distribution(key, cast(str, candidate.version), candidate.req.editable)
         dist.dependencies = repository.get_raw_dependencies(candidate)
         rv.add_distribution(dist)
@@ -479,9 +451,7 @@ def working_set(mocker: MockerFixture, repository: TestRepository) -> MockWorkin
     install_manager = mocker.MagicMock()
     install_manager.install.side_effect = install
     install_manager.uninstall.side_effect = uninstall
-    mocker.patch(
-        "pdm.installers.Synchronizer.get_manager", return_value=install_manager
-    )
+    mocker.patch("pdm.installers.Synchronizer.get_manager", return_value=install_manager)
 
     return rv
 
@@ -639,7 +609,7 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
             try:
                 core.main(args, "pdm", obj=obj, **kwargs)
             except SystemExit as e:
-                exit_code = e.code  # type: ignore
+                exit_code = cast(int, e.code)
             except Exception as e:
                 exit_code = 1
                 exception = e
@@ -647,9 +617,7 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
         result = RunResult(exit_code, stdout.getvalue(), stderr.getvalue(), exception)
 
         if strict and result.exit_code != 0:
-            raise RuntimeError(
-                f"Call command {args} failed({result.exit_code}): {result.stderr}"
-            )
+            raise RuntimeError(f"Call command {args} failed({result.exit_code}): {result.stderr}")
         return result
 
     return caller

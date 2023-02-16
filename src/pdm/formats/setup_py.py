@@ -12,14 +12,10 @@ def check_fingerprint(project: Project, filename: Path) -> bool:
     return os.path.basename(filename) == "setup.py"
 
 
-def convert(
-    project: Project, filename: Path, options: Any | None
-) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
+def convert(project: Project, filename: Path, options: Any | None) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     from pdm.models.in_process import parse_setup_py
 
-    parsed = parse_setup_py(
-        str(project.environment.interpreter.executable), str(filename)
-    )
+    parsed = parse_setup_py(str(project.environment.interpreter.executable), str(filename))
     metadata: dict[str, Any] = {}
     settings: dict[str, Any] = {}
     for name in [

@@ -9,7 +9,7 @@ class Source(TypedDict, total=False):
     url: str
     verify_ssl: bool
     name: str
-    type: Literal["index", "find_links"]
+    type: Literal["index", "find_links"]  # noqa: F821
     username: str
     password: str
 

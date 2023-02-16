@@ -18,18 +18,12 @@ if (
     def resources_open_binary(package: str, resource: str) -> BinaryIO:
         return (importlib.resources.files(package) / resource).open("rb")
 
-    def resources_read_text(
-        package: str, resource: str, encoding: str = "utf-8", errors: str = "strict"
-    ) -> str:
-        with (importlib.resources.files(package) / resource).open(
-            "r", encoding=encoding, errors=errors
-        ) as f:
+    def resources_read_text(package: str, resource: str, encoding: str = "utf-8", errors: str = "strict") -> str:
+        with (importlib.resources.files(package) / resource).open("r", encoding=encoding, errors=errors) as f:
             return f.read()
 
     def resources_path(package: str, resource: str) -> ContextManager[Path]:
-        return importlib.resources.as_file(
-            importlib.resources.files(package) / resource
-        )
+        return importlib.resources.as_file(importlib.resources.files(package) / resource)
 
 else:
     resources_open_binary = importlib.resources.open_binary

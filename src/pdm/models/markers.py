@@ -31,16 +31,8 @@ class Marker(PackageMarker):
             return None, _build_pyspec_from_marker(self._markers)
         if "or" in self._markers:
             return self.copy(), PySpecSet()
-        py_markers = [
-            marker
-            for marker in self._markers
-            if marker != "and" and _only_contains_python_keys(marker)
-        ]
-        rest = [
-            marker
-            for marker in self._markers
-            if marker != "and" and marker not in py_markers
-        ]
+        py_markers = [marker for marker in self._markers if marker != "and" and _only_contains_python_keys(marker)]
+        rest = [marker for marker in self._markers if marker != "and" and marker not in py_markers]
         new_markers = join_list_with(rest, "and")
         if not new_markers:
             marker = None
@@ -149,13 +141,9 @@ def _build_pyspec_from_marker(markers: list[Any]) -> PySpecSet:
                 elif op in ("in", "not in"):
                     version = " ".join(v + ".*" for v in split_version(version))
             if op == "in":
-                pyspec = reduce(
-                    operator.or_, (PySpecSet(f"=={v}") for v in split_version(version))
-                )
+                pyspec = reduce(operator.or_, (PySpecSet(f"=={v}") for v in split_version(version)))
             elif op == "not in":
-                pyspec = reduce(
-                    operator.and_, (PySpecSet(f"!={v}") for v in split_version(version))
-                )
+                pyspec = reduce(operator.and_, (PySpecSet(f"!={v}") for v in split_version(version)))
             else:
                 pyspec = PySpecSet(f"{op}{version}")
             groups[-1] = groups[-1] & pyspec

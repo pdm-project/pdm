@@ -32,9 +32,7 @@ class Command(BaseCommand):
             action="store_false",
             help="Don't build wheels",
         )
-        parser.add_argument(
-            "-d", "--dest", default="dist", help="Target directory to put artifacts"
-        )
+        parser.add_argument("-d", "--dest", default="dist", help="Target directory to put artifacts")
         parser.add_argument(
             "--no-clean",
             dest="clean",

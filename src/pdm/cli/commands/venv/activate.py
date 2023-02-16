@@ -21,9 +21,7 @@ class ActivateCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.env:
-            venv = next(
-                (venv for key, venv in iter_venvs(project) if key == options.env), None
-            )
+            venv = next((venv for key, venv in iter_venvs(project) if key == options.env), None)
             if not venv:
                 project.core.ui.echo(
                     f"No virtualenv with key [success]{options.env}[/] is found",
@@ -36,8 +34,7 @@ class ActivateCommand(BaseCommand):
             interpreter = project.project_config.get("python.path")
             if not interpreter:
                 project.core.ui.echo(
-                    "The project doesn't have a saved python.path. "
-                    "Run [success]pdm use[/] to pick one.",
+                    "The project doesn't have a saved python.path. Run [success]pdm use[/] to pick one.",
                     style="warning",
                     err=True,
                 )

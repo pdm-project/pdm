@@ -24,9 +24,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore the remembered selection",
         )
-        parser.add_argument(
-            "python", nargs="?", help="Specify the Python version or path", default=""
-        )
+        parser.add_argument("python", nargs="?", help="Specify the Python version or path", default="")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_use(

@@ -111,16 +111,12 @@ class ClearCommand(BaseCommand):
         if not options.type:
             pass
         elif options.type not in self.CACHE_TYPES:
-            raise PdmUsageError(
-                f"Invalid cache type {options.type}, should one of {self.CACHE_TYPES}"
-            )
+            raise PdmUsageError(f"Invalid cache type {options.type}, should one of {self.CACHE_TYPES}")
         else:
             types = (str(options.type),)
 
         packages = files = 0
-        with project.core.ui.open_spinner(
-            f"Clearing {options.type or 'all'} caches..."
-        ):
+        with project.core.ui.open_spinner(f"Clearing {options.type or 'all'} caches..."):
             if not options.type:
                 packages, files = 0, self._clear_files(project.cache_dir)
             else:
@@ -159,14 +155,11 @@ class ListCommand(BaseCommand):
     arguments = [verbose_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "pattern", nargs="?", default="*", help="The pattern to list"
-        )
+        parser.add_argument("pattern", nargs="?", default="*", help="The pattern to list")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         rows = [
-            (format_size(file_size(file)), file.name)
-            for file in find_files(project.cache("wheels"), options.pattern)
+            (format_size(file_size(file)), file.name) for file in find_files(project.cache("wheels"), options.pattern)
         ]
         project.core.ui.display_columns(rows, [">Size", "Filename"])
 

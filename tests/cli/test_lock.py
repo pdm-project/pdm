@@ -36,9 +36,7 @@ def test_lock_refresh(invoke, project, repository):
         "http://example1.com/requests-2.19.1-py3-none-any.whl": "sha256:abcdef123456",
     }
     repository.get_hashes = lambda c: (
-        {Link(url): hash for url, hash in url_hashes.items()}
-        if c.identify() == "requests"
-        else {}
+        {Link(url): hash for url, hash in url_hashes.items()} if c.identify() == "requests" else {}
     )
     assert not project.is_lockfile_hash_match()
     result = invoke(["lock", "--refresh", "-v"], obj=project)

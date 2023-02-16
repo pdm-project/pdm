@@ -92,9 +92,7 @@ def test_old_entry_point_compatibility(invoke, mocker, core):
             return [make_entry_point(add_new_config)]
         return []
 
-    mocker.patch.object(
-        importlib_metadata, "entry_points", side_effect=get_entry_points
-    )
+    mocker.patch.object(importlib_metadata, "entry_points", side_effect=get_entry_points)
     core.init_parser()
     core.load_plugins()
 

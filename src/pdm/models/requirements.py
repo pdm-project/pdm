@@ -87,9 +87,7 @@ class Requirement:
     prerelease: bool = False
 
     def __post_init__(self) -> None:
-        self.requires_python = (
-            self.marker.split_pyspec()[1] if self.marker else PySpecSet()
-        )
+        self.requires_python = self.marker.split_pyspec()[1] if self.marker else PySpecSet()
 
     @property
     def project_name(self) -> str | None:
@@ -150,19 +148,11 @@ class Requirement:
             except InvalidMarker as e:
                 raise RequirementError("Invalid marker: %s" % str(e)) from None
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
-            kwargs["extras"] = tuple(
-                e.strip() for e in kwargs["extras"][1:-1].split(",")
-            )
+            kwargs["extras"] = tuple(e.strip() for e in kwargs["extras"][1:-1].split(","))
         version = kwargs.pop("version", None)
         if version:
             kwargs["specifier"] = get_specifier(version)
-        return cls(
-            **{
-                k: v
-                for k, v in kwargs.items()
-                if k in inspect.signature(cls).parameters
-            }
-        )
+        return cls(**{k: v for k, v in kwargs.items() if k in inspect.signature(cls).parameters})
 
     @classmethod
     def from_dist(cls, dist: Distribution) -> Requirement:
@@ -184,9 +174,7 @@ class Requirement:
                 )
                 return VcsRequirement.create(**data)
             return FileRequirement.create(**data)
-        return NamedRequirement.create(
-            name=dist.metadata["Name"], version=f"=={dist.version}"
-        )
+        return NamedRequirement.create(name=dist.metadata["Name"], version=f"=={dist.version}")
 
     @classmethod
     def from_req_dict(cls, name: str, req_dict: RequirementDict) -> Requirement:
@@ -237,9 +225,9 @@ class Requirement:
         if getattr(req, "url", None):
             link = Link(cast(str, req.url))
             klass = VcsRequirement if link.is_vcs else FileRequirement
-            return klass(url=req.url, **kwargs)  # type: ignore
+            return klass(url=req.url, **kwargs)
         else:
-            return NamedRequirement(**kwargs)  # type: ignore
+            return NamedRequirement(**kwargs)  # type: ignore[arg-type]
 
     def _format_marker(self) -> str:
         if self.marker:
@@ -267,13 +255,13 @@ class FileRequirement(Requirement):
             self._check_installable()
 
     def _hash_key(self) -> tuple:
-        return super()._hash_key() + (self.get_full_url(), self.editable)
+        return (*super()._hash_key(), self.get_full_url(), self.editable)
 
     @classmethod
     def create(cls: type[T], **kwargs: Any) -> T:
         if kwargs.get("path"):
             kwargs["path"] = Path(kwargs["path"])
-        return super().create(**kwargs)  # type: ignore
+        return super().create(**kwargs)
 
     @property
     def str_path(self) -> str | None:
@@ -336,11 +324,7 @@ class FileRequirement(Requirement):
 
     def as_line(self) -> str:
         project_name = f"{self.project_name}" if self.project_name else ""
-        extras = (
-            f"[{','.join(sorted(self.extras))}]"
-            if self.extras and self.project_name
-            else ""
-        )
+        extras = f"[{','.join(sorted(self.extras))}]" if self.extras and self.project_name else ""
         marker = self._format_marker()
         if marker:
             marker = f" {marker}"
@@ -367,9 +351,7 @@ class FileRequirement(Requirement):
             if not self.extras:
                 self.extras = extras
         if not self.name and not self.is_vcs:
-            filename = os.path.basename(
-                urlparse.unquote(url_without_fragments(self.url))
-            )
+            filename = os.path.basename(urlparse.unquote(url_without_fragments(self.url)))
             if filename.endswith(".whl"):
                 self.name, *_ = parse_wheel_filename(filename)
             else:
@@ -385,10 +367,7 @@ class FileRequirement(Requirement):
 
     def _check_installable(self) -> None:
         assert self.path
-        if not (
-            self.path.joinpath("setup.py").exists()
-            or self.path.joinpath("pyproject.toml").exists()
-        ):
+        if not (self.path.joinpath("setup.py").exists() or self.path.joinpath("pyproject.toml").exists()):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
         result = Setup.from_directory(self.path.absolute())
         if result.name:
@@ -430,7 +409,7 @@ class VcsRequirement(FileRequirement):
             path, ref = parsed.path.split("@", 1)
         repo = urlparse.urlunparse(parsed._replace(path=path, fragment=""))
         self.url = f"{vcs}+{repo}"
-        self.repo, self.ref = repo, ref  # type: ignore
+        self.repo, self.ref = repo, ref
 
 
 def filter_requirements_with_extras(
@@ -454,12 +433,7 @@ def filter_requirements_with_extras(
                 _r.marker = Marker(rest) if rest else None
         else:
             req_extras = set()
-        if (
-            req_extras
-            and not req_extras.isdisjoint(extras)
-            or not req_extras
-            and (include_default or not extras)
-        ):
+        if req_extras and not req_extras.isdisjoint(extras) or not req_extras and (include_default or not extras):
             result.append(_r.as_line())
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
@@ -527,12 +501,9 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             r.path = Path(get_relative_path(r.url) or "")
 
     if editable:
-        if r.is_vcs or r.is_file_or_url and r.is_local_dir:  # type: ignore
+        if r.is_vcs or r.is_file_or_url and r.is_local_dir:  # type: ignore[attr-defined]
             assert isinstance(r, FileRequirement)
             r.editable = True
         else:
-            raise RequirementError(
-                "Editable requirement is only supported for VCS link"
-                " or local directory."
-            )
+            raise RequirementError("Editable requirement is only supported for VCS link or local directory.")
     return r

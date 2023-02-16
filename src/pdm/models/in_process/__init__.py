@@ -25,9 +25,7 @@ def get_python_abi_tag(executable: str) -> str:
         return json.loads(subprocess.check_output(args=[executable, "-Es", script]))
 
 
-def get_sys_config_paths(
-    executable: str, vars: dict[str, str] | None = None, kind: str = "default"
-) -> dict[str, str]:
+def get_sys_config_paths(executable: str, vars: dict[str, str] | None = None, kind: str = "default") -> dict[str, str]:
     """Return the sys_config.get_paths() result for the python interpreter"""
     env = os.environ.copy()
     env.pop("__PYVENV_LAUNCHER__", None)

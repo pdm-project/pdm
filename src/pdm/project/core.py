@@ -87,11 +87,7 @@ class Project:
                 if not is_global
                 else global_project
             )
-        if (
-            not is_global
-            and root_path is None
-            and self.global_config["global_project.fallback"]
-        ):
+        if not is_global and root_path is None and self.global_config["global_project.fallback"]:
             root_path = global_project
             is_global = True
             if self.global_config["global_project.fallback_verbose"]:
@@ -115,9 +111,7 @@ class Project:
     @property
     def lockfile(self) -> Lockfile:
         if self._lockfile is None:
-            self._lockfile = Lockfile(
-                self.root / self.LOCKFILE_FILENAME, ui=self.core.ui
-            )
+            self._lockfile = Lockfile(self.root / self.LOCKFILE_FILENAME, ui=self.core.ui)
         return self._lockfile
 
     def set_lockfile(self, path: str | Path) -> None:
@@ -132,7 +126,7 @@ class Project:
 
     @property
     def scripts(self) -> dict[str, str | dict[str, str]]:
-        return self.pyproject.settings.get("scripts", {})  # type: ignore
+        return self.pyproject.settings.get("scripts", {})
 
     @cached_property
     def project_config(self) -> Config:
@@ -184,10 +178,7 @@ class Project:
             if venv_in_env:
                 python = PythonInfo.from_path(get_venv_python(Path(venv_in_env)))
                 if match_version(python):
-                    note(
-                        f"Inside an active virtualenv [success]{venv_in_env}[/], "
-                        "reusing it."
-                    )
+                    note(f"Inside an active virtualenv [success]{venv_in_env}[/], reusing it.")
                     return python
             # otherwise, get a venv associated with the project
             for _, venv in iter_venvs(self):
@@ -198,10 +189,7 @@ class Project:
                     return python
 
             if not self.root.joinpath("__pypackages__").exists():
-                note(
-                    "python.use_venv is on, creating a virtualenv for this project"
-                    "..."
-                )
+                note("python.use_venv is on, creating a virtualenv for this project...")
                 venv = self._create_virtualenv()
                 self.python = PythonInfo.from_path(get_venv_python(venv))
                 return self.python
@@ -209,17 +197,11 @@ class Project:
         for py_version in self.find_interpreters():
             if match_version(py_version):
                 if config.get("python.use_venv"):
-                    note(
-                        "[success]__pypackages__[/] is detected, using the PEP 582 mode"
-                    )
+                    note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
                 self.python = py_version
                 return py_version
 
-        raise NoPythonVersion(
-            "No Python that satisfies {} is found on the system.".format(
-                self.python_requires
-            )
-        )
+        raise NoPythonVersion(f"No Python that satisfies {self.python_requires} is found on the system.")
 
     def get_environment(self) -> Environment:
         """Get the environment selected by this project"""
@@ -233,8 +215,7 @@ class Project:
 
         return (
             GlobalEnvironment(self)
-            if self.config["python.use_venv"]
-            and get_venv_like_prefix(self.python.executable) is not None
+            if self.config["python.use_venv"] and get_venv_like_prefix(self.python.executable) is not None
             else Environment(self)
         )
 
@@ -248,9 +229,7 @@ class Project:
             in_project=self.config["venv.in_project"],
             prompt=self.config["venv.prompt"],
         )
-        self.core.ui.echo(
-            f"Virtualenv is created successfully at [success]{path}[/]", err=True
-        )
+        self.core.ui.echo(f"Virtualenv is created successfully at [success]{path}[/]", err=True)
         return path
 
     @property
@@ -367,16 +346,11 @@ class Project:
             if all(source.get("name") != "pypi" for source in sources):
                 sources.insert(0, self.default_source)
             stored_sources = dict(self.project_config.iter_sources())
-            stored_sources.update(
-                (k, v)
-                for k, v in self.global_config.iter_sources()
-                if k not in stored_sources
-            )
+            stored_sources.update((k, v) for k, v in self.global_config.iter_sources() if k not in stored_sources)
             # The order is kept as project sources -> global sources
             sources.extend(stored_sources.values())
         expanded_sources = [
-            cast("Source", {**source, "url": expand_env_vars_in_auth(source["url"])})
-            for source in sources
+            cast("Source", {**source, "url": expand_env_vars_in_auth(source["url"])}) for source in sources
         ]
         return expanded_sources
 
@@ -421,9 +395,7 @@ class Project:
 
         repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         allow_prereleases = self.allow_prereleases
-        overrides = {
-            normalize_name(k): v for k, v in self.pyproject.resolution_overrides.items()
-        }
+        overrides = {normalize_name(k): v for k, v in self.pyproject.resolution_overrides.items()}
         locked_repository: LockedRepository | None = None
         if strategy != "all" or for_install:
             try:
@@ -441,9 +413,7 @@ class Project:
             return BaseProvider(repository, allow_prereleases, overrides)
         if for_install:
             return BaseProvider(locked_repository, allow_prereleases, overrides)
-        provider_class = (
-            ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
-        )
+        provider_class = ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
         return provider_class(
             locked_repository.all_candidates,
@@ -481,9 +451,7 @@ class Project:
             "content_hash": content_hash,
         }
 
-    def write_lockfile(
-        self, toml_data: dict, show_message: bool = True, write: bool = True
-    ) -> None:
+    def write_lockfile(self, toml_data: dict, show_message: bool = True, write: bool = True) -> None:
         toml_data["metadata"].update(self.get_lock_metadata())
         self.lockfile.set_data(toml_data)
 
@@ -520,9 +488,7 @@ class Project:
         accepted = get_specifier(f"~={lockfile_version},>={lockfile_version}")
         return accepted.contains(self.lockfile.spec_version)
 
-    def get_pyproject_dependencies(
-        self, group: str, dev: bool = False
-    ) -> tuple[list[str], bool]:
+    def get_pyproject_dependencies(self, group: str, dev: bool = False) -> tuple[list[str], bool]:
         """Get the dependencies array in the pyproject.toml
         Return a tuple of two elements, the first is the dependencies array,
         and the second tells whether it is a dev-dependencies group.
@@ -573,9 +539,7 @@ class Project:
         if not self.is_global or not self.pyproject.empty:
             return
         self.root.mkdir(parents=True, exist_ok=True)
-        self.pyproject.set_data(
-            {"project": {"dependencies": ["pip", "setuptools", "wheel"]}}
-        )
+        self.pyproject.set_data({"project": {"dependencies": ["pip", "setuptools", "wheel"]}})
         self.pyproject.write()
 
     @property
@@ -599,9 +563,7 @@ class Project:
         return WheelCache(self.cache("wheels"))
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
-        python_hash = hashlib.sha1(
-            str(self.environment.python_requires).encode()
-        ).hexdigest()
+        python_hash = hashlib.sha1(str(self.environment.python_requires).encode()).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
         return CandidateInfoCache(self.cache("metadata") / file_name)
 
@@ -664,15 +626,10 @@ class Project:
     # compatibility, shouldn't be used directly
     @property
     def meta(self) -> dict[str, Any]:
-        deprecation_warning(
-            "project.meta is deprecated, use project.pyproject.metadata instead"
-        )
+        deprecation_warning("project.meta is deprecated, use project.pyproject.metadata instead")
         return self.pyproject.metadata
 
     @property
     def tool_settings(self) -> dict[str, Any]:
-        deprecation_warning(
-            "project.tool_settings is deprecated, "
-            "use project.pyproject.settings instead"
-        )
+        deprecation_warning("project.tool_settings is deprecated, use project.pyproject.settings instead")
         return self.pyproject.settings

@@ -51,8 +51,7 @@ def _parse_setup_cfg(path: str) -> Dict[str, Any]:
 
     if "project_urls" in metadata:
         result["project_urls"] = dict(
-            [u.strip() for u in url.split("=", 1)]
-            for url in metadata["project_urls"].strip().splitlines()
+            [u.strip() for u in url.split("=", 1)] for url in metadata["project_urls"].strip().splitlines()
         )
 
     if "long_description" in metadata:
@@ -67,14 +66,11 @@ def _parse_setup_cfg(path: str) -> Dict[str, Any]:
             result["python_requires"] = options["python_requires"]
 
         if "install_requires" in options:
-            result["install_requires"] = (
-                options["install_requires"].strip().splitlines()
-            )
+            result["install_requires"] = options["install_requires"].strip().splitlines()
 
         if "package_dir" in options:
             result["package_dir"] = dict(
-                [p.strip() for p in d.split("=", 1)]
-                for d in options["package_dir"].strip().splitlines()
+                [p.strip() for p in d.split("=", 1)] for d in options["package_dir"].strip().splitlines()
             )
 
     if setup_cfg.has_section("options.extras_require"):
@@ -159,9 +155,7 @@ def clean_metadata(metadata: Dict[str, Any]) -> None:
         for entry_point, definitions in metadata["entry_points"].items():
             if isinstance(definitions, str):
                 definitions = [definitions]
-            definitions = dict(
-                sorted(d.replace(" ", "").split("=", 1) for d in definitions)
-            )
+            definitions = dict(sorted(d.replace(" ", "").split("=", 1) for d in definitions))
 
             entry_points[entry_point] = definitions
         if entry_points:

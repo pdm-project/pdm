@@ -17,9 +17,7 @@ class PythonVersionParser(HTMLParser):
         self.parsed_python_versions: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str]]) -> None:
-        if tag == "span" and any(
-            "release-number" in value for key, value in attrs if key == "class"
-        ):
+        if tag == "span" and any("release-number" in value for key, value in attrs if key == "class"):
             self._parsing_release_number_span = True
             return
 

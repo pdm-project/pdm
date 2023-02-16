@@ -123,9 +123,7 @@ class Synchronizer:
         self.ui = environment.project.core.ui
         self.self_candidate: Candidate | None = None
         if self.install_self:
-            self.self_candidate = self.environment.project.make_self_candidate(
-                not self.no_editable
-            )
+            self.self_candidate = self.environment.project.make_self_candidate(not self.no_editable)
 
         if isinstance(self.no_editable, Collection):
             keys = self.no_editable
@@ -143,9 +141,7 @@ class Synchronizer:
                 # We do not do in-place update, which will break the caches
                 candidate = candidates[key]
                 req = dataclasses.replace(candidate.req, editable=False)
-                candidates[key] = make_candidate(
-                    req, candidate.name, candidate.version, candidate.link
-                )
+                candidates[key] = make_candidate(req, candidate.name, candidate.version, candidate.link)
         self.candidates = candidates
         self._manager: InstallManager | None = None
 
@@ -190,9 +186,7 @@ class Synchronizer:
             return bool(self.no_editable)
         if not can.req.is_named:
             dreq = Requirement.from_dist(dist)
-            return getattr(dreq, "url", None) != backend.expand_line(
-                can.req.url  # type: ignore
-            )
+            return getattr(dreq, "url", None) != backend.expand_line(can.req.url)  # type: ignore[attr-defined]
         specifier = can.req.as_pinned_version(can.version).specifier
         assert specifier is not None
         return not specifier.contains(dist.version, prereleases=True)
@@ -235,29 +229,21 @@ class Synchronizer:
         try:
             self.manager.install(can)
         except Exception:
-            progress.live.console.print(
-                f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed"
-            )
+            progress.live.console.print(f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed")
             raise
         else:
-            progress.live.console.print(
-                f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful"
-            )
+            progress.live.console.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
         finally:
             progress.update(job, completed=1, visible=False)
         return can
 
-    def update_candidate(
-        self, key: str, progress: Progress
-    ) -> tuple[Distribution, Candidate]:
+    def update_candidate(self, key: str, progress: Progress) -> tuple[Distribution, Candidate]:
         """Update candidate"""
         can = self.candidates[key]
         dist = self.working_set[strip_extras(key)[0]]
         dist_version = dist.version
         job = progress.add_task(
-            f"Updating [req]{key}[/] "
-            f"[warning]{dist_version}[/] "
-            f"-> [warning]{can.version}[/]...",
+            f"Updating [req]{key}[/] " f"[warning]{dist_version}[/] " f"-> [warning]{can.version}[/]...",
             total=1,
         )
         try:
@@ -294,14 +280,12 @@ class Synchronizer:
             self.manager.uninstall(dist)
         except Exception:
             progress.live.console.print(
-                f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] "
-                f"[warning]{dist_version}[/] failed",
+                f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] " f"[warning]{dist_version}[/] failed",
             )
             raise
         else:
             progress.live.console.print(
-                f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] "
-                f"[warning]{dist_version}[/] successful"
+                f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] " f"[warning]{dist_version}[/] successful"
             )
         finally:
             progress.update(job, completed=1, visible=False)
@@ -324,9 +308,7 @@ class Synchronizer:
 
     def _show_summary(self, packages: dict[str, list[str]]) -> None:
         to_add = [self.candidates[key] for key in packages["add"]]
-        to_update = [
-            (self.working_set[key], self.candidates[key]) for key in packages["update"]
-        ]
+        to_update = [(self.working_set[key], self.candidates[key]) for key in packages["update"]]
         to_remove = [self.working_set[key] for key in packages["remove"]]
         lines = []
         if to_add:
@@ -336,17 +318,11 @@ class Synchronizer:
         if to_update:
             lines.append("[bold]Packages to update[/]:")
             for prev, cur in to_update:
-                lines.append(
-                    f"  - [req]{cur.name}[/] "
-                    f"[warning]{prev.version}[/] -> [warning]{cur.version}[/]"
-                )
+                lines.append(f"  - [req]{cur.name}[/] " f"[warning]{prev.version}[/] -> [warning]{cur.version}[/]")
         if to_remove:
             lines.append("[bold]Packages to remove[/]:")
             for dist in to_remove:
-                lines.append(
-                    f"  - [req]{dist.metadata['Name']}[/] "
-                    f"[warning]{dist.version}[/]"
-                )
+                lines.append(f"  - [req]{dist.metadata['Name']}[/] " f"[warning]{dist.version}[/]")
         if lines:
             self.ui.echo("\n".join(lines))
         else:
@@ -389,10 +365,7 @@ class Synchronizer:
                 exc_info = (type(error), error, error.__traceback__)
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
                 failed_jobs.append((kind, key))
-                errors.extend(
-                    [f"{kind} [success]{key}[/] failed:\n"]
-                    + traceback.format_exception(*exc_info)
-                )
+                errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
 
         # get rich progress and live handler to deal with multiple spinners
         with self.ui.logging("install"), self.ui.make_progress(
@@ -407,9 +380,7 @@ class Synchronizer:
                 with self.create_executor() as executor:
                     for kind, key in parallel_jobs:
                         future = executor.submit(handlers[kind], key, progress)
-                        future.add_done_callback(
-                            functools.partial(update_progress, kind=kind, key=key)
-                        )
+                        future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
                 if not failed_jobs or i == self.retry_times:
                     break
                 parallel_jobs, failed_jobs = failed_jobs, []

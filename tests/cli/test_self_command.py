@@ -12,12 +12,8 @@ def mock_distribution(metadata, entry_points=()):
 
 
 DISTRIBUTIONS = [
-    mock_distribution(
-        {"Name": "foo", "Version": "1.0.0", "Summary": "Foo package"}, ["pdm.plugin"]
-    ),
-    mock_distribution(
-        {"Name": "bar", "Version": "2.0.0", "Summary": "Bar package"}, ["pdm"]
-    ),
+    mock_distribution({"Name": "foo", "Version": "1.0.0", "Summary": "Foo package"}, ["pdm.plugin"]),
+    mock_distribution({"Name": "bar", "Version": "2.0.0", "Summary": "Bar package"}, ["pdm"]),
     mock_distribution({"Name": "baz", "Version": "3.0.0", "Summary": "Baz package"}),
 ]
 
@@ -31,9 +27,7 @@ def mock_pip(monkeypatch):
 
 @pytest.fixture()
 def mock_all_distributions(monkeypatch):
-    monkeypatch.setattr(
-        self_cmd, "_get_distributions", Mock(return_value=DISTRIBUTIONS)
-    )
+    monkeypatch.setattr(self_cmd, "_get_distributions", Mock(return_value=DISTRIBUTIONS))
 
 
 @pytest.fixture()
@@ -66,9 +60,7 @@ def test_self_add(invoke, mock_pip):
 
     result = invoke(["self", "add", "--pip-args", "--force-reinstall --upgrade", "foo"])
     assert result.exit_code == 0, result.stderr
-    mock_pip.assert_called_with(
-        ANY, ["install", "--force-reinstall", "--upgrade", "foo"]
-    )
+    mock_pip.assert_called_with(ANY, ["install", "--force-reinstall", "--upgrade", "foo"])
 
 
 def test_self_remove(invoke, mock_pip, monkeypatch):

@@ -40,20 +40,15 @@ class Command(BaseCommand):
             help="Show the installed dependencies in pip's requirements.txt format",
         )
 
-        graph.add_argument(
-            "--graph", action="store_true", help="Display a graph of dependencies"
-        )
+        graph.add_argument("--graph", action="store_true", help="Display a graph of dependencies")
 
-        parser.add_argument(
-            "-r", "--reverse", action="store_true", help="Reverse the dependency graph"
-        )
+        parser.add_argument("-r", "--reverse", action="store_true", help="Reverse the dependency graph")
 
         parser.add_argument(
             "--resolve",
             action="store_true",
             default=False,
-            help="Resolve all requirements to output licenses "
-            "(instead of just showing those currently installed)",
+            help="Resolve all requirements to output licenses (instead of just showing those currently installed)",
         )
 
         parser.add_argument(
@@ -87,15 +82,13 @@ class Command(BaseCommand):
         list_formats.add_argument(
             "--markdown",
             action="store_true",
-            help="Output dependencies and legal notices in markdown "
-            "document format - best effort basis",
+            help="Output dependencies and legal notices in markdown document format - best effort basis",
         )
 
         parser.add_argument(
             "--include",
             default="",
-            help="Dependency groups to include in the output. By default "
-            "all are included",
+            help="Dependency groups to include in the output. By default all are included",
         )
 
         parser.add_argument(
@@ -124,25 +117,13 @@ class Command(BaseCommand):
         # Set up `--include` and `--exclude` dep groups.
         # Include everything by default (*) then exclude after.
         # Check to make sure that only valid dep group names are given.
-        valid_groups = set([g for g in project.iter_groups()] + [SUBDEP_GROUP_LABEL])
-        include = set(
-            parse_comma_separated_string(
-                options.include, lowercase=False, asterisk_values=valid_groups
-            )
-        )
+        valid_groups = {*list(project.iter_groups()), SUBDEP_GROUP_LABEL}
+        include = set(parse_comma_separated_string(options.include, lowercase=False, asterisk_values=valid_groups))
         if not all(g in valid_groups for g in include):
-            raise PdmUsageError(
-                f"--include groups must be selected from: {valid_groups}"
-            )
-        exclude = set(
-            parse_comma_separated_string(
-                options.exclude, lowercase=False, asterisk_values=valid_groups
-            )
-        )
+            raise PdmUsageError(f"--include groups must be selected from: {valid_groups}")
+        exclude = set(parse_comma_separated_string(options.exclude, lowercase=False, asterisk_values=valid_groups))
         if exclude and not all(g in valid_groups for g in exclude):
-            raise PdmUsageError(
-                f"--exclude groups must be selected from: {valid_groups}"
-            )
+            raise PdmUsageError(f"--exclude groups must be selected from: {valid_groups}")
 
         # Include selects only certain groups when set, but always selects :sub
         # unless it is explicitly unset.
@@ -153,16 +134,12 @@ class Command(BaseCommand):
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.
         requirements = [
-            r
-            for g in selected_groups
-            if g != SUBDEP_GROUP_LABEL
-            for r in project.get_dependencies(g).values()
+            r for g in selected_groups if g != SUBDEP_GROUP_LABEL for r in project.get_dependencies(g).values()
         ]
         if options.resolve:
             candidates = actions.resolve_candidates_from_lockfile(project, requirements)
             packages: Mapping[str, im.Distribution] = {
-                k: c.prepare(project.environment).metadata
-                for k, c in candidates.items()
+                k: c.prepare(project.environment).metadata for k, c in candidates.items()
             }
 
         # Use requirements from the working set (currently installed).
@@ -225,9 +202,7 @@ class Command(BaseCommand):
         if options.sort:
             raise PdmUsageError("--sort cannot be used with --graph")
 
-        show_dependency_graph(
-            project, dep_graph, reverse=options.reverse, json=options.json
-        )
+        show_dependency_graph(project, dep_graph, reverse=options.reverse, json=options.json)
 
     def handle_list(
         self,
@@ -240,13 +215,9 @@ class Command(BaseCommand):
             raise PdmUsageError("--reverse cannot be used without --graph")
 
         # Check the fields are specified OK.
-        fields = parse_comma_separated_string(
-            options.fields, asterisk_values=Listable.KEYS
-        )
+        fields = parse_comma_separated_string(options.fields, asterisk_values=Listable.KEYS)
         if not all(field in Listable.KEYS for field in fields):
-            raise PdmUsageError(
-                f"--fields must specify one or more of: {Listable.KEYS}"
-            )
+            raise PdmUsageError(f"--fields must specify one or more of: {Listable.KEYS}")
 
         # Wrap each distribution with a Listable (and a groups pairing)
         # to make it easier to filter on later.
@@ -260,9 +231,7 @@ class Command(BaseCommand):
         if options.sort:
             keys = parse_comma_separated_string(options.sort)
             if not all(key in Listable.KEYS for key in keys):
-                raise PdmUsageError(
-                    f"--sort key must be one of: {','.join(Listable.KEYS)}"
-                )
+                raise PdmUsageError(f"--sort key must be one of: {','.join(Listable.KEYS)}")
             records.sort(key=lambda d: tuple(d[key] for key in keys))
 
         # Write CSV
@@ -293,12 +262,8 @@ class Command(BaseCommand):
                     err=True,
                     style="error",
                 )
-                ui.echo(
-                    text_body.encode().decode("ascii", errors="ignore"), highlight=True
-                )
-                ui.echo(
-                    "**Problem decoding file as UTF-8.  Some characters may be omit.**"
-                )
+                ui.echo(text_body.encode().decode("ascii", errors="ignore"), highlight=True)
+                ui.echo("**Problem decoding file as UTF-8.  Some characters may be omit.**")
 
         # Write nice table format.
         else:
@@ -352,11 +317,7 @@ class Listable:
         self.licenses: str | None = dist.metadata["License"]
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
         if not self.licenses:
-            classifier_licenses = [
-                v
-                for v in dist.metadata.get_all("Classifier", [])  # type: ignore
-                if v.startswith("License")
-            ]
+            classifier_licenses = [v for v in dist.metadata.get_all("Classifier", []) if v.startswith("License")]
             alternatives = [parts.split("::") for parts in classifier_licenses]
             alternatives = [part[-1].strip() for part in alternatives if part]
             self.licenses = "|".join(alternatives)

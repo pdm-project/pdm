@@ -45,13 +45,9 @@ def test_convert_requirements_file(project, is_dev):
 
 def test_convert_requirements_file_without_name(project, vcs):
     req_file = project.root.joinpath("reqs.txt")
-    project.root.joinpath("reqs.txt").write_text(
-        "git+https://github.com/test-root/demo.git\n"
-    )
+    project.root.joinpath("reqs.txt").write_text("git+https://github.com/test-root/demo.git\n")
     assert requirements.check_fingerprint(project, str(req_file))
-    result, _ = requirements.convert(
-        project, str(req_file), Namespace(dev=False, group=None)
-    )
+    result, _ = requirements.convert(project, str(req_file), Namespace(dev=False, group=None))
 
     assert result["dependencies"] == ["git+https://github.com/test-root/demo.git"]
 
@@ -60,9 +56,7 @@ def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject.toml"
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
-        result, settings = poetry.convert(
-            project, golden_file, Namespace(dev=False, group=None)
-        )
+        result, settings = poetry.convert(project, golden_file, Namespace(dev=False, group=None))
 
     assert result["authors"][0] == {
         "name": "Sébastien Eustace",
@@ -84,9 +78,7 @@ def test_convert_poetry(project):
     assert len(settings["dev-dependencies"]["dev"]) == 2
 
     assert result["scripts"] == {"poetry": "poetry.console:run"}
-    assert result["entry-points"]["blogtool.parsers"] == {
-        ".rst": "some_module:SomeClass"
-    }
+    assert result["entry-points"]["blogtool.parsers"] == {".rst": "some_module:SomeClass"}
     build = settings["build"]
     assert build["includes"] == ["lib/my_package", "tests", "CHANGELOG.md"]
     assert build["excludes"] == ["my_package/excluded.py"]
@@ -120,10 +112,7 @@ def test_convert_flit(project):
     ]
 
     assert result["scripts"]["flit"] == "flit:main"
-    assert (
-        result["entry-points"]["pygments.lexers"]["dogelang"]
-        == "dogelang.lexer:DogeLexer"
-    )
+    assert result["entry-points"]["pygments.lexers"]["dogelang"] == "dogelang.lexer:DogeLexer"
     build = settings["build"]
     assert build["includes"] == ["doc/"]
     assert build["excludes"] == ["doc/*.html"]
@@ -132,9 +121,7 @@ def test_convert_flit(project):
 def test_import_requirements_with_group(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    result, settings = requirements.convert(
-        project, golden_file, Namespace(dev=False, group="test")
-    )
+    result, settings = requirements.convert(project, golden_file, Namespace(dev=False, group="test"))
 
     group = result["optional-dependencies"]["test"]
     dev_group = settings["dev-dependencies"]["dev"]
@@ -148,14 +135,9 @@ def test_import_requirements_with_group(project):
 def test_export_expand_env_vars_in_source(project, monkeypatch):
     monkeypatch.setenv("USER", "foo")
     monkeypatch.setenv("PASSWORD", "bar")
-    project.pyproject.settings["source"] = [
-        {"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}
-    ]
+    project.pyproject.settings["source"] = [{"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}]
     result = requirements.export(project, [], Namespace())
-    assert (
-        result.strip().splitlines()[-1]
-        == "--index-url https://foo:bar@test.pypi.org/simple"
-    )
+    assert result.strip().splitlines()[-1] == "--index-url https://foo:bar@test.pypi.org/simple"
 
 
 def test_export_replace_project_root(project):

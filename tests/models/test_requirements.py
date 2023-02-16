@@ -83,11 +83,7 @@ def test_illegal_requirement_line(line, expected):
         parse_requirement(line)
 
 
-@pytest.mark.parametrize(
-    "line", ["requests >= 2.19.0", "https://github.com/pypa/pip/archive/1.3.1.zip"]
-)
+@pytest.mark.parametrize("line", ["requests >= 2.19.0", "https://github.com/pypa/pip/archive/1.3.1.zip"])
 def test_not_supported_editable_requirement(line):
-    with pytest.raises(
-        RequirementError, match="Editable requirement is only supported"
-    ):
+    with pytest.raises(RequirementError, match="Editable requirement is only supported"):
         parse_requirement(line, True)

@@ -72,9 +72,7 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     assert expects == result.outputs
 
     # Only include the dev dep
-    result = invoke(
-        ["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project
-    )
+    result = invoke(["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project)
     expects = "demo[security] 0.0.1 [ required: Any ]\n"
     expects = "".join(expects)
     assert expects == result.outputs
@@ -498,9 +496,7 @@ def fake_working_set(working_set):
 
     # missing package- License is set to UNKNOWN, text saved in LICENCE
     # using UK spelling
-    classifier = Distribution(
-        "classifier", "1.0", metadata={"Classifier": "License :: PDM TEST D"}
-    )
+    classifier = Distribution("classifier", "1.0", metadata={"Classifier": "License :: PDM TEST D"})
     classifier_l = _MockPackagePath("classifier-1.0.dist-info", "LICENCE")
     classifier_l.license_text = "license text for CLASSIFIER here"
     classifier_l.read_text = lambda *a, **kw: 1 / 0  # make it throw an error
@@ -568,9 +564,7 @@ def test_list_bare_sorted_version_resolve(project, invoke, working_set):
     project.environment.python_requires = PySpecSet(">=3.6")
     actions.do_add(project, packages=["requests"], sync=False)
 
-    result = invoke(
-        ["list", "--sort", "version", "--resolve"], obj=project, strict=True
-    )
+    result = invoke(["list", "--sort", "version", "--resolve"], obj=project, strict=True)
     assert "requests" not in working_set
     expected = (
         "+----------------------------------+\n"
@@ -620,9 +614,7 @@ def test_list_csv_fields_licences(project, invoke):
 
 @pytest.mark.usefixtures("fake_working_set")
 def test_list_json_fields_licences(project, invoke):
-    result = invoke(
-        ["list", "--json", "--fields", "name,version,licenses"], obj=project
-    )
+    result = invoke(["list", "--json", "--fields", "name,version,licenses"], obj=project)
     expected = [
         {"name": "foo", "version": "0.1.0", "licenses": "A License"},
         {"name": "bar", "version": "3.0.1", "licenses": "B License"},
@@ -636,9 +628,7 @@ def test_list_json_fields_licences(project, invoke):
 
 @pytest.mark.usefixtures("fake_working_set")
 def test_list_markdown_fields_licences(project, invoke):
-    result = invoke(
-        ["list", "--markdown", "--fields", "name,version,licenses"], obj=project
-    )
+    result = invoke(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "# test_project licenses\n"
         "## foo\n\n"
@@ -761,15 +751,7 @@ def test_list_csv_include_exclude(project, invoke):
         ],
         obj=project,
     )
-    expected = (
-        "name,groups\n"
-        "certifi,:sub\n"
-        "chardet,:sub\n"
-        "demo,dev\n"
-        "idna,:sub\n"
-        "requests,:sub\n"
-        "urllib3,:sub\n"
-    )
+    expected = "name,groups\ncertifi,:sub\nchardet,:sub\ndemo,dev\nidna,:sub\nrequests,:sub\nurllib3,:sub\n"
     assert expected == result.output
 
     # Include all (default) except sub
@@ -786,7 +768,7 @@ def test_list_csv_include_exclude(project, invoke):
         ],
         obj=project,
     )
-    expected = "name,groups\n" "demo,dev\n"
+    expected = "name,groups\ndemo,dev\n"
     assert expected == result.output
 
     # Show just the dev group
@@ -805,7 +787,7 @@ def test_list_csv_include_exclude(project, invoke):
         ],
         obj=project,
     )
-    expected = "name,version,groups\n" "demo,0.0.1,dev\n"
+    expected = "name,version,groups\ndemo,0.0.1,dev\n"
     assert expected == result.output
 
     # Exclude the dev group.

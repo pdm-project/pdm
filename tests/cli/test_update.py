@@ -52,9 +52,7 @@ def test_update_all_packages(project, repository, capsys, strategy):
     actions.do_update(project, strategy=strategy)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
-    assert locked_candidates["chardet"].version == (
-        "3.0.5" if strategy == "all" else "3.0.4"
-    )
+    assert locked_candidates["chardet"].version == ("3.0.5" if strategy == "all" else "3.0.4")
     assert locked_candidates["pytz"].version == "2019.6"
     out, _ = capsys.readouterr()
     update_num = 3 if strategy == "all" else 2
@@ -171,9 +169,7 @@ def test_update_with_package_and_groups_argument(project):
 @pytest.mark.usefixtures("repository", "working_set")
 def test_update_with_prerelease_without_package_argument(project):
     actions.do_add(project, packages=["requests"])
-    with pytest.raises(
-        PdmUsageError, match="--prerelease must be used with packages given"
-    ):
+    with pytest.raises(PdmUsageError, match="--prerelease must be used with packages given"):
         actions.do_update(project, prerelease=True)
 
 
@@ -187,9 +183,7 @@ def test_update_existing_package_with_prerelease(project, working_set):
     assert project.pyproject.metadata["dependencies"][0] == "urllib3~=1.22"
     assert working_set["urllib3"].version == "1.23b0"
 
-    actions.do_update(
-        project, packages=["urllib3"], prerelease=True, unconstrained=True
-    )
+    actions.do_update(project, packages=["urllib3"], prerelease=True, unconstrained=True)
     assert project.pyproject.metadata["dependencies"][0] == "urllib3<2,>=1.23b0"
     assert working_set["urllib3"].version == "1.23b0"
 

@@ -37,9 +37,7 @@ class Command(BaseCommand):
             help="Don't ask questions but use default values",
         )
         parser.add_argument("--python", help="Specify the Python version/path to use")
-        parser.add_argument(
-            "--backend", choices=list(_BACKENDS), help="Specify the build backend"
-        )
+        parser.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend")
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -47,13 +45,9 @@ class Command(BaseCommand):
 
         hooks = HookManager(project, options.skip)
         if project.pyproject.exists:
-            project.core.ui.echo(
-                "pyproject.toml already exists, update it now.", style="primary"
-            )
+            project.core.ui.echo("pyproject.toml already exists, update it now.", style="primary")
         else:
-            project.core.ui.echo(
-                "Creating a pyproject.toml for PDM...", style="primary"
-            )
+            project.core.ui.echo("Creating a pyproject.toml for PDM...", style="primary")
         self.set_interactive(not options.non_interactive)
 
         if self.interactive:
@@ -65,24 +59,17 @@ class Command(BaseCommand):
                 ignore_requires_python=True,
                 hooks=hooks,
             )
-            if (
-                project.config["python.use_venv"]
-                and get_venv_like_prefix(python.executable) is None
-            ):
+            if project.config["python.use_venv"] and get_venv_like_prefix(python.executable) is None:
                 if termui.confirm(
-                    "Would you like to create a virtualenv with "
-                    f"[success]{python.executable}[/]?",
+                    "Would you like to create a virtualenv with " f"[success]{python.executable}[/]?",
                     default=True,
                 ):
                     try:
                         path = project._create_virtualenv()
-                        python = project.python = PythonInfo.from_path(
-                            get_venv_python(path)
-                        )
+                        python = project.python = PythonInfo.from_path(get_venv_python(path))
                     except Exception as e:  # pragma: no cover
                         project.core.ui.echo(
-                            f"Error occurred when creating virtualenv: {e}\n"
-                            "Please fix it and create later.",
+                            f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later.",
                             style="error",
                             err=True,
                         )
@@ -141,9 +128,7 @@ class Command(BaseCommand):
         author = self.ask("Author name", git_user)
         email = self.ask("Author email", git_email)
         python_version = f"{python.major}.{python.minor}"
-        python_requires = self.ask(
-            "Python requires('*' to allow any)", f">={python_version}"
-        )
+        python_requires = self.ask("Python requires('*' to allow any)", f">={python_version}")
 
         actions.do_init(
             project,

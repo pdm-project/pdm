@@ -21,10 +21,7 @@ class ProjectInfo:
 
         if "Project-URL" in metadata:
             project_urls = {
-                k.strip(): v.strip()
-                for k, v in (
-                    row.split(",") for row in metadata.get_all("Project-URL", [])
-                )
+                k.strip(): v.strip() for k, v in (row.split(",") for row in metadata.get_all("Project-URL", []))
             }
         else:
             project_urls = {}

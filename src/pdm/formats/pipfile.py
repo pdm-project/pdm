@@ -23,7 +23,7 @@ def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
     if isinstance(req, dict):
         markers: list[Marker] = []
         if "markers" in req:
-            markers.append(Marker(req["markers"]))  # type: ignore
+            markers.append(Marker(req["markers"]))  # type: ignore[arg-type]
         for key in MARKER_KEYS:
             if key in req:
                 marker = Marker(f"{key}{req[key]}")
@@ -40,9 +40,7 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
     return os.path.basename(filename) == "Pipfile"
 
 
-def convert(
-    project: Project, filename: PathLike, options: Namespace | None
-) -> tuple[dict[str, Any], dict[str, Any]]:
+def convert(project: Project, filename: PathLike, options: Namespace | None) -> tuple[dict[str, Any], dict[str, Any]]:
     with open(filename, "rb") as fp:
         data = tomllib.load(fp)
     result = {}
@@ -50,25 +48,17 @@ def convert(
     if "pipenv" in data:
         settings["allow_prereleases"] = data["pipenv"].get("allow_prereleases", False)
     if "requires" in data:
-        python_version = data["requires"].get("python_full_version") or data[
-            "requires"
-        ].get("python_version")
+        python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
         result["requires-python"] = f">={python_version}"
     if "source" in data:
         settings["source"] = data["source"]
-    result["dependencies"] = make_array(  # type: ignore
-        [
-            convert_pipfile_requirement(k, req)
-            for k, req in data.get("packages", {}).items()
-        ],
+    result["dependencies"] = make_array(  # type: ignore[assignment]
+        [convert_pipfile_requirement(k, req) for k, req in data.get("packages", {}).items()],
         True,
     )
     settings["dev-dependencies"] = {
         "dev": make_array(
-            [
-                convert_pipfile_requirement(k, req)
-                for k, req in data.get("dev-packages", {}).items()
-            ],
+            [convert_pipfile_requirement(k, req) for k, req in data.get("dev-packages", {}).items()],
             True,
         )
     }

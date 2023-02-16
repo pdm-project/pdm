@@ -150,8 +150,7 @@ def test_cache_info(project, invoke):
             "c30e269398d01144ee52aa33292682d",
         ),
         (
-            "http://fixtures.test/artifacts/demo-0.0.1.tar.gz#md5=5218509812c9fcb4646a"
-            "dde8fd3307e1",
+            "http://fixtures.test/artifacts/demo-0.0.1.tar.gz#md5=5218509812c9fcb4646adde8fd3307e1",
             "sha256:d57bf5e3b8723e4fc68275159dcc4ca983d86d4c84220a4d715d491401f27db2",
         ),
     ],

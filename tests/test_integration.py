@@ -37,9 +37,7 @@ def test_basic_integration(python_version, core, tmp_path, invoke):
         invoke(["build", "-v"], obj=project, strict=True)
     invoke(["remove", "-v", "django"], obj=project, strict=True)
     result = invoke(["list"], obj=project, strict=True)
-    assert not any(
-        line.strip().lower().startswith("django") for line in result.output.splitlines()
-    )
+    assert not any(line.strip().lower().startswith("django") for line in result.output.splitlines())
 
 
 def test_actual_list_freeze(project, local_finder, invoke):

@@ -19,9 +19,7 @@ class Command(BaseCommand):
             action="store_true",
             help="import packages into dev dependencies",
         )
-        parser.add_argument(
-            "-G", "--group", help="Specify the target dependency group to import into"
-        )
+        parser.add_argument("-G", "--group", help="Specify the target dependency group to import into")
         parser.add_argument(
             "-f",
             "--format",

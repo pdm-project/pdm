@@ -33,9 +33,7 @@ def resolve(project, repository):
         with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
             reporter = SpinnerReporter(spin, requirements)
             resolver = Resolver(provider, reporter)
-            mapping, *_ = _resolve(
-                resolver, requirements, repository.environment.python_requires
-            )
+            mapping, *_ = _resolve(resolver, requirements, repository.environment.python_requires)
             return mapping
 
     return resolve_func
@@ -161,9 +159,7 @@ def test_resolve_conflicting_dependencies(resolve, repository):
 
 
 @pytest.mark.parametrize("overrides", ["2.1", ">=1.8", "==2.1"])
-def test_resolve_conflicting_dependencies_with_overrides(
-    project, resolve, repository, overrides
-):
+def test_resolve_conflicting_dependencies_with_overrides(project, resolve, repository, overrides):
     repository.add_candidate("foo", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
     repository.add_candidate("bar", "0.1.0")

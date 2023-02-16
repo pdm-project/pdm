@@ -1,1 +1,3 @@
-from pdm.resolver.core import resolve  # noqa
+from pdm.resolver.core import resolve
+
+__all__ = ["resolve"]

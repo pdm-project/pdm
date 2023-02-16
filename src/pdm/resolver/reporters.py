@@ -22,9 +22,7 @@ def log_title(title: str) -> None:
 
 
 class SpinnerReporter(BaseReporter):
-    def __init__(
-        self, spinner: termui.Spinner, requirements: list[Requirement]
-    ) -> None:
+    def __init__(self, spinner: termui.Spinner, requirements: list[Requirement]) -> None:
         self.spinner = spinner
         self.requirements = requirements
         self._previous: dict[str, Candidate] | None = None
@@ -79,11 +77,8 @@ class SpinnerReporter(BaseReporter):
             "Candidate rejected: %s because it introduces a new requirement %s"
             " that conflicts with other requirements:\n  %s",
             candidate,
-            last.requirement.as_line(),  # type: ignore
-            "  \n".join(
-                f"  {req.as_line()} (from {parent if parent else 'project'})"
-                for req, parent in others
-            ),
+            last.requirement.as_line(),  # type: ignore[attr-defined]
+            "  \n".join(f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in others),
         )
 
     def pinning(self, candidate: Candidate) -> None:
@@ -92,8 +87,5 @@ class SpinnerReporter(BaseReporter):
         logger.info("Pinning: %s %s", candidate.name, candidate.version)
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
-        conflicts = [
-            f"  {req.as_line()} (from {parent if parent else 'project'})"
-            for req, parent in causes
-        ]
+        conflicts = [f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in causes]
         logger.info("Conflicts detected: \n%s", "\n".join(conflicts))

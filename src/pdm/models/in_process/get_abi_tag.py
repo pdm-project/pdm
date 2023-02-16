@@ -17,7 +17,7 @@ INTERPRETER_SHORT_NAMES = {
 def get_abbr_impl():
     """Returns the name of the running interpreter."""
     try:
-        name = sys.implementation.name  # type: ignore
+        name = sys.implementation.name
     except AttributeError:  # pragma: no cover
         # Python 2.7 compatibility.
         name = platform.python_implementation().lower()
@@ -32,8 +32,7 @@ def get_flag(var, fallback, expected=True, warn=True):
     if val is None:
         if warn:
             warnings.warn(
-                "Config variable '{}' is unset, Python ABI tag may "
-                "be incorrect".format(var),
+                "Config variable '{}' is unset, Python ABI tag may be incorrect".format(var),
                 RuntimeWarning,
                 2,
             )
@@ -54,9 +53,7 @@ if __name__ == "__main__":
         is_cpython = impl == "cp"
         if get_flag("Py_DEBUG", hasattr(sys, "gettotalrefcount"), warn=False):
             d = "d"
-        if python_version < (3, 8) and get_flag(
-            "WITH_PYMALLOC", is_cpython, warn=False
-        ):
+        if python_version < (3, 8) and get_flag("WITH_PYMALLOC", is_cpython, warn=False):
             m = "m"
         if python_version < (3, 3) and get_flag(
             "Py_UNICODE_SIZE",

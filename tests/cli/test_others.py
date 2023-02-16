@@ -23,9 +23,7 @@ def test_project_no_init_error(project_no_init):
         actions.do_lock,
         actions.do_update,
     ):
-        with pytest.raises(
-            PdmException, match="The pyproject.toml has not been initialized yet"
-        ):
+        with pytest.raises(PdmException, match="The pyproject.toml has not been initialized yet"):
             handler(project_no_init)
 
 
@@ -87,9 +85,7 @@ def test_import_other_format_file(project, invoke, filename):
 def test_import_requirement_no_overwrite(project, invoke, tmp_path):
     project.add_dependencies({"requests": parse_requirement("requests")})
     tmp_path.joinpath("reqs.txt").write_text("flask\nflask-login\n")
-    result = invoke(
-        ["import", "-dGweb", str(tmp_path.joinpath("reqs.txt"))], obj=project
-    )
+    result = invoke(["import", "-dGweb", str(tmp_path.joinpath("reqs.txt"))], obj=project)
     assert result.exit_code == 0, result.stderr
     assert list(project.get_dependencies()) == ["requests"]
     assert list(project.get_dependencies("web")) == ["flask", "flask-login"]
@@ -151,13 +147,9 @@ def test_export_to_requirements_txt(invoke, fixture_project):
     assert result.exit_code == 0
     assert result.output.strip() == requirements_pyproject.read_text().strip()
 
-    result = invoke(
-        ["export", "-o", str(project.root / "requirements_output.txt")], obj=project
-    )
+    result = invoke(["export", "-o", str(project.root / "requirements_output.txt")], obj=project)
     assert result.exit_code == 0
-    assert (
-        project.root / "requirements_output.txt"
-    ).read_text() == requirements_txt.read_text()
+    assert (project.root / "requirements_output.txt").read_text() == requirements_txt.read_text()
 
 
 def test_export_doesnt_include_dep_with_extras(invoke, fixture_project):

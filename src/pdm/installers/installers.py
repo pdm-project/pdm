@@ -117,16 +117,10 @@ class WheelFile(_WheelFile):
     def dist_info_dir(self) -> str:
         namelist = self._zipfile.namelist()
         try:
-            return next(
-                name.split("/")[0]
-                for name in namelist
-                if name.split("/")[0].endswith(".dist-info")
-            )
+            return next(name.split("/")[0] for name in namelist if name.split("/")[0].endswith(".dist-info"))
         except StopIteration:  # pragma: no cover
             canonical_name = super().dist_info_dir
-            raise InvalidWheelSource(
-                f"The wheel doesn't contain metadata {canonical_name!r}"
-            )
+            raise InvalidWheelSource(f"The wheel doesn't contain metadata {canonical_name!r}") from None
 
     def get_contents(self) -> Iterator[WheelContentElement]:
         for element in super().get_contents():
@@ -137,15 +131,11 @@ class WheelFile(_WheelFile):
 
 
 class InstallDestination(SchemeDictionaryDestination):
-    def __init__(
-        self, *args: Any, symlink_to: str | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, *args: Any, symlink_to: str | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.symlink_to = symlink_to
 
-    def write_to_fs(
-        self, scheme: Scheme, path: str | Path, stream: BinaryIO, is_executable: bool
-    ) -> RecordEntry:
+    def write_to_fs(self, scheme: Scheme, path: str | Path, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         target_path = os.path.join(self.scheme_dict[scheme], path)
         if os.path.exists(target_path):
             os.unlink(target_path)
@@ -159,9 +149,7 @@ class InstallDestination(SchemeDictionaryDestination):
     ) -> None:
         if self.symlink_to:
             # Create symlinks to the cached location
-            for relpath in _create_symlinks_recursively(
-                self.symlink_to, self.scheme_dict[scheme]
-            ):
+            for relpath in _create_symlinks_recursively(self.symlink_to, self.scheme_dict[scheme]):
                 records = itertools.chain(
                     records,
                     [(scheme, RecordEntry(relpath.replace("\\", "/"), None, None))],
@@ -169,28 +157,20 @@ class InstallDestination(SchemeDictionaryDestination):
         return super().finalize_installation(scheme, record_file_path, records)
 
 
-def install_wheel(
-    wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None
-) -> None:
+def install_wheel(wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None) -> None:
     """Install a normal wheel file into the environment."""
     additional_metadata = None
     if direct_url is not None:
-        additional_metadata = {
-            "direct_url.json": json.dumps(direct_url, indent=2).encode()
-        }
+        additional_metadata = {"direct_url.json": json.dumps(direct_url, indent=2).encode()}
     destination = InstallDestination(
         scheme_dict=environment.get_paths(),
         interpreter=str(environment.interpreter.executable),
         script_kind=_get_kind(environment),
     )
-    _install_wheel(
-        wheel=wheel, destination=destination, additional_metadata=additional_metadata
-    )
+    _install_wheel(wheel=wheel, destination=destination, additional_metadata=additional_metadata)
 
 
-def install_wheel_with_cache(
-    wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None
-) -> None:
+def install_wheel_with_cache(wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None) -> None:
     """Only create .pth files referring to the cached package.
     If the cache doesn't exist, create one.
     """
@@ -199,10 +179,7 @@ def install_wheel_with_cache(
     package_cache = CachedPackage(cache_path)
     interpreter = str(environment.interpreter.executable)
     script_kind = _get_kind(environment)
-    use_symlink = (
-        environment.project.config["install.cache_method"] == "symlink"
-        and fs_supports_symlink()
-    )
+    use_symlink = environment.project.config["install.cache_method"] == "symlink" and fs_supports_symlink()
     if not cache_path.is_dir():
         logger.info("Installing wheel into cached location %s", cache_path)
         cache_path.mkdir(exist_ok=True)
@@ -216,9 +193,7 @@ def install_wheel_with_cache(
     additional_metadata = {"REFER_TO": package_cache.path.as_posix().encode()}
 
     if direct_url is not None:
-        additional_metadata["direct_url.json"] = json.dumps(
-            direct_url, indent=2
-        ).encode()
+        additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
 
     def skip_files(source: WheelFile, element: WheelContentElement) -> bool:
         root_scheme = _process_WHEEL_file(source)
@@ -240,9 +215,7 @@ def install_wheel_with_cache(
         filename = "aaa_" + wheel_stem.split("-")[0] + ".pth"
         # use site.addsitedir() rather than a plain path to properly process .pth files
         stream = io.BytesIO(f"import site;site.addsitedir({lib_path!r})\n".encode())
-        additional_contents.append(
-            ((filename, "", str(len(stream.getvalue()))), stream, False)
-        )
+        additional_contents.append(((filename, "", str(len(stream.getvalue()))), stream, False))
 
     destination = InstallDestination(
         scheme_dict=environment.get_paths(),

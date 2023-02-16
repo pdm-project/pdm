@@ -42,15 +42,9 @@ class SearchResultParser(HTMLParser):
             if tag == "span" and self._match_class(attrs, "package-snippet__name"):
                 self._data_callback = functools.partial(setattr, self._current, "name")
             elif tag == "span" and self._match_class(attrs, "package-snippet__version"):
-                self._data_callback = functools.partial(
-                    setattr, self._current, "version"
-                )
-            elif tag == "p" and self._match_class(
-                attrs, "package-snippet__description"
-            ):
-                self._data_callback = functools.partial(
-                    setattr, self._current, "description"
-                )
+                self._data_callback = functools.partial(setattr, self._current, "version")
+            elif tag == "p" and self._match_class(attrs, "package-snippet__description"):
+                self._data_callback = functools.partial(setattr, self._current, "description")
             elif tag == "a":
                 self._nest_anchors += 1
 

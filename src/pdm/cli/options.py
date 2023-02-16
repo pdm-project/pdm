@@ -101,9 +101,7 @@ def split_lists(separator: str) -> type[argparse.Action]:
             if not isinstance(values, str):
                 return
             split = getattr(args, self.dest) or []
-            split.extend(
-                value.strip() for value in values.split(separator) if value.strip()
-            )
+            split.extend(value.strip() for value in values.split(separator) if value.strip())
             setattr(args, self.dest, split)
 
     return SplitList
@@ -291,8 +289,7 @@ project_option = Option(
     "-p",
     "--project",
     dest="project_path",
-    help="Specify another path as the project root, "
-    "which changes the base of pyproject.toml and __pypackages__",
+    help="Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__",
 )
 
 
@@ -305,20 +302,12 @@ global_option = Option(
 )
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
-clean_group.add_argument(
-    "--clean", action="store_true", help="clean packages not in the lockfile"
-)
-clean_group.add_argument(
-    "--only-keep", action="store_true", help="only keep the selected packages"
-)
+clean_group.add_argument("--clean", action="store_true", help="clean packages not in the lockfile")
+clean_group.add_argument("--only-keep", action="store_true", help="only keep the selected packages")
 
 sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
-sync_group.add_argument(
-    "--sync", action="store_true", dest="sync", help="sync packages"
-)
-sync_group.add_argument(
-    "--no-sync", action="store_false", dest="sync", help="don't sync packages"
-)
+sync_group.add_argument("--sync", action="store_true", dest="sync", help="sync packages")
+sync_group.add_argument("--no-sync", action="store_false", dest="sync", help="don't sync packages")
 
 packages_group = ArgumentGroup("Package Arguments")
 packages_group.add_argument(

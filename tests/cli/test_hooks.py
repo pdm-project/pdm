@@ -223,10 +223,7 @@ KNOWN_COMMAND_HOOKS = (
 
 parametrize_with_commands = pytest.mark.parametrize(
     "specs",
-    [
-        pytest.param(HookSpecs(command, hooks, fixtures), id=id)
-        for id, command, hooks, fixtures in KNOWN_COMMAND_HOOKS
-    ],
+    [pytest.param(HookSpecs(command, hooks, fixtures), id=id) for id, command, hooks, fixtures in KNOWN_COMMAND_HOOKS],
 )
 
 parametrize_with_hooks = pytest.mark.parametrize(
@@ -241,9 +238,7 @@ parametrize_with_hooks = pytest.mark.parametrize(
 
 @pytest.fixture
 def hooked_project(project, capfd, specs, request):
-    project.pyproject.settings["scripts"] = {
-        hook: f"python -c \"print('{hook} CALLED')\"" for hook in KNOWN_HOOKS
-    }
+    project.pyproject.settings["scripts"] = {hook: f"python -c \"print('{hook} CALLED')\"" for hook in KNOWN_HOOKS}
     project.pyproject.write()
     for fixture in specs.fixtures:
         request.getfixturevalue(fixture)
@@ -267,12 +262,8 @@ def test_hooks(hooked_project, invoke, capfd, specs: HookSpecs):
 
 
 @parametrize_with_hooks  # Iterate over hooks as we need a clean slate for each run
-def test_skip_option_from_signal(
-    hooked_project, invoke, capfd, specs: HookSpecs, hook: str
-):
-    invoke(
-        [*shlex.split(specs.command), f"--skip={hook}"], strict=True, obj=hooked_project
-    )
+def test_skip_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs, hook: str):
+    invoke([*shlex.split(specs.command), f"--skip={hook}"], strict=True, obj=hooked_project)
     out, _ = capfd.readouterr()
     assert f"{hook} CALLED" not in out
     for known_hook in specs.hooks:
@@ -282,9 +273,7 @@ def test_skip_option_from_signal(
 
 @parametrize_with_commands
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
-def test_skip_all_option_from_signal(
-    hooked_project, invoke, capfd, specs: HookSpecs, option: str
-):
+def test_skip_all_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs, option: str):
     invoke(
         [*shlex.split(specs.command), f"--skip={option}"],
         strict=True,
@@ -297,9 +286,7 @@ def test_skip_all_option_from_signal(
 
 @parametrize_with_commands
 @pytest.mark.parametrize("prefix", ["pre", "post"])
-def test_skip_pre_post_option_from_signal(
-    hooked_project, invoke, capfd, specs: HookSpecs, prefix: str
-):
+def test_skip_pre_post_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs, prefix: str):
     invoke(
         [*shlex.split(specs.command), f"--skip=:{prefix}"],
         strict=True,

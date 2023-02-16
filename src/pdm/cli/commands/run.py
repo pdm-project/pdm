@@ -36,13 +36,7 @@ class TaskOptions(TypedDict, total=False):
 def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
     return dict(
         env={k: v for opts in options if opts for k, v in opts.get("env", {}).items()},
-        **{
-            k: v
-            for opts in options
-            if opts
-            for k, v in opts.items()
-            if k not in ("env", "help")
-        },
+        **{k: v for opts in options if opts for k, v in opts.items() if k not in ("env", "help")},
     )
 
 
@@ -77,12 +71,8 @@ class Task(NamedTuple):
         if self.kind == "composite":
             fallback = f" {termui.Emoji.ARROW_SEPARATOR} ".join(self.args)
         else:
-            lines = [
-                line.strip() for line in str(self.args).splitlines() if line.strip()
-            ]
-            fallback = (
-                f"{lines[0]}{termui.Emoji.ELLIPSIS}" if len(lines) > 1 else lines[0]
-            )
+            lines = [line.strip() for line in str(self.args).splitlines() if line.strip()]
+            fallback = f"{lines[0]}{termui.Emoji.ELLIPSIS}" if len(lines) > 1 else lines[0]
         return self.options.get("help", fallback)
 
 
@@ -104,9 +94,7 @@ class TaskRunner:
     def get_task(self, script_name: str) -> Task | None:
         if script_name not in self.project.scripts:
             return None
-        script = cast(
-            "str | Sequence[str] | Mapping[str,Any]", self.project.scripts[script_name]
-        )
+        script = cast("str | Sequence[str] | Mapping[str,Any]", self.project.scripts[script_name])
         if not isinstance(script, Mapping):
             # Regard as the same as {cmd = ... }
             kind = "cmd"
@@ -120,15 +108,11 @@ class TaskRunner:
                     value = cast("str | Sequence[str]", script.pop(key))
                     break
             else:
-                raise PdmUsageError(
-                    f"Script type must be one of ({', '.join(self.TYPES)})"
-                )
+                raise PdmUsageError(f"Script type must be one of ({', '.join(self.TYPES)})")
             options = script.copy()
         unknown_options = set(options) - set(self.OPTIONS)
         if unknown_options:
-            raise PdmUsageError(
-                f"Unknown options for task {script_name}: {', '.join(unknown_options)}"
-            )
+            raise PdmUsageError(f"Unknown options for task {script_name}: {', '.join(unknown_options)}")
         return Task(kind, script_name, value, cast(TaskOptions, options))
 
     def _run_process(
@@ -164,15 +148,11 @@ class TaskRunner:
             else:
                 process_env = {**dotenv_env, **process_env}
         pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
-        pythonpath = [get_pep582_path(project)] + [
-            p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")
-        ]
+        pythonpath = [get_pep582_path(project)] + [p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")]
         project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
         python_root = os.path.dirname(project.python.executable)
-        new_path = os.pathsep.join(
-            [this_path, process_env.get("PATH", ""), python_root]
-        )
+        new_path = os.pathsep.join([this_path, process_env.get("PATH", ""), python_root])
         process_env.update(
             {
                 "PYTHONPATH": os.pathsep.join(pythonpath),
@@ -193,18 +173,14 @@ class TaskRunner:
             assert isinstance(args, Sequence)
             command, *args = args
             if command.endswith(".py"):
-                args = [command] + args
+                args = [command, *args]
                 command = str(project.python.executable)
             expanded_command = project_env.which(command)
             if not expanded_command:
-                raise PdmUsageError(
-                    f"Command [success]'{command}'[/] is not found in your PATH."
-                )
+                raise PdmUsageError(f"Command [success]'{command}'[/] is not found in your PATH.")
             expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
             real_command = os.path.realpath(expanded_command)
-            expanded_args = [
-                os.path.expandvars(arg) for arg in [expanded_command] + args
-            ]
+            expanded_args = [os.path.expandvars(arg) for arg in [expanded_command, *args]]
             if (
                 not project_env.is_global
                 and not site_packages
@@ -226,17 +202,13 @@ class TaskRunner:
 
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
         handle_int = signal.signal(signal.SIGINT, forward_signal)
-        process = subprocess.Popen(
-            expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0
-        )
+        process = subprocess.Popen(expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0)
         process.wait()
         signal.signal(signal.SIGTERM, handle_term)
         signal.signal(signal.SIGINT, handle_int)
         return process.returncode
 
-    def run_task(
-        self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None
-    ) -> int:
+    def run_task(self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None) -> int:
         kind, _, value, options = task
         shell = False
         if kind == "cmd":
@@ -248,8 +220,7 @@ class TaskRunner:
                 interpolated = any(row[1] for row in agg)
                 # In case of multiple default, we need to split the resulting string.
                 parts: Iterator[list[str]] = (
-                    shlex.split(part) if interpolated else [part]
-                    for part, interpolated in agg
+                    shlex.split(part) if interpolated else [part] for part, interpolated in agg
                 )
                 # We flatten the nested list to obtain a list of arguments
                 value = list(itertools.chain(*parts))
@@ -263,18 +234,11 @@ class TaskRunner:
             assert isinstance(value, str)
             module, _, func = value.partition(":")
             if not module or not func:
-                raise PdmUsageError(
-                    "Python callable must be in the form <module_name>:<callable_name>"
-                )
+                raise PdmUsageError("Python callable must be in the form <module_name>:<callable_name>")
             short_name = "_1"
             if re.search(r"\(.*?\)", func) is None:
                 func += "()"
-            args = [
-                "python",
-                "-c",
-                f"import sys, {module} as {short_name};"
-                f"sys.exit({short_name}.{func})",
-            ] + list(args)
+            args = ["python", "-c", f"import sys, {module} as {short_name};sys.exit({short_name}.{func})", *list(args)]
         elif kind == "composite":
             assert isinstance(value, list)
 
@@ -285,9 +249,7 @@ class TaskRunner:
         )
         if kind == "composite":
             args = list(args)
-            should_interpolate = any(
-                (RE_ARGS_PLACEHOLDER.search(script) for script in value)
-            )
+            should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
             for script in value:
                 if should_interpolate:
                     script, _ = interpolate(script, args)
@@ -305,9 +267,7 @@ class TaskRunner:
             **exec_opts(self.global_options, options, opts),
         )
 
-    def run(
-        self, command: str, args: list[str], opts: TaskOptions | None = None
-    ) -> int:
+    def run(self, command: str, args: list[str], opts: TaskOptions | None = None) -> int:
         if command in self.hooks.skip:
             return 0
         task = self.get_task(command)
@@ -328,7 +288,7 @@ class TaskRunner:
             return code
         else:
             return self._run_process(
-                [command] + args,
+                [command, *args],
                 **exec_opts(self.global_options, opts),
             )
 

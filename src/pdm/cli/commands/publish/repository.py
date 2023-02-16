@@ -16,9 +16,9 @@ from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
 
 try:
-    import keyring  # type: ignore
+    import keyring
 except ImportError:
-    keyring = None  # type: ignore
+    keyring = None
 
 
 class Repository:
@@ -40,26 +40,18 @@ class Repository:
         weakref.finalize(self, self.session.close)
         self.ui = project.core.ui
 
-    def _ensure_credentials(
-        self, username: str | None, password: str | None
-    ) -> tuple[str, str]:
+    def _ensure_credentials(self, username: str | None, password: str | None) -> tuple[str, str]:
         netloc = urlparse(self.url).netloc
         if username and password:
             return username, password
         if not termui.is_interactive():
             raise PdmUsageError("Username and password are required")
         username, password, save = self._prompt_for_credentials(netloc, username)
-        if (
-            save
-            and keyring is not None
-            and termui.confirm("Save credentials to keyring?")
-        ):
+        if save and keyring is not None and termui.confirm("Save credentials to keyring?"):
             self._credentials_to_save = (netloc, username, password)
         return username, password
 
-    def _prompt_for_credentials(
-        self, service: str, username: str | None
-    ) -> tuple[str, str, bool]:
+    def _prompt_for_credentials(self, service: str, username: str | None) -> tuple[str, str, bool]:
         if keyring is not None:
             cred = keyring.get_credential(service, username)
             if cred is not None:
@@ -91,14 +83,9 @@ class Repository:
             base = "https://test.pypi.org/"
         else:
             return set()
-        return {
-            f"{base}project/{package.metadata['name']}/{package.metadata['version']}/"
-            for package in packages
-        }
+        return {f"{base}project/{package.metadata['name']}/{package.metadata['version']}/" for package in packages}
 
-    def upload(
-        self, package: PackageFile, progress: rich.progress.Progress
-    ) -> requests.Response:
+    def upload(self, package: PackageFile, progress: rich.progress.Progress) -> requests.Response:
         payload = package.metadata_dict
         payload.update(
             {
@@ -111,16 +98,12 @@ class Repository:
         progress.live.console.print(f"Uploading [success]{package.base_filename}")
 
         with open(package.filename, "rb") as fp:
-            field_parts.append(
-                ("content", (package.base_filename, fp, "application/octet-stream"))
-            )
+            field_parts.append(("content", (package.base_filename, fp, "application/octet-stream")))
 
             def on_upload(monitor: requests_toolbelt.MultipartEncoderMonitor) -> None:
                 progress.update(job, completed=monitor.bytes_read)
 
-            monitor = requests_toolbelt.MultipartEncoderMonitor.from_fields(
-                field_parts, callback=on_upload
-            )
+            monitor = requests_toolbelt.MultipartEncoderMonitor.from_fields(field_parts, callback=on_upload)
             job = progress.add_task("", total=monitor.len)
             resp = self.session.post(
                 self.url,

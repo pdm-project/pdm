@@ -74,9 +74,7 @@ class ErrorArgumentParser(argparse.ArgumentParser):
 
 class PdmFormatter(argparse.RawDescriptionHelpFormatter):
     def start_section(self, heading: str | None) -> None:
-        return super().start_section(
-            termui.style(heading.title() if heading else "", style="warning")
-        )
+        return super().start_section(termui.style(heading.title() if heading else "", style="warning"))
 
     def _format_usage(
         self,
@@ -106,13 +104,13 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
 
         # short action name; start on the same line and pad two spaces
         elif len(action_header) <= action_width:
-            tup = self._current_indent, "", action_width, action_header  # type: ignore
-            action_header = "%*s%-*s  " % tup  # type: ignore
+            tup = self._current_indent, "", action_width, action_header  # type: ignore[assignment]
+            action_header = "%*s%-*s  " % tup  # type: ignore[str-format]
             indent_first = 0
 
         # long action name; start on the next line
         else:
-            tup = self._current_indent, "", action_header  # type: ignore
+            tup = self._current_indent, "", action_header
             action_header = "%*s%s\n" % tup
             indent_first = help_position
 
@@ -142,9 +140,7 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
 class Package:
     """An internal class for the convenience of dependency graph building."""
 
-    def __init__(
-        self, name: str, version: str | None, requirements: dict[str, Requirement]
-    ) -> None:
+    def __init__(self, name: str, version: str | None, requirements: dict[str, Requirement]) -> None:
         self.name = name
         self.version = version  # if version is None, the dist is not installed.
         self.requirements = requirements
@@ -252,9 +248,7 @@ def add_package_to_tree(
         "[error][ not installed ][/]"
         if not package.version
         else f"[error]{package.version}[/]"
-        if required
-        and required not in ("Any", "This project")
-        and not SpecifierSet(required).contains(package.version)
+        if required and required not in ("Any", "This project") and not SpecifierSet(required).contains(package.version)
         else f"[warning]{package.version}[/]"
     )
     # escape deps with extras
@@ -280,11 +274,7 @@ def add_package_to_reverse_tree(
     visited: frozenset[str] = frozenset(),
 ) -> None:
     """Format one package for output reverse dependency graph."""
-    version = (
-        "[error][ not installed ][/]"
-        if not package.version
-        else f"[warning]{package.version}[/]"
-    )
+    version = "[error][ not installed ][/]" if not package.version else f"[warning]{package.version}[/]"
     if package.name in visited:
         version = r"[error]\[circular][/]"
     requires = (
@@ -302,22 +292,16 @@ def add_package_to_reverse_tree(
 
     if package.name in visited:
         return
-    parents: list[Package] = sorted(
-        filter(None, graph.iter_parents(package)), key=lambda p: p.name
-    )
+    parents: list[Package] = sorted(filter(None, graph.iter_parents(package)), key=lambda p: p.name)
     for parent in parents:
         requires = specifier_from_requirement(parent.requirements[package.name])
-        add_package_to_reverse_tree(
-            node, graph, parent, package, requires, visited=visited | {package.name}
-        )
+        add_package_to_reverse_tree(node, graph, parent, package, requires, visited=visited | {package.name})
     return
 
 
 def package_is_project(package: Package, project: Project) -> bool:
     return (
-        not project.environment.is_global
-        and project.name is not None
-        and package.name == normalize_name(project.name)
+        not project.environment.is_global and project.name is not None and package.name == normalize_name(project.name)
     )
 
 
@@ -337,9 +321,7 @@ def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> 
     return root
 
 
-def _format_reverse_dependency_graph(
-    project: Project, graph: DirectedGraph[Package | None]
-) -> Tree:
+def _format_reverse_dependency_graph(project: Project, graph: DirectedGraph[Package | None]) -> Tree:
     """Format reverse dependency graph for output."""
     root = Tree("Dependencies", hide_root=True)
     leaf_nodes = sorted(
@@ -361,11 +343,7 @@ def build_forward_dependency_json_subtree(
     visited: frozenset[str] = frozenset(),
 ) -> dict:
     if not package_is_project(root, project):
-        requirements = (
-            required_by.requirements
-            if required_by
-            else ChainMap(*project.all_dependencies.values())
-        )
+        requirements = required_by.requirements if required_by else ChainMap(*project.all_dependencies.values())
         if root.name in requirements:
             required = specifier_from_requirement(requirements[root.name])
         else:
@@ -381,9 +359,7 @@ def build_forward_dependency_json_subtree(
         required=required,
         dependencies=sorted(
             (
-                build_forward_dependency_json_subtree(
-                    p, project, graph, root, visited | {root.name}
-                )
+                build_forward_dependency_json_subtree(p, project, graph, root, visited | {root.name})
                 for p in children
                 if p
             ),
@@ -403,14 +379,10 @@ def build_reverse_dependency_json_subtree(
     return OrderedDict(
         package=root.name,
         version=root.version,
-        requires=specifier_from_requirement(root.requirements[requires.name])
-        if requires
-        else None,
+        requires=specifier_from_requirement(root.requirements[requires.name]) if requires else None,
         dependents=sorted(
             (
-                build_reverse_dependency_json_subtree(
-                    p, project, graph, root, visited | {root.name}
-                )
+                build_reverse_dependency_json_subtree(p, project, graph, root, visited | {root.name})
                 for p in parents
                 if p
             ),
@@ -419,13 +391,9 @@ def build_reverse_dependency_json_subtree(
     )
 
 
-def build_dependency_json_tree(
-    project: Project, graph: DirectedGraph[Package | None], reverse: bool
-) -> list[dict]:
+def build_dependency_json_tree(project: Project, graph: DirectedGraph[Package | None], reverse: bool) -> list[dict]:
     if reverse:
-        top_level_packages = filter(
-            lambda n: not list(graph.iter_children(n)), graph
-        )  # leaf nodes
+        top_level_packages = filter(lambda n: not list(graph.iter_children(n)), graph)  # leaf nodes
         build_dependency_json_subtree: Callable = build_reverse_dependency_json_subtree
     else:
         top_level_packages = graph.iter_children(None)  # root nodes
@@ -473,33 +441,27 @@ def format_lockfile(
     file_hashes = tomlkit.table()
     for k, v in sorted(mapping.items()):
         base = tomlkit.table()
-        base.update(v.as_lockfile_entry(project.root))  # type: ignore
+        base.update(v.as_lockfile_entry(project.root))
         base.add("summary", v.summary or "")
-        deps = make_array(
-            sorted(r.as_line() for r in fetched_dependencies[v.dep_key]), True
-        )
+        deps = make_array(sorted(r.as_line() for r in fetched_dependencies[v.dep_key]), True)
         if len(deps) > 0:
             base.add("dependencies", deps)
-        packages.append(base)  # type: ignore
+        packages.append(base)
         if v.hashes:
             key = f"{strip_extras(k)[0]} {v.version}"
             if key in file_hashes:
                 continue
             array = tomlkit.array().multiline(True)
-            for link, hash_value in sorted(
-                v.hashes.items(), key=lambda l_h: (l_h[0].url_without_fragment, l_h[1])
-            ):
-                inline = make_inline_table(
-                    {"url": link.url_without_fragment, "hash": hash_value}
-                )
-                array.append(inline)  # type: ignore
+            for link, hash_value in sorted(v.hashes.items(), key=lambda l_h: (l_h[0].url_without_fragment, l_h[1])):
+                inline = make_inline_table({"url": link.url_without_fragment, "hash": hash_value})
+                array.append(inline)
             if array:
                 file_hashes.add(key, array)
     doc = tomlkit.document()
-    doc.add("package", packages)  # type: ignore
+    doc.add("package", packages)
     metadata = tomlkit.table()
     metadata.add("files", file_hashes)
-    doc.add("metadata", metadata)  # type: ignore
+    doc.add("metadata", metadata)
     return cast(dict, doc)
 
 
@@ -523,29 +485,22 @@ def save_version_specifiers(
         for name, r in reqs.items():
             if r.is_named and not r.specifier:
                 if save_strategy == "exact":
-                    r.specifier = get_specifier(
-                        f"=={candidate_version(resolved[name])}"
-                    )
+                    r.specifier = get_specifier(f"=={candidate_version(resolved[name])}")
                 elif save_strategy == "compatible":
                     version = candidate_version(resolved[name])
                     if version.is_prerelease or version.is_devrelease:
                         r.specifier = get_specifier(f">={version},<{version.major + 1}")
                     else:
-                        r.specifier = get_specifier(
-                            f"~={version.major}.{version.minor}"
-                        )
+                        r.specifier = get_specifier(f"~={version.major}.{version.minor}")
                 elif save_strategy == "minimum":
-                    r.specifier = get_specifier(
-                        f">={candidate_version(resolved[name])}"
-                    )
+                    r.specifier = get_specifier(f">={candidate_version(resolved[name])}")
 
 
 def check_project_file(project: Project) -> None:
     """Check the existence of the project file and throws an error on failure."""
     if not project.pyproject.is_valid:
         raise ProjectError(
-            "The pyproject.toml has not been initialized yet. You can do this "
-            "by running [success]`pdm init`[/]."
+            "The pyproject.toml has not been initialized yet. You can do this by running [success]`pdm init`[/]."
         ) from None
 
 
@@ -584,7 +539,7 @@ def set_env_in_reg(env_name: str, value: str) -> None:
                     return
             except FileNotFoundError:
                 paths, type_ = [], winreg.REG_EXPAND_SZ
-            new_value = os.pathsep.join([value] + paths)
+            new_value = os.pathsep.join([value, *paths])
             winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
 
 
@@ -594,15 +549,12 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     causes: list[RequirementInformation] = err.causes
     info_lines: set[str] = set()
     if all(isinstance(cause.requirement, PythonRequirement) for cause in causes):
-        project_requires: PythonRequirement = next(
-            cause.requirement for cause in causes if cause.parent is None
-        )
+        project_requires: PythonRequirement = next(cause.requirement for cause in causes if cause.parent is None)
         pyspec = cast(PySpecSet, project_requires.specifier)
         conflicting = [
             cause
             for cause in causes
-            if cause.parent is not None
-            and not cause.requirement.specifier.is_superset(pyspec)
+            if cause.parent is not None and not cause.requirement.specifier.is_superset(pyspec)
         ]
         result = [
             "Unable to find a resolution because the following dependencies don't work "
@@ -614,10 +566,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
             info_lines.add(f"  {req.as_line()} (from {repr(parent)})")
         result.extend(sorted(info_lines))
         if pyspec.is_impossible:
-            result.append(
-                "Consider changing the version specifiers of the dependencies to "
-                "be compatible"
-            )
+            result.append("Consider changing the version specifiers of the dependencies to be compatible")
         else:
             result.append(
                 "A possible solution is to change the value of `requires-python` "
@@ -648,9 +597,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     return "\n".join(result)
 
 
-def translate_groups(
-    project: Project, default: bool, dev: bool, groups: Iterable[str]
-) -> list[str]:
+def translate_groups(project: Project, default: bool, dev: bool, groups: Iterable[str]) -> list[str]:
     """Translate default, dev and groups containing ":all" into a list of groups"""
     optional_groups = set(project.pyproject.metadata.get("optional-dependencies", {}))
     dev_groups = set(project.pyproject.settings.get("dev-dependencies", {}))
@@ -659,9 +606,7 @@ def translate_groups(
         dev = True
     if groups_set & dev_groups:
         if not dev:
-            raise PdmUsageError(
-                "--prod is not allowed with dev groups and should be left"
-            )
+            raise PdmUsageError("--prod is not allowed with dev groups and should be left")
     elif dev:
         groups_set.update(dev_groups)
     if ":all" in groups:
@@ -681,9 +626,7 @@ def translate_groups(
     return sorted(groups_set)
 
 
-def merge_dictionary(
-    target: MutableMapping[Any, Any], input: Mapping[Any, Any]
-) -> None:
+def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any]) -> None:
     """Merge the input dict with the target while preserving the existing values
     properly. This will update the target dictionary in place.
     List values will be extended, but only if the value is not already in the list.
@@ -719,9 +662,7 @@ def is_homebrew_installation() -> bool:
 
 
 def is_scoop_installation() -> bool:
-    return os.name == "nt" and is_path_relative_to(
-        sys.prefix, Path.home() / "scoop/apps/pdm"
-    )
+    return os.name == "nt" and is_path_relative_to(sys.prefix, Path.home() / "scoop/apps/pdm")
 
 
 def get_dist_location(dist: Distribution) -> str:

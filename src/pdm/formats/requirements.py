@@ -109,9 +109,7 @@ def _is_url_trusted(url: str, trusted_hosts: list[str]) -> bool:
     return False
 
 
-def convert_url_to_source(
-    url: str, name: str | None, trusted_hosts: list[str], type: str = "index"
-) -> Source:
+def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], type: str = "index") -> Source:
     if not name:
         name = hashlib.sha1(url.encode("utf-8")).hexdigest()[:6]
     source = {
@@ -124,9 +122,7 @@ def convert_url_to_source(
     return cast("Source", source)
 
 
-def convert(
-    project: Project, filename: PathLike, options: Namespace
-) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
+def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     parser = RequirementParser()
     parser.parse(str(filename))
     backend = project.backend
@@ -152,9 +148,7 @@ def convert(
         data["dependencies"] = deps
     sources: list[Source] = []
     if parser.index_url and not parser.no_index:
-        sources.append(
-            convert_url_to_source(parser.index_url, "pypi", parser.trusted_hosts)
-        )
+        sources.append(convert_url_to_source(parser.index_url, "pypi", parser.trusted_hosts))
     if not parser.no_index:
         for url in parser.extra_index_urls:
             sources.append(convert_url_to_source(url, None, parser.trusted_hosts))
@@ -169,9 +163,7 @@ def convert(
             )
         )
         for url in find_links:
-            sources.append(
-                convert_url_to_source(url, None, parser.trusted_hosts, "find_links")
-            )
+            sources.append(convert_url_to_source(url, None, parser.trusted_hosts, "find_links"))
 
     if sources:
         settings["source"] = sources
@@ -184,17 +176,15 @@ def export(
     options: Namespace,
 ) -> str:
     lines = []
-    for candidate in sorted(candidates, key=lambda x: x.identify()):  # type: ignore
+    for candidate in sorted(candidates, key=lambda x: x.identify()):
         if isinstance(candidate, Candidate):
-            req = dataclasses.replace(
-                candidate.req, specifier=f"=={candidate.version}", marker=None
-            )
+            req = dataclasses.replace(candidate.req, specifier=f"=={candidate.version}", marker=None)
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
         lines.append(project.backend.expand_line(req.as_line()))
         if options.hashes and getattr(candidate, "hashes", None):
-            for item in sorted(set(candidate.hashes.values())):  # type: ignore
+            for item in sorted(set(candidate.hashes.values())):  # type: ignore[attr-defined]
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
     sources = project.pyproject.settings.get("source", [])

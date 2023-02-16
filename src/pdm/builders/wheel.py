@@ -9,9 +9,7 @@ from pdm.builders.base import EnvBuilder
 class WheelBuilder(EnvBuilder):
     """Build wheel in isolated env with managed Python."""
 
-    def prepare_metadata(
-        self, out_dir: str, config_settings: Mapping[str, Any] | None = None
-    ) -> str:
+    def prepare_metadata(self, out_dir: str, config_settings: Mapping[str, Any] | None = None) -> str:
         self.install(self._requires, shared=True)
         requires = self._hook.get_requires_for_build_wheel(config_settings)
         self.install(requires)

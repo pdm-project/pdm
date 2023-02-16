@@ -102,11 +102,7 @@ class Environment:
     @cached_property
     def packages_path(self) -> Path:
         """The local packages path."""
-        pypackages = (
-            self.project.root  # type: ignore
-            / "__pypackages__"
-            / self.interpreter.identifier
-        )
+        pypackages = self.project.root / "__pypackages__" / self.interpreter.identifier
         if not pypackages.exists() and "-32" in pypackages.name:
             compatible_packages = pypackages.with_name(pypackages.name[:-3])
             if compatible_packages.exists():
@@ -132,9 +128,7 @@ class Environment:
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
         return unearth.TargetPython(python_version, [python_abi_tag])
 
-    def _build_session(
-        self, index_urls: list[str], trusted_hosts: list[str]
-    ) -> PDMSession:
+    def _build_session(self, index_urls: list[str], trusted_hosts: list[str]) -> PDMSession:
         ca_certs = self.project.config.get("pypi.ca_certs")
         session = PDMSession(
             cache_dir=self.project.cache("http"),
@@ -182,9 +176,9 @@ class Environment:
             ignore_compatibility=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
             only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
-            respect_source_order=self.project.pyproject.settings.get(
-                "resolution", {}
-            ).get("respect-source-order", False),
+            respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
+                "respect-source-order", False
+            ),
             verbosity=self.project.core.ui.verbosity,
         )
         try:
@@ -234,9 +228,7 @@ class Environment:
                 raise download_error
             with tempfile.TemporaryDirectory(prefix="pip-download-") as dirname:
                 try:
-                    downloaded = finder.download_and_unpack(
-                        best_match.link, dirname, dirname
-                    )
+                    downloaded = finder.download_and_unpack(best_match.link, dirname, dirname)
                 except unearth.UnpackError as e:
                     raise download_error from e
                 shutil.move(str(downloaded), path)
@@ -249,13 +241,11 @@ class Environment:
         try:
             from pip import __file__ as pip_location
         except ImportError:
-            pip_location = None  # type: ignore
+            pip_location = None  # type: ignore[assignment]
 
         python_version = self.interpreter.version
         executable = str(self.interpreter.executable)
-        proc = subprocess.run(
-            [executable, "-Esm", "pip", "--version"], capture_output=True
-        )
+        proc = subprocess.run([executable, "-Esm", "pip", "--version"], capture_output=True)
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
             command = [executable, "-Esm", "pip"]
@@ -283,9 +273,7 @@ class GlobalEnvironment(Environment):
         is_venv = bool(get_venv_like_prefix(self.interpreter.executable))
         paths = get_sys_config_paths(
             str(self.interpreter.executable),
-            kind="user"
-            if not is_venv and self.project.global_config["global_project.user_site"]
-            else "default",
+            kind="user" if not is_venv and self.project.global_config["global_project.user_site"] else "default",
         )
         if is_venv:
             python_xy = f"python{self.interpreter.identifier}"
@@ -295,7 +283,7 @@ class GlobalEnvironment(Environment):
         return paths
 
     @property
-    def packages_path(self) -> Path | None:  # type: ignore
+    def packages_path(self) -> Path | None:  # type: ignore[override]
         return None
 
 
@@ -307,7 +295,7 @@ class PrefixEnvironment(Environment):
         self.prefix = prefix
 
     @property
-    def packages_path(self) -> Path | None:  # type: ignore
+    def packages_path(self) -> Path | None:  # type: ignore[override]
         return None
 
     def get_paths(self) -> dict[str, str]:

@@ -31,20 +31,17 @@ class Command(BaseCommand):
         parser.add_argument(
             "-r",
             "--repository",
-            help="The repository name or url to publish the package to"
-            " [env var: PDM_PUBLISH_REPO]",
+            help="The repository name or url to publish the package to [env var: PDM_PUBLISH_REPO]",
         )
         parser.add_argument(
             "-u",
             "--username",
-            help="The username to access the repository"
-            " [env var: PDM_PUBLISH_USERNAME]",
+            help="The username to access the repository [env var: PDM_PUBLISH_USERNAME]",
         )
         parser.add_argument(
             "-P",
             "--password",
-            help="The password to access the repository"
-            " [env var: PDM_PUBLISH_PASSWORD]",
+            help="The password to access the repository [env var: PDM_PUBLISH_PASSWORD]",
         )
         parser.add_argument(
             "-S",
@@ -76,9 +73,7 @@ class Command(BaseCommand):
         )
 
     @staticmethod
-    def _make_package(
-        filename: str, signatures: dict[str, str], options: argparse.Namespace
-    ) -> PackageFile:
+    def _make_package(filename: str, signatures: dict[str, str], options: argparse.Namespace) -> PackageFile:
         p = PackageFile.from_filename(filename, options.comment)
         if p.base_filename in signatures:
             p.add_gpg_signature(signatures[p.base_filename], p.base_filename + ".asc")
@@ -96,10 +91,7 @@ class Command(BaseCommand):
                 "(or https://test.pypi.org/legacy/) instead."
             )
         elif response.status_code == 405 and "pypi.org" in response.url:
-            message = (
-                "It appears you're trying to upload to pypi.org but have an "
-                "invalid URL."
-            )
+            message = "It appears you're trying to upload to pypi.org but have an invalid URL."
         else:
             try:
                 response.raise_for_status()
@@ -124,9 +116,7 @@ class Command(BaseCommand):
             config.password = password
         if ca_certs is not None:
             config.ca_certs = ca_certs
-        return Repository(
-            project, config.url, config.username, config.password, config.ca_certs
-        )
+        return Repository(project, config.url, config.username, config.password, config.ca_certs)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         hooks = HookManager(project, options.skip)
@@ -136,16 +126,8 @@ class Command(BaseCommand):
         if options.build:
             actions.do_build(project, hooks=hooks)
 
-        package_files = [
-            str(p)
-            for p in project.root.joinpath("dist").iterdir()
-            if not p.name.endswith(".asc")
-        ]
-        signatures = {
-            p.stem: str(p)
-            for p in project.root.joinpath("dist").iterdir()
-            if p.name.endswith(".asc")
-        }
+        package_files = [str(p) for p in project.root.joinpath("dist").iterdir() if not p.name.endswith(".asc")]
+        signatures = {p.stem: str(p) for p in project.root.joinpath("dist").iterdir() if p.name.endswith(".asc")}
 
         repository = self.get_repository(project, options)
         uploaded: list[PackageFile] = []
@@ -168,9 +150,7 @@ class Command(BaseCommand):
             )
             for package in packages:
                 resp = repository.upload(package, progress)
-                logger.debug(
-                    "Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason
-                )
+                logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason)
                 self._check_response(resp)
                 uploaded.append(package)
 

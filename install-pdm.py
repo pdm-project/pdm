@@ -39,9 +39,7 @@ FOREGROUND_COLORS = {
 
 def _call_subprocess(args: list[str]) -> int:
     try:
-        return subprocess.run(
-            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True
-        ).returncode
+        return subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True).returncode
     except subprocess.CalledProcessError as e:
         print(f"An error occurred when executing {args}:", file=sys.stderr)
         print(e.output.decode("utf-8"), file=sys.stderr)
@@ -100,7 +98,7 @@ if WINDOWS:
         return dir
 
     try:
-        from ctypes import windll  # noqa
+        from ctypes import windll  # noqa: F401
 
         _get_win_folder = _get_win_folder_with_ctypes
     except ImportError:
@@ -110,14 +108,10 @@ if WINDOWS:
         value = os.path.normcase(target)
 
         with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-            with winreg.OpenKey(
-                root, "Environment", 0, winreg.KEY_ALL_ACCESS
-            ) as env_key:
+            with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
                 try:
                     old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
-                    paths = [
-                        os.path.normcase(item) for item in old_value.split(os.pathsep)
-                    ]
+                    paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
                     if value not in paths:
                         return
 
@@ -132,14 +126,10 @@ def _add_to_path(target: Path) -> None:
 
     if WINDOWS:
         with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-            with winreg.OpenKey(
-                root, "Environment", 0, winreg.KEY_ALL_ACCESS
-            ) as env_key:
+            with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
                 try:
                     old_value, type_ = winreg.QueryValueEx(env_key, "PATH")
-                    if value in [
-                        os.path.normcase(item) for item in old_value.split(os.pathsep)
-                    ]:
+                    if value in [os.path.normcase(item) for item in old_value.split(os.pathsep)]:
                         return
                 except FileNotFoundError:
                     old_value, type_ = "", winreg.REG_EXPAND_SZ
@@ -224,9 +214,7 @@ class Installer:
                     parts.append(rest)
             return tuple(parts)
 
-        releases = sorted(
-            filter(version_okay, metadata["releases"]), key=sort_version, reverse=True
-        )
+        releases = sorted(filter(version_okay, metadata["releases"]), key=sort_version, reverse=True)
 
         return releases[0]
 
@@ -266,16 +254,11 @@ class Installer:
                 import virtualenv
             except ModuleNotFoundError:
                 python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-                url = (
-                    "https://bootstrap.pypa.io/virtualenv/"
-                    f"{python_version}/virtualenv.pyz"
-                )
+                url = "https://bootstrap.pypa.io/virtualenv/" f"{python_version}/virtualenv.pyz"
                 with TemporaryDirectory(prefix="pdm-installer-") as tempdir:
                     virtualenv_zip = Path(tempdir) / "virtualenv.pyz"
                     urllib.request.urlretrieve(url, virtualenv_zip)
-                    _call_subprocess(
-                        [sys.executable, str(virtualenv_zip), str(venv_path)]
-                    )
+                    _call_subprocess([sys.executable, str(virtualenv_zip), str(venv_path)])
             else:
                 virtualenv.cli_run([str(venv_path)])
 
@@ -311,7 +294,7 @@ class Installer:
         else:
             req = "pdm"
         args = [req] + [d for d in self.additional_deps if d]
-        pip_cmd = [str(venv_python), "-m", "pip", "install"] + args
+        pip_cmd = [str(venv_python), "-m", "pip", "install", *args]
         _call_subprocess(pip_cmd)
 
     def _make_bin(self, venv_path: Path) -> Path:
@@ -370,8 +353,7 @@ class Installer:
         output = {
             "pdm_version": self.version,
             "pdm_bin": str(script),
-            "install_python_version": f"{sys.version_info.major}."
-            f"{sys.version_info.minor}.{sys.version_info.micro}",
+            "install_python_version": f"{sys.version_info.major}." f"{sys.version_info.minor}.{sys.version_info.micro}",
             "install_location": str(venv_path),
         }
         with open(self.output_path, "w") as f:
@@ -416,8 +398,7 @@ def main():
     parser.add_argument(
         "-v",
         "--version",
-        help="Specify the version to be installed, "
-        "or HEAD to install from the main branch",
+        help="Specify the version to be installed, or HEAD to install from the main branch",
         default=os.getenv("PDM_VERSION"),
     )
     parser.add_argument(
@@ -451,9 +432,7 @@ def main():
         help="Do not add binary to the PATH.",
         default=os.getenv("PDM_SKIP_ADD_TO_PATH"),
     )
-    parser.add_argument(
-        "-o", "--output", help="Output file to write the installation info to"
-    )
+    parser.add_argument("-o", "--output", help="Output file to write the installation info to")
 
     options = parser.parse_args()
     installer = Installer(
