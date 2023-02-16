@@ -243,7 +243,7 @@ class Synchronizer:
         dist = self.working_set[strip_extras(key)[0]]
         dist_version = dist.version
         job = progress.add_task(
-            f"Updating [req]{key}[/] " f"[warning]{dist_version}[/] " f"-> [warning]{can.version}[/]...",
+            f"Updating [req]{key}[/] [warning]{dist_version}[/] -> [warning]{can.version}[/]...",
             total=1,
         )
         try:
@@ -273,19 +273,19 @@ class Synchronizer:
         dist_version = dist.version
 
         job = progress.add_task(
-            f"Removing [req]{key}[/] " f"[warning]{dist_version}[/]...",
+            f"Removing [req]{key}[/] [warning]{dist_version}[/]...",
             total=1,
         )
         try:
             self.manager.uninstall(dist)
         except Exception:
             progress.live.console.print(
-                f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] " f"[warning]{dist_version}[/] failed",
+                f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] [warning]{dist_version}[/] failed",
             )
             raise
         else:
             progress.live.console.print(
-                f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] " f"[warning]{dist_version}[/] successful"
+                f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] [warning]{dist_version}[/] successful"
             )
         finally:
             progress.update(job, completed=1, visible=False)
@@ -318,11 +318,11 @@ class Synchronizer:
         if to_update:
             lines.append("[bold]Packages to update[/]:")
             for prev, cur in to_update:
-                lines.append(f"  - [req]{cur.name}[/] " f"[warning]{prev.version}[/] -> [warning]{cur.version}[/]")
+                lines.append(f"  - [req]{cur.name}[/] [warning]{prev.version}[/] -> [warning]{cur.version}[/]")
         if to_remove:
             lines.append("[bold]Packages to remove[/]:")
             for dist in to_remove:
-                lines.append(f"  - [req]{dist.metadata['Name']}[/] " f"[warning]{dist.version}[/]")
+                lines.append(f"  - [req]{dist.metadata['Name']}[/] [warning]{dist.version}[/]")
         if lines:
             self.ui.echo("\n".join(lines))
         else:

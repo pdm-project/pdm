@@ -341,7 +341,7 @@ def do_update(
             )
             if not matched_name:
                 raise ProjectError(
-                    f"[req]{name}[/] does not exist in [primary]{group}[/] " f"{'dev-' if dev else ''}dependencies."
+                    f"[req]{name}[/] does not exist in [primary]{group}[/] {'dev-' if dev else ''}dependencies."
                 )
             dependencies[matched_name].prerelease = prerelease
             updated_deps[group][matched_name] = dependencies[matched_name]
@@ -418,7 +418,7 @@ def do_remove(
             req = parse_requirement(name)
             matched_indexes = sorted((i for i, r in enumerate(deps) if req.matches(r)), reverse=True)
             if not matched_indexes:
-                raise ProjectError(f"[req]{name}[/] does not exist in " f"[primary]{group}[/] dependencies.")
+                raise ProjectError(f"[req]{name}[/] does not exist in [primary]{group}[/] dependencies.")
             for i in matched_indexes:
                 del deps[i]
     cast(Array, deps).multiline(True)
@@ -575,14 +575,14 @@ def do_use(
                 info = py.identifier if py.valid else "Invalid"
                 project.core.ui.echo(f"  - {py.path} ({info})", err=True)
             raise NoPythonVersion(
-                "No python is found meeting the requirement " f"[success]python {str(project.python_requires)}[/]"
+                f"No python is found meeting the requirement [success]python {str(project.python_requires)}[/]"
             )
         if first or len(matching_interpreters) == 1:
             selected_python = matching_interpreters[0]
         else:
             project.core.ui.echo("Please enter the Python interpreter to use")
             for i, py_version in enumerate(matching_interpreters):
-                project.core.ui.echo(f"{i}. [success]{str(py_version.path)}[/] " f"({py_version.identifier})")
+                project.core.ui.echo(f"{i}. [success]{str(py_version.path)}[/] ({py_version.identifier})")
             selection = termui.ask(
                 "Please select",
                 default="0",
@@ -598,7 +598,7 @@ def do_use(
         return selected_python
     old_python = PythonInfo.from_path(project.config["python.path"]) if "python.path" in project.config else None
     project.core.ui.echo(
-        "Using Python interpreter: " f"[success]{str(selected_python.path)}[/] " f"({selected_python.identifier})"
+        f"Using Python interpreter: [success]{str(selected_python.path)}[/] ({selected_python.identifier})"
     )
     project.python = selected_python
     if old_python and old_python.executable != selected_python.executable and not project.environment.is_global:

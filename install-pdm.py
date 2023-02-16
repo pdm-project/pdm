@@ -254,7 +254,7 @@ class Installer:
                 import virtualenv
             except ModuleNotFoundError:
                 python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-                url = "https://bootstrap.pypa.io/virtualenv/" f"{python_version}/virtualenv.pyz"
+                url = f"https://bootstrap.pypa.io/virtualenv/{python_version}/virtualenv.pyz"
                 with TemporaryDirectory(prefix="pdm-installer-") as tempdir:
                     virtualenv_zip = Path(tempdir) / "virtualenv.pyz"
                     urllib.request.urlretrieve(url, virtualenv_zip)
@@ -353,7 +353,7 @@ class Installer:
         output = {
             "pdm_version": self.version,
             "pdm_bin": str(script),
-            "install_python_version": f"{sys.version_info.major}." f"{sys.version_info.minor}.{sys.version_info.micro}",
+            "install_python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             "install_location": str(venv_path),
         }
         with open(self.output_path, "w") as f:

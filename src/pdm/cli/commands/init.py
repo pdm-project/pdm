@@ -61,7 +61,7 @@ class Command(BaseCommand):
             )
             if project.config["python.use_venv"] and get_venv_like_prefix(python.executable) is None:
                 if termui.confirm(
-                    "Would you like to create a virtualenv with " f"[success]{python.executable}[/]?",
+                    f"Would you like to create a virtualenv with [success]{python.executable}[/]?",
                     default=True,
                 ):
                     try:

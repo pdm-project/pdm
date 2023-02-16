@@ -64,7 +64,7 @@ def test_parse_artifact_metadata(requirement_line, project):
 @pytest.mark.usefixtures("local_finder")
 def test_parse_metadata_with_extras(project):
     req = parse_requirement(
-        f"demo[tests,security] @ file://" f"{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
+        f"demo[tests,security] @ file://{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
     )
     candidate = Candidate(req)
     prepared = candidate.prepare(project.environment)
