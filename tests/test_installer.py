@@ -46,9 +46,7 @@ def test_uninstall_commit_rollback(project):
     installer.install(candidate)
     lib_file = os.path.join(lib_path, "demo.py")
     assert os.path.exists(lib_file)
-    remove_paths = installer.get_paths_to_remove(
-        project.environment.get_working_set()["demo"]
-    )
+    remove_paths = installer.get_paths_to_remove(project.environment.get_working_set()["demo"])
     remove_paths.remove()
     assert not os.path.exists(lib_file)
     remove_paths.rollback()
@@ -67,9 +65,7 @@ def test_rollback_after_commit(project, caplog):
     installer.install(candidate)
     lib_file = os.path.join(lib_path, "demo.py")
     assert os.path.exists(lib_file)
-    remove_paths = installer.get_paths_to_remove(
-        project.environment.get_working_set()["demo"]
-    )
+    remove_paths = installer.get_paths_to_remove(project.environment.get_working_set()["demo"])
     remove_paths.remove()
     remove_paths.commit()
     assert not os.path.exists(lib_file)
@@ -77,10 +73,7 @@ def test_rollback_after_commit(project, caplog):
     remove_paths.rollback()
     assert not os.path.exists(lib_file)
 
-    assert any(
-        record.message == "Can't rollback, not uninstalled yet"
-        for record in caplog.records
-    )
+    assert any(record.message == "Can't rollback, not uninstalled yet" for record in caplog.records)
 
 
 @pytest.mark.parametrize("use_install_cache", [False, True])
@@ -106,9 +99,7 @@ def test_install_wheel_with_cache(project, invoke):
     req = parse_requirement("future-fstrings")
     candidate = Candidate(
         req,
-        link=Link(
-            "http://fixtures.test/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl"
-        ),
+        link=Link("http://fixtures.test/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl"),
     )
     installer = InstallManager(project.environment, use_install_cache=True)
     installer.install(candidate)
@@ -140,8 +131,7 @@ def test_install_wheel_with_cache(project, invoke):
 
 def test_url_requirement_is_not_cached(project):
     req = parse_requirement(
-        "future-fstrings @ http://fixtures.test/artifacts/"
-        "future_fstrings-1.2.0-py2.py3-none-any.whl"
+        "future-fstrings @ http://fixtures.test/artifacts/future_fstrings-1.2.0-py2.py3-none-any.whl"
     )
     candidate = Candidate(req)
     installer = InstallManager(project.environment, use_install_cache=True)
@@ -160,9 +150,7 @@ def test_install_wheel_with_data_scripts(project, use_install_cache):
     req = parse_requirement("jmespath")
     candidate = Candidate(
         req,
-        link=Link(
-            "http://fixtures.test/artifacts/jmespath-0.10.0-py2.py3-none-any.whl"
-        ),
+        link=Link("http://fixtures.test/artifacts/jmespath-0.10.0-py2.py3-none-any.whl"),
     )
     installer = InstallManager(project.environment, use_install_cache=use_install_cache)
     installer.install(candidate)
@@ -190,6 +178,4 @@ def test_compress_file_list_for_rename():
         "test-removal/non_exist.py",
     }
     abs_paths = {os.path.join(project_root, path) for path in paths}
-    assert sorted(compress_for_rename(abs_paths)) == [
-        os.path.join(project_root, "test-removal" + os.sep)
-    ]
+    assert sorted(compress_for_rename(abs_paths)) == [os.path.join(project_root, "test-removal" + os.sep)]

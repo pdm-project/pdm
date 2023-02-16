@@ -12,7 +12,7 @@ from pdm.termui import UI
 try:
     import keyring
 except ModuleNotFoundError:
-    keyring = None  # type: ignore
+    keyring = None
 
 ui = UI()
 
@@ -44,8 +44,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
     def _prompt_for_password(self, netloc: str) -> tuple[str | None, str | None, bool]:
         if not self._real_prompting:
             raise PdmException(
-                f"The credentials for {netloc} are not provided. "
-                "Please rerun the command with `-v` option."
+                f"The credentials for {netloc} are not provided. Please rerun the command with `-v` option."
             )
         return super()._prompt_for_password(netloc)
 

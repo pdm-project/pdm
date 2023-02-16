@@ -25,9 +25,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Set config in the project's local configuration file",
         )
-        parser.add_argument(
-            "-d", "--delete", action="store_true", help="Unset a configuration key"
-        )
+        parser.add_argument("-d", "--delete", action="store_true", help="Unset a configuration key")
         parser.add_argument("key", help="Config key", nargs="?")
         parser.add_argument("value", help="Config value", nargs="?")
 
@@ -44,8 +42,7 @@ class Command(BaseCommand):
     def _get_config(self, project: Project, options: argparse.Namespace) -> None:
         if options.key in project.project_config.deprecated:  # pragma: no cover
             project.core.ui.echo(
-                "DEPRECATED: the config has been renamed to "
-                f"{project.project_config.deprecated[options.key]}",
+                f"DEPRECATED: the config has been renamed to {project.project_config.deprecated[options.key]}",
                 style="warning",
                 err=True,
             )
@@ -60,16 +57,13 @@ class Command(BaseCommand):
         config = project.project_config if options.local else project.global_config
         if options.key in config.deprecated:  # pragma: no cover
             project.core.ui.echo(
-                "DEPRECATED: the config has been renamed to "
-                f"{config.deprecated[options.key]}",
+                f"DEPRECATED: the config has been renamed to {config.deprecated[options.key]}",
                 style="warning",
                 err=True,
             )
         config[options.key] = options.value
 
-    def _show_config(
-        self, config: Mapping[str, Any], supersedes: Mapping[str, Any]
-    ) -> None:
+    def _show_config(self, config: Mapping[str, Any], supersedes: Mapping[str, Any]) -> None:
         assert Config.site is not None
         for key in sorted(config):
             deprecated = ""
@@ -80,9 +74,7 @@ class Command(BaseCommand):
                 if canonical_key in supersedes:
                     superseded = True
                 deprecated = f"[error](deprecating: {key})[/]"
-            elif key not in Config._config_map and not (
-                key.startswith("pypi.") or key.startswith(REPOSITORY)
-            ):
+            elif key not in Config._config_map and not (key.startswith("pypi.") or key.startswith(REPOSITORY)):
                 continue
             extra_style = "dim" if superseded else None
             if canonical_key not in Config._config_map:
@@ -104,11 +96,7 @@ class Command(BaseCommand):
                         repository = dict(config[key][item])
                         if "url" not in repository and item in DEFAULT_REPOSITORIES:
                             repository["url"] = DEFAULT_REPOSITORIES[item].url
-                        self.ui.echo(
-                            RepositoryConfig(
-                                **repository, config_prefix=f"{key}.{item}"
-                            )
-                        )
+                        self.ui.echo(RepositoryConfig(**repository, config_prefix=f"{key}.{item}"))
                 continue
             config_item = Config._config_map[canonical_key]
             self.ui.echo(
@@ -138,13 +126,10 @@ class Command(BaseCommand):
             f"\nHome configuration ([success]{project.global_config.config_file}[/]):",
             style="bold",
         )
-        self._show_config(
-            project.global_config.self_data, project.project_config.self_data
-        )
+        self._show_config(project.global_config.self_data, project.project_config.self_data)
 
         self.ui.echo(
-            "\nProject configuration ([success]"
-            f"{project.project_config.config_file}[/]):",
+            f"\nProject configuration ([success]{project.project_config.config_file}[/]):",
             style="bold",
         )
         self._show_config(project.project_config.self_data, {})
@@ -153,8 +138,7 @@ class Command(BaseCommand):
         config = project.project_config if options.local else project.global_config
         if options.key in config.deprecated:  # pragma: no cover
             project.core.ui.echo(
-                "DEPRECATED: the config has been renamed to "
-                f"{config.deprecated[options.key]}",
+                f"DEPRECATED: the config has been renamed to {config.deprecated[options.key]}",
                 style="warning",
                 err=True,
             )

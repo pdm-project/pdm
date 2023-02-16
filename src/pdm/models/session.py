@@ -19,18 +19,12 @@ class PDMSession(PyPISession):
 
         cache = SafeFileCache(str(cache_dir))
         self.secure_adapter_cls = functools.partial(CacheControlAdapter, cache=cache)
-        self.insecure_adapter_cls = functools.partial(
-            InsecureCacheControlAdapter, cache=cache
-        )
+        self.insecure_adapter_cls = functools.partial(InsecureCacheControlAdapter, cache=cache)
         super().__init__(**kwargs)
         self.headers["User-Agent"] = self._make_user_agent()
 
     def _make_user_agent(self) -> str:
-        return (
-            user_agent.UserAgentBuilder("pdm", __version__)
-            .include_implementation()
-            .build()
-        )
+        return user_agent.UserAgentBuilder("pdm", __version__).include_implementation().build()
 
     # HACK: make the sessions identical to functools.lru_cache
     # so that the same index page won't be fetched twice.
@@ -39,7 +33,4 @@ class PDMSession(PyPISession):
         return hash(self.headers["User-Agent"])
 
     def __eq__(self, __o: Any) -> bool:
-        return (
-            isinstance(__o, PDMSession)
-            and self.headers["User-Agent"] == __o.headers["User-Agent"]
-        )
+        return isinstance(__o, PDMSession) and self.headers["User-Agent"] == __o.headers["User-Agent"]

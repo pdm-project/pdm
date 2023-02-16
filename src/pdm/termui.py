@@ -66,9 +66,7 @@ def confirm(*args: str, **kwargs: Any) -> str:
     return Confirm.ask(*args, **kwargs)
 
 
-def ask(
-    *args: str, prompt_type: type[str] | type[int] | None = None, **kwargs: Any
-) -> str:
+def ask(*args: str, prompt_type: type[str] | type[int] | None = None, **kwargs: Any) -> str:
     """prompt user and return response
 
     :prompt_type: which rich prompt to use, defaults to str.
@@ -136,7 +134,7 @@ class DummySpinner:
         self._show()
 
     def __enter__(self: SpinnerT) -> SpinnerT:
-        self._show()  # type: ignore
+        self._show()  # type: ignore[attr-defined]
         return self
 
     def __exit__(self, *args: Any) -> None:
@@ -185,9 +183,7 @@ class UI:
                 kwargs.setdefault("overflow", "ignore")
             console.print(message, **kwargs)
 
-    def display_columns(
-        self, rows: Sequence[Sequence[str]], header: list[str] | None = None
-    ) -> None:
+    def display_columns(self, rows: Sequence[Sequence[str]], header: list[str] | None = None) -> None:
         """Print rows in aligned columns.
 
         :param rows: a rows of data to be displayed.

@@ -50,9 +50,7 @@ class BaseProvider(AbstractProvider):
         editable = requirement.editable
         is_named = requirement.is_named
         is_prerelease = (
-            requirement.prerelease
-            or requirement.specifier is not None
-            and bool(requirement.specifier.prereleases)
+            requirement.prerelease or requirement.specifier is not None and bool(requirement.specifier.prereleases)
         )
         specifier_parts = len(requirement.specifier) if requirement.specifier else 0
         return (not editable, is_named, not is_prerelease, -specifier_parts)
@@ -70,9 +68,7 @@ class BaseProvider(AbstractProvider):
     ) -> tuple[Comparable, ...]:
         is_top = any(parent is None for _, parent in information[identifier])
         is_backtrack_cause = any(
-            requirement.identify() == identifier
-            or parent
-            and parent.identify() == identifier
+            requirement.identify() == identifier or parent and parent.identify() == identifier
             for requirement, parent in backtrack_causes
         )
         if is_top:
@@ -85,14 +81,9 @@ class BaseProvider(AbstractProvider):
             dep_depth = min(parent_depths, default=0) + 1
         # Use the REAL identifier as it may be updated after candidate preparation.
         self._known_depth[self.identify(next(candidates[identifier]))] = dep_depth
-        is_file_or_url = any(
-            not requirement.is_named for requirement, _ in information[identifier]
-        )
+        is_file_or_url = any(not requirement.is_named for requirement, _ in information[identifier])
         operators = [
-            spec.operator
-            for req, _ in information[identifier]
-            if req.specifier is not None
-            for spec in req.specifier
+            spec.operator for req, _ in information[identifier] if req.specifier is not None for spec in req.specifier
         ]
         is_python = identifier == "python"
         is_pinned = any(op[:2] == "==" for op in operators)
@@ -122,17 +113,13 @@ class BaseProvider(AbstractProvider):
         return self._find_candidates(parse_requirement(req))
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
-        if not requirement.is_named and not isinstance(
-            self.repository, LockedRepository
-        ):
+        if not requirement.is_named and not isinstance(self.repository, LockedRepository):
             can = make_candidate(requirement)
             if not can.name:
                 can.prepare(self.repository.environment).metadata
             return [can]
         else:
-            return self.repository.find_candidates(
-                requirement, requirement.prerelease or self.allow_prereleases
-            )
+            return self.repository.find_candidates(requirement, requirement.prerelease or self.allow_prereleases)
 
     def find_matches(
         self,
@@ -150,10 +137,7 @@ class BaseProvider(AbstractProvider):
             reqs = sorted(requirements[identifier], key=self.requirement_preference)
             candidates = self._find_candidates(reqs[0])
             return (
-                can
-                for can in candidates
-                if can not in incompat
-                and all(self.is_satisfied_by(r, can) for r in reqs)
+                can for can in candidates if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
             )
 
         return matches_gen
@@ -174,7 +158,7 @@ class BaseProvider(AbstractProvider):
         if not requirement.is_named:
             if candidate.req.is_named:
                 return False
-            return self._compare_file_reqs(requirement, candidate.req)  # type: ignore
+            return self._compare_file_reqs(requirement, candidate.req)  # type: ignore[arg-type]
         version = candidate.version
         this_name = self.repository.environment.project.name
         if version is None or candidate.name == this_name:
@@ -182,12 +166,8 @@ class BaseProvider(AbstractProvider):
             return True
         # Allow prereleases if: 1) it is not specified in the tool settings or
         # 2) the candidate doesn't come from PyPI index.
-        allow_prereleases = (
-            self.allow_prereleases in (True, None) or not candidate.req.is_named
-        )
-        return cast(SpecifierSet, requirement.specifier).contains(
-            version, allow_prereleases
-        )
+        allow_prereleases = self.allow_prereleases in (True, None) or not candidate.req.is_named
+        return cast(SpecifierSet, requirement.specifier).contains(version, allow_prereleases)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         if isinstance(candidate, PythonCandidate):
@@ -214,13 +194,8 @@ class BaseProvider(AbstractProvider):
         # For example, A v1 requires python>=3.6, it not eligible on a project with
         # requires-python=">=2.7". But it is eligible if A has environment marker
         # A1; python_version>='3.8'
-        new_requires_python = (
-            candidate.req.requires_python & self.repository.environment.python_requires
-        )
-        if (
-            candidate.identify() not in self.overrides
-            and not requires_python.is_superset(new_requires_python)
-        ):
+        new_requires_python = candidate.req.requires_python & self.repository.environment.python_requires
+        if candidate.identify() not in self.overrides and not requires_python.is_superset(new_requires_python):
             valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))
         return valid_deps
 
@@ -253,19 +228,14 @@ class ReusePinProvider(BaseProvider):
         bare_name = strip_extras(identifier)[0]
 
         def matches_gen() -> Iterator[Candidate]:
-            if (
-                bare_name not in self.tracked_names
-                and identifier in self.preferred_pins
-            ):
+            if bare_name not in self.tracked_names and identifier in self.preferred_pins:
                 pin = self.preferred_pins[identifier]
                 incompat = list(incompatibilities[identifier])
                 demanded_req = next(requirements[identifier], None)
                 if demanded_req and demanded_req.is_named:
                     pin.req = demanded_req
-                pin._preferred = True  # type: ignore
-                if pin not in incompat and all(
-                    self.is_satisfied_by(r, pin) for r in requirements[identifier]
-                ):
+                pin._preferred = True  # type: ignore[attr-defined]
+                if pin not in incompat and all(self.is_satisfied_by(r, pin) for r in requirements[identifier]):
                     yield pin
             yield from super_find()
 
@@ -287,9 +257,7 @@ class EagerUpdateProvider(ReusePinProvider):
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         # If this is a tracking package, tell the resolver out of using the
         # preferred pin, and into a "normal" candidate selection process.
-        if requirement.key in self.tracked_names and getattr(
-            candidate, "_preferred", False
-        ):
+        if requirement.key in self.tracked_names and getattr(candidate, "_preferred", False):
             return False
         return super().is_satisfied_by(requirement, candidate)
 
@@ -312,7 +280,5 @@ class EagerUpdateProvider(ReusePinProvider):
         backtrack_causes: Sequence[RequirementInformation],
     ) -> tuple[Comparable, ...]:
         # Resolve tracking packages so we have a chance to unpin them first.
-        (python, *others) = super().get_preference(
-            identifier, resolutions, candidates, information, backtrack_causes
-        )
+        (python, *others) = super().get_preference(identifier, resolutions, candidates, information, backtrack_causes)
         return (python, identifier not in self.tracked_names, *others)

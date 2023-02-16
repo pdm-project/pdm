@@ -29,9 +29,7 @@ class Command(BaseCommand):
             help="Specify the package name, or show this package if not given",
         )
         for option in self.metadata_keys:
-            parser.add_argument(
-                f"--{option}", action="store_true", help=f"Show {option}"
-            )
+            parser.add_argument(f"--{option}", action="store_true", help=f"Show {option}")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         package = options.package
@@ -54,9 +52,7 @@ class Command(BaseCommand):
             if not project.name:
                 raise PdmUsageError("This project is not a package")
             package = normalize_name(project.name)
-            metadata = (
-                project.make_self_candidate().prepare(project.environment).metadata
-            )
+            metadata = project.make_self_candidate().prepare(project.environment).metadata
             latest_stable = None
         assert metadata
         project_info = ProjectInfo(metadata)

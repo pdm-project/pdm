@@ -13,9 +13,7 @@ default_context = im.DistributionFinder.Context()
 
 class EgglinkFinder(im.DistributionFinder):
     @classmethod
-    def find_distributions(
-        cls, context: im.DistributionFinder.Context = default_context
-    ) -> Iterable[im.Distribution]:
+    def find_distributions(cls, context: im.DistributionFinder.Context = default_context) -> Iterable[im.Distribution]:
         found_links = cls._search_paths(context.name, context.path)
         # For Py3.7 compatibility, handle both classmethod and instance method
         meta_finder = im.MetadataPathFinder()
@@ -24,17 +22,13 @@ class EgglinkFinder(im.DistributionFinder):
             link_pointer = Path(link.open("rb").readline().decode().strip())
             dist = next(
                 iter(
-                    meta_finder.find_distributions(
-                        im.DistributionFinder.Context(
-                            name=name, path=[str(link_pointer)]
-                        )
-                    )
+                    meta_finder.find_distributions(im.DistributionFinder.Context(name=name, path=[str(link_pointer)]))
                 ),
                 None,
             )
             if not dist:
                 continue
-            dist.link_file = link.absolute()  # type: ignore
+            dist.link_file = link.absolute()  # type: ignore[attr-defined]
             yield dist
 
     @classmethod
@@ -68,10 +62,7 @@ class WorkingSet(Mapping[str, im.Distribution]):
     def __init__(self, paths: list[str] | None = None):
         if paths is None:
             paths = sys.path
-        self._dist_map = {
-            normalize_name(dist.metadata["Name"]): dist
-            for dist in distributions(path=paths)
-        }
+        self._dist_map = {normalize_name(dist.metadata["Name"]): dist for dist in distributions(path=paths)}
 
     def __getitem__(self, key: str) -> im.Distribution:
         return self._dist_map[key]

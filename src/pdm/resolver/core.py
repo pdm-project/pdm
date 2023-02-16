@@ -37,11 +37,7 @@ def resolve(
     mapping = cast(Dict[str, Candidate], result.mapping)
     mapping.pop("python", None)
 
-    local_name = (
-        normalize_name(repository.environment.project.name)
-        if repository.environment.project.name
-        else None
-    )
+    local_name = normalize_name(repository.environment.project.name) if repository.environment.project.name else None
     for key, candidate in list(result.mapping.items()):
         if key is None:
             continue

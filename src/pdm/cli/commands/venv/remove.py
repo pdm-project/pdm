@@ -27,14 +27,11 @@ class RemoveCommand(BaseCommand):
         project.core.ui.echo("Virtualenvs created with this project:")
         for ident, venv in iter_venvs(project):
             if ident == options.env:
-                if options.yes or termui.confirm(
-                    f"[warning]Will remove: [success]{venv}[/], continue?", default=True
-                ):
+                if options.yes or termui.confirm(f"[warning]Will remove: [success]{venv}[/], continue?", default=True):
                     shutil.rmtree(venv)
                     if (
                         project.project_config.get("python.path")
-                        and Path(project.project_config["python.path"]).parent.parent
-                        == venv
+                        and Path(project.project_config["python.path"]).parent.parent == venv
                     ):
                         del project.project_config["python.path"]
                     project.core.ui.echo("Removed successfully!")

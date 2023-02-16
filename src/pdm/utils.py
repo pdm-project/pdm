@@ -35,9 +35,7 @@ except Exception:
 PACKAGING_22 = Version(_packaging_version) >= Version("22")
 
 
-def create_tracked_tempdir(
-    suffix: str | None = None, prefix: str | None = None, dir: str | None = None
-) -> str:
+def create_tracked_tempdir(suffix: str | None = None, prefix: str | None = None, dir: str | None = None) -> str:
     name = tempfile.mkdtemp(suffix, prefix, dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
 
@@ -118,15 +116,11 @@ def get_user_email_from_git() -> tuple[str, str]:
     if not git:
         return "", ""
     try:
-        username = subprocess.check_output(
-            [git, "config", "user.name"], text=True, encoding="utf-8"
-        ).strip()
+        username = subprocess.check_output([git, "config", "user.name"], text=True, encoding="utf-8").strip()
     except subprocess.CalledProcessError:
         username = ""
     try:
-        email = subprocess.check_output(
-            [git, "config", "user.email"], text=True, encoding="utf-8"
-        ).strip()
+        email = subprocess.check_output([git, "config", "user.email"], text=True, encoding="utf-8").strip()
     except subprocess.CalledProcessError:
         email = ""
     return username, email
@@ -146,9 +140,7 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
 
 
 @contextlib.contextmanager
-def atomic_open_for_write(
-    filename: str | Path, *, mode: str = "w", encoding: str = "utf-8"
-) -> Iterator[IO]:
+def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: str = "utf-8") -> Iterator[IO]:
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -189,9 +181,7 @@ def url_to_path(url: str) -> str:
 
     WINDOWS = sys.platform == "win32"
 
-    assert url.startswith(
-        "file:"
-    ), f"You can only turn file: urls into filenames (not {url!r})"
+    assert url.startswith("file:"), f"You can only turn file: urls into filenames (not {url!r})"
 
     _, netloc, path, _, _ = parse.urlsplit(url)
 
@@ -202,9 +192,7 @@ def url_to_path(url: str) -> str:
         # If we have a UNC path, prepend UNC share notation.
         netloc = "\\\\" + netloc
     else:
-        raise ValueError(
-            f"non-local file URIs are not supported on this platform: {url!r}"
-        )
+        raise ValueError(f"non-local file URIs are not supported on this platform: {url!r}")
 
     path = url2pathname(netloc + path)
 
@@ -370,7 +358,7 @@ def pdm_scheme(base: str) -> dict[str, str]:
     """Return a PEP 582 style install scheme"""
     if "pep582" not in sysconfig.get_scheme_names():
         bin_prefix = "Scripts" if os.name == "nt" else "bin"
-        sysconfig._INSTALL_SCHEMES["pep582"] = {  # type: ignore
+        sysconfig._INSTALL_SCHEMES["pep582"] = {  # type: ignore[attr-defined]
             "stdlib": "{pep582_base}/lib",
             "platstdlib": "{pep582_base}/lib",
             "purelib": "{pep582_base}/lib",
@@ -406,9 +394,7 @@ def fs_supports_symlink() -> bool:
         return True
 
 
-def deprecation_warning(
-    message: str, stacklevel: int = 1, raise_since: str | None = None
-) -> None:
+def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:
     """Show a deprecation warning with the given message and raise an error
     after a specified version.
     """

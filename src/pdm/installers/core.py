@@ -24,7 +24,7 @@ def install_requirements(
     backend = project.backend
     for req in reqs:
         if req.is_file_or_url:
-            req.relocate(backend)  # type: ignore
+            req.relocate(backend)  # type: ignore[attr-defined]
     resolved, _ = resolve(
         resolver,
         reqs,

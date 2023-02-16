@@ -144,7 +144,7 @@ class Candidate:
         self.name = name or self.req.project_name
         self.version = version
         if link is None and not req.is_named:
-            link = req.as_file_link()  # type: ignore
+            link = req.as_file_link()  # type: ignore[attr-defined]
         self.link = link
         self.summary = ""
         self.hashes: dict[Link, str] | None = None
@@ -178,8 +178,8 @@ class Candidate:
     def get_revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
-        if self.req.revision:  # type: ignore
-            return self.req.revision  # type: ignore
+        if self.req.revision:  # type: ignore[attr-defined]
+            return self.req.revision  # type: ignore[attr-defined]
         return self._prepared.revision if self._prepared else "unknown"
 
     def __repr__(self) -> str:
@@ -194,9 +194,7 @@ class Candidate:
         return f"{self.name}@{self.link.url_without_fragment}"
 
     @classmethod
-    def from_installation_candidate(
-        cls, candidate: Package, req: Requirement
-    ) -> Candidate:
+    def from_installation_candidate(cls, candidate: Package, req: Requirement) -> Candidate:
         """Build a candidate from unearth's find result."""
         return cls(
             req,
@@ -301,12 +299,13 @@ class PreparedCandidate:
             # pulled to local. In this case the link url must contain the full commit
             # hash which can be taken as the revision safely.
             # See more info at https://github.com/pdm-project/pdm/issues/349
-            rev = get_rev_from_url(self.candidate.link.url)  # type: ignore
+            rev = get_rev_from_url(self.candidate.link.url)  # type: ignore[union-attr]
             if rev:
                 return rev
-        return vcs_support.get_backend(
-            self.req.vcs, self.environment.project.core.ui.verbosity  # type: ignore
-        ).get_revision(cast(Path, self._source_dir))
+        assert isinstance(self.req, VcsRequirement)
+        return vcs_support.get_backend(self.req.vcs, self.environment.project.core.ui.verbosity).get_revision(
+            cast(Path, self._source_dir)
+        )
 
     def direct_url(self) -> dict[str, Any] | None:
         """PEP 610 direct_url.json data"""
@@ -349,11 +348,7 @@ class PreparedCandidate:
                 return _filter_none(
                     {
                         "url": self.link.url_without_fragment,
-                        "archive_info": {
-                            "hash": hash_cache.get_hash(
-                                self.link, finder.session
-                            ).replace(":", "=")
-                        },
+                        "archive_info": {"hash": hash_cache.get_hash(self.link, finder.session).replace(":", "=")},
                         "subdirectory": req.subdirectory,
                     }
                 )
@@ -369,7 +364,7 @@ class PreparedCandidate:
             cached = self._get_cached_wheel()
             if cached:
                 self.wheel = cached
-                return self.wheel  # type: ignore
+                return self.wheel
         assert self._source_dir, "Source directory isn't ready yet"
         builder_cls = EditableBuilder if self.req.editable else WheelBuilder
         builder = builder_cls(str(self._unpacked_dir), self.environment)
@@ -377,9 +372,7 @@ class PreparedCandidate:
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
         termui.logger.info("Running PEP 517 backend to build a wheel for %s", self.link)
-        self.wheel = Path(
-            builder.build(build_dir, metadata_directory=self._metadata_dir)
-        )
+        self.wheel = Path(builder.build(build_dir, metadata_directory=self._metadata_dir))
         return self.wheel
 
     def obtain(self, allow_all: bool = False) -> None:
@@ -396,16 +389,9 @@ class PreparedCandidate:
         if not allow_all and self.candidate.hashes:
             hash_options = convert_hashes(self.candidate.hashes)
         with self.environment.get_finder() as finder:
-            if (
-                not self.link
-                or self.link.is_wheel
-                and not self._wheel_compatible(self.link.filename, allow_all)
-            ):
+            if not self.link or self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all):
                 if self.req.is_file_or_url:
-                    raise CandidateNotFound(
-                        f"The URL requirement {self.req.as_line()} is a wheel but "
-                        "incompatible"
-                    )
+                    raise CandidateNotFound(f"The URL requirement {self.req.as_line()} is a wheel but incompatible")
                 self.link = self.wheel = None  # reset the incompatible wheel
                 self.link = _find_best_match_link(
                     finder,
@@ -415,8 +401,7 @@ class PreparedCandidate:
                 )
                 if not self.link:
                     raise CandidateNotFound(
-                        f"No candidate is found for `{self.req.project_name}` "
-                        "that matches the environment or hashes"
+                        f"No candidate is found for `{self.req.project_name}` that matches the environment or hashes"
                     )
                 if not self.candidate.link:
                     self.candidate.link = self.link
@@ -431,9 +416,7 @@ class PreparedCandidate:
                     download_dir = build_dir
                 else:
                     download_dir = tmpdir
-                result = finder.download_and_unpack(
-                    self.link, build_dir, download_dir, hash_options
-                )
+                result = finder.download_and_unpack(self.link, build_dir, download_dir, hash_options)
                 if self.link.is_wheel:
                     self.wheel = result
                 else:
@@ -445,9 +428,7 @@ class PreparedCandidate:
         metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
         if self.wheel:
             # Get metadata from METADATA inside the wheel
-            self._metadata_dir = _get_wheel_metadata_from_wheel(
-                self.wheel, metadir_parent
-            )
+            self._metadata_dir = _get_wheel_metadata_from_wheel(self.wheel, metadir_parent)
             return im.PathDistribution(Path(self._metadata_dir))
 
         assert self._unpacked_dir, "Source directory isn't ready yet"
@@ -488,9 +469,7 @@ class PreparedCandidate:
                         ),
                         extras_require={
                             k: list(map(backend.expand_line, v))
-                            for k, v in metadata.get(
-                                "optional-dependencies", {}
-                            ).items()
+                            for k, v in metadata.get("optional-dependencies", {}).items()
                         },
                         python_requires=metadata.get("requires-python"),
                     )
@@ -498,20 +477,14 @@ class PreparedCandidate:
         # If all fail, try building the source to get the metadata
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
-            termui.logger.info(
-                "Running PEP 517 backend to get metadata for %s", self.link
-            )
-            self._metadata_dir = builder(
-                self._unpacked_dir, self.environment
-            ).prepare_metadata(metadir_parent)
+            termui.logger.info("Running PEP 517 backend to get metadata for %s", self.link)
+            self._metadata_dir = builder(self._unpacked_dir, self.environment).prepare_metadata(metadir_parent)
         except BuildError:
             termui.logger.warn("Failed to build package, try parsing project files.")
             try:
                 setup = Setup.from_directory(self._unpacked_dir)
             except Exception:
-                message = (
-                    "Failed to parse the project files, dependencies may be missing"
-                )
+                message = "Failed to parse the project files, dependencies may be missing"
                 termui.logger.warn(message)
                 warnings.warn(message, RuntimeWarning)
                 setup = Setup()
@@ -528,9 +501,7 @@ class PreparedCandidate:
             if not self.candidate.version:
                 self.candidate.version = result.version
             if not self.candidate.requires_python:
-                self.candidate.requires_python = cast(
-                    str, result.metadata["Requires-Python"] or ""
-                )
+                self.candidate.requires_python = cast(str, result.metadata["Requires-Python"] or "")
             self._metadata = result
         return self._metadata
 
@@ -538,7 +509,7 @@ class PreparedCandidate:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         return filter_requirements_with_extras(
-            self.req.project_name, self.metadata.requires or [], extras  # type: ignore
+            self.req.project_name, self.metadata.requires or [], extras  # type: ignore[arg-type]
         )
 
     def should_cache(self) -> bool:
@@ -553,9 +524,7 @@ class PreparedCandidate:
                 # If the candidate isn't prepared, we can't cache it
                 return False
             assert link
-            vcs_backend = vcs_support.get_backend(
-                link.vcs, self.environment.project.core.ui.verbosity
-            )
+            vcs_backend = vcs_support.get_backend(link.vcs, self.environment.project.core.ui.verbosity)
             return vcs_backend.is_immutable_revision(source_dir, link)
         if link and not (link.is_file and link.file_path.is_dir()):
             # Cache if the link contains egg-info like 'foo-1.0'
@@ -565,9 +534,7 @@ class PreparedCandidate:
     def _get_cached_wheel(self) -> Path | None:
         wheel_cache = self.environment.project.make_wheel_cache()
         assert self.candidate.link
-        cache_entry = wheel_cache.get(
-            self.candidate.link, self.candidate.name, self.environment.target_python
-        )
+        cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.target_python)
         if cache_entry is not None:
             termui.logger.info("Using cached wheel: %s", cache_entry)
         return cache_entry
@@ -584,9 +551,7 @@ class PreparedCandidate:
             if self.environment.packages_path:
                 src_dir = self.environment.packages_path / "src"
             else:
-                venv_prefix = get_venv_like_prefix(
-                    self.environment.interpreter.executable
-                )
+                venv_prefix = get_venv_like_prefix(self.environment.interpreter.executable)
                 if venv_prefix is not None:
                     src_dir = venv_prefix / "src"
                 else:
@@ -611,9 +576,7 @@ class PreparedCandidate:
         if self.should_cache():
             termui.logger.info("Saving wheel to cache: %s", self.candidate.link)
             wheel_cache = self.environment.project.make_wheel_cache()
-            return wheel_cache.get_path_for_link(
-                self.candidate.link, self.environment.target_python
-            ).as_posix()
+            return wheel_cache.get_path_for_link(self.candidate.link, self.environment.target_python).as_posix()
         else:
             return create_tracked_tempdir(prefix="pdm-wheel-")
 

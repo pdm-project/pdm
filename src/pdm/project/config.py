@@ -29,9 +29,7 @@ class RepositoryConfig:
     config_prefix: str | None = None
 
     def __rich__(self) -> str:
-        config_prefix = (
-            f"{self.config_prefix}." if self.config_prefix is not None else ""
-        )
+        config_prefix = f"{self.config_prefix}." if self.config_prefix is not None else ""
         lines = [f"[primary]{config_prefix}url[/] = {self.url}"]
         if self.username:
             lines.append(f"[primary]{config_prefix}username[/] = {self.username}")
@@ -53,9 +51,7 @@ class RegistryConfig:
     config_prefix: str | None = None
 
     def __rich__(self) -> str:
-        config_prefix = (
-            f"{self.config_prefix}." if self.config_prefix is not None else ""
-        )
+        config_prefix = f"{self.config_prefix}." if self.config_prefix is not None else ""
         lines = [f"[primary]{config_prefix}url[/] = {self.url}"]
         if self.username:
             lines.append(f"[primary]{config_prefix}username[/] = {self.username}")
@@ -80,22 +76,20 @@ def load_config(file_path: Path) -> dict[str, Any]:
     E.g. ["python"]["path"] will be loaded as "python.path" key.
     """
 
-    def get_item(sub_data: Mapping[str, Any]) -> Mapping[str, Any]:
+    def get_item(sub_data: Mapping[str, Any]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for k, v in sub_data.items():
             if k == "pypi":
                 result.update((f"{k}.{sub_k}", sub_v) for sub_k, sub_v in v.items())
             elif k != REPOSITORY and isinstance(v, Mapping):
-                result.update(
-                    {f"{k}.{sub_k}": sub_v for sub_k, sub_v in get_item(v).items()}
-                )
+                result.update({f"{k}.{sub_k}": sub_v for sub_k, sub_v in get_item(v).items()})
             else:
                 result.update({k: v})
         return result
 
     if not file_path.is_file():
         return {}
-    return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))  # type: ignore
+    return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
 
 def ensure_boolean(val: Any) -> bool:
@@ -175,9 +169,7 @@ class Config(MutableMapping[str, str]):
             platformdirs.user_config_path("pdm") / "global-project",
             True,
         ),
-        "global_project.user_site": ConfigItem(
-            "Whether to install to user site", False, True, coerce=ensure_boolean
-        ),
+        "global_project.user_site": ConfigItem("Whether to install to user site", False, True, coerce=ensure_boolean),
         "project_max_depth": ConfigItem(
             "The max depth to search for a project through the parents",
             5,
@@ -185,12 +177,8 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_PROJECT_MAX_DEPTH",
             coerce=int,
         ),
-        "strategy.update": ConfigItem(
-            "The default strategy for updating packages", "reuse", False
-        ),
-        "strategy.save": ConfigItem(
-            "Specify how to save versions when a package is added", "minimum", False
-        ),
+        "strategy.update": ConfigItem("The default strategy for updating packages", "reuse", False),
+        "strategy.save": ConfigItem("Specify how to save versions when a package is added", "minimum", False),
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",
             10000,
@@ -213,9 +201,7 @@ class Config(MutableMapping[str, str]):
             "symlink",
         ),
         "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
-        "python.use_pyenv": ConfigItem(
-            "Use the pyenv interpreter", True, coerce=ensure_boolean
-        ),
+        "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True, coerce=ensure_boolean),
         "python.use_venv": ConfigItem(
             "Install packages into the activated venv site packages instead of PEP 582",
             True,
@@ -227,18 +213,11 @@ class Config(MutableMapping[str, str]):
             DEFAULT_PYPI_INDEX,
             env_var="PDM_PYPI_URL",
         ),
-        "pypi.verify_ssl": ConfigItem(
-            "Verify SSL certificate when query PyPI", True, coerce=ensure_boolean
-        ),
-        "pypi.username": ConfigItem(
-            "The username to access PyPI", env_var="PDM_PYPI_USERNAME"
-        ),
-        "pypi.password": ConfigItem(
-            "The password to access PyPI", env_var="PDM_PYPI_PASSWORD"
-        ),
+        "pypi.verify_ssl": ConfigItem("Verify SSL certificate when query PyPI", True, coerce=ensure_boolean),
+        "pypi.username": ConfigItem("The username to access PyPI", env_var="PDM_PYPI_USERNAME"),
+        "pypi.password": ConfigItem("The password to access PyPI", env_var="PDM_PYPI_PASSWORD"),
         "pypi.ca_certs": ConfigItem(
-            "Path to a CA certificate bundle used for verifying the identity "
-            "of the PyPI server",
+            "Path to a CA certificate bundle used for verifying the identity of the PyPI server",
         ),
         "pypi.ignore_stored_index": ConfigItem(
             "Ignore the configured indexes",
@@ -311,20 +290,14 @@ class Config(MutableMapping[str, str]):
     def __init__(self, config_file: Path, is_global: bool = False):
         self.is_global = is_global
         self.config_file = config_file.resolve()
-        self.deprecated = {
-            v.replace: k for k, v in self._config_map.items() if v.replace
-        }
+        self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
-        self._data = collections.ChainMap(
-            self._file_data, self.get_defaults() if is_global else {}
-        )
+        self._data = collections.ChainMap(self._file_data, self.get_defaults() if is_global else {})
 
     def load_theme(self) -> rich.theme.Theme:
         if not self.is_global:  # pragma: no cover
             raise PdmUsageError("Theme can only be loaded from global config")
-        return rich.theme.Theme(
-            {k[6:]: v for k, v in self.items() if k.startswith("theme.")}
-        )
+        return rich.theme.Theme({k[6:]: v for k, v in self.items() if k.startswith("theme.")})
 
     @property
     def self_data(self) -> dict[str, Any]:
@@ -349,7 +322,7 @@ class Config(MutableMapping[str, str]):
             temp[last] = value
 
         with self.config_file.open("w", encoding="utf-8") as fp:
-            tomlkit.dump(toml_data, fp)  # type: ignore
+            tomlkit.dump(toml_data, fp)
 
     def __getitem__(self, key: str) -> Any:
         parts = key.split(".")
@@ -371,11 +344,7 @@ class Config(MutableMapping[str, str]):
             source = self._data[index_key]
             if len(parts) >= 3 and parts[2] == "password":
                 return "<hidden>"
-            return (
-                source[parts[2]]
-                if len(parts) >= 3
-                else RegistryConfig(**self._data[index_key])
-            )
+            return source[parts[2]] if len(parts) >= 3 else RegistryConfig(**self._data[index_key])
         elif key == "pypi.password":
             return "<hidden>"
 
@@ -399,12 +368,8 @@ class Config(MutableMapping[str, str]):
         parts = key.split(".")
         if parts[0] == REPOSITORY:
             if len(parts) < 3:
-                raise PdmUsageError(
-                    "Set repository config with [success]repository.{name}.{attr}"
-                )
-            self._file_data.setdefault(parts[0], {}).setdefault(
-                parts[1], {}
-            ).setdefault(parts[2], value)
+                raise PdmUsageError("Set repository config with [success]repository.{name}.{attr}")
+            self._file_data.setdefault(parts[0], {}).setdefault(parts[1], {}).setdefault(parts[2], value)
             self._save_config()
             return
         if parts[0] == "pypi" and key not in self._config_map:
@@ -419,16 +384,13 @@ class Config(MutableMapping[str, str]):
         config_key = self.deprecated.get(key, key)
         config = self._config_map[config_key]
         if not self.is_global and config.global_only:
-            raise ValueError(
-                f"Config item '{key}' is not allowed to set in project config."
-            )
+            raise ValueError(f"Config item '{key}' is not allowed to set in project config.")
 
         value = config.coerce(value)
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
             ui.echo(
-                "WARNING: the config is shadowed by env var '{}', "
-                "the value set won't take effect.".format(env_var),
+                "WARNING: the config is shadowed by env var '{}', the value set won't take effect.".format(env_var),
                 style="warning",
             )
         self._file_data[config_key] = value
@@ -478,8 +440,7 @@ class Config(MutableMapping[str, str]):
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
             ui.echo(
-                "WARNING: the config is shadowed by env var '{}', "
-                "set value won't take effect.".format(env_var),
+                "WARNING: the config is shadowed by env var '{}', set value won't take effect.".format(env_var),
                 style="warning",
             )
         self._save_config()
@@ -491,9 +452,7 @@ class Config(MutableMapping[str, str]):
         repositories: Mapping[str, Source] = self._data.get(REPOSITORY, {})
         repo: RepositoryConfig | None = None
         if "://" in name_or_url:
-            config: Source = next(
-                (v for v in repositories.values() if v.get("url") == name_or_url), {}
-            )
+            config: Source = next((v for v in repositories.values() if v.get("url") == name_or_url), {})
             repo = next(
                 (r for r in DEFAULT_REPOSITORIES.values() if r.url == name_or_url),
                 RepositoryConfig(name_or_url),
@@ -506,4 +465,4 @@ class Config(MutableMapping[str, str]):
             return dataclasses.replace(repo, **config)
         if not config:
             return None
-        return RepositoryConfig(**config)  # type: ignore
+        return RepositoryConfig(**config)  # type: ignore[misc]

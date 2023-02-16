@@ -12,21 +12,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         group = ArgumentGroup("fields", is_mutually_exclusive=True)
-        group.add_argument(
-            "--python", action="store_true", help="Show the interpreter path"
-        )
+        group.add_argument("--python", action="store_true", help="Show the interpreter path")
         group.add_argument(
             "--where",
             dest="where",
             action="store_true",
             help="Show the project root path",
         )
-        group.add_argument(
-            "--packages", action="store_true", help="Show the packages root"
-        )
-        group.add_argument(
-            "--env", action="store_true", help="Show PEP 508 environment markers"
-        )
+        group.add_argument("--packages", action="store_true", help="Show the packages root")
+        group.add_argument("--env", action="store_true", help="Show PEP 508 environment markers")
         group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -39,9 +33,7 @@ class Command(BaseCommand):
         elif options.packages:
             project.core.ui.echo(str(project.environment.packages_path))
         elif options.env:
-            project.core.ui.echo(
-                json.dumps(project.environment.marker_environment, indent=2)
-            )
+            project.core.ui.echo(json.dumps(project.environment.marker_environment, indent=2))
         else:
             for name, value in zip(
                 [

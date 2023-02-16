@@ -28,9 +28,7 @@ def _get_distributions() -> Iterable[Distribution]:
 def list_distributions(plugin_only: bool = False) -> list[Distribution]:
     result: list[Distribution] = []
     for dist in _get_distributions():
-        if not plugin_only or any(
-            ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points
-        ):
+        if not plugin_only or any(ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points):
             result.append(dist)
     return sorted(result, key=lambda d: d.metadata["Name"] or "UNKNOWN")
 
@@ -123,25 +121,18 @@ class AddCommand(BaseCommand):
         parser.add_argument(
             "packages",
             nargs="+",
-            help="Specify one or many package names, "
-            "each package can have a version specifier",
+            help="Specify one or many package names, each package can have a version specifier",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        pip_args = ["install"] + shlex.split(options.pip_args) + options.packages
+        pip_args = ["install", *shlex.split(options.pip_args), *options.packages]
 
-        project.core.ui.echo(
-            f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
-        )
+        project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
-            with project.core.ui.open_spinner(
-                f"Installing packages: {options.packages}"
-            ):
+            with project.core.ui.open_spinner(f"Installing packages: {options.packages}"):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
-            project.core.ui.echo(
-                "[error]Installation failed:[/]\n" + e.output, err=True
-            )
+            project.core.ui.echo("[error]Installation failed:[/]\n" + e.output, err=True)
             sys.exit(1)
         else:
             project.core.ui.echo("[success]Installation succeeds.[/]")
@@ -159,12 +150,8 @@ class RemoveCommand(BaseCommand):
             help="Arguments that will be passed to pip uninstall",
             default="",
         )
-        parser.add_argument(
-            "-y", "--yes", action="store_true", help="Answer yes on the question"
-        )
-        parser.add_argument(
-            "packages", nargs="+", help="Specify one or many package names"
-        )
+        parser.add_argument("-y", "--yes", action="store_true", help="Answer yes on the question")
+        parser.add_argument("packages", nargs="+", help="Specify one or many package names")
 
     def _resolve_dependencies_to_remove(self, packages: list[str]) -> list[str]:
         """Perform a BFS to find all unneeded dependencies"""
@@ -198,29 +185,16 @@ class RemoveCommand(BaseCommand):
         if not packages_to_remove:
             project.core.ui.echo("No package to remove.", err=True)
             sys.exit(1)
-        if not (
-            options.yes
-            or termui.confirm(
-                f"Will remove: {packages_to_remove}, continue?", default=True
-            )
-        ):
+        if not (options.yes or termui.confirm(f"Will remove: {packages_to_remove}, continue?", default=True)):
             return
-        pip_args = (
-            ["uninstall", "-y"] + shlex.split(options.pip_args) + packages_to_remove
-        )
+        pip_args = ["uninstall", "-y", *shlex.split(options.pip_args), *packages_to_remove]
 
-        project.core.ui.echo(
-            f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
-        )
+        project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
-            with project.core.ui.open_spinner(
-                f"Uninstalling packages: [success]{', '.join(options.packages)}[/]"
-            ):
+            with project.core.ui.open_spinner(f"Uninstalling packages: [success]{', '.join(options.packages)}[/]"):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
-            project.core.ui.echo(
-                "[error]Uninstallation failed:[/]\n" + e.output, err=True
-            )
+            project.core.ui.echo("[error]Uninstallation failed:[/]\n" + e.output, err=True)
             sys.exit(1)
         else:
             project.core.ui.echo("[success]Uninstallation succeeds.[/]")
@@ -262,25 +236,18 @@ class UpdateCommand(BaseCommand):
                 project.core.ui.echo(f"Already up-to-date: [primary]{__version__}[/]")
                 return
             package = f"pdm=={version}"
-        pip_args = ["install", "--upgrade"] + shlex.split(options.pip_args) + [package]
-        project.core.ui.echo(
-            f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL
-        )
+        pip_args = ["install", "--upgrade", *shlex.split(options.pip_args)] + [package]
+        project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
-            with project.core.ui.open_spinner(
-                f"Updating pdm to version [primary]{version}[/]"
-            ):
+            with project.core.ui.open_spinner(f"Updating pdm to version [primary]{version}[/]"):
                 run_pip(project, pip_args)
         except subprocess.CalledProcessError as e:
             project.core.ui.echo(
-                f"[error]Installing version [primary]{version}[/] failed:[/]\n"
-                + e.output,
+                f"[error]Installing version [primary]{version}[/] failed:[/]\n" + e.output,
                 err=True,
             )
             sys.exit(1)
         else:
-            project.core.ui.echo(
-                f"[success]Installing version [primary]{version}[/] succeeds.[/]"
-            )
+            project.core.ui.echo(f"[success]Installing version [primary]{version}[/] succeeds.[/]")
             # Update the version value to avoid check update print wrong message
             project.core.version = read_version()

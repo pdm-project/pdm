@@ -34,9 +34,7 @@ ALLOW_ALL_PYTHON = PySpecSet()
 T = TypeVar("T", bound="BaseRepository")
 
 
-def cache_result(
-    func: Callable[[T, Candidate], CandidateInfo]
-) -> Callable[[T, Candidate], CandidateInfo]:
+def cache_result(func: Callable[[T, Candidate], CandidateInfo]) -> Callable[[T, Candidate], CandidateInfo]:
     @wraps(func)
     def wrapper(self: T, candidate: Candidate) -> CandidateInfo:
         result = func(self, candidate)
@@ -73,9 +71,7 @@ class BaseRepository:
         """Get matching sources based on the index attribute."""
         return self.sources
 
-    def get_dependencies(
-        self, candidate: Candidate
-    ) -> tuple[list[Requirement], PySpecSet, str]:
+    def get_dependencies(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
         """Get (dependencies, python_specifier, summary) of the candidate."""
         requires_python, summary = "", ""
         requirements: list[str] = []
@@ -89,7 +85,7 @@ class BaseRepository:
             break
         else:
             if last_ext_info is not None:
-                raise last_ext_info[1].with_traceback(last_ext_info[2])  # type: ignore
+                raise last_ext_info[1].with_traceback(last_ext_info[2])  # type: ignore[union-attr]
         reqs: list[Requirement] = []
         for line in requirements:
             if line.startswith("-e "):
@@ -111,9 +107,7 @@ class BaseRepository:
         candidate.summary = summary
         if not self.ignore_compatibility:
             pep508_env = self.environment.marker_environment
-            reqs = [
-                req for req in reqs if not req.marker or req.marker.evaluate(pep508_env)
-            ]
+            reqs = [req for req in reqs if not req.marker or req.marker.evaluate(pep508_env)]
         return reqs, PySpecSet(requires_python), summary
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
@@ -122,11 +116,7 @@ class BaseRepository:
     def is_this_package(self, requirement: Requirement) -> bool:
         """Whether the requirement is the same as this package"""
         project = self.environment.project
-        return (
-            requirement.is_named
-            and project.name is not None
-            and requirement.key == normalize_name(project.name)
-        )
+        return requirement.is_named and project.name is not None and requirement.key == normalize_name(project.name)
 
     def make_this_candidate(self, requirement: Requirement) -> Candidate:
         """Make a candidate for this package.
@@ -134,7 +124,7 @@ class BaseRepository:
         """
         project = self.environment.project
         assert project.name
-        link = Link.from_path(project.root)  # type: ignore
+        link = Link.from_path(project.root)
         candidate = make_candidate(requirement, project.name, link=link)
         candidate.prepare(self.environment).metadata
         return candidate
@@ -158,15 +148,11 @@ class BaseRepository:
         applicable_cans = [
             c
             for c in cans
-            if requirement.specifier.contains(  # type: ignore
-                c.version, allow_prereleases  # type: ignore
-            )
+            if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
         ]
 
         applicable_cans_python_compatible = [
-            c
-            for c in applicable_cans
-            if ignore_requires_python or requires_python.is_subset(c.requires_python)
+            c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
         ]
         # Evaluate data-requires-python attr and discard incompatible candidates
         # to reduce the number of candidates to resolve.
@@ -179,28 +165,20 @@ class BaseRepository:
         if not applicable_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
             applicable_cans = [
-                c
-                for c in cans
-                if requirement.specifier.contains(c.version, True)  # type: ignore
+                c for c in cans if requirement.specifier.contains(c.version, True)  # type: ignore[arg-type, union-attr]
             ]
             applicable_cans_python_compatible = [
-                c
-                for c in applicable_cans
-                if ignore_requires_python
-                or requires_python.is_subset(c.requires_python)
+                c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
             ]
             if applicable_cans_python_compatible:
                 applicable_cans = applicable_cans_python_compatible
 
             if not applicable_cans:
                 termui.logger.debug(
-                    "\tCould not find any matching candidates even when considering "
-                    "pre-releases.",
+                    "\tCould not find any matching candidates even when considering pre-releases.",
                 )
 
-        def print_candidates(
-            title: str, candidates: list[Candidate], max_lines: int = 10
-        ) -> None:
+        def print_candidates(title: str, candidates: list[Candidate], max_lines: int = 10) -> None:
             termui.logger.debug("\t" + title)
             logged_lines = set()
             for can in candidates:
@@ -208,9 +186,7 @@ class BaseRepository:
                 if new_line not in logged_lines:
                     logged_lines.add(new_line)
                     if len(logged_lines) > max_lines:
-                        termui.logger.debug(
-                            f"\t  ... [{len(candidates)-max_lines} more candidate(s)]"
-                        )
+                        termui.logger.debug(f"\t  ... [{len(candidates)-max_lines} more candidate(s)]")
                         break
                     else:
                         termui.logger.debug(new_line)
@@ -244,7 +220,7 @@ class BaseRepository:
         if (
             candidate.req.is_vcs
             or candidate.req.is_file_or_url
-            and candidate.req.is_local_dir  # type: ignore
+            and candidate.req.is_local_dir  # type: ignore[attr-defined]
         ):
             return None
         if candidate.hashes:
@@ -267,9 +243,7 @@ class BaseRepository:
                     and prepared_link.file_path.is_dir()
                 ):
                     continue
-                result[c.link] = self._hash_cache.get_hash(
-                    prepared_link, finder.session
-                )
+                result[c.link] = self._hash_cache.get_hash(prepared_link, finder.session)
         return result or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -300,10 +274,7 @@ class PyPIRepository(BaseRepository):
         sources = self.get_filtered_sources(candidate.req)
         url_prefixes = [
             proc_url[:-7]  # Strip "/simple".
-            for proc_url in (
-                raw_url.rstrip("/")
-                for raw_url in (source.get("url", "") for source in sources)
-            )
+            for proc_url in (raw_url.rstrip("/") for raw_url in (source.get("url", "") for source in sources))
             if proc_url.endswith("/simple")
         ]
         with self.environment.get_finder(sources) as finder:
@@ -342,9 +313,7 @@ class PyPIRepository(BaseRepository):
         with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
             cans = [
                 Candidate.from_installation_candidate(c, requirement)
-                for c in finder.find_all_packages(
-                    requirement.project_name, allow_yanked=requirement.is_pinned
-                )
+                for c in finder.find_all_packages(requirement.project_name, allow_yanked=requirement.is_pinned)
             ]
         if not cans:
             raise CandidateNotFound(
@@ -362,7 +331,7 @@ class PyPIRepository(BaseRepository):
             search_url = pypi_simple + "/search"
 
         with self.environment.get_finder() as finder:
-            session = finder.session  # type: ignore
+            session = finder.session
             resp = session.get(search_url, params={"q": query})
             if resp.status_code == 404:
                 self.environment.project.core.ui.echo(
@@ -372,9 +341,7 @@ class PyPIRepository(BaseRepository):
                     err=True,
                     style="warning",
                 )
-                resp = session.get(
-                    f"{self.DEFAULT_INDEX_URL}/search", params={"q": query}
-                )
+                resp = session.get(f"{self.DEFAULT_INDEX_URL}/search", params={"q": query})
             parser = SearchResultParser()
             resp.raise_for_status()
             parser.feed(resp.text)
@@ -406,16 +373,10 @@ class LockedRepository(BaseRepository):
                 if version:
                     package["version"] = f"=={version}"
                 package_name = package.pop("name")
-                req_dict = {
-                    k: v
-                    for k, v in package.items()
-                    if k not in ("dependencies", "requires_python", "summary")
-                }
+                req_dict = {k: v for k, v in package.items() if k not in ("dependencies", "requires_python", "summary")}
                 req = Requirement.from_req_dict(package_name, req_dict)
-                if req.is_file_or_url and req.path and not req.url:  # type: ignore
-                    req.url = path_to_url(  # type: ignore
-                        posixpath.join(root, req.path)  # type: ignore
-                    )
+                if req.is_file_or_url and req.path and not req.url:  # type: ignore[attr-defined]
+                    req.url = path_to_url(posixpath.join(root, req.path))  # type: ignore[attr-defined]
                 can = make_candidate(req, name=package_name, version=version)
                 can_id = self._identify_candidate(can)
                 self.packages[can_id] = can
@@ -427,7 +388,7 @@ class LockedRepository(BaseRepository):
                 self.candidate_info[can_id] = candidate_info
 
         for key, hashes in lockfile.get("metadata", {}).get("files", {}).items():
-            self.file_hashes[tuple(key.split(None, 1))] = {  # type: ignore
+            self.file_hashes[tuple(key.split(None, 1))] = {  # type: ignore[index]
                 Link(item["url"]): item["hash"] for item in hashes if "url" in item
             }
 
@@ -456,9 +417,7 @@ class LockedRepository(BaseRepository):
             raise CandidateInfoNotFound(candidate) from None
 
         reqs = self.environment.project.pyproject.metadata.get("dependencies", [])
-        optional_dependencies = self.environment.project.pyproject.metadata.get(
-            "optional-dependencies", {}
-        )
+        optional_dependencies = self.environment.project.pyproject.metadata.get("optional-dependencies", {})
         if candidate.req.extras is not None:
             reqs = sum(
                 (optional_dependencies.get(g, []) for g in candidate.req.extras),
@@ -483,13 +442,11 @@ class LockedRepository(BaseRepository):
                 if key[0] != requirement.identify():
                     continue
             elif key[2] is not None:
-                if key[2] != url_without_fragments(
-                    getattr(requirement, "url", "")  # type: ignore
-                ):
+                if key[2] != url_without_fragments(getattr(requirement, "url", "")):
                     continue
             else:
                 can_req = self.packages[key].req
-                if can_req.path != getattr(requirement, "path", None):  # type: ignore
+                if can_req.path != getattr(requirement, "path", None):  # type: ignore[attr-defined]
                     continue
 
             yield key
@@ -507,9 +464,7 @@ class LockedRepository(BaseRepository):
                 return
         for key in self._matching_keys(requirement):
             info = self.candidate_info[key]
-            if not PySpecSet(info[1]).contains(
-                str(self.environment.interpreter.version), True
-            ):
+            if not PySpecSet(info[1]).contains(str(self.environment.interpreter.version), True):
                 continue
             can = self.packages[key]
             can.requires_python = info[1]
@@ -521,6 +476,4 @@ class LockedRepository(BaseRepository):
 
     def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
         assert candidate.name
-        return self.file_hashes.get(
-            (normalize_name(candidate.name), candidate.version or "")
-        )
+        return self.file_hashes.get((normalize_name(candidate.name), candidate.version or ""))

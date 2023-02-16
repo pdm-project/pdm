@@ -16,13 +16,11 @@ def _setup_backend(project: Project, backend: str):
     project.root.joinpath("test_project").mkdir()
     project.root.joinpath("test_project/__init__.py").touch()
     if backend == "setuptools":
-        project.pyproject._data.setdefault("tool", {}).setdefault(
-            "setuptools", {}
-        ).update(packages=["test_project"])
+        project.pyproject._data.setdefault("tool", {}).setdefault("setuptools", {}).update(packages=["test_project"])
     elif backend == "hatchling":
-        project.pyproject._data.setdefault("tool", {}).setdefault(
-            "hatch", {}
-        ).setdefault("metadata", {}).update({"allow-direct-references": True})
+        project.pyproject._data.setdefault("tool", {}).setdefault("hatch", {}).setdefault("metadata", {}).update(
+            {"allow-direct-references": True}
+        )
     project.pyproject.write()
     project._environment = None
     assert isinstance(project.backend, backend_cls)
@@ -50,9 +48,7 @@ def test_project_backend(project, working_set, backend, invoke):
         if backend not in ("hatchling", "pdm-backend"):
             candidate = project.make_self_candidate()
             # We skip hatchling here to avoid installing hatchling into the build env
-            metadata_dependency = candidate.prepare(
-                project.environment
-            ).metadata.requires[0]
+            metadata_dependency = candidate.prepare(project.environment).metadata.requires[0]
             assert metadata_dependency == f"demo @ {demo_url}"
 
 
@@ -72,15 +68,9 @@ def test_pdm_pep517_expand_variables(monkeypatch):
     root_url = path_to_url(root.as_posix())
     backend = get_backend("pdm-pep517")(root)
     monkeypatch.setenv("BAR", "bar")
-    assert (
-        backend.expand_line("demo @ file:///${PROJECT_ROOT}/demo")
-        == f"demo @ {root_url}/demo"
-    )
+    assert backend.expand_line("demo @ file:///${PROJECT_ROOT}/demo") == f"demo @ {root_url}/demo"
     assert backend.expand_line("demo==${BAR}") == "demo==bar"
-    assert (
-        backend.relative_path_to_url("demo package")
-        == "file:///${PROJECT_ROOT}/demo%20package"
-    )
+    assert backend.relative_path_to_url("demo package") == "file:///${PROJECT_ROOT}/demo%20package"
     assert backend.relative_path_to_url("../demo") == "file:///${PROJECT_ROOT}/../demo"
 
 

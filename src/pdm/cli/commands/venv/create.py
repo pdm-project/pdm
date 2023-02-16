@@ -30,9 +30,7 @@ class CreateCommand(BaseCommand):
             help="Recreate if the virtualenv already exists",
         )
         parser.add_argument("-n", "--name", help="Specify the name of the virtualenv")
-        parser.add_argument(
-            "--with-pip", action="store_true", help="Install pip with the virtualenv"
-        )
+        parser.add_argument("--with-pip", action="store_true", help="Install pip with the virtualenv")
         parser.add_argument(
             "python",
             nargs="?",
@@ -49,9 +47,7 @@ class CreateCommand(BaseCommand):
         prompt = project.config["venv.prompt"]
         backend: str = options.backend or project.config["venv.backend"]
         venv_backend = BACKENDS[backend](project, options.python)
-        with project.core.ui.open_spinner(
-            f"Creating virtualenv using [success]{backend}[/]..."
-        ):
+        with project.core.ui.open_spinner(f"Creating virtualenv using [success]{backend}[/]..."):
             path = venv_backend.create(
                 options.name,
                 options.venv_args,

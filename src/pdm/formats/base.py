@@ -10,12 +10,10 @@ from pdm import termui
 _T = TypeVar("_T", bound=Callable)
 
 
-def convert_from(
-    field: str | None = None, name: str | None = None
-) -> Callable[[_T], _T]:
+def convert_from(field: str | None = None, name: str | None = None) -> Callable[[_T], _T]:
     def wrapper(func: _T) -> _T:
-        func._convert_from = field  # type: ignore
-        func._convert_to = name  # type: ignore
+        func._convert_from = field  # type: ignore[attr-defined]
+        func._convert_to = name  # type: ignore[attr-defined]
         return func
 
     return wrapper
@@ -50,13 +48,9 @@ class MetaConverter(metaclass=_MetaConverterMeta):
     def convert(self) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
         source = self.source
         for key, func in self._converters.items():
-            if func._convert_from and func._convert_from not in source:  # type: ignore
+            if func._convert_from and func._convert_from not in source:  # type: ignore[attr-defined]
                 continue
-            value = (
-                source
-                if func._convert_from is None  # type: ignore
-                else source[func._convert_from]  # type: ignore
-            )
+            value = source if func._convert_from is None else source[func._convert_from]  # type: ignore[attr-defined]
             try:
                 self._data[key] = func(self, value)
             except Unset:
@@ -64,10 +58,10 @@ class MetaConverter(metaclass=_MetaConverterMeta):
 
         # Delete all used fields
         for func in self._converters.values():
-            if func._convert_from is None:  # type: ignore
+            if func._convert_from is None:  # type: ignore[attr-defined]
                 continue
             try:
-                del source[func._convert_from]  # type: ignore
+                del source[func._convert_from]  # type: ignore[attr-defined]
             except KeyError:
                 pass
         # Add remaining items to the data
@@ -102,9 +96,7 @@ def parse_name_email(name_email: list[str]) -> list[str]:
         [
             {
                 k: v
-                for k, v in NAME_EMAIL_RE.match(item)
-                .groupdict()  # type: ignore
-                .items()
+                for k, v in NAME_EMAIL_RE.match(item).groupdict().items()  # type: ignore[union-attr]
                 if v is not None
             }
             for item in name_email

@@ -75,7 +75,7 @@ def patch_sysconfig(libpath):
 
     bin_prefix = "Scripts" if os.name == "nt" else "bin"
     pep582_base = os.path.dirname(libpath)
-    pep582_scheme = {  # type: ignore
+    pep582_scheme = {
         "stdlib": "{pep582_base}/lib",
         "platstdlib": "{pep582_base}/lib",
         "purelib": "{pep582_base}/lib",
@@ -124,9 +124,7 @@ def main():
     site.addusersitepackages(known_paths)
     site.addsitepackages(known_paths)
     known_paths = {os.path.normcase(path) for path in known_paths}
-    original_sys_path = [
-        path for path in original_sys_path if os.path.normcase(path) not in known_paths
-    ]
+    original_sys_path = [path for path in original_sys_path if os.path.normcase(path) not in known_paths]
     sys.path[:] = original_sys_path
 
     # Second, add lib directories, ensuring .pth file are processed.

@@ -25,9 +25,7 @@ def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
         "findpython.python.PythonVersion._get_version",
         return_value=parse("3.8.0"),
     )
-    mocker.patch(
-        "findpython.python.PythonVersion._get_interpreter", return_value=sys.executable
-    )
+    mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=sys.executable)
     assert Path(project.python.path) == pyenv_python
     assert project.python.executable == Path(sys.executable)
 
@@ -56,25 +54,18 @@ def test_project_sources_overriding(project):
     project.project_config["pypi.url"] = "https://test.pypi.org/simple"
     assert project.sources[0]["url"] == "https://test.pypi.org/simple"
 
-    project.pyproject.settings["source"] = [
-        {"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}
-    ]
+    project.pyproject.settings["source"] = [{"url": "https://example.org/simple", "name": "pypi", "verify_ssl": True}]
     assert project.sources[0]["url"] == "https://example.org/simple"
 
 
 def test_project_sources_env_var_expansion(project, monkeypatch):
     monkeypatch.setenv("PYPI_USER", "user")
     monkeypatch.setenv("PYPI_PASS", "password")
-    project.project_config[
-        "pypi.url"
-    ] = "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
+    project.project_config["pypi.url"] = "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
     # expanded in sources
     assert project.sources[0]["url"] == "https://user:password@test.pypi.org/simple"
     # not expanded in project config
-    assert (
-        project.project_config["pypi.url"]
-        == "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
-    )
+    assert project.project_config["pypi.url"] == "https://${PYPI_USER}:${PYPI_PASS}@test.pypi.org/simple"
 
     project.pyproject.settings["source"] = [
         {
@@ -86,10 +77,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
     # expanded in sources
     assert project.sources[0]["url"] == "https://user:password@example.org/simple"
     # not expanded in tool settings
-    assert (
-        project.pyproject.settings["source"][0]["url"]
-        == "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple"
-    )
+    assert project.pyproject.settings["source"][0]["url"] == "https://${PYPI_USER}:${PYPI_PASS}@example.org/simple"
 
     project.pyproject.settings["source"] = [
         {
@@ -101,10 +89,7 @@ def test_project_sources_env_var_expansion(project, monkeypatch):
     # expanded in sources
     assert project.sources[1]["url"] == "https://user:password@example2.org/simple"
     # not expanded in tool settings
-    assert (
-        project.pyproject.settings["source"][0]["url"]
-        == "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple"
-    )
+    assert project.pyproject.settings["source"][0]["url"] == "https://${PYPI_USER}:${PYPI_PASS}@example2.org/simple"
 
 
 def test_global_project(tmp_path, core):
@@ -114,9 +99,7 @@ def test_global_project(tmp_path, core):
 
 def test_auto_global_project(tmp_path, core):
     tmp_path.joinpath(".pdm-home").mkdir()
-    (tmp_path / ".pdm-home/config.toml").write_text(
-        "[global_project]\nfallback = true\n"
-    )
+    (tmp_path / ".pdm-home/config.toml").write_text("[global_project]\nfallback = true\n")
     with cd(tmp_path):
         project = core.create_project(global_config=tmp_path / ".pdm-home/config.toml")
     assert project.is_global
@@ -131,10 +114,7 @@ def test_project_use_venv(project):
 
     project.project_config["python.use_venv"] = True
     env = project.environment
-    assert (
-        env.interpreter.executable
-        == project.root / "venv" / scripts / f"python{suffix}"
-    )
+    assert env.interpreter.executable == project.root / "venv" / scripts / f"python{suffix}"
     assert env.is_global
 
 
@@ -155,9 +135,7 @@ def test_project_auto_detect_venv(project):
 
     project.project_config["python.use_venv"] = True
     project._python = None
-    project.project_config["python.path"] = (
-        project.root / "test_venv" / scripts / f"python{suffix}"
-    ).as_posix()
+    project.project_config["python.path"] = (project.root / "test_venv" / scripts / f"python{suffix}").as_posix()
 
     assert project.environment.is_global
 
@@ -171,9 +149,7 @@ def test_ignore_saved_python(project, monkeypatch):
     venv.create(project.root / "venv")
     monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
     assert project.python.executable != project.project_config["python.path"]
-    assert (
-        project.python.executable == project.root / "venv" / scripts / f"python{suffix}"
-    )
+    assert project.python.executable == project.root / "venv" / scripts / f"python{suffix}"
 
 
 def test_select_dependencies(project):
@@ -206,9 +182,7 @@ def test_global_python_path_config(project_no_init, tmp_path):
     tmp_path.joinpath(".pdm.toml").unlink()
     project_no_init.global_config["python.path"] = sys.executable
     # Recreate the project to clean cached properties
-    p = project_no_init.core.create_project(
-        project_no_init.root, global_config=tmp_path / ".pdm-home/config.toml"
-    )
+    p = project_no_init.core.create_project(project_no_init.root, global_config=tmp_path / ".pdm-home/config.toml")
     assert p.python.executable == Path(sys.executable)
     assert "python.path" not in p.project_config
 

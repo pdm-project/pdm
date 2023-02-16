@@ -41,9 +41,7 @@ class CachedPackage:
         """Add a new referrer"""
         path = os.path.normcase(os.path.expanduser(os.path.abspath(path)))
         referrers = self.referrers | {path}
-        (self.path / "referrers").write_text(
-            "\n".join(sorted(referrers)) + "\n", "utf8"
-        )
+        (self.path / "referrers").write_text("\n".join(sorted(referrers)) + "\n", "utf8")
         self._referrers = None
 
     def remove_referrer(self, path: str) -> None:
@@ -61,7 +59,5 @@ class CachedPackage:
         return pdm_scheme(str(self.path))
 
     def cleanup(self) -> None:
-        logger.info(
-            "Clean up cached package %s since it is not used by any project.", self.path
-        )
+        logger.info("Clean up cached package %s since it is not used by any project.", self.path)
         shutil.rmtree(self.path)

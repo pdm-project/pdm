@@ -70,9 +70,7 @@ def test_init_non_interactive(project_no_init, invoke, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(actions, "do_init")
-    do_use = mocker.patch.object(
-        actions, "do_use", return_value=PythonInfo.from_path(sys.executable)
-    )
+    do_use = mocker.patch.object(actions, "do_use", return_value=PythonInfo.from_path(sys.executable))
     result = invoke(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
@@ -104,10 +102,7 @@ def test_init_auto_create_venv(project_no_init, invoke, mocker):
     project_no_init.project_config["python.use_venv"] = True
     result = invoke(["init"], input="\n\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
-    assert (
-        project_no_init.python.executable.parent.parent
-        == project_no_init.root / ".venv"
-    )
+    assert project_no_init.python.executable.parent.parent == project_no_init.root / ".venv"
 
 
 def test_init_auto_create_venv_specify_python(project_no_init, invoke, mocker):
@@ -119,10 +114,7 @@ def test_init_auto_create_venv_specify_python(project_no_init, invoke, mocker):
         obj=project_no_init,
     )
     assert result.exit_code == 0
-    assert (
-        project_no_init.python.executable.parent.parent
-        == project_no_init.root / ".venv"
-    )
+    assert project_no_init.python.executable.parent.parent == project_no_init.root / ".venv"
 
 
 def test_init_auto_create_venv_answer_no(project_no_init, invoke, mocker):
@@ -132,7 +124,4 @@ def test_init_auto_create_venv_answer_no(project_no_init, invoke, mocker):
     result = invoke(["init"], input="\nn\n\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     creator.assert_not_called()
-    assert (
-        project_no_init.python.executable.parent.parent
-        != project_no_init.root / ".venv"
-    )
+    assert project_no_init.python.executable.parent.parent != project_no_init.root / ".venv"

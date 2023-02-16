@@ -26,9 +26,7 @@ class BaseCommand:
         self.add_arguments(parser)
 
     @classmethod
-    def register_to(
-        cls, subparsers: _SubParsersAction, name: str | None = None, **kwargs: Any
-    ) -> None:
+    def register_to(cls, subparsers: _SubParsersAction, name: str | None = None, **kwargs: Any) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
         """

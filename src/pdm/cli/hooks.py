@@ -8,9 +8,7 @@ from blinker import Signal
 from pdm import signals
 from pdm.project.core import Project
 
-KNOWN_HOOKS = tuple(
-    name for name, obj in signals.__dict__.items() if isinstance(obj, Signal)
-)
+KNOWN_HOOKS = tuple(name for name, obj in signals.__dict__.items() if isinstance(obj, Signal))
 
 
 class HookManager:

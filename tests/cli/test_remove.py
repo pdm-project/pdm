@@ -70,10 +70,7 @@ def test_remove_package_exist_in_multi_groups(project, working_set):
     actions.do_add(project, packages=["requests"])
     actions.do_add(project, dev=True, packages=["urllib3"])
     actions.do_remove(project, dev=True, packages=["urllib3"])
-    assert all(
-        "urllib3" not in line
-        for line in project.pyproject.settings["dev-dependencies"]["dev"]
-    )
+    assert all("urllib3" not in line for line in project.pyproject.settings["dev-dependencies"]["dev"])
     assert "urllib3" in working_set
     assert "requests" in working_set
 

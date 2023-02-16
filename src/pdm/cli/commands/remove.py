@@ -22,9 +22,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Remove packages from dev dependencies",
         )
-        parser.add_argument(
-            "-G", "--group", help="Specify the target dependency group to remove from"
-        )
+        parser.add_argument("-G", "--group", help="Specify the target dependency group to remove from")
         parser.add_argument(
             "--no-sync",
             dest="sync",
@@ -32,9 +30,7 @@ class Command(BaseCommand):
             action="store_false",
             help="Only write pyproject.toml and do not uninstall packages",
         )
-        parser.add_argument(
-            "packages", nargs="+", help="Specify the packages to remove"
-        )
+        parser.add_argument("packages", nargs="+", help="Specify the packages to remove")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_remove(

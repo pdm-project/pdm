@@ -21,9 +21,10 @@ from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 
 if TYPE_CHECKING:
-    from pdm.project.core import Project
     from argparse import Namespace
+
     from pdm._types import RequirementDict, Source
+    from pdm.project.core import Project
 
 from pdm.utils import cd
 
@@ -45,17 +46,17 @@ VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")
 
 def _convert_specifier(version: str) -> str:
     parts = []
-    for op, version in VERSION_RE.findall(str(version)):
+    for op, ver in VERSION_RE.findall(str(version)):
         if op == "~":
             op += "="
         elif op == "^":
-            major, *vparts = version.split(".")
+            major, *vparts = ver.split(".")
             next_major = ".".join([str(int(major) + 1)] + ["0"] * len(vparts))
-            parts.append(f">={version},<{next_major}")
+            parts.append(f">={ver},<{next_major}")
             continue
         elif not op:
             op = "=="
-        parts.append(f"{op}{version}")
+        parts.append(f"{op}{ver}")
     return ",".join(parts)
 
 
@@ -66,9 +67,7 @@ def _convert_python(python: str) -> PySpecSet:
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(
-    name: str, req_dict: RequirementDict | list[RequirementDict]
-) -> Iterable[str]:
+def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -> Iterable[str]:
     if isinstance(req_dict, list):
         for req in req_dict:
             yield from _convert_req(name, req)
@@ -82,18 +81,14 @@ def _convert_req(
             req_dict["version"] = _convert_specifier(str(req_dict["version"]))
         markers: list[Marker] = []
         if "markers" in req_dict:
-            markers.append(Marker(req_dict.pop("markers")))  # type: ignore
+            markers.append(Marker(req_dict.pop("markers")))  # type: ignore[arg-type]
         if "python" in req_dict:
-            markers.append(
-                Marker(_convert_python(str(req_dict.pop("python"))).as_marker_string())
-            )
+            markers.append(Marker(_convert_python(str(req_dict.pop("python"))).as_marker_string()))
         if markers:
-            req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace(
-                '"', "'"
-            )
+            req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace('"', "'")
         if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:
             req_dict["ref"] = req_dict.pop(
-                "rev", req_dict.pop("tag", req_dict.pop("branch", None))  # type: ignore
+                "rev", req_dict.pop("tag", req_dict.pop("branch", None))  # type: ignore[arg-type]
             )
         yield Requirement.from_req_dict(name, req_dict).as_line()
 
@@ -128,9 +123,7 @@ class PoetryMetaConverter(MetaConverter):
         return rv
 
     @convert_from("plugins", name="entry-points")
-    def entry_points(
-        self, value: dict[str, dict[str, str]]
-    ) -> dict[str, dict[str, str]]:
+    def entry_points(self, value: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
         return value
 
     @convert_from()
@@ -138,16 +131,12 @@ class PoetryMetaConverter(MetaConverter):
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
         for key, req_dict in value.items():
-            optional = getattr(req_dict, "items", None) and req_dict.pop(
-                "optional", False
-            )
+            optional = getattr(req_dict, "items", None) and req_dict.pop("optional", False)
             for req in _convert_req(key, req_dict):
                 if optional:
                     extra = next((k for k, v in extras.items() if key in v), None)
                     if extra:
-                        self._data.setdefault("optional-dependencies", {}).setdefault(
-                            extra, []
-                        ).append(req)
+                        self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
                 else:
                     rv.append(req)
         del source["dependencies"]
@@ -156,9 +145,7 @@ class PoetryMetaConverter(MetaConverter):
     @convert_from("dev-dependencies")
     def dev_dependencies(self, value: dict) -> None:
         self.settings["dev-dependencies"] = {
-            "dev": make_array(
-                [r for key, req in value.items() for r in _convert_req(key, req)], True
-            ),
+            "dev": make_array([r for key, req in value.items() for r in _convert_req(key, req)], True),
         }
         raise Unset()
 
@@ -187,9 +174,7 @@ class PoetryMetaConverter(MetaConverter):
             if "generate-setup-file" in value:
                 run_setuptools = cast(bool, value["generate-setup-file"])
             value = value["script"]
-        self.settings.setdefault("build", {}).update(
-            {"setup-script": value, "run-setuptools": run_setuptools}
-        )
+        self.settings.setdefault("build", {}).update({"setup-script": value, "run-setuptools": run_setuptools})
         raise Unset()
 
     @convert_from("source")
@@ -211,9 +196,7 @@ def convert(
     options: Namespace | None,
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
-        converter = PoetryMetaConverter(
-            tomllib.load(fp)["tool"]["poetry"], project.core.ui if project else None
-        )
+        converter = PoetryMetaConverter(tomllib.load(fp)["tool"]["poetry"], project.core.ui if project else None)
         return converter.convert()
 
 

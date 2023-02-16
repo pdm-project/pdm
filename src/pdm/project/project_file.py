@@ -24,9 +24,7 @@ class PyProject(TOMLBase):
                     metadata, settings = converter.convert(None, self._path, None)
                     data["project"] = metadata
                     if settings:
-                        data.setdefault("tool", {}).setdefault("pdm", {}).update(
-                            settings
-                        )
+                        data.setdefault("tool", {}).setdefault("pdm", {}).update(settings)
                     break
         return data
 

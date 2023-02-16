@@ -6,7 +6,7 @@ from typing import Any, Union, overload
 from pdm.compat import Literal
 from pdm.exceptions import InvalidPyVersion
 
-VersionBit = Union[int, Literal["*"]]
+VersionBit = Union[int, Literal["*"]]  # noqa: F722
 PRE_RELEASE_SEGMENT_RE = re.compile(
     r"(?P<digit>\d+)(?P<type>a|b|rc)(?P<n>\d*)",
     flags=re.IGNORECASE,
@@ -49,8 +49,7 @@ class Version:
                         break  # pre release version is only at the end
                     else:
                         raise InvalidPyVersion(
-                            f"{version_str}: postreleases are not supported "
-                            "for python version specifiers."
+                            f"{version_str}: postreleases are not supported for python version specifiers."
                         ) from None
             version = tuple(bits)
         self._version: tuple[VersionBit, ...] = version

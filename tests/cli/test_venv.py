@@ -31,9 +31,7 @@ def test_venv_create(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     assert os.path.exists(venv_path)
     assert "python.path" not in project.project_config
 
@@ -54,9 +52,7 @@ def test_venv_list(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
 
     result = invoke(["venv", "list"], obj=project)
     assert result.exit_code == 0, result.stderr
@@ -68,9 +64,7 @@ def test_venv_remove(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
 
     result = invoke(["venv", "remove", "non-exist"], obj=project)
@@ -100,9 +94,7 @@ def test_venv_activate(invoke, mocker, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
 
     mocker.patch("shellingham.detect_shell", return_value=("bash", None))
@@ -123,9 +115,7 @@ def test_venv_activate_custom_prompt(invoke, mocker, project):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    creator.assert_called_once_with(
-        None, [], False, False, project.project_config["venv.prompt"], False
-    )
+    creator.assert_called_once_with(None, [], False, False, project.project_config["venv.prompt"], False)
 
 
 def test_venv_activate_project_without_python(invoke, project):
@@ -176,9 +166,7 @@ def test_venv_purge(invoke, project):
 
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     result = invoke(["venv", "purge"], input="y", obj=project)
     assert result.exit_code == 0, result.stderr
     assert not os.path.exists(venv_path)
@@ -189,9 +177,7 @@ def test_venv_purge_force(invoke, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     result = invoke(["venv", "purge", "-f"], obj=project)
     assert result.exit_code == 0, result.stderr
     assert not os.path.exists(venv_path)
@@ -206,9 +192,7 @@ def test_venv_purge_interactive(invoke, user_choices, is_path_exists, project):
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    venv_path = re.match(
-        r"Virtualenv (.+) is created successfully", result.output
-    ).group(1)
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     result = invoke(["venv", "purge", "-i"], input=user_choices, obj=project)
     assert result.exit_code == 0, result.stderr
     assert os.path.exists(venv_path) == is_path_exists

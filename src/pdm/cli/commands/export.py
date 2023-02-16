@@ -68,20 +68,12 @@ class Command(BaseCommand):
                 style="warning",
                 err=True,
             )
-            candidates = resolve_candidates_from_lockfile(
-                project, requirements.values()
-            )
+            candidates = resolve_candidates_from_lockfile(project, requirements.values())
             # Remove candidates with [extras] because the bare candidates are already
             # included
-            packages = (
-                candidate
-                for candidate in candidates.values()
-                if not candidate.req.extras
-            )
+            packages = (candidate for candidate in candidates.values() if not candidate.req.extras)
 
-        content = FORMATS[options.format].export(
-            project, packages, options
-        )  # type: ignore
+        content = FORMATS[options.format].export(project, packages, options)
         if options.output:
             Path(options.output).write_text(content)
         else:

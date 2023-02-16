@@ -37,11 +37,7 @@ class Backend(abc.ABC):
             if saved_python:
                 return PythonInfo.from_path(saved_python)
         for py_version in self.project.find_interpreters(self.python):
-            if (
-                self.python
-                or py_version.valid
-                and self.project.python_requires.contains(py_version.version, True)
-            ):
+            if self.python or py_version.valid and self.project.python_requires.contains(py_version.version, True):
                 return py_version
 
         python = f" {self.python}" if self.python else ""
@@ -67,9 +63,7 @@ class Backend(abc.ABC):
         try:
             subprocess.check_call(
                 cmd,
-                stdout=subprocess.DEVNULL
-                if self.project.core.ui.verbosity < termui.Verbosity.DETAIL
-                else None,
+                stdout=subprocess.DEVNULL if self.project.core.ui.verbosity < termui.Verbosity.DETAIL else None,
             )
         except subprocess.CalledProcessError as e:  # pragma: no cover
             raise VirtualenvCreateError(e) from None
@@ -78,16 +72,12 @@ class Backend(abc.ABC):
         if not location.exists():
             return
         if not force:
-            raise VirtualenvCreateError(
-                f"The location {location} is not empty, add --force to overwrite it."
-            )
+            raise VirtualenvCreateError(f"The location {location} is not empty, add --force to overwrite it.")
         if location.is_file():
             self.project.core.ui.echo(f"Removing existing file {location}", err=True)
             location.unlink()
         else:
-            self.project.core.ui.echo(
-                f"Cleaning existing target directory {location}", err=True
-            )
+            self.project.core.ui.echo(f"Cleaning existing target directory {location}", err=True)
             shutil.rmtree(location)
 
     def get_location(self, name: str | None) -> Path:

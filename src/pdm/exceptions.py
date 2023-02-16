@@ -36,9 +36,7 @@ class CandidateNotFound(PdmException):
 
 class CandidateInfoNotFound(PdmException):
     def __init__(self, candidate: Candidate) -> None:
-        message = (
-            "No metadata information is available for " f"[success]{str(candidate)}[/]."
-        )
+        message = f"No metadata information is available for [success]{str(candidate)}[/]."
         self.candidate = candidate
         super().__init__(message)
 

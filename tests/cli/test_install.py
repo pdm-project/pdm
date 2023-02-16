@@ -198,9 +198,7 @@ def test_sync_with_pure_option(project, working_set, invoke):
     project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
     project.add_dependencies({"django": parse_requirement("django")}, "web", True)
     invoke(["install"], obj=project, strict=True)
-    assert all(
-        p in working_set for p in ("requests", "urllib3", "django", "pytz")
-    ), list(working_set)
+    assert all(p in working_set for p in ("requests", "urllib3", "django", "pytz")), list(working_set)
     actions.do_sync(project, dev=False, only_keep=True)
     assert "requests" in working_set
     assert "urllib3" in working_set
@@ -210,9 +208,7 @@ def test_sync_with_pure_option(project, working_set, invoke):
 def test_install_referencing_self_package(project, working_set, invoke):
     project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
     project.add_dependencies({"urllib3": parse_requirement("urllib3")}, to_group="web")
-    project.add_dependencies(
-        {"test-project": parse_requirement("test-project[tz,web]")}, to_group="all"
-    )
+    project.add_dependencies({"test-project": parse_requirement("test-project[tz,web]")}, to_group="all")
     invoke(["install", "-Gall"], obj=project, strict=True)
     assert "pytz" in working_set
     assert "urllib3" in working_set

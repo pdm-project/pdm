@@ -80,9 +80,7 @@ def do_lock(
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
     if not requirements:
-        requirements = [
-            r for deps in project.all_dependencies.values() for r in deps.values()
-        ]
+        requirements = [r for deps in project.all_dependencies.values() for r in deps.values()]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     ui = project.core.ui
     with ui.logging("lock"):
@@ -124,15 +122,11 @@ def do_lock(
     return mapping
 
 
-def resolve_candidates_from_lockfile(
-    project: Project, requirements: Iterable[Requirement]
-) -> dict[str, Candidate]:
+def resolve_candidates_from_lockfile(project: Project, requirements: Iterable[Requirement]) -> dict[str, Candidate]:
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     reqs = [
-        req
-        for req in requirements
-        if not req.marker or req.marker.evaluate(project.environment.marker_environment)
+        req for req in requirements if not req.marker or req.marker.evaluate(project.environment.marker_environment)
     ]
     with ui.logging("install-resolve"):
         with ui.open_spinner("Resolving packages from lockfile...") as spinner:
@@ -199,9 +193,7 @@ def do_sync(
             requirements.extend(project.get_dependencies(group).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
-        candidates = {
-            name: c for name, c in candidates.items() if name in tracked_names
-        }
+        candidates = {name: c for name, c in candidates.items() if name in tracked_names}
     handler = project.core.synchronizer_class(
         candidates,
         project.environment,
@@ -245,18 +237,10 @@ def do_add(
         group = "dev" if dev else "default"
     tracked_names: set[str] = set()
     requirements: dict[str, Requirement] = {}
-    if (
-        group == "default"
-        or not dev
-        and group not in project.pyproject.settings.get("dev-dependencies", {})
-    ):
+    if group == "default" or not dev and group not in project.pyproject.settings.get("dev-dependencies", {}):
         if editables:
-            raise PdmUsageError(
-                "Cannot add editables to the default or optional dependency group"
-            )
-    for r in [parse_requirement(line, True) for line in editables] + [
-        parse_requirement(line) for line in packages
-    ]:
+            raise PdmUsageError("Cannot add editables to the default or optional dependency group")
+    for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
         if project.name and normalize_name(project.name) == r.key and not r.extras:
             project.core.ui.echo(
                 f"Package [req]{project.name}[/] is the project itself.",
@@ -265,7 +249,7 @@ def do_add(
             )
             continue
         if r.is_file_or_url:
-            r.relocate(project.backend)  # type: ignore
+            r.relocate(project.backend)  # type: ignore[attr-defined]
         key = r.identify()
         r.prerelease = prerelease
         tracked_names.add(key)
@@ -274,8 +258,7 @@ def do_add(
         return
     project.core.ui.echo(
         f"Adding packages to [primary]{group}[/] "
-        f"{'dev-' if dev else ''}dependencies: "
-        + ", ".join(f"[req]{r.as_line()}[/]" for r in requirements.values())
+        f"{'dev-' if dev else ''}dependencies: " + ", ".join(f"[req]{r.as_line()}[/]" for r in requirements.values())
     )
     all_dependencies = project.all_dependencies
     group_deps = all_dependencies.setdefault(group, {})
@@ -285,9 +268,7 @@ def do_add(
     group_deps.update(requirements)
     reqs = [r for deps in all_dependencies.values() for r in deps.values()]
     with hooks.skipping("post_lock"):
-        resolved = do_lock(
-            project, strategy, tracked_names, reqs, dry_run=dry_run, hooks=hooks
-        )
+        resolved = do_lock(project, strategy, tracked_names, reqs, dry_run=dry_run, hooks=hooks)
 
     # Update dependency specifiers and lockfile hash.
     deps_to_update = group_deps if unconstrained else requirements
@@ -340,10 +321,7 @@ def do_update(
     hooks = hooks or HookManager(project)
     check_project_file(project)
     if len(packages) > 0 and (top or len(groups) > 1 or not default):
-        raise PdmUsageError(
-            "packages argument can't be used together with multiple -G or "
-            "--no-default and --top."
-        )
+        raise PdmUsageError("packages argument can't be used together with multiple -G or --no-default and --top.")
     all_dependencies = project.all_dependencies
     updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
     install_dev = True if dev is None else dev
@@ -358,25 +336,18 @@ def do_update(
         dependencies = all_dependencies[group]
         for name in packages:
             matched_name = next(
-                (
-                    k
-                    for k in dependencies
-                    if normalize_name(strip_extras(k)[0]) == normalize_name(name)
-                ),
+                (k for k in dependencies if normalize_name(strip_extras(k)[0]) == normalize_name(name)),
                 None,
             )
             if not matched_name:
                 raise ProjectError(
-                    f"[req]{name}[/] does not exist in [primary]{group}[/] "
-                    f"{'dev-' if dev else ''}dependencies."
+                    f"[req]{name}[/] does not exist in [primary]{group}[/] {'dev-' if dev else ''}dependencies."
                 )
             dependencies[matched_name].prerelease = prerelease
             updated_deps[group][matched_name] = dependencies[matched_name]
         project.core.ui.echo(
             "Updating packages: {}.".format(
-                ", ".join(
-                    f"[req]{v}[/]" for v in chain.from_iterable(updated_deps.values())
-                )
+                ", ".join(f"[req]{v}[/]" for v in chain.from_iterable(updated_deps.values()))
             )
         )
     if unconstrained:
@@ -409,9 +380,7 @@ def do_update(
             clean=False,
             dry_run=dry_run,
             requirements=[r for deps in updated_deps.values() for r in deps.values()],
-            tracked_names=list(chain.from_iterable(updated_deps.values()))
-            if top
-            else None,
+            tracked_names=list(chain.from_iterable(updated_deps.values())) if top else None,
             no_editable=no_editable,
             no_self=no_self,
             hooks=hooks,
@@ -442,20 +411,14 @@ def do_remove(
     deps, _ = project.get_pyproject_dependencies(group, dev)
     project.core.ui.echo(
         f"Removing packages from [primary]{group}[/] "
-        f"{'dev-' if dev else ''}dependencies: "
-        + ", ".join(f"[req]{name}[/]" for name in packages)
+        f"{'dev-' if dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
     )
     with cd(project.root):
         for name in packages:
             req = parse_requirement(name)
-            matched_indexes = sorted(
-                (i for i, r in enumerate(deps) if req.matches(r)), reverse=True
-            )
+            matched_indexes = sorted((i for i, r in enumerate(deps) if req.matches(r)), reverse=True)
             if not matched_indexes:
-                raise ProjectError(
-                    f"[req]{name}[/] does not exist in "
-                    f"[primary]{group}[/] dependencies."
-                )
+                raise ProjectError(f"[req]{name}[/] does not exist in [primary]{group}[/] dependencies.")
             for i in matched_indexes:
                 del deps[i]
     cast(Array, deps).multiline(True)
@@ -506,16 +469,12 @@ def do_build(
     with project.core.ui.logging("build"):
         if sdist:
             project.core.ui.echo("Building sdist...")
-            loc = SdistBuilder(project.root, project.environment).build(
-                dest, config_settings
-            )
+            loc = SdistBuilder(project.root, project.environment).build(dest, config_settings)
             project.core.ui.echo(f"Built sdist at {loc}")
             artifacts.append(loc)
         if wheel:
             project.core.ui.echo("Building wheel...")
-            loc = WheelBuilder(project.root, project.environment).build(
-                dest, config_settings
-            )
+            loc = WheelBuilder(project.root, project.environment).build(dest, config_settings)
             project.core.ui.echo(f"Built wheel at {loc}")
             artifacts.append(loc)
     hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
@@ -548,13 +507,13 @@ def do_init(
     if build_backend is not None:
         data["build-system"] = build_backend.build_system()
     if python_requires and python_requires != "*":
-        data["project"]["requires-python"] = python_requires  # type: ignore
+        data["project"]["requires-python"] = python_requires
     if name and version:
         readme = next(project.root.glob("README*"), None)
         if readme is None:
             readme = project.root.joinpath("README.md")
             readme.write_text(f"# {name}\n\n{description}\n")
-        data["project"]["readme"] = readme.name  # type: ignore
+        data["project"]["readme"] = readme.name
     get_specifier(python_requires)
     project.pyproject._data.update(data)
     project.pyproject.write()
@@ -580,15 +539,12 @@ def do_use(
 
     def version_matcher(py_version: PythonInfo) -> bool:
         return py_version.valid and (
-            ignore_requires_python
-            or project.python_requires.contains(str(py_version.version), True)
+            ignore_requires_python or project.python_requires.contains(str(py_version.version), True)
         )
 
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)
-    use_cache: JSONFileCache[str, str] = JSONFileCache(
-        project.cache_dir / "use_cache.json"
-    )
+    use_cache: JSONFileCache[str, str] = JSONFileCache(project.cache_dir / "use_cache.json")
     selected_python: PythonInfo | None = None
     if python and not ignore_remembered:
         if python in use_cache:
@@ -612,27 +568,21 @@ def do_use(
         found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
         matching_interpreters = list(filter(version_matcher, found_interpreters))
         if not found_interpreters:
-            raise NoPythonVersion(
-                f"No Python interpreter matching [success]{python}[/] is found."
-            )
+            raise NoPythonVersion(f"No Python interpreter matching [success]{python}[/] is found.")
         if not matching_interpreters:
             project.core.ui.echo("Interpreters found but not matching:", err=True)
             for py in found_interpreters:
                 info = py.identifier if py.valid else "Invalid"
                 project.core.ui.echo(f"  - {py.path} ({info})", err=True)
             raise NoPythonVersion(
-                "No python is found meeting the requirement "
-                f"[success]python {str(project.python_requires)}[/]"
+                f"No python is found meeting the requirement [success]python {str(project.python_requires)}[/]"
             )
         if first or len(matching_interpreters) == 1:
             selected_python = matching_interpreters[0]
         else:
             project.core.ui.echo("Please enter the Python interpreter to use")
             for i, py_version in enumerate(matching_interpreters):
-                project.core.ui.echo(
-                    f"{i}. [success]{str(py_version.path)}[/] "
-                    f"({py_version.identifier})"
-                )
+                project.core.ui.echo(f"{i}. [success]{str(py_version.path)}[/] ({py_version.identifier})")
             selection = termui.ask(
                 "Please select",
                 default="0",
@@ -646,22 +596,12 @@ def do_use(
 
     if not save:
         return selected_python
-    old_python = (
-        PythonInfo.from_path(project.config["python.path"])
-        if "python.path" in project.config
-        else None
-    )
+    old_python = PythonInfo.from_path(project.config["python.path"]) if "python.path" in project.config else None
     project.core.ui.echo(
-        "Using Python interpreter: "
-        f"[success]{str(selected_python.path)}[/] "
-        f"({selected_python.identifier})"
+        f"Using Python interpreter: [success]{str(selected_python.path)}[/] ({selected_python.identifier})"
     )
     project.python = selected_python
-    if (
-        old_python
-        and old_python.executable != selected_python.executable
-        and not project.environment.is_global
-    ):
+    if old_python and old_python.executable != selected_python.executable and not project.environment.is_global:
         project.core.ui.echo("Updating executable scripts...", style="primary")
         project.environment.update_shebangs(selected_python.executable.as_posix())
     hooks.try_emit("post_use", python=selected_python)
@@ -687,8 +627,7 @@ def do_import(
                 break
         else:
             raise PdmUsageError(
-                "Can't derive the file format automatically, "
-                "please specify it via '-f/--format' option."
+                "Can't derive the file format automatically, please specify it via '-f/--format' option."
             )
     else:
         key = format
@@ -697,26 +636,20 @@ def do_import(
     project_data, settings = FORMATS[key].convert(project, filename, options)
     pyproject = project.pyproject._data
 
-    if "tool" not in pyproject or "pdm" not in pyproject["tool"]:  # type: ignore
+    if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
         pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
-    if "build" in pyproject["tool"]["pdm"] and isinstance(
-        pyproject["tool"]["pdm"]["build"], str
-    ):
+    if "build" in pyproject["tool"]["pdm"] and isinstance(pyproject["tool"]["pdm"]["build"], str):
         pyproject["tool"]["pdm"]["build"] = {
             "setup-script": pyproject["tool"]["pdm"]["build"],
             "run-setuptools": True,
         }
     if "project" not in pyproject:
-        pyproject.add("project", tomlkit.table())  # type: ignore
-        pyproject["project"].add(  # type: ignore
-            tomlkit.comment("PEP 621 project metadata")
-        )
-        pyproject["project"].add(  # type: ignore
-            tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/")
-        )
+        pyproject.add("project", tomlkit.table())
+        pyproject["project"].add(tomlkit.comment("PEP 621 project metadata"))
+        pyproject["project"].add(tomlkit.comment("See https://www.python.org/dev/peps/pep-0621/"))
 
-    merge_dictionary(pyproject["project"], project_data)  # type: ignore
-    merge_dictionary(pyproject["tool"]["pdm"], settings)  # type: ignore
+    merge_dictionary(pyproject["project"], project_data)
+    merge_dictionary(pyproject["tool"]["pdm"], settings)
     pyproject["build-system"] = {
         "requires": ["pdm-pep517>=1.0.0"],
         "build-backend": "pdm.pep517.api",
@@ -737,14 +670,10 @@ def ask_for_import(project: Project) -> None:
     importable_files = list(find_importable_files(project))
     if not importable_files:
         return
-    project.core.ui.echo(
-        "Found following files from other formats that you may import:", style="primary"
-    )
+    project.core.ui.echo("Found following files from other formats that you may import:", style="primary")
     for i, (key, filepath) in enumerate(importable_files):
         project.core.ui.echo(f"{i}. [success]{filepath.as_posix()}[/] ({key})")
-    project.core.ui.echo(
-        f"{len(importable_files)}. [warning]don't do anything, I will import later.[/]"
-    )
+    project.core.ui.echo(f"{len(importable_files)}. [warning]don't do anything, I will import later.[/]")
     choice = termui.ask(
         "Please select",
         prompt_type=int,
@@ -774,8 +703,7 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
                 err=True,
             )
         ui.echo(
-            "The environment variable has been saved, "
-            "please restart the session to take effect.",
+            "The environment variable has been saved, please restart the session to take effect.",
             style="success",
         )
         return
@@ -818,16 +746,11 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
             """
         ).strip()
     else:
-        raise PdmUsageError(
-            f"Unsupported shell: {shell}, please specify another shell "
-            "via `--pep582 <SHELL>`"
-        )
+        raise PdmUsageError(f"Unsupported shell: {shell}, please specify another shell via `--pep582 <SHELL>`")
     ui.echo(result)
 
 
-def get_latest_pdm_version_from_pypi(
-    project: Project, prereleases: bool = False
-) -> str | None:
+def get_latest_pdm_version_from_pypi(project: Project, prereleases: bool = False) -> str | None:
     """Get the latest version of PDM from PyPI."""
     environment = BareEnvironment(project)
     with environment.get_finder([project.default_source]) as finder:
@@ -843,10 +766,7 @@ def get_latest_version(project: Project) -> str | None:
     with contextlib.suppress(OSError):
         state = json.loads(cache_file.read_text())
     current_time = datetime.datetime.utcnow().timestamp()
-    if (
-        state.get("last-check")
-        and current_time - state["last-check"] < 60 * 60 * 24 * 7
-    ):
+    if state.get("last-check") and current_time - state["last-check"] < 60 * 60 * 24 * 7:
         return cast(str, state["latest-version"])
     try:
         latest_version = get_latest_pdm_version_from_pypi(project)
@@ -867,9 +787,7 @@ def check_update(project: Project) -> None:
 
     this_version = project.core.version
     latest_version = get_latest_version(project)
-    if latest_version is None or parse_version(this_version) >= parse_version(
-        latest_version
-    ):
+    if latest_version is None or parse_version(this_version) >= parse_version(latest_version):
         return
     install_command = "pdm self update"
     disable_command = "pdm config check_update false"

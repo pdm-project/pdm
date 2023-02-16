@@ -33,17 +33,10 @@ def get_paths(kind="default", vars=None):
     if kind == "user" and not running_under_virtualenv():
         scheme = _get_user_scheme()
         if scheme not in scheme_names:
-            raise ValueError(
-                "{} is not a valid scheme on the system, "
-                "or user site may be disabled.".format(scheme)
-            )
+            raise ValueError("{} is not a valid scheme on the system, or user site may be disabled.".format(scheme))
         return sysconfig.get_paths(scheme, vars=vars)
     else:
-        if (
-            sys.platform == "darwin"
-            and "osx_framework_library" in scheme_names
-            and kind == "prefix"
-        ):
+        if sys.platform == "darwin" and "osx_framework_library" in scheme_names and kind == "prefix":
             return sysconfig.get_paths("posix_prefix", vars=vars)
         return sysconfig.get_paths(vars=vars)
 

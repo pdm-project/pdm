@@ -22,9 +22,7 @@ def test_package_parse_metadata(filename):
     meta = package.metadata_dict
     assert meta["name"] == "demo"
     assert meta["version"] == "0.0.1"
-    assert all(
-        f"{hash_name}_digest" in meta for hash_name in ["md5", "sha256", "blake2_256"]
-    )
+    assert all(f"{hash_name}_digest" in meta for hash_name in ["md5", "sha256", "blake2_256"])
 
     if filename.endswith(".whl"):
         assert meta["pyversion"] == "py2.py3"
@@ -38,24 +36,20 @@ def test_parse_metadata_with_non_ascii_chars():
     fullpath = FIXTURES / "artifacts" / "caj2pdf-restructured-0.1.0a6.tar.gz"
     package = PackageFile.from_filename(str(fullpath), None)
     meta = package.metadata_dict
-    assert meta["summary"] == "caj2pdf 重新组织，方便打包与安装"
+    assert meta["summary"] == "caj2pdf 重新组织，方便打包与安装"  # noqa: RUF001
     assert meta["author_email"] == "张三 <san@zhang.me>"
     assert meta["description"].strip() == "# caj2pdf\n\n测试中文项目"
 
 
 def test_package_add_signature(tmp_path):
-    package = PackageFile.from_filename(
-        str(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"), None
-    )
+    package = PackageFile.from_filename(str(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"), None)
     tmp_path.joinpath("signature.asc").write_bytes(b"test gpg signature")
     package.add_gpg_signature(str(tmp_path / "signature.asc"), "signature.asc")
     assert package.gpg_signature == ("signature.asc", b"test gpg signature")
 
 
 def test_package_call_gpg_sign():
-    package = PackageFile.from_filename(
-        str(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"), None
-    )
+    package = PackageFile.from_filename(str(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"), None)
     try:
         package.sign(None)
     finally:
@@ -75,16 +69,10 @@ def test_repository_get_release_urls(project):
             "demo-0.0.1.zip",
         ]
     ]
-    repository = Repository(
-        project, "https://upload.pypi.org/legacy/", "abc", "123", None
-    )
-    assert repository.get_release_urls(package_files) == {
-        "https://pypi.org/project/demo/0.0.1/"
-    }
+    repository = Repository(project, "https://upload.pypi.org/legacy/", "abc", "123", None)
+    assert repository.get_release_urls(package_files) == {"https://pypi.org/project/demo/0.0.1/"}
 
-    repository = Repository(
-        project, "https://example.pypi.org/legacy/", "abc", "123", None
-    )
+    repository = Repository(project, "https://example.pypi.org/legacy/", "abc", "123", None)
     assert not repository.get_release_urls(package_files)
 
 
@@ -125,9 +113,7 @@ def test_publish_package_with_signature(project, uploaded, invoke):
 @pytest.mark.usefixtures("local_finder")
 def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
     project = fixture_project("demo-module")
-    result = invoke(
-        ["publish", "--username=abc", "--password=123"], obj=project, strict=True
-    ).output
+    result = invoke(["publish", "--username=abc", "--password=123"], obj=project, strict=True).output
 
     mock_pypi.assert_called()
     assert "Uploading demo_module-0.1.0-py3-none-any.whl" in result
@@ -138,9 +124,7 @@ def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
 def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
     repo = PublishCommand.get_repository(
         project,
-        Namespace(
-            repository=None, username="foo", password="bar", ca_certs="custom.pem"
-        ),
+        Namespace(repository=None, username="foo", password="bar", ca_certs="custom.pem"),
     )
     assert repo.url == "https://upload.pypi.org/legacy/"
     assert repo.session.auth == ("foo", "bar")
@@ -162,9 +146,7 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
 
         repo = PublishCommand.get_repository(
             project,
-            Namespace(
-                repository="pypi", username="foo", password=None, ca_certs="custom.pem"
-            ),
+            Namespace(repository="pypi", username="foo", password=None, ca_certs="custom.pem"),
         )
         assert repo.url == "https://upload.pypi.org/legacy/"
         assert repo.session.auth == ("foo", "secret")

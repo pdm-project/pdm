@@ -156,18 +156,13 @@ def test_hide_password_in_output_pypi(project, invoke):
 def test_config_get_repository(project, invoke):
     config = project.global_config["repository.pypi"]
     assert config == project.global_config.get_repository_config("pypi")
-    assert (
-        project.global_config["repository.pypi.url"]
-        == "https://upload.pypi.org/legacy/"
-    )
+    assert project.global_config["repository.pypi.url"] == "https://upload.pypi.org/legacy/"
 
     result = invoke(["config", "repository.pypi"], obj=project, strict=True)
     assert result.stdout.strip() == "url = https://upload.pypi.org/legacy/"
 
     assert (
-        project.global_config.get_repository_config(
-            "https://example.pypi.org/legacy/"
-        ).url
+        project.global_config.get_repository_config("https://example.pypi.org/legacy/").url
         == "https://example.pypi.org/legacy/"
     )
 
@@ -178,10 +173,7 @@ def test_config_get_repository(project, invoke):
 def test_config_set_repository(project):
     project.global_config["repository.pypi.url"] = "https://example.pypi.org/legacy/"
     project.global_config["repository.pypi.username"] = "foo"
-    assert (
-        project.global_config["repository.pypi.url"]
-        == "https://example.pypi.org/legacy/"
-    )
+    assert project.global_config["repository.pypi.url"] == "https://example.pypi.org/legacy/"
     assert project.global_config["repository.pypi.username"] == "foo"
     del project.global_config["repository.pypi.username"]
     assert project.global_config["repository.pypi.username"] is None

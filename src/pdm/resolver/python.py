@@ -12,7 +12,7 @@ from pdm.models.specifiers import PySpecSet
 
 class PythonCandidate(Candidate):
     def format(self) -> str:
-        return f"[req]{self.name}[/]" f"[warning]{str(self.req.specifier)}[/]"
+        return f"[req]{self.name}[/][warning]{str(self.req.specifier)}[/]"
 
 
 class PythonRequirement(NamedRequirement):

@@ -46,9 +46,7 @@ class SetuptoolsBackend(BuildBackend):
 
 class PDMBackend(BuildBackend):
     def expand_line(self, req: str) -> str:
-        return expand_env_vars(req).replace(
-            "file:///${PROJECT_ROOT}", path_to_url(self.root.as_posix())
-        )
+        return expand_env_vars(req).replace("file:///${PROJECT_ROOT}", path_to_url(self.root.as_posix()))
 
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
@@ -93,9 +91,7 @@ class EnvContext:
         if name in os.environ:
             return os.environ[name]
         if not sep:
-            raise ValueError(
-                f"Nonexistent environment variable must set a default: {name}"
-            )
+            raise ValueError(f"Nonexistent environment variable must set a default: {name}")
         return default
 
 

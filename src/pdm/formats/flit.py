@@ -65,9 +65,7 @@ def get_docstring_and_version_via_ast(
 
 
 class FlitMetaConverter(MetaConverter):
-    def warn_against_dynamic_version_or_docstring(
-        self, source: Path, version: str, description: str
-    ) -> None:
+    def warn_against_dynamic_version_or_docstring(self, source: Path, version: str, description: str) -> None:
         if not self._ui:
             return
         dynamic_fields = []
@@ -101,9 +99,7 @@ class FlitMetaConverter(MetaConverter):
         description_in_ast, version_in_ast = get_docstring_and_version_via_ast(source)
         self._data["version"] = version or version_in_ast or ""
         self._data["description"] = description or description_in_ast or ""
-        self.warn_against_dynamic_version_or_docstring(
-            source, self._data["version"], self._data["description"]
-        )
+        self.warn_against_dynamic_version_or_docstring(source, self._data["version"], self._data["description"])
         # author and maintainer
         if "author" in metadata:
             self._data["authors"] = _get_author(metadata)
@@ -129,9 +125,7 @@ class FlitMetaConverter(MetaConverter):
         return self._data["name"]
 
     @convert_from("entrypoints", name="entry-points")
-    def entry_points(
-        self, value: dict[str, dict[str, str]]
-    ) -> dict[str, dict[str, str]]:
+    def entry_points(self, value: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
         return value
 
     @convert_from("sdist")
@@ -142,13 +136,9 @@ class FlitMetaConverter(MetaConverter):
         raise Unset()
 
 
-def convert(
-    project: Project | None, filename: PathLike, options: Namespace | None
-) -> tuple[Mapping, Mapping]:
+def convert(project: Project | None, filename: PathLike, options: Namespace | None) -> tuple[Mapping, Mapping]:
     with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
-        converter = FlitMetaConverter(
-            tomllib.load(fp)["tool"]["flit"], project.core.ui if project else None
-        )
+        converter = FlitMetaConverter(tomllib.load(fp)["tool"]["flit"], project.core.ui if project else None)
         return converter.convert()
 
 

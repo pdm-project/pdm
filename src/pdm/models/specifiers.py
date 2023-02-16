@@ -84,13 +84,9 @@ class PySpecSet(SpecifierSet):
             if op == "!=":
                 excludes.add(version)
             elif op[0] == ">":
-                lower_bound = max(
-                    lower_bound, version if op == ">=" else version.bump()
-                )
+                lower_bound = max(lower_bound, version if op == ">=" else version.bump())
             elif op[0] == "<":
-                upper_bound = min(
-                    upper_bound, version.bump() if op == "<=" else version
-                )
+                upper_bound = min(upper_bound, version.bump() if op == "<=" else version)
             elif op == "~=":
                 new_lower = version.complete()
                 new_upper = version.bump(-2)
@@ -110,15 +106,12 @@ class PySpecSet(SpecifierSet):
         excludes: Iterable[Version],
     ) -> tuple[Version, Version, list[Version]]:
         sorted_excludes = sorted(excludes)
-        wildcard_excludes = {
-            version[:-1] for version in sorted_excludes if version.is_wildcard
-        }
+        wildcard_excludes = {version[:-1] for version in sorted_excludes if version.is_wildcard}
         # Remove versions that are already excluded by another wildcard exclude.
         sorted_excludes = [
             version
             for version in sorted_excludes
-            if version.is_wildcard
-            or not any(version.startswith(wv) for wv in wildcard_excludes)
+            if version.is_wildcard or not any(version.startswith(wv) for wv in wildcard_excludes)
         ]
 
         if lower == Version.MIN and upper == Version.MAX:
@@ -175,9 +168,7 @@ class PySpecSet(SpecifierSet):
 
         return lower, upper, sorted_excludes
 
-    def _rearrange(
-        self, lower_bound: Version, upper_bound: Version, excludes: Iterable[Version]
-    ) -> None:
+    def _rearrange(self, lower_bound: Version, upper_bound: Version, excludes: Iterable[Version]) -> None:
         """Rearrange the version bounds with the given inputs."""
         (
             self._lower_bound,
@@ -210,11 +201,7 @@ class PySpecSet(SpecifierSet):
         """Return True if the specifierset accepts all versions."""
         if self.is_impossible:
             return False
-        return (
-            self._lower_bound == Version.MIN
-            and self._upper_bound == Version.MAX
-            and not self._excludes
-        )
+        return self._lower_bound == Version.MIN and self._upper_bound == Version.MAX and not self._excludes
 
     def __bool__(self) -> bool:
         return not self.is_allow_all
@@ -280,15 +267,11 @@ class PySpecSet(SpecifierSet):
         lower = left._lower_bound
         upper = max(left._upper_bound, right._upper_bound)
         if right._lower_bound > left._upper_bound:  # two ranges has no overlap
-            excludes.update(
-                self._populate_version_range(left._upper_bound, right._lower_bound)
-            )
+            excludes.update(self._populate_version_range(left._upper_bound, right._lower_bound))
         rv._rearrange(lower, upper, excludes)
         return rv
 
-    def _populate_version_range(
-        self, lower: Version, upper: Version
-    ) -> Iterable[Version]:
+    def _populate_version_range(self, lower: Version, upper: Version) -> Iterable[Version]:
         """Expand the version range to a collection of versions to exclude,
         taking the released python versions into consideration.
         """
@@ -306,10 +289,7 @@ class PySpecSet(SpecifierSet):
                 if cur <= upper:  # It is still within the range
                     yield prev[:2].complete("*")  # Exclude X.Y.*
                     prev = (
-                        prev.bump(0)
-                        if cur.is_py2
-                        and cast(int, cur[1]) > self.PY_MAX_MINOR_VERSION[cur[:1]]
-                        else cur
+                        prev.bump(0) if cur.is_py2 and cast(int, cur[1]) > self.PY_MAX_MINOR_VERSION[cur[:1]] else cur
                     )  # If prev is 2.7, next is 3.0, otherwise next is X.Y+1.0
                     continue
                 while prev < upper:
@@ -323,12 +303,7 @@ class PySpecSet(SpecifierSet):
                 current_max = self.PY_MAX_MINOR_VERSION[prev[:2]]
                 for z in range(cast(int, prev[2]), current_max + 1):
                     yield prev[:2].complete(z)
-                prev = (
-                    prev.bump(0)
-                    if cur.is_py2
-                    and cast(int, cur[1]) > self.PY_MAX_MINOR_VERSION[cur[:1]]
-                    else cur
-                )
+                prev = prev.bump(0) if cur.is_py2 and cast(int, cur[1]) > self.PY_MAX_MINOR_VERSION[cur[:1]] else cur
             else:  # Produce each version from X.Y.Z to X.Y.W
                 while prev < upper:
                     yield prev
@@ -346,19 +321,10 @@ class PySpecSet(SpecifierSet):
             # XXX: narrow down the upper bound to ``MAX_MAJOR_VERSION``
             # So that `>=3.6,<4.0` is considered a superset of `>=3.7`, see issues/66
             other._upper_bound = self.MAX_MAJOR_VERSION
-        lower, upper, excludes = self._merge_bounds_and_excludes(
-            other._lower_bound, other._upper_bound, self._excludes
-        )
-        if (
-            self._lower_bound > other._lower_bound
-            or self._upper_bound < other._upper_bound
-        ):
+        lower, upper, excludes = self._merge_bounds_and_excludes(other._lower_bound, other._upper_bound, self._excludes)
+        if self._lower_bound > other._lower_bound or self._upper_bound < other._upper_bound:
             return False
-        return (
-            lower <= other._lower_bound
-            and upper >= other._upper_bound
-            and set(excludes) <= set(other._excludes)
-        )
+        return lower <= other._lower_bound and upper >= other._upper_bound and set(excludes) <= set(other._excludes)
 
     @lru_cache()
     def is_subset(self, other: str | SpecifierSet) -> bool:
@@ -370,19 +336,10 @@ class PySpecSet(SpecifierSet):
             other._upper_bound = Version.MAX
         if other.is_allow_all:
             return True
-        lower, upper, excludes = self._merge_bounds_and_excludes(
-            self._lower_bound, self._upper_bound, other._excludes
-        )
-        if (
-            self._lower_bound < other._lower_bound
-            or self._upper_bound > other._upper_bound
-        ):
+        lower, upper, excludes = self._merge_bounds_and_excludes(self._lower_bound, self._upper_bound, other._excludes)
+        if self._lower_bound < other._lower_bound or self._upper_bound > other._upper_bound:
             return False
-        return (
-            lower <= self._lower_bound
-            and upper >= self._upper_bound
-            and set(self._excludes) >= set(excludes)
-        )
+        return lower <= self._lower_bound and upper >= self._upper_bound and set(self._excludes) >= set(excludes)
 
     def as_marker_string(self) -> str:
         if self.is_allow_all:
@@ -407,15 +364,9 @@ class PySpecSet(SpecifierSet):
             else:
                 result.append(f"{key}{op}{version!r}")
         if excludes:
-            result.append(
-                "python_version not in {!r}".format(", ".join(sorted(excludes)))
-            )
+            result.append("python_version not in {!r}".format(", ".join(sorted(excludes))))
         if full_excludes:
-            result.append(
-                "python_full_version not in {!r}".format(
-                    ", ".join(sorted(full_excludes))
-                )
-            )
+            result.append("python_full_version not in {!r}".format(", ".join(sorted(full_excludes))))
         return " and ".join(result)
 
     def supports_py2(self) -> bool:

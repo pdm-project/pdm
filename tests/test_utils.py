@@ -55,10 +55,7 @@ def compare_python_paths(path1, path2):
 
 @pytest.mark.path
 def test_find_python_in_path(tmp_path):
-    assert (
-        utils.find_python_in_path(sys.executable)
-        == pathlib.Path(sys.executable).absolute()
-    )
+    assert utils.find_python_in_path(sys.executable) == pathlib.Path(sys.executable).absolute()
 
     posix_path_to_executable = pathlib.Path(sys.executable)
     assert compare_python_paths(
@@ -94,9 +91,7 @@ def setup_dependencies(project):
             "optional-dependencies": {"web": ["flask"], "auth": ["passlib"]},
         }
     )
-    project.pyproject.settings.update(
-        {"dev-dependencies": {"test": ["pytest"], "doc": ["mkdocs"]}}
-    )
+    project.pyproject.settings.update({"dev-dependencies": {"test": ["pytest"], "doc": ["mkdocs"]}})
     project.pyproject.write()
 
 

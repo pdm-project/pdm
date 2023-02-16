@@ -137,7 +137,7 @@ class BaseRemovePaths(abc.ABC):
         """Create an instance from the distribution"""
         scheme = environment.get_paths()
         instance = cls(dist, environment)
-        meta_location = os.path.normcase(dist._path.absolute())  # type: ignore
+        meta_location = os.path.normcase(dist._path.absolute())  # type: ignore[attr-defined]
         dist_location = os.path.dirname(meta_location)
         if is_egg_link(dist):  # pragma: no cover
             egg_link_path = cast("Path | None", getattr(dist, "link_file", None))
@@ -147,9 +147,7 @@ class BaseRemovePaths(abc.ABC):
                     dist.metadata["Name"],
                 )
             else:
-                link_pointer = os.path.normcase(
-                    egg_link_path.open("rb").readline().decode().strip()
-                )
+                link_pointer = os.path.normcase(egg_link_path.open("rb").readline().decode().strip())
                 if link_pointer != dist_location:
                     raise UninstallError(
                         f"The link pointer in {egg_link_path} doesn't match "
@@ -207,9 +205,7 @@ class StashedRemovePaths(BaseRemovePaths):
 
     def __init__(self, dist: Distribution, environment: Environment) -> None:
         super().__init__(dist, environment)
-        self._pth_file = os.path.join(
-            self.environment.get_paths()["purelib"], self.PTH_REGISTRY
-        )
+        self._pth_file = os.path.join(self.environment.get_paths()["purelib"], self.PTH_REGISTRY)
         self._saved_pth: bytes | None = None
         self._stashed: list[tuple[str, str]] = []
         self._tempdirs: dict[str, TemporaryDirectory] = {}
@@ -238,18 +234,14 @@ class StashedRemovePaths(BaseRemovePaths):
             if not os.path.exists(old_path):
                 continue
             is_dir = os.path.isdir(old_path) and not os.path.islink(old_path)
-            termui.logger.debug(
-                "Removing %s %s", "directory" if is_dir else "file", old_path
-            )
+            termui.logger.debug("Removing %s %s", "directory" if is_dir else "file", old_path)
             if old_path.endswith(".pyc"):
                 # Don't stash cache files, remove them directly
                 os.unlink(old_path)
                 continue
             root = _get_file_root(old_path, prefix)
             if root is None:
-                termui.logger.debug(
-                    "File path %s is not under packages root %s, skip", old_path, prefix
-                )
+                termui.logger.debug("File path %s is not under packages root %s, skip", old_path, prefix)
                 continue
             if root not in self._tempdirs:
                 self._tempdirs[root] = TemporaryDirectory("-uninstall", "pdm-")

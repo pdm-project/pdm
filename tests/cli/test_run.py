@@ -29,9 +29,7 @@ def _args(project):
 
 
 def test_pep582_launcher_for_python_interpreter(project, local_finder, invoke):
-    project.root.joinpath("main.py").write_text(
-        "import first;print(first.first([0, False, 1, 2]))\n"
-    )
+    project.root.joinpath("main.py").write_text("import first;print(first.first([0, False, 1, 2]))\n")
     result = invoke(["add", "first"], obj=project)
     assert result.exit_code == 0, result.stderr
     env = os.environ.copy()
@@ -106,9 +104,7 @@ def test_run_cmd_script(project, invoke):
 
 
 def test_run_cmd_script_with_array(project, invoke):
-    project.pyproject.settings["scripts"] = {
-        "test_script": ["python", "-c", "import sys; sys.exit(22)"]
-    }
+    project.pyproject.settings["scripts"] = {"test_script": ["python", "-c", "import sys; sys.exit(22)"]}
     project.pyproject.write()
     result = invoke(["run", "test_script"], obj=project)
     assert result.exit_code == 22
@@ -172,9 +168,7 @@ def test_run_shell_script_with_args_placeholder(project, invoke, args, expected)
         pytest.param([], "default", id="with-default"),
     ),
 )
-def test_run_shell_script_with_args_placeholder_with_default(
-    project, invoke, args, expected
-):
+def test_run_shell_script_with_args_placeholder_with_default(project, invoke, args, expected):
     project.pyproject.settings["scripts"] = {
         "test_script": {
             "shell": "echo {args:default} > output.txt",
@@ -247,9 +241,7 @@ def test_run_script_with_extra_args(project, invoke, capfd):
         pytest.param(["python", "test_script.py", "{args}", "-x"], id="as-list"),
     ),
 )
-def test_run_script_with_args_placeholder(
-    project, invoke, capfd, script, args, expected
-):
+def test_run_script_with_args_placeholder(project, invoke, capfd, script, args, expected):
     (project.root / "test_script.py").write_text(
         textwrap.dedent(
             """
@@ -277,14 +269,10 @@ def test_run_script_with_args_placeholder(
     "script",
     (
         pytest.param("python test_script.py {args:--default --value} -x", id="as-str"),
-        pytest.param(
-            ["python", "test_script.py", "{args:--default --value}", "-x"], id="as-list"
-        ),
+        pytest.param(["python", "test_script.py", "{args:--default --value}", "-x"], id="as-list"),
     ),
 )
-def test_run_script_with_args_placeholder_with_default(
-    project, invoke, capfd, script, args, expected
-):
+def test_run_script_with_args_placeholder_with_default(project, invoke, capfd, script, args, expected):
     (project.root / "test_script.py").write_text(
         textwrap.dedent(
             """
@@ -332,9 +320,7 @@ def test_run_expand_env_vars(project, invoke, capfd, monkeypatch):
 
 def test_run_script_with_env_defined(project, invoke, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
-    project.pyproject.settings["scripts"] = {
-        "test_script": {"cmd": "python test_script.py", "env": {"FOO": "bar"}}
-    }
+    project.pyproject.settings["scripts"] = {"test_script": {"cmd": "python test_script.py", "env": {"FOO": "bar"}}}
     project.pyproject.write()
     capfd.readouterr()
     with cd(project.root):
@@ -343,9 +329,7 @@ def test_run_script_with_env_defined(project, invoke, capfd):
 
 
 def test_run_script_with_dotenv_file(project, invoke, capfd, monkeypatch):
-    (project.root / "test_script.py").write_text(
-        "import os; print(os.getenv('FOO'), os.getenv('BAR'))"
-    )
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'), os.getenv('BAR'))")
     project.pyproject.settings["scripts"] = {
         "test_override": {
             "cmd": "python test_script.py",
@@ -394,22 +378,11 @@ def test_run_show_list_of_scripts(project, invoke):
     project.pyproject.write()
     result = invoke(["run", "--list"], obj=project)
     result_lines = result.output.splitlines()[3:]
-    assert (
-        result_lines[0][1:-1].strip() == "test_cmd       │ cmd       │ flask db upgrade"
-    )
+    assert result_lines[0][1:-1].strip() == "test_cmd       │ cmd       │ flask db upgrade"
     sep = termui.Emoji.ARROW_SEPARATOR
-    assert (
-        result_lines[1][1:-1].strip()
-        == f"test_composite │ composite │ test_cmd {sep} test_script {sep} test_shell"
-    )
-    assert (
-        result_lines[2][1:-1].strip()
-        == f"test_multi     │ cmd       │ I am a multilines{termui.Emoji.ELLIPSIS}"
-    )
-    assert (
-        result_lines[3][1:-1].strip()
-        == "test_script    │ call      │ call a python function"
-    )
+    assert result_lines[1][1:-1].strip() == f"test_composite │ composite │ test_cmd {sep} test_script {sep} test_shell"
+    assert result_lines[2][1:-1].strip() == f"test_multi     │ cmd       │ I am a multilines{termui.Emoji.ELLIPSIS}"
+    assert result_lines[3][1:-1].strip() == "test_script    │ call      │ call a python function"
     assert result_lines[4][1:-1].strip() == "test_shell     │ shell     │ shell command"
 
 
@@ -420,9 +393,7 @@ def test_run_with_another_project_root(project, invoke, capfd, explicit_python):
     project.pyproject.write()
     invoke(["add", "first"], obj=project)
     with TemporaryDirectory(prefix="pytest-run-") as tmp_dir:
-        Path(tmp_dir).joinpath("main.py").write_text(
-            "import first;print(first.first([0, False, 1, 2]))\n"
-        )
+        Path(tmp_dir).joinpath("main.py").write_text("import first;print(first.first([0, False, 1, 2]))\n")
         capfd.readouterr()
         with cd(tmp_dir):
             args = ["run", "-p", str(project.root), "main.py"]
@@ -441,9 +412,7 @@ def test_import_another_sitecustomize(project, invoke, capfd):
     project.root.joinpath("foo.py").write_text("import os;print(os.getenv('FOO'))")
     # ensure there have at least one sitecustomize can be imported
     # there may have more than one sitecustomize.py in sys.path
-    project.root.joinpath("sitecustomize.py").write_text(
-        "import os;os.environ['FOO'] = 'foo'"
-    )
+    project.root.joinpath("sitecustomize.py").write_text("import os;os.environ['FOO'] = 'foo'")
     env = os.environ.copy()
     paths = env.get("PYTHONPATH")
     this_path = str(project.root)
@@ -612,9 +581,7 @@ def test_composite_can_pass_parameters(project, invoke, capfd, _args):
         pytest.param([], "", id="without-args"),
     ),
 )
-def test_composite_only_pass_parameters_to_subtasks_with_args(
-    project, invoke, capfd, _args, args, expected
-):
+def test_composite_only_pass_parameters_to_subtasks_with_args(project, invoke, capfd, _args, args, expected):
     project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second {args} key=value"]},
         "first": "python args.py First",

@@ -25,9 +25,7 @@ class _Format(Protocol):
     ) -> tuple[Mapping, Mapping]:
         ...
 
-    def export(
-        self, project: Project, candidates: ExportItems, options: Namespace | None
-    ) -> str:
+    def export(self, project: Project, candidates: ExportItems, options: Namespace | None) -> str:
         ...
 
 

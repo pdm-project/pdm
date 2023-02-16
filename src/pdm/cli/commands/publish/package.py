@@ -34,9 +34,7 @@ wheel_file_re = re.compile(
 
 
 def parse_metadata(fp: IO[bytes]) -> email.message.Message:
-    return email.message_from_file(
-        io.TextIOWrapper(fp, encoding="utf-8", errors="surrogateescape")
-    )
+    return email.message_from_file(io.TextIOWrapper(fp, encoding="utf-8", errors="surrogateescape"))
 
 
 @dataclass
@@ -164,7 +162,7 @@ class PackageFile:
                 "'gpg' or 'gpg2' executables not available.\n"
                 "Try installing one of these or specifying an executable "
                 "with the --sign-with flag."
-            )
+            ) from None
 
     @property
     def metadata_dict(self) -> dict[str, Any]:

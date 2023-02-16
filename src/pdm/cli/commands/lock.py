@@ -12,11 +12,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Resolve and lock dependencies"""
 
-    arguments = BaseCommand.arguments + [
-        lockfile_option,
-        no_isolation_option,
-        skip_option,
-    ]
+    arguments = [*BaseCommand.arguments, lockfile_option, no_isolation_option, skip_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -43,8 +39,7 @@ class Command(BaseCommand):
                 sys.exit(1)
             else:
                 project.core.ui.echo(
-                    f"[success]{termui.Emoji.SUCC}[/] Lockfile is "
-                    "[success]up to date[/].",
+                    f"[success]{termui.Emoji.SUCC}[/] Lockfile is [success]up to date[/].",
                     err=True,
                     verbosity=termui.Verbosity.DETAIL,
                 )

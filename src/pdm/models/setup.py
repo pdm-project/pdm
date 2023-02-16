@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import ast
+import os
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field, fields
-import os
 from pathlib import Path
 from typing import Any, Iterable, no_type_check
 
@@ -99,9 +99,7 @@ class _SetupReader:
             version=cls._find_single_string(setup_call, body, "version") or "0.0.0",
             install_requires=cls._find_install_requires(setup_call, body),
             extras_require=cls._find_extras_require(setup_call, body),
-            python_requires=cls._find_single_string(
-                setup_call, body, "python_requires"
-            ),
+            python_requires=cls._find_single_string(setup_call, body, "python_requires"),
         )
 
     @staticmethod
@@ -155,9 +153,7 @@ class _SetupReader:
         )
 
     @classmethod
-    def _find_setup_call(
-        cls, elements: list[Any]
-    ) -> tuple[ast.Call | None, list[Any | None]]:
+    def _find_setup_call(cls, elements: list[Any]) -> tuple[ast.Call | None, list[Any | None]]:
         funcdefs = []
         for i, element in enumerate(elements):
             if isinstance(element, ast.If) and i == len(elements) - 1:
@@ -206,9 +202,7 @@ class _SetupReader:
 
     @no_type_check
     @classmethod
-    def _find_sub_setup_call(
-        cls, elements: list[Any]
-    ) -> tuple[ast.Call | None, list[Any | None]]:
+    def _find_sub_setup_call(cls, elements: list[Any]) -> tuple[ast.Call | None, list[Any | None]]:
         for element in elements:
             if not isinstance(element, (ast.FunctionDef, ast.If)):
                 continue
@@ -267,9 +261,7 @@ class _SetupReader:
 
     @no_type_check
     @classmethod
-    def _find_extras_require(
-        cls, call: ast.Call, body: Iterable[Any]
-    ) -> dict[str, list[str]]:
+    def _find_extras_require(cls, call: ast.Call, body: Iterable[Any]) -> dict[str, list[str]]:
         extras_require: dict[str, list[str]] = {}
         value = cls._find_in_call(call, "extras_require")
         if value is None:
@@ -320,9 +312,7 @@ class _SetupReader:
         return extras_require
 
     @classmethod
-    def _find_single_string(
-        cls, call: ast.Call, body: list[Any], name: str
-    ) -> str | None:
+    def _find_single_string(cls, call: ast.Call, body: list[Any], name: str) -> str | None:
         value = cls._find_in_call(call, name)
         if value is None:
             # Trying to find in kwargs
@@ -408,7 +398,7 @@ class SetupDistribution(Distribution):
         return Path()
 
     @property
-    def metadata(self) -> dict[str, Any]:  # type: ignore
+    def metadata(self) -> dict[str, Any]:  # type: ignore[override]
         return {
             "Name": self._data.name,
             "Version": self._data.version,
@@ -418,8 +408,8 @@ class SetupDistribution(Distribution):
 
     @property
     def requires(self) -> list[str] | None:
-        from pdm.models.requirements import parse_requirement
         from pdm.models.markers import Marker
+        from pdm.models.requirements import parse_requirement
 
         result = self._data.install_requires
         for extra, reqs in self._data.extras_require.items():

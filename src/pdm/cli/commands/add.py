@@ -21,7 +21,8 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Add package(s) to pyproject.toml and install them"""
 
-    arguments = BaseCommand.arguments + [
+    arguments = [
+        *BaseCommand.arguments,
         lockfile_option,
         save_strategy_group,
         update_strategy_group,
@@ -41,9 +42,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Add packages into dev dependencies",
         )
-        parser.add_argument(
-            "-G", "--group", help="Specify the target dependency group to add into"
-        )
+        parser.add_argument("-G", "--group", help="Specify the target dependency group to add into")
         parser.add_argument(
             "--no-sync",
             dest="sync",

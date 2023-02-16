@@ -32,9 +32,7 @@ from pdm.project import Project
 from pdm.project.config import Config, ConfigItem
 from pdm.utils import is_in_zipapp
 
-COMMANDS_MODULE_PATH: str = importlib.import_module(
-    "pdm.cli.commands"
-).__path__  # type: ignore
+COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
 
 class Core:
@@ -61,7 +59,7 @@ class Core:
             description=__doc__,
             formatter_class=PdmFormatter,
         )
-        self.parser.is_root = True  # type: ignore
+        self.parser.is_root = True  # type: ignore[attr-defined]
         self.parser.add_argument(
             "-V",
             "--version",
@@ -82,13 +80,11 @@ class Core:
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
-        self.subparsers = self.parser.add_subparsers(
-            parser_class=argparse.ArgumentParser
-        )
+        self.subparsers = self.parser.add_subparsers(parser_class=argparse.ArgumentParser)
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:
-                klass = module.Command  # type: ignore
+                klass = module.Command
             except AttributeError:
                 continue
             self.register_command(klass, klass.name or name)
@@ -96,21 +92,15 @@ class Core:
     def __call__(self, *args: Any, **kwargs: Any) -> None:
         return self.main(*args, **kwargs)
 
-    def ensure_project(
-        self, options: argparse.Namespace, obj: Project | None
-    ) -> Project:
+    def ensure_project(self, options: argparse.Namespace, obj: Project | None) -> Project:
         if obj is not None:
             project = obj
         else:
             global_project = bool(getattr(options, "global_project", None))
 
-            default_root = (
-                None
-                if global_project or getattr(options, "search_parent", True)
-                else "."
-            )
+            default_root = None if global_project or getattr(options, "search_parent", True) else "."
             project = self.create_project(
-                getattr(options, "project_path", None) or default_root,  # type: ignore
+                getattr(options, "project_path", None) or default_root,
                 is_global=global_project,
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
@@ -188,9 +178,9 @@ class Core:
                 etype, err, traceback = sys.exc_info()
                 should_show_tb = not isinstance(err, PdmUsageError)
                 if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
-                    raise cast(Exception, err).with_traceback(traceback)
+                    raise cast(Exception, err).with_traceback(traceback) from None
                 self.ui.echo(
-                    rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore
+                    rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
                     err=True,
                 )
                 if should_show_tb:
@@ -204,9 +194,7 @@ class Core:
                 if project.config["check_update"] and not is_in_zipapp():
                     check_update(project)
 
-    def register_command(
-        self, command: type[BaseCommand], name: str | None = None
-    ) -> None:
+    def register_command(self, command: type[BaseCommand], name: str | None = None) -> None:
         """Register a subcommand to the subparsers,
         with an optional name of the subcommand.
 
