@@ -222,6 +222,28 @@ Below is a sample code snippet showing how to make PDM work with [lsp-python-ms]
                (lsp))))  ; or lsp-deferred
 ```
 
+## Work with pyright and eglot in Emacs
+
+Using [pyright](https://github.com/microsoft/pyright) and [eglot](https://github.com/joaotavora/eglot) (which is included in Emacs 29), add the following to your config:
+
+```emacs-lisp
+(defun maybe-from-dir (cmd &optional dir)
+  (if dir
+      (format "cd %s && %s" dir cmd)
+    cmd))
+
+(defun get-packages-path (&optional dir)
+  (let* ((get-packages-cmd-str (maybe-from-dir "pdm info --packages" dir))
+         (get-packages-cmd (string-trim (shell-command-to-string get-packages-cmd-str))))
+    (concat get-packages-cmd "/lib")))
+
+(defun my/eglot-workspace-config (server)
+  (list :python.analysis
+        (list :extraPaths (vector (get-packages-path)))))
+        
+(setq-default eglot-workspace-configuration #'my/eglot-workspace-config)
+```
+
 ## Hooks for `pre-commit`
 
 [`pre-commit`](https://pre-commit.com/) is a powerful framework for managing git hooks in a centralized fashion. PDM already uses `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) for its internal QA checks. PDM exposes also several hooks that can be run locally or in CI pipelines.
