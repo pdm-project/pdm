@@ -182,7 +182,9 @@ CMD ["python", "-m", "project"]
 
 ## Integrate with other IDE or editors
 
-### Work with lsp-python-ms in Emacs
+### Emacs
+
+#### LSP-Mode + lsp-python-ms
 
 Below is a sample code snippet showing how to make PDM work with [lsp-python-ms](https://github.com/emacs-lsp/lsp-python-ms) in Emacs. Contributed by [@linw1995](https://github.com/pdm-project/pdm/discussions/372#discussion-3303501).
 
@@ -222,7 +224,7 @@ Below is a sample code snippet showing how to make PDM work with [lsp-python-ms]
                (lsp))))  ; or lsp-deferred
 ```
 
-## Work with pyright and eglot in Emacs
+#### eglot + pyright
 
 Using [pyright](https://github.com/microsoft/pyright) and [eglot](https://github.com/joaotavora/eglot) (which is included in Emacs 29), add the following to your config:
 
