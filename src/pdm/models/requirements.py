@@ -25,7 +25,7 @@ from pdm.exceptions import ExtrasWarning, RequirementError
 from pdm.models.backends import BuildBackend, get_relative_path
 from pdm.models.markers import Marker, get_marker, split_marker_extras
 from pdm.models.setup import Setup
-from pdm.models.specifiers import PySpecSet, get_specifier
+from pdm.models.specifiers import PySpecSet, fix_legacy_specifier, get_specifier
 from pdm.utils import (
     PACKAGING_22,
     add_ssh_scheme_to_git_uri,
@@ -38,8 +38,6 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from typing import Match
-
     from pdm._types import RequirementDict
 
 
@@ -443,31 +441,14 @@ def filter_requirements_with_extras(
     return result
 
 
-_legacy_specifier_re = re.compile(r"(==|!=|<=|>=|<|>)(\s*)([^,;\s)]*)")
-
-
 def parse_as_pkg_requirement(line: str) -> PackageRequirement:
     """Parse a requirement line as packaging.requirement.Requirement"""
-
-    def fix_wildcard(match: Match[str]) -> str:
-        operator, _, version = match.groups()
-        if ".*" not in version or operator in ("==", "!="):
-            return match.group(0)
-        version = version.replace(".*", ".0")
-        if operator in ("<", "<="):  # <4.* and <=4.* are equivalent to <4.0
-            operator = "<"
-        elif operator in (">", ">="):  # >4.* and >=4.* are equivalent to >=4.0
-            operator = ">="
-        return f"{operator}{version}"
-
     try:
         return PackageRequirement(line)
     except InvalidRequirement:
         if not PACKAGING_22:  # We can't do anything, reraise the error.
             raise
-        # Since packaging 22.0, legacy specifiers like '>=4.*' are no longer
-        # supported. We try to normalize them to the new format.
-        new_line = _legacy_specifier_re.sub(fix_wildcard, line)
+        new_line = fix_legacy_specifier(line)
         return PackageRequirement(new_line)
 
 

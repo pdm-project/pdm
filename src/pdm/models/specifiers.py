@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from operator import attrgetter
-from typing import Any, Iterable, cast
+from typing import Any, Iterable, Match, cast
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
@@ -25,6 +26,29 @@ def get_specifier(version_str: SpecifierSet | str) -> SpecifierSet:
     if not version_str or version_str == "*":
         return SpecifierSet()
     return SpecifierSet(version_str)
+
+
+_legacy_specifier_re = re.compile(r"(==|!=|<=|>=|<|>)(\s*)([^,;\s)]*)")
+
+
+@lru_cache()
+def fix_legacy_specifier(specifier: str) -> str:
+    """Since packaging 22.0, legacy specifiers like '>=4.*' are no longer
+    supported. We try to normalize them to the new format.
+    """
+
+    def fix_wildcard(match: Match[str]) -> str:
+        operator, _, version = match.groups()
+        if ".*" not in version or operator in ("==", "!="):
+            return match.group(0)
+        version = version.replace(".*", ".0")
+        if operator in ("<", "<="):  # <4.* and <=4.* are equivalent to <4.0
+            operator = "<"
+        elif operator in (">", ">="):  # >4.* and >=4.* are equivalent to >=4.0
+            operator = ">="
+        return f"{operator}{version}"
+
+    return _legacy_specifier_re.sub(fix_wildcard, specifier)
 
 
 def _normalize_op_specifier(op: str, version_str: str) -> tuple[str, Version]:
@@ -58,17 +82,17 @@ class PySpecSet(SpecifierSet):
     PY_MAX_MINOR_VERSION = _read_max_versions()
     MAX_MAJOR_VERSION = max(PY_MAX_MINOR_VERSION)[:1].bump()
 
-    def __init__(self, version_str: str = "", analyze: bool = True) -> None:
-        if version_str == "*":
-            version_str = ""
+    def __init__(self, specifiers: str = "", analyze: bool = True) -> None:
+        if specifiers == "*":
+            specifiers = ""
         try:
-            super().__init__(version_str)
+            super().__init__(fix_legacy_specifier(specifiers))
         except InvalidSpecifier as e:
             raise InvalidPyVersion(str(e)) from e
         self._lower_bound = Version.MIN
         self._upper_bound = Version.MAX
         self._excludes: list[Version] = []
-        if version_str and analyze:
+        if specifiers and analyze:
             self._analyze_specifiers()
 
     def _analyze_specifiers(self) -> None:
@@ -379,7 +403,7 @@ class ImpossiblePySpecSet(PySpecSet):
     """
 
     def __init__(self, version_str: str = "", analyze: bool = True) -> None:
-        super().__init__(version_str=version_str, analyze=False)
+        super().__init__(specifiers=version_str, analyze=False)
         # Make sure the spec set is impossible
         self._lower_bound = Version.MAX
         self._upper_bound = Version.MIN

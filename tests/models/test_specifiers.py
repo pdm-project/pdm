@@ -1,7 +1,6 @@
 import pytest
 
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import PACKAGING_22
 
 
 @pytest.mark.parametrize(
@@ -20,26 +19,10 @@ from pdm.utils import PACKAGING_22
         (">=3.6,<3.8,!=3.8.*", ">=3.6,<3.8"),
         (">=2.7,<3.2,!=3.0.*,!=3.1.*", ">=2.7,<3.0"),
         ("!=3.0.*,!=3.0.2", "!=3.0.*"),
-        pytest.param(
-            ">=3.4.*",
-            ">=3.4",
-            marks=pytest.mark.xfail(PACKAGING_22, reason="packaging 22.0 doesn't parse it"),
-        ),
-        pytest.param(
-            ">3.4.*",
-            ">=3.5",
-            marks=pytest.mark.xfail(PACKAGING_22, reason="packaging 22.0 doesn't parse it"),
-        ),
-        pytest.param(
-            "<=3.4.*",
-            "<3.4",
-            marks=pytest.mark.xfail(PACKAGING_22, reason="packaging 22.0 doesn't parse it"),
-        ),
-        pytest.param(
-            "<3.4.*",
-            "<3.4",
-            marks=pytest.mark.xfail(PACKAGING_22, reason="packaging 22.0 doesn't parse it"),
-        ),
+        (">=3.4.*", ">=3.4"),
+        (">3.4.*", ">=3.4"),
+        ("<=3.4.*", "<3.4"),
+        ("<3.4.*", "<3.4"),
         ("<3.10.0a6", "<3.10.0a6"),
         ("<3.10.2a3", "<3.10.2a3"),
     ],
@@ -108,12 +91,7 @@ def test_impossible_pyspec():
             ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*",
             ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*",
         ),
-        pytest.param(
-            # 11.* normalizes to 11.0
-            ">=3.11.*",
-            ">=3.11.0rc",
-            marks=pytest.mark.xfail(PACKAGING_22, reason="packaging 22.0 doesn't parse it"),
-        ),
+        (">=3.11.*", ">=3.11.0rc"),
     ],
 )
 def test_pyspec_is_subset_superset(left, right):
