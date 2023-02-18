@@ -248,14 +248,12 @@ class _SetupReader:
             return install_requires
 
         if isinstance(value, ast.List):
-            for el in value.elts:
-                install_requires.append(el.s)
+            install_requires.extend([el.s for el in value.elts if isinstance(el, ast.Str)])
         elif isinstance(value, ast.Name):
             variable = cls._find_variable_in_body(body, value.id)
 
             if variable is not None and isinstance(variable, ast.List):
-                for el in variable.elts:
-                    install_requires.append(el.s)
+                install_requires.extend([el.s for el in variable.elts if isinstance(el, ast.Str)])
 
         return install_requires
 
@@ -295,7 +293,7 @@ class _SetupReader:
                     val = cls._find_variable_in_body(body, val.id)
 
                 if isinstance(val, ast.List):
-                    extras_require[key.s] = [e.s for e in val.elts]
+                    extras_require[key.s] = [e.s for e in val.elts if isinstance(e, ast.Str)]
         elif isinstance(value, ast.Name):
             variable = cls._find_variable_in_body(body, value.id)
 
@@ -307,7 +305,7 @@ class _SetupReader:
                     val = cls._find_variable_in_body(body, val.id)
 
                 if isinstance(val, ast.List):
-                    extras_require[key.s] = [e.s for e in val.elts]
+                    extras_require[key.s] = [e.s for e in val.elts if isinstance(e, ast.Str)]
 
         return extras_require
 
