@@ -229,20 +229,15 @@ Below is a sample code snippet showing how to make PDM work with [lsp-python-ms]
 Using [pyright](https://github.com/microsoft/pyright) and [eglot](https://github.com/joaotavora/eglot) (which is included in Emacs 29), add the following to your config:
 
 ```emacs-lisp
-(defun maybe-from-dir (cmd &optional dir)
-  (if dir
-      (format "cd %s && %s" dir cmd)
-    cmd))
-
-(defun get-packages-path (&optional dir)
-  (let* ((get-packages-cmd-str (maybe-from-dir "pdm info --packages" dir))
-         (get-packages-cmd (string-trim (shell-command-to-string get-packages-cmd-str))))
-    (concat get-packages-cmd "/lib")))
+(defun get-pdm-packages-path ()
+  "For the current PDM project, find the path to the packages."
+  (let ((packages-path (string-trim (shell-command-to-string "pdm info --packages"))))
+    (concat packages-path "/lib")))
 
 (defun my/eglot-workspace-config (server)
-  (list :python.analysis
-        (list :extraPaths (vector (get-packages-path)))))
-        
+  "For the current PDM project, dynamically generate a python lsp config."
+  `(:python\.analysis (:extraPaths ,(vector (get-pdm-packages-path)))))
+
 (setq-default eglot-workspace-configuration #'my/eglot-workspace-config)
 ```
 
