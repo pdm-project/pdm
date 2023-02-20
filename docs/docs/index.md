@@ -109,6 +109,14 @@ You can either pass the options after the script or set the env var value.
     ```bash
     pip install --user pdm
     ```
+=== "asdf"
+
+    Assuming you have [asdf](https://asdf-vm.com/) installed.
+    ```
+    asdf plugin add pdm
+    asdf local pdm latest
+    asdf install pdm
+    ```
 
 === "inside project"
 
