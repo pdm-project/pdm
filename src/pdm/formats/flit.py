@@ -45,6 +45,8 @@ def get_docstring_and_version_via_ast(
     they are just left empty.
     """
     # read as bytes to enable custom encodings
+    if not target.exists():
+        return None, None
     node = ast.parse(target.read_bytes())
     for child in node.body:
         # Only use the version from the given module if it's a simple
