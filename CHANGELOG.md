@@ -1,3 +1,24 @@
+Release v2.4.6 (2023-02-20)
+---------------------------
+
+### Bug Fixes
+
+- Fix a resolution failure when the project has cascading relative path dependencies. [#1702](https://github.com/pdm-project/pdm/issues/1702)
+- Don't crash when trying to update the shebang in a binary script. [#1709](https://github.com/pdm-project/pdm/issues/1709)
+- Handle the legacy specifiers that is unable to parse with packaging>22.0. [#1719](https://github.com/pdm-project/pdm/issues/1719)
+- Fix the setup.py parser to ignore the expressions unable to parse as a string. This is safe for initializing a requirement. [#1720](https://github.com/pdm-project/pdm/issues/1720)
+- Fix a bug converting from flit metadata when the source file can't be found. [#1726](https://github.com/pdm-project/pdm/issues/1726)
+
+### Documentation
+
+- Add config example for Emacs using eglot + pyright [#1721](https://github.com/pdm-project/pdm/issues/1721)
+
+### Miscellany
+
+- Use `ruff` as the linter. [#1715](https://github.com/pdm-project/pdm/issues/1715)
+- Document installation via `asdf`. [#1725](https://github.com/pdm-project/pdm/issues/1725)
+
+
 Release v2.4.5 (2023-02-10)
 ---------------------------
 
