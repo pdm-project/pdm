@@ -288,6 +288,12 @@ def get_venv_like_prefix(interpreter: str | Path) -> Path | None:
     virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
     if virtual_env and is_path_relative_to(interpreter, virtual_env):
         return Path(virtual_env)
+
+    with contextlib.suppress(subprocess.CalledProcessError):
+        envs= json.loads(subprocess.check_output(["conda", "env", "list", "--json"]))["envs"]
+        for env in envs:
+            if is_path_relative_to(interpreter, env):
+                return Path(env)
     return None
 
 
