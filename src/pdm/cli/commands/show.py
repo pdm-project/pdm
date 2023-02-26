@@ -48,18 +48,18 @@ class Command(BaseCommand):
                 return
             latest_stable = next(filter(filter_stable, matches), None)
             metadata = latest.prepare(project.environment).metadata
+            project_info = ProjectInfo.from_distribution(metadata)
         else:
             if not project.name:
                 raise PdmUsageError("This project is not a package")
             package = normalize_name(project.name)
-            metadata = project.make_self_candidate().prepare(project.environment).metadata
+            project_info = ProjectInfo.from_metadata(project.pyproject.metadata)
             latest_stable = None
-        assert metadata
-        project_info = ProjectInfo(metadata)
+
         if any(getattr(options, key, None) for key in self.metadata_keys):
             for key in self.metadata_keys:
                 if getattr(options, key, None):
-                    project.core.ui.echo(project_info[key])
+                    project.core.ui.echo(getattr(project_info, key))
             return
 
         installed = project.environment.get_working_set().get(package)
