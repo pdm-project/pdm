@@ -25,7 +25,7 @@ def get_pypackages_path():
     if os.name == "nt" and sys.maxsize <= 2**32:
         version += "-32"
 
-    if getattr(sys, "argv", None):
+    if getattr(sys, "argv", None) and sys.argv[0]:
         script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         find_paths.insert(0, script_dir)
 
