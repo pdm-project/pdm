@@ -512,7 +512,7 @@ def do_init(
         readme = next(project.root.glob("README*"), None)
         if readme is None:
             readme = project.root.joinpath("README.md")
-            readme.write_text(f"# {name}\n\n{description}\n")
+            readme.write_text(f"# {name}\n\n{description}\n", encoding="utf-8")
         data["project"]["readme"] = readme.name
     get_specifier(python_requires)
     project.pyproject._data.update(data)
