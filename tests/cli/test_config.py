@@ -66,11 +66,11 @@ def test_config_env_var_shadowing(project, invoke, monkeypatch):
 
 
 def test_config_project_global_precedence(project, invoke):
-    invoke(["config", "python.path", "/path/to/foo"], obj=project)
-    invoke(["config", "-l", "python.path", "/path/to/bar"], obj=project)
+    invoke(["config", "python.use_pyenv", "true"], obj=project)
+    invoke(["config", "-l", "python.use_pyenv", "false"], obj=project)
 
-    result = invoke(["config", "python.path"], obj=project)
-    assert result.output.strip() == "/path/to/bar"
+    result = invoke(["config", "python.use_pyenv"], obj=project)
+    assert result.output.strip() == "False"
 
 
 def test_specify_config_file(tmp_path, invoke, monkeypatch):

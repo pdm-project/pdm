@@ -614,7 +614,8 @@ def do_use(
 
     if not save:
         return selected_python
-    old_python = PythonInfo.from_path(project.config["python.path"]) if "python.path" in project.config else None
+    saved_python = project._saved_python
+    old_python = PythonInfo.from_path(saved_python) if saved_python else None
     project.core.ui.echo(
         f"Using Python interpreter: [success]{str(selected_python.path)}[/] ({selected_python.identifier})"
     )

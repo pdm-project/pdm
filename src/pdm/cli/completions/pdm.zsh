@@ -43,7 +43,7 @@ _pdm() {
     $arguments \
     {-c,--config}'[Specify another config file path(env var: PDM_CONFIG_FILE)]' \
     {-V,--version}'[Show the version and exit]' \
-    {-I,--ignore-python}'[Ignore the Python path saved in the .pdm.toml config]' \
+    {-I,--ignore-python}'[Ignore the Python path saved in .pdm-python]' \
     '--pep582:Print the command line to be eval by the shell:shell:(zsh bash fish tcsh csh)' \
     '*:: :->_subcmds' \
     && return 0

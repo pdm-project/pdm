@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import os
 import re
@@ -132,7 +133,7 @@ class Project:
     @cached_property
     def project_config(self) -> Config:
         """Read-and-writable configuration dict for project settings"""
-        return Config(self.root / ".pdm.toml")
+        return Config(self.root / "pdm.toml")
 
     @property
     def name(self) -> str | None:
@@ -152,7 +153,24 @@ class Project:
     @python.setter
     def python(self, value: PythonInfo) -> None:
         self._python = value
-        self.project_config["python.path"] = value.path
+        self._saved_python = value.path.as_posix()
+
+    @property
+    def _saved_python(self) -> str | None:
+        if os.getenv("PDM_PYTHON"):
+            return os.getenv("PDM_PYTHON")
+        with contextlib.suppress(FileNotFoundError):
+            return self.root.joinpath(".pdm-python").read_text("utf-8").strip()
+        return None
+
+    @_saved_python.setter
+    def _saved_python(self, value: str | None) -> None:
+        python_file = self.root.joinpath(".pdm-python")
+        if value is None:
+            with contextlib.suppress(FileNotFoundError):
+                python_file.unlink()
+            return
+        python_file.write_text(value, "utf-8")
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
@@ -166,12 +184,12 @@ class Project:
                 self.core.ui.echo(message, style="warning", err=True)
 
         config = self.config
-        if config.get("python.path") and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
-            saved_path = config["python.path"]
+        saved_path = self._saved_python
+        if saved_path and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
             python = PythonInfo.from_path(saved_path)
             if match_version(python):
                 return python
-            self.project_config.pop("python.path", None)
+            self._saved_python = None  # Clear the saved path if it doesn't match
 
         if config.get("python.use_venv") and not self.is_global:
             # Resolve virtual environments from env-vars
@@ -636,7 +654,7 @@ class Project:
 
         finder = Finder(resolve_symlinks=True)
         if self.config["python.use_venv"]:
-            finder._providers.insert(0, VenvProvider(self))
+            finder.add_provider(VenvProvider(self), 0)
         return finder
 
     # compatibility, shouldn't be used directly
