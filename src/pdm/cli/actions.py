@@ -12,7 +12,7 @@ import warnings
 from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
-from typing import Collection, Iterable, Mapping, Sequence, cast
+from typing import Collection, Iterable, Mapping, cast
 
 import tomlkit
 from resolvelib.reporters import BaseReporter
@@ -20,6 +20,7 @@ from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolv
 from tomlkit.items import Array
 
 from pdm import termui
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.utils import (
     check_project_file,
@@ -31,7 +32,6 @@ from pdm.cli.utils import (
     merge_dictionary,
     save_version_specifiers,
     set_env_in_reg,
-    translate_groups,
 )
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
@@ -55,6 +55,7 @@ def do_lock(
     requirements: list[Requirement] | None = None,
     dry_run: bool = False,
     refresh: bool = False,
+    groups: list[str] | None = None,
     hooks: HookManager | None = None,
 ) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
@@ -75,12 +76,14 @@ def do_lock(
             with project.core.ui.logging("lock"):
                 fetch_hashes(repo, mapping)
             lockfile = format_lockfile(project, mapping, dependencies)
-        project.write_lockfile(lockfile)
+        project.write_lockfile(lockfile, groups=groups)
         return mapping
     # TODO: multiple dependency definitions for the same package.
     provider = project.get_provider(strategy, tracked_names)
     if not requirements:
-        requirements = [r for deps in project.all_dependencies.values() for r in deps.values()]
+        requirements = [
+            r for g, deps in project.all_dependencies.items() if groups is None or g in groups for r in deps.values()
+        ]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     ui = project.core.ui
     with ui.logging("lock"):
@@ -116,7 +119,7 @@ def do_lock(
         else:
             data = format_lockfile(project, mapping, dependencies)
             ui.echo(f"{termui.Emoji.LOCK} Lock successful")
-            project.write_lockfile(data, write=not dry_run)
+            project.write_lockfile(data, write=not dry_run, groups=groups)
             hooks.try_emit("post_lock", resolution=mapping, dry_run=dry_run)
 
     return mapping
@@ -171,9 +174,7 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
 def do_sync(
     project: Project,
     *,
-    groups: Collection[str] = (),
-    dev: bool = True,
-    default: bool = True,
+    selection: GroupSelection,
     dry_run: bool = False,
     clean: bool = False,
     requirements: list[Requirement] | None = None,
@@ -188,9 +189,8 @@ def do_sync(
     """Synchronize project"""
     hooks = hooks or HookManager(project)
     if requirements is None:
-        groups = translate_groups(project, default, dev, groups or ())
         requirements = []
-        for group in groups:
+        for group in selection:
             requirements.extend(project.get_dependencies(group).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
@@ -201,7 +201,7 @@ def do_sync(
         clean=clean,
         dry_run=dry_run,
         no_editable=no_editable,
-        install_self=not no_self and "default" in groups and bool(project.name),
+        install_self=not no_self and "default" in selection and bool(project.name),
         use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
         only_keep=only_keep,
@@ -216,8 +216,7 @@ def do_sync(
 def do_add(
     project: Project,
     *,
-    dev: bool = False,
-    group: str | None = None,
+    selection: GroupSelection,
     sync: bool = True,
     save: str = "compatible",
     strategy: str = "reuse",
@@ -234,15 +233,16 @@ def do_add(
     """Add packages and install"""
     hooks = hooks or HookManager(project)
     check_project_file(project)
-    if not editables and not packages:
-        raise PdmUsageError("Must specify at least one package or editable package.")
     if editables and no_editable:
         raise PdmUsageError("Cannot use --no-editable with editable packages given.")
-    if not group:
-        group = "dev" if dev else "default"
+    group = selection.one()
     tracked_names: set[str] = set()
     requirements: dict[str, Requirement] = {}
-    if group == "default" or not dev and group not in project.pyproject.settings.get("dev-dependencies", {}):
+    lock_groups = project.lockfile.groups
+    if lock_groups and group not in lock_groups:
+        project.core.ui.echo(f"Adding group [success]{group}[/] to lockfile", err=True, style="info")
+        lock_groups.append(group)
+    if group == "default" or not selection.dev and group not in project.pyproject.settings.get("dev-dependencies", {}):
         if editables:
             raise PdmUsageError("Cannot add editables to the default or optional dependency group")
     for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
@@ -259,35 +259,44 @@ def do_add(
         r.prerelease = prerelease
         tracked_names.add(key)
         requirements[key] = r
-    if not requirements:
-        return
-    project.core.ui.echo(
-        f"Adding packages to [primary]{group}[/] "
-        f"{'dev-' if dev else ''}dependencies: " + ", ".join(f"[req]{r.as_line()}[/]" for r in requirements.values())
-    )
+    if requirements:
+        project.core.ui.echo(
+            f"Adding packages to [primary]{group}[/] "
+            f"{'dev-' if selection.dev else ''}dependencies: "
+            + ", ".join(f"[req]{r.as_line()}[/]" for r in requirements.values())
+        )
     all_dependencies = project.all_dependencies
     group_deps = all_dependencies.setdefault(group, {})
     if unconstrained:
+        if not requirements:
+            raise PdmUsageError("--unconstrained requires at least one package")
         for req in group_deps.values():
             req.specifier = get_specifier("")
     group_deps.update(requirements)
-    reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+    reqs = [r for g, deps in all_dependencies.items() if lock_groups is None or g in lock_groups for r in deps.values()]
     with hooks.skipping("post_lock"):
-        resolved = do_lock(project, strategy, tracked_names, reqs, dry_run=dry_run, hooks=hooks)
+        resolved = do_lock(
+            project,
+            strategy,
+            tracked_names,
+            reqs,
+            dry_run=True,
+            hooks=hooks,
+            groups=lock_groups,
+        )
 
     # Update dependency specifiers and lockfile hash.
     deps_to_update = group_deps if unconstrained else requirements
     save_version_specifiers({group: deps_to_update}, resolved, save)
     if not dry_run:
-        project.add_dependencies(deps_to_update, group, dev)
-        project.write_lockfile(project.lockfile._data, False)
+        project.add_dependencies(deps_to_update, group, selection.dev or False)
+        project.write_lockfile(project.lockfile._data, False, groups=lock_groups)
         hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
     _populate_requirement_names(group_deps)
     if sync:
         do_sync(
             project,
-            groups=(group,),
-            default=False,
+            selection=GroupSelection(project, groups=[group], default=False),
             no_editable=no_editable and tracked_names,
             no_self=no_self,
             requirements=list(group_deps.values()),
@@ -308,9 +317,7 @@ def _populate_requirement_names(req_mapping: dict[str, Requirement]) -> None:
 def do_update(
     project: Project,
     *,
-    dev: bool | None = None,
-    groups: Sequence[str] = (),
-    default: bool = True,
+    selection: GroupSelection,
     strategy: str = "reuse",
     save: str = "compatible",
     unconstrained: bool = False,
@@ -327,19 +334,20 @@ def do_update(
     """Update specified packages or all packages"""
     hooks = hooks or HookManager(project)
     check_project_file(project)
-    if len(packages) > 0 and (top or len(groups) > 1 or not default):
-        raise PdmUsageError("packages argument can't be used together with multiple -G or --no-default and --top.")
+    if len(packages) > 0 and (top or selection.groups or not selection.default):
+        raise PdmUsageError("packages argument can't be used together with multiple -G or " "--no-default or --top.")
     all_dependencies = project.all_dependencies
     updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
-    install_dev = True if dev is None else dev
+    locked_groups = project.lockfile.groups
     if not packages:
         if prerelease:
             raise PdmUsageError("--prerelease must be used with packages given")
-        groups = translate_groups(project, default, install_dev, groups or ())
-        for group in groups:
+        for group in selection:
             updated_deps[group] = all_dependencies[group]
     else:
-        group = groups[0] if groups else ("dev" if dev else "default")
+        group = selection.one()
+        if locked_groups and group not in locked_groups:
+            raise ProjectError(f"Requested group not in lockfile: {group}")
         dependencies = all_dependencies[group]
         for name in packages:
             matched_name = next(
@@ -348,7 +356,8 @@ def do_update(
             )
             if not matched_name:
                 raise ProjectError(
-                    f"[req]{name}[/] does not exist in [primary]{group}[/] {'dev-' if dev else ''}dependencies."
+                    f"[req]{name}[/] does not exist in [primary]{group}[/] "
+                    f"{'dev-' if selection.dev else ''}dependencies."
                 )
             dependencies[matched_name].prerelease = prerelease
             updated_deps[group][matched_name] = dependencies[matched_name]
@@ -367,23 +376,23 @@ def do_update(
         strategy,
         chain.from_iterable(updated_deps.values()),
         reqs,
-        dry_run=dry_run,
+        dry_run=True,
         hooks=hooks,
+        groups=locked_groups,
     )
     for deps in updated_deps.values():
         _populate_requirement_names(deps)
-    if unconstrained and not dry_run:
+    if unconstrained:
         # Need to update version constraints
         save_version_specifiers(updated_deps, resolved, save)
         for group, deps in updated_deps.items():
-            project.add_dependencies(deps, group, dev or False)
-        project.write_lockfile(project.lockfile._data, False)
+            project.add_dependencies(deps, group, selection.dev or False)
+    if not dry_run:
+        project.write_lockfile(project.lockfile._data, False, groups=locked_groups)
     if sync or dry_run:
         do_sync(
             project,
-            groups=groups,
-            dev=install_dev,
-            default=default,
+            selection=selection,
             clean=False,
             dry_run=dry_run,
             requirements=[r for deps in updated_deps.values() for r in deps.values()],
@@ -397,8 +406,7 @@ def do_update(
 
 def do_remove(
     project: Project,
-    dev: bool = False,
-    group: str | None = None,
+    selection: GroupSelection,
     sync: bool = True,
     packages: Collection[str] = (),
     no_editable: bool = False,
@@ -412,15 +420,13 @@ def do_remove(
     check_project_file(project)
     if not packages:
         raise PdmUsageError("Must specify at least one package to remove.")
-    if not group:
-        group = "dev" if dev else "default"
-    if group not in list(project.iter_groups()):
-        raise ProjectError(f"Non-exist group {group}")
+    group = selection.one()
+    lock_groups = project.lockfile.groups
 
-    deps, _ = project.get_pyproject_dependencies(group, dev)
+    deps, _ = project.get_pyproject_dependencies(group, selection.dev or False)
     project.core.ui.echo(
         f"Removing packages from [primary]{group}[/] "
-        f"{'dev-' if dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
+        f"{'dev-' if selection.dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
     )
     with cd(project.root):
         for name in packages:
@@ -434,12 +440,14 @@ def do_remove(
 
     if not dry_run:
         project.pyproject.write()
-    do_lock(project, "reuse", dry_run=dry_run, hooks=hooks)
+    if lock_groups and group not in lock_groups:
+        project.core.ui.echo(f"Group [success]{group}[/] isn't in lockfile, skipping lock.", style="warning", err=True)
+        return
+    do_lock(project, "reuse", dry_run=dry_run, hooks=hooks, groups=lock_groups)
     if sync:
         do_sync(
             project,
-            groups=(group,),
-            default=False,
+            selection=GroupSelection(project, default=False, groups=[group]),
             clean=True,
             no_editable=no_editable,
             no_self=no_self,

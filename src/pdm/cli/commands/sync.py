@@ -2,6 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     clean_group,
@@ -39,9 +40,7 @@ class Command(BaseCommand):
         actions.check_lockfile(project)
         actions.do_sync(
             project,
-            groups=options.groups,
-            dev=options.dev,
-            default=options.default,
+            selection=GroupSelection.from_options(project, options),
             dry_run=options.dry_run,
             clean=options.clean,
             no_editable=options.no_editable,

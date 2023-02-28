@@ -121,8 +121,8 @@ def is_editable(request):
 
 
 @pytest.fixture(params=[False, True])
-def is_dev(request):
-    return request.param
+def dev_option(request) -> Iterable[str]:
+    return ("--dev",) if request.param else ()
 
 
 @pytest.fixture

@@ -2,6 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     dry_run_option,
@@ -56,8 +57,7 @@ class Command(BaseCommand):
             raise PdmUsageError("`--no-editable` cannot be used with `-e/--editable`")
         actions.do_add(
             project,
-            dev=options.dev,
-            group=options.group,
+            selection=GroupSelection.from_options(project, options),
             sync=options.sync,
             save=options.save_strategy or project.config["strategy.save"],
             strategy=options.update_strategy or project.config["strategy.update"],

@@ -1,6 +1,8 @@
 import shutil
 from argparse import Namespace
 
+import pytest
+
 from pdm.formats import flit, pipfile, poetry, requirements, setup_py
 from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
@@ -23,6 +25,7 @@ def test_convert_pipfile(project):
     assert settings["source"][0]["url"] == "https://pypi.python.org/simple"
 
 
+@pytest.mark.parametrize("is_dev", [True, False])
 def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)

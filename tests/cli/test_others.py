@@ -1,7 +1,6 @@
 import pytest
 
 from pdm.cli import actions
-from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
 from tests import FIXTURES
@@ -17,14 +16,11 @@ def test_build_distributions(tmp_path, core):
     assert tarball.exists()
 
 
-def test_project_no_init_error(project_no_init):
-    for handler in (
-        actions.do_add,
-        actions.do_lock,
-        actions.do_update,
-    ):
-        with pytest.raises(PdmException, match="The pyproject.toml has not been initialized yet"):
-            handler(project_no_init)
+def test_project_no_init_error(project_no_init, pdm):
+    for command in ("add", "lock", "update"):
+        result = pdm([command], obj=project_no_init)
+        assert result.exit_code != 0
+        assert "The pyproject.toml has not been initialized yet" in result.stderr
 
 
 def test_help_option(invoke):

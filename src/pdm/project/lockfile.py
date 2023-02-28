@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 import tomlkit
 
@@ -26,6 +26,11 @@ class Lockfile(TOMLBase):
     @property
     def groups(self) -> list[str] | None:
         return self._data.get("metadata", {}).get("groups")
+
+    def compare_groups(self, groups: Iterable[str]) -> list[str]:
+        if not self.groups:
+            return []
+        return list(set(groups).difference(self.groups))
 
     def set_data(self, data: Mapping[str, Any]) -> None:
         self._data = tomlkit.document()
