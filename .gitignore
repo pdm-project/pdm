@@ -132,6 +132,7 @@ caches/
 .idea/
 __pypackages__
 .pdm.toml
+.pdm-python
 temp.py
 
 # Pyannotate generated stubs

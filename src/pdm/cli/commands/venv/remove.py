@@ -2,11 +2,11 @@ import argparse
 import shutil
 from pathlib import Path
 
-from pdm.project import Project
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.utils import iter_venvs
 from pdm.cli.options import verbose_option
+from pdm.project import Project
 
 
 class RemoveCommand(BaseCommand):
@@ -29,11 +29,9 @@ class RemoveCommand(BaseCommand):
             if ident == options.env:
                 if options.yes or termui.confirm(f"[warning]Will remove: [success]{venv}[/], continue?", default=True):
                     shutil.rmtree(venv)
-                    if (
-                        project.project_config.get("python.path")
-                        and Path(project.project_config["python.path"]).parent.parent == venv
-                    ):
-                        del project.project_config["python.path"]
+                    saved_python = project._saved_python
+                    if saved_python and Path(saved_python).parent.parent == venv:
+                        project._saved_python = None
                     project.core.ui.echo("Removed successfully!")
                 break
         else:

@@ -33,7 +33,7 @@ class Backend(abc.ABC):
     @cached_property
     def _resolved_interpreter(self) -> PythonInfo:
         if not self.python:
-            saved_python = self.project.project_config.get("python.path")
+            saved_python = self.project._saved_python
             if saved_python:
                 return PythonInfo.from_path(saved_python)
         for py_version in self.project.find_interpreters(self.python):

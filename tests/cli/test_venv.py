@@ -30,13 +30,13 @@ def fake_create(monkeypatch):
 
 @pytest.mark.usefixtures("fake_create")
 def test_venv_create(invoke, project):
-    project.project_config.pop("python.path", None)
+    project._saved_python = None
     project.project_config["venv.in_project"] = False
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     assert os.path.exists(venv_path)
-    assert "python.path" not in project.project_config
+    assert not project._saved_python
 
 
 @pytest.mark.usefixtures("fake_create")
@@ -135,7 +135,7 @@ def test_venv_activate_custom_prompt(invoke, mocker, project):
 
 
 def test_venv_activate_project_without_python(invoke, project):
-    project.project_config.pop("python.path", None)
+    project._saved_python = None
     result = invoke(["venv", "activate"], obj=project)
     assert result.exit_code != 0
     assert "The project doesn't have a saved python.path" in result.stderr
@@ -150,9 +150,8 @@ def test_venv_activate_error(invoke, project):
     assert result.exit_code != 0
     assert "No virtualenv with key" in result.stderr
 
-    project.project_config["python.path"] = os.path.abspath("fake/bin/python")
+    project._saved_python = os.path.abspath("fake/bin/python")
     result = invoke(["venv", "activate"], obj=project)
-    print(project.project_config.get("python.path"))
     assert result.exit_code != 0, result.output + result.stderr
     assert "Can't activate a non-venv Python" in result.stderr
 
@@ -161,7 +160,7 @@ def test_venv_activate_error(invoke, project):
 @pytest.mark.parametrize("keep_pypackages", [True, False])
 def test_venv_auto_create(invoke, mocker, project, keep_pypackages):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
-    del project.project_config["python.path"]
+    project._saved_python = None
     if keep_pypackages:
         project.root.joinpath("__pypackages__").mkdir(exist_ok=True)
     else:

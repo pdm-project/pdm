@@ -30,8 +30,8 @@ class ActivateCommand(BaseCommand):
                 )
                 raise SystemExit(1)
         else:
-            # Use what is saved in .pdm.toml
-            interpreter = project.project_config.get("python.path")
+            # Use what is saved in .pdm-python
+            interpreter = project._saved_python
             if not interpreter:
                 project.core.ui.echo(
                     "The project doesn't have a saved python.path. Run [success]pdm use[/] to pick one.",

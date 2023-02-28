@@ -325,7 +325,7 @@ ignore_python_option = Option(
     "-I",
     "--ignore-python",
     action="store_true",
-    help="Ignore the Python path saved in the .pdm.toml config",
+    help="Ignore the Python path saved in .pdm-python",
 )
 
 prerelease_option = Option(

@@ -395,7 +395,7 @@ def project_no_init(
     python_path = find_python_in_path(sys.base_prefix)
     if python_path is None:
         raise ValueError("Unable to find a Python path")
-    p.project_config["python.path"] = python_path.as_posix()
+    p._saved_python = python_path.as_posix()
     monkeypatch.delenv("VIRTUAL_ENV", raising=False)
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     monkeypatch.delenv("PEP582_PACKAGES", raising=False)
