@@ -256,7 +256,7 @@ There are a few similar commands to do this job with slight differences:
 
 You can specify another lockfile than the default [`pdm lock`](../reference/cli.md#exec-0--lock) by using the `-L/--lockfile <filepath>` option or the `PDM_LOCKFILE` environment variable.
 
-### Select a subset of dependencies with CLI options
+## Select a subset of dependency groups to be installed or locked
 
 Say we have a project with following dependencies:
 
@@ -287,6 +287,34 @@ dev2 = ["mkdocs"]
 **All** development dependencies are included as long as `--prod` is not passed and `-G` doesn't specify any dev groups.
 
 Besides, if you don't want the root project to be installed, add `--no-self` option, and `--no-editable` can be used when you want all packages to be installed in non-editable versions. With `--no-editable` turn on, you can safely archive the whole `__pypackages__` and copy it to the target environment for deployment.
+
+You may also use the pdm lock command with these options to lock only the specified groups, which will be recorded in the `[metadata]` table of the lock file. If no `--group/--prod/--dev/--no-default` option is specified, `pdm sync` and `pdm update` will operate using the groups in the lockfile. However, if any groups that are not included in the lockfile are given as arguments to the commands, PDM will raise an error.
+
+This feature is especially valuable when managing multiple lockfiles, where each may have different versions of the same package pinned. To switch between lockfiles, you can use the `--lockfile/-L` option.
+
+For a realistic example, your project depends on a release version of `werkzeug` and you may want to work with a local in-development copy of it when developing. You can add the following to your `pyproject.toml`:
+
+```toml
+[project]
+requires-python = ">=3.7"
+dependencies = ["werkzeug"]
+
+[tool.pdm.dev-dependencies]
+dev = ["werkzeug @ file:///${PROJECT_ROOT}/dev/werkzeug"]
+```
+
+Then, run `pdm lock` with different options to generate lockfiles for different purposes:
+
+```bash
+# Lock default + dev, write to pdm.lock
+# with the local copy of werkzeug pinned.
+pdm lock
+# Lock default, write to pdm.prod.lock
+# with the release version of werkzeug pinned.
+pdm lock --prod -L pdm.prod.lock
+```
+
+Check the `metadata.groups` field in the lockfile to see which groups are included.
 
 ## Show what packages are installed
 

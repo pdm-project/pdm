@@ -6,53 +6,47 @@ from unittest import mock
 import pytest
 from rich.box import ASCII
 
-from pdm.cli import actions
 from pdm.cli.commands.list import Command
 from pdm.models.specifiers import PySpecSet
 from pdm.pytest import Distribution
 from tests import FIXTURES
 
 
-def test_list_command(project, invoke, mocker):
+def test_list_command(project, pdm, mocker):
     # Calls the correct handler within the Command
     m = mocker.patch.object(Command, "handle_list")
-    invoke(["list"], obj=project)
+    pdm(["list"], obj=project)
     m.assert_called_once()
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_graph_command(project, invoke, mocker):
+def test_list_graph_command(project, pdm, mocker):
     # Calls the correct handler within the list command
     m = mocker.patch.object(Command, "handle_graph")
-    invoke(["list", "--graph"], obj=project)
+    pdm(["list", "--graph"], obj=project)
     m.assert_called_once()
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("working_set")
-def test_list_dependency_graph(project, invoke):
+def test_list_dependency_graph(project, pdm):
     # Shows a line that contains a sub requirement (any order).
-    actions.do_add(project, packages=["requests"])
-    result = invoke(["list", "--graph"], obj=project)
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list", "--graph"], obj=project)
     expected = "-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in result.outputs
     assert expected
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("working_set")
-def test_list_dependency_graph_include_exclude(project, invoke):
+def test_list_dependency_graph_include_exclude(project, pdm):
     # Just include dev packages in the graph
     project.environment.python_requires = PySpecSet(">=3.6")
     dep_path = FIXTURES.joinpath("projects/demo").as_posix()
-    actions.do_add(
-        project,
-        dev=True,
-        group="dev",
-        editables=[f"{dep_path}[security]"],
-    )
+    pdm(["add", "-de", f"{dep_path}[security]"], obj=project, strict=True)
 
     # Output full graph
-    result = invoke(["list", "--graph"], obj=project)
+    result = pdm(["list", "--graph"], obj=project)
     expects = (
         "demo 0.0.1 [ Not required ]\n",
         "+-- chardet 3.0.4 [ required: Any ]\n" if os.name == "nt" else "",
@@ -67,88 +61,88 @@ def test_list_dependency_graph_include_exclude(project, invoke):
     assert expects == result.outputs
 
     # Now exclude the dev dep.
-    result = invoke(["list", "--graph", "--exclude", "dev"], obj=project)
+    result = pdm(["list", "--graph", "--exclude", "dev"], obj=project)
     expects = ""
     assert expects == result.outputs
 
     # Only include the dev dep
-    result = invoke(["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project)
+    result = pdm(["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project)
     expects = "demo[security] 0.0.1 [ required: Any ]\n"
     expects = "".join(expects)
     assert expects == result.outputs
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_dependency_graph_with_circular_forward(project, invoke, repository):
+def test_list_dependency_graph_with_circular_forward(project, pdm, repository):
     # shows a circular dependency
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo-bar", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
-    actions.do_add(project, packages=["foo"])
-    result = invoke(["list", "--graph"], obj=project)
+    pdm(["add", "foo"], obj=project, strict=True)
+    result = pdm(["list", "--graph"], obj=project)
     circular_found = "foo [circular]" in result.outputs
     assert circular_found
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("working_set")
-def test_list_dependency_graph_with_circular_reverse(project, invoke, repository):
+def test_list_dependency_graph_with_circular_reverse(project, pdm, repository):
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo-bar", "0.1.0")
     repository.add_candidate("baz", "0.1.0")
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo", "baz"])
     repository.add_dependencies("baz", "0.1.0", [])
-    actions.do_add(project, packages=["foo"])
+    pdm(["add", "foo"], obj=project, strict=True)
 
     # --reverse flag shows packages reversed and with [circular]
-    result = invoke(["list", "--graph", "--reverse"], obj=project)
+    result = pdm(["list", "--graph", "--reverse"], obj=project)
     expected = (
         "baz 0.1.0 \n"
         "`-- foo-bar 0.1.0 [ requires: Any ]\n"
         "    `-- foo 0.1.0 [ requires: Any ]\n"
         "        +-- foo-bar [circular] [ requires: Any ]\n"
-        "        `-- test-project 0.0.0 [ requires: ~=0.1 ]\n"
+        "        `-- test-project 0.0.0 [ requires: >=0.1.0 ]\n"
     )
     assert expected in result.outputs
 
     # -r flag shows packages reversed and with [circular]
-    result = invoke(["list", "--graph", "-r"], obj=project)
+    result = pdm(["list", "--graph", "-r"], obj=project)
     assert expected in result.outputs
 
 
-def test_list_reverse_without_graph_flag(project, invoke):
+def test_list_reverse_without_graph_flag(project, pdm):
     # results in PDMUsageError since --reverse needs --graph
-    result = invoke(["list", "--reverse"], obj=project)
+    result = pdm(["list", "--reverse"], obj=project)
     assert "[PdmUsageError]" in result.stderr
     assert "--reverse cannot be used without --graph" in result.stderr
 
-    result = invoke(["list", "-r"], obj=project)
+    result = pdm(["list", "-r"], obj=project)
     assert "[PdmUsageError]" in result.stderr
     assert "--reverse cannot be used without --graph" in result.stderr
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
 @pytest.mark.usefixtures("working_set")
-def test_list_reverse_dependency_graph(project, invoke):
+def test_list_reverse_dependency_graph(project, pdm):
     # requests visible on leaf node
-    actions.do_add(project, packages=["requests"])
-    result = invoke(["list", "--graph", "--reverse"], obj=project)
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list", "--graph", "--reverse"], obj=project)
     assert "`-- requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in result.outputs
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_json(project, invoke):
+def test_list_json(project, pdm):
     # check json output matches graph output
-    actions.do_add(project, packages=["requests"], no_self=True)
-    result = invoke(["list", "--graph", "--json"], obj=project)
+    pdm(["add", "requests", "--no-self"], obj=project, strict=True)
+    result = pdm(["list", "--graph", "--json"], obj=project)
 
     expected = [
         {
             "package": "requests",
             "version": "2.19.1",
-            "required": "~=2.19",
+            "required": ">=2.19.1",
             "dependencies": [
                 {
                     "package": "certifi",
@@ -181,10 +175,10 @@ def test_list_json(project, invoke):
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_json_reverse(project, invoke):
+def test_list_json_reverse(project, pdm):
     # check json output matches reversed graph
-    actions.do_add(project, packages=["requests"], no_self=True)
-    result = invoke(["list", "--graph", "--reverse", "--json"], obj=project)
+    pdm(["add", "requests", "--no-self"], obj=project, strict=True)
+    result = pdm(["list", "--graph", "--reverse", "--json"], obj=project)
     expected = [
         {
             "package": "certifi",
@@ -244,7 +238,7 @@ def test_list_json_reverse(project, invoke):
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_json_with_circular_forward(project, invoke, repository):
+def test_list_json_with_circular_forward(project, pdm, repository):
     # circulars are handled in json exports
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo-bar", "0.1.0")
@@ -252,13 +246,13 @@ def test_list_json_with_circular_forward(project, invoke, repository):
     repository.add_dependencies("baz", "0.1.0", ["foo"])
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
-    actions.do_add(project, packages=["baz"], no_self=True)
-    result = invoke(["list", "--graph", "--json"], obj=project)
+    pdm(["add", "baz", "--no-self"], obj=project, strict=True)
+    result = pdm(["list", "--graph", "--json"], obj=project)
     expected = [
         {
             "package": "baz",
             "version": "0.1.0",
-            "required": "~=0.1",
+            "required": ">=0.1.0",
             "dependencies": [
                 {
                     "package": "foo",
@@ -287,7 +281,7 @@ def test_list_json_with_circular_forward(project, invoke, repository):
 
 
 @pytest.mark.usefixtures("working_set")
-def test_list_json_with_circular_reverse(project, invoke, repository):
+def test_list_json_with_circular_reverse(project, pdm, repository):
     # circulars are handled in reversed json exports
     repository.add_candidate("foo", "0.1.0")
     repository.add_candidate("foo-bar", "0.1.0")
@@ -295,8 +289,8 @@ def test_list_json_with_circular_reverse(project, invoke, repository):
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo", "baz"])
     repository.add_dependencies("baz", "0.1.0", [])
-    actions.do_add(project, packages=["foo"], no_self=True)
-    result = invoke(["list", "--graph", "--reverse", "--json"], obj=project)
+    pdm(["add", "foo", "--no-self"], obj=project, strict=True)
+    result = pdm(["list", "--graph", "--reverse", "--json"], obj=project)
     expected = [
         {
             "package": "baz",
@@ -329,99 +323,99 @@ def test_list_json_with_circular_reverse(project, invoke, repository):
     assert expected == json.loads(result.outputs)
 
 
-def test_list_field_unknown(project, invoke):
+def test_list_field_unknown(project, pdm):
     # unknown list fields flagged to user
-    result = invoke(["list", "--fields", "notvalid"], obj=project)
+    result = pdm(["list", "--fields", "notvalid"], obj=project)
     assert "[PdmUsageError]" in result.stderr
     assert "--fields must specify one or more of:" in result.stderr
 
 
-def test_list_sort_unknown(project, invoke):
+def test_list_sort_unknown(project, pdm):
     # unknown sort fields flagged to user
-    result = invoke(["list", "--sort", "notvalid"], obj=project)
+    result = pdm(["list", "--sort", "notvalid"], obj=project)
     assert "[PdmUsageError]" in result.stderr
     assert "--sort key must be one of:" in result.stderr
 
 
-def test_list_freeze_banned_options(project, invoke):
+def test_list_freeze_banned_options(project, pdm):
     # other flags cannot be used with --freeze
-    result = invoke(["list", "--freeze", "--graph"], obj=project)
+    result = pdm(["list", "--freeze", "--graph"], obj=project)
     expected = "--graph cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--reverse"], obj=project)
+    result = pdm(["list", "--freeze", "--reverse"], obj=project)
     expected = "--reverse cannot be used without --graph"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "-r"], obj=project)
+    result = pdm(["list", "--freeze", "-r"], obj=project)
     expected = "--reverse cannot be used without --graph"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--fields", "name"], obj=project)
+    result = pdm(["list", "--freeze", "--fields", "name"], obj=project)
     expected = "--fields cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--resolve"], obj=project)
+    result = pdm(["list", "--freeze", "--resolve"], obj=project)
     expected = "--resolve cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--sort", "name"], obj=project)
+    result = pdm(["list", "--freeze", "--sort", "name"], obj=project)
     expected = "--sort cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--csv"], obj=project)
+    result = pdm(["list", "--freeze", "--csv"], obj=project)
     expected = "--csv cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--json"], obj=project)
+    result = pdm(["list", "--freeze", "--json"], obj=project)
     expected = "--json cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--markdown"], obj=project)
+    result = pdm(["list", "--freeze", "--markdown"], obj=project)
     expected = "--markdown cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--include", "dev"], obj=project)
+    result = pdm(["list", "--freeze", "--include", "dev"], obj=project)
     expected = "--include/--exclude cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = invoke(["list", "--freeze", "--exclude", "dev"], obj=project)
+    result = pdm(["list", "--freeze", "--exclude", "dev"], obj=project)
     expected = "--include/--exclude cannot be used with --freeze"
     assert expected in result.outputs
 
 
-def test_list_multiple_export_formats(project, invoke):
+def test_list_multiple_export_formats(project, pdm):
     # export formats cannot be used with each other
-    result = invoke(["list", "--csv", "--markdown"], obj=project)
+    result = pdm(["list", "--csv", "--markdown"], obj=project)
     expected = "--markdown: not allowed with argument --csv"
     assert expected in result.outputs
 
-    result = invoke(["list", "--csv", "--json"], obj=project)
+    result = pdm(["list", "--csv", "--json"], obj=project)
     expected = "--json: not allowed with argument --csv"
     assert expected in result.outputs
 
-    result = invoke(["list", "--markdown", "--csv"], obj=project)
+    result = pdm(["list", "--markdown", "--csv"], obj=project)
     expected = "--csv: not allowed with argument --markdown"
     assert expected in result.outputs
 
-    result = invoke(["list", "--markdown", "--json"], obj=project)
+    result = pdm(["list", "--markdown", "--json"], obj=project)
     expected = "--json: not allowed with argument --markdown"
     assert expected in result.outputs
 
-    result = invoke(["list", "--json", "--markdown"], obj=project)
+    result = pdm(["list", "--json", "--markdown"], obj=project)
     expected = "--markdown: not allowed with argument --json"
     assert expected in result.outputs
 
-    result = invoke(["list", "--json", "--csv"], obj=project)
+    result = pdm(["list", "--json", "--csv"], obj=project)
     expected = "--csv: not allowed with argument --json"
     assert expected in result.outputs
 
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
-def test_list_bare(project, invoke):
-    actions.do_add(project, packages=["requests"])
-    result = invoke(["list"], obj=project)
+def test_list_bare(project, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list"], obj=project)
     # Ordering can be different on different platforms
     # and python versions.
     assert "| name         | version    | location |\n" in result.output
@@ -435,9 +429,9 @@ def test_list_bare(project, invoke):
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
-def test_list_bare_sorted_name(project, invoke):
-    actions.do_add(project, packages=["requests"])
-    result = invoke(["list", "--sort", "name"], obj=project)
+def test_list_bare_sorted_name(project, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list", "--sort", "name"], obj=project)
     expected = (
         "+--------------------------------------+\n"
         "| name         | version    | location |\n"
@@ -524,9 +518,9 @@ def fake_metadata(mocker, repository):
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
-def test_list_freeze(project, invoke):
-    actions.do_add(project, packages=["requests"])
-    result = invoke(["list", "--freeze"], obj=project)
+def test_list_freeze(project, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list", "--freeze"], obj=project)
     expected = (
         "certifi==2018.11.17\n"
         "chardet==3.0.4\n"
@@ -540,9 +534,9 @@ def test_list_freeze(project, invoke):
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
-def test_list_bare_sorted_version(project, invoke):
-    actions.do_add(project, packages=["requests"])
-    result = invoke(["list", "--sort", "version"], obj=project)
+def test_list_bare_sorted_version(project, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list", "--sort", "version"], obj=project)
     expected = (
         "+--------------------------------------+\n"
         "| name         | version    | location |\n"
@@ -560,11 +554,11 @@ def test_list_bare_sorted_version(project, invoke):
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("fake_metadata")
-def test_list_bare_sorted_version_resolve(project, invoke, working_set):
+def test_list_bare_sorted_version_resolve(project, pdm, working_set):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, packages=["requests"], sync=False)
+    pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
 
-    result = invoke(["list", "--sort", "version", "--resolve"], obj=project, strict=True)
+    result = pdm(["list", "--sort", "version", "--resolve"], obj=project, strict=True)
     assert "requests" not in working_set
     expected = (
         "+----------------------------------+\n"
@@ -582,8 +576,8 @@ def test_list_bare_sorted_version_resolve(project, invoke, working_set):
 
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("fake_working_set")
-def test_list_bare_fields_licences(project, invoke):
-    result = invoke(["list", "--fields", "name,version,groups,licenses"], obj=project)
+def test_list_bare_fields_licences(project, pdm):
+    result = pdm(["list", "--fields", "name,version,groups,licenses"], obj=project)
     expected = (
         "+---------------------------------------------------------+\n"
         "| name       | version | groups | licenses                |\n"
@@ -599,8 +593,8 @@ def test_list_bare_fields_licences(project, invoke):
 
 
 @pytest.mark.usefixtures("fake_working_set")
-def test_list_csv_fields_licences(project, invoke):
-    result = invoke(["list", "--csv", "--fields", "name,version,licenses"], obj=project)
+def test_list_csv_fields_licences(project, pdm):
+    result = pdm(["list", "--csv", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "name,version,licenses\n"
         "foo,0.1.0,A License\n"
@@ -613,8 +607,8 @@ def test_list_csv_fields_licences(project, invoke):
 
 
 @pytest.mark.usefixtures("fake_working_set")
-def test_list_json_fields_licences(project, invoke):
-    result = invoke(["list", "--json", "--fields", "name,version,licenses"], obj=project)
+def test_list_json_fields_licences(project, pdm):
+    result = pdm(["list", "--json", "--fields", "name,version,licenses"], obj=project)
     expected = [
         {"name": "foo", "version": "0.1.0", "licenses": "A License"},
         {"name": "bar", "version": "3.0.1", "licenses": "B License"},
@@ -627,8 +621,8 @@ def test_list_json_fields_licences(project, invoke):
 
 
 @pytest.mark.usefixtures("fake_working_set")
-def test_list_markdown_fields_licences(project, invoke):
-    result = invoke(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
+def test_list_markdown_fields_licences(project, pdm):
+    result = pdm(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "# test_project licenses\n"
         "## foo\n\n"
@@ -681,16 +675,11 @@ def test_list_markdown_fields_licences(project, invoke):
 
 
 @pytest.mark.usefixtures("working_set", "repository")
-def test_list_csv_include_exclude_valid(project, invoke):
+def test_list_csv_include_exclude_valid(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     dep_path = FIXTURES.joinpath("projects/demo").as_posix()
-    actions.do_add(
-        project,
-        dev=True,
-        group="dev",
-        editables=[f"{dep_path}[security]"],
-    )
-    result = invoke(
+    pdm(["add", "-de", f"{dep_path}[security]"], obj=project, strict=True)
+    result = pdm(
         [
             "list",
             "--csv",
@@ -711,18 +700,13 @@ def test_list_csv_include_exclude_valid(project, invoke):
 
 
 @pytest.mark.usefixtures("working_set", "repository")
-def test_list_csv_include_exclude(project, invoke):
+def test_list_csv_include_exclude(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     dep_path = FIXTURES.joinpath("projects/demo").as_posix()
-    actions.do_add(
-        project,
-        dev=True,
-        group="dev",
-        editables=[f"{dep_path}[security]"],
-    )
+    pdm(["add", "-de", f"{dep_path}[security]"], obj=project, strict=True)
 
     # Show all groups.
-    result = invoke(
+    result = pdm(
         ["list", "--csv", "--fields", "name,version,groups", "--sort", "name"],
         obj=project,
     )
@@ -738,7 +722,7 @@ def test_list_csv_include_exclude(project, invoke):
     assert expected == result.output
 
     # Sub always included.
-    result = invoke(
+    result = pdm(
         [
             "list",
             "--csv",
@@ -755,7 +739,7 @@ def test_list_csv_include_exclude(project, invoke):
     assert expected == result.output
 
     # Include all (default) except sub
-    result = invoke(
+    result = pdm(
         [
             "list",
             "--csv",
@@ -772,7 +756,7 @@ def test_list_csv_include_exclude(project, invoke):
     assert expected == result.output
 
     # Show just the dev group
-    result = invoke(
+    result = pdm(
         [
             "list",
             "--csv",
@@ -791,7 +775,7 @@ def test_list_csv_include_exclude(project, invoke):
     assert expected == result.output
 
     # Exclude the dev group.
-    result = invoke(
+    result = pdm(
         [
             "list",
             "--csv",

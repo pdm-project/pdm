@@ -4,35 +4,35 @@ import pytest
 from unearth import Link
 
 from pdm.cli import actions
-from pdm.exceptions import PdmUsageError
+from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import path_to_url
 from tests import FIXTURES
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_package(project, working_set, is_dev):
-    actions.do_add(project, dev=is_dev, packages=["requests"])
+def test_add_package(project, working_set, dev_option, pdm):
+    pdm(["add", *dev_option, "requests"], obj=project, strict=True)
     group = (
-        project.pyproject.settings["dev-dependencies"]["dev"] if is_dev else project.pyproject.metadata["dependencies"]
+        project.pyproject.settings["dev-dependencies"]["dev"]
+        if dev_option
+        else project.pyproject.metadata["dependencies"]
     )
 
-    assert group[0] == "requests~=2.19"
+    assert group[0] == "requests>=2.19.1"
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
 
 
-def test_add_command(project, invoke, mocker):
+def test_add_command(project, pdm, mocker):
     do_add = mocker.patch.object(actions, "do_add")
-    invoke(["add", "requests"], obj=project)
+    pdm(["add", "requests"], obj=project)
     do_add.assert_called_once()
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_package_to_custom_group(project, working_set):
-    actions.do_add(project, group="test", packages=["requests"])
+def test_add_package_to_custom_group(project, working_set, pdm):
+    pdm(["add", "requests", "--group", "test"], obj=project, strict=True)
 
     assert "requests" in project.pyproject.metadata["optional-dependencies"]["test"][0]
     locked_candidates = project.locked_repository.all_candidates
@@ -41,9 +41,8 @@ def test_add_package_to_custom_group(project, working_set):
         assert package in working_set
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_package_to_custom_dev_group(project, working_set):
-    actions.do_add(project, dev=True, group="test", packages=["requests"])
+def test_add_package_to_custom_dev_group(project, working_set, pdm):
+    pdm(["add", "requests", "--group", "test", "--dev"], obj=project, strict=True)
 
     dependencies = project.pyproject.settings["dev-dependencies"]["test"]
     assert "requests" in dependencies[0]
@@ -53,16 +52,13 @@ def test_add_package_to_custom_dev_group(project, working_set):
         assert package in working_set
 
 
-@pytest.mark.usefixtures("repository", "vcs")
-def test_add_editable_package(project, working_set):
+@pytest.mark.usefixtures("vcs")
+def test_add_editable_package(project, working_set, pdm):
     # Ensure that correct python version is used.
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, dev=True, packages=["demo"])
-    actions.do_add(
-        project,
-        dev=True,
-        editables=["git+https://github.com/test-root/demo.git#egg=demo"],
-    )
+    pdm(["add", "--dev", "demo"], obj=project, strict=True)
+    pdm(["add", "-de", "git+https://github.com/test-root/demo.git#egg=demo"], obj=project, strict=True)
+
     group = project.pyproject.settings["dev-dependencies"]["dev"]
     assert group == ["-e git+https://github.com/test-root/demo.git#egg=demo"]
     locked_candidates = project.locked_repository.all_candidates
@@ -71,82 +67,67 @@ def test_add_editable_package(project, working_set):
     assert locked_candidates["idna"].version == "2.7"
     assert "idna" in working_set
 
-    actions.do_sync(project, no_editable=True)
+    pdm(["sync", "--no-editable"], obj=project, strict=True)
     assert not working_set["demo"].link_file
 
 
-@pytest.mark.usefixtures("repository", "vcs", "working_set")
-def test_add_editable_package_to_metadata_forbidden(project):
+@pytest.mark.usefixtures("vcs", "working_set")
+def test_add_editable_package_to_metadata_forbidden(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
-    with pytest.raises(PdmUsageError):
-        actions.do_add(project, editables=["git+https://github.com/test-root/demo.git#egg=demo"])
-    with pytest.raises(PdmUsageError):
-        actions.do_add(
-            project,
-            group="foo",
-            editables=["git+https://github.com/test-root/demo.git#egg=demo"],
-        )
+    result = pdm(["add", "-v", "-e", "git+https://github.com/test-root/demo.git#egg=demo"], obj=project)
+    assert "PdmUsageError" in result.stderr
+    result = pdm(["add", "-v", "-Gtest", "-e", "git+https://github.com/test-root/demo.git#egg=demo"], obj=project)
+    assert "PdmUsageError" in result.stderr
 
 
-@pytest.mark.usefixtures("repository", "vcs")
-def test_non_editable_override_editable(project, working_set):
+@pytest.mark.usefixtures("working_set", "vcs")
+def test_non_editable_override_editable(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(
-        project,
-        dev=True,
-        editables=[
-            "git+https://github.com/test-root/demo.git#egg=demo",
-        ],
-    )
-    actions.do_add(
-        project,
-        dev=True,
-        packages=["git+https://github.com/test-root/demo.git#egg=demo"],
-    )
+    url = "git+https://github.com/test-root/demo.git#egg=demo"
+    pdm(["add", "--dev", "-e", url], obj=project, strict=True)
+    pdm(["add", "--dev", url], obj=project, strict=True)
     assert not project.dev_dependencies["demo"].editable
 
 
-@pytest.mark.usefixtures("repository", "working_set")
-def test_add_remote_package_url(project, is_dev):
+@pytest.mark.usefixtures("working_set")
+def test_add_remote_package_url(project, dev_option, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(
-        project,
-        dev=is_dev,
-        packages=["http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"],
-    )
+    url = "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
+    pdm(["add", *dev_option, url], obj=project, strict=True)
     group = (
-        project.pyproject.settings["dev-dependencies"]["dev"] if is_dev else project.pyproject.metadata["dependencies"]
+        project.pyproject.settings["dev-dependencies"]["dev"]
+        if dev_option
+        else project.pyproject.metadata["dependencies"]
     )
-    assert group[0] == "demo @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
+    assert group[0] == f"demo @ {url}"
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_no_install(project, working_set):
-    actions.do_add(project, sync=False, packages=["requests"])
+def test_add_no_install(project, working_set, pdm):
+    pdm(["add", "--no-sync", "requests"], obj=project, strict=True)
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package not in working_set
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_package_save_exact(project):
-    actions.do_add(project, sync=False, save="exact", packages=["requests"])
+def test_add_package_save_exact(project, pdm):
+    pdm(["add", "--save-exact", "--no-sync", "requests"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"][0] == "requests==2.19.1"
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_package_save_wildcard(project):
-    actions.do_add(project, sync=False, save="wildcard", packages=["requests"])
+def test_add_package_save_wildcard(project, pdm):
+    pdm(["add", "--save-wildcard", "--no-sync", "requests"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"][0] == "requests"
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_package_save_minimum(project):
-    actions.do_add(project, sync=False, save="minimum", packages=["requests"])
+def test_add_package_save_minimum(project, pdm):
+    pdm(["add", "--save-minimum", "--no-sync", "requests"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"][0] == "requests>=2.19.1"
 
 
-def test_add_package_update_reuse(project, repository):
-    actions.do_add(project, sync=False, save="wildcard", packages=["requests", "pytz"])
+def test_add_package_update_reuse(project, repository, pdm):
+    pdm(["add", "--no-sync", "--save-wildcard", "requests", "pytz"], obj=project, strict=True)
 
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
@@ -166,15 +147,15 @@ def test_add_package_update_reuse(project, repository):
             "urllib3<1.24,>=1.21.1",
         ],
     )
-    actions.do_add(project, sync=False, save="wildcard", packages=["requests"], strategy="reuse")
+    pdm(["add", "--no-sync", "--save-wildcard", "requests"], obj=project, strict=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
 
 
-def test_add_package_update_eager(project, repository):
-    actions.do_add(project, sync=False, save="wildcard", packages=["requests", "pytz"])
+def test_add_package_update_eager(project, repository, pdm):
+    pdm(["add", "--no-sync", "--save-wildcard", "requests", "pytz"], obj=project, strict=True)
 
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.19.1"
@@ -194,56 +175,53 @@ def test_add_package_update_eager(project, repository):
             "urllib3<1.24,>=1.21.1",
         ],
     )
-    actions.do_add(project, sync=False, save="wildcard", packages=["requests"], strategy="eager")
+    pdm(["add", "--no-sync", "--save-wildcard", "--update-eager", "requests"], obj=project, strict=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.3"
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_package_with_mismatch_marker(project, working_set, mocker):
+def test_add_package_with_mismatch_marker(project, working_set, mocker, pdm):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
     )
-    actions.do_add(project, packages=["requests", "pytz; platform_system!='Darwin'"])
+    pdm(["add", "requests", "pytz; platform_system!='Darwin'"], obj=project, strict=True)
     assert "pytz" not in working_set
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_dependency_from_multiple_parents(project, working_set, mocker):
+def test_add_dependency_from_multiple_parents(project, working_set, mocker, pdm):
     mocker.patch(
         "pdm.models.environment.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
     )
-    actions.do_add(project, packages=["requests", "chardet; platform_system!='Darwin'"])
+    pdm(["add", "requests", "chardet; platform_system!='Darwin'"], obj=project, strict=True)
     assert "chardet" in working_set
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_packages_without_self(project, working_set):
+def test_add_packages_without_self(project, working_set, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, packages=["requests"], no_self=True)
+    pdm(["add", "--no-self", "requests"], obj=project, strict=True)
     assert project.name not in working_set
 
 
-@pytest.mark.usefixtures("repository", "working_set")
-def test_add_package_unconstrained_rewrite_specifier(project):
+@pytest.mark.usefixtures("working_set")
+def test_add_package_unconstrained_rewrite_specifier(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
-    actions.do_add(project, packages=["django"], no_self=True)
+    pdm(["add", "--no-self", "django"], obj=project, strict=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "2.2.9"
-    assert project.pyproject.metadata["dependencies"][0] == "django~=2.2"
+    assert project.pyproject.metadata["dependencies"][0] == "django>=2.2.9"
 
-    actions.do_add(project, packages=["django-toolbar"], no_self=True, unconstrained=True)
+    pdm(["add", "--no-self", "--unconstrained", "django-toolbar"], obj=project, strict=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["django"].version == "1.11.8"
-    assert project.pyproject.metadata["dependencies"][0] == "django~=1.11"
+    assert project.pyproject.metadata["dependencies"][0] == "django>=1.11.8"
 
 
-@pytest.mark.usefixtures("repository", "working_set", "vcs")
-def test_add_cached_vcs_requirement(project, mocker):
+@pytest.mark.usefixtures("working_set", "vcs")
+def test_add_cached_vcs_requirement(project, mocker, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     url = "git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo"
     built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
@@ -254,7 +232,7 @@ def test_add_cached_vcs_requirement(project, mocker):
     shutil.copy2(built_path, cache_path)
     downloader = mocker.patch("unearth.finder.unpack_link")
     builder = mocker.patch("pdm.builders.WheelBuilder.build")
-    actions.do_add(project, packages=[url], no_self=True)
+    pdm(["add", "--no-self", url], obj=project, strict=True)
     lockfile_entry = next(p for p in project.lockfile["package"] if p["name"] == "demo")
     assert lockfile_entry["revision"] == "1234567890abcdef"
     downloader.assert_not_called()
@@ -262,40 +240,51 @@ def test_add_cached_vcs_requirement(project, mocker):
 
 
 @pytest.mark.usefixtures("repository")
-def test_add_with_dry_run(project, capsys):
-    actions.do_add(project, dry_run=True, packages=["requests"])
-    out, _ = capsys.readouterr()
+def test_add_with_dry_run(project, pdm):
+    result = pdm(["add", "--dry-run", "requests"], obj=project, strict=True)
     assert not project.get_dependencies()
-    assert "requests 2.19.1" in out
-    assert "urllib3 1.22" in out
+    assert "requests 2.19.1" in result.stdout
+    assert "urllib3 1.22" in result.stdout
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_with_prerelease(project, working_set):
-    actions.do_add(project, packages=["urllib3"], prerelease=True)
+def test_add_with_prerelease(project, working_set, pdm):
+    pdm(["add", "--prerelease", "--save-compatible", "urllib3"], obj=project, strict=True)
     assert working_set["urllib3"].version == "1.23b0"
     assert project.pyproject.metadata["dependencies"][0] == "urllib3<2,>=1.23b0"
 
 
-@pytest.mark.usefixtures("repository")
-def test_add_editable_package_with_extras(project, working_set):
+def test_add_editable_package_with_extras(project, working_set, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     dep_path = FIXTURES.joinpath("projects/demo").as_posix()
-    actions.do_add(
-        project,
-        dev=True,
-        group="dev",
-        editables=[f"{dep_path}[security]"],
-    )
+    pdm(["add", "-dGdev", "-e", f"{dep_path}[security]"], obj=project, strict=True)
     assert f"-e {path_to_url(dep_path)}#egg=demo[security]" in project.get_pyproject_dependencies("dev", True)[0]
     assert "demo" in working_set
     assert "requests" in working_set
     assert "urllib3" in working_set
 
 
-def test_add_package_with_local_version(project, repository, working_set):
+def test_add_package_with_local_version(project, repository, working_set, pdm):
     repository.add_candidate("foo", "1.0-alpha.0+local")
-    actions.do_add(project, packages=["foo"], save="minimum")
+    pdm(["add", "foo"], obj=project, strict=True)
     assert working_set["foo"].version == "1.0-alpha.0+local"
     dependencies, _ = project.get_pyproject_dependencies("default")
     assert dependencies[0] == "foo>=1.0a0"
+
+
+def test_add_group_to_lockfile(project, working_set, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default"]
+    pdm(["add", "--group", "tz", "pytz"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default", "tz"]
+    assert "pytz" in working_set
+
+
+def test_add_group_to_lockfile_without_package(project, working_set, pdm):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    pdm(["install"], obj=project, strict=True)
+    assert "pytz" not in working_set
+    assert project.lockfile.groups == ["default"]
+    pdm(["add", "--group", "tz"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default", "tz"]
+    assert "pytz" in working_set

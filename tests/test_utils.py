@@ -5,6 +5,7 @@ import pytest
 
 from pdm import utils
 from pdm.cli import utils as cli_utils
+from pdm.cli.filters import GroupSelection
 from pdm.exceptions import PdmUsageError
 
 
@@ -98,26 +99,39 @@ def setup_dependencies(project):
 @pytest.mark.parametrize(
     "args,golden",
     [
-        ((True, None, ()), ["default", "test", "doc"]),
-        ((True, None, [":all"]), ["default", "web", "auth", "test", "doc"]),
-        ((True, True, ["web"]), ["default", "web", "test", "doc"]),
-        ((True, None, ["web"]), ["default", "web", "test", "doc"]),
-        ((True, None, ["test"]), ["default", "test"]),
-        ((True, None, ["test", "web"]), ["default", "test", "web"]),
-        ((True, False, ["web"]), ["default", "web"]),
-        ((False, None, ()), ["test", "doc"]),
+        ({"default": True, "dev": None, "groups": ()}, ["default", "test", "doc"]),
+        (
+            {"default": True, "dev": None, "groups": [":all"]},
+            ["default", "web", "auth", "test", "doc"],
+        ),
+        (
+            {"default": True, "dev": True, "groups": ["web"]},
+            ["default", "web", "test", "doc"],
+        ),
+        (
+            {"default": True, "dev": None, "groups": ["web"]},
+            ["default", "web", "test", "doc"],
+        ),
+        ({"default": True, "dev": None, "groups": ["test"]}, ["default", "test"]),
+        (
+            {"default": True, "dev": None, "groups": ["test", "web"]},
+            ["default", "test", "web"],
+        ),
+        ({"default": True, "dev": False, "groups": ["web"]}, ["default", "web"]),
+        ({"default": False, "dev": None, "groups": ()}, ["test", "doc"]),
     ],
 )
 def test_dependency_group_selection(project, args, golden):
     setup_dependencies(project)
-    target = cli_utils.translate_groups(project, *args)
-    assert sorted(golden) == sorted(target)
+    selection = GroupSelection(project, **args)
+    assert sorted(golden) == sorted(selection)
 
 
 def test_prod_should_not_be_with_dev(project):
     setup_dependencies(project)
+    selection = GroupSelection(project, default=True, dev=False, groups=["test"])
     with pytest.raises(PdmUsageError):
-        cli_utils.translate_groups(project, True, False, ("test",))
+        list(selection)
 
 
 def test_deprecation_warning():

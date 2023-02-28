@@ -2,6 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import dry_run_option, install_group, lockfile_option, skip_option
 from pdm.project import Project
@@ -33,8 +34,7 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_remove(
             project,
-            dev=options.dev,
-            group=options.group,
+            selection=GroupSelection.from_options(project, options),
             sync=options.sync,
             packages=options.packages,
             no_editable=options.no_editable,

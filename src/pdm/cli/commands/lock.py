@@ -4,15 +4,21 @@ import sys
 from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import lockfile_option, no_isolation_option, skip_option
+from pdm.cli.options import (
+    groups_group,
+    lockfile_option,
+    no_isolation_option,
+    skip_option,
+)
 from pdm.project import Project
 
 
 class Command(BaseCommand):
     """Resolve and lock dependencies"""
 
-    arguments = [*BaseCommand.arguments, lockfile_option, no_isolation_option, skip_option]
+    arguments = [*BaseCommand.arguments, lockfile_option, no_isolation_option, skip_option, groups_group]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -44,9 +50,10 @@ class Command(BaseCommand):
                     verbosity=termui.Verbosity.DETAIL,
                 )
                 sys.exit(0)
-
+        selection = GroupSelection.from_options(project, options)
         actions.do_lock(
             project,
             refresh=options.refresh,
+            groups=selection.all(),
             hooks=HookManager(project, options.skip),
         )

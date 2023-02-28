@@ -25,7 +25,7 @@ from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
 
 from pdm import termui
-from pdm.exceptions import PdmArgumentError, PdmUsageError, ProjectError
+from pdm.exceptions import PdmArgumentError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import make_array, make_inline_table
 from pdm.models.requirements import (
@@ -595,35 +595,6 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         "#solve-the-locking-failure for more details."
     )
     return "\n".join(result)
-
-
-def translate_groups(project: Project, default: bool, dev: bool, groups: Iterable[str]) -> list[str]:
-    """Translate default, dev and groups containing ":all" into a list of groups"""
-    optional_groups = set(project.pyproject.metadata.get("optional-dependencies", {}))
-    dev_groups = set(project.pyproject.settings.get("dev-dependencies", {}))
-    groups_set = set(groups)
-    if dev is None:
-        dev = True
-    if groups_set & dev_groups:
-        if not dev:
-            raise PdmUsageError("--prod is not allowed with dev groups and should be left")
-    elif dev:
-        groups_set.update(dev_groups)
-    if ":all" in groups:
-        groups_set.discard(":all")
-        groups_set.update(optional_groups)
-    if default:
-        groups_set.add("default")
-    # Sorts the result in ascending order instead of in random order
-    # to make this function pure
-    invalid_groups = groups_set - set(project.iter_groups())
-    if invalid_groups:
-        project.core.ui.echo(
-            f"[d]Ignoring non-existing groups: [success]{', '.join(invalid_groups)}[/]",
-            err=True,
-        )
-        groups_set -= invalid_groups
-    return sorted(groups_set)
 
 
 def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any]) -> None:

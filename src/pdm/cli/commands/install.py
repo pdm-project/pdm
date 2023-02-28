@@ -4,6 +4,7 @@ import sys
 from pdm import termui
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     dry_run_option,
@@ -41,6 +42,7 @@ class Command(BaseCommand):
         hooks = HookManager(project, options.skip)
 
         strategy = actions.check_lockfile(project, False)
+        selection = GroupSelection.from_options(project, options)
         if strategy:
             if options.check:
                 project.core.ui.echo(
@@ -50,13 +52,14 @@ class Command(BaseCommand):
                 sys.exit(1)
             if options.lock:
                 project.core.ui.echo("Updating the lock file...", style="success", err=True)
-                actions.do_lock(project, strategy=strategy, dry_run=options.dry_run, hooks=hooks)
+
+                actions.do_lock(
+                    project, strategy=strategy, dry_run=options.dry_run, hooks=hooks, groups=selection.all()
+                )
 
         actions.do_sync(
             project,
-            groups=options.groups,
-            dev=options.dev,
-            default=options.default,
+            selection=selection,
             no_editable=options.no_editable,
             no_self=options.no_self,
             dry_run=options.dry_run,
