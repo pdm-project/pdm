@@ -4,6 +4,7 @@ import pytest
 from unearth import Link
 
 from pdm.cli import actions
+from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import path_to_url
 from tests import FIXTURES
@@ -268,3 +269,22 @@ def test_add_package_with_local_version(project, repository, working_set, pdm):
     assert working_set["foo"].version == "1.0-alpha.0+local"
     dependencies, _ = project.get_pyproject_dependencies("default")
     assert dependencies[0] == "foo>=1.0a0"
+
+
+def test_add_group_to_lockfile(project, working_set, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default"]
+    pdm(["add", "--group", "tz", "pytz"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default", "tz"]
+    assert "pytz" in working_set
+
+
+def test_add_group_to_lockfile_without_package(project, working_set, pdm):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    pdm(["install"], obj=project, strict=True)
+    assert "pytz" not in working_set
+    assert project.lockfile.groups == ["default"]
+    pdm(["add", "--group", "tz"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default", "tz"]
+    assert "pytz" in working_set

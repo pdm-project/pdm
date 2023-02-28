@@ -101,3 +101,13 @@ def test_skip_editable_dependencies_in_metadata(project, capsys):
     _, err = capsys.readouterr()
     assert "WARNING: Skipping editable dependency" in err
     assert not project.locked_repository.all_candidates
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_selected_groups(project, pdm):
+    project.add_dependencies({"requests": parse_requirement("requests")}, to_group="http")
+    project.add_dependencies({"pytz": parse_requirement("pytz")})
+    pdm(["lock", "-G", "http", "--no-default"], obj=project, strict=True)
+    assert project.lockfile.groups == ["http"]
+    assert "requests" in project.locked_repository.all_candidates
+    assert "pytz" not in project.locked_repository.all_candidates

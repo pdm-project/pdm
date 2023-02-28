@@ -260,3 +260,23 @@ def test_install_groups_not_in_lockfile(project, pdm):
         assert package not in all_locked_packages
     with pytest.raises(RuntimeError, match="Requested groups not in lockfile"):
         pdm(["install", "-Gtz"], obj=project, strict=True)
+
+
+def test_install_locked_groups(project, pdm, working_set):
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    pdm(["lock", "-Gtz", "--no-default"], obj=project, strict=True)
+    pdm(["sync"], obj=project, strict=True)
+    assert "pytz" in working_set
+    assert "urllib3" not in working_set
+
+
+def test_install_groups_and_lock(project, pdm, working_set):
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")})
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    pdm(["install", "-Gtz", "--no-default"], obj=project, strict=True)
+    assert "pytz" in working_set
+    assert "urllib3" not in working_set
+    assert project.lockfile.groups == ["tz"]
+    assert "pytz" in project.locked_repository.all_candidates
+    assert "urllib3" not in project.locked_repository.all_candidates

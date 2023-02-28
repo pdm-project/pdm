@@ -422,8 +422,6 @@ def do_remove(
         raise PdmUsageError("Must specify at least one package to remove.")
     group = selection.one()
     lock_groups = project.lockfile.groups
-    if lock_groups and group not in lock_groups:
-        raise ProjectError(f"Requested group not in lockfile: {group}")
 
     deps, _ = project.get_pyproject_dependencies(group, selection.dev or False)
     project.core.ui.echo(
@@ -442,6 +440,9 @@ def do_remove(
 
     if not dry_run:
         project.pyproject.write()
+    if lock_groups and group not in lock_groups:
+        project.core.ui.echo(f"Group [success]{group}[/] isn't in lockfile, skipping lock.", style="warning", err=True)
+        return
     do_lock(project, "reuse", dry_run=dry_run, hooks=hooks, groups=lock_groups)
     if sync:
         do_sync(

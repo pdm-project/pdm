@@ -1,6 +1,7 @@
 import pytest
 
 from pdm.cli import actions
+from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 
 
@@ -85,3 +86,14 @@ dependencies = [
     project_no_init.pyproject.reload()
     pdm(["remove", "requests"], obj=project_no_init, strict=True)
     assert project_no_init.pyproject.metadata["dependencies"] == []
+
+
+@pytest.mark.usefixtures("working_set")
+def test_remove_group_not_in_lockfile(project, pdm, mocker):
+    pdm(["add", "requests"], obj=project, strict=True)
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    assert project.lockfile.groups == ["default"]
+    locker = mocker.patch.object(actions, "do_lock")
+    pdm(["remove", "--group", "tz", "pytz"], obj=project, strict=True)
+    assert not project.pyproject.metadata["optional-dependencies"].get("tz")
+    locker.assert_not_called()
