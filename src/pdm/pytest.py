@@ -617,6 +617,8 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
         result = RunResult(exit_code, stdout.getvalue(), stderr.getvalue(), exception)
 
         if strict and result.exit_code != 0:
+            if result.exception:
+                raise result.exception.with_traceback(result.exception.__traceback__)
             raise RuntimeError(f"Call command {args} failed({result.exit_code}): {result.stderr}")
         return result
 
