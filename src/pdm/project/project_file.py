@@ -36,7 +36,7 @@ class PyProject(TOMLBase):
 
     @property
     def is_valid(self) -> bool:
-        return "project" in self._data
+        return bool(self._data.get("project"))
 
     @property
     def metadata(self) -> items.Table:

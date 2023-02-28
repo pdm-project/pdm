@@ -7,10 +7,10 @@ from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
 
 
-def test_lock_command(project, invoke, mocker):
+def test_lock_command(project, pdm, mocker):
     m = mocker.patch.object(actions, "do_lock")
-    invoke(["lock"], obj=project)
-    m.assert_called_with(project, refresh=False, hooks=ANY)
+    pdm(["lock"], obj=project)
+    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY)
 
 
 @pytest.mark.usefixtures("repository")
@@ -101,3 +101,13 @@ def test_skip_editable_dependencies_in_metadata(project, capsys):
     _, err = capsys.readouterr()
     assert "WARNING: Skipping editable dependency" in err
     assert not project.locked_repository.all_candidates
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_selected_groups(project, pdm):
+    project.add_dependencies({"requests": parse_requirement("requests")}, to_group="http")
+    project.add_dependencies({"pytz": parse_requirement("pytz")})
+    pdm(["lock", "-G", "http", "--no-default"], obj=project, strict=True)
+    assert project.lockfile.groups == ["http"]
+    assert "requests" in project.locked_repository.all_candidates
+    assert "pytz" not in project.locked_repository.all_candidates

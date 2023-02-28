@@ -2,6 +2,7 @@ import argparse
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     groups_group,
@@ -58,9 +59,7 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.do_update(
             project,
-            dev=options.dev,
-            groups=options.groups,
-            default=options.default,
+            selection=GroupSelection.from_options(project, options),
             save=options.save_strategy or project.config["strategy.save"],
             strategy=options.update_strategy or project.config["strategy.update"],
             unconstrained=options.unconstrained,

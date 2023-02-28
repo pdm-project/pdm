@@ -207,7 +207,7 @@ dev_group = ArgumentGroup("dev", is_mutually_exclusive=True)
 dev_group.add_argument(
     "-d",
     "--dev",
-    default=True,
+    default=None,
     dest="dev",
     action="store_true",
     help="Select dev dependencies",
