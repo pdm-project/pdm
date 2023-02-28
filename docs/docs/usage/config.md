@@ -27,13 +27,13 @@ By default, the configuration are changed globally, if you want to make the conf
 pdm config --local pypi.url "https://test.pypi.org/simple"
 ```
 
-Any local configurations will be stored in `.pdm.toml` under the project root directory.
+Any local configurations will be stored in `pdm.toml` under the project root directory.
 
 ## Configuration files
 
 The configuration files are searched in the following order:
 
-1. `<PROJECT_ROOT>/.pdm.toml` - The project configuration
+1. `<PROJECT_ROOT>/pdm.toml` - The project configuration
 2. `<CONFIG_ROOT>/config.toml` - The home configuration
 3. `<SITE_CONFIG_ROOT>/config.toml` - The site configuration
 
@@ -49,7 +49,7 @@ and `<SITE_CONFIG_ROOT>` is:
 - `/Library/Preference/pdm` on MacOS as defined by [Apple File System Basics](https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html)
 - `C:\ProgramData\pdm\pdm` on Windows as defined in [Known folders](https://docs.microsoft.com/en-us/windows/win32/shell/known-folders)
 
-If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROOT>/global-project/.pdm.toml`.
+If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROOT>/global-project/pdm.toml`.
 
 You can find all available configuration items in [Configuration Page](../reference/configuration.md).
 

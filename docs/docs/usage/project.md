@@ -12,7 +12,9 @@ You will need to answer a few questions, to help PDM to create a `pyproject.toml
 ## Choose a Python interpreter
 
 At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. The interpreter path
-will be stored in the project config `.pdm.toml` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#exec-0--use).
+will be stored in `.pdm-python` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#exec-0--use).
+
+Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
 ## Virtualenv or not
 
@@ -92,7 +94,7 @@ Also, when you are executing [`pdm init`](../reference/cli.md#exec-0--init) or [
 
 ## Working with version control
 
-You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lock` file. **Do not** commit the `.pdm.toml` file.
+You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lock` and `pdm.toml` file. **Do not** commit the `.pdm-python` file.
 
 The `pyproject.toml` file must be committed as it contains the project's build metadata and dependencies needed for PDM.
 It is also commonly used by other python tools for configuration. Read more about the `pyproject.toml` file at
@@ -101,8 +103,9 @@ It is also commonly used by other python tools for configuration. Read more abou
 You should be committing the `pdm.lock` file, by doing so you ensure that all installers are using the same versions of dependencies.
 To learn how to update dependencies see [update existing dependencies](./dependency.md#update-existing-dependencies).
 
-It is not necessary to commit your `.pdm.toml` file as it contains configuration specific to your system.
-If you are using git you can safely add `.pdm.toml` to your `.gitignore` file.
+`pdm.toml` contains some project-wide configuration and it may be useful to commit it for sharing.
+
+`.pdm-python` stores the **Python path** used by the **current** project and doesn't need to be shared.
 
 ## Show the current Python environment
 

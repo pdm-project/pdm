@@ -94,7 +94,7 @@ def test_search_package(invoke, tmp_path):
     assert result.exit_code == 0
     assert len(result.output.splitlines()) > 0
     assert not tmp_path.joinpath("__pypackages__").exists()
-    assert not tmp_path.joinpath(".pdm.toml").exists()
+    assert not tmp_path.joinpath(".pdm-python").exists()
 
 
 @pytest.mark.network
