@@ -169,7 +169,7 @@ class Config(MutableMapping[str, str]):
         "pypi.username": ConfigItem("The username to access PyPI", env_var="PDM_PYPI_USERNAME"),
         "pypi.password": ConfigItem("The password to access PyPI", env_var="PDM_PYPI_PASSWORD"),
         "pypi.ca_certs": ConfigItem(
-            "Path to a CA certificate bundle used for verifying the identity of the PyPI server",
+            "Path to a CA certificate bundle used for verifying the identity of the PyPI server", global_only=True
         ),
         "pypi.ignore_stored_index": ConfigItem(
             "Ignore the configured indexes",
@@ -177,12 +177,8 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_IGNORE_STORED_INDEX",
             coerce=ensure_boolean,
         ),
-        "pypi.client_cert": ConfigItem(
-            "Path to client certificate file, or combined cert/key file",
-        ),
-        "pypi.client_key": ConfigItem(
-            "Path to client cert keyfile, if not in pypi.client_cert",
-        ),
+        "pypi.client_cert": ConfigItem("Path to client certificate file, or combined cert/key file", global_only=True),
+        "pypi.client_key": ConfigItem("Path to client cert keyfile, if not in pypi.client_cert", global_only=True),
         "pypi.json_api": ConfigItem(
             "Consult PyPI's JSON API for package metadata",
             False,

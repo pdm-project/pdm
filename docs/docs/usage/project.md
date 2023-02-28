@@ -14,6 +14,8 @@ You will need to answer a few questions, to help PDM to create a `pyproject.toml
 At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. The interpreter path
 will be stored in `.pdm-python` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#exec-0--use).
 
+Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
+
 ## Virtualenv or not
 
 After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.
