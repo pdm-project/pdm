@@ -12,7 +12,7 @@ from pdm.utils import cd
 
 
 def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
-    del project.project_config["python.path"]
+    project._saved_python = None
     project._python = None
     monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
     mocker.patch("pdm.project.core.PYENV_ROOT", str(project.root))
@@ -106,7 +106,7 @@ def test_auto_global_project(tmp_path, core):
 
 
 def test_project_use_venv(project):
-    del project.project_config["python.path"]
+    project._saved_python = None
     project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
@@ -135,7 +135,7 @@ def test_project_auto_detect_venv(project):
 
     project.project_config["python.use_venv"] = True
     project._python = None
-    project.project_config["python.path"] = (project.root / "test_venv" / scripts / f"python{suffix}").as_posix()
+    project._saved_python = (project.root / "test_venv" / scripts / f"python{suffix}").as_posix()
 
     assert project.environment.is_global
 
@@ -148,7 +148,7 @@ def test_ignore_saved_python(project, monkeypatch):
     suffix = ".exe" if os.name == "nt" else ""
     venv.create(project.root / "venv")
     monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
-    assert project.python.executable != project.project_config["python.path"]
+    assert project.python.executable != project._saved_python
     assert project.python.executable == project.root / "venv" / scripts / f"python{suffix}"
 
 
@@ -178,18 +178,9 @@ def test_select_dependencies(project):
     ]
 
 
-def test_global_python_path_config(project_no_init, tmp_path):
-    tmp_path.joinpath(".pdm.toml").unlink()
-    project_no_init.global_config["python.path"] = sys.executable
-    # Recreate the project to clean cached properties
-    p = project_no_init.core.create_project(project_no_init.root, global_config=tmp_path / ".pdm-home/config.toml")
-    assert p.python.executable == Path(sys.executable)
-    assert "python.path" not in p.project_config
-
-
 @pytest.mark.path
 def test_set_non_exist_python_path(project_no_init):
-    project_no_init.project_config["python.path"] = "non-exist-python"
+    project_no_init._saved_python = "non-exist-python"
     project_no_init._python = None
     assert project_no_init.python.executable.name != "non-exist-python"
 
@@ -197,21 +188,21 @@ def test_set_non_exist_python_path(project_no_init):
 @pytest.mark.usefixtures("venv_backends")
 def test_create_venv_first_time(invoke, project, local_finder):
     project.project_config.update({"venv.in_project": False})
-    del project.project_config["python.path"]
+    project._saved_python = None
     result = invoke(["install"], obj=project)
     assert result.exit_code == 0
     venv_parent = project.root / "venvs"
     venv_path = next(venv_parent.iterdir(), None)
     assert venv_path is not None
 
-    assert Path(project.project_config["python.path"]).relative_to(venv_path)
+    assert Path(project._saved_python).relative_to(venv_path)
 
 
 @pytest.mark.usefixtures("venv_backends", "local_finder")
 @pytest.mark.parametrize("with_pip", [True, False])
 def test_create_venv_in_project(invoke, project, with_pip):
     project.project_config.update({"venv.in_project": True, "venv.with_pip": with_pip})
-    del project.project_config["python.path"]
+    project._saved_python = None
     result = invoke(["install"], obj=project)
     assert result.exit_code == 0
     assert project.root.joinpath(".venv").exists()
@@ -222,7 +213,7 @@ def test_create_venv_in_project(invoke, project, with_pip):
 @pytest.mark.usefixtures("venv_backends")
 def test_find_interpreters_from_venv(invoke, project, local_finder):
     project.project_config.update({"venv.in_project": False})
-    del project.project_config["python.path"]
+    project._saved_python = None
     result = invoke(["install"], obj=project)
     assert result.exit_code == 0
     venv_parent = project.root / "venvs"
@@ -234,7 +225,7 @@ def test_find_interpreters_from_venv(invoke, project, local_finder):
 
 @pytest.mark.usefixtures("local_finder")
 def test_find_interpreters_without_duplicate_relative_paths(invoke, project):
-    del project.project_config["python.path"]
+    project._saved_python = None
     venv.create(project.root / ".venv", clear=True)
     with cd(project.root):
         bin_dir = "Scripts" if os.name == "nt" else "bin"

@@ -26,7 +26,7 @@ ui = termui.UI()
 def load_config(file_path: Path) -> dict[str, Any]:
     """Load a nested TOML document into key-value pairs
 
-    E.g. ["python"]["path"] will be loaded as "python.path" key.
+    E.g. ["python"]["use_venv"] will be loaded as "python.use_venv" key.
     """
 
     def get_item(sub_data: Mapping[str, Any]) -> dict[str, Any]:
@@ -153,7 +153,6 @@ class Config(MutableMapping[str, str]):
             "`symlink` or `pth` to create links to the cached installation",
             "symlink",
         ),
-        "python.path": ConfigItem("The Python interpreter path", env_var="PDM_PYTHON"),
         "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True, coerce=ensure_boolean),
         "python.use_venv": ConfigItem(
             "Install packages into the activated venv site packages instead of PEP 582",

@@ -15,7 +15,7 @@ class ListCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         project.core.ui.echo("Virtualenvs created with this project:\n")
         for ident, venv in iter_venvs(project):
-            saved_python = project.project_config.get("python.path")
+            saved_python = project._saved_python
             if saved_python and Path(saved_python).parent.parent == venv:
                 mark = "*"
             else:
