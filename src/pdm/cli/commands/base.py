@@ -32,7 +32,7 @@ class BaseCommand:
         """
         help_text = cls.description or cls.__doc__
         name = name or cls.name or ""
-        # Remove the existing subparser as it will raises an error on Python 3.11+
+        # Remove the existing subparser as it will raise an error on Python 3.11+
         subparsers._name_parser_map.pop(name, None)
         subactions = subparsers._get_subactions()
         subactions[:] = [action for action in subactions if action.dest != name]
@@ -44,7 +44,8 @@ class BaseCommand:
             **kwargs,
         )
         command = cls(parser)
-        parser.set_defaults(handler=command.handle)
+        # A special attribute to store the command instance. See pdm/core.py for more details
+        parser.set_defaults(__command__=command)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         """Manipulate the argument parser to add more arguments"""

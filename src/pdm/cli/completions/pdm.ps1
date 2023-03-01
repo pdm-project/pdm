@@ -192,7 +192,7 @@ function TabExpansion($line, $lastWord) {
 
     if ($lastBlock -match "^pdm ") {
         [string[]]$words = $lastBlock.Split()[1..$lastBlock.Length]
-        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "import", "info", "init", "install", "list", "lock", "plugin", "publish", "remove", "run", "search", "show", "sync", "update", "use")
+        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "fix", "import", "info", "init", "install", "list", "lock", "plugin", "publish", "remove", "run", "search", "show", "sync", "update", "use")
         [string[]]$commands = $words.Where( { $_ -notlike "-*" })
         $command = $commands[0]
         $completer = [Completer]::new()
@@ -252,6 +252,13 @@ function TabExpansion($line, $lastWord) {
                     ))
                 break
             }
+            "fix" {
+                $completer.AddOpts(@(
+                        [Option]::new(@("--dry-run", "-g", "--global")),
+                        $projectOption
+                    ))
+                break
+            }
             "import" {
                 $completer.AddOpts(@(
                         [Option]::new(@("--dev", "--global", "--no-default", "-g", "-d")),
@@ -303,8 +310,9 @@ function TabExpansion($line, $lastWord) {
             "lock" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile", "--check")),
+                        [Option]::new(@("--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile", "--check", "--dev", "--prod", "--production", "-d", "--no-default")),
                         $skipOption,
+                        $sectionOption,
                         $projectOption
                     ))
                 break

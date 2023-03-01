@@ -21,6 +21,7 @@ _pdm() {
     'completion:Generate completion scripts for the given shell'
     'config:Display the current configuration'
     'export:Export the locked packages set to other formats'
+    'fix:Fix the project problems according to the latest version of PDM'
     'import:Import project metadata from other formats'
     'info:Show the project information'
     'init:Initialize a pyproject.toml for PDM'
@@ -151,6 +152,13 @@ _pdm() {
         "--no-default[Don't include dependencies from the default group]"
       )
       ;;
+    fix)
+      arguments+=(
+        {-g,--global}'[Use the global project, supply the project root with `-p` option]'
+        '--dry-run[Only show the problems]'
+        '1:problem:'
+      )
+      ;;
     import)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
@@ -219,6 +227,10 @@ _pdm() {
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--refresh[Don't update pinned versions, only refresh the lock file]"
         "--check[Check if the lock file is up to date and quit]"
+        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-d,--dev}"[Select dev dependencies]"
+        {--prod,--production}"[Unselect dev dependencies]"
+        "--no-default[Don\'t include dependencies from the default group]"
       )
       ;;
     self)
