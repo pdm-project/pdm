@@ -2,17 +2,12 @@ from __future__ import annotations
 
 import urllib.parse
 
-from unearth.auth import MaybeAuth, MultiDomainBasicAuth
+from unearth.auth import MaybeAuth, MultiDomainBasicAuth, get_keyring_provider
 from unearth.utils import split_auth_from_netloc
 
 from pdm._types import RepositoryConfig
 from pdm.exceptions import PdmException
 from pdm.termui import UI
-
-try:
-    import keyring
-except ModuleNotFoundError:
-    keyring = None
 
 ui = UI()
 
@@ -45,17 +40,18 @@ class PdmBasicAuth(MultiDomainBasicAuth):
     def _prompt_for_password(self, netloc: str) -> tuple[str | None, str | None, bool]:
         if not self._real_prompting:
             raise PdmException(
-                f"The credentials for {netloc} are not provided. Please rerun the command with `-v` option."
+                f"The credentials for {netloc} are not provided. To give them via interactive shell, "
+                "please rerun the command with `-v` option."
             )
         return super()._prompt_for_password(netloc)
 
     def _should_save_password_to_keyring(self) -> bool:
-        if keyring is None:
+        if get_keyring_provider() is None:
             ui.echo(
-                "The provided credentials will not be saved into your system.\n"
+                "The provided credentials will not be saved into the keyring.\n"
                 "You can enable this by installing keyring:\n"
-                "    pdm self add keyring",
+                "    [success]pdm self add keyring[/]",
                 err=True,
-                style="warning",
+                style="info",
             )
         return super()._should_save_password_to_keyring()
