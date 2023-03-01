@@ -8,6 +8,7 @@ from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import groups_group, lockfile_option
 from pdm.cli.utils import translate_groups
+from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
@@ -62,6 +63,8 @@ class Command(BaseCommand):
         if options.pyproject:
             packages = requirements.values()
         else:
+            if not project.lockfile.exists:
+                raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
             project.core.ui.echo(
                 "The exported requirements file is no longer cross-platform. "
                 "Using it on other platforms may cause unexpected result.",
