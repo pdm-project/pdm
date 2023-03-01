@@ -44,7 +44,6 @@ class CreateCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         in_project = project.config["venv.in_project"] and not options.name
-        prompt = project.config["venv.prompt"]
         backend: str = options.backend or project.config["venv.backend"]
         venv_backend = BACKENDS[backend](project, options.python)
         with project.core.ui.open_spinner(f"Creating virtualenv using [success]{backend}[/]..."):
@@ -53,7 +52,7 @@ class CreateCommand(BaseCommand):
                 options.venv_args,
                 options.force,
                 in_project,
-                prompt,
-                options.with_pip,
+                prompt=project.config["venv.prompt"],
+                with_pip=options.with_pip or project.config["venv.with_pip"],
             )
         project.core.ui.echo(f"Virtualenv [success]{path}[/] is created successfully")

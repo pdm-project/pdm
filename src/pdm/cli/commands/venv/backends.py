@@ -101,27 +101,27 @@ class Backend(abc.ABC):
             location = self.get_location(name)
         args = (*self.pip_args(with_pip), *args)
         if prompt is not None:
-            prompt_string = prompt.format(
+            prompt = prompt.format(
                 project_name=self.project.root.name.lower() or "virtualenv",
                 python_version=self.ident,
             )
-            args = (*args, f"--prompt={prompt_string}")
         self._ensure_clean(location, force)
-        self.perform_create(location, args)
+        self.perform_create(location, args, prompt=prompt)
         return location
 
     @abc.abstractmethod
-    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
         pass
 
 
 class VirtualenvBackend(Backend):
     def pip_args(self, with_pip: bool) -> Iterable[str]:
-        if with_pip or self.project.config["venv.with_pip"]:
+        if with_pip:
             return ()
         return ("--no-pip", "--no-setuptools", "--no-wheel")
 
-    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
+        prompt_option = (f"--prompt={prompt}",) if prompt else ()
         cmd = [
             sys.executable,
             "-m",
@@ -129,6 +129,7 @@ class VirtualenvBackend(Backend):
             str(location),
             "-p",
             str(self._resolved_interpreter.executable),
+            *prompt_option,
             *args,
         ]
         self.subprocess_call(cmd)
@@ -136,18 +137,13 @@ class VirtualenvBackend(Backend):
 
 class VenvBackend(VirtualenvBackend):
     def pip_args(self, with_pip: bool) -> Iterable[str]:
-        if with_pip or self.project.config["venv.with_pip"]:
+        if with_pip:
             return ()
         return ("--without-pip",)
 
-    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
-        cmd = [
-            str(self._resolved_interpreter.executable),
-            "-m",
-            "venv",
-            str(location),
-            *args,
-        ]
+    def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
+        prompt_option = (f"--prompt={prompt}",) if prompt else ()
+        cmd = [str(self._resolved_interpreter.executable), "-m", "venv", str(location), *prompt_option, *args]
         self.subprocess_call(cmd)
 
 
@@ -161,11 +157,11 @@ class CondaBackend(Backend):
         return super().ident
 
     def pip_args(self, with_pip: bool) -> Iterable[str]:
-        if with_pip or self.project.config["venv.with_pip"]:
+        if with_pip:
             return ("pip",)
         return ()
 
-    def perform_create(self, location: Path, args: tuple[str, ...]) -> None:
+    def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
         if self.python:
             python_ver = self.python
         else:
@@ -173,16 +169,8 @@ class CondaBackend(Backend):
             python_ver = f"{python.major}.{python.minor}"
         if any(arg.startswith("python=") for arg in args):
             raise PdmUsageError("Cannot use python= in conda creation arguments")
-        cmd = [
-            "conda",
-            "create",
-            "--yes",
-            "--prefix",
-            str(location),
-            f"python={python_ver}",
-            *args,
-        ]
 
+        cmd = ["conda", "create", "--yes", "--prefix", str(location), f"python={python_ver}", *args]
         self.subprocess_call(cmd)
 
 

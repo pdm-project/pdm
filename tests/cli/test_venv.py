@@ -17,7 +17,7 @@ def with_pip(request):
 
 @pytest.fixture()
 def fake_create(monkeypatch):
-    def fake_create(self, location, *args):
+    def fake_create(self, location, *args, prompt=None):
         location.mkdir(parents=True)
 
     monkeypatch.setattr(backends.VirtualenvBackend, "perform_create", fake_create)
@@ -115,7 +115,9 @@ def test_venv_activate_custom_prompt(invoke, mocker, project):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
     result = invoke(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
-    creator.assert_called_once_with(None, [], False, False, project.project_config["venv.prompt"], False)
+    creator.assert_called_once_with(
+        None, [], False, False, prompt=project.project_config["venv.prompt"], with_pip=False
+    )
 
 
 def test_venv_activate_project_without_python(invoke, project):

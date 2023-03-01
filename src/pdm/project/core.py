@@ -228,6 +228,7 @@ class Project:
             force=True,
             in_project=self.config["venv.in_project"],
             prompt=self.config["venv.prompt"],
+            with_pip=self.config["venv.with_pip"],
         )
         self.core.ui.echo(f"Virtualenv is created successfully at [success]{path}[/]", err=True)
         return path
