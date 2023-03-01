@@ -16,6 +16,9 @@ class BaseFixer(abc.ABC):
     def __init__(self, project: Project) -> None:
         self.project = project
 
+    def log(self, message: str, verbosity: Verbosity = Verbosity.DETAIL) -> None:
+        self.project.core.ui.echo(message, verbosity=verbosity)
+
     @abc.abstractmethod
     def get_message(self) -> str:
         """Return a description of the problem"""
@@ -52,11 +55,13 @@ class ProjectConfigFixer(BaseFixer):
         old_file = self.project.root.joinpath(".pdm.toml")
         config = Config(old_file).self_data
         if not self.project.root.joinpath(".pdm-python").exists() and config.get("python.path"):
-            self.project.core.ui.echo("Creating .pdm-python...", verbosity=Verbosity.DETAIL)
+            self.log("Creating .pdm-python...", verbosity=Verbosity.DETAIL)
             self.project.root.joinpath(".pdm-python").write_text(config["python.path"])
         self.project.project_config  # access the project config to move the config items
-        self.project.core.ui.echo("Moving .pdm.toml to pdm.toml...", verbosity=Verbosity.DETAIL)
+        self.log("Moving .pdm.toml to pdm.toml...", verbosity=Verbosity.DETAIL)
         old_file.unlink()
+        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
+        self._fix_gitignore()
 
     def check(self) -> bool:
         return self.project.root.joinpath(".pdm.toml").exists()
