@@ -3,7 +3,7 @@
 
 function __fish_pdm_a919b69078acdf0a_complete_no_subcommand
     for i in (commandline -opc)
-        if contains -- $i add build cache completion config export import info init install list lock plugin publish remove run search self show sync update use venv
+        if contains -- $i add build cache completion config export fix import info init install list lock plugin publish remove run search self show sync update use venv
             return 1
         end
     end
@@ -25,6 +25,7 @@ complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a ca
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a completion -d 'Generate completion scripts for the given shell'
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a config -d 'Display the current configuration'
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a export -d 'Export the locked packages set to other formats'
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a fix -d 'Fix the project problems according to the latest version of PDM'
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a import -d 'Import project metadata from other formats'
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a info -d 'Show the project information'
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a init -d 'Initialize a pyproject.toml for PDM'
@@ -113,6 +114,13 @@ complete -c pdm -A -n '__fish_seen_subcommand_from export' -l pyproject -d 'Read
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l without-hashes -d 'Don\'t include artifact hashes'
 
+# fix
+complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l dry-run -d 'Only show the problems'
+complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l global -d 'Use the global project, supply the project root with `-p` option'
+complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l help -d 'show this help message and exit'
+complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
+complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l verbose -d '-v for detailed output and -vv for more detailed'
+
 # import
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l dev -d 'import packages into dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l format -d 'Specify the file format explicitly'
@@ -181,10 +189,14 @@ complete -c pdm -A -n '__fish_seen_subcommand_from list' -l verbose -d '-v for d
 
 # lock
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l check -d 'Check if the lock file is up to date and quit'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the global project, supply the project root with `-p` option'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l group -d 'Select group of optional-dependencies separated by comma or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l help -d 'show this help message and exit'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-default -d 'Don\'t include dependencies from the default group'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'

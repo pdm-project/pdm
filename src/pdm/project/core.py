@@ -133,7 +133,12 @@ class Project:
     @cached_property
     def project_config(self) -> Config:
         """Read-and-writable configuration dict for project settings"""
-        return Config(self.root / "pdm.toml")
+        config = Config(self.root / "pdm.toml")
+        # TODO: for backward compatibility, remove this in the future
+        if self.root.joinpath(".pdm.toml").exists():
+            legacy_config = Config(self.root / ".pdm.toml").self_data
+            config.update((k, v) for k, v in legacy_config.items() if k != "python.path")
+        return config
 
     @property
     def name(self) -> str | None:
@@ -161,6 +166,12 @@ class Project:
             return os.getenv("PDM_PYTHON")
         with contextlib.suppress(FileNotFoundError):
             return self.root.joinpath(".pdm-python").read_text("utf-8").strip()
+        with contextlib.suppress(FileNotFoundError):
+            # TODO: remove this in the future
+            with self.root.joinpath(".pdm.toml").open("rb") as fp:
+                data = tomlkit.load(fp)
+                if data.get("python", {}).get("path"):
+                    return data["python"]["path"]
         return None
 
     @_saved_python.setter

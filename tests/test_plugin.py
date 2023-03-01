@@ -78,7 +78,7 @@ def test_load_multiple_plugings(invoke, mocker, core):
     core.load_plugins()
 
     result = invoke(["hello"])
-    assert result.output.strip() == "Hello world"
+    assert result.output.strip() == "Hello world", result.outputs
 
     result = invoke(["config", "foo"])
     assert result.output.strip() == "bar"

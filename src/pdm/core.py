@@ -135,6 +135,8 @@ class Core:
         **extra: Any,
     ) -> None:
         """The main entry function"""
+        from pdm.cli.commands.fix import Command as FixCommand
+
         # Ensure same behavior while testing and using the CLI
         args = args or sys.argv[1:]
         # Keep it for after project parsing to check if its a defined script
@@ -156,15 +158,15 @@ class Core:
         self.ui.set_verbosity(options.verbose)
         project = self.ensure_project(options, obj)
         self.ui.set_theme(project.global_config.load_theme())
-        if options.ignore_python:
-            os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
+        if next((arg for arg in args if not arg.startswith("-")), None) != "fix":
+            FixCommand.check_problems(project)
 
         if options.pep582:
             print_pep582_command(project, options.pep582)
             sys.exit(0)
 
         if root_script and root_script not in project.scripts:
-            self.parser.error(f"Command unknown: {root_script}")
+            self.parser.error(f"Script unknown: {root_script}")
 
         try:
             f = options.handler
