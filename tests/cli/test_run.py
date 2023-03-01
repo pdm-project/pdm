@@ -722,7 +722,7 @@ def test_run_shortcuts_dont_override_commands(project, invoke, capfd, mocker):
 def test_run_shortcut_fail_with_usage_if_script_not_found(project, invoke):
     result = invoke(["whatever"], obj=project)
     assert result.exit_code != 0
-    assert "Command unknown: whatever" in result.stderr
+    assert "Script unknown: whatever" in result.stderr
     assert "Usage" in result.stderr
 
 

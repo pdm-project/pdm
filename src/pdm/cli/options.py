@@ -324,8 +324,10 @@ packages_group.add_argument("packages", nargs="*", help="Specify packages")
 ignore_python_option = Option(
     "-I",
     "--ignore-python",
-    action="store_true",
+    action=CallbackAction,
+    nargs=0,
     help="Ignore the Python path saved in .pdm-python",
+    callback=lambda *args, **kwargs: os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"}),
 )
 
 prerelease_option = Option(

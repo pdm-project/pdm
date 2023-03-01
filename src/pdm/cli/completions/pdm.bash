@@ -52,6 +52,10 @@ _pdm_a919b69078acdf0a_complete()
             opts="--dev --format --global --group --help --lockfile --no-default --output --production --project --pyproject --verbose --without-hashes"
             ;;
 
+            (fix)
+            opts="--dry-run --global --help --project --verbose"
+            ;;
+
             (import)
             opts="--dev --format --global --group --help --project --verbose"
             ;;
@@ -73,7 +77,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (lock)
-            opts="--check --global --help --lockfile --no-isolation --project --refresh --skip --verbose"
+            opts="--check --dev --global --group --help --lockfile --no-default --no-isolation --production --project --refresh --skip --verbose"
             ;;
 
             (plugin)
@@ -130,7 +134,7 @@ _pdm_a919b69078acdf0a_complete()
 
     # completing for a command
     if [[ $cur == $com ]]; then
-        coms="add build cache completion config export import info init install list lock plugin publish remove run search self show sync update use venv"
+        coms="add build cache completion config export fix import info init install list lock plugin publish remove run search self show sync update use venv"
 
         COMPREPLY=($(compgen -W "${coms}" -- ${cur}))
         __ltrim_colon_completions "$cur"
