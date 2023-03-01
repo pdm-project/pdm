@@ -157,11 +157,9 @@ class Core:
 
         self.ui.set_verbosity(options.verbose)
         project = self.ensure_project(options, obj)
+        self.ui.set_theme(project.global_config.load_theme())
         if next((arg for arg in args if not arg.startswith("-")), None) != "fix":
             FixCommand.check_problems(project)
-        self.ui.set_theme(project.global_config.load_theme())
-        if options.ignore_python:
-            os.environ["PDM_IGNORE_SAVED_PYTHON"] = "1"
 
         if options.pep582:
             print_pep582_command(project, options.pep582)
