@@ -1,3 +1,20 @@
+Release v2.4.7 (2023-03-02)
+---------------------------
+
+### Bug Fixes
+
+- Abort if lockfile isn't generated when executing `pdm export`. [#1730](https://github.com/pdm-project/pdm/issues/1730)
+- Ignore `venv.prompt` configuration when using `conda` as the backend. [#1734](https://github.com/pdm-project/pdm/issues/1734)
+- Fix a bug of finding local packages in the parent folder when it exists in the current folder. [#1736](https://github.com/pdm-project/pdm/issues/1736)
+- Ensure UTF-8 encoding when generating README.md. [#1739](https://github.com/pdm-project/pdm/issues/1739)
+- Fix a bug of show command not showing metadata of the current project. [#1740](https://github.com/pdm-project/pdm/issues/1740)
+- Replace `.` with `-` when normalizing package name. [#1745](https://github.com/pdm-project/pdm/issues/1745)
+
+### Documentation
+
+- Support using `pdm venv activate` without specifying `env_name` to activate in project venv created by conda [#1735](https://github.com/pdm-project/pdm/issues/1735)
+
+
 Release v2.4.6 (2023-02-20)
 ---------------------------
 
