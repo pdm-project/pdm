@@ -281,8 +281,12 @@ def get_venv_like_prefix(interpreter: str | Path) -> Path | None:
     and return the prefix if found.
     """
     interpreter = Path(interpreter)
-    prefix = interpreter.parent.parent
-    if prefix.joinpath("pyvenv.cfg").exists():
+    prefix = interpreter.parent
+    if prefix.joinpath("conda-meta").exists():
+        return prefix
+
+    prefix = prefix.parent
+    if prefix.joinpath("pyvenv.cfg").exists() or prefix.joinpath("conda-meta").exists():
         return prefix
 
     virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
