@@ -220,3 +220,10 @@ def test_install_monorepo_with_rel_paths(fixture_project, invoke, working_set):
         invoke(["install"], obj=project, strict=True)
     for package in ("package-a", "package-b", "core"):
         assert package in working_set
+
+
+def test_pre_install_version_rewriting(fixture_project, invoke, working_set):
+    project = fixture_project("test-pre-install-version-rewriting")
+    with cd(project.root):
+        invoke(["sync"], obj=project, strict=True)
+    assert working_set[project.name].version == "0.0.1+rewrite"

@@ -1,0 +1,18 @@
+[project]
+dynamic = ["version"]
+dependencies = []
+name = "test-pre-install-version-rewriting"
+
+[build-system]
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
+
+[tool.pdm.version]
+source = "file"
+path = "mypackage/__version__.py"
+
+[tool.pdm.scripts.pre_install]
+shell = "echo '__version__ = \"0.0.1+rewrite\"' >mypackage/__version__.py"
+
+[tool.pdm.scripts.pre_build]
+shell = "echo '__version__ = \"0.0.1+rewrite\"' >mypackage/__version__.py"

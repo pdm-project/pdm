@@ -194,6 +194,7 @@ def do_sync(
     candidates = resolve_candidates_from_lockfile(project, requirements)
     if tracked_names and dry_run:
         candidates = {name: c for name, c in candidates.items() if name in tracked_names}
+    hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
     handler = project.core.synchronizer_class(
         candidates,
         project.environment,
@@ -205,7 +206,6 @@ def do_sync(
         reinstall=reinstall,
         only_keep=only_keep,
     )
-    hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
     handler.synchronize()
     hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
 
