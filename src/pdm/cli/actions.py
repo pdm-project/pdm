@@ -514,6 +514,8 @@ def do_init(
             readme = project.root.joinpath("README.md")
             readme.write_text(f"# {name}\n\n{description}\n", encoding="utf-8")
         data["project"]["readme"] = readme.name
+    with project.root.joinpath(".gitignore").open("a", encoding="utf-8") as file:
+        file.write(".pdm-python")
     get_specifier(python_requires)
     project.pyproject._data.update(data)
     project.pyproject.write()
