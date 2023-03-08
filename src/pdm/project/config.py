@@ -155,10 +155,7 @@ class Config(MutableMapping[str, str]):
         ),
         "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True, coerce=ensure_boolean),
         "python.use_venv": ConfigItem(
-            "Install packages into the activated venv site packages instead of PEP 582",
-            True,
-            env_var="PDM_USE_VENV",
-            coerce=ensure_boolean,
+            "Use virtual environments when available", True, env_var="PDM_USE_VENV", coerce=ensure_boolean
         ),
         "pypi.url": ConfigItem(
             "The URL of PyPI mirror, defaults to https://pypi.org/simple",

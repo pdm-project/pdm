@@ -8,6 +8,7 @@ from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.options import groups_group, lockfile_option
+from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
