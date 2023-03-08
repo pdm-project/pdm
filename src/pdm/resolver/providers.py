@@ -67,10 +67,9 @@ class BaseProvider(AbstractProvider):
         backtrack_causes: Sequence[RequirementInformation],
     ) -> tuple[Comparable, ...]:
         is_top = any(parent is None for _, parent in information[identifier])
-        is_backtrack_cause = any(
-            requirement.identify() == identifier or parent and parent.identify() == identifier
-            for requirement, parent in backtrack_causes
-        )
+        backtrack_identifiers = {req.identify() for req, _ in backtrack_causes} | {
+            parent.identify() for _, parent in backtrack_causes if parent is not None
+        }
         if is_top:
             dep_depth = 1
         else:
@@ -80,7 +79,9 @@ class BaseProvider(AbstractProvider):
             )
             dep_depth = min(parent_depths, default=0) + 1
         # Use the REAL identifier as it may be updated after candidate preparation.
-        self._known_depth[self.identify(next(candidates[identifier]))] = dep_depth
+        candidate = next(candidates[identifier])
+        self._known_depth[self.identify(candidate)] = dep_depth
+        is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in self.get_dependencies(candidate))
         is_file_or_url = any(not requirement.is_named for requirement, _ in information[identifier])
         operators = [
             spec.operator for req, _ in information[identifier] if req.specifier is not None for spec in req.specifier
