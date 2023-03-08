@@ -36,7 +36,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
             parsed = urllib.parse.urlparse(source["url"])
             auth, index_netloc = split_auth_from_netloc(parsed.netloc)
             if index_netloc == netloc:
-                if "username" in source:
+                if source.get("username"):
                     auth = (source["username"], source.get("password"))
                 return auth, source["url"]
         return None, None
