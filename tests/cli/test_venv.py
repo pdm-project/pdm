@@ -17,7 +17,7 @@ def with_pip(request):
 
 @pytest.fixture()
 def fake_create(monkeypatch):
-    def fake_create(self, location, *args):
+    def fake_create(self, location, *args, prompt=None):
         bin_dir = "Scripts" if sys.platform == "win32" else "bin"
         suffix = ".exe" if sys.platform == "win32" else ""
         (location / bin_dir).mkdir(parents=True)
