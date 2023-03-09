@@ -14,7 +14,7 @@ from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.environment import Environment
-from pdm.models.requirements import Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable, normalize_name
 
 if TYPE_CHECKING:
@@ -186,7 +186,10 @@ class Synchronizer:
             return bool(self.no_editable)
         if not can.req.is_named:
             dreq = Requirement.from_dist(dist)
-            return getattr(dreq, "url", None) != backend.expand_line(can.req.url)  # type: ignore[attr-defined]
+            if not isinstance(dreq, FileRequirement):
+                return True
+            assert can.link is not None
+            return dreq.get_full_url() != backend.expand_line(can.link.url_without_fragment)
         specifier = can.req.as_pinned_version(can.version).specifier
         assert specifier is not None
         return not specifier.contains(dist.version, prereleases=True)
