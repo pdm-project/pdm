@@ -1,3 +1,13 @@
+Release v2.4.8 (2023-03-09)
+---------------------------
+
+### Bug Fixes
+
+- Fix the resolution order to prefer the packages causing the conflict.
+  This can make the resolution reach a solution faster. [#1752](https://github.com/pdm-project/pdm/issues/1752)
+- Fix a bug that embedded credentials in URL are not respected for the default source. [#1757](https://github.com/pdm-project/pdm/issues/1757)
+
+
 Release v2.4.7 (2023-03-02)
 ---------------------------
 
