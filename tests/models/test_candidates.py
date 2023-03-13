@@ -102,6 +102,7 @@ def test_extras_warning(project, recwarn):
     assert candidate.version == "0.0.1"
 
 
+@pytest.mark.xfail(reason="packaging 22 no longer supports legacy specifiers")
 @pytest.mark.usefixtures("local_finder")
 def test_parse_abnormal_specifiers(project):
     req = parse_requirement("http://fixtures.test/artifacts/celery-4.4.2-py2.py3-none-any.whl")
