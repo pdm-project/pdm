@@ -11,14 +11,15 @@ import sys
 from types import FrameType
 from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, cast
 
-from pdm import signals, termui
+from pdm import termui
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.hooks import KNOWN_HOOKS, HookManager
+from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.cli.utils import check_project_file, get_pep582_path
 from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
+from pdm.signals import pdm_signals
 from pdm.utils import is_path_relative_to
 
 
@@ -374,5 +375,5 @@ def run_script_if_present(script_name: str) -> Callable:
     return handler
 
 
-for hook in KNOWN_HOOKS:
-    getattr(signals, hook).connect(run_script_if_present(hook), weak=False)
+for hook in pdm_signals:
+    pdm_signals.signal(hook).connect(run_script_if_present(hook), weak=False)

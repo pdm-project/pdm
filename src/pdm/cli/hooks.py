@@ -3,12 +3,8 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Generator
 
-from blinker import Signal
-
-from pdm import signals
 from pdm.project.core import Project
-
-KNOWN_HOOKS = tuple(name for name, obj in signals.__dict__.items() if isinstance(obj, Signal))
+from pdm.signals import pdm_signals
 
 
 class HookManager:
@@ -55,4 +51,4 @@ class HookManager:
         Emit a hook signal if rules allow it.
         """
         if self.should_run(name):
-            getattr(signals, name).send(self.project, hooks=self, **kwargs)
+            pdm_signals.signal(name).send(self.project, hooks=self, **kwargs)
