@@ -473,7 +473,10 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             m = _file_req_re.match(line)
             if m is None:
                 raise RequirementError(str(e)) from None
-            r = FileRequirement.create(**m.groupdict())
+            args = m.groupdict()
+            if not args["url"] and args["path"] and not os.path.exists(args["path"]):
+                raise RequirementError(str(e)) from None
+            r = FileRequirement.create(**args)
         else:
             r = Requirement.from_pkg_requirement(pkg_req)
         if replaced:

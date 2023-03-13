@@ -74,8 +74,9 @@ def test_convert_req_dict_to_req_line(req, result):
 @pytest.mark.parametrize(
     "line,expected",
     [
-        ("requests; os_name=>'nt'", "Invalid marker:"),
+        ("requests; os_name=>'nt'", None),
         ("./tests", r"The local path (.+)? is not installable"),
+        ("django>=2<4", None),
     ],
 )
 def test_illegal_requirement_line(line, expected):
