@@ -6,9 +6,9 @@ from textwrap import dedent
 import pytest
 
 from pdm.cli import actions
-from pdm.cli.hooks import KNOWN_HOOKS
 from pdm.cli.options import from_splitted_env
 from pdm.models.requirements import parse_requirement
+from pdm.signals import pdm_signals
 
 pytestmark = pytest.mark.usefixtures("repository", "working_set", "local_finder")
 
@@ -238,7 +238,7 @@ parametrize_with_hooks = pytest.mark.parametrize(
 
 @pytest.fixture
 def hooked_project(project, capfd, specs, request):
-    project.pyproject.settings["scripts"] = {hook: f"python -c \"print('{hook} CALLED')\"" for hook in KNOWN_HOOKS}
+    project.pyproject.settings["scripts"] = {hook: f"python -c \"print('{hook} CALLED')\"" for hook in pdm_signals}
     project.pyproject.write()
     for fixture in specs.fixtures:
         request.getfixturevalue(fixture)
@@ -280,7 +280,7 @@ def test_skip_all_option_from_signal(hooked_project, invoke, capfd, specs: HookS
         obj=hooked_project,
     )
     out, _ = capfd.readouterr()
-    for hook in KNOWN_HOOKS:
+    for hook in pdm_signals:
         assert f"{hook} CALLED" not in out
 
 
