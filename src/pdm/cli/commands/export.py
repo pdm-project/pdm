@@ -78,6 +78,6 @@ class Command(BaseCommand):
 
         content = FORMATS[options.format].export(project, packages, options)
         if options.output:
-            Path(options.output).write_text(content)
+            Path(options.output).write_text(content, encoding="utf-8")
         else:
-            project.core.ui.echo(content)
+            project.core.ui.echo(content, markup=False)
