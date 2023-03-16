@@ -1,3 +1,13 @@
+Release v2.4.9 (2023-03-16)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug of synchronization of not considering the revision of VCS requirement in comparison. [#1762](https://github.com/pdm-project/pdm/issues/1762)
+- Improve the error message when parsing an invalid requirement string. [#1765](https://github.com/pdm-project/pdm/issues/1765)
+- Fix a bug that `pdm export` output doesn't include the extras of the dependencies. [#1767](https://github.com/pdm-project/pdm/issues/1767)
+
+
 Release v2.4.8 (2023-03-09)
 ---------------------------
 
