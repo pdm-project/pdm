@@ -128,7 +128,7 @@ Release v2.4.0 (2023-01-12)
 
 - Support multiple PyPI indexes in the configuration. They will be tried after the sources in `pyproject.toml`. [#1310](https://github.com/pdm-project/pdm/issues/1310)
 - Accept yanked versions when the requirement version is pinned. [#1575](https://github.com/pdm-project/pdm/issues/1575)
-- - Expose PDM fixtures as a `pytest` plugin `pdm.pytest` for plugin developers. [#1594](https://github.com/pdm-project/pdm/issues/1594)
+- Expose PDM fixtures as a `pytest` plugin `pdm.pytest` for plugin developers. [#1594](https://github.com/pdm-project/pdm/issues/1594)
 - Show message in the status when fetching package hashes.
   Fetch hashes from the JSON API response as well. [#1609](https://github.com/pdm-project/pdm/issues/1609)
 - Mark `pdm.lock` with an `@generated` comment. [#1611](https://github.com/pdm-project/pdm/issues/1611)
