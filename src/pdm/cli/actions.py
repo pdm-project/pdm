@@ -722,15 +722,7 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
             """
         ).strip()
     elif shell == "fish":
-        result = textwrap.dedent(
-            f"""
-            if test -n "$PYTHONPATH"
-                set -x PYTHONPATH '{lib_path}' $PYTHONPATH
-            else
-                set -x PYTHONPATH '{lib_path}'
-            end
-            """
-        ).strip()
+        result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
     elif shell in ("tcsh", "csh"):
         result = textwrap.dedent(
             f"""
