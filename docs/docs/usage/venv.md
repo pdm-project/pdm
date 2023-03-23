@@ -41,7 +41,7 @@ Other virtualenvs go to the location specified by the `venv.location` configurat
 When no interpreter is stored in the project config or `PDM_IGNORE_SAVED_PYTHON` env var is set, PDM will try to detect possible virtualenvs to use:
 
 - `venv`, `env`, `.venv` directories in the project root
-- The currently activated virtualenv
+- The currently activated virtualenv, unless `PDM_IGNORE_ACTIVE_VENV` is set
 
 ## List all virtualenvs created with this project
 
