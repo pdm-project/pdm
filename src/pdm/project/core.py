@@ -202,13 +202,16 @@ class Project:
                 return python
             self._saved_python = None  # Clear the saved path if it doesn't match
 
-        if config.get("python.use_venv") and not self.is_global:
+        if config.get("python.use_venv") and not self.is_global and not os.getenv("PDM_IGNORE_ACTIVE_VENV"):
             # Resolve virtual environments from env-vars
             venv_in_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
             if venv_in_env:
                 python = PythonInfo.from_path(get_venv_python(Path(venv_in_env)))
                 if match_version(python):
-                    note(f"Inside an active virtualenv [success]{venv_in_env}[/], reusing it.")
+                    note(
+                        f"Inside an active virtualenv [success]{venv_in_env}[/], reusing it.\n"
+                        "Set env var [success]PDM_IGNORE_ACTIVE_VENV[/] to ignore it."
+                    )
                     return python
             # otherwise, get a venv associated with the project
             for _, venv in iter_venvs(self):
