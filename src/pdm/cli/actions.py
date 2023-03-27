@@ -12,6 +12,7 @@ import warnings
 from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
+from pathlib import Path
 from typing import Collection, Iterable, Mapping, cast
 
 import tomlkit
@@ -535,7 +536,29 @@ def do_init(
     get_specifier(python_requires)
     project.pyproject._data.update(data)
     project.pyproject.write()
+    _write_gitignore(project.root.joinpath(".gitignore"))
     hooks.try_emit("post_init")
+
+
+def _write_gitignore(path: Path) -> None:
+    import requests
+
+    url = "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore"
+    if not path.exists():
+        try:
+            resp = requests.get(url)
+            resp.raise_for_status()
+        except requests.exceptions.RequestException:
+            content = "\n".join(["build/", "dist/", "*.egg-info/", "__pycache__/", "*.py[cod]"]) + "\n"
+        else:
+            content = resp.text
+        content += ".pdm-python\n"
+    else:
+        content = path.read_text(encoding="utf-8")
+        if ".pdm-python" in content:
+            return
+        content += ".pdm-python\n"
+    path.write_text(content, encoding="utf-8")
 
 
 def do_use(
