@@ -193,7 +193,7 @@ summary = "brain-dead simple config-ini parsing"
 
 [[package]]
 name = "installer"
-version = "0.6.0"
+version = "0.7.0"
 requires_python = ">=3.7"
 summary = "A library for installing Python wheels."
 
@@ -693,7 +693,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [metadata]
 lock_version = "4.2"
 groups = ["default", "doc", "pytest", "test", "tox", "workflow"]
-content_hash = "sha256:331f58dc3a677cf4ba098b0378ead879d28c9943b47131968cc4c40707939904"
+content_hash = "sha256:9678956ef9b49114377c653bc9d6ccfe91bb0bc116022fc77d33f918d0aa0eb9"
 
 [metadata.files]
 "arpeggio 2.0.0" = [
@@ -844,9 +844,9 @@ content_hash = "sha256:331f58dc3a677cf4ba098b0378ead879d28c9943b47131968cc4c4070
     {url = "https://files.pythonhosted.org/packages/d7/4b/cbd8e699e64a6f16ca3a8220661b5f83792b3017d0f79807cb8708d33913/iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
     {url = "https://files.pythonhosted.org/packages/ef/a6/62565a6e1cf69e10f5727360368e451d4b7f58beeac6173dc9db836a5b46/iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
 ]
-"installer 0.6.0" = [
-    {url = "https://files.pythonhosted.org/packages/bf/42/fe5f10fd0d58d5d8231a0bc39e664de09992f960597e9fbd3753f84423a3/installer-0.6.0-py3-none-any.whl", hash = "sha256:ae7c62d1d6158b5c096419102ad0d01fdccebf857e784cee57f94165635fe038"},
-    {url = "https://files.pythonhosted.org/packages/c9/ab/a9141dc175ec7b620fffe7e0295251a7b6a0ffb4325d64aeb128dff8c698/installer-0.6.0.tar.gz", hash = "sha256:f3bd36cd261b440a88a1190b1becca0578fee90b4b62decc796932fdd5ae8839"},
+"installer 0.7.0" = [
+    {url = "https://files.pythonhosted.org/packages/05/18/ceeb4e3ab3aa54495775775b38ae42b10a92f42ce42dfa44da684289b8c8/installer-0.7.0.tar.gz", hash = "sha256:a26d3e3116289bb08216e0d0f7d925fcef0b0194eedfa0c944bcaaa106c4b631"},
+    {url = "https://files.pythonhosted.org/packages/e5/ca/1172b6638d52f2d6caa2dd262ec4c811ba59eee96d54a7701930726bce18/installer-0.7.0-py3-none-any.whl", hash = "sha256:05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53"},
 ]
 "jinja2 3.1.2" = [
     {url = "https://files.pythonhosted.org/packages/7a/ff/75c28576a1d900e87eb6335b063fab47a8ef3c8b4d88524c4bf78f670cce/Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
