@@ -4,6 +4,7 @@ import io
 import itertools
 import json
 import os
+import warnings
 import zipfile
 from functools import lru_cache
 from pathlib import Path
@@ -14,6 +15,7 @@ from installer.destinations import SchemeDictionaryDestination
 from installer.exceptions import InvalidWheelSource
 from installer.records import RecordEntry
 from installer.sources import WheelFile as _WheelFile
+from installer.sources import _WheelFileValidationError
 
 from pdm.compat import cached_property
 from pdm.installers.packages import CachedPackage
@@ -247,6 +249,16 @@ def _install_wheel(
     Return the .dist-info path
     """
     with WheelFile.open(wheel) as source:
+        try:
+            source.validate_record()
+        except _WheelFileValidationError as e:
+            formatted_issues = "\n".join(e.issues)
+            warning = (
+                f"Validation of the RECORD file of {wheel} failed."
+                " Please report to the maintainers of that package so they can fix"
+                f" their build process. Details:\n{formatted_issues}\n"
+            )
+            warnings.warn(warning, UserWarning, stacklevel=2)
         root_scheme = _process_WHEEL_file(source)
         source.exclude = excludes
         if additional_contents:
