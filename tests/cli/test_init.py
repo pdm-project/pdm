@@ -103,6 +103,7 @@ def test_init_auto_create_venv(project_no_init, invoke, mocker):
     result = invoke(["init"], input="\n\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     assert project_no_init.python.executable.parent.parent == project_no_init.root / ".venv"
+    assert ".pdm-python" in (project_no_init.root / ".gitignore").read_text()
 
 
 def test_init_auto_create_venv_specify_python(project_no_init, invoke, mocker):
