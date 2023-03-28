@@ -423,7 +423,7 @@ class PreparedCandidate:
                     self._source_dir = Path(build_dir)
                     self._unpacked_dir = result
 
-    def prepare_metadata(self) -> im.Distribution:
+    def prepare_metadata(self, force_build: bool = False) -> im.Distribution:
         self.obtain(allow_all=True)
         metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
         if self.wheel:
@@ -434,7 +434,7 @@ class PreparedCandidate:
         assert self._unpacked_dir, "Source directory isn't ready yet"
         # Try getting from PEP 621 metadata
         pyproject_toml = self._unpacked_dir / "pyproject.toml"
-        if pyproject_toml.exists():
+        if pyproject_toml.exists() and not force_build:
             pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
             metadata = pyproject.metadata.unwrap()
             if not metadata:
@@ -486,7 +486,7 @@ class PreparedCandidate:
             except Exception:
                 message = "Failed to parse the project files, dependencies may be missing"
                 termui.logger.warn(message)
-                warnings.warn(message, RuntimeWarning)
+                warnings.warn(message, RuntimeWarning, stacklevel=1)
                 setup = Setup()
             return setup.as_dist()
         else:

@@ -48,13 +48,13 @@ class Command(BaseCommand):
                 return
             latest_stable = next(filter(filter_stable, matches), None)
             metadata = latest.prepare(project.environment).metadata
-            project_info = ProjectInfo.from_distribution(metadata)
         else:
             if not project.name:
                 raise PdmUsageError("This project is not a package")
             package = normalize_name(project.name)
-            project_info = ProjectInfo.from_metadata(project.pyproject.metadata)
+            metadata = project.make_self_candidate().prepare(project.environment).prepare_metadata(True)
             latest_stable = None
+        project_info = ProjectInfo.from_distribution(metadata)
 
         if any(getattr(options, key, None) for key in self.metadata_keys):
             for key in self.metadata_keys:
