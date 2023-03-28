@@ -1,6 +1,8 @@
 [project]
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
+name = "pdm"
+description = "A modern Python package and dependency manager supporting the latest PEP standards"
 authors = [
     {name = "Frost Ming", email = "mianghong@gmail.com"},
 ]
@@ -28,8 +30,6 @@ dependencies = [
     "typing-extensions; python_version < \"3.8\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
 ]
-name = "pdm"
-description = "A modern Python package and dependency manager supporting the latest PEP standards"
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
@@ -109,7 +109,6 @@ workflow = [
 line-length = 120
 target-version = ["py37", "py38", "py39", "py310"]
 
-
 [tool.ruff]
 line-length = 120
 select = [
@@ -119,7 +118,6 @@ select = [
   "F",    # pyflakes
   "PGH",  # pygrep-hooks
   "RUF",  # ruff
-  "W",    # pycodestyle
   "W",    # pycodestyle
   "YTT",  # flake8-2020
 ]
