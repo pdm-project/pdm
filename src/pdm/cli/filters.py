@@ -57,13 +57,13 @@ class GroupSelection:
         return list(self)
 
     @cached_property
-    def _translated_groups(self) -> set[str]:
+    def _translated_groups(self) -> list[str]:
         """Translate default, dev and groups containing ":all" into a list of groups"""
         if self.is_unset:
             # Default case, return what is in the lock file
             locked_groups = self.project.lockfile.groups
             if locked_groups:
-                return set(locked_groups)
+                return locked_groups
         default, dev, groups = self.default, self.dev, self.groups
         if dev is None:  # --prod is not set, include dev-dependencies
             dev = True
@@ -79,10 +79,7 @@ class GroupSelection:
         if ":all" in groups:
             groups_set.discard(":all")
             groups_set.update(optional_groups)
-        if default:
-            groups_set.add("default")
-        # Sorts the result in ascending order instead of in random order
-        # to make this function pure
+
         invalid_groups = groups_set - set(project.iter_groups())
         if invalid_groups:
             project.core.ui.echo(
@@ -93,7 +90,12 @@ class GroupSelection:
         extra_groups = project.lockfile.compare_groups(groups_set)
         if extra_groups:
             raise PdmUsageError(f"Requested groups not in lockfile: {','.join(extra_groups)}")
-        return groups_set
+        # Sorts the result in ascending order instead of in random order
+        # to make this function pure
+        result = sorted(groups_set)
+        if default:
+            result.insert(0, "default")
+        return result
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._translated_groups)
