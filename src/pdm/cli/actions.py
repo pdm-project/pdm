@@ -150,7 +150,7 @@ def resolve_candidates_from_lockfile(project: Project, requirements: Iterable[Re
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
     """Check if the lock file exists and is up to date. Return the update strategy."""
-    if not project.lockfile.exists:
+    if not project.lockfile.exists():
         if raise_not_exist:
             raise ProjectError("Lock file does not exist, nothing to install")
         project.core.ui.echo("Lock file does not exist", style="warning", err=True)

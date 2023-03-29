@@ -153,7 +153,7 @@ class TestRepository(BaseRepository):
     A mock repository to ease testing dependencies
     """
 
-    def __init__(self, sources: list[RepositoryConfig], environment: Environment, pypi_json: Path):
+    def __init__(self, sources: list[RepositoryConfig], environment: BaseEnvironment, pypi_json: Path):
         super().__init__(sources, environment)
         self._pypi_data: dict[str, Any] = {}
         self._pypi_json = pypi_json

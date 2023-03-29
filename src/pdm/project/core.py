@@ -525,7 +525,7 @@ class Project:
         """Within the same major version, the higher lockfile generator can work with
         lower lockfile but not vice versa.
         """
-        if not self.lockfile.exists:
+        if not self.lockfile.exists():
             return True
         lockfile_version = str(self.lockfile.file_version)
         if not lockfile_version:
@@ -583,7 +583,7 @@ class Project:
         self.pyproject.write(show_message)
 
     def init_global_project(self) -> None:
-        if not self.is_global or not self.pyproject.empty:
+        if not self.is_global or not self.pyproject.empty():
             return
         self.root.mkdir(parents=True, exist_ok=True)
         self.pyproject.set_data({"project": {"dependencies": ["pip", "setuptools", "wheel"]}})

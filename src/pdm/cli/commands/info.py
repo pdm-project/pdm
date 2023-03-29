@@ -19,14 +19,16 @@ class Command(BaseCommand):
             action="store_true",
             help="Show the project root path",
         )
-        group.add_argument("--packages", action="store_true", help="Show the packages root")
+        group.add_argument("--packages", action="store_true", help="Show the local packages root")
         group.add_argument("--env", action="store_true", help="Show PEP 508 environment markers")
         group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
         interpreter = project.python
-        packages_path = project.environment.get_paths()["purelib"]
+        packages_path = ""
+        if project.environment.is_local:
+            packages_path = project.environment.packages_path  # type: ignore[attr-defined]
         if options.python:
             project.core.ui.echo(str(interpreter.executable))
         elif options.where:
@@ -43,7 +45,7 @@ class Command(BaseCommand):
                         "PDM version",
                         "Python Interpreter",
                         "Project Root",
-                        "Project Packages",
+                        "Local Packages",
                     ]
                 ],
                 [

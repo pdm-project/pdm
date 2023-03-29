@@ -45,7 +45,7 @@ class Command(BaseCommand):
         from pdm.cli.commands.venv.utils import get_venv_python
 
         hooks = HookManager(project, options.skip)
-        if project.pyproject.exists:
+        if project.pyproject.exists():
             project.core.ui.echo("pyproject.toml already exists, update it now.", style="primary")
         else:
             project.core.ui.echo("Creating a pyproject.toml for PDM...", style="primary")

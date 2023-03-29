@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from pdm.environments.base import BaseEnvironment
 from pdm.models.in_process import get_sys_config_paths
 from pdm.models.python import PythonInfo
-from pdm.project import Project
 from pdm.utils import get_venv_like_prefix
+
+if TYPE_CHECKING:
+    from pdm.project import Project
 
 
 class PythonEnvironment(BaseEnvironment):
@@ -25,9 +30,7 @@ class PythonEnvironment(BaseEnvironment):
         is_venv = self.interpreter.is_venv
         paths = get_sys_config_paths(
             str(self.interpreter.executable),
-            kind="user"
-            if not is_venv and self.project.global_config["global_project.user_site"]
-            else "default",
+            kind="user" if not is_venv and self.project.global_config["global_project.user_site"] else "default",
         )
         if is_venv:
             python_xy = f"python{self.interpreter.identifier}"

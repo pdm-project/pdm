@@ -16,7 +16,7 @@ from pdm.environments import BaseEnvironment
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
-from pdm.models.requirements import Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable, normalize_name
 
 if TYPE_CHECKING:

@@ -52,7 +52,7 @@ class GroupSelection:
 
     def all(self) -> list[str] | None:
         if self.is_unset:
-            if self.project.lockfile.exists:
+            if self.project.lockfile.exists():
                 return self.project.lockfile.groups
         return list(self)
 

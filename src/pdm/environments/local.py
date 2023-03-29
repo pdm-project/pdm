@@ -6,10 +6,12 @@ import shlex
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pdm.environments.prefix import PrefixEnvironment
+from pdm.compat import cached_property
+from pdm.environments.base import BaseEnvironment
+from pdm.utils import pdm_scheme
 
 if TYPE_CHECKING:
-    from pdm.project import Project
+    pass
 
 
 def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
@@ -44,16 +46,12 @@ def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
         return contents.replace(match.group(1), new_executable, 1)
 
 
-class PythonLocalEnvironment(PrefixEnvironment):
+class PythonLocalEnvironment(BaseEnvironment):
     """A project environment that installs packages into
     the local `__pypackages__` directory(PEP 582).
     """
 
     is_local = True
-
-    def __init__(self, project: Project) -> None:
-        prefix = os.path.join(project.root, "__pypackages__")
-        super().__init__(project, prefix=prefix)
 
     @property
     def process_env(self) -> dict[str, str]:
@@ -61,11 +59,28 @@ class PythonLocalEnvironment(PrefixEnvironment):
 
         env = super().process_env
         pythonpath = os.getenv("PYTHONPATH", "").split(os.pathsep)
-        pythonpath = [get_pep582_path(self.project)] + [
-            p for p in pythonpath if "/pep582" not in p.replace("\\", "/")
-        ]
+        pythonpath = [get_pep582_path(self.project)] + [p for p in pythonpath if "/pep582" not in p.replace("\\", "/")]
         env["PYTHONPATH"] = os.pathsep.join(pythonpath)
         return env
+
+    @cached_property
+    def packages_path(self) -> Path:
+        """The local packages path."""
+        pypackages = self.project.root / "__pypackages__" / self.interpreter.identifier
+        if not pypackages.exists() and "-32" in pypackages.name:
+            compatible_packages = pypackages.with_name(pypackages.name[:-3])
+            if compatible_packages.exists():
+                pypackages = compatible_packages
+        scripts = "Scripts" if os.name == "nt" else "bin"
+        if not pypackages.parent.exists():
+            pypackages.parent.mkdir(parents=True)
+            pypackages.parent.joinpath(".gitignore").write_text("*\n!.gitignore\n")
+        for subdir in [scripts, "include", "lib"]:
+            pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
+        return pypackages
+
+    def get_paths(self) -> dict[str, str]:
+        return pdm_scheme(self.packages_path.as_posix())
 
     def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""
