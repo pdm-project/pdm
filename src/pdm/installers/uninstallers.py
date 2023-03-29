@@ -133,9 +133,7 @@ class BaseRemovePaths(abc.ABC):
         """Roll back the removal operations"""
 
     @classmethod
-    def from_dist(
-        cls: type[_T], dist: Distribution, environment: BaseEnvironment
-    ) -> _T:
+    def from_dist(cls: type[_T], dist: Distribution, environment: BaseEnvironment) -> _T:
         """Create an instance from the distribution"""
         scheme = environment.get_paths()
         instance = cls(dist, environment)

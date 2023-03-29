@@ -68,9 +68,7 @@ class BaseEnvironment(abc.ABC):
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
         return unearth.TargetPython(python_version, [python_abi_tag])
 
-    def _build_session(
-        self, index_urls: list[str], trusted_hosts: list[str]
-    ) -> PDMSession:
+    def _build_session(self, index_urls: list[str], trusted_hosts: list[str]) -> PDMSession:
         ca_certs = self.project.config.get("pypi.ca_certs")
         session = PDMSession(
             cache_dir=self.project.cache("http"),
@@ -118,9 +116,9 @@ class BaseEnvironment(abc.ABC):
             ignore_compatibility=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
             only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
-            respect_source_order=self.project.pyproject.settings.get(
-                "resolution", {}
-            ).get("respect-source-order", False),
+            respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
+                "respect-source-order", False
+            ),
             verbosity=self.project.core.ui.verbosity,
         )
         try:
@@ -160,9 +158,7 @@ class BaseEnvironment(abc.ABC):
                 raise download_error
             with tempfile.TemporaryDirectory(prefix="pip-download-") as dirname:
                 try:
-                    downloaded = finder.download_and_unpack(
-                        best_match.link, dirname, dirname
-                    )
+                    downloaded = finder.download_and_unpack(best_match.link, dirname, dirname)
                 except unearth.UnpackError as e:
                     raise download_error from e
                 shutil.move(str(downloaded), path)
@@ -179,9 +175,7 @@ class BaseEnvironment(abc.ABC):
 
         python_version = self.interpreter.version
         executable = str(self.interpreter.executable)
-        proc = subprocess.run(
-            [executable, "-Esm", "pip", "--version"], capture_output=True
-        )
+        proc = subprocess.run([executable, "-Esm", "pip", "--version"], capture_output=True)
         if proc.returncode == 0:
             # The pip has already been installed with the executable, just use it
             command = [executable, "-Esm", "pip"]
