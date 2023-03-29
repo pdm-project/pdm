@@ -127,6 +127,23 @@ class Core:
         """
         return self.project_class(self, root_path, is_global, global_config)
 
+    def before_invoke(self, project: Project, command: BaseCommand | None, options: argparse.Namespace) -> None:
+        """Called before command invocation"""
+        from pdm.cli.commands.fix import Command as FixCommand
+        from pdm.cli.hooks import HookManager
+
+        self.ui.set_verbosity(options.verbose)
+        self.ui.set_theme(project.global_config.load_theme())
+        hooks = HookManager(project, getattr(options, "skip", None))
+        hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
+
+        if not isinstance(getattr(options, "__command__", None), FixCommand):
+            FixCommand.check_problems(project)
+
+        if options.pep582:
+            print_pep582_command(project, options.pep582)
+            sys.exit(0)
+
     def main(
         self,
         args: list[str] | None = None,
@@ -135,7 +152,6 @@ class Core:
         **extra: Any,
     ) -> None:
         """The main entry function"""
-        from pdm.cli.commands.fix import Command as FixCommand
 
         # Ensure same behavior while testing and using the CLI
         args = args or sys.argv[1:]
@@ -155,46 +171,34 @@ class Core:
             except PdmArgumentError as e:
                 self.parser.error(str(e.__cause__))
 
-        self.ui.set_verbosity(options.verbose)
         project = self.ensure_project(options, obj)
-        self.ui.set_theme(project.global_config.load_theme())
-        if not isinstance(getattr(options, "__command__", None), FixCommand):
-            FixCommand.check_problems(project)
-
-        if options.pep582:
-            print_pep582_command(project, options.pep582)
-            sys.exit(0)
+        command = getattr(options, "__command__", None)
+        self.before_invoke(project, command, options)
 
         if root_script and root_script not in project.scripts:
             self.parser.error(f"Script unknown: {root_script}")
 
-        try:
-            command: BaseCommand = options.__command__
-        except AttributeError:
+        if command is None:
             self.parser.print_help(sys.stderr)
             sys.exit(1)
+        assert isinstance(command, BaseCommand)
+        try:
+            command.handle(project, options)
+        except Exception:
+            etype, err, traceback = sys.exc_info()
+            should_show_tb = not isinstance(err, PdmUsageError)
+            if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
+                raise cast(Exception, err).with_traceback(traceback) from None
+            self.ui.echo(
+                rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
+                err=True,
+            )
+            if should_show_tb:
+                self.ui.echo("Add '-v' to see the detailed traceback", style="warning", err=True)
+            sys.exit(1)
         else:
-            try:
-                command.handle(project, options)
-            except Exception:
-                etype, err, traceback = sys.exc_info()
-                should_show_tb = not isinstance(err, PdmUsageError)
-                if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
-                    raise cast(Exception, err).with_traceback(traceback) from None
-                self.ui.echo(
-                    rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
-                    err=True,
-                )
-                if should_show_tb:
-                    self.ui.echo(
-                        "Add '-v' to see the detailed traceback",
-                        style="warning",
-                        err=True,
-                    )
-                sys.exit(1)
-            else:
-                if project.config["check_update"] and not is_in_zipapp():
-                    check_update(project)
+            if project.config["check_update"] and not is_in_zipapp():
+                check_update(project)
 
     def register_command(self, command: type[BaseCommand], name: str | None = None) -> None:
         """Register a subcommand to the subparsers,

@@ -8,6 +8,8 @@ It also provides hooks attached to these steps allowing for:
 - plugins to listen to the [signals][pdm.signals] of the same name.
 - developers to define custom scripts with the same name.
 
+Besides, `pre_invoke` signal is emitted before ANY command is invoked, allowing plugins to modify the project or options beforehand.
+
 The built-in commands are currently split into 3 groups:
 
 - the [initialization phase](#initialization)
