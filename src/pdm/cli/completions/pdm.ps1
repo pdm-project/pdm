@@ -429,7 +429,7 @@ function TabExpansion($line, $lastWord) {
                         $completer.AddOpts((
                             [Option]::new(("--with", "-w")).WithValues(@("venv", "virtualenv", "conda")),
                             [Option]::new(("--name", "-n")).WithValues(@()),
-                            [Option]::new(("--with-pip", "-f", "--force")),
+                            [Option]::new(("--with-pip", "-f", "--force"))
                         ))
                     }
                     "list" {$command = $subCommand}
@@ -443,7 +443,7 @@ function TabExpansion($line, $lastWord) {
                         $completer.AddOpts(([Option]::new(("-i", "--interactive", "--force", "-f"))))
                     }
                     Default {
-                        $completer.AddOpts(([Option]::new(("--python", "--path"))
+                        $completer.AddOpts(([Option]::new(("--python", "--path"))))
                         $completer.AddParams(@("create", "list", "remove", "activate", "purge"), $false)
                         break
                     }
