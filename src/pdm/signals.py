@@ -122,3 +122,11 @@ Args:
     project (Project): The project object
     python (PythonInfo): Information about the new Python interpreter
 """
+pre_invoke: NamedSignal = pdm_signals.signal("pre_invoke")
+"""Called before any command is invoked.
+
+Args:
+    project (Project): The project object
+    command (str | None): the command name
+    options (Namespace): the parsed arguments
+"""

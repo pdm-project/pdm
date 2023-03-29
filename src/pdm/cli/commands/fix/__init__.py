@@ -32,7 +32,7 @@ class Command(BaseCommand):
         if not problems:
             return
         breaking = False
-        project.core.ui.echo("The following problems are found in your project:", err=True)
+        project.core.ui.echo("[warning]WARNING:[/] The following problems are found in your project:", err=True)
         for name, fixer in problems:
             project.core.ui.echo(f"  [b]{name}[/]: {fixer.get_message()}", err=True)
             if fixer.breaking:

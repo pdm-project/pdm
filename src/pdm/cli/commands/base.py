@@ -44,6 +44,7 @@ class BaseCommand:
             **kwargs,
         )
         command = cls(parser)
+        command.name = name
         # A special attribute to store the command instance. See pdm/core.py for more details
         parser.set_defaults(__command__=command)
 
