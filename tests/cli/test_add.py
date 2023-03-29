@@ -184,7 +184,7 @@ def test_add_package_update_eager(project, repository, pdm):
 
 def test_add_package_with_mismatch_marker(project, working_set, mocker, pdm):
     mocker.patch(
-        "pdm.models.environment.get_pep508_environment",
+        "pdm.environments.base.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
     )
     pdm(["add", "requests", "pytz; platform_system!='Darwin'"], obj=project, strict=True)
@@ -193,7 +193,7 @@ def test_add_package_with_mismatch_marker(project, working_set, mocker, pdm):
 
 def test_add_dependency_from_multiple_parents(project, working_set, mocker, pdm):
     mocker.patch(
-        "pdm.models.environment.get_pep508_environment",
+        "pdm.environments.base.get_pep508_environment",
         return_value={"platform_system": "Darwin"},
     )
     pdm(["add", "requests", "chardet; platform_system!='Darwin'"], obj=project, strict=True)

@@ -12,10 +12,10 @@ from rich.progress import SpinnerColumn
 
 from pdm import termui
 from pdm.compat import cached_property
+from pdm.environments import BaseEnvironment
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
-from pdm.models.environment import Environment
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable, normalize_name
 
@@ -74,7 +74,7 @@ class DummyExecutor:
         return
 
 
-def editables_candidate(environment: Environment) -> Candidate | None:
+def editables_candidate(environment: BaseEnvironment) -> Candidate | None:
     """Return a candidate for `editables` package"""
     repository = environment.project.get_repository()
     return next(iter(repository.find_candidates(parse_requirement("editables"))), None)
@@ -102,8 +102,7 @@ class Synchronizer:
     def __init__(
         self,
         candidates: dict[str, Candidate],
-        environment: Environment,
-        *,
+        environment: BaseEnvironment,
         clean: bool = False,
         dry_run: bool = False,
         retry_times: int = 1,

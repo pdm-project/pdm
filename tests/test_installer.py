@@ -30,7 +30,10 @@ def test_install_with_file_existing(project):
         req,
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"),
     )
-    (project.environment.packages_path / "lib/demo.py").touch()
+    lib_path = project.environment.get_paths()["purelib"]
+    os.makedirs(lib_path, exist_ok=True)
+    with open(os.path.join(lib_path, "demo.py"), "w") as fp:
+        fp.write("print('hello')\n")
     installer = InstallManager(project.environment)
     installer.install(candidate)
 
@@ -114,6 +117,7 @@ def test_install_wheel_with_cache(project, invoke):
 
     cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
     assert cache_path.is_dir()
+    invoke(["run", "python", "-m", "site"], object=project)
     r = invoke(["run", "python", "-c", "import future_fstrings"], obj=project)
     assert r.exit_code == 0
 

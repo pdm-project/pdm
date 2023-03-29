@@ -57,7 +57,7 @@ class Command(BaseCommand):
         if options.pyproject:
             packages = requirements.values()
         else:
-            if not project.lockfile.exists:
+            if not project.lockfile.exists():
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
             project.core.ui.echo(
                 "The exported requirements file is no longer cross-platform. "

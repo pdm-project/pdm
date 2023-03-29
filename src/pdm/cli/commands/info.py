@@ -19,19 +19,22 @@ class Command(BaseCommand):
             action="store_true",
             help="Show the project root path",
         )
-        group.add_argument("--packages", action="store_true", help="Show the packages root")
+        group.add_argument("--packages", action="store_true", help="Show the local packages root")
         group.add_argument("--env", action="store_true", help="Show PEP 508 environment markers")
         group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
         interpreter = project.python
+        packages_path = ""
+        if project.environment.is_local:
+            packages_path = project.environment.packages_path  # type: ignore[attr-defined]
         if options.python:
             project.core.ui.echo(str(interpreter.executable))
         elif options.where:
             project.core.ui.echo(str(project.root))
         elif options.packages:
-            project.core.ui.echo(str(project.environment.packages_path))
+            project.core.ui.echo(str(packages_path))
         elif options.env:
             project.core.ui.echo(json.dumps(project.environment.marker_environment, indent=2))
         else:
@@ -42,14 +45,14 @@ class Command(BaseCommand):
                         "PDM version",
                         "Python Interpreter",
                         "Project Root",
-                        "Project Packages",
+                        "Local Packages",
                     ]
                 ],
                 [
                     project.core.version,
                     f"{interpreter.executable} ({interpreter.identifier})",
                     project.root.as_posix(),
-                    str(project.environment.packages_path),
+                    str(packages_path),
                 ],
             ):
                 project.core.ui.echo(f"{name}\n  {value}")

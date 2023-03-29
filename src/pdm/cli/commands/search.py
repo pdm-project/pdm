@@ -9,7 +9,8 @@ from pdm import termui
 from pdm._types import SearchResult
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.models.environment import BareEnvironment, WorkingSet
+from pdm.environments import BareEnvironment
+from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 from pdm.utils import normalize_name
 

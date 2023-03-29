@@ -300,9 +300,7 @@ def add_package_to_reverse_tree(
 
 
 def package_is_project(package: Package, project: Project) -> bool:
-    return (
-        not project.environment.is_global and project.name is not None and package.name == normalize_name(project.name)
-    )
+    return project.name is not None and package.name == normalize_name(project.name)
 
 
 def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> Tree:

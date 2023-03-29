@@ -33,10 +33,8 @@ class TOMLBase(TOMLFile):
     def write(self) -> None:
         return super().write(self._data)
 
-    @property
     def exists(self) -> bool:
         return self._path.exists()
 
-    @property
     def empty(self) -> bool:
         return not self._data

@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 from pyproject_hooks import BuildBackendHookCaller
 
 from pdm.compat import tomllib
+from pdm.environments import PrefixEnvironment
 from pdm.exceptions import BuildError
-from pdm.models.environment import PrefixEnvironment
 from pdm.models.in_process import get_sys_config_paths
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.working_set import WorkingSet
@@ -22,7 +22,7 @@ from pdm.termui import logger
 from pdm.utils import create_tracked_tempdir
 
 if TYPE_CHECKING:
-    from pdm.models.environment import Environment
+    from pdm.environments import BaseEnvironment
 
 
 class LoggerWrapper(threading.Thread):
@@ -177,7 +177,7 @@ class EnvBuilder:
             cls._overlay_envs[key] = create_tracked_tempdir("-overlay", "pdm-build-env-")
         return cls._overlay_envs[key]
 
-    def __init__(self, src_dir: str | Path, environment: Environment) -> None:
+    def __init__(self, src_dir: str | Path, environment: BaseEnvironment) -> None:
         """If isolated is True(default), the builder will set up a *clean* environment.
         Otherwise, the environment of the host Python will be used.
         """
@@ -290,7 +290,7 @@ class EnvBuilder:
         if not missing:
             return
         path = self._prefix.shared if shared else self._prefix.overlay
-        env = PrefixEnvironment(self._env.project, path)
+        env = PrefixEnvironment(self._env.project, prefix=path)
         install_requirements(missing, env)
 
         if shared:

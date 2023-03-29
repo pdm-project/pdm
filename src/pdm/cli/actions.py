@@ -34,13 +34,13 @@ from pdm.cli.utils import (
     save_version_specifiers,
     set_env_in_reg,
 )
+from pdm.environments import BareEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.backends import DEFAULT_BACKEND, BuildBackend
 from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
-from pdm.models.environment import BareEnvironment
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import get_specifier
@@ -150,7 +150,7 @@ def resolve_candidates_from_lockfile(project: Project, requirements: Iterable[Re
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
     """Check if the lock file exists and is up to date. Return the update strategy."""
-    if not project.lockfile.exists:
+    if not project.lockfile.exists():
         if raise_not_exist:
             raise ProjectError("Lock file does not exist, nothing to install")
         project.core.ui.echo("Lock file does not exist", style="warning", err=True)
@@ -643,7 +643,17 @@ def do_use(
         f"Using Python interpreter: [success]{str(selected_python.path)}[/] ({selected_python.identifier})"
     )
     project.python = selected_python
-    if old_python and old_python.executable != selected_python.executable and not project.environment.is_global:
+    if project.environment.is_local:
+        project.core.ui.echo(
+            "Using __pypackages__ because non-venv Python is used.",
+            style="primary",
+            err=True,
+        )
+    if (
+        old_python
+        and old_python.executable != selected_python.executable
+        and isinstance(project.environment, PythonLocalEnvironment)
+    ):
         project.core.ui.echo("Updating executable scripts...", style="primary")
         project.environment.update_shebangs(selected_python.executable.as_posix())
     hooks.try_emit("post_use", python=selected_python)

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from installer.destinations import Scheme
     from installer.sources import WheelContentElement
 
-    from pdm.models.environment import Environment
+    from pdm.environments import BaseEnvironment
 
 
 @lru_cache()
@@ -159,7 +159,7 @@ class InstallDestination(SchemeDictionaryDestination):
         return super().finalize_installation(scheme, record_file_path, records)
 
 
-def install_wheel(wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None) -> None:
+def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> None:
     """Install a normal wheel file into the environment."""
     additional_metadata = None
     if direct_url is not None:
@@ -172,7 +172,9 @@ def install_wheel(wheel: str, environment: Environment, direct_url: dict[str, An
     _install_wheel(wheel=wheel, destination=destination, additional_metadata=additional_metadata)
 
 
-def install_wheel_with_cache(wheel: str, environment: Environment, direct_url: dict[str, Any] | None = None) -> None:
+def install_wheel_with_cache(
+    wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None
+) -> None:
     """Only create .pth files referring to the cached package.
     If the cache doesn't exist, create one.
     """
@@ -267,7 +269,7 @@ def _install_wheel(
     return os.path.join(destination.scheme_dict[root_scheme], source.dist_info_dir)
 
 
-def _get_kind(environment: Environment) -> str:
+def _get_kind(environment: BaseEnvironment) -> str:
     if os.name != "nt":
         return "posix"
     is_32bit = environment.interpreter.is_32bit
