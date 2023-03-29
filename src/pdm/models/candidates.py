@@ -549,7 +549,7 @@ class PreparedCandidate:
             # In this branch the requirement must be an editable VCS requirement.
             # The repository will be unpacked into a *persistent* src directory.
             if self.environment.is_local:
-                prefix = self.environment.prefix  # type: ignore[attr-defined]
+                prefix = self.environment.packages_path  # type: ignore[attr-defined]
             else:
                 prefix = get_venv_like_prefix(self.environment.interpreter.executable)
             if prefix is not None:

@@ -18,13 +18,13 @@ from pdm.compat import cached_property
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.auth import PdmBasicAuth
 from pdm.models.in_process import get_pep508_environment, get_python_abi_tag
+from pdm.models.python import PythonInfo
 from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
 from pdm.utils import get_index_urls, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
     from pdm._types import RepositoryConfig
-    from pdm.models.python import PythonInfo
     from pdm.project import Project
 
 

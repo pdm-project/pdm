@@ -61,6 +61,7 @@ class PythonLocalEnvironment(BaseEnvironment):
         pythonpath = os.getenv("PYTHONPATH", "").split(os.pathsep)
         pythonpath = [get_pep582_path(self.project)] + [p for p in pythonpath if "/pep582" not in p.replace("\\", "/")]
         env["PYTHONPATH"] = os.pathsep.join(pythonpath)
+        env["PEP582_PACKAGES"] = str(self.packages_path)
         return env
 
     @cached_property

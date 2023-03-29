@@ -388,7 +388,7 @@ def project_no_init(
     )
     p = core.create_project(tmp_path, global_config=test_home.joinpath("config.toml").as_posix())
     p.global_config["venv.location"] = str(tmp_path / "venvs")
-    mocker.patch("pdm.models.environment.PDMSession", pdm_session)
+    mocker.patch("pdm.environments.base.PDMSession", pdm_session)
     mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()

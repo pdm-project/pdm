@@ -117,7 +117,7 @@ def test_project_use_venv(project):
     project.project_config["python.use_venv"] = True
     env = project.environment
     assert env.interpreter.executable == project.root / "venv" / scripts / f"python{suffix}"
-    assert env.is_global
+    assert not env.is_local
 
 
 def test_project_packages_path(project):
