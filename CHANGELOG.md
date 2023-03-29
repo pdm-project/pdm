@@ -1,3 +1,41 @@
+Release v2.5.0b0 (2023-03-29)
+-----------------------------
+
+### Breaking Changes
+
+- Switch the default build backend to `pdm-backend`. [#1684](https://github.com/pdm-project/pdm/issues/1684)
+- Only lock selected groups into the lockfile. Modify other commands to honor the groups included in the lockfile. [#1704](https://github.com/pdm-project/pdm/issues/1704)
+- Move the project python path to its own file, and rename the project config file as `pdm.toml` which can be committed to the VCS. [#1742](https://github.com/pdm-project/pdm/issues/1742)
+- Refactor the environment package. `Environment` is renamed to `PythonLocalEnvironment` and `GlobalEnvironment` is renamed to `PythonEnvironment`. Move `pdm.models.environment` module to `pdm.environments` package. [#1791](https://github.com/pdm-project/pdm/issues/1791)
+
+### Features & Improvements
+
+- Add option to fail on the first install error. [#1614](https://github.com/pdm-project/pdm/issues/1614)
+- Upgrade `unearth` to 0.8 to allow calling keyring from CLI. [#1653](https://github.com/pdm-project/pdm/issues/1653)
+- Merge the index parameters from different configuration files. [#1667](https://github.com/pdm-project/pdm/issues/1667)
+- Add new options to `venv` command to show the path or the python interpreter for a managed venv. [#1680](https://github.com/pdm-project/pdm/issues/1680)
+- Write the groups of resolved dependencies to the metadata table in lockfile. [#1692](https://github.com/pdm-project/pdm/issues/1692)
+- Introduce `--lib` option to `init` command to create a library project without prompting. [#1708](https://github.com/pdm-project/pdm/issues/1708)
+- New command: `pdm fix` to migrate to the new PDM features. Add a hint when invoking PDM commands. [#1743](https://github.com/pdm-project/pdm/issues/1743)
+- Include `.pdm-python` in project root `.gitignore` when running `pdm init`. [#1749](https://github.com/pdm-project/pdm/issues/1749)
+- Allow to ignore the activated venv with `PDM_IGNORE_ACTIVE_VENV` env var. [#1782](https://github.com/pdm-project/pdm/issues/1782)
+- Add a signal `pre_invoke` to emit before any command is invoked. [#1792](https://github.com/pdm-project/pdm/issues/1792)
+
+### Bug Fixes
+
+- Fix a bug that install warning prints to terminal under non-verbose mode. [#1635](https://github.com/pdm-project/pdm/issues/1635)
+- Fix the random failure of `pdm export` due to non-deterministic order of group iteration. [#1786](https://github.com/pdm-project/pdm/issues/1786)
+- Show the actual version when running `pdm show --version` [#1788](https://github.com/pdm-project/pdm/issues/1788)
+
+### Documentation
+
+- Restructure the documentation. [#1687](https://github.com/pdm-project/pdm/issues/1687)
+
+### Dependencies
+
+- Update `installer` to `0.7.0` and emit a warning if the RECORD validation fails. [#1784](https://github.com/pdm-project/pdm/issues/1784)
+
+
 Release v2.4.9 (2023-03-16)
 ---------------------------
 
