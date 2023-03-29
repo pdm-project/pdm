@@ -171,7 +171,7 @@ class BaseEnvironment(abc.ABC):
         try:
             from pip import __file__ as pip_location
         except ImportError:
-            pip_location = None  # type: ignore
+            pip_location = None  # type: ignore[assignment]
 
         python_version = self.interpreter.version
         executable = str(self.interpreter.executable)
