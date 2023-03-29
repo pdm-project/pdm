@@ -5,7 +5,7 @@ from pdm.environments.local import PythonLocalEnvironment
 from pdm.environments.prefix import PrefixEnvironment
 from pdm.environments.python import PythonEnvironment
 
-_deprecated = {"Environment": BaseEnvironment, "GlobalEnvironment": PythonEnvironment}
+_deprecated = {"Environment": PythonLocalEnvironment, "GlobalEnvironment": PythonEnvironment}
 
 
 def __getattr__(name: str) -> Any:
@@ -16,6 +16,7 @@ def __getattr__(name: str) -> Any:
         warnings.warn(
             f"{name} is deprecated, please use {real.__name__} instead",
             DeprecationWarning,
+            stacklevel=2,
         )
         return real
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
