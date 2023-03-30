@@ -191,6 +191,7 @@ def do_sync(
     hooks = hooks or HookManager(project)
     if requirements is None:
         requirements = []
+        selection.validate()
         for group in selection:
             requirements.extend(project.get_dependencies(group).values())
     candidates = resolve_candidates_from_lockfile(project, requirements)
@@ -343,6 +344,7 @@ def do_update(
     if not packages:
         if prerelease:
             raise PdmUsageError("--prerelease must be used with packages given")
+        selection.validate()
         for group in selection:
             updated_deps[group] = all_dependencies[group]
     else:

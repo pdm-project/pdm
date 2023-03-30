@@ -87,15 +87,17 @@ class GroupSelection:
                 err=True,
             )
             groups_set -= invalid_groups
-        extra_groups = project.lockfile.compare_groups(groups_set)
-        if extra_groups:
-            raise PdmUsageError(f"Requested groups not in lockfile: {','.join(extra_groups)}")
         # Sorts the result in ascending order instead of in random order
         # to make this function pure
         result = sorted(groups_set)
         if default:
             result.insert(0, "default")
         return result
+
+    def validate(self) -> None:
+        extra_groups = self.project.lockfile.compare_groups(self._translated_groups)
+        if extra_groups:
+            raise PdmUsageError(f"Requested groups not in lockfile: {','.join(extra_groups)}")
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._translated_groups)
