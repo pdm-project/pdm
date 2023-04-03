@@ -48,8 +48,9 @@ class ProjectConfigFixer(BaseFixer):
         if not gitignore.exists():
             return
         content = gitignore.read_text("utf8")
-        content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.M)
-        gitignore.write_text(content, "utf8")
+        if ".pdm-python" not in content:
+            content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.M)
+            gitignore.write_text(content, "utf8")
 
     def fix(self) -> None:
         old_file = self.project.root.joinpath(".pdm.toml")
