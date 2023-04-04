@@ -814,7 +814,7 @@ def get_latest_version(project: Project) -> str | None:
     try:
         latest_version = get_latest_pdm_version_from_pypi(project)
     except Exception as e:
-        warnings.warn(f"Failed to get latest version: {e}", RuntimeWarning)
+        warnings.warn(f"Failed to get latest version: {e}", RuntimeWarning, stacklevel=1)
         latest_version = None
     if latest_version is None:
         return None

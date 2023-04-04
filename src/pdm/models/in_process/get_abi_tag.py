@@ -34,7 +34,7 @@ def get_flag(var, fallback, expected=True, warn=True):
             warnings.warn(
                 "Config variable '{}' is unset, Python ABI tag may be incorrect".format(var),
                 RuntimeWarning,
-                2,
+                stacklevel=2,
             )
         return fallback
     return val == expected

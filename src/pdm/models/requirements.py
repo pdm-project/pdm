@@ -436,7 +436,7 @@ def filter_requirements_with_extras(
 
     extras_not_found = [e for e in extras if e not in extras_in_meta]
     if extras_not_found:
-        warnings.warn(ExtrasWarning(project_name, extras_not_found))
+        warnings.warn(ExtrasWarning(project_name, extras_not_found), stacklevel=2)
 
     return result
 
