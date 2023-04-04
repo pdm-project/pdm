@@ -137,7 +137,7 @@ class Core:
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
 
-        if not isinstance(getattr(options, "__command__", None), FixCommand):
+        if not isinstance(command, FixCommand):
             FixCommand.check_problems(project)
 
         if options.pep582:
@@ -172,7 +172,7 @@ class Core:
                 self.parser.error(str(e.__cause__))
 
         project = self.ensure_project(options, obj)
-        command = getattr(options, "__command__", None)
+        command = getattr(options, "command", None)
         self.before_invoke(project, command, options)
 
         if root_script and root_script not in project.scripts:

@@ -45,8 +45,8 @@ class BaseCommand:
         )
         command = cls(parser)
         command.name = name
-        # A special attribute to store the command instance. See pdm/core.py for more details
-        parser.set_defaults(__command__=command)
+        # Store the command instance in the parsed args. See pdm/core.py for more details
+        parser.set_defaults(command=command)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         """Manipulate the argument parser to add more arguments"""

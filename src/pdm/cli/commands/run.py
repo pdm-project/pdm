@@ -320,7 +320,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Load site-packages from the selected interpreter",
         )
-        parser.add_argument("command", nargs="?", help="The command to run")
+        parser.add_argument("script", nargs="?", help="The command to run")
         parser.add_argument(
             "args",
             nargs=argparse.REMAINDER,
@@ -335,16 +335,16 @@ class Command(BaseCommand):
             return runner.show_list()
         if options.site_packages:
             runner.global_options.update({"site_packages": options.site_packages})
-        if not options.command:
+        if not options.script:
             project.core.ui.echo(
                 "No command is given, default to the Python REPL.",
                 style="warning",
                 err=True,
             )
-            options.command = "python"
-        hooks.try_emit("pre_run", script=options.command, args=options.args)
-        exit_code = runner.run(options.command, options.args)
-        hooks.try_emit("post_run", script=options.command, args=options.args)
+            options.script = "python"
+        hooks.try_emit("pre_run", script=options.script, args=options.args)
+        exit_code = runner.run(options.script, options.args)
+        hooks.try_emit("post_run", script=options.script, args=options.args)
         sys.exit(exit_code)
 
 
