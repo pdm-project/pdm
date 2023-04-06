@@ -46,13 +46,9 @@ def create_tracked_tempdir(suffix: str | None = None, prefix: str | None = None,
     return name
 
 
-def get_index_urls(
-    sources: list[RepositoryConfig],
-) -> tuple[list[str], list[str], list[str]]:
-    """Parse the project sources and return
-    (index_urls, find_link_urls, trusted_hosts)
-    """
-    index_urls, find_link_urls, trusted_hosts = [], [], []
+def get_trusted_hosts(sources: list[RepositoryConfig]) -> list[str]:
+    """Parse the project sources and return the trusted hosts"""
+    trusted_hosts = []
     for source in sources:
         assert source.url
         url = source.url
@@ -60,11 +56,7 @@ def get_index_urls(
         host = netloc.rsplit("@", 1)[-1]
         if host not in trusted_hosts and source.verify_ssl is False:
             trusted_hosts.append(host)
-        if source.type == "find_links":
-            find_link_urls.append(url)
-        else:
-            index_urls.append(url)
-    return index_urls, find_link_urls, trusted_hosts
+    return trusted_hosts
 
 
 def url_without_fragments(url: str) -> str:

@@ -21,7 +21,7 @@ from pdm.models.in_process import get_pep508_environment, get_python_abi_tag
 from pdm.models.python import PythonInfo
 from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
-from pdm.utils import get_index_urls, is_pip_compatible_with_python
+from pdm.utils import get_trusted_hosts, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
     from pdm._types import RepositoryConfig
@@ -73,11 +73,10 @@ class BaseEnvironment(abc.ABC):
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
         return unearth.TargetPython(python_version, [python_abi_tag])
 
-    def _build_session(self, index_urls: list[str], trusted_hosts: list[str]) -> PDMSession:
+    def _build_session(self, trusted_hosts: list[str]) -> PDMSession:
         ca_certs = self.project.config.get("pypi.ca_certs")
         session = PDMSession(
             cache_dir=self.project.cache("http"),
-            index_urls=index_urls,
             trusted_hosts=trusted_hosts,
             ca_certificates=Path(ca_certs) if ca_certs is not None else None,
         )
@@ -110,22 +109,27 @@ class BaseEnvironment(abc.ABC):
                 f"{self.project.config['pypi.ignore_stored_index']}"
             )
 
-        index_urls, find_links, trusted_hosts = get_index_urls(sources)
+        trusted_hosts = get_trusted_hosts(sources)
 
-        session = self._build_session(index_urls, trusted_hosts)
+        session = self._build_session(trusted_hosts)
         finder = unearth.PackageFinder(
             session=session,
-            index_urls=index_urls,
-            find_links=find_links,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
             only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
+            prefer_binary=os.getenv("PDM_PREFER_BINARY", "").split(","),
             respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
                 "respect-source-order", False
             ),
             verbosity=self.project.core.ui.verbosity,
         )
+        for source in sources:
+            assert source.url
+            if source.type == "find_links":
+                finder.add_find_links(source.url)
+            else:
+                finder.add_index_url(source.url)
         try:
             yield finder
         finally:
