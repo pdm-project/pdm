@@ -45,6 +45,11 @@ class BaseEnvironment(abc.ABC):
         )
 
     @property
+    def is_global(self) -> bool:
+        """For backward compatibility, it is opposite to ``is_local``."""
+        return not self.is_local
+
+    @property
     def interpreter(self) -> PythonInfo:
         return self.project.python
 
