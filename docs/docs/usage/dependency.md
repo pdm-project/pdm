@@ -363,6 +363,8 @@ PDM_NO_BINARY=werkzeug pdm add flask
 PDM_ONLY_BINARY=:all: pdm lock
 # No binaries will be used for installation
 PDM_NO_BINARY=:all: pdm install
+# Prefer binary distributions and even if sdist with higher version is available
+PDM_PREFER_BINARY=flask pdm install
 ```
 
 ## Solve the locking failure
