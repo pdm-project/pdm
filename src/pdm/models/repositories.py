@@ -145,7 +145,7 @@ class BaseRepository:
         if self.is_this_package(requirement):
             return [self.make_this_candidate(requirement)]
         requires_python = requirement.requires_python & self.environment.python_requires
-        cans = self._find_candidates(requirement)
+        cans = LazySequence(self._find_candidates(requirement))
         applicable_cans = LazySequence(
             c
             for c in cans
