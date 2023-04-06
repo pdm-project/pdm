@@ -144,7 +144,7 @@ class Candidate:
         self.name = name or self.req.project_name
         self.version = version
         if link is None and not req.is_named:
-            link = req.as_file_link()  # type: ignore[attr-defined]
+            link = cast(Link, req.as_file_link())  # type: ignore[attr-defined]
         self.link = link
         self.summary = ""
         self.hashes: dict[Link, str] | None = None

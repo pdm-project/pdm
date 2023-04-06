@@ -31,7 +31,7 @@ class Repository:
         ca_certs: str | None,
     ) -> None:
         self.url = url
-        self.session = project.environment._build_session([], [])
+        self.session = project.environment._build_session([])
         if ca_certs is not None:
             self.session.set_ca_certificates(pathlib.Path(ca_certs))
         self._credentials_to_save: tuple[str, str, str] | None = None

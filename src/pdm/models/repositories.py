@@ -3,10 +3,11 @@ from __future__ import annotations
 import dataclasses
 import posixpath
 import sys
-from functools import lru_cache, wraps
+from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
 from unearth import Link
+from unearth.utils import LazySequence
 
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
@@ -144,16 +145,16 @@ class BaseRepository:
         if self.is_this_package(requirement):
             return [self.make_this_candidate(requirement)]
         requires_python = requirement.requires_python & self.environment.python_requires
-        cans = list(self._find_candidates(requirement))
-        applicable_cans = [
+        cans = self._find_candidates(requirement)
+        applicable_cans = LazySequence(
             c
             for c in cans
             if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
-        ]
+        )
 
-        applicable_cans_python_compatible = [
+        applicable_cans_python_compatible = LazySequence(
             c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
-        ]
+        )
         # Evaluate data-requires-python attr and discard incompatible candidates
         # to reduce the number of candidates to resolve.
         if applicable_cans_python_compatible:
@@ -164,12 +165,12 @@ class BaseRepository:
 
         if not applicable_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
-            applicable_cans = [
+            applicable_cans = LazySequence(
                 c for c in cans if requirement.specifier.contains(c.version, True)  # type: ignore[arg-type, union-attr]
-            ]
-            applicable_cans_python_compatible = [
+            )
+            applicable_cans_python_compatible = LazySequence(
                 c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
-            ]
+            )
             if applicable_cans_python_compatible:
                 applicable_cans = applicable_cans_python_compatible
 
@@ -178,7 +179,7 @@ class BaseRepository:
                     "\tCould not find any matching candidates even when considering pre-releases.",
                 )
 
-        def print_candidates(title: str, candidates: list[Candidate], max_lines: int = 10) -> None:
+        def log_candidates(title: str, candidates: Iterable[Candidate], max_lines: int = 10) -> None:
             termui.logger.debug("\t" + title)
             logged_lines = set()
             for can in candidates:
@@ -186,15 +187,16 @@ class BaseRepository:
                 if new_line not in logged_lines:
                     logged_lines.add(new_line)
                     if len(logged_lines) > max_lines:
-                        termui.logger.debug(f"\t  ... [{len(candidates)-max_lines} more candidate(s)]")
+                        termui.logger.debug("\t  ... [more]")
                         break
                     else:
                         termui.logger.debug(new_line)
 
-        if applicable_cans:
-            print_candidates("Found matching candidates:", applicable_cans)
-        elif cans:
-            print_candidates("Found but non-matching candidates:", cans)
+        if self.environment.project.core.ui.verbosity >= termui.Verbosity.DEBUG:
+            if applicable_cans:
+                log_candidates("Found matching candidates:", applicable_cans)
+            elif cans:
+                log_candidates("Found but non-matching candidates:", cans)
 
         return applicable_cans
 
@@ -226,25 +228,30 @@ class BaseRepository:
         if candidate.hashes:
             return candidate.hashes
         req = candidate.req.as_pinned_version(candidate.version)
-        if candidate.req.is_file_or_url:
-            matching_candidates: Iterable[Candidate] = [candidate]
-        else:
-            matching_candidates = self.find_candidates(req, ignore_requires_python=True)
+        comes_from = candidate.link.comes_from if candidate.link else None
         result: dict[str, str] = {}
-        with self.environment.get_finder(self.sources) as finder:
-            for c in matching_candidates:
-                assert c.link is not None
-                # Prepare the candidate to replace vars in the link URL
-                prepared_link = c.prepare(self.environment).link
-                if (
-                    not prepared_link
-                    or prepared_link.is_vcs
-                    or prepared_link.is_file
-                    and prepared_link.file_path.is_dir()
-                ):
+        logged = False
+        respect_source_order = self.environment.project.pyproject.settings.get("resolution", {}).get(
+            "respect-source-order", False
+        )
+        if req.is_named and respect_source_order and comes_from:
+            sources = [s for s in self.sources if comes_from.startswith(s.url)]
+        else:
+            sources = self.sources
+        with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
+            if req.is_file_or_url:
+                this_link = cast(Link, candidate.prepare(self.environment).link)
+                links: list[Link] = [this_link]
+            else:  # the req must be a named requirement
+                links = [package.link for package in finder.find_matches(req.as_line())]
+            for link in links:
+                if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
+                    # The links found can still be a local directory or vcs, skippping it.
                     continue
-                termui.logger.info("Fetching hashes for %s", candidate)
-                result[c.link] = self._hash_cache.get_hash(prepared_link, finder.session)
+                if not logged:
+                    termui.logger.info("Fetching hashes for %s", candidate)
+                    logged = True
+                result[link] = self._hash_cache.get_hash(link, finder.session)
         return result or None
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -308,14 +315,13 @@ class PyPIRepository(BaseRepository):
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata
 
-    @lru_cache()
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         sources = self.get_filtered_sources(requirement)
         with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
-            cans = [
+            cans = LazySequence(
                 Candidate.from_installation_candidate(c, requirement)
                 for c in finder.find_all_packages(requirement.project_name, allow_yanked=requirement.is_pinned)
-            ]
+            )
         if not cans:
             raise CandidateNotFound(
                 f"Unable to find candidates for {requirement.project_name}. There may "
