@@ -200,6 +200,7 @@ function TabExpansion($line, $lastWord) {
         $sectionOption = [Option]::new(@("-G", "--group")).WithValues(@(getSections))
         $projectOption = [Option]::new(@("-p", "--project")).WithValues(@())
         $skipOption = [Option]::new(@("-k", "--skip")).WithValues(@())
+        $venvOption = [Option]::new(@("--venv")).WithValues(@())
         $formatOption = [Option]::new(@("-f", "--format")).WithValues(@("setuppy", "requirements", "poetry", "flit"))
 
         Switch ($command) {
@@ -214,6 +215,7 @@ function TabExpansion($line, $lastWord) {
                         )),
                         $sectionOption,
                         $projectOption,
+                        $venvOption,
                         $skipOption
                         [Option]::new(@("-e", "--editable")).WithValues(@(getPyPIPackages))
                     ))
@@ -272,7 +274,8 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("--env", "--global", "-g", "--python", "--where", "--packages")),
-                        $projectOption
+                        $projectOption,
+                        $venvOption
                     ))
                 break
             }
@@ -295,6 +298,7 @@ function TabExpansion($line, $lastWord) {
                         )),
                         $sectionOption,
                         $skipOption,
+                        $venvOption,
                         $projectOption
                     ))
                 break
@@ -303,6 +307,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("--graph", "--global", "-g", "--reverse", "-r", "--freeze", "--json", "--csv", "--markdown", "--fields", "--sort", "--include", "--exclude", "--resolve")),
+                        $venvOption,
                         $projectOption
                     ))
                 break
@@ -361,6 +366,7 @@ function TabExpansion($line, $lastWord) {
                         )),
                         $projectOption,
                         $skipOption,
+                        $venvOption,
                         $sectionOption
                     ))
                 $completer.AddParams(@(getPdmPackages), $true)
@@ -371,6 +377,7 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@("--global", "-g", "-l", "--list", "-s", "--site-packages")),
                         $skipOption,
+                        $venvOption,
                         $projectOption
                     ))
                 $completer.AddParams(@(getScripts), $false)
@@ -381,6 +388,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("--global", "-g", "--name", "--version", "--summary", "--license", "--platform", "--keywords")),
+                        $venvOption,
                         $projectOption
                     ))
                 break
@@ -393,6 +401,7 @@ function TabExpansion($line, $lastWord) {
                             "-L", "--lockfile", "--fail-fast", "-x"
                         )),
                         $sectionOption,
+                        $venvOption,
                         $skipOption,
                         $projectOption
                     ))
@@ -408,6 +417,7 @@ function TabExpansion($line, $lastWord) {
                         )),
                         $sectionOption,
                         $skipOption,
+                        $venvOption,
                         $projectOption
                     ))
                 $completer.AddParams(@(getPdmPackages), $true)
@@ -417,6 +427,7 @@ function TabExpansion($line, $lastWord) {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@("--global", "-g", "-f", "--first", "-i", "--ignore-remembered", "--skip")),
+                        $venvOption,
                         $projectOption
                     ))
                 break

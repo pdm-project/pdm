@@ -14,7 +14,7 @@ from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, cast
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import skip_option
+from pdm.cli.options import skip_option, venv_option
 from pdm.cli.utils import check_project_file, get_pep582_path
 from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
@@ -163,7 +163,7 @@ class TaskRunner:
             command, *args = args
             if command.endswith(".py"):
                 args = [command, *args]
-                command = str(project.python.executable)
+                command = str(project.environment.interpreter.executable)
             expanded_command = project_env.which(command)
             if not expanded_command:
                 raise PdmUsageError(f"Command [success]'{command}'[/] is not found in your PATH.")
@@ -305,9 +305,9 @@ class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
     runner_cls: type[TaskRunner] = TaskRunner
+    arguments = [*BaseCommand.arguments, skip_option, venv_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        skip_option.add_to_parser(parser)
         parser.add_argument(
             "-l",
             "--list",

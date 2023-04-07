@@ -14,6 +14,7 @@ from pdm.cli.options import (
     skip_option,
     unconstrained_option,
     update_strategy_group,
+    venv_option,
 )
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
@@ -32,6 +33,7 @@ class Command(BaseCommand):
         packages_group,
         install_group,
         dry_run_option,
+        venv_option,
         skip_option,
     ]
 

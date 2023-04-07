@@ -3,6 +3,7 @@ import argparse
 from packaging.version import Version
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import venv_option
 from pdm.exceptions import PdmUsageError
 from pdm.models.candidates import Candidate
 from pdm.models.project_info import ProjectInfo
@@ -22,6 +23,7 @@ class Command(BaseCommand):
     metadata_keys = ["name", "version", "summary", "license", "platform", "keywords"]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        venv_option.add_to_parser(parser)
         parser.add_argument(
             "package",
             type=normalize_name,

@@ -13,6 +13,7 @@ from pdm.cli.options import (
     skip_option,
     unconstrained_option,
     update_strategy_group,
+    venv_option,
 )
 from pdm.project import Project
 
@@ -30,6 +31,7 @@ class Command(BaseCommand):
         prerelease_option,
         unconstrained_option,
         skip_option,
+        venv_option,
     ]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:

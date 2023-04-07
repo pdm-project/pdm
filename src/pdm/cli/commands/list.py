@@ -9,6 +9,7 @@ from typing import Iterable, Mapping, Sequence
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import venv_option
 from pdm.cli.utils import (
     DirectedGraph,
     Package,
@@ -32,6 +33,7 @@ class Command(BaseCommand):
     DEFAULT_FIELDS = "name,version,location"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        venv_option.add_to_parser(parser)
         graph = parser.add_mutually_exclusive_group()
 
         parser.add_argument(

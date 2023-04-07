@@ -240,8 +240,8 @@ def do_add(
     group = selection.one()
     tracked_names: set[str] = set()
     requirements: dict[str, Requirement] = {}
-    lock_groups = project.lockfile.groups
-    if lock_groups and group not in lock_groups:
+    lock_groups = [] if project.lockfile.empty() else project.lockfile.groups
+    if lock_groups is not None and group not in lock_groups:
         project.core.ui.echo(f"Adding group [success]{group}[/] to lockfile", err=True, style="info")
         lock_groups.append(group)
     if group == "default" or not selection.dev and group not in project.pyproject.settings.get("dev-dependencies", {}):
@@ -570,26 +570,32 @@ def do_use(
     ignore_remembered: bool = False,
     ignore_requires_python: bool = False,
     save: bool = True,
+    venv: str | None = None,
     hooks: HookManager | None = None,
 ) -> PythonInfo:
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    hooks = hooks or HookManager(project)
-
-    if python:
-        python = python.strip()
+    from pdm.cli.commands.venv.utils import get_venv_python, get_venv_with_name
 
     def version_matcher(py_version: PythonInfo) -> bool:
         return py_version.valid and (
             ignore_requires_python or project.python_requires.contains(str(py_version.version), True)
         )
 
+    hooks = hooks or HookManager(project)
+
+    selected_python: PythonInfo | None = None
+    if venv:
+        venv_path = get_venv_with_name(project, venv)
+        selected_python = PythonInfo.from_path(get_venv_python(venv_path))
+
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)
     use_cache: JSONFileCache[str, str] = JSONFileCache(project.cache_dir / "use_cache.json")
-    selected_python: PythonInfo | None = None
-    if python and not ignore_remembered:
+    if python:
+        python = python.strip()
+    if selected_python is None and python and not ignore_remembered:
         if python in use_cache:
             path = use_cache.get(python)
             cached_python = PythonInfo.from_path(path)

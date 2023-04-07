@@ -131,6 +131,30 @@ $ eval $(pdm venv activate test-prompt)
 (test-project-py3.10) $
 ```
 
+## Run a command in a virtual environment without activating it
+
+```bash
+# Run a script
+$ pdm run --venv test test
+# Install packages
+$ pdm sync --venv test
+# List the packages installed
+$ pdm list --venv test
+```
+
+There are other commands supporting `--venv` flag or `PDM_USE_VENV` environment variable, see the [CLI reference](../reference/cli.md). You should create the virtualenv with `pdm venv create --name <name>` before using this feature.
+
+## Switch to a virtualenv as the project environment
+
+By default, if you use `pdm use` and select a non-venv Python, the project will be switched to [PEP 582 mode](../pep582.md). We also allow you to switch to a named virtual environment via the `--venv` flag:
+
+```bash
+# Switch to a virtualenv named test
+$ pdm use --venv test
+# Switch to the in-project venv located at $PROJECT_ROOT/.venv
+$ pdm use --venv
+```
+
 ## Disable virtualenv mode
 
 You can disable the auto-creation and auto-detection for virtualenv by `pdm config python.use_venv false`.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from pdm.cli.commands.venv.utils import iter_venvs, get_venv_python
+from pdm.cli.commands.venv.utils import get_venv_with_name, iter_venvs, get_venv_python
 
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
@@ -32,25 +32,14 @@ class Command(BaseCommand):
         PurgeCommand.register_to(subparser, "purge")
         self.parser = parser
 
-    def _get_venv_with_name(self, project: Project, name: str) -> Path:
-        venv = next((venv for key, venv in iter_venvs(project) if key == name), None)
-        if not venv:
-            project.core.ui.echo(
-                f"No virtualenv with key [success]{name}[/] is found",
-                style="warning",
-                err=True,
-            )
-            raise SystemExit(1)
-        return venv
-
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.path and options.python:
             raise PdmUsageError("--path and --python are mutually exclusive")
         if options.path:
-            venv = self._get_venv_with_name(project, options.path)
+            venv = get_venv_with_name(project, options.path)
             project.core.ui.echo(str(venv))
         elif options.python:
-            venv = self._get_venv_with_name(project, options.python)
+            venv = get_venv_with_name(project, options.python)
             project.core.ui.echo(str(get_venv_python(venv)))
         else:
             self.parser.print_help()

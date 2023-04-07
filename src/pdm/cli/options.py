@@ -2,19 +2,17 @@ from __future__ import annotations
 
 import argparse
 import os
-from typing import Any, Sequence
+import sys
+from functools import partial
+from typing import Any, Sequence, cast
 
+from pdm.cli.actions import print_pep582_command
 from pdm.compat import Protocol
+from pdm.project import Project
 
 
 class ActionCallback(Protocol):
-    def __call__(
-        self,
-        parser: argparse.ArgumentParser,
-        namespace: argparse.Namespace,
-        values: str | Sequence[Any] | None,
-        option_string: str | None,
-    ) -> None:
+    def __call__(self, project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
         ...
 
 
@@ -33,6 +31,10 @@ class Option:
     def add_to_group(self, group: argparse._ArgumentGroup) -> None:
         group.add_argument(*self.args, **self.kwargs)
 
+    def __call__(self, func: ActionCallback) -> Option:
+        self.kwargs.update(action=CallbackAction, callback=func)
+        return self
+
 
 class CallbackAction(argparse.Action):
     def __init__(self, *args: Any, callback: ActionCallback, **kwargs: Any) -> None:
@@ -46,7 +48,10 @@ class CallbackAction(argparse.Action):
         values: str | Sequence[Any] | None,
         option_string: str | None = None,
     ) -> None:
-        return self.callback(parser, namespace, values, option_string=option_string)
+        if not hasattr(namespace, "callbacks"):
+            namespace.callbacks = []
+        callback = partial(self.callback, values=values)
+        namespace.callbacks.append(callback)
 
 
 class ArgumentGroup(Option):
@@ -133,6 +138,7 @@ dry_run_option = Option(
     help="Show the difference only and don't perform any action",
 )
 
+
 lockfile_option = Option(
     "-L",
     "--lockfile",
@@ -140,13 +146,12 @@ lockfile_option = Option(
     help="Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]",
 )
 
-pep582_option = Option(
-    "--pep582",
-    const="AUTO",
-    metavar="SHELL",
-    nargs="?",
-    help="Print the command line to be eval'd by the shell",
-)
+
+@Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
+def pep582_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+    print_pep582_command(project, cast(str, values))
+    sys.exit(0)
+
 
 install_group = ArgumentGroup("Install options")
 install_group.add_argument(
@@ -164,23 +169,11 @@ install_group.add_argument(
 install_group.add_argument("--fail-fast", "-x", action="store_true", help="Abort on first installation error")
 
 
-def no_isolation_callback(
-    parser: argparse.ArgumentParser,
-    namespace: argparse.Namespace,
-    values: str | Sequence[Any] | None,
-    option_string: str | None,
-) -> None:
+@Option("--no-isolation", dest="build_isolation", nargs=0, help="Do not isolate the build in a clean environment")
+def no_isolation_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
     os.environ["PDM_BUILD_ISOLATION"] = "no"
 
 
-no_isolation_option = Option(
-    "--no-isolation",
-    dest="build_isolation",
-    action=CallbackAction,
-    nargs=0,
-    help="Do not isolate the build in a clean environment",
-    callback=no_isolation_callback,
-)
 install_group.options.append(no_isolation_option)
 
 groups_group = ArgumentGroup("Dependencies selection")
@@ -321,14 +314,16 @@ packages_group.add_argument(
 )
 packages_group.add_argument("packages", nargs="*", help="Specify packages")
 
-ignore_python_option = Option(
+
+@Option(
     "-I",
     "--ignore-python",
-    action=CallbackAction,
     nargs=0,
-    help="Ignore the Python path saved in .pdm-python",
-    callback=lambda *args, **kwargs: os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"}),
+    help="Ignore the Python path saved in .pdm-python. [env var: PDM_IGNORE_SAVED_PYTHON]",
 )
+def ignore_python_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+    os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
+
 
 prerelease_option = Option(
     "--pre",
@@ -343,4 +338,15 @@ unconstrained_option = Option(
     action="store_true",
     default=False,
     help="Ignore the version constraint of packages",
+)
+
+
+venv_option = Option(
+    "--venv",
+    dest="use_venv",
+    metavar="NAME",
+    nargs="?",
+    const="in-project",
+    help="Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]",
+    default=os.getenv("PDM_USE_VENV"),
 )

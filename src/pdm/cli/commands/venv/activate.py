@@ -5,7 +5,7 @@ from pathlib import Path
 import shellingham
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.venv.utils import BIN_DIR, iter_venvs
+from pdm.cli.commands.venv.utils import BIN_DIR, iter_venvs, get_venv_with_name
 from pdm.cli.options import verbose_option
 from pdm.project import Project
 from pdm.utils import get_venv_like_prefix
@@ -21,14 +21,7 @@ class ActivateCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.env:
-            venv = next((venv for key, venv in iter_venvs(project) if key == options.env), None)
-            if not venv:
-                project.core.ui.echo(
-                    f"No virtualenv with key [success]{options.env}[/] is found",
-                    style="warning",
-                    err=True,
-                )
-                raise SystemExit(1)
+            venv = get_venv_with_name(project, options.env)
         else:
             # Use what is saved in .pdm-python
             interpreter = project._saved_python
@@ -39,8 +32,8 @@ class ActivateCommand(BaseCommand):
                     err=True,
                 )
                 raise SystemExit(1)
-            venv = get_venv_like_prefix(interpreter)
-            if venv is None:
+            venv_like = get_venv_like_prefix(interpreter)
+            if venv_like is None:
                 project.core.ui.echo(
                     f"Can't activate a non-venv Python [success]{interpreter}[/], "
                     "you can specify one with [success]pdm venv activate <env_name>[/]",
@@ -48,6 +41,7 @@ class ActivateCommand(BaseCommand):
                     err=True,
                 )
                 raise SystemExit(1)
+            venv = venv_like
         project.core.ui.echo(self.get_activate_command(venv))
 
     def get_activate_command(self, venv: Path) -> str:  # pragma: no cover

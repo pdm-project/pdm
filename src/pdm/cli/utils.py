@@ -660,3 +660,14 @@ def get_pep582_path(project: Project) -> str:
     with resources_open_binary("pdm.pep582", "sitecustomize.py") as f:
         script_dir.joinpath("sitecustomize.py").write_bytes(f.read())
     return str(script_dir)
+
+
+def use_venv(project: Project, name: str) -> None:
+    from pdm.cli.commands.venv.utils import get_venv_python, get_venv_with_name
+    from pdm.environments import PythonEnvironment
+
+    venv = get_venv_with_name(project, cast(str, name))
+    project.core.ui.echo(
+        f"In virtual environment: [success]{venv}[/]", err=True, style="info", verbosity=termui.Verbosity.DETAIL
+    )
+    project.environment = PythonEnvironment(project, python=str(get_venv_python(venv)))

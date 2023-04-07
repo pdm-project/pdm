@@ -699,6 +699,28 @@ def test_list_csv_include_exclude_valid(project, pdm):
     assert ":sub" in result.outputs
 
 
+@pytest.mark.usefixtures("local_finder")
+def test_list_packages_in_given_venv(project, pdm):
+    project.pyproject.metadata["requires-python"] = ">=3.7"
+    project.pyproject.write()
+    project.global_config["python.use_venv"] = True
+    pdm(["venv", "create"], obj=project, strict=True)
+    pdm(["venv", "create", "--name", "second"], obj=project, strict=True)
+    project._saved_python = None
+    pdm(["add", "first", "--no-self"], obj=project, strict=True)
+    second_lockfile = str(project.root / "pdm.2.lock")
+    pdm(
+        ["add", "-G", "second", "--no-self", "-L", second_lockfile, "--venv", "second", "editables"],
+        obj=project,
+        strict=True,
+    )
+    project.environment = None
+    result1 = pdm(["list", "--freeze"], obj=project, strict=True)
+    result2 = pdm(["list", "--freeze", "--venv", "second"], obj=project, strict=True)
+    assert result1.output.strip() == "first==2.0.2"
+    assert result2.output.strip() == "editables==0.2"
+
+
 @pytest.mark.usefixtures("working_set", "repository")
 def test_list_csv_include_exclude(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
