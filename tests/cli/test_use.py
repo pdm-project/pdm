@@ -70,3 +70,16 @@ def test_use_remember_last_selection(project, mocker):
     mocker.patch.object(project, "find_interpreters")
     actions.do_use(project, "3")
     project.find_interpreters.assert_not_called()
+
+
+def test_use_venv_python(project, pdm):
+    pdm(["venv", "create"], obj=project, strict=True)
+    pdm(["venv", "create", "--name", "test"], obj=project, strict=True)
+    project.global_config["python.use_venv"] = True
+    venv_location = project.config["venv.location"]
+    actions.do_use(project, venv="in-project")
+    assert project.python.executable.parent.parent == project.root.joinpath(".venv")
+    actions.do_use(project, venv="test")
+    assert project.python.executable.parent.parent.parent == Path(venv_location)
+    with pytest.raises(Exception, match="No virtualenv with key 'non-exists' is found"):
+        actions.do_use(project, venv="non-exists")

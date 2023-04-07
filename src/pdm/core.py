@@ -20,7 +20,7 @@ from resolvelib import Resolver
 
 from pdm import termui
 from pdm.__version__ import __version__
-from pdm.cli.actions import check_update, print_pep582_command
+from pdm.cli.actions import check_update
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import ErrorArgumentParser, PdmFormatter
@@ -104,9 +104,6 @@ class Core:
                 is_global=global_project,
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
-
-        if getattr(options, "lockfile", None):
-            project.set_lockfile(options.lockfile)
         return project
 
     def create_project(
@@ -131,18 +128,25 @@ class Core:
         """Called before command invocation"""
         from pdm.cli.commands.fix import Command as FixCommand
         from pdm.cli.hooks import HookManager
+        from pdm.cli.utils import use_venv
 
         self.ui.set_verbosity(options.verbose)
         self.ui.set_theme(project.global_config.load_theme())
+
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
 
         if not isinstance(command, FixCommand):
             FixCommand.check_problems(project)
 
-        if options.pep582:
-            print_pep582_command(project, options.pep582)
-            sys.exit(0)
+        for callback in getattr(options, "callbacks", []):
+            callback(project, options)
+
+        if getattr(options, "lockfile", None):
+            project.set_lockfile(cast(str, options.lockfile))
+
+        if getattr(options, "use_venv", None):
+            use_venv(project, cast(str, options.use_venv))
 
     def main(
         self,
@@ -173,16 +177,15 @@ class Core:
 
         project = self.ensure_project(options, obj)
         command = getattr(options, "command", None)
-        self.before_invoke(project, command, options)
 
         if root_script and root_script not in project.scripts:
             self.parser.error(f"Script unknown: {root_script}")
 
         if command is None:
-            self.parser.print_help(sys.stderr)
-            sys.exit(1)
+            self.parser.error("No command given")
         assert isinstance(command, BaseCommand)
         try:
+            self.before_invoke(project, command, options)
             command.handle(project, options)
         except Exception:
             etype, err, traceback = sys.exc_info()

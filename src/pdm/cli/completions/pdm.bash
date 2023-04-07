@@ -29,7 +29,7 @@ _pdm_a919b69078acdf0a_complete()
         case "$com" in
 
             (add)
-            opts="--dev --dry-run --editable --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --verbose"
+            opts="--dev --dry-run --editable --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
             ;;
 
             (build)
@@ -61,7 +61,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (info)
-            opts="--env --global --help --packages --project --python --verbose --where"
+            opts="--env --global --help --packages --project --python --venv --verbose --where"
             ;;
 
             (init)
@@ -69,11 +69,11 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (install)
-            opts="--check --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --production --project --skip --verbose"
+            opts="--check --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --production --project --skip --venv --verbose"
             ;;
 
             (list)
-            opts="--csv --exclude --fields --freeze --global --graph --help --include --json --markdown --project --resolve --reverse --sort --verbose"
+            opts="--csv --exclude --fields --freeze --global --graph --help --include --json --markdown --project --resolve --reverse --sort --venv --verbose"
             ;;
 
             (lock)
@@ -89,11 +89,11 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (remove)
-            opts="--dev --dry-run --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --skip --verbose"
+            opts="--dev --dry-run --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --skip --venv --verbose"
             ;;
 
             (run)
-            opts="--global --help --list --project --site-packages --skip --verbose"
+            opts="--global --help --list --project --site-packages --skip --venv --verbose"
             ;;
 
             (search)
@@ -105,19 +105,19 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (show)
-            opts="--global --help --keywords --license --name --platform --project --summary --verbose --version"
+            opts="--global --help --keywords --license --name --platform --project --summary --venv --verbose --version"
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --only-keep --production --project --reinstall --skip --verbose"
+            opts="--clean --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --only-keep --production --project --reinstall --skip --venv --verbose"
             ;;
 
             (update)
-            opts="--dev --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --verbose"
+            opts="--dev --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
             ;;
 
             (use)
-            opts="--first --global --help --ignore-remembered --project --skip --verbose"
+            opts="--first --global --help --ignore-remembered --project --skip --venv --verbose"
             ;;
 
             (venv)

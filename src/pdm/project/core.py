@@ -191,7 +191,7 @@ class Project:
 
         def note(message: str) -> None:
             if not self.is_global:
-                self.core.ui.echo(message, style="warning", err=True)
+                self.core.ui.echo(message, style="info", err=True)
 
         config = self.config
         saved_path = self._saved_python
@@ -199,6 +199,11 @@ class Project:
             python = PythonInfo.from_path(saved_path)
             if match_version(python):
                 return python
+            else:
+                note(
+                    "The saved Python interpreter doesn't match the project's requirement. "
+                    "Trying to find another one."
+                )
             self._saved_python = None  # Clear the saved path if it doesn't match
 
         if config.get("python.use_venv") and not self.is_global and not os.getenv("PDM_IGNORE_ACTIVE_VENV"):

@@ -8,6 +8,7 @@ from typing import Iterable, TypeVar
 from findpython import PythonVersion
 
 from findpython.providers import BaseProvider
+from pdm.exceptions import PdmUsageError
 
 from pdm.project import Project
 
@@ -80,3 +81,14 @@ class VenvProvider(BaseProvider):
             python = get_venv_python(venv)
             if python.exists():
                 yield PythonVersion(python, _interpreter=python, keep_symlink=True)
+
+
+def get_venv_with_name(project: Project, name: str) -> Path:
+    all_venvs = dict(iter_venvs(project))
+    try:
+        return all_venvs[name]
+    except KeyError:
+        raise PdmUsageError(
+            f"No virtualenv with key '{name}' is found, must be one of {list(all_venvs)}.\n"
+            "You can create one with 'pdm venv create'.",
+        )

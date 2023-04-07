@@ -24,6 +24,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore the remembered selection",
         )
+        parser.add_argument("--venv", help="Use the interpreter in the virtual environment with the given name")
         parser.add_argument("python", nargs="?", help="Specify the Python version or path", default="")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -32,5 +33,6 @@ class Command(BaseCommand):
             python=options.python,
             first=options.first,
             ignore_remembered=options.ignore_remembered,
+            venv=options.venv,
             hooks=HookManager(project, options.skip),
         )

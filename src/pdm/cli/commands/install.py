@@ -6,20 +6,22 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import (
-    dry_run_option,
-    groups_group,
-    install_group,
-    lockfile_option,
-    skip_option,
-)
+from pdm.cli.options import dry_run_option, groups_group, install_group, lockfile_option, skip_option, venv_option
 from pdm.project import Project
 
 
 class Command(BaseCommand):
     """Install dependencies from lock file"""
 
-    arguments = [*BaseCommand.arguments, groups_group, install_group, dry_run_option, lockfile_option, skip_option]
+    arguments = [
+        *BaseCommand.arguments,
+        groups_group,
+        install_group,
+        dry_run_option,
+        lockfile_option,
+        skip_option,
+        venv_option,
+    ]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

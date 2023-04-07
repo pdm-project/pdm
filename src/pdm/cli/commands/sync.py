@@ -11,6 +11,7 @@ from pdm.cli.options import (
     install_group,
     lockfile_option,
     skip_option,
+    venv_option,
 )
 from pdm.project import Project
 
@@ -26,6 +27,7 @@ class Command(BaseCommand):
         skip_option,
         clean_group,
         install_group,
+        venv_option,
     ]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:

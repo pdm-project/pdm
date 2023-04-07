@@ -2,7 +2,7 @@ import argparse
 import json
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.options import ArgumentGroup
+from pdm.cli.options import ArgumentGroup, venv_option
 from pdm.cli.utils import check_project_file
 from pdm.project import Project
 
@@ -11,6 +11,7 @@ class Command(BaseCommand):
     """Show the project information"""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        venv_option.add_to_parser(parser)
         group = ArgumentGroup("fields", is_mutually_exclusive=True)
         group.add_argument("--python", action="store_true", help="Show the interpreter path")
         group.add_argument(
@@ -25,7 +26,7 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
-        interpreter = project.python
+        interpreter = project.environment.interpreter
         packages_path = ""
         if project.environment.is_local:
             packages_path = project.environment.packages_path  # type: ignore[attr-defined]
