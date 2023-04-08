@@ -832,13 +832,13 @@ def get_latest_version(project: Project) -> str | None:
 
 def check_update(project: Project) -> None:
     """Check if there is a new version of PDM available"""
-    from packaging.version import parse as parse_version
+    from packaging.version import Version
 
     this_version = project.core.version
     latest_version = get_latest_version(project)
-    if latest_version is None or parse_version(this_version) >= parse_version(latest_version):
+    if latest_version is None or Version(this_version) >= Version(latest_version):
         return
-    install_command = "pdm self update"
+    install_command = "pdm self update" + (" --pre" if Version(latest_version).is_prerelease else "")
     disable_command = "pdm config check_update false"
 
     message = [
