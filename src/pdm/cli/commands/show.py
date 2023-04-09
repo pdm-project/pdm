@@ -54,7 +54,7 @@ class Command(BaseCommand):
             if not project.name:
                 raise PdmUsageError("This project is not a package")
             package = normalize_name(project.name)
-            metadata = project.make_self_candidate().prepare(project.environment).prepare_metadata(True)
+            metadata = project.make_self_candidate(False).prepare(project.environment).prepare_metadata(True)
             latest_stable = None
         project_info = ProjectInfo.from_distribution(metadata)
 

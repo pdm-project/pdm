@@ -30,6 +30,11 @@ def test_help_option(pdm):
     assert "Usage: pdm [-h]" in result.output
 
 
+def test_pep582_option(pdm):
+    result = pdm(["--pep582", "bash"])
+    assert result.exit_code == 0
+
+
 def test_info_command(project, pdm):
     result = pdm(["info"], obj=project)
     assert "Project Root:" in result.output

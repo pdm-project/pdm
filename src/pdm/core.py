@@ -124,7 +124,7 @@ class Core:
         """
         return self.project_class(self, root_path, is_global, global_config)
 
-    def before_invoke(self, project: Project, command: BaseCommand | None, options: argparse.Namespace) -> None:
+    def handle(self, project: Project, options: argparse.Namespace) -> None:
         """Called before command invocation"""
         from pdm.cli.commands.fix import Command as FixCommand
         from pdm.cli.hooks import HookManager
@@ -133,6 +133,7 @@ class Core:
         self.ui.set_verbosity(options.verbose)
         self.ui.set_theme(project.global_config.load_theme())
 
+        command = cast("BaseCommand | None", getattr(options, "command", None))
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
 
@@ -147,6 +148,10 @@ class Core:
 
         if getattr(options, "use_venv", None):
             use_venv(project, cast(str, options.use_venv))
+
+        if command is None:
+            self.parser.error("No command given")
+        command.handle(project, options)
 
     def main(
         self,
@@ -176,17 +181,11 @@ class Core:
                 self.parser.error(str(e.__cause__))
 
         project = self.ensure_project(options, obj)
-        command = getattr(options, "command", None)
-
         if root_script and root_script not in project.scripts:
             self.parser.error(f"Script unknown: {root_script}")
 
-        if command is None:
-            self.parser.error("No command given")
-        assert isinstance(command, BaseCommand)
         try:
-            self.before_invoke(project, command, options)
-            command.handle(project, options)
+            self.handle(project, options)
         except Exception:
             etype, err, traceback = sys.exc_info()
             should_show_tb = not isinstance(err, PdmUsageError)
