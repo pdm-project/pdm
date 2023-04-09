@@ -94,8 +94,8 @@ class Command(BaseCommand):
         if not is_library and self.interactive:
             is_library = termui.confirm(
                 "Is the project a library that is installable?\n"
-                "A few more questions will be asked to include a project name "
-                "and build backend"
+                "If yes, we will need to ask a few more questions to include "
+                "the project name and build backend"
             )
         build_backend: type[BuildBackend] | None = None
         if is_library:
