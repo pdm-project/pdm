@@ -1,3 +1,21 @@
+Release v2.5.0 (2023-04-09)
+---------------------------
+
+### Features & Improvements
+
+- When `resolution.respect-source-order` is enabled, sources are lazily evaluated. This means that if a match is found on the first source, the remaining sources will not be requested. [#1509](https://github.com/pdm-project/pdm/issues/1509)
+- New option `--venv <venv>` to run a command in the virtual environment with the given name. [#1705](https://github.com/pdm-project/pdm/issues/1705)
+- Allow to prefer binary distributions when locking and installing packages, via `PDM_PREFER_BINARY` environment variable. [#1817](https://github.com/pdm-project/pdm/issues/1817)
+
+### Bug Fixes
+
+- Do not validate selected groups against the locked grouped when running `pdm lock`. [#1796](https://github.com/pdm-project/pdm/issues/1796)
+- Avoid duplicate .pdm-python in .gitignore. [#1800](https://github.com/pdm-project/pdm/issues/1800)
+- Fix a backwards compatibility issue by adding back the `environment.is_global` property. [#1814](https://github.com/pdm-project/pdm/issues/1814)
+- Fix a resolution conflict when a relative path requirement resolves to the same path as another file requirement with absolute path. [#1822](https://github.com/pdm-project/pdm/issues/1822)
+- Fix an error when running `pdm init -p <dir>` if the target directory is not created yet. [#1822](https://github.com/pdm-project/pdm/issues/1822)
+
+
 Release v2.5.0b0 (2023-03-29)
 -----------------------------
 
