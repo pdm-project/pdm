@@ -1,3 +1,11 @@
+Release v2.5.1 (2023-04-09)
+---------------------------
+
+### Bug Fixes
+
+- Fix a bug that `pdm --pep582` raises an argument error. [#1823](https://github.com/pdm-project/pdm/issues/1823)
+
+
 Release v2.5.0 (2023-04-09)
 ---------------------------
 
