@@ -146,7 +146,7 @@ class BaseProvider(AbstractProvider):
     def _compare_file_reqs(self, req1: FileRequirement, req2: FileRequirement) -> bool:
         backend = self.repository.environment.project.backend
         if req1.path and req2.path:
-            return os.path.normpath(req1.path) == os.path.normpath(req2.path)
+            return os.path.normpath(req1.path.absolute()) == os.path.normpath(req2.path.absolute())
         left = backend.expand_line(url_without_fragments(req1.get_full_url()))
         right = backend.expand_line(url_without_fragments(req2.get_full_url()))
         return left == right

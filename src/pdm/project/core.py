@@ -175,6 +175,7 @@ class Project:
 
     @_saved_python.setter
     def _saved_python(self, value: str | None) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
         python_file = self.root.joinpath(".pdm-python")
         if value is None:
             with contextlib.suppress(FileNotFoundError):
