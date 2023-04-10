@@ -347,6 +347,6 @@ venv_option = Option(
     metavar="NAME",
     nargs="?",
     const="in-project",
-    help="Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]",
-    default=os.getenv("PDM_USE_VENV"),
+    help="Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]",
+    default=os.getenv("PDM_IN_VENV"),
 )

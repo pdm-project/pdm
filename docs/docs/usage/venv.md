@@ -142,7 +142,7 @@ $ pdm sync --venv test
 $ pdm list --venv test
 ```
 
-There are other commands supporting `--venv` flag or `PDM_USE_VENV` environment variable, see the [CLI reference](../reference/cli.md). You should create the virtualenv with `pdm venv create --name <name>` before using this feature.
+There are other commands supporting `--venv` flag or `PDM_IN_VENV` environment variable, see the [CLI reference](../reference/cli.md). You should create the virtualenv with `pdm venv create --name <name>` before using this feature.
 
 ## Switch to a virtualenv as the project environment
 

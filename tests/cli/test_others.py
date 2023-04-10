@@ -67,7 +67,7 @@ def test_info_with_multiple_venvs(pdm, project):
     result = pdm(["info", "--python", "--venv", "test"], obj=project, strict=True)
     assert Path(result.output.strip()).parent.parent.parent == project.root / venv_location
 
-    result = pdm(["info", "--python", "--venv", "test"], obj=project, strict=True, env={"PDM_USE_VENV": "test"})
+    result = pdm(["info", "--python", "--venv", "test"], obj=project, strict=True, env={"PDM_IN_VENV": "test"})
     assert Path(result.output.strip()).parent.parent.parent == project.root / venv_location
     result = pdm(["info", "--python", "--venv", "default"], obj=project)
     assert "No virtualenv with key 'default' is found" in result.stderr

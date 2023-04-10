@@ -70,7 +70,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l unconstrained -d 'Ign
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-all -d 'Update all dependencies and sub-dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
-complete -c pdm -A -n '__fish_seen_subcommand_from add' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # build
@@ -138,7 +138,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l help -d 'show this h
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l packages -d 'Show the local packages root'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l python -d 'Show the interpreter path'
-complete -c pdm -A -n '__fish_seen_subcommand_from info' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from info' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the project root path'
 
@@ -170,7 +170,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-self -d 'Don\'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
-complete -c pdm -A -n '__fish_seen_subcommand_from install' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # list
@@ -188,7 +188,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from list' -l project -d 'Specify 
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l resolve -d 'Resolve all requirements to output licenses (instead of just showing those currently installed)'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l reverse -d 'Reverse the dependency graph'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l sort -d 'Sort the output using a given field name. If nothing is set, no sort is applied. Multiple fields can be combined with \',\'.'
-complete -c pdm -A -n '__fish_seen_subcommand_from list' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # lock
@@ -238,7 +238,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-self -d 'Don\'t
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-sync -d 'Only write pyproject.toml and do not uninstall packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
-complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # run
@@ -248,7 +248,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l list -d 'Show all ava
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l site-packages -d 'Load site-packages from the selected interpreter'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
-complete -c pdm -A -n '__fish_seen_subcommand_from run' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from run' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # search
@@ -268,7 +268,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from show' -l name -d 'Show name'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l platform -d 'Show platform'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l summary -d 'Show summary'
-complete -c pdm -A -n '__fish_seen_subcommand_from show' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l verbose -d '-v for detailed output and -vv for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l version -d 'Show version'
 
@@ -290,7 +290,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l production -d 'Unsel
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l reinstall -d 'Force reinstall existing dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
-complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # update
@@ -319,7 +319,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l unconstrained -d '
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-all -d 'Update all dependencies and sub-dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
-complete -c pdm -A -n '__fish_seen_subcommand_from update' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_USE_VENV]'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d '-v for detailed output and -vv for more detailed'
 
 # use
