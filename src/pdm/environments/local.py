@@ -27,7 +27,7 @@ def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
     return shlex.quote(executable).encode("utf-8")
 
 
-def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
+def _replace_shebang(path: Path, new_executable: bytes) -> None:
     """Replace the python executable from the shebeng line, which can be in two forms:
 
     1. #!python_executable
@@ -37,13 +37,15 @@ def _replace_shebang(contents: bytes, new_executable: bytes) -> bytes:
     """
     _complex_shebang_re = rb"^'''exec' ('.+?') \"\$0\""
     _simple_shebang_re = rb"^#!(.+?)\s*$"
+    contents = path.read_bytes()
     match = re.search(_complex_shebang_re, contents, flags=re.M)
     if match:
-        return contents.replace(match.group(1), new_executable, 1)
-    else:
-        match = re.search(_simple_shebang_re, contents, flags=re.M)
-        assert match is not None
-        return contents.replace(match.group(1), new_executable, 1)
+        path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+        return
+
+    match = re.search(_simple_shebang_re, contents, flags=re.M)
+    if match:
+        path.write_bytes(contents.replace(match.group(1), new_executable, 1))
 
 
 class PythonLocalEnvironment(BaseEnvironment):
@@ -91,4 +93,4 @@ class PythonLocalEnvironment(BaseEnvironment):
                 continue
             is_launcher = child.suffix == ".exe"
             new_shebang = _get_shebang_path(new_path, is_launcher)
-            child.write_bytes(_replace_shebang(child.read_bytes(), new_shebang))
+            _replace_shebang(child, new_shebang)
