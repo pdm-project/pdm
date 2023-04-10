@@ -1,3 +1,12 @@
+Release v2.5.2 (2023-04-10)
+---------------------------
+
+### Bug Fixes
+
+- Regression(#1710): Don't crash when trying to update the shebang in a binary script [#1827](https://github.com/pdm-project/pdm/issues/1827)
+- Rename the env var `PDM_USE_VENV` as `PDM_IN_VENV` for `--venv` flag as it mistakenly override another existing env var. [#1829](https://github.com/pdm-project/pdm/issues/1829)
+
+
 Release v2.5.1 (2023-04-09)
 ---------------------------
 
