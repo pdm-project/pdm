@@ -31,6 +31,7 @@ class TOMLBase(TOMLFile):
         self._data = self.read()
 
     def write(self) -> None:
+        self._path.parent.mkdir(parents=True, exist_ok=True)
         return super().write(self._data)
 
     def exists(self) -> bool:

@@ -180,6 +180,39 @@ COPY --from=builder /project/__pypackages__/3.8/lib /project/pkgs
 CMD ["python", "-m", "project"]
 ```
 
+## Use PDM to manage a monorepo
+
+With PDM, you can have multiple sub-packages within a single project, each with its own `pyproject.toml` file. And you can create only one `pdm.lock` file to lock all dependencies. The sub-packages can have each other as their dependencies. To achieve this, follow these steps:
+
+`project/pyproject.toml`:
+
+```toml
+[tool.pdm.dev-dependencies]
+dev = [
+    "-e file:///${PROJECT_ROOT}/packages/foo-core",
+    "-e file:///${PROJECT_ROOT}/packages/foo-cli",
+    "-e file:///${PROJECT_ROOT}/packages/foo-app",
+]
+```
+
+`packages/foo-cli/pyproject.toml`:
+
+```toml
+[projects]
+dependencies = ["foo-core"]
+```
+
+`packages/foo-app/pyproject.toml`:
+
+```toml
+[projects]
+dependencies = ["foo-core"]
+```
+
+Now, run `pdm install` in the project root, and you will get a `pdm.lock` with all dependencies locked. All sub-packages will be installed in editable mode.
+
+Look at the [🚀 Example repository](https://github.com/pdm-project/pdm-example-monorepo) for more details.
+
 ## Hooks for `pre-commit`
 
 [`pre-commit`](https://pre-commit.com/) is a powerful framework for managing git hooks in a centralized fashion. PDM already uses `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) for its internal QA checks. PDM exposes also several hooks that can be run locally or in CI pipelines.
