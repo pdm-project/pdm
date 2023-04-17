@@ -15,6 +15,27 @@ def test_fix_individual_problem(project, pdm):
     assert not old_config.exists()
 
 
+def test_show_fix_command(project, pdm):
+    old_config = project.root / ".pdm.toml"
+    old_config.write_text(f'[python]\nuse_pyenv = false\npath = "{Path(sys.executable).as_posix()}"\n')
+    result = pdm(["info"], obj=project)
+    assert "Run pdm fix to fix all" in result.stderr
+
+    result = pdm(["fix", "-h"], obj=project)
+    assert "Run pdm fix to fix all" not in result.stderr
+
+
+def test_show_fix_command_global_project(core, pdm, project_no_init):
+    project = core.create_project(None, True, project_no_init.global_config.config_file)
+    old_config = project.root / ".pdm.toml"
+    old_config.write_text(f'[python]\nuse_pyenv = false\npath = "{Path(sys.executable).as_posix()}"\n')
+    result = pdm(["info"], obj=project)
+    assert "Run pdm fix -g to fix all" in result.stderr
+
+    result = pdm(["fix", "-h"], obj=project)
+    assert "Run pdm fix -g to fix all" not in result.stderr
+
+
 def test_fix_project_config(project, pdm):
     project._saved_python = None
     old_config = project.root / ".pdm.toml"

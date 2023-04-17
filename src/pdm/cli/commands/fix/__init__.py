@@ -37,8 +37,10 @@ class Command(BaseCommand):
             project.core.ui.echo(f"  [b]{name}[/]: {fixer.get_message()}", err=True)
             if fixer.breaking:
                 breaking = True
+        extra_option = " -g" if project.is_global else ""
         project.core.ui.echo(
-            "Run [success]pdm fix[/] to fix all or [success]pdm fix <name>[/] to fix individual problem.",
+            f"Run [success]pdm fix{extra_option}[/] to fix all or [success]pdm fix{extra_option} <name>[/]"
+            " to fix individual problem.",
             err=True,
         )
         if breaking and strict:
