@@ -166,7 +166,7 @@ post_test = ""
 test = ""
 pre_composite = ""
 post_composite = ""
-composite = {composite: ["test"]}
+composite = {composite = ["test"]}
 ```
 
 a `pdm run test` will have the following lifecycle:
