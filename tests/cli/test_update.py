@@ -155,8 +155,9 @@ def test_update_specified_packages_eager_mode(project, repository, pdm):
 
 @pytest.mark.usefixtures("working_set")
 def test_update_with_package_and_groups_argument(project, pdm):
-    pdm(["add", "requests", "pytz"], obj=project, strict=True)
-    result = pdm(["update", "requests", "--group", "dev"], obj=project)
+    pdm(["add", "-G", "web", "requests"], obj=project, strict=True)
+    pdm(["add", "-Gextra", "pytz"], obj=project, strict=True)
+    result = pdm(["update", "requests", "--group", "web", "-G", "extra"], obj=project)
     assert "PdmUsageError" in result.stderr
 
     result = pdm(["update", "requests", "--no-default"], obj=project)
