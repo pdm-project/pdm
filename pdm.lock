@@ -222,7 +222,7 @@ dependencies = [
 
 [[package]]
 name = "markdown-exec"
-version = "1.5.1"
+version = "1.6.0"
 requires_python = ">=3.7"
 summary = "Utilities to execute code blocks in Markdown files."
 dependencies = [
@@ -860,9 +860,9 @@ content_hash = "sha256:054d7fa5635e78a5f7397dea5c6f61c3ad3a198554b6958bda09005df
     {url = "https://files.pythonhosted.org/packages/d6/58/79df20de6e67a83f0d0bbfe6c19bb82adf68cdf362885257eb01099f930a/Markdown-3.3.7.tar.gz", hash = "sha256:cbb516f16218e643d8e0a95b309f77eb118cb138d39a4f27851e6a63581db874"},
     {url = "https://files.pythonhosted.org/packages/f3/df/ca72f352e15b6f8ce32b74af029f1189abffb906f7c137501ffe69c98a65/Markdown-3.3.7-py3-none-any.whl", hash = "sha256:f5da449a6e1c989a4cea2631aa8ee67caa5a2ef855d551c88f9e309f4634c621"},
 ]
-"markdown-exec 1.5.1" = [
-    {url = "https://files.pythonhosted.org/packages/0a/f8/9be190ecb273bfa8c992248a1e061c7f0a2506c339c20760e7ed75ee503a/markdown_exec-1.5.1.tar.gz", hash = "sha256:ea2fdb411d109d8c388a81988527df10555191883662265a57a9e921b7d7a070"},
-    {url = "https://files.pythonhosted.org/packages/dd/18/31109bd536fd757beec6acafd501b71cd761994a68576f81a3d053c52d63/markdown_exec-1.5.1-py3-none-any.whl", hash = "sha256:bb26aa103fcc182e5b6022aaf5d341a5c778904e79c7c9d9e6c834b39835c0e1"},
+"markdown-exec 1.6.0" = [
+    {url = "https://files.pythonhosted.org/packages/0c/38/cb1cc8c607d8fd99d4cc3e0dfe5ee32fe21191101014af667bcaaddb9076/markdown_exec-1.6.0.tar.gz", hash = "sha256:a52a84dda65c841f1a6a605d219cef9503b0a38fef8cd6c1f19b41a02d0e8d9d"},
+    {url = "https://files.pythonhosted.org/packages/14/6c/08278d9e09df9d12daccedcf082da39be02dbd9dadb984ba37cd20d48b92/markdown_exec-1.6.0-py3-none-any.whl", hash = "sha256:7dc22dda1e94815d72529caf6ec7a44a164d68e204894a48d4d0702425517504"},
 ]
 "markupsafe 2.1.1" = [
     {url = "https://files.pythonhosted.org/packages/06/7f/d5e46d7464360b6ac39c5b0b604770dba937e3d7cab485d2f3298454717b/MarkupSafe-2.1.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:e04e26803c9c3851c931eac40c695602c6295b8d432cbe78609649ad9bd2da8a"},

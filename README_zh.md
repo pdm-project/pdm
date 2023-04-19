@@ -28,7 +28,6 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 
 ## 主要特性
 
-- [PEP 582] 支持，完全不需要虚拟环境。
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
 - 兼容 [PEP 517] 的构建后端，用于构建发布包(源码格式与 wheel 格式)
 - 灵活且强大的插件系统
@@ -37,7 +36,6 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 - 像 [pnpm] 一样的中心化安装缓存，节省磁盘空间
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
-[pep 582]: https://www.python.org/dev/peps/pep-0582
 [pep 621]: https://www.python.org/dev/peps/pep-0621
 [pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
@@ -61,7 +59,8 @@ Hatch 也可以管理环境（它允许每个项目有多个环境，但不允�
 ### 本项目
 
 PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从一个标准化的 `pyproject.toml` 文件中读取项目元数据，并支持 lockfile。用户可以在插件中添加更多的功能，并将其作为一个发行版上传，以供分享。
-此外，PDM有一个实验性的 [PEP 582] 支持（[docs](https://pdm.fming.dev/latest/usage/pep582/)），这意味着你可以在不创建虚拟环境的情况下安装包。此外，与 Poetry 和 Hatch 不同，PDM 并没有被和一个特定的构建后端绑定，你可以选择任何你喜欢的构建后端。
+
+此外，与 Poetry 和 Hatch 不同，PDM 并没有被和一个特定的构建后端绑定，你可以选择任何你喜欢的构建后端。
 
 ## 安装
 

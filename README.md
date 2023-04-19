@@ -35,7 +35,6 @@ you can probably find some goodness in `pdm`.
 
 ## Highlights of features
 
-- Opt-in [PEP 582] support, no virtualenv involved at all.
 - Simple and fast dependency resolver, mainly for large binary distributions.
 - A [PEP 517] build backend.
 - [PEP 621] project metadata.
@@ -44,7 +43,6 @@ you can probably find some goodness in `pdm`.
 - Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
-[pep 582]: https://www.python.org/dev/peps/pep-0582
 [pep 621]: https://www.python.org/dev/peps/pep-0621
 [pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
@@ -72,8 +70,9 @@ Hatch can also manage environments (it allows multiple environments per project,
 
 ### This project
 
-PDM also can manage venvs, both in project and centralized location as Pipenv does. It reads the project metadata from a standardized `pyproject.toml` file, and has lockfile support. Users can add more functionalities in a plugin and upload it as a distribution for sharing.
-Besides, PDM has an experimental [PEP 582] support([docs](https://pdm.fming.dev/latest/usage/pep582/)), which means you can install packages without creating a virtual environment. Moreover, unlike Poetry and Hatch, PDM isn't locked to a specific build backend, you can choose any build backend you like.
+PDM can manage virtual environments (venvs) in both project and centralized locations, similar to Pipenv. It reads project metadata from a standardized `pyproject.toml` file and supports lockfiles. Users can add additional functionality through plugins, which can be shared by uploading them as distributions.
+
+Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users have the freedom to choose any build backend they prefer.
 
 ## Installation
 

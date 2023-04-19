@@ -183,7 +183,7 @@ The caches are located in `$(pdm config cache_dir)/packages`. You can view the c
 
 ## Configure the repositories for upload
 
-When using the [`pdm publish`](../reference/cli.md#exec-0--publish) command, it reads the repository secrets from the *global* config file(`<CONFIG_ROOT>/config.toml`). The content of the config is as follows:
+When using the [`pdm publish`](../reference/cli.md#publish) command, it reads the repository secrets from the *global* config file(`<CONFIG_ROOT>/config.toml`). The content of the config is as follows:
 
 ```toml
 [repository.pypi]
@@ -207,7 +207,7 @@ A PEM-encoded Certificate Authority bundle (`ca_certs`) can be used for local / 
     You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
     The username, password, and certificate authority bundle can be passed in from the command line for `pdm publish` via `--username`, `--password`, and `--ca-certs`, respectively.
 
-To change the repository config from the command line, use the [`pdm config`](../reference/cli.md#exec-0--config) command:
+To change the repository config from the command line, use the [`pdm config`](../reference/cli.md#config) command:
 
 ```bash
 pdm config repository.pypi.username "__token__"

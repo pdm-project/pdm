@@ -1,6 +1,6 @@
 # CLI Reference
 
-```python exec="true"
+```python exec="1" idprefix=""
 import argparse
 from pdm.core import Core
 

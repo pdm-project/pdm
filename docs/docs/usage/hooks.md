@@ -23,7 +23,7 @@ To provides full flexibility, PDM allows to [skip some hooks and tasks](#skippin
 
 ## Initialization
 
-The initialization phase should occur only once in a project lifetime by running the [`pdm init`](../reference/cli.md#exec-0--init)
+The initialization phase should occur only once in a project lifetime by running the [`pdm init`](../reference/cli.md#init)
 command to initialize an existing project (prompt to fill the `pyproject.toml` file).
 
 They trigger the following hooks:
@@ -50,12 +50,12 @@ The dependencies management is required for the developer to be able to work and
 
 All those steps are directly available with the following commands:
 
-- [`pdm lock`](../reference/cli.md#exec-0--lock): execute the `lock` task
-- [`pdm sync`](../reference/cli.md#exec-0--sync): execute the `sync` task
-- [`pdm install`](../reference/cli.md#exec-0--install): execute the `sync` task, preceded from `lock` if required
-- [`pdm add`](../reference/cli.md#exec-0--add): add a dependency requirement, re-lock and then sync
-- [`pdm remove`](../reference/cli.md#exec-0--remove): remove a dependency requirement, re-lock and then sync
-- [`pdm update`](../reference/cli.md#exec-0--update): re-lock dependencies from their latest versions and then sync
+- [`pdm lock`](../reference/cli.md#lock): execute the `lock` task
+- [`pdm sync`](../reference/cli.md#sync): execute the `sync` task
+- [`pdm install`](../reference/cli.md#install): execute the `sync` task, preceded from `lock` if required
+- [`pdm add`](../reference/cli.md#add): add a dependency requirement, re-lock and then sync
+- [`pdm remove`](../reference/cli.md#remove): remove a dependency requirement, re-lock and then sync
+- [`pdm update`](../reference/cli.md#update): re-lock dependencies from their latest versions and then sync
 
 They trigger the following hooks:
 
@@ -90,7 +90,7 @@ flowchart LR
 ### Switching Python version
 
 This is a special case in dependency management:
-you can switch the current Python version using [`pdm use`](../reference/cli.md#exec-0--use)
+you can switch the current Python version using [`pdm use`](../reference/cli.md#use)
 and it will emit the [`post_use`][pdm.signals.post_use] signal with the new Python interpreter.
 
 ```mermaid
@@ -111,8 +111,8 @@ As soon as you are ready to publish your package/library, you will require the p
 
 All those steps are available with the following commands:
 
-- [`pdm build`](../reference/cli.md#exec-0--build)
-- [`pdm publish`](../reference/cli.md#exec-0--publish)
+- [`pdm build`](../reference/cli.md#build)
+- [`pdm publish`](../reference/cli.md#publish)
 
 They trigger the following hooks:
 
