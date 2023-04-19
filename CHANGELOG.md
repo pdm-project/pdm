@@ -1,3 +1,16 @@
+Release v2.5.3 (2023-04-19)
+---------------------------
+
+### Bug Fixes
+
+- Fix the wrong argument validation for update command, where packages given with group option should be allowed. [#1836](https://github.com/pdm-project/pdm/issues/1836)
+
+### Documentation
+
+- Update `markdown-exec` to `1.5.0` for rendering TOC in CLI reference page. [#1836](https://github.com/pdm-project/pdm/issues/1836)
+- Remove advertizing of PEP-582 from the feature highlights. Improve the anchor links for CLI reference. [#1840](https://github.com/pdm-project/pdm/issues/1840)
+
+
 Release v2.5.2 (2023-04-10)
 ---------------------------
 
