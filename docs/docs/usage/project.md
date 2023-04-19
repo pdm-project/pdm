@@ -1,6 +1,6 @@
 # New Project
 
-To start with, create a new project with [`pdm init`](../reference/cli.md#exec-0--init):
+To start with, create a new project with [`pdm init`](../reference/cli.md#init):
 
 ```bash
 mkdir my-project && cd my-project
@@ -12,7 +12,7 @@ You will need to answer a few questions, to help PDM to create a `pyproject.toml
 ## Choose a Python interpreter
 
 At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. The interpreter path
-will be stored in `.pdm-python` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#exec-0--use).
+will be stored in `.pdm-python` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#use).
 
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
@@ -64,7 +64,7 @@ The value of `requires-python` is a [version specifier as defined in PEP 440](ht
 
 ## Working with Python < 3.7
 
-Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-pep517` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#exec-0--build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
+Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-pep517` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
 
 | Backend               | Supported Python | Support PEP 621 |
 | --------------------- | ---------------- | --------------- |
@@ -87,7 +87,7 @@ PDM provides `import` command so that you don't have to initialize the project m
 4. `requirements.txt` format used by pip
 5. setuptools `setup.py`(It requires `setuptools` to be installed in the project environment. You can do this by configuring `venv.with_pip` to `true` for venv and `pdm add setuptools` for `__pypackages__`)
 
-Also, when you are executing [`pdm init`](../reference/cli.md#exec-0--init) or [`pdm install`](../reference/cli.md#exec-0--install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
+Also, when you are executing [`pdm init`](../reference/cli.md#init) or [`pdm install`](../reference/cli.md#install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
 
 !!! info
     Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
@@ -137,7 +137,7 @@ $ pdm info --env
 }
 ```
 
-[This command](../reference/cli.md#exec-0--info) is useful for checking which mode is being used by the project:
+[This command](../reference/cli.md#info) is useful for checking which mode is being used by the project:
 
 - If *Project Packages* is `None`, [virtualenv mode](./venv.md) is enabled.
 - Otherwise, [PEP 582 mode](./pep582.md) is enabled.

@@ -5,7 +5,7 @@ The following examples are run on Ubuntu 18.04, a few changes must be done if yo
 
 ## Add dependencies
 
-[`pdm add`](../reference/cli.md#exec-0--add) can be followed by one or several dependencies, and the dependency specification is described in [PEP 508](https://www.python.org/dev/peps/pep-0508/).
+[`pdm add`](../reference/cli.md#add) can be followed by one or several dependencies, and the dependency specification is described in [PEP 508](https://www.python.org/dev/peps/pep-0508/).
 
 Examples:
 
@@ -166,7 +166,7 @@ for the dependency):
 
 ### Add prereleases
 
-One can give `--pre/--prerelease` option to [`pdm add`](../reference/cli.md#exec-0--add) so that prereleases are allowed to be pinned for the given packages.
+One can give `--pre/--prerelease` option to [`pdm add`](../reference/cli.md#add) so that prereleases are allowed to be pinned for the given packages.
 
 ## Update existing dependencies
 
@@ -223,7 +223,7 @@ which is given by `--update-<strategy>` option:
 ### Update packages to the versions that break the version specifiers
 
 One can give `-u/--unconstrained` to tell PDM to ignore the version specifiers in the `pyproject.toml`.
-This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](../reference/cli.md#exec-0--update) also supports the
+This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](../reference/cli.md#update) also supports the
 `--pre/--prerelease` option.
 
 ## Remove existing dependencies
@@ -243,9 +243,9 @@ pdm remove -dG test pytest-cov
 
 There are a few similar commands to do this job with slight differences:
 
-- [`pdm sync`](../reference/cli.md#exec-0--sync) installs packages from the lock file.
-- [`pdm update`](../reference/cli.md#exec-0--update) will update the lock file, then `sync`.
-- [`pdm install`](../reference/cli.md#exec-0--install) will check the project file for changes, update the lock file if needed, then `sync`.
+- [`pdm sync`](../reference/cli.md#sync) installs packages from the lock file.
+- [`pdm update`](../reference/cli.md#update) will update the lock file, then `sync`.
+- [`pdm install`](../reference/cli.md#install) will check the project file for changes, update the lock file if needed, then `sync`.
 
 `sync` also has a few options to manage installed packages:
 
@@ -254,7 +254,7 @@ There are a few similar commands to do this job with slight differences:
 
 ## Specify the lockfile to use
 
-You can specify another lockfile than the default [`pdm lock`](../reference/cli.md#exec-0--lock) by using the `-L/--lockfile <filepath>` option or the `PDM_LOCKFILE` environment variable.
+You can specify another lockfile than the default [`pdm lock`](../reference/cli.md#lock) by using the `-L/--lockfile <filepath>` option or the `PDM_LOCKFILE` environment variable.
 
 ## Select a subset of dependency groups to be installed or locked
 
@@ -406,7 +406,7 @@ project path via `-p/--project <path>` option.
 
 ## Export locked packages to alternative formats
 
-You can also export [`pdm lock`](../reference/cli.md#exec-0--lock) to other formats, to ease the CI flow or image building process. Currently,
+You can also export [`pdm lock`](../reference/cli.md#lock) to other formats, to ease the CI flow or image building process. Currently,
 only `requirements.txt` format is supported:
 
 ```bash

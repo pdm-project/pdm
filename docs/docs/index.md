@@ -11,7 +11,6 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 
 ## Feature highlights
 
-- Opt-in [PEP 582] support, no virtualenv involved at all.
 - Simple and fast dependency resolver, mainly for large binary distributions.
 - A [PEP 517] build backend.
 - [PEP 621] project metadata.
@@ -20,7 +19,6 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 - Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
-[pep 582]: https://www.python.org/dev/peps/pep-0582
 [pep 621]: https://www.python.org/dev/peps/pep-0621
 [pnpm]: https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed
 
@@ -200,8 +198,11 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
 
 ## Virtualenv and PEP 582
 
-In addition to the virtualenv management, PDM supports [PEP 582](https://www.python.org/dev/peps/pep-0582/) as an opt-in feature.
-You can learn more about the two modes in the corresponding chapters in [Working with virtualenv](usage/venv.md) and [Working with PEP 582](usage/pep582.md)
+PDM offers experimental support for [PEP 582](https://www.python.org/dev/peps/pep-0582/) as an opt-in feature, in addition to virtualenv management. Although [the Python Steering Council has rejected PEP 582][rejected], you can still test it out using PDM.
+
+To learn more about the two modes, refer to the relevant chapters on [Working with virtualenv](usage/venv.md) and [Working with PEP 582](usage/pep582.md).
+
+[rejected]: https://discuss.python.org/t/pep-582-python-local-packages-directory/963/430
 
 ## PDM Eco-system
 

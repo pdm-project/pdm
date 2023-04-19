@@ -1,6 +1,6 @@
 # Configurations
 
-[pdm-config]: ../reference/cli.md#exec-0--config
+[pdm-config]: ../reference/cli.md#config
 
 ## Color Theme
 
