@@ -219,7 +219,7 @@ _pdm() {
         "--freeze[Show the installed dependencies as pip's requirements.txt format]"
         "--include[Dependency groups to include in the output. By default all are included]:include:"
         "--exclude[Dependency groups to exclude from the output]:exclude:"
-        "--resolve[Resolve all requirements to output licenses (instead of just showing those currently installed)"
+        "--resolve[Resolve all requirements to output licenses (instead of just showing those currently installed)]"
         '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
       )
       ;;
