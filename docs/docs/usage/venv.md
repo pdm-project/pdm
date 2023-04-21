@@ -146,7 +146,7 @@ There are other commands supporting `--venv` flag or `PDM_IN_VENV` environment v
 
 ## Switch to a virtualenv as the project environment
 
-By default, if you use `pdm use` and select a non-venv Python, the project will be switched to [PEP 582 mode](../pep582.md). We also allow you to switch to a named virtual environment via the `--venv` flag:
+By default, if you use `pdm use` and select a non-venv Python, the project will be switched to [PEP 582 mode](./pep582.md). We also allow you to switch to a named virtual environment via the `--venv` flag:
 
 ```bash
 # Switch to a virtualenv named test
