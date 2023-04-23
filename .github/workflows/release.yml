@@ -9,6 +9,8 @@ jobs:
   release-pypi:
     name: release-pypi
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v3
@@ -45,10 +47,8 @@ jobs:
           pdm run mike deploy --no-redirect --update-aliases "$DOC_VERSION" latest
           git push origin gh-pages
 
-      - name: Upload to Pypi
-        run: |
-          pip install twine
-          twine upload --username __token__ --password ${{ secrets.PYPI_TOKEN }} dist/*
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Get Changelog
         id: get-changelog
