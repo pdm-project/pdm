@@ -11,6 +11,8 @@ import sys
 from types import FrameType
 from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, cast
 
+from rich import print_json
+
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
@@ -300,6 +302,33 @@ class TaskRunner:
             )
         self.project.core.ui.display_columns(result, columns)
 
+    def as_json(self) -> dict[str, Any]:
+        out = {}
+        for name in sorted(self.project.scripts):
+            if name == "_":
+                data = out["_"] = dict(name="_", kind="shared", help="Shared options", **self.global_options)
+                _fix_env_file(data)
+                continue
+            task = self.get_task(name)
+            assert task is not None
+            data = out[name] = {
+                "name": name,
+                "kind": task.kind,
+                "help": task.short_description,
+                "args": task.args,  # type: ignore[dict-item]
+            }
+            data.update(**task.options)
+            _fix_env_file(data)
+        return out
+
+
+def _fix_env_file(data: dict[str, Any]) -> dict[str, Any]:
+    env_file = data.get("env_file")
+    if isinstance(env_file, dict):
+        del data["env_file"]
+        data["env_file.override"] = env_file.get("override")
+    return data
+
 
 class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
@@ -308,20 +337,28 @@ class Command(BaseCommand):
     arguments = [*BaseCommand.arguments, skip_option, venv_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
+        action = parser.add_mutually_exclusive_group()
+        action.add_argument(
             "-l",
             "--list",
             action="store_true",
             help="Show all available scripts defined in pyproject.toml",
         )
-        parser.add_argument(
+        action.add_argument(
+            "-j",
+            "--json",
+            action="store_true",
+            help="Output all scripts infos in JSON",
+        )
+        exec = action.add_argument_group("execution", "Execution parameters")
+        exec.add_argument(
             "-s",
             "--site-packages",
             action="store_true",
             help="Load site-packages from the selected interpreter",
         )
-        parser.add_argument("script", nargs="?", help="The command to run")
-        parser.add_argument(
+        exec.add_argument("script", nargs="?", help="The command to run")
+        exec.add_argument(
             "args",
             nargs=argparse.REMAINDER,
             help="Arguments that will be passed to the command",
@@ -333,6 +370,8 @@ class Command(BaseCommand):
         runner = self.runner_cls(project, hooks=hooks)
         if options.list:
             return runner.show_list()
+        if options.json:
+            return print_json(data=runner.as_json())
         if options.site_packages:
             runner.global_options.update({"site_packages": options.site_packages})
         if not options.script:

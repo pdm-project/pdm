@@ -1,6 +1,8 @@
 import argparse
 import json
 
+from rich import print_json
+
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ArgumentGroup, venv_option
 from pdm.cli.utils import check_project_file
@@ -22,6 +24,7 @@ class Command(BaseCommand):
         )
         group.add_argument("--packages", action="store_true", help="Show the local packages root")
         group.add_argument("--env", action="store_true", help="Show PEP 508 environment markers")
+        group.add_argument("--json", action="store_true", help="Dump the information in JSON")
         group.add_to_parser(parser)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -38,6 +41,21 @@ class Command(BaseCommand):
             project.core.ui.echo(str(packages_path))
         elif options.env:
             project.core.ui.echo(json.dumps(project.environment.marker_environment, indent=2))
+        elif options.json:
+            print_json(
+                data={
+                    "pdm": {"version": project.core.version},
+                    "python": {
+                        "interpreter": str(interpreter.executable),
+                        "version": interpreter.identifier,
+                        "markers": project.environment.marker_environment,
+                    },
+                    "project": {
+                        "root": str(project.root),
+                        "pypackages": str(packages_path),
+                    },
+                }
+            )
         else:
             for name, value in zip(
                 [

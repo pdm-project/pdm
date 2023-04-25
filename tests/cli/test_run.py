@@ -386,6 +386,74 @@ def test_run_show_list_of_scripts(project, invoke):
     assert result_lines[4][1:-1].strip() == "test_shell     │ shell     │ shell command"
 
 
+def test_run_json_list_of_scripts(project, invoke):
+    project.pyproject.settings["scripts"] = {
+        "_": {"env_file": ".env"},
+        "test_composite": {"composite": ["test_cmd", "test_script", "test_shell"]},
+        "test_cmd": "flask db upgrade",
+        "test_multi": """\
+            I am a multilines
+            command
+        """,
+        "test_script": {"call": "test_script:main", "help": "call a python function"},
+        "test_shell": {"shell": "echo $FOO", "help": "shell command"},
+        "test_env": {"cmd": "true", "env": {"TEST": "value"}},
+        "test_env_file": {"cmd": "true", "env_file": ".env"},
+        "test_override": {"cmd": "true", "env_file": {"override": ".env"}},
+        "test_site_packages": {"cmd": "true", "site_packages": True},
+        "_private": "true",
+    }
+    project.pyproject.write()
+    result = invoke(["run", "--json"], obj=project, strict=True)
+
+    sep = termui.Emoji.ARROW_SEPARATOR
+    assert json.loads(result.outputs) == {
+        "_": {"name": "_", "help": "Shared options", "kind": "shared", "env_file": ".env"},
+        "test_cmd": {"name": "test_cmd", "help": "flask db upgrade", "kind": "cmd", "args": "flask db upgrade"},
+        "test_composite": {
+            "name": "test_composite",
+            "help": f"test_cmd {sep} test_script {sep} test_shell",
+            "kind": "composite",
+            "args": ["test_cmd", "test_script", "test_shell"],
+        },
+        "test_multi": {
+            "name": "test_multi",
+            "help": f"I am a multilines{termui.Emoji.ELLIPSIS}",
+            "kind": "cmd",
+            "args": "            I am a multilines\n            command\n        ",
+        },
+        "test_script": {
+            "name": "test_script",
+            "help": "call a python function",
+            "kind": "call",
+            "args": "test_script:main",
+        },
+        "test_shell": {"name": "test_shell", "help": "shell command", "kind": "shell", "args": "echo $FOO"},
+        "test_env": {"name": "test_env", "help": "true", "kind": "cmd", "args": "true", "env": {"TEST": "value"}},
+        "test_env_file": {"name": "test_env_file", "help": "true", "kind": "cmd", "args": "true", "env_file": ".env"},
+        "test_override": {
+            "name": "test_override",
+            "help": "true",
+            "kind": "cmd",
+            "args": "true",
+            "env_file.override": ".env",
+        },
+        "test_site_packages": {
+            "name": "test_site_packages",
+            "help": "true",
+            "kind": "cmd",
+            "args": "true",
+            "site_packages": True,
+        },
+        "_private": {
+            "name": "_private",
+            "help": "true",
+            "kind": "cmd",
+            "args": "true",
+        },
+    }
+
+
 @pytest.mark.usefixtures("local_finder")
 @pytest.mark.parametrize("explicit_python", [True, False])
 def test_run_with_another_project_root(project, invoke, capfd, explicit_python):
