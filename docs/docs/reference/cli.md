@@ -2,9 +2,21 @@
 
 ```python exec="1" idprefix=""
 import argparse
+import re
 from pdm.core import Core
 
 parser = Core().parser
+
+MONOSPACED = ("pyproject.toml", "pdm.lock", ".pdm-python", ":pre", ":post", ":all")
+
+def clean_help(help: str) -> str:
+    # Make dunders monospaced avoiding italic markdown rendering
+    help = re.sub(r"__([\w\d\_]+)__", r"`__\1__`", help)
+    # Make env vars monospaced
+    help = re.sub(r"env var: ([A-Z_]+)", r"env var: `\1`", help)
+    for monospaced in MONOSPACED:
+        help = re.sub(rf"\s(['\"]?{monospaced}['\"]?)", f"`{monospaced}`", help)
+    return help
 
 
 def render_parser(
@@ -39,9 +51,9 @@ def render_parser(
                 line = f"- {', '.join(opts)}"
             if action.metavar:
                 line += f" `{action.metavar}`"
-            line += f": {action.help}"
+            line += f": {clean_help(action.help)}"
             if action.default and action.default != argparse.SUPPRESS:
-                line += f"(default: `{action.default}`)"
+                line += f" (default: `{action.default}`)"
             result.append(line)
         result.append("")
 
