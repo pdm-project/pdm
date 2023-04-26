@@ -386,6 +386,17 @@ def test_run_show_list_of_scripts(project, invoke):
     assert result_lines[4][1:-1].strip() == "test_shell     │ shell     │ shell command"
 
 
+def test_run_show_list_of_scripts_hide_internals(project, invoke):
+    project.pyproject.settings["scripts"] = {
+        "public": "true",
+        "_internal": "true",
+    }
+    project.pyproject.write()
+    result = invoke(["run", "--list"], obj=project)
+    assert "public" in result.output
+    assert "_internal" not in result.output
+
+
 def test_run_json_list_of_scripts(project, invoke):
     project.pyproject.settings["scripts"] = {
         "_": {"env_file": ".env"},

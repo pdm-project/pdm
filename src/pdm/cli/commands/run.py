@@ -289,7 +289,7 @@ class TaskRunner:
         columns = ["Name", "Type", "Description"]
         result = []
         for name in sorted(self.project.scripts):
-            if name == "_":
+            if name.startswith("_"):
                 continue
             task = self.get_task(name)
             assert task is not None

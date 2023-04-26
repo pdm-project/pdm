@@ -260,6 +260,9 @@ $ pdm run --list
 
 You can add an `help` option with the description of the script, and it will be displayed in the `Description` column in the above output.
 
+!!! note
+    Tasks with a name starting with an underscore (`_`) are considered internal (helpers...) and are not shown in the listing.
+
 ## Pre & Post Scripts
 
 Like `npm`, PDM also supports tasks composition by pre and post scripts, pre script will be run before the given task and post script will be run after.
