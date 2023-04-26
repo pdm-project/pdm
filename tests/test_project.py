@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from packaging.version import parse
+from pytest_httpserver import HTTPServer
 
 from pdm.cli.commands.venv.utils import get_venv_python
 from pdm.environments import PythonEnvironment
@@ -275,19 +276,20 @@ def test_no_index_raise_error(project):
             pass
 
 
-@pytest.mark.network
-def test_access_index_with_auth(project):
-    url = "https://httpbin.org/basic-auth/foo/bar"
+def test_access_index_with_auth(project, httpserver: HTTPServer):
+    httpserver.expect_request(
+        "/simple/my-package", method="GET", headers={"Authorization": "Basic Zm9vOmJhcg=="}
+    ).respond_with_data("OK")
     project.global_config.update(
         {
-            "pypi.extra.url": "https://httpbin.org",
+            "pypi.extra.url": httpserver.url_for("/simple"),
             "pypi.extra.username": "foo",
             "pypi.extra.password": "bar",
         }
     )
     with project.environment.get_finder() as finder:
         session = finder.session
-        resp = session.get(url)
+        resp = session.get(httpserver.url_for("/simple/my-package"))
         assert resp.ok
 
 

@@ -462,6 +462,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pytest-httpserver"
+version = "1.0.6"
+requires_python = ">=3.7,<4.0"
+summary = "pytest-httpserver is a httpserver for pytest"
+dependencies = [
+    "Werkzeug>=2.0.0",
+]
+
+[[package]]
 name = "pytest-mock"
 version = "3.10.0"
 requires_python = ">=3.7"
@@ -685,6 +694,15 @@ requires_python = ">=3.6"
 summary = "Filesystem events monitoring"
 
 [[package]]
+name = "werkzeug"
+version = "2.2.3"
+requires_python = ">=3.7"
+summary = "The comprehensive WSGI web application library."
+dependencies = [
+    "MarkupSafe>=2.1.1",
+]
+
+[[package]]
 name = "zipp"
 version = "3.11.0"
 requires_python = ">=3.7"
@@ -693,7 +711,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 [metadata]
 lock_version = "4.2"
 groups = ["default", "doc", "pytest", "test", "tox", "workflow"]
-content_hash = "sha256:054d7fa5635e78a5f7397dea5c6f61c3ad3a198554b6958bda09005df76c4ed3"
+content_hash = "sha256:591bfc7fe0ffac8e787d014ca3c531786ca9a5aad6ca17d99372159ee319f227"
 
 [metadata.files]
 "arpeggio 2.0.0" = [
@@ -1043,6 +1061,10 @@ content_hash = "sha256:054d7fa5635e78a5f7397dea5c6f61c3ad3a198554b6958bda09005df
     {url = "https://files.pythonhosted.org/packages/ea/70/da97fd5f6270c7d2ce07559a19e5bf36a76f0af21500256f005a69d9beba/pytest-cov-4.0.0.tar.gz", hash = "sha256:996b79efde6433cdbd0088872dbc5fb3ed7fe1578b68cdbba634f14bb8dd0470"},
     {url = "https://files.pythonhosted.org/packages/fe/1f/9ec0ddd33bd2b37d6ec50bb39155bca4fe7085fa78b3b434c05459a860e3/pytest_cov-4.0.0-py3-none-any.whl", hash = "sha256:2feb1b751d66a8bd934e5edfa2e961d11309dc37b73b0eabe73b5945fee20f6b"},
 ]
+"pytest-httpserver 1.0.6" = [
+    {url = "https://files.pythonhosted.org/packages/27/7b/3f5bdca6a6732fd02f5bd61ed6a7971c76db422ed2a93b61111bfa1dac43/pytest_httpserver-1.0.6.tar.gz", hash = "sha256:9040d07bf59ac45d8de3db1d4468fd2d1d607975e4da4c872ecc0402cdbf7b3e"},
+    {url = "https://files.pythonhosted.org/packages/c3/53/73bcf0bae91ae9cb85d9926a08865c168973a9d3affa499e238d8fce0110/pytest_httpserver-1.0.6-py3-none-any.whl", hash = "sha256:ac2379acc91fe8bdbe2911c93af8dd130e33b5899fb9934d15669480739c6d32"},
+]
 "pytest-mock 3.10.0" = [
     {url = "https://files.pythonhosted.org/packages/91/84/c951790e199cd54ddbf1021965b62a5415b81193ebdb4f4af2659fd06a73/pytest_mock-3.10.0-py3-none-any.whl", hash = "sha256:f4c973eeae0282963eb293eb173ce91b091a79c1334455acfac9ddee8a1c784b"},
     {url = "https://files.pythonhosted.org/packages/f6/2b/137a7db414aeaf3d753d415a2bc3b90aba8c5f61dff7a7a736d84b2ec60d/pytest-mock-3.10.0.tar.gz", hash = "sha256:fbbdb085ef7c252a326fd8cdcac0aa3b1333d8811f131bdcc701002e1be7ed4f"},
@@ -1296,6 +1318,10 @@ content_hash = "sha256:054d7fa5635e78a5f7397dea5c6f61c3ad3a198554b6958bda09005df
     {url = "https://files.pythonhosted.org/packages/d0/ce/9cadf2b2ccb10dd3b96e036e79e497270fc1568af6b991dc55462df65ff6/watchdog-2.2.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:d0f29fd9f3f149a5277929de33b4f121a04cf84bb494634707cfa8ea8ae106a8"},
     {url = "https://files.pythonhosted.org/packages/f4/20/f02d47f27d2e395eca01a96438411ed343be76855481da95e18e2d6c6546/watchdog-2.2.1-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:a480d122740debf0afac4ddd583c6c0bb519c24f817b42ed6f850e2f6f9d64a8"},
     {url = "https://files.pythonhosted.org/packages/f8/35/98996332b9ae5a805ae8f7bad4834f51c0c8b070c223e7417163820732c5/watchdog-2.2.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a09483249d25cbdb4c268e020cb861c51baab2d1affd9a6affc68ffe6a231260"},
+]
+"werkzeug 2.2.3" = [
+    {url = "https://files.pythonhosted.org/packages/02/3c/baaebf3235c87d61d6593467056d5a8fba7c75ac838b8d100a5e64eba7a0/Werkzeug-2.2.3.tar.gz", hash = "sha256:2e1ccc9417d4da358b9de6f174e3ac094391ea1d4fbef2d667865d819dfd0afe"},
+    {url = "https://files.pythonhosted.org/packages/f6/f8/9da63c1617ae2a1dec2fbf6412f3a0cfe9d4ce029eccbda6e1e4258ca45f/Werkzeug-2.2.3-py3-none-any.whl", hash = "sha256:56433961bc1f12533306c624f3be5e744389ac61d722175d543e1751285da612"},
 ]
 "zipp 3.11.0" = [
     {url = "https://files.pythonhosted.org/packages/8e/b3/8b16a007184714f71157b1a71bbe632c5d66dd43bc8152b3c799b13881e1/zipp-3.11.0.tar.gz", hash = "sha256:a7a22e05929290a67401440b39690ae6563279bced5f314609d9d03798f56766"},
