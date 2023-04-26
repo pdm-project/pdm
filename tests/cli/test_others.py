@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -48,6 +49,19 @@ def test_info_command(project, pdm):
 
     result = pdm(["info", "--env"], obj=project)
     assert result.exit_code == 0
+
+
+def test_info_command_json(project, pdm):
+    result = pdm(["info", "--json"], obj=project, strict=True)
+
+    data = json.loads(result.outputs)
+
+    assert data["pdm"]["version"] == project.core.version
+    assert data["python"]["version"] == project.environment.interpreter.identifier
+    assert data["python"]["interpreter"] == str(project.environment.interpreter.executable)
+    assert isinstance(data["python"]["markers"], dict)
+    assert data["project"]["root"] == str(project.root)
+    assert isinstance(data["project"]["pypackages"], str)
 
 
 def test_info_global_project(pdm, tmp_path):
