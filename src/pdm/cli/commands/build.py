@@ -45,8 +45,8 @@ class Command(BaseCommand):
             "-C",
             action="append",
             help="Pass options to the backend. options with a value must be "
-            'specified after "=": "--config-setting=--opt(=value)" '
-            'or "-C--opt(=value)"',
+            'specified after "=": `--config-setting=--opt(=value)` '
+            "or `-C--opt(=value)`",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

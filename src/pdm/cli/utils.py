@@ -55,23 +55,6 @@ if TYPE_CHECKING:
     from pdm.project import Project
 
 
-class ErrorArgumentParser(argparse.ArgumentParser):
-    """A subclass of argparse.ArgumentParser that raises
-    parsing error rather than exiting.
-
-    This does the same as passing exit_on_error=False on Python 3.9+
-    """
-
-    def _parse_known_args(
-        self, arg_strings: list[str], namespace: argparse.Namespace
-    ) -> tuple[argparse.Namespace, list[str]]:
-        try:
-            return super()._parse_known_args(arg_strings, namespace)
-        except argparse.ArgumentError as e:
-            # We raise a dedicated error to avoid being caught by the caller
-            raise PdmArgumentError(e) from e
-
-
 class PdmFormatter(argparse.RawDescriptionHelpFormatter):
     def start_section(self, heading: str | None) -> None:
         return super().start_section(termui.style(heading.title() if heading else "", style="warning"))
@@ -135,6 +118,35 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
 
         # return a single string
         return self._join_parts(parts)
+
+
+class ArgumentParser(argparse.ArgumentParser):
+    """A standard argument parser but with title-cased help."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs["formatter_class"] = PdmFormatter
+        kwargs["add_help"] = False
+        super().__init__(*args, **kwargs)
+        self.add_argument(
+            "-h", "--help", action="help", default=argparse.SUPPRESS, help="Show this help message and exit."
+        )
+
+
+class ErrorArgumentParser(ArgumentParser):
+    """A subclass of argparse.ArgumentParser that raises
+    parsing error rather than exiting.
+
+    This does the same as passing exit_on_error=False on Python 3.9+
+    """
+
+    def _parse_known_args(
+        self, arg_strings: list[str], namespace: argparse.Namespace
+    ) -> tuple[argparse.Namespace, list[str]]:
+        try:
+            return super()._parse_known_args(arg_strings, namespace)
+        except argparse.ArgumentError as e:
+            # We raise a dedicated error to avoid being caught by the caller
+            raise PdmArgumentError(e) from e
 
 
 class Package:

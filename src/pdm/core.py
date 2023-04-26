@@ -23,7 +23,7 @@ from pdm.__version__ import __version__
 from pdm.cli.actions import check_update
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
-from pdm.cli.utils import ErrorArgumentParser, PdmFormatter
+from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
@@ -57,7 +57,6 @@ class Core:
         self.parser = ErrorArgumentParser(
             prog="pdm",
             description=__doc__,
-            formatter_class=PdmFormatter,
         )
         self.parser.is_root = True  # type: ignore[attr-defined]
         self.parser.add_argument(
@@ -68,19 +67,19 @@ class Core:
                 termui.style("PDM", style="bold"),
                 termui.style(self.version, style="success"),
             ),
-            help="show the version and exit",
+            help="Show the version and exit",
         )
         self.parser.add_argument(
             "-c",
             "--config",
-            help="Specify another config file path(env var: PDM_CONFIG_FILE)",
+            help="Specify another config file path [env var: PDM_CONFIG_FILE] ",
         )
         self.parser._positionals.title = "Commands"
         verbose_option.add_to_parser(self.parser)
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
-        self.subparsers = self.parser.add_subparsers(parser_class=argparse.ArgumentParser)
+        self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser)
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:

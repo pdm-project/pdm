@@ -5,7 +5,6 @@ from argparse import _SubParsersAction
 from typing import Any
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
-from pdm.cli.utils import PdmFormatter
 from pdm.project import Project
 
 
@@ -40,7 +39,6 @@ class BaseCommand:
             name,
             description=help_text,
             help=help_text,
-            formatter_class=PdmFormatter,
             **kwargs,
         )
         command = cls(parser)

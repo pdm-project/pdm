@@ -127,7 +127,7 @@ verbose_option = Option(
     "--verbose",
     action="count",
     default=0,
-    help="-v for detailed output and -vv for more detailed",
+    help="Use `-v` for detailed output and `-vv` for more detailed",
 )
 
 
@@ -184,7 +184,7 @@ groups_group.add_argument(
     metavar="GROUP",
     action=split_lists(","),
     help="Select group of optional-dependencies separated by comma "
-    "or dev-dependencies(with -d). Can be supplied multiple times, "
+    "or dev-dependencies (with `-d`). Can be supplied multiple times, "
     'use ":all" to include all groups under the same species.',
     default=[],
 )
@@ -296,12 +296,12 @@ global_option = Option(
 )
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
-clean_group.add_argument("--clean", action="store_true", help="clean packages not in the lockfile")
-clean_group.add_argument("--only-keep", action="store_true", help="only keep the selected packages")
+clean_group.add_argument("--clean", action="store_true", help="Clean packages not in the lockfile")
+clean_group.add_argument("--only-keep", action="store_true", help="Only keep the selected packages")
 
 sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
-sync_group.add_argument("--sync", action="store_true", dest="sync", help="sync packages")
-sync_group.add_argument("--no-sync", action="store_false", dest="sync", help="don't sync packages")
+sync_group.add_argument("--sync", action="store_true", dest="sync", help="Sync packages")
+sync_group.add_argument("--no-sync", action="store_false", dest="sync", help="Don't sync packages")
 
 packages_group = ArgumentGroup("Package Arguments")
 packages_group.add_argument(
