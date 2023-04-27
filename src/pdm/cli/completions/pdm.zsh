@@ -174,6 +174,7 @@ _pdm() {
         '--where[Show the project root path]'
         '--env[Show PEP 508 environment markers]'
         '--packages[Show the packages root]'
+        '--json[Dump the information in JSON]'
         '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
       )
       ;;
@@ -320,6 +321,7 @@ _pdm() {
       _arguments -s \
         {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
         {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
+        '--json[Output all scripts infos in JSON]' \
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]' \
         {-s,--site-packages}'[Load site-packages from the selected interpreter]' \
         '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:' \

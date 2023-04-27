@@ -273,7 +273,7 @@ function TabExpansion($line, $lastWord) {
             "info" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--env", "--global", "-g", "--python", "--where", "--packages")),
+                        [Option]::new(@("--env", "--global", "-g", "--python", "--where", "--packages", "--json")),
                         $projectOption,
                         $venvOption
                     ))
@@ -375,7 +375,7 @@ function TabExpansion($line, $lastWord) {
             "run" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "-l", "--list", "-s", "--site-packages")),
+                        [Option]::new(@("--global", "-g", "-l", "--list", "-s", "--site-packages", "--json")),
                         $skipOption,
                         $venvOption,
                         $projectOption

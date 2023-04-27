@@ -61,7 +61,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (info)
-            opts="--env --global --help --packages --project --python --venv --verbose --where"
+            opts="--env --global --help --json --packages --project --python --venv --verbose --where"
             ;;
 
             (init)
@@ -93,7 +93,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (run)
-            opts="--global --help --list --project --site-packages --skip --venv --verbose"
+            opts="--global --help --json --list --project --site-packages --skip --venv --verbose"
             ;;
 
             (search)
