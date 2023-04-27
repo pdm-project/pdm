@@ -46,6 +46,8 @@ class Command(BaseCommand):
             value = project.project_config[options.key]
         except KeyError:
             value = project.global_config[options.key]
+        if options.key.endswith(".password"):
+            value = "[i]<hidden>[/i]"
         project.core.ui.echo(value)
 
     def _set_config(self, project: Project, options: argparse.Namespace) -> None:

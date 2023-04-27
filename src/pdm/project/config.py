@@ -279,19 +279,13 @@ class Config(MutableMapping[str, str]):
                 raise KeyError(f"No repository named {parts[1]}")
 
             value = getattr(repo, parts[2]) if len(parts) >= 3 else repo
-            if len(parts) >= 3 and parts[2] == "password" and value:
-                return "<hidden>"
             return value
-        elif parts[0] == "pypi" and key not in self._config_map:
+        elif parts[0] == "pypi" and key not in self._config_map and len(parts) >= 2:
             index_key = ".".join(parts[:2])
             if index_key not in self._data:
                 raise KeyError(f"No PyPI index named {parts[1]}")
             source = self._data[index_key]
-            if len(parts) >= 3 and parts[2] == "password":
-                return "<hidden>"
             return source[parts[2]] if len(parts) >= 3 else RepositoryConfig(**self._data[index_key])
-        elif key == "pypi.password":
-            return "<hidden>"
 
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
