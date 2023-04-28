@@ -32,8 +32,7 @@ For the difference between these two approaches, please refer to the correspondi
 
 ## Library or Application
 
-A library and an application differ in many ways, [here is a good explanation](https://pipenv.pypa.io/en/latest/advanced/#pipfile-vs-setup-py) for them. In short, a library is a package that is intended to be installed and used by other projects.
-Usually it also needs to be uploaded to PyPI. An application, on the other hand, is one that is directly facing end users and may need to be deployed into production.
+A library and an application differ in many ways. In short, a library is a package that is intended to be installed and used by other projects. In most cases it also needs to be uploaded to PyPI. An application, on the other hand, is one that is directly facing end users and may need to be deployed into some production environments.
 
 In PDM, if you choose to create a library, PDM will add a `name`, `version` field to the `pyproject.toml` file, as well as a `[build-system]` table for the [build backend](../reference/build.md), which is only useful if your project needs to be built and distributed. So you need to manually add these fields to `pyproject.toml` if you want to change the project from an application to a library. Also, a library project will be installed into the environment when you run `pdm install` or `pdm sync`, unless `--no-self` is specified.
 
