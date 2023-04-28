@@ -159,3 +159,28 @@ $ pdm use --venv
 
 You can disable the auto-creation and auto-detection for virtualenv by `pdm config python.use_venv false`.
 **If venv is disabled, PEP 582 mode will always be used even if the selected interpreter is from a virtualenv.**
+
+## Including pip in your virtual environment
+
+By default PDM will not include `pip` in virtual environments.
+This increases isolation by ensuring that _only your dependencies_ are installed in the virtual environment.
+
+To install `pip` once (if for example you want to install arbitrary dependencies in CI) you can run:
+
+```bash
+# Install pip in the virtual environment
+$ pdm run python -m ensurepip
+# Install arbitrary dependencies
+# These dependencies are not checked for conflicts against lockfile dependencies!
+$ pdm run python -m pip install coverage
+```
+
+Or you can create the virtual environment with `--with-pip`:
+
+```bash
+$ pdm venv create --with-pip 3.9
+```
+
+See the [ensurepip docs](https://docs.python.org/3/library/ensurepip.html) for more details on `ensurepip`.
+
+If you want to permanently configure PDM to include `pip` in virtual environments you can use the [`venv.with_pip`](../reference/configuration.md) configuration.
