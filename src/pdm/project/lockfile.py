@@ -4,6 +4,7 @@ from typing import Any, Iterable, Mapping
 
 import tomlkit
 
+from pdm.models.specifiers import get_specifier
 from pdm.project.toml_file import TOMLBase
 
 GENERATED_COMMENTS = [
@@ -45,3 +46,17 @@ class Lockfile(TOMLBase):
 
     def __getitem__(self, key: str) -> dict:
         return self._data[key]
+
+    def is_compatible(self) -> bool:
+        """Within the same major version, the higher lockfile generator can work with
+        lower lockfile but not vice versa.
+        """
+        if not self.exists():
+            return True
+        lockfile_version = str(self.file_version)
+        if not lockfile_version:
+            return False
+        if "." not in lockfile_version:
+            lockfile_version += ".0"
+        accepted = get_specifier(f"~={lockfile_version},>={lockfile_version}")
+        return accepted.contains(self.spec_version)
