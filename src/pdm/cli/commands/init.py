@@ -60,20 +60,6 @@ class Command(BaseCommand):
                 ignore_requires_python=True,
                 hooks=hooks,
             )
-            if project.config["python.use_venv"] and get_venv_like_prefix(python.executable) is None:
-                if termui.confirm(
-                    f"Would you like to create a virtualenv with [success]{python.executable}[/]?",
-                    default=True,
-                ):
-                    try:
-                        path = project._create_virtualenv()
-                        python = project.python = PythonInfo.from_path(get_venv_python(path))
-                    except Exception as e:  # pragma: no cover
-                        project.core.ui.echo(
-                            f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later.",
-                            style="error",
-                            err=True,
-                        )
         else:
             python = actions.do_use(
                 project,
@@ -84,6 +70,20 @@ class Command(BaseCommand):
                 save=False,
                 hooks=hooks,
             )
+        if project.config["python.use_venv"] and get_venv_like_prefix(python.executable) is None:
+            if not self.interactive or termui.confirm(
+                f"Would you like to create a virtualenv with [success]{python.executable}[/]?",
+                default=True,
+            ):
+                try:
+                    path = project._create_virtualenv()
+                    python = project.python = PythonInfo.from_path(get_venv_python(path))
+                except Exception as e:  # pragma: no cover
+                    project.core.ui.echo(
+                        f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later.",
+                        style="error",
+                        err=True,
+                    )
         if get_venv_like_prefix(python.executable) is None:
             project.core.ui.echo(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"

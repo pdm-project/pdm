@@ -26,7 +26,7 @@ from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
-from pdm.models.specifiers import PySpecSet, get_specifier
+from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config
 from pdm.project.lockfile import Lockfile
 from pdm.project.project_file import PyProject
@@ -526,20 +526,6 @@ class Project:
         algo, hash_value = hash_in_lockfile.split(":")
         content_hash = self.pyproject.content_hash(algo)
         return content_hash == hash_value
-
-    def is_lockfile_compatible(self) -> bool:
-        """Within the same major version, the higher lockfile generator can work with
-        lower lockfile but not vice versa.
-        """
-        if not self.lockfile.exists():
-            return True
-        lockfile_version = str(self.lockfile.file_version)
-        if not lockfile_version:
-            return False
-        if "." not in lockfile_version:
-            lockfile_version += ".0"
-        accepted = get_specifier(f"~={lockfile_version},>={lockfile_version}")
-        return accepted.contains(self.lockfile.spec_version)
 
     def get_pyproject_dependencies(self, group: str, dev: bool = False) -> tuple[list[str], bool]:
         """Get the dependencies array in the pyproject.toml

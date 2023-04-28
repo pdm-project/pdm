@@ -10,6 +10,14 @@ from pdm.project.toml_file import TOMLBase
 from pdm.utils import deprecation_warning
 
 
+def _remove_empty_tables(doc: dict) -> None:
+    for k, v in list(doc.items()):
+        if isinstance(v, dict):
+            _remove_empty_tables(v)
+            if not v:
+                del doc[k]
+
+
 class PyProject(TOMLBase):
     """The data object representing th pyproject.toml file"""
 
@@ -30,6 +38,7 @@ class PyProject(TOMLBase):
 
     def write(self, show_message: bool = True) -> None:
         """Write the TOMLDocument to the file."""
+        _remove_empty_tables(self._data)
         super().write()
         if show_message:
             self.ui.echo("Changes are written to [success]pyproject.toml[/].")

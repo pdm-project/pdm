@@ -155,7 +155,7 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
             raise ProjectError("Lock file does not exist, nothing to install")
         project.core.ui.echo("Lock file does not exist", style="warning", err=True)
         return "all"
-    elif not project.is_lockfile_compatible():
+    elif not project.lockfile.is_compatible():
         project.core.ui.echo(
             "Lock file version is not compatible with PDM, installation may fail",
             style="warning",
