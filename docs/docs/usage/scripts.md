@@ -295,7 +295,7 @@ Under certain situations PDM will look for some special hook scripts for executi
 - `pre_script`: Run before any script
 - `post_script`: Run after any script
 - `pre_run`: Run once before run script invocation
-- `post_script`: Run once after run script invocation
+- `post_run`: Run once after run script invocation
 
 !!! note
     Pre & post scripts can't receive any arguments.
