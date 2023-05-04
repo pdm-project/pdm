@@ -326,3 +326,10 @@ def test_parse_metadata_with_dynamic_fields(project, local_finder):
     metadata = candidate.prepare(project.environment).metadata
     assert not metadata.requires
     assert metadata.version == "0.1.0"
+
+
+def test_get_metadata_for_non_existing_path(project):
+    req = parse_requirement("file:///${PROJECT_ROOT}/non-existing-path")
+    candidate = Candidate(req)
+    with pytest.raises(FileNotFoundError, match="No such file or directory"):
+        candidate.prepare(project.environment).metadata

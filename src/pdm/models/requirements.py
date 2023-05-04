@@ -474,7 +474,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             if m is None:
                 raise RequirementError(str(e)) from None
             args = m.groupdict()
-            if not args["url"] and args["path"] and not os.path.exists(args["path"]):
+            if not line.startswith(".") and not args["url"] and args["path"] and not os.path.exists(args["path"]):
                 raise RequirementError(str(e)) from None
             r = FileRequirement.create(**args)
         else:
