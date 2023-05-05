@@ -119,14 +119,27 @@ jobs:
           pdm info
       - name: Run Tests
         run: pdm run pytest -n auto --cov=pdm --cov-config=setup.cfg --cov-report=xml tests
-      - name: pack pdm
-        run: |
-          pdm self add pdm-packer
-          pdm pack
-          python pdm.pyz --version
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
           flags: unittests
+
+  Pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - name: Install PDM
+        run: |
+          python -m pip install .
+          pdm self add pdm-packer
+      - name: Pack pdm
+        run: pdm pack
+
+      - name: Test zipapp
+        run: python pdm.pyz --version
