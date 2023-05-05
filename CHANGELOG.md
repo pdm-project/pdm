@@ -1,3 +1,11 @@
+Release v2.5.4 (2023-05-05)
+---------------------------
+
+### Bug Fixes
+
+- Pin the urllib3 to `<2.0` to avoid incompatibility with `cachecontrol`. [#1886](https://github.com/pdm-project/pdm/issues/1886)
+
+
 Release v2.5.3 (2023-04-19)
 ---------------------------
 
