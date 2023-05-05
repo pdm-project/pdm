@@ -5,6 +5,7 @@ import dataclasses
 import hashlib
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
 
@@ -17,9 +18,10 @@ from pdm._types import CandidateInfo
 from pdm.exceptions import PdmException
 from pdm.models.candidates import Candidate
 from pdm.termui import logger
-from pdm.utils import atomic_open_for_write
+from pdm.utils import atomic_open_for_write, create_tracked_tempdir
 
 if TYPE_CHECKING:
+    from packaging.tags import Tag
     from unearth import Link, TargetPython
 
 KT = TypeVar("KT")
@@ -171,16 +173,16 @@ class WheelCache:
 
     def __init__(self, directory: Path) -> None:
         self.directory = directory
+        self.ephemeral_directory = Path(create_tracked_tempdir(prefix="pdm-wheel-cache-"))
 
-    def _get_candidates(self, link: Link, target_python: TargetPython) -> Iterable[Path]:
-        path = self.get_path_for_link(link, target_python)
+    def _get_candidates(self, path: Path) -> Iterable[Path]:
         if not path.exists():
             return
         for candidate in path.iterdir():
             if candidate.name.endswith(".whl"):
                 yield candidate
 
-    def get_path_for_link(self, link: Link, target_python: TargetPython) -> Path:
+    def _get_path_parts(self, link: Link, target_python: TargetPython) -> tuple[str, ...]:
         hash_key = {
             "url": link.url_without_fragment,
             # target python participates in the hash key to handle the some cases
@@ -195,16 +197,32 @@ class WheelCache:
         hashed = hashlib.sha224(
             json.dumps(hash_key, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
         ).hexdigest()
-        parts = (hashed[:2], hashed[2:4], hashed[4:6], hashed[6:])
+        return (hashed[:2], hashed[2:4], hashed[4:6], hashed[6:])
+
+    def get_path_for_link(self, link: Link, target_python: TargetPython) -> Path:
+        parts = self._get_path_parts(link, target_python)
         return self.directory.joinpath(*parts)
+
+    def get_ephemeral_path_for_link(self, link: Link, target_python: TargetPython) -> Path:
+        parts = self._get_path_parts(link, target_python)
+        return self.ephemeral_directory.joinpath(*parts)
 
     def get(self, link: Link, project_name: str | None, target_python: TargetPython) -> Path | None:
         if not project_name:
             return None
         canonical_name = canonicalize_name(project_name)
         tags_priorities = {tag: i for i, tag in enumerate(target_python.supported_tags())}
+
+        candidate = self._get_from_path(self.get_path_for_link(link, target_python), canonical_name, tags_priorities)
+        if candidate is not None:
+            return candidate
+        return self._get_from_path(
+            self.get_ephemeral_path_for_link(link, target_python), canonical_name, tags_priorities
+        )
+
+    def _get_from_path(self, path: Path, canonical_name: str, tags_priorities: dict[Tag, int]) -> Path | None:
         candidates: list[tuple[int, Path]] = []
-        for candidate in self._get_candidates(link, target_python):
+        for candidate in self._get_candidates(path):
             try:
                 name, *_, tags = parse_wheel_filename(candidate.name)
             except ValueError:
@@ -262,3 +280,8 @@ class SafeFileCache(BaseCache):
         path = self._get_cache_path(key)
         with contextlib.suppress(OSError):
             os.remove(path)
+
+
+@lru_cache(maxsize=128)
+def get_wheel_cache(directory: Path) -> WheelCache:
+    return WheelCache(directory)
