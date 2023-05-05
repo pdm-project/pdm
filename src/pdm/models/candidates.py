@@ -369,8 +369,7 @@ class PreparedCandidate:
         builder_cls = EditableBuilder if self.req.editable else WheelBuilder
         builder = builder_cls(str(self._unpacked_dir), self.environment)
         build_dir = self._get_wheel_dir()
-        if not os.path.exists(build_dir):
-            os.makedirs(build_dir)
+        os.makedirs(build_dir, exist_ok=True)
         termui.logger.info("Running PEP 517 backend to build a wheel for %s", self.link)
         self.wheel = Path(builder.build(build_dir, metadata_directory=self._metadata_dir))
         return self.wheel
@@ -573,12 +572,14 @@ class PreparedCandidate:
 
     def _get_wheel_dir(self) -> str:
         assert self.candidate.link
+        wheel_cache = self.environment.project.make_wheel_cache()
         if self.should_cache():
             termui.logger.info("Saving wheel to cache: %s", self.candidate.link)
-            wheel_cache = self.environment.project.make_wheel_cache()
             return wheel_cache.get_path_for_link(self.candidate.link, self.environment.target_python).as_posix()
         else:
-            return create_tracked_tempdir(prefix="pdm-wheel-")
+            return wheel_cache.get_ephemeral_path_for_link(
+                self.candidate.link, self.environment.target_python
+            ).as_posix()
 
 
 @lru_cache(maxsize=None)

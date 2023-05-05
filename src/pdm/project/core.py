@@ -21,7 +21,7 @@ from pdm.compat import cached_property
 from pdm.environments import BaseEnvironment, PythonEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
-from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
+from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache, get_wheel_cache
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
@@ -599,7 +599,7 @@ class Project:
         return path
 
     def make_wheel_cache(self) -> WheelCache:
-        return WheelCache(self.cache("wheels"))
+        return get_wheel_cache(self.cache("wheels"))
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
         python_hash = hashlib.sha1(str(self.environment.python_requires).encode()).hexdigest()
