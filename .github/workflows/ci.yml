@@ -16,6 +16,7 @@ on:
     branches:
       - main
       - dev
+      - "maintain/*"
     paths-ignore:
       - "docs/**"
       - "news/**"

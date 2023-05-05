@@ -12,7 +12,6 @@ license = {text = "MIT"}
 dependencies = [
     "blinker",
     "certifi",
-    "urllib3<2",
     "packaging>=20.9,!=22.0",
     "platformdirs",
     "rich>=12.3.0",
