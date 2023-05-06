@@ -215,6 +215,28 @@ class BaseRepository:
         summary = prepared.metadata.metadata["Summary"]
         return deps, requires_python, summary
 
+    def _get_dependency_from_local_package(self, candidate: Candidate) -> CandidateInfo:
+        """Adds the local package as a candidate only if the candidate
+        name is the same as the local package."""
+        project = self.environment.project
+        if not project.name or candidate.name != project.name:
+            raise CandidateInfoNotFound(candidate) from None
+
+        reqs = project.pyproject.metadata.get("dependencies", [])
+        extra_dependencies = project.pyproject.settings.get("dev-dependencies", {})
+        extra_dependencies.update(project.pyproject.metadata.get("optional-dependencies", {}))
+        if candidate.req.extras is not None:
+            reqs = sum(
+                (extra_dependencies.get(g, []) for g in candidate.req.extras),
+                [],
+            )
+
+        return (
+            reqs,
+            str(self.environment.python_requires),
+            project.pyproject.metadata.get("description", "UNKNOWN"),
+        )
+
     def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
         """Get hashes of all possible installable candidates
         of a given package version.
@@ -311,6 +333,7 @@ class PyPIRepository(BaseRepository):
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         yield self._get_dependencies_from_cache
+        yield self._get_dependency_from_local_package
         if self.environment.project.config["pypi.json_api"]:
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata
@@ -416,26 +439,6 @@ class LockedRepository(BaseRepository):
 
     def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
         return self.candidate_info[self._identify_candidate(candidate)]
-
-    def _get_dependency_from_local_package(self, candidate: Candidate) -> CandidateInfo:
-        """Adds the local package as a candidate only if the candidate
-        name is the same as the local package."""
-        if candidate.name != self.environment.project.name:
-            raise CandidateInfoNotFound(candidate) from None
-
-        reqs = self.environment.project.pyproject.metadata.get("dependencies", [])
-        optional_dependencies = self.environment.project.pyproject.metadata.get("optional-dependencies", {})
-        if candidate.req.extras is not None:
-            reqs = sum(
-                (optional_dependencies.get(g, []) for g in candidate.req.extras),
-                [],
-            )
-
-        return (
-            reqs,
-            str(self.environment.python_requires),
-            self.environment.project.pyproject.metadata.get("description", "UNKNOWN"),
-        )
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (
