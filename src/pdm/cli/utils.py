@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses as dc
 import json
 import os
 import sys
@@ -149,24 +150,16 @@ class ErrorArgumentParser(ArgumentParser):
             raise PdmArgumentError(e) from e
 
 
+@dc.dataclass(frozen=True)
 class Package:
     """An internal class for the convenience of dependency graph building."""
 
-    def __init__(self, name: str, version: str | None, requirements: dict[str, Requirement]) -> None:
-        self.name = name
-        self.version = version  # if version is None, the dist is not installed.
-        self.requirements = requirements
-
-    def __hash__(self) -> int:
-        return hash(self.name)
+    name: str = dc.field(hash=True, compare=True)
+    version: str | None = dc.field(compare=False)
+    requirements: dict[str, Requirement] = dc.field(compare=False)
 
     def __repr__(self) -> str:
         return f"<Package {self.name}=={self.version}>"
-
-    def __eq__(self, value: object) -> bool:
-        if not isinstance(value, Package):
-            return False
-        return self.name == value.name
 
 
 def build_dependency_graph(

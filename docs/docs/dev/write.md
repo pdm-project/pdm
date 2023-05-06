@@ -1,4 +1,4 @@
-# Write a plugin
+# PDM Plugins
 
 PDM is aiming at being a community driven package manager.
 It is shipped with a full-featured plug-in system, with which you can:
@@ -209,3 +209,26 @@ Hello, Jack
 ```
 
 See more plugin management subcommands by typing `pdm self --help` in the terminal.
+
+## Specify the plugins in project
+
+To specify the required plugins for a project, you can use the `plugins` dev dependency group in the `pyproject.toml` file.
+These dependencies can be locked and installed into a project plugin library by running `pdm install`.
+The project plugin library will be loaded in subsequent PDM commands.
+
+This is useful when you want to share the same plugin set with the contributors.
+
+```toml
+# pyproject.toml
+[tool.pdm.dev-dependencies]
+plugins = [
+    "pdm-packer"
+]
+```
+
+Note that this special group will never be installed into your project environment.
+
+!!! note
+    To install the project plugins, make sure you include the `plugins` group when running `pdm install`, it also has to be
+    in the lockfile. You can use `-L/--lockfile <lockfile>` to specify another lockfile which contains the locked versions
+    of the plugin dependencies.

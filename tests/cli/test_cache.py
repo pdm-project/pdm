@@ -32,8 +32,8 @@ def prepare_http_cache(project):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache")
-def test_cache_list(project, invoke):
-    result = invoke(["cache", "list"], obj=project)
+def test_cache_list(project, pdm):
+    result = pdm(["cache", "list"], obj=project)
     assert result.exit_code == 0
 
     for name in (
@@ -46,8 +46,8 @@ def test_cache_list(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache")
-def test_cache_list_pattern(project, invoke):
-    result = invoke(["cache", "list", "ba*"], obj=project)
+def test_cache_list_pattern(project, pdm):
+    result = pdm(["cache", "list", "ba*"], obj=project)
     assert result.exit_code == 0
 
     for name in (
@@ -64,8 +64,8 @@ def test_cache_list_pattern(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_remove_pattern(project, invoke):
-    result = invoke(["cache", "remove", "ba*"], obj=project)
+def test_cache_remove_pattern(project, pdm):
+    result = pdm(["cache", "remove", "ba*"], obj=project)
     assert result.exit_code == 0
 
     for name in (
@@ -84,8 +84,8 @@ def test_cache_remove_pattern(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_remove_wildcard(project, invoke):
-    result = invoke(["cache", "remove", "*"], obj=project)
+def test_cache_remove_wildcard(project, pdm):
+    result = pdm(["cache", "remove", "*"], obj=project)
     assert result.exit_code == 0
 
     for name in (
@@ -100,8 +100,8 @@ def test_cache_remove_wildcard(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_clear(project, invoke):
-    result = invoke(["cache", "clear"], obj=project)
+def test_cache_clear(project, pdm):
+    result = pdm(["cache", "clear"], obj=project)
     assert result.exit_code == 0
 
     for name in (
@@ -116,14 +116,14 @@ def test_cache_clear(project, invoke):
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_remove_no_pattern(project, invoke):
-    result = invoke(["cache", "remove"], obj=project)
+def test_cache_remove_no_pattern(project, pdm):
+    result = pdm(["cache", "remove"], obj=project)
     assert result.exit_code != 0
 
 
 @pytest.mark.usefixtures("prepare_wheel_cache", "prepare_http_cache")
-def test_cache_info(project, invoke):
-    result = invoke(["cache", "info"], obj=project)
+def test_cache_info(project, pdm):
+    result = pdm(["cache", "info"], obj=project)
     assert result.exit_code == 0
 
     lines = result.output.splitlines()
@@ -161,7 +161,7 @@ def test_hash_cache(project, url, hash):
         assert hash_cache.get_hash(Link(url), finder.session) == hash
 
 
-def test_clear_package_cache(project, invoke):
+def test_clear_package_cache(project, pdm):
     pkg = CachedPackage(project.cache("packages") / "test_package")
     pkg.path.mkdir()
     refer_pkg = project.root / "refer_pkg"
@@ -171,5 +171,5 @@ def test_clear_package_cache(project, invoke):
     pkg._referrers = None
 
     refer_pkg.rmdir()
-    invoke(["cache", "clear", "packages"], obj=project, strict=True)
+    pdm(["cache", "clear", "packages"], obj=project, strict=True)
     assert not pkg.path.exists()

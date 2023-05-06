@@ -18,14 +18,14 @@ def get_wheel_names(path):
         return zf.namelist()
 
 
-def test_build_command(project, invoke, mocker):
+def test_build_command(project, pdm, mocker):
     do_build = mocker.patch.object(actions, "do_build")
-    invoke(["build"], obj=project)
+    pdm(["build"], obj=project)
     do_build.assert_called_once()
 
 
-def test_build_global_project_forbidden(invoke):
-    result = invoke(["build", "-g"])
+def test_build_global_project_forbidden(pdm):
+    result = pdm(["build", "-g"])
     assert result.exit_code != 0
 
 
@@ -135,24 +135,24 @@ def test_build_with_config_settings(fixture_project):
     assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
 
 
-def test_cli_build_with_config_settings(fixture_project, invoke):
+def test_cli_build_with_config_settings(fixture_project, pdm):
     project = fixture_project("demo-src-package")
-    result = invoke(["build", "-C--plat-name=win_amd64"], obj=project)
+    result = pdm(["build", "-C--plat-name=win_amd64"], obj=project)
     assert result.exit_code == 0
     assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
 
 
 @pytest.mark.network
 @pytest.mark.parametrize("isolated", (True, False))
-def test_build_with_no_isolation(fixture_project, invoke, isolated):
+def test_build_with_no_isolation(fixture_project, pdm, isolated):
     project = fixture_project("demo-failure")
     project.pyproject.set_data({"project": {"name": "demo", "version": "0.1.0"}})
     project.pyproject.write()
-    invoke(["add", "first"], obj=project)
+    pdm(["add", "first"], obj=project)
     args = ["build"]
     if not isolated:
         args.append("--no-isolation")
-    result = invoke(args, obj=project)
+    result = pdm(args, obj=project)
     assert result.exit_code == int(isolated)
 
 

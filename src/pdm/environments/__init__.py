@@ -2,7 +2,6 @@ from typing import Any
 
 from pdm.environments.base import BareEnvironment, BaseEnvironment
 from pdm.environments.local import PythonLocalEnvironment
-from pdm.environments.prefix import PrefixEnvironment
 from pdm.environments.python import PythonEnvironment
 
 _deprecated = {"Environment": PythonLocalEnvironment, "GlobalEnvironment": PythonEnvironment}
@@ -26,7 +25,6 @@ __all__ = [
     "BaseEnvironment",
     "BareEnvironment",
     "PythonEnvironment",
-    "PrefixEnvironment",
     "PythonLocalEnvironment",
 ]
 __all__.extend(_deprecated)

@@ -34,7 +34,7 @@ from pdm.cli.utils import (
     save_version_specifiers,
     set_env_in_reg,
 )
-from pdm.environments import BareEnvironment, PythonLocalEnvironment
+from pdm.environments import BareEnvironment, PythonEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.formats import FORMATS
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
@@ -189,30 +189,73 @@ def do_sync(
 ) -> None:
     """Synchronize project"""
     hooks = hooks or HookManager(project)
+    plugin_requirements: list[Requirement] = []
+    # Split the requirements into two parts: plugin requirements and normal requirements
     if requirements is None:
         requirements = []
         selection.validate()
         for group in selection:
-            requirements.extend(project.get_dependencies(group).values())
-    candidates = resolve_candidates_from_lockfile(project, requirements)
-    if tracked_names and dry_run:
-        candidates = {name: c for name, c in candidates.items() if name in tracked_names}
-    synchronizer = project.core.synchronizer_class(
-        candidates,
-        project.environment,
-        clean=clean,
-        dry_run=dry_run,
-        no_editable=no_editable,
-        install_self=not no_self and "default" in selection and bool(project.name),
-        use_install_cache=project.config["install.cache"],
-        reinstall=reinstall,
-        only_keep=only_keep,
-        fail_fast=fail_fast,
-    )
+            if group == "plugins":
+                plugin_requirements.extend(project.get_dependencies(group).values())
+            else:
+                requirements.extend(project.get_dependencies(group).values())
+    elif selection.one() == "plugins":
+        plugin_requirements, requirements = requirements, []
+    elif "plugins" in selection:
+        plugin_keys = set(project.get_dependencies("plugins").keys())
+        non_plugin_keys = set(
+            chain.from_iterable(project.get_dependencies(group).keys() for group in selection if group != "plugins")
+        )
+        plugin_requirements = [r for r in requirements if r.identify() in plugin_keys]
+        requirements = [r for r in requirements if r.identify() in non_plugin_keys]
     with project.core.ui.logging("install"):
+        candidates = resolve_candidates_from_lockfile(project, requirements)
+        if tracked_names and dry_run:
+            candidates = {name: c for name, c in candidates.items() if name in tracked_names}
+        synchronizer = project.core.synchronizer_class(
+            candidates,
+            project.environment,
+            clean=clean,
+            dry_run=dry_run,
+            no_editable=no_editable,
+            install_self=not no_self and "default" in selection and bool(project.name),
+            use_install_cache=project.config["install.cache"],
+            reinstall=reinstall,
+            only_keep=only_keep,
+            fail_fast=fail_fast,
+        )
         hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
         synchronizer.synchronize()
         hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
+        if "plugins" in selection:
+            import platform
+
+            from pdm.models.specifiers import PySpecSet
+
+            plugin_root = project.root / ".pdm-plugins"
+            environment = PythonEnvironment(project, prefix=str(plugin_root), python=sys.executable)
+            environment.python_requires = PySpecSet(f"=={platform.python_version()}")
+            project.environment = environment
+            candidates = resolve_candidates_from_lockfile(project, plugin_requirements)
+            if tracked_names and dry_run:
+                candidates = {name: c for name, c in candidates.items() if name in tracked_names}
+            synchronizer = project.core.synchronizer_class(
+                candidates,
+                environment,
+                clean=clean,
+                dry_run=dry_run,
+                no_editable=no_editable,
+                install_self=False,
+                use_install_cache=project.config["install.cache"],
+                reinstall=reinstall,
+                only_keep=only_keep,
+                fail_fast=fail_fast,
+            )
+            with project.core.ui.open_spinner("[success]Installing plugins...[/]"):
+                with termui._console.capture():
+                    synchronizer.synchronize()
+            if not plugin_root.joinpath(".gitignore").exists():
+                plugin_root.joinpath(".gitignore").write_text("*\n")
 
 
 def do_add(

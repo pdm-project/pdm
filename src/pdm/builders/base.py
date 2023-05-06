@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 from pyproject_hooks import BuildBackendHookCaller
 
 from pdm.compat import tomllib
-from pdm.environments import PrefixEnvironment
+from pdm.environments import PythonEnvironment
 from pdm.exceptions import BuildError
 from pdm.models.in_process import get_sys_config_paths
 from pdm.models.requirements import Requirement, parse_requirement
@@ -290,7 +290,7 @@ class EnvBuilder:
         if not missing:
             return
         path = self._prefix.shared if shared else self._prefix.overlay
-        env = PrefixEnvironment(self._env.project, prefix=path)
+        env = PythonEnvironment(self._env.project, prefix=path)
         install_requirements(missing, env)
 
         if shared:

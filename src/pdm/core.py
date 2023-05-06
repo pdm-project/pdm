@@ -224,6 +224,19 @@ class Core:
         """
         Config.add_config(name, config_item)
 
+    def _add_project_plugins_library(self) -> None:
+        project = self.create_project(is_global=False)
+        if project.is_global or not project.root.joinpath(".pdm-plugins").exists():
+            return
+
+        import site
+        import sysconfig
+
+        base = str(project.root / ".pdm-plugins")
+        replace_vars = {"base": base, "platbase": base}
+        scheme = "nt" if os.name == "nt" else "posix_prefix"
+        site.addsitedir(sysconfig.get_path("purelib", scheme, replace_vars))
+
     def load_plugins(self) -> None:
         """Import and load plugins under `pdm.plugin` namespace
         A plugin is a callable that accepts the core object as the only argument.
@@ -234,6 +247,7 @@ class Core:
                 ...
             ```
         """
+        self._add_project_plugins_library()
         entry_points: Iterable[importlib_metadata.EntryPoint] = itertools.chain(
             importlib_metadata.entry_points(group="pdm"),
             importlib_metadata.entry_points(group="pdm.plugin"),

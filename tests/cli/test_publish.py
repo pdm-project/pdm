@@ -77,12 +77,12 @@ def test_repository_get_release_urls(project):
 
 
 @pytest.mark.usefixtures("prepare_packages")
-def test_publish_pick_up_asc_files(project, uploaded, invoke):
+def test_publish_pick_up_asc_files(project, uploaded, pdm):
     for p in list(project.root.joinpath("dist").iterdir()):
         with open(str(p) + ".asc", "w") as f:
             f.write("fake signature")
 
-    invoke(
+    pdm(
         ["publish", "--no-build", "--username=abc", "--password=123"],
         obj=project,
         strict=True,
@@ -97,8 +97,8 @@ def test_publish_pick_up_asc_files(project, uploaded, invoke):
 
 
 @pytest.mark.usefixtures("prepare_packages")
-def test_publish_package_with_signature(project, uploaded, invoke):
-    invoke(
+def test_publish_package_with_signature(project, uploaded, pdm):
+    pdm(
         ["publish", "--no-build", "-S", "--username=abc", "--password=123"],
         obj=project,
         strict=True,
@@ -111,9 +111,9 @@ def test_publish_package_with_signature(project, uploaded, invoke):
 
 
 @pytest.mark.usefixtures("local_finder")
-def test_publish_and_build_in_one_run(fixture_project, invoke, mock_pypi):
+def test_publish_and_build_in_one_run(fixture_project, pdm, mock_pypi):
     project = fixture_project("demo-module")
-    result = invoke(["publish", "--username=abc", "--password=123"], obj=project, strict=True).output
+    result = pdm(["publish", "--username=abc", "--password=123"], obj=project, strict=True).output
 
     mock_pypi.assert_called()
     assert "Uploading demo_module-0.1.0-py3-none-any.whl" in result
