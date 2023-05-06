@@ -185,7 +185,8 @@ class Project:
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
-        from pdm.cli.commands.venv.utils import get_venv_python, iter_venvs
+        from pdm.cli.commands.venv.utils import iter_venvs
+        from pdm.models.venv import get_venv_python
 
         def match_version(python: PythonInfo) -> bool:
             return python.valid and self.python_requires.contains(python.version, True)
@@ -220,16 +221,16 @@ class Project:
                     return python
             # otherwise, get a venv associated with the project
             for _, venv in iter_venvs(self):
-                python = PythonInfo.from_path(get_venv_python(venv))
+                python = PythonInfo.from_path(venv.interpreter)
                 if match_version(python):
-                    note(f"Virtualenv [success]{venv}[/] is reused.")
+                    note(f"Virtualenv [success]{venv.root}[/] is reused.")
                     self.python = python
                     return python
 
             if not self.root.joinpath("__pypackages__").exists():
                 note("python.use_venv is on, creating a virtualenv for this project...")
-                venv = self._create_virtualenv()
-                self.python = PythonInfo.from_path(get_venv_python(venv))
+                venv_path = self._create_virtualenv()
+                self.python = PythonInfo.from_path(get_venv_python(venv_path))
                 return self.python
 
         for py_version in self.find_interpreters():
@@ -253,7 +254,7 @@ class Project:
 
         return (
             PythonEnvironment(self)
-            if self.config["python.use_venv"] and self.python.is_venv
+            if self.config["python.use_venv"] and self.python.get_venv() is not None
             else PythonLocalEnvironment(self)
         )
 

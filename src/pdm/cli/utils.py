@@ -675,11 +675,11 @@ def get_pep582_path(project: Project) -> str:
 
 
 def use_venv(project: Project, name: str) -> None:
-    from pdm.cli.commands.venv.utils import get_venv_python, get_venv_with_name
+    from pdm.cli.commands.venv.utils import get_venv_with_name
     from pdm.environments import PythonEnvironment
 
     venv = get_venv_with_name(project, cast(str, name))
     project.core.ui.echo(
-        f"In virtual environment: [success]{venv}[/]", err=True, style="info", verbosity=termui.Verbosity.DETAIL
+        f"In virtual environment: [success]{venv.root}[/]", err=True, style="info", verbosity=termui.Verbosity.DETAIL
     )
-    project.environment = PythonEnvironment(project, python=str(get_venv_python(venv)))
+    project.environment = PythonEnvironment(project, python=str(venv.interpreter))

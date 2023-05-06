@@ -7,9 +7,9 @@ import pytest
 from packaging.version import parse
 from pytest_httpserver import HTTPServer
 
-from pdm.cli.commands.venv.utils import get_venv_python
 from pdm.environments import PythonEnvironment
 from pdm.exceptions import PdmException
+from pdm.models.venv import get_venv_python
 from pdm.utils import cd
 
 
@@ -238,16 +238,19 @@ def test_find_interpreters_without_duplicate_relative_paths(invoke, project):
 
 
 def test_iter_project_venvs(project):
-    from pdm.cli.commands.venv import utils
+    from pdm.cli.commands.venv.utils import get_venv_prefix, iter_venvs
+    from pdm.models.venv import get_venv_python
 
     venv_parent = Path(project.config["venv.location"])
-    venv_prefix = utils.get_venv_prefix(project)
+    venv_prefix = get_venv_prefix(project)
     for name in ("foo", "bar", "baz"):
-        venv_parent.joinpath(venv_prefix + name).mkdir(parents=True)
-    dot_venv_python = utils.get_venv_python(project.root / ".venv")
+        venv_python = get_venv_python(venv_parent / (venv_prefix + name))
+        venv_python.parent.mkdir(parents=True)
+        venv_python.touch()
+    dot_venv_python = get_venv_python(project.root / ".venv")
     dot_venv_python.parent.mkdir(parents=True)
     dot_venv_python.touch()
-    venv_keys = [key for key, _ in utils.iter_venvs(project)]
+    venv_keys = [key for key, _ in iter_venvs(project)]
     assert sorted(venv_keys) == ["bar", "baz", "foo", "in-project"]
 
 

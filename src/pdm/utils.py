@@ -271,23 +271,28 @@ def is_path_relative_to(path: str | Path, other: str | Path) -> bool:
     return True
 
 
-def get_venv_like_prefix(interpreter: str | Path) -> Path | None:
+def get_venv_like_prefix(interpreter: str | Path) -> tuple[Path | None, bool]:
     """Check if the given interpreter path is from a virtualenv,
-    and return the prefix if found.
+    and return two values: the root path and whether it's a conda env.
     """
     interpreter = Path(interpreter)
     prefix = interpreter.parent
     if prefix.joinpath("conda-meta").exists():
-        return prefix
+        return prefix, True
 
     prefix = prefix.parent
-    if prefix.joinpath("pyvenv.cfg").exists() or prefix.joinpath("conda-meta").exists():
-        return prefix
+    if prefix.joinpath("pyvenv.cfg").exists():
+        return prefix, False
+    if prefix.joinpath("conda-meta").exists():
+        return prefix, True
 
-    virtual_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
+    virtual_env = os.getenv("VIRTUAL_ENV")
     if virtual_env and is_path_relative_to(interpreter, virtual_env):
-        return Path(virtual_env)
-    return None
+        return Path(virtual_env), False
+    virtual_env = os.getenv("CONDA_PREFIX")
+    if virtual_env and is_path_relative_to(interpreter, virtual_env):
+        return Path(virtual_env), True
+    return None, False
 
 
 def find_python_in_path(path: str | Path) -> Path | None:
