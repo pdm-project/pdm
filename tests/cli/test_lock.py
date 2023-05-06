@@ -111,3 +111,18 @@ def test_lock_selected_groups(project, pdm):
     assert project.lockfile.groups == ["http"]
     assert "requests" in project.locked_repository.all_candidates
     assert "pytz" not in project.locked_repository.all_candidates
+
+
+@pytest.mark.usefixtures("repository")
+@pytest.mark.parametrize("to_dev", [False, True])
+def test_lock_self_referencing_groups(project, pdm, to_dev):
+    name = project.name
+    project.add_dependencies({"requests": parse_requirement("requests")}, to_group="http", dev=to_dev)
+    project.add_dependencies(
+        {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
+        to_group="dev",
+        dev=True,
+    )
+    pdm(["lock", "-G", "dev"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default", "dev"]
+    assert "requests" in project.locked_repository.all_candidates
