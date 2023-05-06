@@ -576,7 +576,7 @@ def do_use(
     """Use the specified python version and save in project config.
     The python can be a version string or interpreter path.
     """
-    from pdm.cli.commands.venv.utils import get_venv_python, get_venv_with_name
+    from pdm.cli.commands.venv.utils import get_venv_with_name
 
     def version_matcher(py_version: PythonInfo) -> bool:
         return py_version.valid and (
@@ -587,8 +587,8 @@ def do_use(
 
     selected_python: PythonInfo | None = None
     if venv:
-        venv_path = get_venv_with_name(project, venv)
-        selected_python = PythonInfo.from_path(get_venv_python(venv_path))
+        virtualenv = get_venv_with_name(project, venv)
+        selected_python = PythonInfo.from_path(virtualenv.interpreter)
 
     if not project.cache_dir.exists():
         project.cache_dir.mkdir(parents=True)

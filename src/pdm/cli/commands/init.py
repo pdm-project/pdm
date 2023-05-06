@@ -9,8 +9,9 @@ from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
 from pdm.models.python import PythonInfo
+from pdm.models.venv import get_venv_python
 from pdm.project import Project
-from pdm.utils import get_user_email_from_git, get_venv_like_prefix
+from pdm.utils import get_user_email_from_git
 
 
 class Command(BaseCommand):
@@ -42,8 +43,6 @@ class Command(BaseCommand):
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        from pdm.cli.commands.venv.utils import get_venv_python
-
         hooks = HookManager(project, options.skip)
         if project.pyproject.exists():
             project.core.ui.echo("pyproject.toml already exists, update it now.", style="primary")
@@ -70,7 +69,7 @@ class Command(BaseCommand):
                 save=False,
                 hooks=hooks,
             )
-        if project.config["python.use_venv"] and get_venv_like_prefix(python.executable) is None:
+        if project.config["python.use_venv"] and python.get_venv() is None:
             if not self.interactive or termui.confirm(
                 f"Would you like to create a virtualenv with [success]{python.executable}[/]?",
                 default=True,
@@ -84,7 +83,7 @@ class Command(BaseCommand):
                         style="error",
                         err=True,
                     )
-        if get_venv_like_prefix(python.executable) is None:
+        if python.get_venv() is None:
             project.core.ui.echo(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"
                 "For more info, please visit https://peps.python.org/pep-0582/",

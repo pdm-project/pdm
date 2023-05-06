@@ -16,8 +16,8 @@ class ListCommand(BaseCommand):
         project.core.ui.echo("Virtualenvs created with this project:\n")
         for ident, venv in iter_venvs(project):
             saved_python = project._saved_python
-            if saved_python and Path(saved_python).parent.parent == venv:
+            if saved_python and Path(saved_python).parent.parent == venv.root:
                 mark = "*"
             else:
                 mark = "-"
-            project.core.ui.echo(f"{mark}  [success]{ident}[/]: {venv}")
+            project.core.ui.echo(f"{mark}  [success]{ident}[/]: {venv.root}")

@@ -34,7 +34,6 @@ from pdm.utils import (
     convert_hashes,
     create_tracked_tempdir,
     get_rev_from_url,
-    get_venv_like_prefix,
     normalize_name,
     path_to_url,
     url_without_fragments,
@@ -547,10 +546,13 @@ class PreparedCandidate:
         if self.req.editable:
             # In this branch the requirement must be an editable VCS requirement.
             # The repository will be unpacked into a *persistent* src directory.
+            prefix: Path | None = None
             if self.environment.is_local:
                 prefix = self.environment.packages_path  # type: ignore[attr-defined]
             else:
-                prefix = get_venv_like_prefix(self.environment.interpreter.executable)
+                venv = self.environment.interpreter.get_venv()
+                if venv is not None:
+                    prefix = venv.root
             if prefix is not None:
                 src_dir = prefix / "src"
             else:

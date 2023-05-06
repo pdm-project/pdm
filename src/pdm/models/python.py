@@ -8,7 +8,7 @@ from findpython import PythonVersion
 from packaging.version import InvalidVersion, Version
 
 from pdm.compat import cached_property
-from pdm.utils import get_venv_like_prefix
+from pdm.models.venv import VirtualEnv
 
 
 class PythonInfo:
@@ -80,6 +80,5 @@ class PythonInfo:
         except InvalidVersion:
             return "unknown"
 
-    @property
-    def is_venv(self) -> bool:
-        return get_venv_like_prefix(self.executable) is not None
+    def get_venv(self) -> VirtualEnv | None:
+        return VirtualEnv.from_interpreter(self.executable)

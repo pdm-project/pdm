@@ -5,10 +5,10 @@ from pathlib import Path
 import shellingham
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.venv.utils import BIN_DIR, iter_venvs, get_venv_with_name
+from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import verbose_option
+from pdm.models.venv import VirtualEnv
 from pdm.project import Project
-from pdm.utils import get_venv_like_prefix
 
 
 class ActivateCommand(BaseCommand):
@@ -32,7 +32,7 @@ class ActivateCommand(BaseCommand):
                     err=True,
                 )
                 raise SystemExit(1)
-            venv_like = get_venv_like_prefix(interpreter)
+            venv_like = VirtualEnv.from_interpreter(Path(interpreter))
             if venv_like is None:
                 project.core.ui.echo(
                     f"Can't activate a non-venv Python [success]{interpreter}[/], "
@@ -44,7 +44,7 @@ class ActivateCommand(BaseCommand):
             venv = venv_like
         project.core.ui.echo(self.get_activate_command(venv))
 
-    def get_activate_command(self, venv: Path) -> str:  # pragma: no cover
+    def get_activate_command(self, venv: VirtualEnv) -> str:  # pragma: no cover
         shell, _ = shellingham.detect_shell()
         if shell == "fish":
             command, filename = "source", "activate.fish"
@@ -54,8 +54,8 @@ class ActivateCommand(BaseCommand):
             command, filename = ".", "Activate.ps1"
         else:
             command, filename = "source", "activate"
-        activate_script = venv / BIN_DIR / filename
+        activate_script = venv.interpreter.with_name(filename)
         if activate_script.exists():
             return f"{command} {shlex.quote(str(activate_script))}"
         # Conda backed virtualenvs don't have activate scripts
-        return f"conda activate {shlex.quote(str(venv))}"
+        return f"conda activate {shlex.quote(str(venv.root))}"
