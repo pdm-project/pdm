@@ -1,17 +1,15 @@
 from __future__ import annotations
 
+from pdm import termui
 from pdm.environments import BaseEnvironment
-from pdm.installers.manager import InstallManager
+from pdm.installers.synchronizers import Synchronizer
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver.core import resolve
-from pdm.termui import logger
 
 
 def install_requirements(
-    reqs: list[Requirement],
-    environment: BaseEnvironment,
-    use_install_cache: bool = False,
+    reqs: list[Requirement], environment: BaseEnvironment, use_install_cache: bool = False, clean: bool = False
 ) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""
     project = environment.project
@@ -31,15 +29,6 @@ def install_requirements(
         environment.python_requires,
         max_rounds=resolve_max_rounds,
     )
-    manager = InstallManager(environment, use_install_cache=use_install_cache)
-    working_set = environment.get_working_set()
-    for key, candidate in resolved.items():
-        if "[" in key:
-            # This is a candidate with extras, just skip it as it will be handled
-            # by the one without extras.
-            continue
-        logger.info("Installing %s %s", candidate.name, candidate.version)
-        if key in working_set:
-            # Force reinstall the package if it's already installed.
-            manager.uninstall(working_set[key])
-        manager.install(candidate)
+    syncer = Synchronizer(resolved, environment, clean=clean, use_install_cache=use_install_cache, retry_times=0)
+    with termui._console.capture():
+        syncer.synchronize()

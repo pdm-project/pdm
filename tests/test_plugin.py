@@ -4,7 +4,6 @@ import pytest
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.compat import importlib_metadata
-from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import ConfigItem
 from pdm.utils import cd
@@ -111,10 +110,9 @@ def test_old_entry_point_compatibility(pdm, mocker, core):
 @pytest.mark.usefixtures("local_finder")
 def test_project_plugin_library(pdm, project, core):
     project.environment.python_requires = PySpecSet(">=3.6")
-    project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")}, "plugins", dev=True)
-    pdm(["install"], obj=project, strict=True)
+    project.pyproject.settings["plugins"] = ["pdm-hello"]
+    pdm(["install", "--plugins"], obj=project, strict=True)
     assert project.root.joinpath(".pdm-plugins").exists()
-    project.environment = None
     assert "pdm-hello" not in project.environment.get_working_set()
     with cd(project.root):
         core.load_plugins()
