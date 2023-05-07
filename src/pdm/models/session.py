@@ -11,6 +11,10 @@ from pdm.__version__ import __version__
 
 
 class Serializer(LegacySerializer):
+    """Patch for the compatibility of cachecontrol serializer.
+    It should be removed when cachecontrol supports urllib3 2.0.
+    """
+
     def dumps(self, request, response, body=None):  # type: ignore[no-untyped-def]
         if not hasattr(response, "strict"):
             # XXX: urllib3 2.0 removes this attribute
@@ -20,6 +24,9 @@ class Serializer(LegacySerializer):
     def prepare_response(self, request, cached, body_file=None):  # type: ignore[no-untyped-def]
         # We don't need to pass strict to HTTPResponse
         cached["response"].pop("strict", None)
+        # urllib3 2.0 changes the default to True, which causes a double read issue
+        # See https://github.com/ionrock/cachecontrol/issues/295
+        cached["response"]["enforce_content_length"] = False
         return super().prepare_response(request, cached, body_file)
 
 
