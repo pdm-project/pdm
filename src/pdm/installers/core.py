@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pdm import termui
 from pdm.environments import BaseEnvironment
-from pdm.installers.synchronizers import Synchronizer
+from pdm.installers.synchronizers import BaseSynchronizer
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver.core import resolve
@@ -29,6 +28,5 @@ def install_requirements(
         environment.python_requires,
         max_rounds=resolve_max_rounds,
     )
-    syncer = Synchronizer(resolved, environment, clean=clean, use_install_cache=use_install_cache, retry_times=0)
-    with termui._console.capture():
-        syncer.synchronize()
+    syncer = BaseSynchronizer(resolved, environment, clean=clean, use_install_cache=use_install_cache, retry_times=0)
+    syncer.synchronize()

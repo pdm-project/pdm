@@ -80,7 +80,7 @@ def editables_candidate(environment: BaseEnvironment) -> Candidate | None:
     return next(iter(repository.find_candidates(parse_requirement("editables"))), None)
 
 
-class Synchronizer:
+class BaseSynchronizer:
     """Synchronize the working set with given installation candidates
 
     :param candidates: a dict of candidates to be installed
@@ -166,14 +166,6 @@ class Synchronizer:
         metadata = self.self_candidate.prepare(self.environment).metadata
         return any(req.startswith("editables") for req in metadata.requires or [])
 
-    def create_executor(
-        self,
-    ) -> ThreadPoolExecutor | DummyExecutor:
-        if self.parallel:
-            return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
-        else:
-            return DummyExecutor()
-
     @property
     def manager(self) -> InstallManager:
         if not self._manager:
@@ -241,6 +233,37 @@ class Synchronizer:
             sorted(to_update),
             sorted(to_remove),
         )
+
+    def synchronize(self) -> None:
+        """Synchronize the working set with pinned candidates."""
+        to_add, to_update, to_remove = self.compare_with_working_set()
+        manager = self.manager
+        for key in to_add:
+            can = self.candidates[key]
+            termui.logger.info("Installing %s@%s...", key, can.version)
+            manager.install(can)
+        for key in to_update:
+            can = self.candidates[key]
+            dist = self.working_set[strip_extras(key)[0]]
+            dist_version = dist.version
+            termui.logger.info("Updating %s@%s -> %s...", key, dist_version, can.version)
+            manager.uninstall(dist)
+            manager.install(can)
+        for key in to_remove:
+            dist = self.working_set[key]
+            termui.logger.info("Removing %s@%s...", key, dist.version)
+            manager.uninstall(dist)
+        termui.logger.info("Synchronization complete.")
+
+
+class Synchronizer(BaseSynchronizer):
+    def create_executor(
+        self,
+    ) -> ThreadPoolExecutor | DummyExecutor:
+        if self.parallel:
+            return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
+        else:
+            return DummyExecutor()
 
     def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
@@ -349,7 +372,6 @@ class Synchronizer:
             self.ui.echo("All packages are synced to date, nothing to do.")
 
     def synchronize(self) -> None:
-        """Synchronize the working set with pinned candidates."""
         to_add, to_update, to_remove = self.compare_with_working_set()
         to_do = {"remove": to_remove, "update": to_update, "add": to_add}
 
