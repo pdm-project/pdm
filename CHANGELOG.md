@@ -1,3 +1,11 @@
+Release v2.5.6 (2023-05-07)
+---------------------------
+
+### Bug Fixes
+
+- Fix a double reading issue due to cachecontrol not compatible with urllib3 2.0. [#1894](https://github.com/pdm-project/pdm/issues/1894)
+
+
 Release v2.5.5 (2023-05-05)
 ---------------------------
 
