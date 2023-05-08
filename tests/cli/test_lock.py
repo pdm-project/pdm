@@ -12,7 +12,7 @@ from pdm.models.specifiers import PySpecSet
 def test_lock_command(project, pdm, mocker):
     m = mocker.patch.object(actions, "do_lock")
     pdm(["lock"], obj=project)
-    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY)
+    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY, cross_platform=True)
 
 
 @pytest.mark.usefixtures("repository")
