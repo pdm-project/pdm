@@ -1,3 +1,4 @@
+import sys
 from unittest.mock import ANY
 
 import pytest
@@ -5,6 +6,7 @@ from unearth import Link
 
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
+from pdm.models.specifiers import PySpecSet
 
 
 def test_lock_command(project, pdm, mocker):
@@ -126,3 +128,24 @@ def test_lock_self_referencing_groups(project, pdm, to_dev):
     pdm(["lock", "-G", "dev"], obj=project, strict=True)
     assert project.lockfile.groups == ["default", "dev"]
     assert "requests" in project.locked_repository.all_candidates
+
+
+@pytest.mark.usefixtures("local_finder")
+def test_lock_multiple_platform_wheels(project, pdm):
+    project.environment.python_requires = PySpecSet(">=3.7")
+    project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")})
+    pdm(["lock"], obj=project, strict=True)
+    assert project.lockfile.cross_platform
+    file_hashes = project.lockfile["metadata"]["files"]["pdm-hello 0.1.0"]
+    assert len(file_hashes) == 2
+
+
+@pytest.mark.usefixtures("local_finder")
+def test_lock_current_platform_wheels(project, pdm):
+    project.environment.python_requires = PySpecSet(">=3.7")
+    project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")})
+    pdm(["lock", "--no-cross-platform"], obj=project, strict=True)
+    assert project.lockfile.cross_platform is False
+    file_hashes = project.lockfile["metadata"]["files"]["pdm-hello 0.1.0"]
+    wheels_num = 2 if sys.platform == "win32" else 1
+    assert len(file_hashes) == wheels_num

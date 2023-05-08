@@ -491,22 +491,32 @@ class Project:
 
         return SpinnerReporter(spinner, requirements)
 
-    def get_lock_metadata(self, groups: Iterable[str] | None = None) -> dict[str, Any]:
+    def get_lock_metadata(
+        self, groups: Iterable[str] | None = None, cross_platform: bool | None = None
+    ) -> dict[str, Any]:
         content_hash = tomlkit.string("sha256:" + self.pyproject.content_hash("sha256"))
         content_hash.trivia.trail = "\n\n"
         if groups is None:
             groups = self.iter_groups()
+        if cross_platform is None:
+            cross_platform = self.lockfile.cross_platform
         return {
             "lock_version": self.lockfile.spec_version,
+            "cross_platform": cross_platform,
             "groups": sorted(groups, key=lambda x: (x != "default", x)),
             "content_hash": content_hash,
         }
 
     def write_lockfile(
-        self, toml_data: dict, show_message: bool = True, write: bool = True, groups: Iterable[str] | None = None
+        self,
+        toml_data: dict,
+        show_message: bool = True,
+        write: bool = True,
+        groups: Iterable[str] | None = None,
+        cross_platform: bool | None = None,
     ) -> None:
         """Write the lock file to disk."""
-        toml_data["metadata"].update(self.get_lock_metadata(groups))
+        toml_data["metadata"].update(self.get_lock_metadata(groups, cross_platform=cross_platform))
         self.lockfile.set_data(toml_data)
 
         if write:

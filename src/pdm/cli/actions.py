@@ -57,6 +57,7 @@ def do_lock(
     dry_run: bool = False,
     refresh: bool = False,
     groups: list[str] | None = None,
+    cross_platform: bool | None = None,
     hooks: HookManager | None = None,
 ) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
@@ -80,11 +81,16 @@ def do_lock(
         project.write_lockfile(lockfile, groups=groups)
         return mapping
     # TODO: multiple dependency definitions for the same package.
-    provider = project.get_provider(strategy, tracked_names)
+    if cross_platform is None:
+        cross_platform = project.lockfile.cross_platform
+    provider = project.get_provider(strategy, tracked_names, ignore_compatibility=cross_platform)
     if not requirements:
         requirements = [
             r for g, deps in project.all_dependencies.items() if groups is None or g in groups for r in deps.values()
         ]
+    if not cross_platform:
+        this_env = project.environment.marker_environment
+        requirements = [req for req in requirements if not req.marker or req.marker.evaluate(this_env)]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     ui = project.core.ui
     with ui.logging("lock"):
@@ -120,7 +126,7 @@ def do_lock(
         else:
             data = format_lockfile(project, mapping, dependencies)
             ui.echo(f"{termui.Emoji.LOCK} Lock successful")
-            project.write_lockfile(data, write=not dry_run, groups=groups)
+            project.write_lockfile(data, write=not dry_run, groups=groups, cross_platform=cross_platform)
             hooks.try_emit("post_lock", resolution=mapping, dry_run=dry_run)
 
     return mapping

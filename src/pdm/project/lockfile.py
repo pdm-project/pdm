@@ -28,6 +28,12 @@ class Lockfile(TOMLBase):
     def groups(self) -> list[str] | None:
         return self._data.get("metadata", {}).get("groups")
 
+    @property
+    def cross_platform(self) -> bool:
+        if self.empty():
+            return True
+        return self._data.get("metadata", {}).get("cross_platform", True)
+
     def compare_groups(self, groups: Iterable[str]) -> list[str]:
         if not self.groups:
             return []
