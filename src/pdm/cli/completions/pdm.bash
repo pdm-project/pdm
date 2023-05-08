@@ -69,7 +69,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (install)
-            opts="--check --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --production --project --skip --venv --verbose"
+            opts="--check --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --plugins --production --project --skip --venv --verbose"
             ;;
 
             (list)

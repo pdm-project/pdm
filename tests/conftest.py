@@ -12,7 +12,7 @@ from unearth.vcs import Git, vcs_support
 from tests import FIXTURES
 
 if TYPE_CHECKING:
-    from pdm.pytest import IndexesDefinition, PDMCallable
+    from pdm.pytest import IndexesDefinition
 
 
 os.environ.update(CI="1", PDM_CHECK_UPDATE="0")
@@ -81,7 +81,7 @@ def build_env_wheels() -> Iterable[Path]:
 
 
 @pytest.fixture
-def local_finder_artifacts() -> Path():
+def local_finder_artifacts() -> Path:
     return FIXTURES / "artifacts"
 
 
@@ -123,8 +123,3 @@ def is_editable(request):
 @pytest.fixture(params=[False, True])
 def dev_option(request) -> Iterable[str]:
     return ("--dev",) if request.param else ()
-
-
-@pytest.fixture
-def invoke(pdm: PDMCallable) -> PDMCallable:
-    return pdm

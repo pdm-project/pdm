@@ -10,24 +10,24 @@ from pdm.exceptions import NoPythonVersion
 from pdm.models.caches import JSONFileCache
 
 
-def test_use_command(project, invoke):
+def test_use_command(project, pdm):
     python = "python" if os.name == "nt" else "python3"
     python_path = shutil.which(python)
-    result = invoke(["use", "-f", python], obj=project)
+    result = pdm(["use", "-f", python], obj=project)
     assert result.exit_code == 0
     config_content = project.root.joinpath(".pdm-python").read_text()
     assert Path(python_path).as_posix() in config_content
 
-    result = invoke(["use", "-f", python_path], obj=project)
+    result = pdm(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
     project.pyproject.metadata["requires-python"] = ">=3.6"
-    result = invoke(["use", "2.7"], obj=project)
+    result = pdm(["use", "2.7"], obj=project)
     assert result.exit_code == 1
 
 
-def test_use_python_by_version(project, invoke):
+def test_use_python_by_version(project, pdm):
     python_version = ".".join(map(str, sys.version_info[:2]))
-    result = invoke(["use", "-f", python_version], obj=project)
+    result = pdm(["use", "-f", python_version], obj=project)
     assert result.exit_code == 0
 
 

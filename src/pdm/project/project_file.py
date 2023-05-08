@@ -90,3 +90,7 @@ class PyProject(TOMLBase):
         hasher = hashlib.new(algo)
         hasher.update(pyproject_content.encode("utf-8"))
         return hasher.hexdigest()
+
+    @property
+    def plugins(self) -> list[str]:
+        return self.settings.get("plugins", [])

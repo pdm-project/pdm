@@ -36,10 +36,35 @@ class Command(BaseCommand):
             action="store_true",
             help="Check if the lock file is up to date and fail otherwise",
         )
+        parser.add_argument("--plugins", action="store_true", help="Install the plugins specified in pyproject.toml")
+
+    def install_plugins(self, project: Project) -> None:
+        from pdm.environments import PythonEnvironment
+        from pdm.installers.core import install_requirements
+        from pdm.models.requirements import parse_requirement
+
+        plugins = [
+            parse_requirement(r[3:], True) if r.startswith("-e ") else parse_requirement(r)
+            for r in project.pyproject.plugins
+        ]
+        if not plugins:
+            return
+        plugin_root = project.root / ".pdm-plugins"
+        environment = PythonEnvironment(project, python=sys.executable, prefix=str(plugin_root))
+        use_install_cache = project.config["install.cache"]
+        with project.core.ui.open_spinner("[success]Installing plugins...[/]"):
+            with project.core.ui.logging("install-plugins"):
+                install_requirements(plugins, environment, use_install_cache=use_install_cache, clean=True)
+            if not plugin_root.joinpath(".gitignore").exists():
+                plugin_root.joinpath(".gitignore").write_text("*\n")
+        project.core.ui.echo("Plugins are installed successfully into [primary].pdm-plugins[/].")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if not project.pyproject.is_valid and termui.is_interactive():
             actions.ask_for_import(project)
+
+        if options.plugins:
+            return self.install_plugins(project)
 
         hooks = HookManager(project, options.skip)
 

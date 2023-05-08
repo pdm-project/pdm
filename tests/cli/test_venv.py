@@ -29,10 +29,10 @@ def fake_create(monkeypatch):
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_create(invoke, project):
+def test_venv_create(pdm, project):
     project._saved_python = None
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     assert os.path.exists(venv_path)
@@ -40,81 +40,81 @@ def test_venv_create(invoke, project):
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_create_in_project(invoke, project):
+def test_venv_create_in_project(pdm, project):
     project.project_config["venv.in_project"] = True
-    invoke(["venv", "create"], obj=project, strict=True)
+    pdm(["venv", "create"], obj=project, strict=True)
     venv_path = project.root / ".venv"
     assert venv_path.exists()
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 1
     assert "is not empty" in result.stderr
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_show_path(invoke, project):
+def test_venv_show_path(pdm, project):
     project.project_config["venv.in_project"] = True
-    invoke(["venv", "create"], obj=project, strict=True)
-    invoke(["venv", "create", "--name", "test"], obj=project, strict=True)
-    result = invoke(["venv", "--path", "in-project"], obj=project, strict=True)
+    pdm(["venv", "create"], obj=project, strict=True)
+    pdm(["venv", "create", "--name", "test"], obj=project, strict=True)
+    result = pdm(["venv", "--path", "in-project"], obj=project, strict=True)
     assert result.output.strip() == str(project.root / ".venv")
-    result = invoke(["venv", "--path", "test"], obj=project)
+    result = pdm(["venv", "--path", "test"], obj=project)
     assert result.exit_code == 0
-    result = invoke(["venv", "--path", "foo"], obj=project)
+    result = pdm(["venv", "--path", "foo"], obj=project)
     assert result.exit_code == 1
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_list(invoke, project):
+def test_venv_list(pdm, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
 
-    result = invoke(["venv", "list"], obj=project)
+    result = pdm(["venv", "list"], obj=project)
     assert result.exit_code == 0, result.stderr
     assert venv_path in result.output
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_remove(invoke, project):
+def test_venv_remove(pdm, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
 
-    result = invoke(["venv", "remove", "non-exist"], obj=project)
+    result = pdm(["venv", "remove", "non-exist"], obj=project)
     assert result.exit_code != 0
 
-    result = invoke(["venv", "remove", "-y", key], obj=project)
+    result = pdm(["venv", "remove", "-y", key], obj=project)
     assert result.exit_code == 0, result.stderr
 
     assert not os.path.exists(venv_path)
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_recreate(invoke, project):
+def test_venv_recreate(pdm, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
 
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code != 0
 
-    result = invoke(["venv", "create", "-f"], obj=project)
+    result = pdm(["venv", "create", "-f"], obj=project)
     assert result.exit_code == 0, result.stderr
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_venv_activate(invoke, mocker, project):
+def test_venv_activate(pdm, mocker, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
 
     mocker.patch("shellingham.detect_shell", return_value=("bash", None))
-    result = invoke(["venv", "activate", key], obj=project)
+    result = pdm(["venv", "activate", key], obj=project)
     assert result.exit_code == 0, result.stderr
     backend = project.config["venv.backend"]
 
@@ -126,41 +126,41 @@ def test_venv_activate(invoke, mocker, project):
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_venv_activate_custom_prompt(invoke, mocker, project):
+def test_venv_activate_custom_prompt(pdm, mocker, project):
     project.project_config["venv.in_project"] = False
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     creator.assert_called_once_with(
         None, [], False, False, prompt=project.project_config["venv.prompt"], with_pip=False
     )
 
 
-def test_venv_activate_project_without_python(invoke, project):
+def test_venv_activate_project_without_python(pdm, project):
     project._saved_python = None
-    result = invoke(["venv", "activate"], obj=project)
+    result = pdm(["venv", "activate"], obj=project)
     assert result.exit_code != 0
     assert "The project doesn't have a saved python.path" in result.stderr
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_activate_error(invoke, project):
+def test_venv_activate_error(pdm, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project, strict=True)
+    result = pdm(["venv", "create"], obj=project, strict=True)
 
-    result = invoke(["venv", "activate", "foo"], obj=project)
+    result = pdm(["venv", "activate", "foo"], obj=project)
     assert result.exit_code != 0
     assert "No virtualenv with key" in result.stderr
 
     project._saved_python = os.path.abspath("fake/bin/python")
-    result = invoke(["venv", "activate"], obj=project)
+    result = pdm(["venv", "activate"], obj=project)
     assert result.exit_code != 0, result.output + result.stderr
     assert "Can't activate a non-venv Python" in result.stderr
 
 
 @pytest.mark.usefixtures("fake_create")
 @pytest.mark.parametrize("keep_pypackages", [True, False])
-def test_venv_auto_create(invoke, mocker, project, keep_pypackages):
+def test_venv_auto_create(pdm, mocker, project, keep_pypackages):
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")
     project._saved_python = None
     if keep_pypackages:
@@ -168,7 +168,7 @@ def test_venv_auto_create(invoke, mocker, project, keep_pypackages):
     else:
         shutil.rmtree(project.root / "__pypackages__", ignore_errors=True)
     project.project_config["python.use_venv"] = True
-    invoke(["install"], obj=project)
+    pdm(["install"], obj=project)
     if keep_pypackages:
         creator.assert_not_called()
     else:
@@ -176,26 +176,26 @@ def test_venv_auto_create(invoke, mocker, project, keep_pypackages):
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_purge(invoke, project):
+def test_venv_purge(pdm, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "purge"], obj=project)
+    result = pdm(["venv", "purge"], obj=project)
     assert result.exit_code == 0, result.stderr
 
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
-    result = invoke(["venv", "purge"], input="y", obj=project)
+    result = pdm(["venv", "purge"], input="y", obj=project)
     assert result.exit_code == 0, result.stderr
     assert not os.path.exists(venv_path)
 
 
 @pytest.mark.usefixtures("fake_create")
-def test_venv_purge_force(invoke, project):
+def test_venv_purge_force(pdm, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
-    result = invoke(["venv", "purge", "-f"], obj=project)
+    result = pdm(["venv", "purge", "-f"], obj=project)
     assert result.exit_code == 0, result.stderr
     assert not os.path.exists(venv_path)
 
@@ -205,12 +205,12 @@ user_options = [("none", True), ("0", False), ("all", False)]
 
 @pytest.mark.usefixtures("venv_backends")
 @pytest.mark.parametrize("user_choices, is_path_exists", user_options)
-def test_venv_purge_interactive(invoke, user_choices, is_path_exists, project):
+def test_venv_purge_interactive(pdm, user_choices, is_path_exists, project):
     project.project_config["venv.in_project"] = False
-    result = invoke(["venv", "create"], obj=project)
+    result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 0, result.stderr
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
-    result = invoke(["venv", "purge", "-i"], input=user_choices, obj=project)
+    result = pdm(["venv", "purge", "-i"], input=user_choices, obj=project)
     assert result.exit_code == 0, result.stderr
     assert os.path.exists(venv_path) == is_path_exists
 

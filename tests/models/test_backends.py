@@ -27,12 +27,12 @@ def _setup_backend(project: Project, backend: str):
 
 
 @pytest.mark.parametrize("backend", _BACKENDS.keys())
-def test_project_backend(project, working_set, backend, invoke):
+def test_project_backend(project, working_set, backend, pdm):
     _setup_backend(project, backend)
     shutil.copytree(FIXTURES / "projects/demo", project.root / "demo")
     project.root.joinpath("sub").mkdir()
     with cd(project.root.joinpath("sub")):
-        invoke(["add", "--no-self", "../demo"], obj=project, strict=True)
+        pdm(["add", "--no-self", "../demo"], obj=project, strict=True)
         assert "idna" in working_set
         assert "demo" in working_set
         dep = project.pyproject.metadata["dependencies"][0]

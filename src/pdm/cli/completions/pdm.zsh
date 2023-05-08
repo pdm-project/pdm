@@ -204,6 +204,7 @@ _pdm() {
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lock file content]"
         "--check[Check if the lock file is up to date and fail otherwise]"
+        "--plugins[Install the plugins specified in pyproject.toml]"
         '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
       )
       ;;

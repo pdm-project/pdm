@@ -53,7 +53,7 @@ from pdm.cli.actions import do_init
 from pdm.cli.hooks import HookManager
 from pdm.compat import Protocol
 from pdm.core import Core
-from pdm.environments import BaseEnvironment, PrefixEnvironment
+from pdm.environments import BaseEnvironment, PythonEnvironment
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers.installers import install_wheel
 from pdm.models.backends import get_backend
@@ -320,7 +320,7 @@ def build_env(build_env_wheels: Iterable[Path], tmp_path_factory: pytest.TempPat
     """
     d = tmp_path_factory.mktemp("pdm-test-env")
     p = Core().create_project(d)
-    env = PrefixEnvironment(p, prefix=str(d))
+    env = PythonEnvironment(p, prefix=str(d))
     for wheel in build_env_wheels:
         install_wheel(str(wheel), env)
     return d

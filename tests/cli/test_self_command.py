@@ -38,32 +38,32 @@ def mock_latest_pdm_version(mocker):
 
 
 @pytest.mark.usefixtures("mock_all_distributions")
-def test_self_list(invoke):
-    result = invoke(["self", "list"])
+def test_self_list(pdm):
+    result = pdm(["self", "list"])
     assert result.exit_code == 0, result.stderr
     packages = [line.split()[0] for line in result.stdout.splitlines()]
     assert packages == ["bar", "baz", "foo"]
 
 
 @pytest.mark.usefixtures("mock_all_distributions")
-def test_self_list_plugins(invoke):
-    result = invoke(["self", "list", "--plugins"])
+def test_self_list_plugins(pdm):
+    result = pdm(["self", "list", "--plugins"])
     assert result.exit_code == 0, result.stderr
     packages = [line.split()[0] for line in result.stdout.splitlines()]
     assert packages == ["bar", "foo"]
 
 
-def test_self_add(invoke, mock_pip):
-    result = invoke(["self", "add", "foo"])
+def test_self_add(pdm, mock_pip):
+    result = pdm(["self", "add", "foo"])
     assert result.exit_code == 0, result.stderr
     mock_pip.assert_called_with(ANY, ["install", "foo"])
 
-    result = invoke(["self", "add", "--pip-args", "--force-reinstall --upgrade", "foo"])
+    result = pdm(["self", "add", "--pip-args", "--force-reinstall --upgrade", "foo"])
     assert result.exit_code == 0, result.stderr
     mock_pip.assert_called_with(ANY, ["install", "--force-reinstall", "--upgrade", "foo"])
 
 
-def test_self_remove(invoke, mock_pip, monkeypatch):
+def test_self_remove(pdm, mock_pip, monkeypatch):
     def _mock_resolve(self, packages):
         return ["demo", "pytz"] if "demo" in packages else packages
 
@@ -73,10 +73,10 @@ def test_self_remove(invoke, mock_pip, monkeypatch):
         _mock_resolve,
     )
 
-    result = invoke(["self", "remove", "foo"])
+    result = pdm(["self", "remove", "foo"])
     assert result.exit_code != 0
 
-    result = invoke(["self", "remove", "-y", "demo"])
+    result = pdm(["self", "remove", "-y", "demo"])
     assert result.exit_code == 0, result.stderr
     mock_pip.assert_called_with(ANY, ["uninstall", "-y", "demo", "pytz"])
 
@@ -92,21 +92,21 @@ def test_self_remove(invoke, mock_pip, monkeypatch):
         ),
     ],
 )
-def test_self_update(invoke, mock_pip, mock_latest_pdm_version, args, expected):
+def test_self_update(pdm, mock_pip, mock_latest_pdm_version, args, expected):
     def mocked_latest_version(project, pre):
         return "99.0.1b1" if pre else "99.0.0"
 
     mock_latest_pdm_version.side_effect = mocked_latest_version
 
-    result = invoke(args)
+    result = pdm(args)
     assert result.exit_code == 0, result.stderr
     mock_pip.assert_called_with(ANY, expected)
 
 
-def test_self_update_already_latest(invoke, mock_pip, mock_latest_pdm_version):
+def test_self_update_already_latest(pdm, mock_pip, mock_latest_pdm_version):
     mock_latest_pdm_version.return_value = "0.0.0"
 
-    result = invoke(["self", "update"])
+    result = pdm(["self", "update"])
     assert result.exit_code == 0, result.stderr
     assert "Already up-to-date" in result.stdout
     mock_pip.assert_not_called()

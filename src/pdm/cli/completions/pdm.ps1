@@ -294,7 +294,7 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new((
                             "-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod",
                             "--production", "--no-editable", "--no-self", "--no-isolation", "--check", "-L",
-                            "--lockfile", "--fail-fast", "-x"
+                            "--lockfile", "--fail-fast", "-x", "--plugins"
                         )),
                         $sectionOption,
                         $skipOption,

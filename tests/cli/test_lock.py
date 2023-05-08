@@ -23,9 +23,9 @@ def test_lock_dependencies(project):
         assert package in locked
 
 
-def test_lock_refresh(invoke, project, repository):
+def test_lock_refresh(pdm, project, repository):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    result = invoke(["lock"], obj=project)
+    result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
     assert not project.lockfile["metadata"]["files"].get("requests 2.19.1")
@@ -39,7 +39,7 @@ def test_lock_refresh(invoke, project, repository):
         {Link(url): hash for url, hash in url_hashes.items()} if c.identify() == "requests" else {}
     )
     assert not project.is_lockfile_hash_match()
-    result = invoke(["lock", "--refresh", "-v"], obj=project)
+    result = pdm(["lock", "--refresh", "-v"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
     assert project.lockfile["metadata"]["files"]["requests 2.19.1"] == [
@@ -47,48 +47,48 @@ def test_lock_refresh(invoke, project, repository):
     ]
 
 
-def test_lock_refresh_keep_consistent(invoke, project, repository):
+def test_lock_refresh_keep_consistent(pdm, project, repository):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    result = invoke(["lock"], obj=project)
+    result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
     previous = project.lockfile._path.read_text()
-    result = invoke(["lock", "--refresh"], obj=project)
+    result = pdm(["lock", "--refresh"], obj=project)
     assert result.exit_code == 0
     assert project.lockfile._path.read_text() == previous
 
 
-def test_lock_check_no_change_success(invoke, project, repository):
+def test_lock_check_no_change_success(pdm, project, repository):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    result = invoke(["lock"], obj=project)
+    result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
 
-    result = invoke(["lock", "--check"], obj=project)
+    result = pdm(["lock", "--check"], obj=project)
     assert result.exit_code == 0
 
 
-def test_lock_check_change_fails(invoke, project, repository):
+def test_lock_check_change_fails(pdm, project, repository):
     project.add_dependencies({"requests": parse_requirement("requests")})
-    result = invoke(["lock"], obj=project)
+    result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
 
     project.add_dependencies({"pyyaml": parse_requirement("pyyaml")})
-    result = invoke(["lock", "--check"], obj=project)
+    result = pdm(["lock", "--check"], obj=project)
     assert result.exit_code == 1
 
 
 @pytest.mark.usefixtures("repository")
-def test_innovations_with_specified_lockfile(invoke, project, working_set):
+def test_innovations_with_specified_lockfile(pdm, project, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")})
     lockfile = str(project.root / "mylock.lock")
-    invoke(["lock", "--lockfile", lockfile], strict=True, obj=project)
+    pdm(["lock", "--lockfile", lockfile], strict=True, obj=project)
     assert project.lockfile._path == project.root / "mylock.lock"
     assert project.is_lockfile_hash_match()
     locked = project.locked_repository.all_candidates
     assert "requests" in locked
-    invoke(["sync", "--lockfile", lockfile], strict=True, obj=project)
+    pdm(["sync", "--lockfile", lockfile], strict=True, obj=project)
     assert "requests" in working_set
 
 

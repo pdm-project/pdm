@@ -189,10 +189,10 @@ def test_set_non_exist_python_path(project_no_init):
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_create_venv_first_time(invoke, project, local_finder):
+def test_create_venv_first_time(pdm, project, local_finder):
     project.project_config.update({"venv.in_project": False})
     project._saved_python = None
-    result = invoke(["install"], obj=project)
+    result = pdm(["install"], obj=project)
     assert result.exit_code == 0
     venv_parent = project.root / "venvs"
     venv_path = next(venv_parent.iterdir(), None)
@@ -203,10 +203,10 @@ def test_create_venv_first_time(invoke, project, local_finder):
 
 @pytest.mark.usefixtures("venv_backends", "local_finder")
 @pytest.mark.parametrize("with_pip", [True, False])
-def test_create_venv_in_project(invoke, project, with_pip):
+def test_create_venv_in_project(pdm, project, with_pip):
     project.project_config.update({"venv.in_project": True, "venv.with_pip": with_pip})
     project._saved_python = None
-    result = invoke(["install"], obj=project)
+    result = pdm(["install"], obj=project)
     assert result.exit_code == 0
     assert project.root.joinpath(".venv").exists()
     working_set = project.environment.get_working_set()
@@ -214,10 +214,10 @@ def test_create_venv_in_project(invoke, project, with_pip):
 
 
 @pytest.mark.usefixtures("venv_backends")
-def test_find_interpreters_from_venv(invoke, project, local_finder):
+def test_find_interpreters_from_venv(pdm, project, local_finder):
     project.project_config.update({"venv.in_project": False})
     project._saved_python = None
-    result = invoke(["install"], obj=project)
+    result = pdm(["install"], obj=project)
     assert result.exit_code == 0
     venv_parent = project.root / "venvs"
     venv_path = next(venv_parent.iterdir(), None)
@@ -227,7 +227,7 @@ def test_find_interpreters_from_venv(invoke, project, local_finder):
 
 
 @pytest.mark.usefixtures("local_finder")
-def test_find_interpreters_without_duplicate_relative_paths(invoke, project):
+def test_find_interpreters_without_duplicate_relative_paths(pdm, project):
     project._saved_python = None
     venv.create(project.root / ".venv", clear=True)
     with cd(project.root):

@@ -33,7 +33,7 @@ class BaseEnvironment(abc.ABC):
 
     is_local = False
 
-    def __init__(self, project: Project) -> None:
+    def __init__(self, project: Project, *, python: str | None = None) -> None:
         """
         :param project: the project instance
         """
@@ -43,6 +43,10 @@ class BaseEnvironment(abc.ABC):
             self.project.sources,
             self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
         )
+        if python is None:
+            self._interpreter = project.python
+        else:
+            self._interpreter = PythonInfo.from_path(python)
 
     @property
     def is_global(self) -> bool:
@@ -51,7 +55,7 @@ class BaseEnvironment(abc.ABC):
 
     @property
     def interpreter(self) -> PythonInfo:
-        return self.project.python
+        return self._interpreter
 
     @abc.abstractmethod
     def get_paths(self) -> dict[str, str]:
@@ -207,16 +211,7 @@ class BareEnvironment(BaseEnvironment):
     """Bare environment that does not depend on project files."""
 
     def __init__(self, project: Project) -> None:
-        self.python_requires = project.python_requires
-        self.project = project
-        self.auth = PdmBasicAuth(
-            self.project.sources,
-            self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
-        )
-
-    @property
-    def interpreter(self) -> PythonInfo:
-        return PythonInfo.from_path(sys.executable)
+        super().__init__(project, python=sys.executable)
 
     def get_paths(self) -> dict[str, str]:
         return {}

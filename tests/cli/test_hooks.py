@@ -13,14 +13,14 @@ from pdm.signals import pdm_signals
 pytestmark = pytest.mark.usefixtures("repository", "working_set", "local_finder")
 
 
-def test_pre_script_fail_fast(project, invoke, capfd, mocker):
+def test_pre_script_fail_fast(project, pdm, capfd, mocker):
     project.pyproject.settings["scripts"] = {
         "pre_install": "python -c \"print('PRE INSTALL CALLED'); exit(1)\"",
         "post_install": "python -c \"print('POST INSTALL CALLED')\"",
     }
     project.pyproject.write()
     synchronize = mocker.patch("pdm.installers.synchronizers.Synchronizer.synchronize")
-    result = invoke(["install"], obj=project)
+    result = pdm(["install"], obj=project)
     assert result.exit_code == 1
     out, _ = capfd.readouterr()
     assert "PRE INSTALL CALLED" in out
@@ -28,7 +28,7 @@ def test_pre_script_fail_fast(project, invoke, capfd, mocker):
     synchronize.assert_not_called()
 
 
-def test_pre_and_post_scripts(project, invoke, capfd, _echo):
+def test_pre_and_post_scripts(project, pdm, capfd, _echo):
     project.pyproject.settings["scripts"] = {
         "pre_script": "python echo.py pre_script",
         "post_script": "python echo.py post_script",
@@ -40,7 +40,7 @@ def test_pre_and_post_scripts(project, invoke, capfd, _echo):
     }
     project.pyproject.write()
     capfd.readouterr()
-    invoke(["run", "test"], strict=True, obj=project)
+    pdm(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     expected = dedent(
         """
@@ -56,7 +56,7 @@ def test_pre_and_post_scripts(project, invoke, capfd, _echo):
     assert out.strip() == expected
 
 
-def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
+def test_composite_runs_all_hooks(project, pdm, capfd, _echo):
     project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
@@ -72,7 +72,7 @@ def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
     }
     project.pyproject.write()
     capfd.readouterr()
-    invoke(["run", "test"], strict=True, obj=project)
+    pdm(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     expected = dedent(
         """
@@ -96,7 +96,7 @@ def test_composite_runs_all_hooks(project, invoke, capfd, _echo):
 
 
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
-def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
+def test_skip_all_hooks_option(project, pdm, capfd, option: str, _echo):
     project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
@@ -114,7 +114,7 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
     }
     project.pyproject.write()
     capfd.readouterr()
-    invoke(["run", f"--skip={option}", "first"], strict=True, obj=project)
+    pdm(["run", f"--skip={option}", "first"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     assert "Pre-First CALLED" not in out
     assert "First CALLED" in out
@@ -122,7 +122,7 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
     assert "Pre-Script CALLED" not in out
     assert "Post-Script CALLED" not in out
     capfd.readouterr()
-    invoke(["run", f"--skip={option}", "test"], strict=True, obj=project)
+    pdm(["run", f"--skip={option}", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     assert "Pre-Test CALLED" not in out
     assert "Pre-First CALLED" not in out
@@ -149,7 +149,7 @@ def test_skip_all_hooks_option(project, invoke, capfd, option: str, _echo):
         "-k pre_test -k post_first,second",
     ],
 )
-def test_skip_option(project, invoke, capfd, args, _echo):
+def test_skip_option(project, pdm, capfd, args, _echo):
     project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},
         "pre_test": "python echo.py Pre-Test",
@@ -163,7 +163,7 @@ def test_skip_option(project, invoke, capfd, args, _echo):
     }
     project.pyproject.write()
     capfd.readouterr()
-    invoke(["run", *shlex.split(args), "test"], strict=True, obj=project)
+    pdm(["run", *shlex.split(args), "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
     assert "Pre-Test CALLED" not in out
     assert "Pre-First CALLED" in out
@@ -254,16 +254,16 @@ def lock(project, capfd):
 
 
 @parametrize_with_commands
-def test_hooks(hooked_project, invoke, capfd, specs: HookSpecs):
-    invoke(shlex.split(specs.command), strict=True, obj=hooked_project)
+def test_hooks(hooked_project, pdm, capfd, specs: HookSpecs):
+    pdm(shlex.split(specs.command), strict=True, obj=hooked_project)
     out, _ = capfd.readouterr()
     for hook in specs.hooks:
         assert f"{hook} CALLED" in out
 
 
 @parametrize_with_hooks  # Iterate over hooks as we need a clean slate for each run
-def test_skip_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs, hook: str):
-    invoke([*shlex.split(specs.command), f"--skip={hook}"], strict=True, obj=hooked_project)
+def test_skip_option_from_signal(hooked_project, pdm, capfd, specs: HookSpecs, hook: str):
+    pdm([*shlex.split(specs.command), f"--skip={hook}"], strict=True, obj=hooked_project)
     out, _ = capfd.readouterr()
     assert f"{hook} CALLED" not in out
     for known_hook in specs.hooks:
@@ -273,8 +273,8 @@ def test_skip_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs
 
 @parametrize_with_commands
 @pytest.mark.parametrize("option", [":all", ":pre,:post"])
-def test_skip_all_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs, option: str):
-    invoke(
+def test_skip_all_option_from_signal(hooked_project, pdm, capfd, specs: HookSpecs, option: str):
+    pdm(
         [*shlex.split(specs.command), f"--skip={option}"],
         strict=True,
         obj=hooked_project,
@@ -286,8 +286,8 @@ def test_skip_all_option_from_signal(hooked_project, invoke, capfd, specs: HookS
 
 @parametrize_with_commands
 @pytest.mark.parametrize("prefix", ["pre", "post"])
-def test_skip_pre_post_option_from_signal(hooked_project, invoke, capfd, specs: HookSpecs, prefix: str):
-    invoke(
+def test_skip_pre_post_option_from_signal(hooked_project, pdm, capfd, specs: HookSpecs, prefix: str):
+    pdm(
         [*shlex.split(specs.command), f"--skip=:{prefix}"],
         strict=True,
         obj=hooked_project,

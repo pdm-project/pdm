@@ -1,8 +1,11 @@
 from unittest import mock
 
+import pytest
+
 from pdm.cli.commands.base import BaseCommand
 from pdm.compat import importlib_metadata
 from pdm.project.config import ConfigItem
+from pdm.utils import cd
 
 
 class HelloCommand(BaseCommand):
@@ -34,7 +37,7 @@ def make_entry_point(plugin):
     return ret
 
 
-def test_plugin_new_command(invoke, mocker, project, core):
+def test_plugin_new_command(pdm, mocker, project, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
@@ -42,17 +45,17 @@ def test_plugin_new_command(invoke, mocker, project, core):
     )
     core.init_parser()
     core.load_plugins()
-    result = invoke(["--help"], obj=project)
+    result = pdm(["--help"], obj=project)
     assert "hello" in result.output
 
-    result = invoke(["hello"], obj=project)
+    result = pdm(["hello"], obj=project)
     assert result.output.strip() == "Hello world"
 
-    result = invoke(["hello", "-n", "Frost"], obj=project)
+    result = pdm(["hello", "-n", "Frost"], obj=project)
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_plugin_replace_command(invoke, mocker, project, core):
+def test_plugin_replace_command(pdm, mocker, project, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
@@ -61,14 +64,14 @@ def test_plugin_replace_command(invoke, mocker, project, core):
     core.init_parser()
     core.load_plugins()
 
-    result = invoke(["info"], obj=project)
+    result = pdm(["info"], obj=project)
     assert result.output.strip() == "Hello world"
 
-    result = invoke(["info", "-n", "Frost"], obj=project)
+    result = pdm(["info", "-n", "Frost"], obj=project)
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_load_multiple_plugings(invoke, mocker, core):
+def test_load_multiple_plugings(pdm, mocker, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",
@@ -77,14 +80,14 @@ def test_load_multiple_plugings(invoke, mocker, core):
     core.init_parser()
     core.load_plugins()
 
-    result = invoke(["hello"])
+    result = pdm(["hello"])
     assert result.output.strip() == "Hello world", result.outputs
 
-    result = invoke(["config", "foo"])
+    result = pdm(["config", "foo"])
     assert result.output.strip() == "bar"
 
 
-def test_old_entry_point_compatibility(invoke, mocker, core):
+def test_old_entry_point_compatibility(pdm, mocker, core):
     def get_entry_points(group):
         if group == "pdm":
             return [make_entry_point(new_command)]
@@ -96,8 +99,20 @@ def test_old_entry_point_compatibility(invoke, mocker, core):
     core.init_parser()
     core.load_plugins()
 
-    result = invoke(["hello"])
+    result = pdm(["hello"])
     assert result.output.strip() == "Hello world"
 
-    result = invoke(["config", "foo"])
+    result = pdm(["config", "foo"])
     assert result.output.strip() == "bar"
+
+
+@pytest.mark.usefixtures("local_finder")
+def test_project_plugin_library(pdm, project, core):
+    project.pyproject.settings["plugins"] = ["pdm-hello"]
+    pdm(["install", "--plugins"], obj=project, strict=True)
+    assert project.root.joinpath(".pdm-plugins").exists()
+    assert "pdm-hello" not in project.environment.get_working_set()
+    with cd(project.root):
+        core.load_plugins()
+        result = pdm(["hello", "Frost"], strict=True)
+    assert result.stdout.strip() == "Hello, Frost!"
