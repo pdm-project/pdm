@@ -316,6 +316,18 @@ pdm lock --prod -L pdm.prod.lock
 
 Check the `metadata.groups` field in the lockfile to see which groups are included.
 
+## Cross-platform lockfile
+
+By default, the generated lockfile is **cross-platform**, which means the current platform isn't taken into account when resolving the dependencies. The result lockfile will contain wheels and dependencies for all possible platforms and Python versions.
+However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels. To avoid this, you can tell PDM
+to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform. This can be done by passing the `--no-cross-platform` option to `pdm lock`:
+
+```bash
+pdm lock --no-cross-platform
+```
+
+```bash
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:
