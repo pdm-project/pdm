@@ -237,6 +237,7 @@ _pdm() {
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-default[Don\'t include dependencies from the default group]"
+        "--no-cross-platform[Only lock packages for the current platform]"
       )
       ;;
     self)

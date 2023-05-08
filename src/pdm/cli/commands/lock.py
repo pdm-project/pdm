@@ -32,6 +32,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Check if the lock file is up to date and quit",
         )
+        parser.add_argument(
+            "--no-cross-platform",
+            action="store_false",
+            default=True,
+            dest="cross_platform",
+            help="Only lock packages for the current platform",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.check:
@@ -55,5 +62,6 @@ class Command(BaseCommand):
             project,
             refresh=options.refresh,
             groups=selection.all(),
+            cross_platform=options.cross_platform,
             hooks=HookManager(project, options.skip),
         )
