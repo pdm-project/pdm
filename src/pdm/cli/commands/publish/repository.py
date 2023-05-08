@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import os
 import pathlib
 import weakref
 from typing import Any, Iterable
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 import requests
 import requests_toolbelt
 import rich.progress
+from unearth.auth import get_keyring_provider
 
 from pdm import termui
 from pdm.cli.commands.publish.package import PackageFile
@@ -15,10 +17,7 @@ from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
 
-try:
-    import keyring
-except ImportError:
-    keyring = None
+keyring = get_keyring_provider()
 
 
 class Repository:
@@ -44,6 +43,11 @@ class Repository:
         netloc = urlparse(self.url).netloc
         if username and password:
             return username, password
+        if password:
+            return "__token__", password
+        token = self._get_pypi_token_via_oidc()
+        if token is not None:
+            return "__token__", token
         if not termui.is_interactive():
             raise PdmUsageError("Username and password are required")
         username, password, save = self._prompt_for_credentials(netloc, username)
@@ -51,19 +55,53 @@ class Repository:
             self._credentials_to_save = (netloc, username, password)
         return username, password
 
+    def _get_pypi_token_via_oidc(self) -> str | None:
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN = os.getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+        ACTIONS_ID_TOKEN_REQUEST_URL = os.getenv("ACTIONS_ID_TOKEN_REQUEST_URL")
+        if not ACTIONS_ID_TOKEN_REQUEST_TOKEN or not ACTIONS_ID_TOKEN_REQUEST_URL:
+            return None
+        self.ui.echo("Getting PyPI token via GitHub Actions OIDC...")
+        try:
+            parsed_url = urlparse(self.url)
+            audience_url = urlunparse(parsed_url._replace(path="/_/oidc/audience"))
+            resp = self.session.get(audience_url)
+            resp.raise_for_status()
+
+            resp = self.session.get(
+                ACTIONS_ID_TOKEN_REQUEST_URL,
+                params=resp.json(),
+                headers={"Authorization": f"bearer {ACTIONS_ID_TOKEN_REQUEST_TOKEN}"},
+            )
+            resp.raise_for_status()
+            oidc_token = resp.json()["value"]
+
+            mint_token_url = urlunparse(parsed_url._replace(path="/_/oidc/github/mint-token"))
+            resp = self.session.post(mint_token_url, json={"token": oidc_token})
+            resp.raise_for_status()
+            token = resp.json()["token"]
+        except requests.RequestException:
+            self.ui.echo("Failed to get PyPI token via GitHub Actions OIDC", err=True)
+            return None
+        else:
+            if os.getenv("GITHUB_ACTIONS"):
+                # tell GitHub Actions to mask the token in any console logs
+                print(f"::add-mask::{token}")
+            return token
+
     def _prompt_for_credentials(self, service: str, username: str | None) -> tuple[str, str, bool]:
         if keyring is not None:
-            cred = keyring.get_credential(service, username)
+            cred = keyring.get_auth_info(service, username)
             if cred is not None:
-                return cred.username, cred.password, False
+                return cred[0], cred[1], False
         if username is None:
             username = termui.ask("[primary]Username")
         password = termui.ask("[primary]Password", password=True)
         return username, password, True
 
     def _save_credentials(self, service: str, username: str, password: str) -> None:
+        assert keyring is not None
         self.ui.echo("Saving credentials to keyring")
-        keyring.set_password(service, username, password)
+        keyring.save_auth_info(service, username, password)
 
     @staticmethod
     def _convert_to_list_of_tuples(data: dict[str, Any]) -> list[tuple[str, Any]]:
