@@ -326,8 +326,6 @@ to create a lockfile that works for **this platform** only, trimming the wheels 
 pdm lock --no-cross-platform
 ```
 
-```bash
-
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:
