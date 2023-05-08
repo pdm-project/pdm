@@ -43,7 +43,10 @@ class Command(BaseCommand):
         from pdm.installers.core import install_requirements
         from pdm.models.requirements import parse_requirement
 
-        plugins = [parse_requirement(r) for r in project.pyproject.plugins]
+        plugins = [
+            parse_requirement(r[3:], True) if r.startswith("-e ") else parse_requirement(r)
+            for r in project.pyproject.plugins
+        ]
         if not plugins:
             return
         plugin_root = project.root / ".pdm-plugins"
