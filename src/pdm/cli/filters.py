@@ -51,9 +51,13 @@ class GroupSelection:
         return self.default and self.dev is None and not self.groups
 
     def all(self) -> list[str] | None:
+        project_groups = list(self.project.iter_groups())
         if self.is_unset:
             if self.project.lockfile.exists():
-                return self.project.lockfile.groups
+                groups = self.project.lockfile.groups
+                if groups:
+                    groups = [g for g in groups if g in project_groups]
+                return groups
         return list(self)
 
     @cached_property
@@ -62,8 +66,9 @@ class GroupSelection:
         if self.is_unset:
             # Default case, return what is in the lock file
             locked_groups = self.project.lockfile.groups
+            project_groups = list(self.project.iter_groups())
             if locked_groups:
-                return locked_groups
+                return [g for g in locked_groups if g in project_groups]
         default, dev, groups = self.default, self.dev, self.groups
         if dev is None:  # --prod is not set, include dev-dependencies
             dev = True
