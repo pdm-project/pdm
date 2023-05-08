@@ -227,3 +227,13 @@ plugins = [
 ```
 
 Run `pdm install --plugins` to install and activate the plugins.
+
+Alternatively, you can have project-local plugins that are not published to PyPI, by using editable local dependencies:
+
+```toml
+# pyproject.toml
+[tool.pdm]
+plugins = [
+    "-e file:///${PROJECT_ROOT}/plugins/my_plugin"
+]
+```
