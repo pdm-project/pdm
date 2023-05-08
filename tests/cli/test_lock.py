@@ -147,5 +147,5 @@ def test_lock_current_platform_wheels(project, pdm):
     pdm(["lock", "--no-cross-platform"], obj=project, strict=True)
     assert project.lockfile.cross_platform is False
     file_hashes = project.lockfile["metadata"]["files"]["pdm-hello 0.1.0"]
-    wheels_num = 2 if sys.platform == "win32" else 1
+    wheels_num = 2 if sys.platform == "win32" and not project.python.is_32bit else 1
     assert len(file_hashes) == wheels_num
