@@ -15,6 +15,28 @@ pdm publish --repository testpypi
 pdm publish --repository https://test.pypi.org/legacy/
 ```
 
+## Publish with trusted publishers
+
+You can configure trusted publishers for PyPI so that you don't need to expose the PyPI tokens in the release workflow. To do this, follow
+[the guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to add a publisher and write the GitHub Actions workflow as below:
+
+```yaml
+jobs:
+  pypi-publish:
+    name: upload release to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: pdm-project/setup-pdm@v3
+
+      - name: Publish package distributions to PyPI
+        runs: pdm publish
+```
+
 ## Build and publish separately
 
 You can also build the package and upload it in two steps, to allow you to inspect the built artifacts before uploading.
