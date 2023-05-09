@@ -163,8 +163,9 @@ install_group.add_argument(
 install_group.add_argument(
     "--no-self",
     action="store_true",
+    default=bool(os.getenv("PDM_NO_SELF")),
     dest="no_self",
-    help="Don't install the project itself",
+    help="Don't install the project itself. [env var: PDM_NO_SELF]",
 )
 install_group.add_argument("--fail-fast", "-x", action="store_true", help="Abort on first installation error")
 
