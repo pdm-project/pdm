@@ -34,10 +34,10 @@ class Repository:
         if ca_certs is not None:
             self.session.set_ca_certificates(pathlib.Path(ca_certs))
         self._credentials_to_save: tuple[str, str, str] | None = None
+        self.ui = project.core.ui
         username, password = self._ensure_credentials(username, password)
         self.session.auth = (username, password)
         weakref.finalize(self, self.session.close)
-        self.ui = project.core.ui
 
     def _ensure_credentials(self, username: str | None, password: str | None) -> tuple[str, str]:
         netloc = urlparse(self.url).netloc
