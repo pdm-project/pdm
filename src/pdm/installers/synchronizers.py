@@ -108,7 +108,6 @@ class BaseSynchronizer:
         retry_times: int = 1,
         install_self: bool = False,
         no_editable: bool | Collection[str] = False,
-        use_install_cache: bool = False,
         reinstall: bool = False,
         only_keep: bool = False,
         fail_fast: bool = False,
@@ -120,7 +119,7 @@ class BaseSynchronizer:
         self.retry_times = retry_times
         self.no_editable = no_editable
         self.install_self = install_self
-        self.use_install_cache = use_install_cache
+        self.use_install_cache = environment.project.config["install.cache"]
         self.reinstall = reinstall
         self.only_keep = only_keep
         self.parallel = environment.project.config["install.parallel"]
@@ -211,7 +210,7 @@ class BaseSynchronizer:
         all_candidate_keys = list(locked_repository.all_candidates)
 
         for key, dist in working_set.items():
-            if key == self.self_key:
+            if key == self.self_key and self.install_self:
                 continue
             if key in candidates:
                 can = candidates.pop(key)
