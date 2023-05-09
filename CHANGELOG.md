@@ -1,3 +1,50 @@
+Release v2.6.0 (2023-05-09)
+---------------------------
+
+### Features & Improvements
+
+- Install project-level plugins from project config, with `tool.pdm.plugins` setting. [#1461](https://github.com/pdm-project/pdm/issues/1461)
+- Added a `--json` flag to both `run` and `info` command allowing to dump scripts and infos as JSON. [#1854](https://github.com/pdm-project/pdm/issues/1854)
+- Consider tasks with a name starting by an underscore (`_`) as internal tasks and hide them from the listing. [#1855](https://github.com/pdm-project/pdm/issues/1855)
+- When running `pdm init -n`(non-interactive mode), a venv will be created by default. Previously, the selected Python will be used under PEP 582 mode. [#1862](https://github.com/pdm-project/pdm/issues/1862)
+- Support [Trusted Publisher](https://docs.pypi.org/trusted-publishers/using-a-publisher/). [#1868](https://github.com/pdm-project/pdm/issues/1868)
+- Add an ephemeral wheel cache in process for wheels built from non-static revision sources. [#1885](https://github.com/pdm-project/pdm/issues/1885)
+- Allow self-referencing groups in dev-dependencies. [#1890](https://github.com/pdm-project/pdm/issues/1890)
+- Add an option `--no-cross-platform` to `pdm lock` to create a non-cross-platform lockfile. [#1898](https://github.com/pdm-project/pdm/issues/1898)
+
+### Bug Fixes
+
+- Fix brackets in `--venv` option descriptions in zsh completion script. [#1847](https://github.com/pdm-project/pdm/issues/1847)
+- The resolver doesn't take into account of the requirements for both bare `package` and `package[extra]`. [#1851](https://github.com/pdm-project/pdm/issues/1851)
+- Default pypi source does not use configured pypi.password, but "<hidden>" instead. [#1856](https://github.com/pdm-project/pdm/issues/1856)
+- Detect Python interpreters under the root of virtual environments. [#1866](https://github.com/pdm-project/pdm/issues/1866)
+- Fix a race condition when the builder is creating a new build directory. [#1869](https://github.com/pdm-project/pdm/issues/1869)
+- Raise `FileNotFoundError` if the requirement path is not found. [#1875](https://github.com/pdm-project/pdm/issues/1875)
+- Fix a bug that the self package isn't uninstallable. [#1901](https://github.com/pdm-project/pdm/issues/1901)
+
+
+Release v2.5.6 (2023-05-07)
+---------------------------
+
+### Bug Fixes
+
+- Fix a double reading issue due to cachecontrol not compatible with urllib3 2.0. [#1894](https://github.com/pdm-project/pdm/issues/1894)
+
+
+Release v2.5.5 (2023-05-05)
+---------------------------
+
+No significant changes.
+
+
+Release v2.5.4 (2023-05-05)
+---------------------------
+
+### Bug Fixes
+
+- Pin the urllib3 to `<2.0` to avoid incompatibility with `cachecontrol`. [#1886](https://github.com/pdm-project/pdm/issues/1886)
+
+
 Release v2.5.3 (2023-04-19)
 ---------------------------
 
