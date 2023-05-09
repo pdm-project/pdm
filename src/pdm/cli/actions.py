@@ -210,7 +210,6 @@ def do_sync(
         dry_run=dry_run,
         no_editable=no_editable,
         install_self=not no_self and "default" in selection and bool(project.name),
-        use_install_cache=project.config["install.cache"],
         reinstall=reinstall,
         only_keep=only_keep,
         fail_fast=fail_fast,
