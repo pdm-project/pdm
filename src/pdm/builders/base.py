@@ -226,7 +226,7 @@ class EnvBuilder:
         paths = self._prefix.bin_dirs
         if "PATH" in os.environ:
             paths.append(os.getenv("PATH", ""))
-        env = {"PATH": os.pathsep.join(paths)}
+        env: dict[str, str] = {}
         if self.isolated:
             env.update(
                 {
@@ -235,13 +235,16 @@ class EnvBuilder:
                 }
             )
         else:
-            project_libs = self._env.get_paths()["purelib"]
+            env_paths = self._env.get_paths()
+            project_libs = env_paths["purelib"]
             pythonpath = [*self._prefix.lib_dirs, project_libs]
             if "PYTHONPATH" in os.environ:
                 pythonpath.append(os.getenv("PYTHONPATH", ""))
             env.update(
                 PYTHONPATH=os.pathsep.join(pythonpath),
             )
+            paths.append(env_paths["scripts"])
+        env["PATH"] = os.pathsep.join(paths)
         return env
 
     def subprocess_runner(
