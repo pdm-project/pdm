@@ -1,3 +1,12 @@
+Release v2.6.1 (2023-05-10)
+---------------------------
+
+### Bug Fixes
+
+- Fix the error when publishing using trusted publisher. [#1868](https://github.com/pdm-project/pdm/issues/1868)
+- Fix a bug that `PATH` env var isn't set correctly when running under non-isolation mode. [#1904](https://github.com/pdm-project/pdm/issues/1904)
+
+
 Release v2.6.0 (2023-05-09)
 ---------------------------
 
