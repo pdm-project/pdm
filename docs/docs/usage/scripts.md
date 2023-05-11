@@ -8,7 +8,7 @@ Like `npm run`, with PDM, you can run arbitrary scripts or commands with local p
 pdm run flask run -p 54321
 ```
 
-It will run `flask run -p 54321` in the environment that is aware of packages in `__pypackages__/` folder.
+It will run `flask run -p 54321` in the environment that is aware of packages in your project environment.
 
 ## User Scripts
 
