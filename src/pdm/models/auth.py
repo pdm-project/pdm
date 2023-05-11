@@ -64,7 +64,7 @@ class Keyring:
         """Return the password for the given url and username.
         The username can be None.
         """
-        if self.provider is None:
+        if self.provider is None or not self.enabled:
             return None
         try:
             return self.provider.get_auth_info(url, username)
@@ -76,7 +76,7 @@ class Keyring:
         """Set the password for the given url and username.
         Returns whether the operation is successful.
         """
-        if self.provider is None:
+        if self.provider is None or not self.enabled:
             return False
         try:
             self.provider.save_auth_info(url, username, password)

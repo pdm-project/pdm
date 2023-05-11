@@ -207,7 +207,8 @@ def test_config_password_save_into_keyring(project, keyring):
 
 
 def test_keyring_operation_error_disables_itself(project, keyring, mocker):
-    mocker.patch.object(keyring.provider, "save_auth_info", side_effect=RuntimeError())
+    saver = mocker.patch.object(keyring.provider, "save_auth_info", side_effect=RuntimeError())
+    getter = mocker.patch.object(keyring.provider, "get_auth_info")
     project.global_config.update(
         {
             "pypi.extra.url": "https://extra.pypi.org/simple",
@@ -220,6 +221,9 @@ def test_keyring_operation_error_disables_itself(project, keyring, mocker):
 
     assert project.global_config["pypi.extra.password"] == "barbaz"
     assert project.global_config["repository.pypi.password"] == "password"
+
+    saver.assert_called_once()
+    getter.assert_not_called()
 
     assert not keyring.enabled
     assert keyring.get_auth_info("pdm-pypi-extra", "foo") is None
