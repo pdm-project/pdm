@@ -369,6 +369,7 @@ class Project:
     def default_source(self) -> RepositoryConfig:
         """Get the default source from the pypi setting"""
         return RepositoryConfig(
+            config_prefix="pypi",
             name="pypi",
             url=self.config["pypi.url"],
             verify_ssl=self.config["pypi.verify_ssl"],
@@ -380,11 +381,11 @@ class Project:
     def sources(self) -> list[RepositoryConfig]:
         result: dict[str, RepositoryConfig] = {}
         for source in self.pyproject.settings.get("source", []):
-            result[source["name"]] = RepositoryConfig(**source)
+            result[source["name"]] = RepositoryConfig(**source, config_prefix="pypi")
 
-        def merge_sources(other_sources: Iterable[tuple[str, RepositoryConfig]]) -> None:
-            for name, source in other_sources:
-                source.name = name
+        def merge_sources(other_sources: Iterable[RepositoryConfig]) -> None:
+            for source in other_sources:
+                name = source.name
                 if name in result:
                     result[name].passive_update(source)
                 else:

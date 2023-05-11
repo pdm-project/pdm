@@ -5,7 +5,7 @@ from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.cli.commands.base import BaseCommand
 from pdm.project import Project
-from pdm.project.config import DEFAULT_REPOSITORIES, REPOSITORY, Config
+from pdm.project.config import DEFAULT_REPOSITORIES, REPOSITORY, SOURCE, Config
 
 
 class Command(BaseCommand):
@@ -75,25 +75,18 @@ class Command(BaseCommand):
                 continue
             extra_style = "dim" if superseded else None
             if canonical_key not in Config._config_map:
-                if key.startswith("pypi."):
-                    index = key.split(".")[1]
+                prefix, name = key.split(".", 1)
+                if prefix in (SOURCE, REPOSITORY):
+                    title = "non-default PyPI index" if prefix == SOURCE else "custom repository"
                     self.ui.echo(
-                        f"[warning]# Configuration of non-default Pypi index `{index}`",
+                        f"[warning]# Configuration of {title} `{name}`",
                         style=extra_style,
                         verbosity=termui.Verbosity.DETAIL,
                     )
-                    self.ui.echo(RepositoryConfig(**config[key], config_prefix=key))
-                elif key.startswith(REPOSITORY):
-                    for item in config[key]:
-                        self.ui.echo(
-                            f"[warning]# Configuration of custom repository `{item}`",
-                            style=extra_style,
-                            verbosity=termui.Verbosity.DETAIL,
-                        )
-                        repository = dict(config[key][item])
-                        if "url" not in repository and item in DEFAULT_REPOSITORIES:
-                            repository["url"] = DEFAULT_REPOSITORIES[item]
-                        self.ui.echo(RepositoryConfig(**repository, config_prefix=f"{key}.{item}"))
+                    repository = RepositoryConfig(**config[key], config_prefix=prefix, name=name)
+                    if not repository.url and name in DEFAULT_REPOSITORIES:
+                        repository.url = DEFAULT_REPOSITORIES[name]
+                    self.ui.echo(repository)
                 continue
             config_item = Config._config_map[canonical_key]
             self.ui.echo(

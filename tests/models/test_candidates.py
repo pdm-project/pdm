@@ -301,6 +301,8 @@ def test_find_candidates_from_find_links(project):
     repo = project.get_repository()
     repo.sources = [
         RepositoryConfig(
+            name="test",
+            config_prefix="pypi",
             url="http://fixtures.test/index/demo.html",
             verify_ssl=False,
             type="find_links",

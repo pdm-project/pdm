@@ -4,16 +4,18 @@ import argparse
 import os
 import sys
 from functools import partial
-from typing import Any, Sequence, cast
+from typing import TYPE_CHECKING, cast
 
 from pdm.cli.actions import print_pep582_command
-from pdm.compat import Protocol
-from pdm.project import Project
 
+if TYPE_CHECKING:
+    from typing import Any, Protocol, Sequence
 
-class ActionCallback(Protocol):
-    def __call__(self, project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
-        ...
+    from pdm.project import Project
+
+    class ActionCallback(Protocol):
+        def __call__(self, project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+            ...
 
 
 class Option:

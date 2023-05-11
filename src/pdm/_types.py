@@ -1,22 +1,23 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Dict, List, NamedTuple, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Tuple, TypeVar, Union
 
-from pdm.compat import Protocol
+if TYPE_CHECKING:
+    from typing import Protocol
 
 
 @dataclasses.dataclass
 class RepositoryConfig:
+    config_prefix: str
+    name: str
+
     url: str | None = None
     username: str | None = None
     password: str | None = None
     verify_ssl: bool | None = None
     type: str | None = None
     ca_certs: str | None = None
-
-    config_prefix: str | None = None
-    name: str | None = None
 
     def passive_update(self, other: RepositoryConfig | None = None, **kwargs: Any) -> None:
         """An update method that prefers the existing value over the new one."""
@@ -30,7 +31,7 @@ class RepositoryConfig:
                 setattr(self, k, v)
 
     def __rich__(self) -> str:
-        config_prefix = f"{self.config_prefix}." if self.config_prefix is not None else ""
+        config_prefix = f"{self.config_prefix}.{self.name}." if self.name else f"{self.config_prefix}."
         lines: list[str] = []
         if self.url:
             lines.append(f"[primary]{config_prefix}url[/] = {self.url}")
@@ -57,28 +58,27 @@ class Package(NamedTuple):
     summary: str
 
 
-class Comparable(Protocol):
-    def __lt__(self, __other: Any) -> bool:
-        ...
-
-
-SpinnerT = TypeVar("SpinnerT", bound="Spinner")
-
-
-class Spinner(Protocol):
-    def update(self, text: str) -> None:
-        ...
-
-    def __enter__(self: SpinnerT) -> SpinnerT:
-        ...
-
-    def __exit__(self, *args: Any) -> None:
-        ...
-
-
-class RichProtocol(Protocol):
-    def __rich__(self) -> str:
-        ...
-
-
 SearchResult = List[Package]
+
+
+if TYPE_CHECKING:
+
+    class Comparable(Protocol):
+        def __lt__(self, __other: Any) -> bool:
+            ...
+
+    SpinnerT = TypeVar("SpinnerT", bound="Spinner")
+
+    class Spinner(Protocol):
+        def update(self, text: str) -> None:
+            ...
+
+        def __enter__(self: SpinnerT) -> SpinnerT:
+            ...
+
+        def __exit__(self, *args: Any) -> None:
+            ...
+
+    class RichProtocol(Protocol):
+        def __rich__(self) -> str:
+            ...

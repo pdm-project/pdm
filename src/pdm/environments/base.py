@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Generator
 
 import unearth
 
-from pdm import termui
 from pdm.compat import cached_property
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.auth import PdmBasicAuth
@@ -39,10 +38,7 @@ class BaseEnvironment(abc.ABC):
         """
         self.python_requires = project.python_requires
         self.project = project
-        self.auth = PdmBasicAuth(
-            self.project.sources,
-            self.project.core.ui.verbosity >= termui.Verbosity.DETAIL,
-        )
+        self.auth = PdmBasicAuth(project.core.ui, self.project.sources)
         if python is None:
             self._interpreter = project.python
         else:
