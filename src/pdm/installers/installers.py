@@ -50,11 +50,8 @@ def _is_namespace_package(root: str) -> bool:
         return False
     if not os.path.exists(os.path.join(root, "__init__.py")):  # PEP 420 style
         return True
-    init_py_lines = [
-        line.strip()
-        for line in Path(root, "__init__.py").open(encoding="utf-8")
-        if line.strip() and not line.strip().startswith("#")
-    ]
+    with Path(root, "__init__.py").open(encoding="utf-8") as f:
+        init_py_lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
     namespace_identifiers = [
         # pkg_resources style
         "__import__('pkg_resources').declare_namespace(__name__)",
