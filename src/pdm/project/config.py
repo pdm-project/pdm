@@ -15,6 +15,7 @@ from pdm._types import RepositoryConfig
 from pdm.exceptions import NoConfigError, PdmUsageError
 
 REPOSITORY = "repository"
+SOURCE = "pypi"
 DEFAULT_REPOSITORIES = {
     "pypi": "https://upload.pypi.org/legacy/",
     "testpypi": "https://test.pypi.org/legacy/",
@@ -32,9 +33,9 @@ def load_config(file_path: Path) -> dict[str, Any]:
     def get_item(sub_data: Mapping[str, Any]) -> dict[str, Any]:
         result: dict[str, Any] = {}
         for k, v in sub_data.items():
-            if k == "pypi":
+            if k in (REPOSITORY, SOURCE):
                 result.update((f"{k}.{sub_k}", sub_v) for sub_k, sub_v in v.items())
-            elif k != REPOSITORY and isinstance(v, Mapping):
+            elif isinstance(v, Mapping):
                 result.update({f"{k}.{sub_k}": sub_v for sub_k, sub_v in get_item(v).items()})
             else:
                 result.update({k: v})
@@ -248,10 +249,10 @@ class Config(MutableMapping[str, str]):
     def self_data(self) -> dict[str, Any]:
         return dict(self._file_data)
 
-    def iter_sources(self) -> Iterator[tuple[str, RepositoryConfig]]:
+    def iter_sources(self) -> Iterator[RepositoryConfig]:
         for name, data in self._data.items():
-            if name.startswith("pypi.") and name not in self._config_map:
-                yield name[5:], RepositoryConfig(**data)
+            if name.startswith(f"{SOURCE}.") and name not in self._config_map:
+                yield RepositoryConfig(**data, name=name[len(SOURCE) + 1 :], config_prefix=SOURCE)
 
     def _save_config(self) -> None:
         """Save the changed to config file."""
@@ -271,21 +272,15 @@ class Config(MutableMapping[str, str]):
 
     def __getitem__(self, key: str) -> Any:
         parts = key.split(".")
-        if parts[0] == REPOSITORY:
+        if parts[0] in (REPOSITORY, SOURCE) and key not in self._config_map:
             if len(parts) < 2:
-                raise PdmUsageError("Must specify a repository name")
-            repo = self.get_repository_config(parts[1])
+                raise PdmUsageError(f"Must specify a {parts[0]} name")
+            repo = self.get_repository_config(parts[1], parts[0])
             if repo is None:
-                raise KeyError(f"No repository named {parts[1]}")
+                raise KeyError(f"No {parts[0]} named {parts[1]}")
 
             value = getattr(repo, parts[2]) if len(parts) >= 3 else repo
             return value
-        elif parts[0] == "pypi" and key not in self._config_map and len(parts) >= 2:
-            index_key = ".".join(parts[:2])
-            if index_key not in self._data:
-                raise KeyError(f"No PyPI index named {parts[1]}")
-            source = self._data[index_key]
-            return source[parts[2]] if len(parts) >= 3 else RepositoryConfig(**self._data[index_key])
 
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
@@ -305,19 +300,14 @@ class Config(MutableMapping[str, str]):
 
     def __setitem__(self, key: str, value: Any) -> None:
         parts = key.split(".")
-        if parts[0] == REPOSITORY:
+        if parts[0] in (REPOSITORY, SOURCE) and key not in self._config_map:
             if len(parts) < 3:
-                raise PdmUsageError("Set repository config with [success]repository.{name}.{attr}")
-            self._file_data.setdefault(parts[0], {}).setdefault(parts[1], {}).setdefault(parts[2], value)
-            self._save_config()
-            return
-        if parts[0] == "pypi" and key not in self._config_map:
-            if len(parts) < 3:
-                raise PdmUsageError("Set index config with [success]pypi.{name}.{attr}")
+                raise PdmUsageError(f"Set {parts[0]} config with [success]{parts[0]}.{{name}}.{{attr}}")
             index_key = ".".join(parts[:2])
             self._file_data.setdefault(index_key, {})[parts[2]] = value
             self._save_config()
             return
+
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
         config_key = self.deprecated.get(key, key)
@@ -344,25 +334,15 @@ class Config(MutableMapping[str, str]):
         keys: set[str] = set()
         for key in self._data:
             if key in self.deprecated:
-                keys.add(self.deprecated[key])
-            elif key != REPOSITORY:
-                keys.add(key)
+                key = self.deprecated[key]
+            keys.add(key)
         return iter(keys)
 
     def __delitem__(self, key: str) -> None:
         parts = key.split(".")
-        if parts[0] == REPOSITORY:
+        if parts[0] in (REPOSITORY, SOURCE) and key not in self._config_map:
             if len(parts) < 2:
-                raise PdmUsageError("Should specify the name of repository")
-            if len(parts) >= 3:
-                del self._file_data.get(REPOSITORY, {}).get(parts[1], {})[parts[2]]
-            else:
-                del self._file_data.get(REPOSITORY, {})[parts[1]]
-            self._save_config()
-            return
-        if parts[0] == "pypi" and key not in self._config_map:
-            if len(parts) < 2:
-                raise PdmUsageError("Should specify the name of index")
+                raise PdmUsageError(f"Should specify the name of {parts[0]}")
             if len(parts) >= 3:
                 index_key, attr = key.rsplit(".", 1)
                 del self._file_data.get(index_key, {})[attr]
@@ -370,6 +350,7 @@ class Config(MutableMapping[str, str]):
                 del self._file_data[key]
             self._save_config()
             return
+
         config_key = self.deprecated.get(key, key)
         config = self._config_map[config_key]
         self._file_data.pop(config_key, None)
@@ -384,28 +365,41 @@ class Config(MutableMapping[str, str]):
             )
         self._save_config()
 
-    def get_repository_config(self, name_or_url: str) -> RepositoryConfig | None:
-        """Get a repository by name or url."""
-        if not self.is_global:  # pragma: no cover
-            raise NoConfigError("repository")
-        repositories: Mapping[str, RepositoryConfig] = {
-            k: RepositoryConfig(**v) for k, v in self._data.get(REPOSITORY, {}).items()
-        }
+    def get_repository_config(self, name_or_url: str, prefix: str) -> RepositoryConfig | None:
+        """Get a repository or source by name or url."""
+        if not self.is_global and prefix == REPOSITORY:  # pragma: no cover
+            raise NoConfigError(prefix)
+        repositories: dict[str, RepositoryConfig] = {}
+        for k, v in self._data.items():
+            if not k.startswith(f"{prefix}.") or k in self._config_map:
+                continue
+            key = k[len(prefix) + 1 :]
+            repositories[key] = RepositoryConfig(**v, name=key, config_prefix=prefix)
         config: RepositoryConfig | None = None
         if "://" in name_or_url:
             config = next(
                 (v for v in repositories.values() if v.url == name_or_url),
-                RepositoryConfig(name_or_url),
+                RepositoryConfig(url=name_or_url, name="__unknown__", config_prefix=prefix),
             )
         else:
             config = repositories.get(name_or_url)
 
+        if prefix == SOURCE:
+            return config
+
         if name_or_url in DEFAULT_REPOSITORIES:
             if config is None:
-                return RepositoryConfig(DEFAULT_REPOSITORIES[name_or_url])
+                return RepositoryConfig(url=DEFAULT_REPOSITORIES[name_or_url], name=name_or_url, config_prefix=prefix)
             config.passive_update(url=DEFAULT_REPOSITORIES[name_or_url])
         if name_or_url in DEFAULT_REPOSITORIES.values():
+            name = next(k for k, v in DEFAULT_REPOSITORIES.items() if v == name_or_url)
             if config is None:
-                return RepositoryConfig(name_or_url)
+                return RepositoryConfig(
+                    name=name,
+                    config_prefix=prefix,
+                    url=name_or_url,
+                )
             config.passive_update(url=name_or_url)
+            if config.name == "__unknown__":
+                config.name = name
         return config

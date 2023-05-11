@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Union, overload
+from typing import TYPE_CHECKING, overload
 
-from pdm.compat import Literal
 from pdm.exceptions import InvalidPyVersion
 
-VersionBit = Union[int, Literal["*"]]  # noqa: F722
+if TYPE_CHECKING:
+    from typing import Any, Literal, Union
+
+    VersionBit = Union[int, Literal["*"]]
+
 PRE_RELEASE_SEGMENT_RE = re.compile(
     r"(?P<digit>\d+)(?P<type>a|b|rc)(?P<n>\d*)",
     flags=re.IGNORECASE,

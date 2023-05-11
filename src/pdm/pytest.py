@@ -51,7 +51,6 @@ from unearth import Link
 
 from pdm.cli.actions import do_init
 from pdm.cli.hooks import HookManager
-from pdm.compat import Protocol
 from pdm.core import Core
 from pdm.environments import BaseEnvironment, PythonEnvironment
 from pdm.exceptions import CandidateInfoNotFound
@@ -70,6 +69,8 @@ from pdm.project.core import Project
 from pdm.utils import find_python_in_path, normalize_name, path_to_url
 
 if TYPE_CHECKING:
+    from typing import Protocol
+
     from _pytest.fixtures import SubRequest
 
     from pdm._types import CandidateInfo, RepositoryConfig
@@ -547,30 +548,32 @@ class RunResult:
         print("# stderr:", self.stderr, sep="\n")
 
 
-class PDMCallable(Protocol):
-    """The PDM fixture callable signature"""
+if TYPE_CHECKING:
 
-    def __call__(
-        self,
-        args: str | list[str],
-        strict: bool = False,
-        input: str | None = None,
-        obj: Project | None = None,
-        env: Mapping[str, str] | None = None,
-        **kwargs: Any,
-    ) -> RunResult:
-        """
-        Args:
-            args: the command arguments as a single lexable string or a strings array
-            strict: raise an exception on failure instead of returning if enabled
-            input: an optional string to be submitted too `stdin`
-            obj: an optional existing `Project`.
-            env: override the environment variables with those
+    class PDMCallable(Protocol):
+        """The PDM fixture callable signature"""
 
-        Returns:
-            The command result
-        """
-        ...
+        def __call__(
+            self,
+            args: str | list[str],
+            strict: bool = False,
+            input: str | None = None,
+            obj: Project | None = None,
+            env: Mapping[str, str] | None = None,
+            **kwargs: Any,
+        ) -> RunResult:
+            """
+            Args:
+                args: the command arguments as a single lexable string or a strings array
+                strict: raise an exception on failure instead of returning if enabled
+                input: an optional string to be submitted too `stdin`
+                obj: an optional existing `Project`.
+                env: override the environment variables with those
+
+            Returns:
+                The command result
+            """
+            ...
 
 
 @pytest.fixture

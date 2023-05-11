@@ -9,7 +9,7 @@ import signal
 import subprocess
 import sys
 from types import FrameType
-from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, cast
+from typing import TYPE_CHECKING, Mapping, NamedTuple, Sequence, cast
 
 from rich import print_json
 
@@ -18,22 +18,22 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option, venv_option
 from pdm.cli.utils import check_project_file, get_pep582_path
-from pdm.compat import TypedDict
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.signals import pdm_signals
 from pdm.utils import is_path_relative_to
 
+if TYPE_CHECKING:
+    from typing import Any, Callable, Iterator, TypedDict
 
-class EnvFileOptions(TypedDict, total=True):
-    override: str
+    class EnvFileOptions(TypedDict, total=True):
+        override: str
 
-
-class TaskOptions(TypedDict, total=False):
-    env: Mapping[str, str]
-    env_file: EnvFileOptions | str | None
-    help: str
-    site_packages: bool
+    class TaskOptions(TypedDict, total=False):
+        env: Mapping[str, str]
+        env_file: EnvFileOptions | str | None
+        help: str
+        site_packages: bool
 
 
 def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
@@ -88,7 +88,7 @@ class TaskRunner:
     def __init__(self, project: Project, hooks: HookManager) -> None:
         self.project = project
         global_options = cast(
-            TaskOptions,
+            "TaskOptions",
             self.project.scripts.get("_", {}) if self.project.scripts else {},
         )
         self.global_options = global_options.copy()
@@ -116,7 +116,7 @@ class TaskRunner:
         unknown_options = set(options) - set(self.OPTIONS)
         if unknown_options:
             raise PdmUsageError(f"Unknown options for task {script_name}: {', '.join(unknown_options)}")
-        return Task(kind, script_name, value, cast(TaskOptions, options))
+        return Task(kind, script_name, value, cast("TaskOptions", options))
 
     def _run_process(
         self,
@@ -241,6 +241,7 @@ class TaskRunner:
         if kind == "composite":
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
+            code = 0
             for script in value:
                 if should_interpolate:
                     script, _ = interpolate(script, args)

@@ -6,7 +6,7 @@ import enum
 import logging
 import os
 from tempfile import mktemp
-from typing import Any, Iterator, Sequence
+from typing import TYPE_CHECKING
 
 from rich.box import ROUNDED
 from rich.console import Console
@@ -15,7 +15,10 @@ from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 from rich.theme import Theme
 
-from pdm._types import RichProtocol, Spinner, SpinnerT
+if TYPE_CHECKING:
+    from typing import Any, Iterator, Sequence
+
+    from pdm._types import RichProtocol, Spinner, SpinnerT
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

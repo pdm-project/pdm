@@ -33,11 +33,8 @@ else:
 
 if sys.version_info >= (3, 8):
     from functools import cached_property
-    from typing import Literal, Protocol, TypedDict
 else:
     from typing import Any, Callable, Generic, TypeVar, overload
-
-    from typing_extensions import Literal, Protocol, TypedDict
 
     _T = TypeVar("_T")
     _C = TypeVar("_C")
@@ -73,12 +70,4 @@ else:
 Distribution = importlib_metadata.Distribution
 
 
-__all__ = [
-    "tomllib",
-    "cached_property",
-    "importlib_metadata",
-    "Literal",
-    "Protocol",
-    "TypedDict",
-    "Distribution",
-]
+__all__ = ["tomllib", "cached_property", "importlib_metadata", "Distribution"]
