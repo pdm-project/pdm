@@ -185,3 +185,42 @@ def test_config_del_repository(project):
 
     del project.global_config["repository.test"]
     assert project.global_config.get_repository_config("test", "repository") is None
+
+
+def test_config_password_save_into_keyring(project, keyring):
+    project.global_config.update(
+        {
+            "pypi.extra.url": "https://extra.pypi.org/simple",
+            "pypi.extra.username": "foo",
+            "pypi.extra.password": "barbaz",
+            "repository.pypi.username": "frost",
+            "repository.pypi.password": "password",
+        }
+    )
+
+    assert project.global_config["pypi.extra.password"] == "barbaz"
+    assert project.global_config["repository.pypi.password"] == "password"
+
+    assert keyring.enabled
+    assert keyring.get_auth_info("pdm-pypi-extra", "foo") == ("foo", "barbaz")
+    assert keyring.get_auth_info("pdm-repository-pypi", None) == ("frost", "password")
+
+
+def test_keyring_operation_error_disables_itself(project, keyring, mocker):
+    mocker.patch.object(keyring.provider, "save_auth_info", side_effect=RuntimeError())
+    project.global_config.update(
+        {
+            "pypi.extra.url": "https://extra.pypi.org/simple",
+            "pypi.extra.username": "foo",
+            "pypi.extra.password": "barbaz",
+            "repository.pypi.username": "frost",
+            "repository.pypi.password": "password",
+        }
+    )
+
+    assert project.global_config["pypi.extra.password"] == "barbaz"
+    assert project.global_config["repository.pypi.password"] == "password"
+
+    assert not keyring.enabled
+    assert keyring.get_auth_info("pdm-pypi-extra", "foo") is None
+    assert keyring.get_auth_info("pdm-repository-pypi", None) is None

@@ -151,3 +151,9 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
         assert repo.url == "https://upload.pypi.org/legacy/"
         assert repo.session.auth == ("foo", "secret")
         assert repo.session.verify == "custom.pem"
+
+
+def test_repository_get_credentials_from_keyring(project, keyring):
+    keyring.save_auth_info("https://test.org/upload", "foo", "barbaz")
+    repository = Repository(project, "https://test.org/upload", None, None, None)
+    assert repository.session.auth == ("foo", "barbaz")
