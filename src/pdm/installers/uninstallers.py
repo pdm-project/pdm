@@ -147,7 +147,8 @@ class BaseRemovePaths(abc.ABC):
                     dist.metadata["Name"],
                 )
             else:
-                link_pointer = os.path.normcase(egg_link_path.open("rb").readline().decode().strip())
+                with egg_link_path.open("rb") as f:
+                    link_pointer = os.path.normcase(f.readline().decode().strip())
                 if link_pointer != dist_location:
                     raise UninstallError(
                         f"The link pointer in {egg_link_path} doesn't match "
@@ -193,7 +194,8 @@ class BaseRemovePaths(abc.ABC):
         if path.endswith(".py"):
             self._paths.update(_cache_file_from_source(normalized_path))
         elif path.replace("\\", "/").endswith(".dist-info/REFER_TO"):
-            line = open(path, "rb").readline().decode().strip()
+            with open(path, "rb") as f:
+                line = f.readline().decode().strip()
             if line:
                 self.refer_to = line
 
@@ -217,7 +219,8 @@ class StashedRemovePaths(BaseRemovePaths):
     def _remove_pth(self) -> None:
         if not self._pth_entries:
             return
-        self._saved_pth = open(self._pth_file, "rb").read()
+        with open(self._pth_file, "rb") as f:
+            self._saved_pth = f.read()
         endline = "\r\n" if b"\r\n" in self._saved_pth else "\n"
         lines = self._saved_pth.decode().splitlines()
         for item in self._pth_entries:

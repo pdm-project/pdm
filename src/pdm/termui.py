@@ -251,6 +251,7 @@ class UI:
         finally:
             logger.removeHandler(handler)
             unearth_logger.removeHandler(handler)
+            handler.close()
 
     def open_spinner(self, title: str) -> Spinner:
         """Open a spinner as a context manager."""
