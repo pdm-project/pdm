@@ -223,7 +223,7 @@ class BaseRepository:
             raise CandidateInfoNotFound(candidate) from None
 
         reqs = project.pyproject.metadata.get("dependencies", [])
-        extra_dependencies = project.pyproject.settings.get("dev-dependencies", {})
+        extra_dependencies = project.pyproject.settings.get("dev-dependencies", {}).copy()
         extra_dependencies.update(project.pyproject.metadata.get("optional-dependencies", {}))
         if candidate.req.extras is not None:
             reqs = sum(
