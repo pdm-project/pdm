@@ -113,12 +113,12 @@ class HashCache:
             with open(link.file_path, "rb") as f:
                 yield from f
         else:
-            resp = session.get(link.normalized, stream=True)
-            try:
-                resp.raise_for_status()
-            except requests.HTTPError as e:
-                raise PdmException(f"Failed to read from {link.redacted}: {e}") from e
-            yield from resp.iter_content(chunk_size=8096)
+            with session.get(link.normalized, stream=True) as resp:
+                try:
+                    resp.raise_for_status()
+                except requests.HTTPError as e:
+                    raise PdmException(f"Failed to read from {link.redacted}: {e}") from e
+                yield from resp.iter_content(chunk_size=8192)
 
     def _get_file_hash(self, link: Link, session: requests.Session) -> str:
         h = hashlib.new(self.FAVORITE_HASH)

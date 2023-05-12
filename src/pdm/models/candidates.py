@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import os
 import re
 import warnings
@@ -105,6 +106,21 @@ def _find_best_match_link(
             found = new_found
         finder.ignore_compatibility = False
     return found
+
+
+class MetadataDistribution(im.Distribution):
+    """A wrapper around a single METADATA file to provide the Distribution interface"""
+
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+    def locate_file(self, path: str | os.PathLike[str]) -> os.PathLike[str]:
+        return Path()
+
+    def read_text(self, filename: str) -> str | None:
+        if filename != "":
+            return None
+        return self.text
 
 
 class Candidate:
@@ -373,19 +389,18 @@ class PreparedCandidate:
         self.wheel = Path(builder.build(build_dir, metadata_directory=self._metadata_dir))
         return self.wheel
 
-    def obtain(self, allow_all: bool = False) -> None:
+    def obtain(self, allow_all: bool = False, unpack: bool = True) -> None:
         """Fetch the link of the candidate and unpack to local if necessary.
 
         :param allow_all: If true, don't validate the wheel tag nor hashes
+        :param unpack: Whether to download and unpack the link if it's not local
         """
         if self.wheel:
             if self._wheel_compatible(self.wheel.name, allow_all):
                 return
         elif self._source_dir and self._source_dir.exists():
             return
-        hash_options = None
-        if not allow_all and self.candidate.hashes:
-            hash_options = convert_hashes(self.candidate.hashes)
+
         with self.environment.get_finder() as finder:
             if not self.link or self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all):
                 if self.req.is_file_or_url:
@@ -408,6 +423,15 @@ class PreparedCandidate:
                 if cached:
                     self.wheel = cached
                     return
+            if unpack:
+                self._unpack(validate_hashes=not allow_all)
+
+    def _unpack(self, validate_hashes: bool = False) -> None:
+        hash_options = None
+        if validate_hashes and self.candidate.hashes:
+            hash_options = convert_hashes(self.candidate.hashes)
+        assert self.link is not None
+        with self.environment.get_finder() as finder:
             with TemporaryDirectory(prefix="pdm-download-") as tmpdir:
                 build_dir = self._get_build_dir()
                 if self.link.is_wheel:
@@ -422,65 +446,102 @@ class PreparedCandidate:
                     self._unpacked_dir = result
 
     def prepare_metadata(self, force_build: bool = False) -> im.Distribution:
-        self.obtain(allow_all=True)
-        metadir_parent = create_tracked_tempdir(prefix="pdm-meta-")
+        self.obtain(allow_all=True, unpack=False)
+
+        metadata_parent = create_tracked_tempdir(prefix="pdm-meta-")
         if self.wheel:
-            # Get metadata from METADATA inside the wheel
-            self._metadata_dir = _get_wheel_metadata_from_wheel(self.wheel, metadir_parent)
-            return im.PathDistribution(Path(self._metadata_dir))
+            return self._get_metadata_from_wheel(self.wheel, metadata_parent)
+
+        assert self.link is not None
+        if self.link.dist_info_link:
+            dist = self._get_metadata_from_metadata_link(self.link.dist_info_link, self.link.dist_info_metadata)
+            if dist is not None:
+                return dist
+
+        self._unpack(validate_hashes=False)
+        if self.wheel:  # check again if the wheel is downloaded to local
+            return self._get_metadata_from_wheel(self.wheel, metadata_parent)
 
         assert self._unpacked_dir, "Source directory isn't ready yet"
-        # Try getting from PEP 621 metadata
         pyproject_toml = self._unpacked_dir / "pyproject.toml"
-        if pyproject_toml.exists() and not force_build:
-            pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
-            metadata = pyproject.metadata.unwrap()
-            if not metadata:
-                termui.logger.warn("Failed to parse pyproject.toml")
-            else:
-                dynamic_fields = metadata.get("dynamic", [])
-                # Use the parse result only when all are static
-                if set(dynamic_fields).isdisjoint(
-                    {
-                        "name",
-                        "version",
-                        "dependencies",
-                        "optional-dependencies",
-                        "requires-python",
-                    }
-                ):
-                    try:
-                        backend_cls = get_backend_by_spec(pyproject.build_system)
-                    except Exception:
-                        # no variable expansion
-                        backend_cls = get_backend("setuptools")
-                    backend = backend_cls(self._unpacked_dir)
-                    setup = Setup(
-                        name=metadata.get("name"),
-                        summary=metadata.get("description"),
-                        version=metadata.get("version"),
-                        install_requires=list(
-                            map(
-                                backend.expand_line,
-                                metadata.get("dependencies", []),
-                            )
-                        ),
-                        extras_require={
-                            k: list(map(backend.expand_line, v))
-                            for k, v in metadata.get("optional-dependencies", {}).items()
-                        },
-                        python_requires=metadata.get("requires-python"),
-                    )
-                    return setup.as_dist()
+        if not force_build and pyproject_toml.exists():
+            dist = self._get_metadata_from_project(pyproject_toml)
+            if dist is not None:
+                return dist
+
         # If all fail, try building the source to get the metadata
+        return self._get_metadata_from_build(self._unpacked_dir, metadata_parent)
+
+    def _get_metadata_from_metadata_link(
+        self, link: Link, medata_hash: bool | dict[str, str] | None
+    ) -> im.Distribution | None:
+        with self.environment.get_finder() as finder:
+            resp = finder.session.get(link.normalized, headers={"Cache-Control": "max-age=0"})
+            if isinstance(medata_hash, dict):
+                hash_name, hash_value = next(iter(medata_hash.items()))
+                if hashlib.new(hash_name, resp.content).hexdigest() != hash_value:
+                    termui.logger.warn("Metadata hash mismatch for %s, ignoring the metadata", link)
+                    return None
+            return MetadataDistribution(resp.text)
+
+    def _get_metadata_from_wheel(self, wheel: Path, metadata_parent: str) -> im.Distribution:
+        # Get metadata from METADATA inside the wheel
+        self._metadata_dir = _get_wheel_metadata_from_wheel(wheel, metadata_parent)
+        return im.PathDistribution(Path(self._metadata_dir))
+
+    def _get_metadata_from_project(self, pyproject_toml: Path) -> im.Distribution | None:
+        # Try getting from PEP 621 metadata
+        pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
+        metadata = pyproject.metadata.unwrap()
+        if not metadata:
+            termui.logger.warn("Failed to parse pyproject.toml")
+            return None
+
+        dynamic_fields = metadata.get("dynamic", [])
+        # Use the parse result only when all are static
+        if not set(dynamic_fields).isdisjoint(
+            {
+                "name",
+                "version",
+                "dependencies",
+                "optional-dependencies",
+                "requires-python",
+            }
+        ):
+            return None
+
+        try:
+            backend_cls = get_backend_by_spec(pyproject.build_system)
+        except Exception:
+            # no variable expansion
+            backend_cls = get_backend("setuptools")
+        backend = backend_cls(pyproject_toml.parent)
+        setup = Setup(
+            name=metadata.get("name"),
+            summary=metadata.get("description"),
+            version=metadata.get("version"),
+            install_requires=list(
+                map(
+                    backend.expand_line,
+                    metadata.get("dependencies", []),
+                )
+            ),
+            extras_require={
+                k: list(map(backend.expand_line, v)) for k, v in metadata.get("optional-dependencies", {}).items()
+            },
+            python_requires=metadata.get("requires-python"),
+        )
+        return setup.as_dist()
+
+    def _get_metadata_from_build(self, source_dir: Path, metadata_parent: str) -> im.Distribution:
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
             termui.logger.info("Running PEP 517 backend to get metadata for %s", self.link)
-            self._metadata_dir = builder(self._unpacked_dir, self.environment).prepare_metadata(metadir_parent)
+            self._metadata_dir = builder(source_dir, self.environment).prepare_metadata(metadata_parent)
         except BuildError:
             termui.logger.warn("Failed to build package, try parsing project files.")
             try:
-                setup = Setup.from_directory(self._unpacked_dir)
+                setup = Setup.from_directory(source_dir)
             except Exception:
                 message = "Failed to parse the project files, dependencies may be missing"
                 termui.logger.warn(message)
