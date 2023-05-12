@@ -17,13 +17,20 @@ import tempfile
 import urllib.parse as parse
 import warnings
 from pathlib import Path
-from re import Match
-from typing import IO, Any, Iterator
+from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
-from pdm._types import RepositoryConfig
-from pdm.compat import Distribution, importlib_metadata
+from pdm.compat import importlib_metadata
+
+if TYPE_CHECKING:
+    from re import Match
+    from typing import IO, Any, Iterator
+
+    from unearth import Link
+
+    from pdm._types import RepositoryConfig
+    from pdm.compat import Distribution
 
 _egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
 
@@ -87,7 +94,7 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
     return None
 
 
-def convert_hashes(hashes: dict[str, str]) -> dict[str, list[str]]:
+def convert_hashes(hashes: dict[Link, str]) -> dict[str, list[str]]:
     """Convert Pipfile.lock hash lines into InstallRequirement option format.
 
     The option format uses a str-list mapping. Keys are hash algorithms, and
