@@ -299,11 +299,17 @@ class Config(MutableMapping[str, str]):
         return config.coerce(result)
 
     def __setitem__(self, key: str, value: Any) -> None:
+        from pdm.models.auth import keyring
+
         parts = key.split(".")
         if parts[0] in (REPOSITORY, SOURCE) and key not in self._config_map:
             if len(parts) < 3:
                 raise PdmUsageError(f"Set {parts[0]} config with [success]{parts[0]}.{{name}}.{{attr}}")
             index_key = ".".join(parts[:2])
+            username = self._data.get(index_key, {}).get("username")
+            service = f'pdm-{index_key.replace(".", "-")}'
+            if parts[2] == "password" and self.is_global and keyring.save_auth_info(service, username, value):
+                return
             self._file_data.setdefault(index_key, {})[parts[2]] = value
             self._save_config()
             return

@@ -53,3 +53,37 @@ class PdmBasicAuth(MultiDomainBasicAuth):
                 style="info",
             )
         return super()._should_save_password_to_keyring()
+
+
+class Keyring:
+    def __init__(self) -> None:
+        self.provider = get_keyring_provider()
+        self.enabled = self.provider is not None
+
+    def get_auth_info(self, url: str, username: str | None) -> tuple[str, str] | None:
+        """Return the password for the given url and username.
+        The username can be None.
+        """
+        if self.provider is None or not self.enabled:
+            return None
+        try:
+            return self.provider.get_auth_info(url, username)
+        except Exception:
+            self.enabled = False
+            return None
+
+    def save_auth_info(self, url: str, username: str, password: str) -> bool:
+        """Set the password for the given url and username.
+        Returns whether the operation is successful.
+        """
+        if self.provider is None or not self.enabled:
+            return False
+        try:
+            self.provider.save_auth_info(url, username, password)
+            return True
+        except Exception:
+            self.enabled = False
+            return False
+
+
+keyring = Keyring()

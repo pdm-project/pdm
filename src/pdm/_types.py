@@ -1,23 +1,46 @@
 from __future__ import annotations
 
-import dataclasses
+import dataclasses as dc
 from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Tuple, TypeVar, Union
 
 if TYPE_CHECKING:
     from typing import Protocol
 
 
-@dataclasses.dataclass
-class RepositoryConfig:
+@dc.dataclass
+class _RepositoryConfig:
+    """Private dataclass to be subclassed"""
+
     config_prefix: str
     name: str
 
     url: str | None = None
     username: str | None = None
-    password: str | None = None
+    _password: str | None = dc.field(default=None, repr=False)
     verify_ssl: bool | None = None
     type: str | None = None
     ca_certs: str | None = None
+
+
+class RepositoryConfig(_RepositoryConfig):
+    def __init__(self, *args: Any, password: str | None = None, **kwargs: Any) -> None:
+        kwargs["_password"] = password
+        super().__init__(*args, **kwargs)
+
+    @property
+    def password(self) -> str | None:
+        if self._password is None:
+            from pdm.models.auth import keyring
+
+            service = f"pdm-{self.config_prefix}-{self.name}"
+            result = keyring.get_auth_info(service, self.username)
+            if result is not None:
+                self._password = result[1]
+        return self._password
+
+    @password.setter
+    def password(self, value: str) -> None:
+        self._password = value
 
     def passive_update(self, other: RepositoryConfig | None = None, **kwargs: Any) -> None:
         """An update method that prefers the existing value over the new one."""

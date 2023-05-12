@@ -197,6 +197,15 @@ password = "<secret>"
 ca_certs = "/path/to/custom-cacerts.pem"
 ```
 
+Alternatively, these credentials can be provided with env vars:
+
+```bash
+export PDM_PUBLISH_REPO=...
+export PDM_PUBLISH_USERNAME=...
+export PDM_PUBLISH_PASSWORD=...
+export PDM_PUBLISH_CA_CERTS=...
+```
+
 A PEM-encoded Certificate Authority bundle (`ca_certs`) can be used for local / custom PyPI repositories where the server certificate is not signed by the standard [certifi](https://github.com/certifi/python-certifi/blob/master/certifi/cacert.pem) CA bundle.
 
 !!! NOTE
@@ -215,6 +224,22 @@ pdm config repository.pypi.password "my-pypi-token"
 
 pdm config repository.company.url "https://pypi.company.org/legacy/"
 pdm config repository.company.ca_certs "/path/to/custom-cacerts.pem"
+```
+
+## Password management with keyring
+
+When keyring is available and supported, the passwords will be stored to and retrieved from the keyring instead of writing to the config file. This supports both indexes and upload repositories. The service name will be `pdm-pypi-<name>` for an index and `pdm-repository-<name>` for a repository.
+
+You can enable keyring by either installing `keyring` into the same environment as PDM or installing globally. To add keyring to the PDM environment:
+
+```bash
+pdm self add keyring
+```
+
+Alternatively, if you have installed a copy of keyring globally, make sure the CLI is exposed in the `PATH` env var to make it discoverable by PDM:
+
+```bash
+export PATH=$PATH:path/to/keyring/bin
 ```
 
 ## Override the resolved package versions

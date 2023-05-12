@@ -1,3 +1,4 @@
+import sys
 from unittest import mock
 
 import pytest
@@ -107,7 +108,8 @@ def test_old_entry_point_compatibility(pdm, mocker, core):
 
 
 @pytest.mark.usefixtures("local_finder")
-def test_project_plugin_library(pdm, project, core):
+def test_project_plugin_library(pdm, project, core, monkeypatch):
+    monkeypatch.setattr(sys, "path", sys.path[:])
     project.pyproject.settings["plugins"] = ["pdm-hello"]
     pdm(["install", "--plugins"], obj=project, strict=True)
     assert project.root.joinpath(".pdm-plugins").exists()

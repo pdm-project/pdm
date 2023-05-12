@@ -9,15 +9,13 @@ from urllib.parse import urlparse, urlunparse
 import requests
 import requests_toolbelt
 import rich.progress
-from unearth.auth import get_keyring_provider
 
 from pdm import termui
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.exceptions import PdmUsageError
+from pdm.models.auth import keyring
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
-
-keyring = get_keyring_provider()
 
 
 class Repository:
@@ -45,13 +43,17 @@ class Repository:
             return username, password
         if password:
             return "__token__", password
+        if keyring.enabled:
+            auth = keyring.get_auth_info(self.url, username)
+            if auth is not None:
+                return auth
         token = self._get_pypi_token_via_oidc()
         if token is not None:
             return "__token__", token
         if not termui.is_interactive():
             raise PdmUsageError("Username and password are required")
         username, password, save = self._prompt_for_credentials(netloc, username)
-        if save and keyring is not None and termui.confirm("Save credentials to keyring?"):
+        if save and keyring.enabled and termui.confirm("Save credentials to keyring?"):
             self._credentials_to_save = (netloc, username, password)
         return username, password
 
@@ -89,7 +91,7 @@ class Repository:
             return token
 
     def _prompt_for_credentials(self, service: str, username: str | None) -> tuple[str, str, bool]:
-        if keyring is not None:
+        if keyring.enabled:
             cred = keyring.get_auth_info(service, username)
             if cred is not None:
                 return cred[0], cred[1], False
@@ -99,7 +101,6 @@ class Repository:
         return username, password, True
 
     def _save_credentials(self, service: str, username: str, password: str) -> None:
-        assert keyring is not None
         self.ui.echo("Saving credentials to keyring")
         keyring.save_auth_info(service, username, password)
 

@@ -13,6 +13,7 @@ from pytest_mock import MockerFixture
 
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
+from pdm.models.auth import Keyring, keyring
 from tests import FIXTURES
 
 
@@ -99,3 +100,29 @@ def _echo(project):
             """
         )
     )
+
+
+@pytest.fixture(name="keyring")
+def keyring_fixture(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> Keyring:
+    from unearth.auth import AuthInfo, KeyringBaseProvider
+
+    class MockKeyringProvider(KeyringBaseProvider):
+        def __init__(self) -> None:
+            self._store: dict[str, dict[str, str]] = {}
+
+        def save_auth_info(self, url: str, username: str, password: str) -> None:
+            self._store.setdefault(url, {})[username] = password
+
+        def get_auth_info(self, url: str, username: str | None) -> AuthInfo | None:
+            d = self._store.get(url, {})
+            if username is not None and username in d:
+                return username, d[username]
+            if username is None and d:
+                return next(iter(d.items()))
+            return None
+
+    provider = MockKeyringProvider()
+    mocker.patch("unearth.auth.get_keyring_provider", return_value=provider)
+    monkeypatch.setattr(keyring, "provider", provider)
+    monkeypatch.setattr(keyring, "enabled", True)
+    return keyring
