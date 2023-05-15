@@ -62,6 +62,19 @@ dependencies = [
     ```
     Other backends doesn't support encoding relative paths in the URL and will write the absolute path instead.
 
+### URL dependencies
+
+PDM also supports downloading and installing packages directly from a web address.
+
+Examples:
+
+```bash
+# Install gzipped package from a plain URL
+pdm add "https://github.com/numpy/numpy/releases/download/v1.20.0/numpy-1.20.0.tar.gz"
+# Install wheel from a plain URL
+pdm add "https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.5.0/en_core_web_trf-3.5.0-py3-none-any.whl"
+```
+
 ### VCS dependencies
 
 You can also install from a git repository url or other version control systems. The following are supported:
