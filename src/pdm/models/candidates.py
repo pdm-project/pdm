@@ -453,7 +453,8 @@ class PreparedCandidate:
             return self._get_metadata_from_wheel(self.wheel, metadata_parent)
 
         assert self.link is not None
-        if self.link.dist_info_link:
+        if self.link.dist_info_metadata:
+            assert self.link.dist_info_link
             dist = self._get_metadata_from_metadata_link(self.link.dist_info_link, self.link.dist_info_metadata)
             if dist is not None:
                 return dist
