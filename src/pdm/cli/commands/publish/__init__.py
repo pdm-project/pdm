@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
+from typing import TYPE_CHECKING
 
-import requests
 from rich.progress import (
     BarColumn,
     DownloadColumn,
@@ -18,8 +18,12 @@ from pdm.cli.commands.publish.repository import Repository
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import project_option, skip_option, verbose_option
 from pdm.exceptions import PdmUsageError, PublishError
-from pdm.project import Project
 from pdm.termui import logger
+
+if TYPE_CHECKING:
+    from requests import Response
+
+    from pdm.project import Project
 
 
 class Command(BaseCommand):
@@ -82,7 +86,9 @@ class Command(BaseCommand):
         return p
 
     @staticmethod
-    def _check_response(response: requests.Response) -> None:
+    def _check_response(response: Response) -> None:
+        import requests
+
         message = ""
         if response.status_code == 410 and "pypi.python.org" in response.url:
             message = (

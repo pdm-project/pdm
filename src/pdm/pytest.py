@@ -338,10 +338,13 @@ def pypi_indexes() -> IndexesDefinition:
     return {}
 
 
+_build_session = BaseEnvironment._build_session
+
+
 @pytest.fixture
 def pdm_session(pypi_indexes: IndexesDefinition) -> Callable[[Any], PDMSession]:
     def get_pypi_session(*args: Any, **kwargs: Any) -> PDMSession:
-        session = PDMSession(*args, **kwargs)
+        session = _build_session(*args, **kwargs)
         for root, specs in pypi_indexes.items():
             index, overrides, strip = specs if isinstance(specs, tuple) else (specs, None, False)
             session.mount(root, LocalFileAdapter(index, overrides=overrides, strip_suffix=strip))
@@ -390,7 +393,7 @@ def project_no_init(
     )
     p = core.create_project(tmp_path, global_config=test_home.joinpath("config.toml").as_posix())
     p.global_config["venv.location"] = str(tmp_path / "venvs")
-    mocker.patch("pdm.environments.base.PDMSession", pdm_session)
+    mocker.patch.object(BaseEnvironment, "_build_session", pdm_session)
     mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()

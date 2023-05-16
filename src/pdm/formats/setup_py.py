@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    from pdm.project import Project
 
 
 def check_fingerprint(project: Project, filename: Path) -> bool:

@@ -27,8 +27,6 @@ from rich.tree import Tree
 
 from pdm import termui
 from pdm.exceptions import PdmArgumentError, ProjectError
-from pdm.formats import FORMATS
-from pdm.formats.base import make_array, make_inline_table
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -439,6 +437,7 @@ def format_lockfile(
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
     """
+    from pdm.formats.base import make_array, make_inline_table
 
     packages = tomlkit.aot()
     file_hashes = tomlkit.table()
@@ -509,6 +508,8 @@ def check_project_file(project: Project) -> None:
 
 def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
     """Find all possible files that can be imported"""
+    from pdm.formats import FORMATS
+
     for filename in (
         "Pipfile",
         "pyproject.toml",
@@ -566,7 +567,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         ]
         for req, parent in conflicting:
             pyspec &= req.specifier
-            info_lines.add(f"  {req.as_line()} (from {repr(parent)})")
+            info_lines.add(f"  {req.as_line()} (from {parent!r})")
         result.extend(sorted(info_lines))
         if pyspec.is_impossible:
             result.append("Consider changing the version specifiers of the dependencies to be compatible")

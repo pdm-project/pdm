@@ -3,18 +3,21 @@ from __future__ import annotations
 import functools
 import operator
 import os
-from argparse import Namespace
-from os import PathLike
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from packaging.markers import default_environment
 
-from pdm._types import RequirementDict
 from pdm.compat import tomllib
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    from argparse import Namespace
+    from os import PathLike
+
+    from pdm._types import RequirementDict
+    from pdm.project import Project
 
 MARKER_KEYS = list(default_environment().keys())
 

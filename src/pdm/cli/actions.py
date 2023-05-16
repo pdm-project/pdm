@@ -36,10 +36,7 @@ from pdm.cli.utils import (
 )
 from pdm.environments import BareEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
-from pdm.formats import FORMATS
-from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 from pdm.models.backends import DEFAULT_BACKEND, BuildBackend
-from pdm.models.caches import JSONFileCache
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -519,6 +516,8 @@ def do_init(
     hooks: HookManager | None = None,
 ) -> None:
     """Bootstrap the project and create a pyproject.toml"""
+    from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+
     hooks = hooks or HookManager(project)
     data = {
         "project": {
@@ -582,6 +581,7 @@ def do_use(
     The python can be a version string or interpreter path.
     """
     from pdm.cli.commands.venv.utils import get_venv_with_name
+    from pdm.models.caches import JSONFileCache
 
     def version_matcher(py_version: PythonInfo) -> bool:
         return py_version.valid and (
@@ -629,14 +629,14 @@ def do_use(
                 info = py.identifier if py.valid else "Invalid"
                 project.core.ui.echo(f"  - {py.path} ({info})", err=True)
             raise NoPythonVersion(
-                f"No python is found meeting the requirement [success]python {str(project.python_requires)}[/]"
+                f"No python is found meeting the requirement [success]python {project.python_requires!s}[/]"
             )
         if first or len(matching_interpreters) == 1:
             selected_python = matching_interpreters[0]
         else:
             project.core.ui.echo("Please enter the Python interpreter to use")
             for i, py_version in enumerate(matching_interpreters):
-                project.core.ui.echo(f"{i}. [success]{str(py_version.path)}[/] ({py_version.identifier})")
+                project.core.ui.echo(f"{i}. [success]{py_version.path!s}[/] ({py_version.identifier})")
             selection = termui.ask(
                 "Please select",
                 default="0",
@@ -653,7 +653,7 @@ def do_use(
     saved_python = project._saved_python
     old_python = PythonInfo.from_path(saved_python) if saved_python else None
     project.core.ui.echo(
-        f"Using Python interpreter: [success]{str(selected_python.path)}[/] ({selected_python.identifier})"
+        f"Using Python interpreter: [success]{selected_python.path!s}[/] ({selected_python.identifier})"
     )
     project.python = selected_python
     if project.environment.is_local:
@@ -686,6 +686,8 @@ def do_import(
     :param format: the file format, or guess if not given.
     :param options: other options parsed to the CLI.
     """
+    from pdm.formats import FORMATS
+
     if not format:
         for key in FORMATS:
             if FORMATS[key].check_fingerprint(project, filename):

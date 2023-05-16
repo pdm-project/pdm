@@ -11,19 +11,18 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
-import unearth
-
 from pdm.compat import cached_property
 from pdm.exceptions import BuildError, PdmUsageError
-from pdm.models.auth import PdmBasicAuth
 from pdm.models.in_process import get_pep508_environment, get_python_abi_tag
 from pdm.models.python import PythonInfo
-from pdm.models.session import PDMSession
 from pdm.models.working_set import WorkingSet
 from pdm.utils import get_trusted_hosts, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
+    import unearth
+
     from pdm._types import RepositoryConfig
+    from pdm.models.session import PDMSession
     from pdm.project import Project
 
 
@@ -36,6 +35,8 @@ class BaseEnvironment(abc.ABC):
         """
         :param project: the project instance
         """
+        from pdm.models.auth import PdmBasicAuth
+
         self.python_requires = project.python_requires
         self.project = project
         self.auth = PdmBasicAuth(project.core.ui, self.project.sources)
@@ -69,11 +70,15 @@ class BaseEnvironment(abc.ABC):
 
     @cached_property
     def target_python(self) -> unearth.TargetPython:
+        from unearth import TargetPython
+
         python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
-        return unearth.TargetPython(python_version, [python_abi_tag])
+        return TargetPython(python_version, [python_abi_tag])
 
     def _build_session(self, trusted_hosts: list[str]) -> PDMSession:
+        from pdm.models.session import PDMSession
+
         ca_certs = self.project.config.get("pypi.ca_certs")
         session = PDMSession(
             cache_dir=self.project.cache("http"),
@@ -100,6 +105,8 @@ class BaseEnvironment(abc.ABC):
         :param ignore_compatibility: whether to ignore the python version
             and wheel tags.
         """
+        from unearth import PackageFinder
+
         if sources is None:
             sources = self.project.sources
         if not sources:
@@ -112,7 +119,7 @@ class BaseEnvironment(abc.ABC):
         trusted_hosts = get_trusted_hosts(sources)
 
         session = self._build_session(trusted_hosts)
-        finder = unearth.PackageFinder(
+        finder = PackageFinder(
             session=session,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
@@ -159,6 +166,8 @@ class BaseEnvironment(abc.ABC):
         return shutil.which(command, path=new_path)
 
     def _download_pip_wheel(self, path: str | Path) -> None:
+        from unearth import UnpackError
+
         download_error = BuildError("Can't get a working copy of pip for the project")
         with self.get_finder([self.project.default_source]) as finder:
             finder.only_binary = ["pip"]
@@ -168,7 +177,7 @@ class BaseEnvironment(abc.ABC):
             with tempfile.TemporaryDirectory(prefix="pip-download-") as dirname:
                 try:
                     downloaded = finder.download_and_unpack(best_match.link, dirname, dirname)
-                except unearth.UnpackError as e:
+                except UnpackError as e:
                     raise download_error from e
                 shutil.move(str(downloaded), path)
 

@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import ast
 import os
-from argparse import Namespace
-from os import PathLike
 from pathlib import Path
-from typing import Any, List, Mapping, cast
+from typing import TYPE_CHECKING, Any, List, Mapping, cast
 
 from pdm.compat import tomllib
 from pdm.formats.base import (
@@ -16,8 +14,13 @@ from pdm.formats.base import (
     make_array,
     make_inline_table,
 )
-from pdm.project import Project
 from pdm.utils import cd
+
+if TYPE_CHECKING:
+    from argparse import Namespace
+    from os import PathLike
+
+    from pdm.project import Project
 
 
 def check_fingerprint(project: Project | None, filename: PathLike) -> bool:

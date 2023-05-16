@@ -8,12 +8,8 @@ import io
 import os
 import re
 import subprocess
-import tarfile
-import zipfile
 from dataclasses import dataclass
 from typing import IO, Any, cast
-
-from unearth.preparer import has_leading_dir, split_leading_dir
 
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.termui import logger
@@ -96,6 +92,10 @@ class PackageFile:
 
     @staticmethod
     def read_metadata_from_tar(filename: str) -> email.message.Message:
+        import tarfile
+
+        from unearth.preparer import has_leading_dir, split_leading_dir
+
         if filename.endswith(".gz"):
             mode = "r:gz"
         elif filename.endswith(".bz2"):
@@ -114,6 +114,10 @@ class PackageFile:
 
     @staticmethod
     def read_metadata_from_zip(filename: str) -> email.message.Message:
+        import zipfile
+
+        from unearth.preparer import has_leading_dir, split_leading_dir
+
         with zipfile.ZipFile(filename, allowZip64=True) as zip:
             filenames = zip.namelist()
             has_leading = has_leading_dir(filenames)
@@ -125,6 +129,8 @@ class PackageFile:
 
     @staticmethod
     def read_metadata_from_wheel(filename: str) -> email.message.Message:
+        import zipfile
+
         with zipfile.ZipFile(filename, allowZip64=True) as zip:
             for fn in zip.namelist():
                 if fn.replace("\\", "/").endswith(".dist-info/METADATA"):

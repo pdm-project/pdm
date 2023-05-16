@@ -14,14 +14,12 @@ import os
 import pkgutil
 import sys
 from pathlib import Path
-from typing import Any, Iterable, cast
+from typing import TYPE_CHECKING, cast
 
 from resolvelib import Resolver
 
 from pdm import termui
 from pdm.__version__ import __version__
-from pdm.cli.actions import check_update
-from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
 from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
@@ -29,8 +27,14 @@ from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
 from pdm.models.repositories import PyPIRepository
 from pdm.project import Project
-from pdm.project.config import Config, ConfigItem
+from pdm.project.config import Config
 from pdm.utils import is_in_zipapp
+
+if TYPE_CHECKING:
+    from typing import Any, Iterable
+
+    from pdm.cli.commands.base import BaseCommand
+    from pdm.project.config import ConfigItem
 
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
@@ -199,6 +203,8 @@ class Core:
             sys.exit(1)
         else:
             if project.config["check_update"] and not is_in_zipapp():
+                from pdm.cli.actions import check_update
+
                 check_update(project)
 
     def register_command(self, command: type[BaseCommand], name: str | None = None) -> None:
