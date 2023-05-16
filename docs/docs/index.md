@@ -48,7 +48,7 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
     ```
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
-The sha256 checksum is: `ce0a116987b2667231391d13dd005006433114033cac74aa18f0b2dec5538d03`
+The sha256 checksum is: `06abd94a6678636eba640529bf91b242759363c45d3620cdfabaa0053d826b30`
 
 The installer will install PDM into the user site and the location depends on the system:
 

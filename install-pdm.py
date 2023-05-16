@@ -294,7 +294,7 @@ class Installer:
         else:
             req = "pdm"
         args = [req] + [d for d in self.additional_deps if d]
-        pip_cmd = [str(venv_python), "-m", "pip", "install", *args]
+        pip_cmd = [str(venv_python), "-Im", "pip", "install", *args]
         _call_subprocess(pip_cmd)
 
     def _make_bin(self, venv_path: Path) -> Path:
