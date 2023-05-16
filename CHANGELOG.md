@@ -763,7 +763,7 @@ Release v1.14.0 (2022-04-08)
 
 - Fix a bug that requirement with extras isn't resolved to the version as specified by the range. [#1001](https://github.com/pdm-project/pdm/issues/1001)
 - Replace the `${PROJECT_ROOT}` in the output of `pdm list`. [#1004](https://github.com/pdm-project/pdm/issues/1004)
-- Further fix the python path issue of MacOS system installed Python. [#1023](https://github.com/pdm-project/pdm/issues/1023)
+- Further fix the python path issue of macOS system installed Python. [#1023](https://github.com/pdm-project/pdm/issues/1023)
 - Fix the install path issue on Python 3.10 installed from homebrew. [#996](https://github.com/pdm-project/pdm/issues/996)
 
 ### Improved Documentation
@@ -1035,7 +1035,7 @@ Release v1.11.3 (2021-12-15)
 
 ### Miscellany
 
-- Fix an installation failure of the bootstrap script on MacOS Catalina. [#793](https://github.com/pdm-project/pdm/issues/793)
+- Fix an installation failure of the bootstrap script on macOS Catalina. [#793](https://github.com/pdm-project/pdm/issues/793)
 - Add a basic benchmarking script. [#794](https://github.com/pdm-project/pdm/issues/794)
 
 
@@ -1350,7 +1350,7 @@ Release v1.6.3 (2021-06-17)
 - Fix the format of dependency arrays when a new value is appended. [#487](https://github.com/pdm-project/pdm/issues/487)
 - Allow missing email attribute for authors and maintainers. [#492](https://github.com/pdm-project/pdm/issues/492)
 - Fix a bug that editable install shouldn't require pyproject.toml to be valid. [#497](https://github.com/pdm-project/pdm/issues/497)
-- Fix a bug on MacOS that purelib and platlib paths of isolated build envs cannot be substituted correctly if the Python is a framework build. [#502](https://github.com/pdm-project/pdm/issues/502)
+- Fix a bug on macOS that purelib and platlib paths of isolated build envs cannot be substituted correctly if the Python is a framework build. [#502](https://github.com/pdm-project/pdm/issues/502)
 - Fix the version sort of candidates. [#506](https://github.com/pdm-project/pdm/issues/506)
 
 
