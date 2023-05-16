@@ -109,7 +109,7 @@ optional arguments:
 
 ### 其他安装方法
 
-如果你使用的是 MacOS 并且安装了 `homebrew`：
+如果你使用的是 macOS 并且安装了 `homebrew`：
 
 ```bash
 brew install pdm

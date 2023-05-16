@@ -121,7 +121,7 @@ You can either pass the options after the script or set the env var value.
 
 ### Alternative Installation Methods
 
-If you are on MacOS and using `homebrew`, install it by:
+If you are on macOS and using `homebrew`, install it by:
 
 ```bash
 brew install pdm
