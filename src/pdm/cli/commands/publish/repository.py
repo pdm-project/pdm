@@ -3,19 +3,19 @@ from __future__ import annotations
 import os
 import pathlib
 import weakref
-from typing import Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 from urllib.parse import urlparse, urlunparse
 
-import requests
-import requests_toolbelt
 import rich.progress
 
 from pdm import termui
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.exceptions import PdmUsageError
-from pdm.models.auth import keyring
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
+
+if TYPE_CHECKING:
+    from requests import Response
 
 
 class Repository:
@@ -38,6 +38,8 @@ class Repository:
         weakref.finalize(self, self.session.close)
 
     def _ensure_credentials(self, username: str | None, password: str | None) -> tuple[str, str]:
+        from pdm.models.auth import keyring
+
         netloc = urlparse(self.url).netloc
         if username and password:
             return username, password
@@ -63,6 +65,8 @@ class Repository:
         if not ACTIONS_ID_TOKEN_REQUEST_TOKEN or not ACTIONS_ID_TOKEN_REQUEST_URL:
             return None
         self.ui.echo("Getting PyPI token via GitHub Actions OIDC...")
+        import requests
+
         try:
             parsed_url = urlparse(self.url)
             audience_url = urlunparse(parsed_url._replace(path="/_/oidc/audience"))
@@ -91,6 +95,8 @@ class Repository:
             return token
 
     def _prompt_for_credentials(self, service: str, username: str | None) -> tuple[str, str, bool]:
+        from pdm.models.auth import keyring
+
         if keyring.enabled:
             cred = keyring.get_auth_info(service, username)
             if cred is not None:
@@ -101,6 +107,8 @@ class Repository:
         return username, password, True
 
     def _save_credentials(self, service: str, username: str, password: str) -> None:
+        from pdm.models.auth import keyring
+
         self.ui.echo("Saving credentials to keyring")
         keyring.save_auth_info(service, username, password)
 
@@ -124,7 +132,9 @@ class Repository:
             return set()
         return {f"{base}project/{package.metadata['name']}/{package.metadata['version']}/" for package in packages}
 
-    def upload(self, package: PackageFile, progress: rich.progress.Progress) -> requests.Response:
+    def upload(self, package: PackageFile, progress: rich.progress.Progress) -> Response:
+        import requests_toolbelt
+
         payload = package.metadata_dict
         payload.update(
             {

@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any, Iterable, cast, no_type_check
 from zipfile import ZipFile
 
 from packaging.utils import parse_wheel_filename
-from unearth import Link, vcs_support
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
@@ -29,7 +28,6 @@ from pdm.models.requirements import (
 )
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet
-from pdm.project.project_file import PyProject
 from pdm.utils import (
     cd,
     convert_hashes,
@@ -41,7 +39,7 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from unearth import Package, PackageFinder
+    from unearth import Link, Package, PackageFinder
 
     from pdm.environments import BaseEnvironment
 
@@ -159,7 +157,7 @@ class Candidate:
         self.name = name or self.req.project_name
         self.version = version
         if link is None and not req.is_named:
-            link = cast(Link, req.as_file_link())  # type: ignore[attr-defined]
+            link = cast("Link", req.as_file_link())  # type: ignore[attr-defined]
         self.link = link
         self.summary = ""
         self.hashes: dict[Link, str] | None = None
@@ -309,6 +307,8 @@ class PreparedCandidate:
 
     @cached_property
     def revision(self) -> str:
+        from unearth import vcs_support
+
         if not (self._source_dir and os.path.exists(self._source_dir)):
             # It happens because the cached wheel is hit and the source code isn't
             # pulled to local. In this case the link url must contain the full commit
@@ -492,6 +492,8 @@ class PreparedCandidate:
 
     def _get_metadata_from_project(self, pyproject_toml: Path) -> im.Distribution | None:
         # Try getting from PEP 621 metadata
+        from pdm.project.project_file import PyProject
+
         pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
         metadata = pyproject.metadata.unwrap()
         if not metadata:
@@ -574,6 +576,8 @@ class PreparedCandidate:
 
     def should_cache(self) -> bool:
         """Determine whether to cache the dependencies and built wheel."""
+        from unearth import vcs_support
+
         link, source_dir = self.candidate.link, self._source_dir
         if self.req.editable:
             return False

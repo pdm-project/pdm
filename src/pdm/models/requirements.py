@@ -18,7 +18,6 @@ from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
-from unearth import Link
 
 from pdm.compat import Distribution
 from pdm.exceptions import ExtrasWarning, RequirementError
@@ -38,6 +37,8 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from unearth import Link
+
     from pdm._types import RequirementDict
 
 
@@ -214,6 +215,8 @@ class Requirement:
 
     @classmethod
     def from_pkg_requirement(cls, req: PackageRequirement) -> Requirement:
+        from unearth import Link
+
         kwargs = {
             "name": req.name,
             "extras": req.extras,
@@ -229,7 +232,7 @@ class Requirement:
 
     def _format_marker(self) -> str:
         if self.marker:
-            return f"; {str(self.marker)}"
+            return f"; {self.marker!s}"
         return ""
 
 
@@ -311,6 +314,8 @@ class FileRequirement(Requirement):
         return self.is_local and cast(Path, self.path).is_dir()
 
     def as_file_link(self) -> Link:
+        from unearth import Link
+
         url = self.get_full_url()
         # only subdirectory is useful in a file link
         if self.subdirectory:

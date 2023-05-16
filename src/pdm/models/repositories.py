@@ -6,9 +6,6 @@ import sys
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
 
-from unearth import Link
-from unearth.utils import LazySequence
-
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
 from pdm.models.candidates import Candidate, make_candidate
@@ -28,6 +25,8 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from unearth import Link
+
     from pdm._types import CandidateInfo, RepositoryConfig, SearchResult
     from pdm.environments import BaseEnvironment
 
@@ -123,6 +122,8 @@ class BaseRepository:
         """Make a candidate for this package.
         In this case the finder will look for a candidate from the package sources
         """
+        from unearth import Link
+
         project = self.environment.project
         assert project.name
         link = Link.from_path(project.root)
@@ -141,6 +142,7 @@ class BaseRepository:
         """
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
+        from unearth.utils import LazySequence
 
         if self.is_this_package(requirement):
             return [self.make_this_candidate(requirement)]
@@ -251,7 +253,7 @@ class BaseRepository:
             return candidate.hashes
         req = candidate.req.as_pinned_version(candidate.version)
         comes_from = candidate.link.comes_from if candidate.link else None
-        result: dict[str, str] = {}
+        result: dict[Link, str] = {}
         logged = False
         respect_source_order = self.environment.project.pyproject.settings.get("resolution", {}).get(
             "respect-source-order", False
@@ -262,7 +264,7 @@ class BaseRepository:
             sources = self.sources
         with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
             if req.is_file_or_url:
-                this_link = cast(Link, candidate.prepare(self.environment).link)
+                this_link = cast("Link", candidate.prepare(self.environment).link)
                 links: list[Link] = [this_link]
             else:  # the req must be a named requirement
                 links = [package.link for package in finder.find_matches(req.as_line())]
@@ -339,6 +341,8 @@ class PyPIRepository(BaseRepository):
         yield self._get_dependencies_from_metadata
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+        from unearth.utils import LazySequence
+
         sources = self.get_filtered_sources(requirement)
         with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
             cans = LazySequence(
@@ -396,6 +400,8 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
+        from unearth import Link
+
         root = self.environment.project.root
         with cd(root):
             for package in lockfile.get("package", []):

@@ -9,7 +9,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
 
-import requests
 from cachecontrol.cache import BaseCache
 from cachecontrol.caches import FileCache
 from packaging.utils import canonicalize_name, parse_wheel_filename
@@ -22,6 +21,7 @@ from pdm.utils import atomic_open_for_write, create_tracked_tempdir
 
 if TYPE_CHECKING:
     from packaging.tags import Tag
+    from requests import Session
     from unearth import Link, TargetPython
 
 KT = TypeVar("KT")
@@ -108,11 +108,13 @@ class HashCache:
     def __init__(self, directory: Path) -> None:
         self.directory = directory
 
-    def _read_from_link(self, link: Link, session: requests.Session) -> Iterable[bytes]:
+    def _read_from_link(self, link: Link, session: Session) -> Iterable[bytes]:
         if link.is_file:
             with open(link.file_path, "rb") as f:
                 yield from f
         else:
+            import requests
+
             with session.get(link.normalized, stream=True) as resp:
                 try:
                     resp.raise_for_status()
@@ -120,14 +122,14 @@ class HashCache:
                     raise PdmException(f"Failed to read from {link.redacted}: {e}") from e
                 yield from resp.iter_content(chunk_size=8192)
 
-    def _get_file_hash(self, link: Link, session: requests.Session) -> str:
+    def _get_file_hash(self, link: Link, session: Session) -> str:
         h = hashlib.new(self.FAVORITE_HASH)
         logger.debug("Downloading link %s for calculating hash", link.redacted)
         for chunk in self._read_from_link(link, session):
             h.update(chunk)
         return ":".join([h.name, h.hexdigest()])
 
-    def get_hash(self, link: Link, session: requests.Session) -> str:
+    def get_hash(self, link: Link, session: Session) -> str:
         # If there is no link hash (i.e., md5, sha256, etc.), we don't want
         # to store it.
         hash_value = self.get(link.url_without_fragment)

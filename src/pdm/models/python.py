@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from findpython import PythonVersion
 from packaging.version import InvalidVersion, Version
 
 from pdm.compat import cached_property
 from pdm.models.venv import VirtualEnv
+
+if TYPE_CHECKING:
+    from findpython import PythonVersion
 
 
 class PythonInfo:
@@ -21,6 +23,8 @@ class PythonInfo:
 
     @classmethod
     def from_path(cls, path: str | Path) -> PythonInfo:
+        from findpython import PythonVersion
+
         py_ver = PythonVersion(Path(path))
         return cls(py_ver)
 

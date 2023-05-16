@@ -9,20 +9,14 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, cast
 
-import platformdirs
 import tomlkit
-from findpython import Finder
 from tomlkit.items import Array
-from unearth import Link
 
 from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.compat import cached_property
-from pdm.environments import BaseEnvironment, PythonEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
-from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache, get_wheel_cache
-from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -41,10 +35,14 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from findpython import Finder
     from resolvelib.reporters import BaseReporter
 
     from pdm._types import Spinner
     from pdm.core import Core
+    from pdm.environments import BaseEnvironment
+    from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
+    from pdm.models.candidates import Candidate
     from pdm.resolver.providers import BaseProvider
 
 
@@ -72,6 +70,8 @@ class Project:
         is_global: bool = False,
         global_config: str | Path | None = None,
     ) -> None:
+        import platformdirs
+
         self._lockfile: Lockfile | None = None
         self._environment: BaseEnvironment | None = None
         self._python: PythonInfo | None = None
@@ -243,6 +243,8 @@ class Project:
         raise NoPythonVersion(f"No Python that satisfies {self.python_requires} is found on the system.")
 
     def get_environment(self) -> BaseEnvironment:
+        from pdm.environments import PythonEnvironment, PythonLocalEnvironment
+
         """Get the environment selected by this project"""
 
         if self.is_global:
@@ -524,6 +526,10 @@ class Project:
             self.lockfile.write(show_message)
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:
+        from unearth import Link
+
+        from pdm.models.candidates import make_candidate
+
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         assert self.name
         req.name = self.name
@@ -611,14 +617,20 @@ class Project:
         return path
 
     def make_wheel_cache(self) -> WheelCache:
+        from pdm.models.caches import get_wheel_cache
+
         return get_wheel_cache(self.cache("wheels"))
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
+        from pdm.models.caches import CandidateInfoCache
+
         python_hash = hashlib.sha1(str(self.environment.python_requires).encode()).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
         return CandidateInfoCache(self.cache("metadata") / file_name)
 
     def make_hash_cache(self) -> HashCache:
+        from pdm.models.caches import HashCache
+
         return HashCache(directory=self.cache("hashes"))
 
     def find_interpreters(self, python_spec: str | None = None) -> Iterable[PythonInfo]:
@@ -667,6 +679,8 @@ class Project:
             yield PythonInfo.from_path(this_python)
 
     def _get_python_finder(self) -> Finder:
+        from findpython import Finder
+
         from pdm.cli.commands.venv.utils import VenvProvider
 
         finder = Finder(resolve_symlinks=True)

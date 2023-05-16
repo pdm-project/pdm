@@ -6,8 +6,6 @@ import sys
 from functools import partial
 from typing import TYPE_CHECKING, cast
 
-from pdm.cli.actions import print_pep582_command
-
 if TYPE_CHECKING:
     from typing import Any, Protocol, Sequence
 
@@ -151,6 +149,8 @@ lockfile_option = Option(
 
 @Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
 def pep582_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+    from pdm.cli.actions import print_pep582_command
+
     print_pep582_command(project, cast(str, values))
     sys.exit(0)
 
