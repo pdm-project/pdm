@@ -76,7 +76,7 @@ class Command(BaseCommand):
         url = "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore"
         if not path.exists():
             try:
-                resp = requests.get(url)
+                resp = requests.get(url, timeout=5)
                 resp.raise_for_status()
             except requests.exceptions.RequestException:
                 content = "\n".join(["build/", "dist/", "*.egg-info/", "__pycache__/", "*.py[cod]"]) + "\n"
