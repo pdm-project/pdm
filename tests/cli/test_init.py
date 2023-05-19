@@ -4,6 +4,7 @@ from unittest.mock import ANY
 import pytest
 
 from pdm.cli import actions
+from pdm.cli.commands.init import Command
 from pdm.models.backends import get_backend
 from pdm.models.python import PythonInfo
 
@@ -12,7 +13,7 @@ PYTHON_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
 
 def test_init_validate_python_requires(project_no_init):
     with pytest.raises(ValueError):
-        actions.do_init(project_no_init, python_requires="3.7")
+        Command.do_init(project_no_init, python_requires="3.7")
 
 
 def test_init_command(project_no_init, pdm, mocker):
@@ -20,7 +21,7 @@ def test_init_command(project_no_init, pdm, mocker):
         "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
     )
-    do_init = mocker.patch.object(actions, "do_init")
+    do_init = mocker.patch.object(Command, "do_init")
     pdm(["init"], input="\n\n\n\n\n\n", strict=True, obj=project_no_init)
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_init.assert_called_with(
@@ -42,7 +43,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
         "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
     )
-    do_init = mocker.patch.object(actions, "do_init")
+    do_init = mocker.patch.object(Command, "do_init")
     result = pdm(
         ["init"],
         input="\ny\ntest-project\n\nTest Project\n1\n\n\n\n\n",
@@ -69,7 +70,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
         "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
     )
-    do_init = mocker.patch.object(actions, "do_init")
+    do_init = mocker.patch.object(Command, "do_init")
     do_use = mocker.patch.object(actions, "do_use", return_value=PythonInfo.from_path(sys.executable))
     result = pdm(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0

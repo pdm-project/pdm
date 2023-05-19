@@ -11,8 +11,10 @@ from tests import FIXTURES
 
 @pytest.mark.usefixtures("project_no_init", "local_finder")
 def test_build_distributions(tmp_path, core):
+    from pdm.cli.commands.build import Command
+
     project = core.create_project()
-    actions.do_build(project, dest=tmp_path.as_posix())
+    Command.do_build(project, dest=tmp_path.as_posix())
     wheel = next(tmp_path.glob("*.whl"))
     assert wheel.name.startswith("pdm-")
     tarball = next(tmp_path.glob("*.tar.gz"))

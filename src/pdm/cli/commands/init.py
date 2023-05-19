@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pdm import termui
 from pdm.cli import actions
@@ -9,9 +11,12 @@ from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
 from pdm.models.python import PythonInfo
+from pdm.models.specifiers import get_specifier
 from pdm.models.venv import get_venv_python
-from pdm.project import Project
 from pdm.utils import get_user_email_from_git
+
+if TYPE_CHECKING:
+    from pdm.project import Project
 
 
 class Command(BaseCommand):
@@ -20,6 +25,70 @@ class Command(BaseCommand):
     def __init__(self, parser: argparse.ArgumentParser) -> None:
         super().__init__(parser)
         self.interactive = True
+
+    @staticmethod
+    def do_init(
+        project: Project,
+        name: str = "",
+        version: str = "",
+        description: str = "",
+        license: str = "MIT",
+        author: str = "",
+        email: str = "",
+        python_requires: str = "",
+        build_backend: type[BuildBackend] | None = None,
+        hooks: HookManager | None = None,
+    ) -> None:
+        """Bootstrap the project and create a pyproject.toml"""
+        from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+
+        hooks = hooks or HookManager(project)
+        data = {
+            "project": {
+                "name": name,
+                "version": version,
+                "description": description,
+                "authors": array_of_inline_tables([{"name": author, "email": email}]),
+                "license": make_inline_table({"text": license}),
+                "dependencies": make_array([], True),
+            },
+        }
+        if build_backend is not None:
+            data["build-system"] = build_backend.build_system()
+        if python_requires and python_requires != "*":
+            data["project"]["requires-python"] = python_requires
+        if name and version:
+            readme = next(project.root.glob("README*"), None)
+            if readme is None:
+                readme = project.root.joinpath("README.md")
+                readme.write_text(f"# {name}\n\n{description}\n", encoding="utf-8")
+            data["project"]["readme"] = readme.name
+        get_specifier(python_requires)
+        project.pyproject._data.update(data)
+        project.pyproject.write()
+        Command._write_gitignore(project.root.joinpath(".gitignore"))
+        hooks.try_emit("post_init")
+
+    @staticmethod
+    def _write_gitignore(path: Path) -> None:
+        import requests
+
+        url = "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore"
+        if not path.exists():
+            try:
+                resp = requests.get(url)
+                resp.raise_for_status()
+            except requests.exceptions.RequestException:
+                content = "\n".join(["build/", "dist/", "*.egg-info/", "__pycache__/", "*.py[cod]"]) + "\n"
+            else:
+                content = resp.text
+            content += ".pdm-python\n"
+        else:
+            content = path.read_text(encoding="utf-8")
+            if ".pdm-python" in content:
+                return
+            content += ".pdm-python\n"
+        path.write_text(content, encoding="utf-8")
 
     def set_interactive(self, value: bool) -> None:
         self.interactive = value
@@ -128,7 +197,7 @@ class Command(BaseCommand):
         python_version = f"{python.major}.{python.minor}"
         python_requires = self.ask("Python requires('*' to allow any)", f">={python_version}")
 
-        actions.do_init(
+        self.do_init(
             project,
             name=name,
             version=version,

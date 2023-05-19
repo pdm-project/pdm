@@ -49,7 +49,6 @@ from packaging.version import parse as parse_version
 from pytest_mock import MockerFixture
 from unearth import Link
 
-from pdm.cli.actions import do_init
 from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.environments import BaseEnvironment, PythonEnvironment
@@ -420,8 +419,10 @@ def project(project_no_init: Project) -> Project:
     Returns:
         The initialized project
     """
+    from pdm.cli.commands.init import Command
+
     hooks = HookManager(project_no_init, ["post_init"])
-    do_init(
+    Command.do_init(
         project_no_init,
         "test_project",
         "0.0.0",

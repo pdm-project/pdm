@@ -5,15 +5,13 @@ import datetime
 import hashlib
 import json
 import os
-import shutil
 import sys
 import textwrap
 import warnings
 from argparse import Namespace
 from collections import defaultdict
 from itertools import chain
-from pathlib import Path
-from typing import Collection, Iterable, Mapping, cast
+from typing import Collection, Iterable, cast
 
 import tomlkit
 from resolvelib.reporters import BaseReporter
@@ -36,7 +34,7 @@ from pdm.cli.utils import (
 )
 from pdm.environments import BareEnvironment, PythonLocalEnvironment
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
-from pdm.models.backends import DEFAULT_BACKEND, BuildBackend
+from pdm.models.backends import DEFAULT_BACKEND
 from pdm.models.candidates import Candidate
 from pdm.models.python import PythonInfo
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -460,111 +458,6 @@ def do_remove(
             fail_fast=fail_fast,
             hooks=hooks,
         )
-
-
-def do_build(
-    project: Project,
-    sdist: bool = True,
-    wheel: bool = True,
-    dest: str = "dist",
-    clean: bool = True,
-    config_settings: Mapping[str, str] | None = None,
-    hooks: HookManager | None = None,
-) -> None:
-    """Build artifacts for distribution."""
-    from pdm.builders import SdistBuilder, WheelBuilder
-
-    hooks = hooks or HookManager(project)
-
-    if project.is_global:
-        raise ProjectError("Not allowed to build based on the global project.")
-    if not wheel and not sdist:
-        project.core.ui.echo("All artifacts are disabled, nothing to do.", err=True)
-        return
-    if not os.path.isabs(dest):
-        dest = project.root.joinpath(dest).as_posix()
-    if clean:
-        shutil.rmtree(dest, ignore_errors=True)
-    if not os.path.exists(dest):
-        os.makedirs(dest, exist_ok=True)
-    hooks.try_emit("pre_build", dest=dest, config_settings=config_settings)
-    artifacts: list[str] = []
-    with project.core.ui.logging("build"):
-        if sdist:
-            project.core.ui.echo("Building sdist...")
-            loc = SdistBuilder(project.root, project.environment).build(dest, config_settings)
-            project.core.ui.echo(f"Built sdist at {loc}")
-            artifacts.append(loc)
-        if wheel:
-            project.core.ui.echo("Building wheel...")
-            loc = WheelBuilder(project.root, project.environment).build(dest, config_settings)
-            project.core.ui.echo(f"Built wheel at {loc}")
-            artifacts.append(loc)
-    hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
-
-
-def do_init(
-    project: Project,
-    name: str = "",
-    version: str = "",
-    description: str = "",
-    license: str = "MIT",
-    author: str = "",
-    email: str = "",
-    python_requires: str = "",
-    build_backend: type[BuildBackend] | None = None,
-    hooks: HookManager | None = None,
-) -> None:
-    """Bootstrap the project and create a pyproject.toml"""
-    from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
-
-    hooks = hooks or HookManager(project)
-    data = {
-        "project": {
-            "name": name,
-            "version": version,
-            "description": description,
-            "authors": array_of_inline_tables([{"name": author, "email": email}]),
-            "license": make_inline_table({"text": license}),
-            "dependencies": make_array([], True),
-        },
-    }
-    if build_backend is not None:
-        data["build-system"] = build_backend.build_system()
-    if python_requires and python_requires != "*":
-        data["project"]["requires-python"] = python_requires
-    if name and version:
-        readme = next(project.root.glob("README*"), None)
-        if readme is None:
-            readme = project.root.joinpath("README.md")
-            readme.write_text(f"# {name}\n\n{description}\n", encoding="utf-8")
-        data["project"]["readme"] = readme.name
-    get_specifier(python_requires)
-    project.pyproject._data.update(data)
-    project.pyproject.write()
-    _write_gitignore(project.root.joinpath(".gitignore"))
-    hooks.try_emit("post_init")
-
-
-def _write_gitignore(path: Path) -> None:
-    import requests
-
-    url = "https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore"
-    if not path.exists():
-        try:
-            resp = requests.get(url)
-            resp.raise_for_status()
-        except requests.exceptions.RequestException:
-            content = "\n".join(["build/", "dist/", "*.egg-info/", "__pycache__/", "*.py[cod]"]) + "\n"
-        else:
-            content = resp.text
-        content += ".pdm-python\n"
-    else:
-        content = path.read_text(encoding="utf-8")
-        if ".pdm-python" in content:
-            return
-        content += ".pdm-python\n"
-    path.write_text(content, encoding="utf-8")
 
 
 def do_use(

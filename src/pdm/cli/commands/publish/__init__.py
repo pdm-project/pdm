@@ -11,7 +11,7 @@ from rich.progress import (
     TransferSpeedColumn,
 )
 
-from pdm.cli import actions
+from pdm.cli.commands import build
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
@@ -131,7 +131,7 @@ class Command(BaseCommand):
         hooks.try_emit("pre_publish")
 
         if options.build:
-            actions.do_build(project, hooks=hooks)
+            build.Command.do_build(project, hooks=hooks)
 
         package_files = [str(p) for p in project.root.joinpath("dist").iterdir() if not p.name.endswith(".asc")]
         signatures = {p.stem: str(p) for p in project.root.joinpath("dist").iterdir() if p.name.endswith(".asc")}
