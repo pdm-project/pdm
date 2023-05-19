@@ -150,15 +150,21 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from()
     def includes(self, source: dict[str, list[str] | str]) -> list[str]:
-        result: list[str] = []
+        includes: list[str] = []
+        source_includes: list[str] = []
         for item in source.pop("packages", []):
             assert isinstance(item, dict)
             include = item["include"]
             if item.get("from"):
                 include = f"{item.get('from')}/{include}"
-            result.append(include)
-        result.extend(source.pop("include", []))
-        self.settings.setdefault("build", {})["includes"] = result
+            includes.append(include)
+        for item in source.pop("include", []):
+            if not isinstance(item, dict):
+                includes.append(item)
+            else:
+                dest = source_includes if "sdist" in item.get("format", "") else includes
+                dest.append(item["path"])
+        self.settings.setdefault("build", {})["includes"] = includes
         raise Unset()
 
     @convert_from("exclude")
@@ -168,12 +174,11 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from("build")
     def build(self, value: str | dict) -> None:
-        run_setuptools = True
+        value = {}
         if isinstance(value, dict):
             if "generate-setup-file" in value:
-                run_setuptools = cast(bool, value["generate-setup-file"])
-            value = value["script"]
-        self.settings.setdefault("build", {}).update({"setup-script": value, "run-setuptools": run_setuptools})
+                value["run-setuptools"] = cast(bool, value["generate-setup-file"])
+        self.settings.setdefault("build", {}).update(value)
         raise Unset()
 
     @convert_from("source")
