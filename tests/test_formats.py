@@ -135,12 +135,12 @@ def test_import_requirements_with_group(project):
     assert not result.get("dependencies")
 
 
-def test_export_expand_env_vars_in_source(project, monkeypatch):
+def test_keep_env_vars_in_source(project, monkeypatch):
     monkeypatch.setenv("USER", "foo")
     monkeypatch.setenv("PASSWORD", "bar")
     project.pyproject.settings["source"] = [{"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}]
     result = requirements.export(project, [], Namespace())
-    assert result.strip().splitlines()[-1] == "--index-url https://foo:bar@test.pypi.org/simple"
+    assert result.strip().splitlines()[-1] == "--index-url https://${USER}:${PASSWORD}@test.pypi.org/simple"
 
 
 def test_export_replace_project_root(project):
