@@ -2,32 +2,11 @@ import functools
 from pathlib import Path
 from typing import Any
 
-from cachecontrol.adapter import CacheControlAdapter
-from cachecontrol.serialize import Serializer as LegacySerializer
+from cacheyou.adapter import CacheControlAdapter
 from requests_toolbelt.utils import user_agent
 from unearth.session import InsecureMixin, PyPISession
 
 from pdm.__version__ import __version__
-
-
-class Serializer(LegacySerializer):
-    """Patch for the compatibility of cachecontrol serializer.
-    It should be removed when cachecontrol supports urllib3 2.0.
-    """
-
-    def dumps(self, request, response, body=None):  # type: ignore[no-untyped-def]
-        if not hasattr(response, "strict"):
-            # XXX: urllib3 2.0 removes this attribute
-            response.strict = False
-        return super().dumps(request, response, body)
-
-    def prepare_response(self, request, cached, body_file=None):  # type: ignore[no-untyped-def]
-        # We don't need to pass strict to HTTPResponse
-        cached["response"].pop("strict", None)
-        # urllib3 2.0 changes the default to True, which causes a double read issue
-        # See https://github.com/ionrock/cachecontrol/issues/295
-        cached["response"]["enforce_content_length"] = False
-        return super().prepare_response(request, cached, body_file)
 
 
 class InsecureCacheControlAdapter(InsecureMixin, CacheControlAdapter):
@@ -39,9 +18,8 @@ class PDMSession(PyPISession):
         from pdm.models.caches import SafeFileCache
 
         cache = SafeFileCache(str(cache_dir))
-        serializer = Serializer()
-        self.secure_adapter_cls = functools.partial(CacheControlAdapter, cache=cache, serializer=serializer)
-        self.insecure_adapter_cls = functools.partial(InsecureCacheControlAdapter, cache=cache, serializer=serializer)
+        self.secure_adapter_cls = functools.partial(CacheControlAdapter, cache=cache)
+        self.insecure_adapter_cls = functools.partial(InsecureCacheControlAdapter, cache=cache)
         super().__init__(**kwargs)
         self.headers["User-Agent"] = self._make_user_agent()
 

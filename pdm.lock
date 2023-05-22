@@ -19,27 +19,6 @@ requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "Fast, simple object-to-object and broadcast signaling"
 
 [[package]]
-name = "cachecontrol"
-version = "0.12.11"
-requires_python = ">=3.6"
-summary = "httplib2 caching for requests"
-dependencies = [
-    "msgpack>=0.5.2",
-    "requests",
-]
-
-[[package]]
-name = "cachecontrol"
-version = "0.12.11"
-extras = ["filecache"]
-requires_python = ">=3.6"
-summary = "httplib2 caching for requests"
-dependencies = [
-    "cachecontrol==0.12.11",
-    "lockfile>=0.9",
-]
-
-[[package]]
 name = "cached-property"
 version = "1.5.2"
 summary = "A decorator for caching properties in classes."
@@ -49,6 +28,27 @@ name = "cachetools"
 version = "5.2.1"
 requires_python = "~=3.7"
 summary = "Extensible memoizing collections and decorators"
+
+[[package]]
+name = "cacheyou"
+version = "23.2"
+requires_python = ">=3.7"
+summary = "httplib2 caching for requests"
+dependencies = [
+    "msgpack>=0.5.2",
+    "requests",
+]
+
+[[package]]
+name = "cacheyou"
+version = "23.2"
+extras = ["filecache"]
+requires_python = ">=3.7"
+summary = "httplib2 caching for requests"
+dependencies = [
+    "cacheyou==23.2",
+    "filelock>=3.8.0",
+]
 
 [[package]]
 name = "certifi"
@@ -205,11 +205,6 @@ summary = "A very fast and expressive template engine."
 dependencies = [
     "MarkupSafe>=2.0",
 ]
-
-[[package]]
-name = "lockfile"
-version = "0.12.2"
-summary = "Platform-independent file locking module"
 
 [[package]]
 name = "markdown"
@@ -712,7 +707,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "doc", "pytest", "test", "tox", "workflow"]
-content_hash = "sha256:16d7de6464c20de4ff84c952a9a3ecab76e6814bb9b50f8ba4cc5ea8dd8a680d"
+content_hash = "sha256:74dca3acdd07ce6f8151a4350e19337ea6e1dbad7a4fc63767782e4a7b7943b4"
 
 [metadata.files]
 "arpeggio 2.0.0" = [
@@ -727,10 +722,6 @@ content_hash = "sha256:16d7de6464c20de4ff84c952a9a3ecab76e6814bb9b50f8ba4cc5ea8d
     {url = "https://files.pythonhosted.org/packages/2b/12/82786486cefb68685bb1c151730f510b0f4e5d621d77f245bc0daf9a6c64/blinker-1.5.tar.gz", hash = "sha256:923e5e2f69c155f2cc42dafbbd70e16e3fde24d2d4aa2ab72fbe386238892462"},
     {url = "https://files.pythonhosted.org/packages/30/41/caa5da2dbe6d26029dfe11d31dfa8132b4d6d30b6d6b61a24824075a5f06/blinker-1.5-py2.py3-none-any.whl", hash = "sha256:1eb563df6fdbc39eeddc177d953203f99f097e9bf0e2b8f9f3cf18b6ca425e36"},
 ]
-"cachecontrol 0.12.11" = [
-    {url = "https://files.pythonhosted.org/packages/46/9b/34215200b0c2b2229d7be45c1436ca0e8cad3b10de42cfea96983bd70248/CacheControl-0.12.11.tar.gz", hash = "sha256:a5b9fcc986b184db101aa280b42ecdcdfc524892596f606858e0b7a8b4d9e144"},
-    {url = "https://files.pythonhosted.org/packages/83/63/15ce47ede5b03657e920f3f006e56ca9a16f7873978146f2f77e297bdd22/CacheControl-0.12.11-py2.py3-none-any.whl", hash = "sha256:2c75d6a8938cb1933c75c50184549ad42728a27e9f6b92fd677c3151aa72555b"},
-]
 "cached-property 1.5.2" = [
     {url = "https://files.pythonhosted.org/packages/48/19/f2090f7dad41e225c7f2326e4cfe6fff49e57dedb5b53636c9551f86b069/cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
     {url = "https://files.pythonhosted.org/packages/61/2c/d21c1c23c2895c091fa7a91a54b6872098fea913526932d21902088a7c41/cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
@@ -738,6 +729,10 @@ content_hash = "sha256:16d7de6464c20de4ff84c952a9a3ecab76e6814bb9b50f8ba4cc5ea8d
 "cachetools 5.2.1" = [
     {url = "https://files.pythonhosted.org/packages/3d/cf/8bab81474cb9ec7879ba28aef71c8351db92cd03587d9eac8e908b2c1c23/cachetools-5.2.1.tar.gz", hash = "sha256:5991bc0e08a1319bb618d3195ca5b6bc76646a49c21d55962977197b301cc1fe"},
     {url = "https://files.pythonhosted.org/packages/a4/7e/9a87d3b3ca48e253b5c0e114a6601160b9b29f175f4268cb30e21d9e8b63/cachetools-5.2.1-py3-none-any.whl", hash = "sha256:8462eebf3a6c15d25430a8c27c56ac61340b2ecf60c9ce57afc2b97e450e47da"},
+]
+"cacheyou 23.2" = [
+    {url = "https://files.pythonhosted.org/packages/92/ba/58715e6183e2143499f5d6434be66313d8c9b4f1fddff8695116ecf8e669/cacheyou-23.2.tar.gz", hash = "sha256:e64cd34f65e3e121df1ad6e2a70f87b42970b7cbba233a1c38b34d1a3fbb8131"},
+    {url = "https://files.pythonhosted.org/packages/b0/b3/a50c4205da066731a22db5b1443f382b94c89a4a6c7767e7441c86987d48/cacheyou-23.2-py3-none-any.whl", hash = "sha256:c0d7ac6742b1a56d9767bf694e2774e70da7979254e4f947360a72d25a3ed1b6"},
 ]
 "certifi 2023.5.7" = [
     {url = "https://files.pythonhosted.org/packages/93/71/752f7a4dd4c20d6b12341ed1732368546bc0ca9866139fe812f6009d9ac7/certifi-2023.5.7.tar.gz", hash = "sha256:0f0d56dc5a6ad56fd4ba36484d6cc34451e1c6548c61daad8c320169f91eddc7"},
@@ -943,10 +938,6 @@ content_hash = "sha256:16d7de6464c20de4ff84c952a9a3ecab76e6814bb9b50f8ba4cc5ea8d
 "jinja2 3.1.2" = [
     {url = "https://files.pythonhosted.org/packages/7a/ff/75c28576a1d900e87eb6335b063fab47a8ef3c8b4d88524c4bf78f670cce/Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},
     {url = "https://files.pythonhosted.org/packages/bc/c3/f068337a370801f372f2f8f6bad74a5c140f6fda3d9de154052708dd3c65/Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
-]
-"lockfile 0.12.2" = [
-    {url = "https://files.pythonhosted.org/packages/17/47/72cb04a58a35ec495f96984dddb48232b551aafb95bde614605b754fe6f7/lockfile-0.12.2.tar.gz", hash = "sha256:6aed02de03cba24efabcd600b30540140634fc06cfa603822d508d5361e9f799"},
-    {url = "https://files.pythonhosted.org/packages/c8/22/9460e311f340cb62d26a38c419b1381b8593b0bb6b5d1f056938b086d362/lockfile-0.12.2-py2.py3-none-any.whl", hash = "sha256:6c3cb24f344923d30b2785d5ad75182c8ea7ac1b6171b08657258ec7429d50fa"},
 ]
 "markdown 3.3.7" = [
     {url = "https://files.pythonhosted.org/packages/d6/58/79df20de6e67a83f0d0bbfe6c19bb82adf68cdf362885257eb01099f930a/Markdown-3.3.7.tar.gz", hash = "sha256:cbb516f16218e643d8e0a95b309f77eb118cb138d39a4f27851e6a63581db874"},

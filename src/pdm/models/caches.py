@@ -9,8 +9,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
 
-from cachecontrol.cache import BaseCache
-from cachecontrol.caches import FileCache
+from cacheyou.cache import BaseCache
+from cacheyou.caches import FileCache
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from pdm._types import CandidateInfo
