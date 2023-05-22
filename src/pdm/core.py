@@ -241,7 +241,11 @@ class Core:
         base = str(project.root / ".pdm-plugins")
         replace_vars = {"base": base, "platbase": base}
         scheme = "nt" if os.name == "nt" else "posix_prefix"
-        site.addsitedir(sysconfig.get_path("purelib", scheme, replace_vars))
+        purelib = sysconfig.get_path("purelib", scheme, replace_vars)
+        scripts = sysconfig.get_path("scripts", scheme, replace_vars)
+        site.addsitedir(purelib)
+        if os.path.exists(scripts):
+            os.environ["PATH"] = os.pathsep.join([scripts, os.getenv("PATH", "")])
 
     def load_plugins(self) -> None:
         """Import and load plugins under `pdm.plugin` namespace
