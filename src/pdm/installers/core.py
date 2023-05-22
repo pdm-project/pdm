@@ -8,7 +8,7 @@ from pdm.resolver.core import resolve
 
 
 def install_requirements(
-    reqs: list[Requirement], environment: BaseEnvironment, clean: bool = False
+    reqs: list[Requirement], environment: BaseEnvironment, clean: bool = False, use_install_cache: bool = False
 ) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""
     project = environment.project
@@ -28,5 +28,5 @@ def install_requirements(
         environment.python_requires,
         max_rounds=resolve_max_rounds,
     )
-    syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0)
+    syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0, use_install_cache=use_install_cache)
     syncer.synchronize()
