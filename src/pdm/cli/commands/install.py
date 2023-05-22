@@ -53,7 +53,9 @@ class Command(BaseCommand):
         environment = PythonEnvironment(project, python=sys.executable, prefix=str(plugin_root))
         with project.core.ui.open_spinner("[success]Installing plugins...[/]"):
             with project.core.ui.logging("install-plugins"):
-                install_requirements(plugins, environment, clean=True)
+                install_requirements(
+                    plugins, environment, clean=True, use_install_cache=project.config["install.cache"]
+                )
             if not plugin_root.joinpath(".gitignore").exists():
                 plugin_root.joinpath(".gitignore").write_text("*\n")
         project.core.ui.echo("Plugins are installed successfully into [primary].pdm-plugins[/].")
