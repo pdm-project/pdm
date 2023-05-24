@@ -2,6 +2,7 @@ import pathlib
 import sys
 
 import pytest
+import tomlkit
 
 from pdm import utils
 from pdm.cli import utils as cli_utils
@@ -68,10 +69,12 @@ def test_find_python_in_path(tmp_path):
 
 
 def test_merge_dictionary():
-    target = {
-        "existing_dict": {"foo": "bar", "hello": "world"},
-        "existing_list": ["hello"],
-    }
+    target = tomlkit.item(
+        {
+            "existing_dict": {"foo": "bar", "hello": "world"},
+            "existing_list": ["hello"],
+        }
+    )
     input_dict = {
         "existing_dict": {"foo": "baz"},
         "existing_list": ["world"],
