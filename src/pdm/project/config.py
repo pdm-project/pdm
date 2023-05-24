@@ -310,6 +310,8 @@ class Config(MutableMapping[str, str]):
             service = f'pdm-{index_key.replace(".", "-")}'
             if parts[2] == "password" and self.is_global and keyring.save_auth_info(service, username, value):
                 return
+            if parts[2] == "verify_ssl":
+                value = ensure_boolean(value)
             self._file_data.setdefault(index_key, {})[parts[2]] = value
             self._save_config()
             return
