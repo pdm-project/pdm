@@ -26,7 +26,7 @@ class Repository:
         username: str | None,
         password: str | None,
         ca_certs: str | None,
-        verify_ssl: bool | None,
+        verify_ssl: bool | None = True,
     ) -> None:
         self.url = url
         self.session = project.environment._build_session([])
