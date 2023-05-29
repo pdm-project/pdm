@@ -264,3 +264,19 @@ In this example, PDM will resolve the above packages into the given versions no 
 !!! warning
     By using `[tool.pdm.resolution.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be used if there is no valid resolution for your requirements and you know the specific version works.
     Most of the time, you can just add any transient constraints to the `dependencies` array.
+
+## Passing constant arguments to every pdm invocation
+
+_New in version 2.7.0_
+
+You can add extra options passed to individual pdm commands by `tool.pdm.options` configuration:
+
+```toml
+[tool.pdm.options]
+add = ["--no-isolation", "--no-self"]
+install = ["--no-self"]
+lock = ["--no-cross-platform"]
+```
+
+These options will be added right after the command name. For instance, based on the configuration above,
+`pdm add requests` is equivalent to `pdm add --no-isolation --no-self requests`.

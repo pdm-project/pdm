@@ -156,6 +156,17 @@ class Core:
             self.parser.error("No command given")
         command.handle(project, options)
 
+    def _get_cli_args(self, args: list[str], obj: Project | None) -> list[str]:
+        project = self.create_project(is_global=False) if obj is None else obj
+        if project.is_global:
+            return args
+        config = project.pyproject.settings.get("options", {})
+        (pos, command) = next(((i, arg) for i, arg in enumerate(args) if not arg.startswith("-")), (-1, None))
+        if command and command in config:
+            # add args after the command
+            args[pos + 1 : pos + 1] = list(config[command])
+        return args
+
     def main(
         self,
         args: list[str] | None = None,
@@ -166,7 +177,7 @@ class Core:
         """The main entry function"""
 
         # Ensure same behavior while testing and using the CLI
-        args = args or sys.argv[1:]
+        args = self._get_cli_args(args or sys.argv[1:], obj)
         # Keep it for after project parsing to check if its a defined script
         root_script = None
         try:
