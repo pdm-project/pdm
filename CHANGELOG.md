@@ -1,3 +1,32 @@
+Release v2.7.0 (2023-05-29)
+---------------------------
+
+### Features & Improvements
+
+- When keyring is available, either by importing or by CLI, the credentials of repositories and PyPI indexes will be saved into it. [#1908](https://github.com/pdm-project/pdm/issues/1908)
+- Add support for reading metadata from simple index directly. [#1919](https://github.com/pdm-project/pdm/issues/1919)
+- Add a configuration to specify constant command arguments for every pdm invocation. [#1923](https://github.com/pdm-project/pdm/issues/1923)
+- Add ability to skip SSL verification for publish repositories via `repository.custom.verify_ssl` config option as well as new command line argument of `publish` command. [#1928](https://github.com/pdm-project/pdm/issues/1928)
+- Use lazy import to reduce the startup time of the CLI. [#1929](https://github.com/pdm-project/pdm/issues/1929)
+- Add the local plugin scripts to `PATH` env var. [#1944](https://github.com/pdm-project/pdm/issues/1944)
+
+### Bug Fixes
+
+- Don't use install cache when installing build requirements to avoid race condition. [#1869](https://github.com/pdm-project/pdm/issues/1869)
+- Fix a number of `ResourceWarning`s when running the test suite with warnings enabled. [#1915](https://github.com/pdm-project/pdm/issues/1915)
+- Fix a bug that dev-dependencies group gets updated with the optional dependencies, causing the hash mismatch. [#1916](https://github.com/pdm-project/pdm/issues/1916)
+- Fix format conversion error from Poetry when `tool.poetry.build` doesn't exist. [#1935](https://github.com/pdm-project/pdm/issues/1935)
+- Add timeout when fetching .gitignore from GitHub. [#1937](https://github.com/pdm-project/pdm/issues/1937)
+- Keep the variables in the URL credentials when exporting. [#1939](https://github.com/pdm-project/pdm/issues/1939)
+- Convert to boolean when setting verify_ssl for custom indexes. [#1945](https://github.com/pdm-project/pdm/issues/1945)
+- `pdm import` clobbers `build-system.requires` value in `pyproject.toml`. [#1948](https://github.com/pdm-project/pdm/issues/1948)
+
+### Documentation
+
+- Update publish.md to use run instead of runs to match GitHub Actions steps documentation [#1936](https://github.com/pdm-project/pdm/issues/1936)
+- Update advanced.md to use `pdm sync` instead of `pdm install --no-lock`. [#1947](https://github.com/pdm-project/pdm/issues/1947)
+
+
 Release v2.6.1 (2023-05-10)
 ---------------------------
 
