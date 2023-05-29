@@ -314,3 +314,19 @@ def test_configured_source_overwriting(project):
     assert custom_source.verify_ssl is False
     assert custom_source.username == "foo"
     assert custom_source.password == "bar"
+
+
+def test_invoke_pdm_adding_configured_args(project, pdm, mocker):
+    project.pyproject.settings["options"] = {
+        "install": ["--no-self", "--no-editable"],
+        "add": ["--no-isolation"],
+        "lock": ["--no-cross-platform"],
+    }
+    project.pyproject.write()
+    parser = mocker.patch("argparse.ArgumentParser.parse_args")
+    pdm(["add", "requests"], obj=project)
+    parser.assert_called_with(["add", "--no-isolation", "requests"])
+    pdm(["install", "--check"], obj=project)
+    parser.assert_called_with(["install", "--no-self", "--no-editable", "--check"])
+    pdm(["lock", "--lockfile", "pdm.2.lock"], obj=project)
+    parser.assert_called_with(["lock", "--no-cross-platform", "--lockfile", "pdm.2.lock"])
