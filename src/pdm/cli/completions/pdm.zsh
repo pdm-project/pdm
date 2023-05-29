@@ -298,6 +298,7 @@ _pdm() {
         {-i,--identity}'[GPG identity used to sign files.]:gpg identity:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-c,--comment}'[The comment to include with the distribution file.]:comment:'
+        "--no-verify-ssl[Disable SSL verification]"
         "--ca-certs[The path to a PEM-encoded Certificate Authority bundle to use for publish server validation]:cacerts:_files"
         "--no-build[Don't build the package before publishing]"
       )

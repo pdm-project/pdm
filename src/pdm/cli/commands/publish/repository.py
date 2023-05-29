@@ -30,10 +30,10 @@ class Repository:
     ) -> None:
         self.url = url
         self.session = project.environment._build_session([])
-        if ca_certs is not None:
-            self.session.set_ca_certificates(pathlib.Path(ca_certs))
-        if verify_ssl is not None:
+        if verify_ssl is False:
             self.session.verify = verify_ssl
+        elif ca_certs is not None:
+            self.session.set_ca_certificates(pathlib.Path(ca_certs))
         self._credentials_to_save: tuple[str, str, str] | None = None
         self.ui = project.core.ui
         username, password = self._ensure_credentials(username, password)

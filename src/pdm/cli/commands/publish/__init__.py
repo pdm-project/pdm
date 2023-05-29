@@ -69,7 +69,11 @@ class Command(BaseCommand):
             dest="build",
             help="Don't build the package before publishing",
         )
-        parser.add_argument(
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument(
+            "--no-very-ssl", action="store_false", dest="verify_ssl", help="Disable SSL verification", default=None
+        )
+        group.add_argument(
             "--ca-certs",
             dest="ca_certs",
             help="The path to a PEM-encoded Certificate Authority bundle to use"
@@ -123,6 +127,8 @@ class Command(BaseCommand):
             config.password = password
         if ca_certs is not None:
             config.ca_certs = ca_certs
+        if options.verify_ssl is False:
+            config.verify_ssl = options.verify_ssl
         return Repository(project, config.url, config.username, config.password, config.ca_certs, config.verify_ssl)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
