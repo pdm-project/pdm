@@ -31,7 +31,7 @@ summary = "Extensible memoizing collections and decorators"
 
 [[package]]
 name = "cacheyou"
-version = "23.2"
+version = "23.3"
 requires_python = ">=3.7"
 summary = "httplib2 caching for requests"
 dependencies = [
@@ -41,12 +41,12 @@ dependencies = [
 
 [[package]]
 name = "cacheyou"
-version = "23.2"
+version = "23.3"
 extras = ["filecache"]
 requires_python = ">=3.7"
 summary = "httplib2 caching for requests"
 dependencies = [
-    "cacheyou==23.2",
+    "cacheyou==23.3",
     "filelock>=3.8.0",
 ]
 
@@ -730,9 +730,9 @@ content_hash = "sha256:74dca3acdd07ce6f8151a4350e19337ea6e1dbad7a4fc63767782e4a7
     {url = "https://files.pythonhosted.org/packages/3d/cf/8bab81474cb9ec7879ba28aef71c8351db92cd03587d9eac8e908b2c1c23/cachetools-5.2.1.tar.gz", hash = "sha256:5991bc0e08a1319bb618d3195ca5b6bc76646a49c21d55962977197b301cc1fe"},
     {url = "https://files.pythonhosted.org/packages/a4/7e/9a87d3b3ca48e253b5c0e114a6601160b9b29f175f4268cb30e21d9e8b63/cachetools-5.2.1-py3-none-any.whl", hash = "sha256:8462eebf3a6c15d25430a8c27c56ac61340b2ecf60c9ce57afc2b97e450e47da"},
 ]
-"cacheyou 23.2" = [
-    {url = "https://files.pythonhosted.org/packages/92/ba/58715e6183e2143499f5d6434be66313d8c9b4f1fddff8695116ecf8e669/cacheyou-23.2.tar.gz", hash = "sha256:e64cd34f65e3e121df1ad6e2a70f87b42970b7cbba233a1c38b34d1a3fbb8131"},
-    {url = "https://files.pythonhosted.org/packages/b0/b3/a50c4205da066731a22db5b1443f382b94c89a4a6c7767e7441c86987d48/cacheyou-23.2-py3-none-any.whl", hash = "sha256:c0d7ac6742b1a56d9767bf694e2774e70da7979254e4f947360a72d25a3ed1b6"},
+"cacheyou 23.3" = [
+    {url = "https://files.pythonhosted.org/packages/41/e1/1864f74d5ea8edfe4e217ce6cf81d04989b32ef949487b289753227a64af/cacheyou-23.3-py3-none-any.whl", hash = "sha256:eeed1d071495ed59be0049c3897a4c3c056c4b30f751b3197b823c518bcac604"},
+    {url = "https://files.pythonhosted.org/packages/8e/6e/8a9d13f938789b29e89b78cfeb9d0a9e002c67272ead73060c8306b74fc8/cacheyou-23.3.tar.gz", hash = "sha256:7e408f15f4978fea2247734b308621f75f7fe169b461679519c72e8a85d61d5d"},
 ]
 "certifi 2023.5.7" = [
     {url = "https://files.pythonhosted.org/packages/93/71/752f7a4dd4c20d6b12341ed1732368546bc0ca9866139fe812f6009d9ac7/certifi-2023.5.7.tar.gz", hash = "sha256:0f0d56dc5a6ad56fd4ba36484d6cc34451e1c6548c61daad8c320169f91eddc7"},
