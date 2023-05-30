@@ -86,7 +86,7 @@ def test_non_editable_override_editable(project, pdm):
     url = "git+https://github.com/test-root/demo.git#egg=demo"
     pdm(["add", "--dev", "-e", url], obj=project, strict=True)
     pdm(["add", "--dev", url], obj=project, strict=True)
-    assert not project.dev_dependencies["demo"].editable
+    assert not project.get_dependencies("dev")["demo"].editable
 
 
 @pytest.mark.usefixtures("working_set")

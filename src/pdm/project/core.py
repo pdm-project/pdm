@@ -330,27 +330,6 @@ class Project:
                 result[req.identify()] = req
         return result
 
-    @property
-    def dependencies(self) -> dict[str, Requirement]:
-        return self.get_dependencies()
-
-    @property
-    def dev_dependencies(self) -> dict[str, Requirement]:
-        """All development dependencies"""
-        dev_group = self.pyproject.settings.get("dev-dependencies", {})
-        if not dev_group:
-            return {}
-        result = {}
-        with cd(self.root):
-            for _, deps in dev_group.items():
-                for line in deps:
-                    if line.startswith("-e "):
-                        req = parse_requirement(line[3:].strip(), True)
-                    else:
-                        req = parse_requirement(line)
-                    result[req.identify()] = req
-        return result
-
     def iter_groups(self) -> Iterable[str]:
         groups = {"default"}
         if self.pyproject.metadata.get("optional-dependencies"):

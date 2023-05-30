@@ -166,11 +166,9 @@ def test_select_dependencies(project):
         "doc": ["mkdocs"],
     }
     assert sorted(project.get_dependencies()) == ["requests"]
-    assert sorted(project.dependencies) == ["requests"]
 
     assert sorted(project.get_dependencies("security")) == ["cryptography"]
     assert sorted(project.get_dependencies("test")) == ["pytest"]
-    assert sorted(project.dev_dependencies) == ["mkdocs", "pytest"]
 
     assert sorted(project.iter_groups()) == [
         "default",
