@@ -80,7 +80,7 @@ class ConfigItem:
     replace: str | None = None
 
     def should_show(self) -> bool:
-        return self.default is not self._NOT_SET
+        return self.default is not self._NOT_SET or bool(self.env_var) and self.env_var in os.environ
 
 
 class Config(MutableMapping[str, str]):
