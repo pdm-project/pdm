@@ -3,16 +3,16 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import hashlib
+import io
 import json
 import os
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
 
-from cacheyou.cache import BaseCache
-from cacheyou.caches import FileCache
+from cachecontrol.cache import SeparateBodyBaseCache
+from cachecontrol.caches import FileCache
 from packaging.utils import canonicalize_name, parse_wheel_filename
-
 from pdm._types import CandidateInfo
 from pdm.exceptions import PdmException
 from pdm.models.candidates import Candidate
@@ -247,7 +247,7 @@ class WheelCache:
         return min(candidates, key=lambda x: x[0])[1]
 
 
-class SafeFileCache(BaseCache):
+class SafeFileCache(SeparateBodyBaseCache):
     """
     A file based cache which is safe to use even when the target directory may
     not be accessible or writable.
@@ -270,13 +270,28 @@ class SafeFileCache(BaseCache):
         with contextlib.suppress(OSError):
             with open(path, "rb") as f:
                 return f.read()
+
         return None
+
+    def get_body(self, key) -> io.FileIO | None:
+        path = self._get_cache_path(key)
+        with contextlib.suppress(OSError):
+            return open(f"{path}.body", "rb")
 
     def set(self, key: str, value: bytes, expires: int | None = None) -> None:
         path = self._get_cache_path(key)
         with contextlib.suppress(OSError):
             with atomic_open_for_write(path, mode="wb") as f:
                 cast(BinaryIO, f).write(value)
+
+    def set_body(self, key: str, body: bytes) -> None:
+        if body is None:
+            return
+
+        path = self._get_cache_path(key)
+        with contextlib.suppress(OSError):
+            with atomic_open_for_write(f"{path}.body", mode="wb") as f:
+                cast(BinaryIO, f).write(body)
 
     def delete(self, key: str) -> None:
         path = self._get_cache_path(key)
