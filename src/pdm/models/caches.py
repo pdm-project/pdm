@@ -3,7 +3,6 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import hashlib
-import io
 import json
 import os
 from functools import lru_cache
@@ -273,10 +272,12 @@ class SafeFileCache(SeparateBodyBaseCache):
 
         return None
 
-    def get_body(self, key) -> io.FileIO | None:
+    def get_body(self, key: str) -> BinaryIO | None:
         path = self._get_cache_path(key)
         with contextlib.suppress(OSError):
-            return open(f"{path}.body", "rb")
+            return cast(BinaryIO, open(f"{path}.body", "rb"))
+
+        return None
 
     def set(self, key: str, value: bytes, expires: int | None = None) -> None:
         path = self._get_cache_path(key)
