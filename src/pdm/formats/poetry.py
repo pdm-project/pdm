@@ -156,7 +156,7 @@ class PoetryMetaConverter(MetaConverter):
             assert isinstance(item, dict)
             include = item["include"]
             if item.get("from"):
-                include = str(Path(str(item.get("from"))).joinpath(include))
+                include = Path(item.get("from"), include).as_posix()
             includes.append(include)
         for item in source.pop("include", []):
             if not isinstance(item, dict):
