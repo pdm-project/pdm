@@ -734,17 +734,28 @@ def check_update(project: Project) -> None:
     """Check if there is a new version of PDM available"""
     from packaging.version import Version
 
+    from pdm.cli.utils import is_homebrew_installation, is_pipx_installation, is_scoop_installation
+
     this_version = project.core.version
     latest_version = get_latest_version(project)
     if latest_version is None or Version(this_version) >= Version(latest_version):
         return
-    install_command = "pdm self update" + (" --pre" if Version(latest_version).is_prerelease else "")
     disable_command = "pdm config check_update false"
 
-    if os.name == "nt":
-        # On Windows, the executable can't replace itself, we add the python prefix to the command
-        # A bit ugly but it works
-        install_command = f"{sys.executable} -m {install_command}"
+    is_prerelease = Version(latest_version).is_prerelease
+
+    if is_pipx_installation():
+        install_command = f"pipx upgrade {'--pip-args=--pre ' if is_prerelease else ''}pdm"
+    elif is_homebrew_installation():
+        install_command = "brew upgrade pdm"
+    elif is_scoop_installation():
+        install_command = "scoop update pdm"
+    else:
+        install_command = "pdm self update" + (" --pre" if is_prerelease else "")
+        if os.name == "nt":
+            # On Windows, the executable can't replace itself, we add the python prefix to the command
+            # A bit ugly but it works
+            install_command = f"{sys.executable} -m {install_command}"
 
     message = [
         f"\nPDM [primary]{this_version}[/]",
