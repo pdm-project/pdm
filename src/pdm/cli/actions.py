@@ -741,6 +741,11 @@ def check_update(project: Project) -> None:
     install_command = "pdm self update" + (" --pre" if Version(latest_version).is_prerelease else "")
     disable_command = "pdm config check_update false"
 
+    if os.name == "nt":
+        # On Windows, the executable can't replace itself, we add the python prefix to the command
+        # A bit ugly but it works
+        install_command = f"{sys.executable} -m {install_command}"
+
     message = [
         f"\nPDM [primary]{this_version}[/]",
         f" is installed, while [primary]{latest_version}[/]",
