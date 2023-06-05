@@ -52,7 +52,7 @@ def test_convert_requirements_file_without_name(project, vcs):
     assert requirements.check_fingerprint(project, str(req_file))
     result, _ = requirements.convert(project, str(req_file), Namespace(dev=False, group=None))
 
-    assert result["dependencies"] == ["git+https://github.com/test-root/demo.git"]
+    assert result["dependencies"] == ["demo @ git+https://github.com/test-root/demo.git"]
 
 
 def test_convert_poetry(project):

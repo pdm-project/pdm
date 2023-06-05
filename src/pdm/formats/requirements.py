@@ -8,7 +8,7 @@ import urllib.parse
 from typing import TYPE_CHECKING, Any, Mapping
 
 from pdm.formats.base import make_array
-from pdm.models.requirements import Requirement, parse_requirement
+from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -53,7 +53,11 @@ class RequirementParser:
         if not line.startswith("-"):
             # Starts with a requirement, just ignore all per-requirement options
             req_string = line.split(" -", 1)[0].strip()
-            self.requirements.append(parse_requirement(req_string))
+            req = parse_requirement(req_string)
+            if not req.name:
+                assert isinstance(req, FileRequirement)
+                req.name = req.guess_name()
+            self.requirements.append(req)
             return
         args, _ = self._parser.parse_known_args(shlex.split(line))
         if args.index_url:
