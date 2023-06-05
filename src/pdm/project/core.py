@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, cast
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 
 import tomlkit
 from tomlkit.items import Array
@@ -118,12 +118,12 @@ class Project:
     def set_lockfile(self, path: str | Path) -> None:
         self._lockfile = Lockfile(path, ui=self.core.ui)
 
-    @property
-    def config(self) -> dict[str, Any]:
-        """A read-only dict configuration, any modifications won't land in the file."""
-        result = dict(self.global_config)
-        result.update(self.project_config)
-        return result
+    @cached_property
+    def config(self) -> Mapping[str, Any]:
+        """A read-only dict configuration"""
+        import collections
+
+        return collections.ChainMap(self.project_config, self.global_config)
 
     @property
     def scripts(self) -> dict[str, str | dict[str, str]]:

@@ -4,7 +4,7 @@ import collections
 import dataclasses
 import os
 from pathlib import Path
-from typing import Any, Callable, Iterator, Mapping, MutableMapping
+from typing import Any, Callable, Iterator, Mapping, MutableMapping, cast
 
 import platformdirs
 import rich.theme
@@ -12,6 +12,7 @@ import tomlkit
 
 from pdm import termui
 from pdm._types import RepositoryConfig
+from pdm.compat import cached_property
 from pdm.exceptions import NoConfigError, PdmUsageError
 
 REPOSITORY = "repository"
@@ -80,7 +81,7 @@ class ConfigItem:
     replace: str | None = None
 
     def should_show(self) -> bool:
-        return self.default is not self._NOT_SET or bool(self.env_var) and self.env_var in os.environ
+        return self.default is not self._NOT_SET
 
 
 class Config(MutableMapping[str, str]):
@@ -228,6 +229,10 @@ class Config(MutableMapping[str, str]):
         defaults.update(cls.site)
         return defaults
 
+    @cached_property
+    def env_map(self) -> Mapping[str, Any]:
+        return EnvMap(self._config_map)
+
     @classmethod
     def add_config(cls, name: str, item: ConfigItem) -> None:
         """Add or modify a config item"""
@@ -238,7 +243,11 @@ class Config(MutableMapping[str, str]):
         self.config_file = config_file.resolve()
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
-        self._data = collections.ChainMap(self._file_data, self.get_defaults() if is_global else {})
+        self._data = collections.ChainMap(
+            cast(MutableMapping[str, Any], self.env_map) if is_global else {},
+            self._file_data,
+            self.get_defaults() if is_global else {},
+        )
 
     def load_theme(self) -> rich.theme.Theme:
         if not self.is_global:  # pragma: no cover
@@ -286,16 +295,13 @@ class Config(MutableMapping[str, str]):
             raise NoConfigError(key)
         config_key = self.deprecated.get(key, key)
         config = self._config_map[config_key]
-        env_var = config.env_var
-        if env_var is not None and env_var in os.environ:
-            result = os.environ[env_var]
+
+        if config_key in self._data:
+            result = self._data[config_key]
+        elif config.replace:
+            result = self._data[config.replace]
         else:
-            if config_key in self._data:
-                result = self._data[config_key]
-            elif config.replace:
-                result = self._data[config.replace]
-            else:
-                raise NoConfigError(key) from None
+            raise NoConfigError(key) from None
         return config.coerce(result)
 
     def __setitem__(self, key: str, value: Any) -> None:
@@ -324,10 +330,9 @@ class Config(MutableMapping[str, str]):
             raise ValueError(f"Config item '{key}' is not allowed to set in project config.")
 
         value = config.coerce(value)
-        env_var = config.env_var
-        if env_var is not None and env_var in os.environ:
+        if key in self.env_map:
             ui.echo(
-                "WARNING: the config is shadowed by env var '{}', the value set won't take effect.".format(env_var),
+                f"WARNING: the config is shadowed by env var '{config.env_var}', the value set won't take effect.",
                 style="warning",
             )
         self._file_data[config_key] = value
@@ -411,3 +416,25 @@ class Config(MutableMapping[str, str]):
             if config.name == "__unknown__":
                 config.name = name
         return config
+
+
+class EnvMap(Mapping[str, Any]):
+    def __init__(self, config_items: Mapping[str, ConfigItem]) -> None:
+        self._config_map = config_items
+
+    def __getitem__(self, k: str) -> Any:
+        try:
+            item = self._config_map[k]
+            if item.env_var:
+                return item.coerce(os.environ[item.env_var])
+        except KeyError:
+            pass
+        raise KeyError(k)
+
+    def __iter__(self) -> Iterator[str]:
+        for key, item in self._config_map.items():
+            if item.env_var and item.env_var in os.environ:
+                yield key
+
+    def __len__(self) -> int:
+        return sum(1 for _ in self)
