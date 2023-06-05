@@ -2,7 +2,7 @@ import functools
 from pathlib import Path
 from typing import Any
 
-from cacheyou.adapter import CacheControlAdapter
+from cachecontrol.adapter import CacheControlAdapter
 from requests_toolbelt.utils import user_agent
 from unearth.session import InsecureMixin, PyPISession
 
