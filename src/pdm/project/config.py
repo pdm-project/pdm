@@ -422,6 +422,9 @@ class EnvMap(Mapping[str, Any]):
     def __init__(self, config_items: Mapping[str, ConfigItem]) -> None:
         self._config_map = config_items
 
+    def __repr__(self) -> str:
+        return repr(dict(self))
+
     def __getitem__(self, k: str) -> Any:
         try:
             item = self._config_map[k]
