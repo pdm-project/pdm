@@ -258,6 +258,35 @@ class FileRequirement(Requirement):
     def _hash_key(self) -> tuple:
         return (*super()._hash_key(), self.get_full_url(), self.editable)
 
+    def guess_name(self) -> str | None:
+        filename = os.path.basename(urlparse.unquote(url_without_fragments(self.url))).rsplit("@", 1)[0]
+        if self.is_vcs:
+            if self.vcs == "git":  # type: ignore[attr-defined]
+                name = filename
+                if name.endswith(".git"):
+                    name = name[:-4]
+                return name
+            elif self.vcs == "hg":  # type: ignore[attr-defined]
+                return filename
+            else:  # svn and bzr
+                name, in_branch, _ = filename.rpartition("/branches/")
+                if not in_branch and name.endswith("/trunk"):
+                    return name[:-6]
+                return name
+        elif filename.endswith(".whl"):
+            return parse_wheel_filename(filename)[0]
+        else:
+            try:
+                return parse_sdist_filename(filename)[0]
+            except ValueError:
+                match = _egg_info_re.match(filename)
+                # Filename is like `<name>-<version>.tar.gz`, where name will be
+                # extracted and version will be left to be determined from
+                # the metadata.
+                if match:
+                    return match.group(1)
+        return None
+
     @classmethod
     def create(cls: type[T], **kwargs: Any) -> T:
         if kwargs.get("path"):
@@ -354,19 +383,7 @@ class FileRequirement(Requirement):
             if not self.extras:
                 self.extras = extras
         if not self.name and not self.is_vcs:
-            filename = os.path.basename(urlparse.unquote(url_without_fragments(self.url)))
-            if filename.endswith(".whl"):
-                self.name, *_ = parse_wheel_filename(filename)
-            else:
-                try:
-                    self.name, *_ = parse_sdist_filename(filename)
-                except ValueError:
-                    match = _egg_info_re.match(filename)
-                    # Filename is like `<name>-<version>.tar.gz`, where name will be
-                    # extracted and version will be left to be determined from
-                    # the metadata.
-                    if match:
-                        self.name = match.group(1)
+            self.name = self.guess_name()
 
     def _check_installable(self) -> None:
         assert self.path

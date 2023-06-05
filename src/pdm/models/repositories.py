@@ -4,7 +4,7 @@ import dataclasses
 import posixpath
 import sys
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, TypeVar, cast
+from typing import TYPE_CHECKING, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
@@ -25,10 +25,14 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from typing import Any, Callable, Iterable, Mapping
+
     from unearth import Link
 
     from pdm._types import CandidateInfo, RepositoryConfig, SearchResult
     from pdm.environments import BaseEnvironment
+
+    CandidateKey = tuple[str, str | None, str | None, bool]
 
 ALLOW_ALL_PYTHON = PySpecSet()
 T = TypeVar("T", bound="BaseRepository")
@@ -390,9 +394,9 @@ class LockedRepository(BaseRepository):
         environment: BaseEnvironment,
     ) -> None:
         super().__init__(sources, environment, ignore_compatibility=False)
-        self.packages: dict[tuple, Candidate] = {}
+        self.packages: dict[CandidateKey, Candidate] = {}
         self.file_hashes: dict[tuple[str, str], dict[Link, str]] = {}
-        self.candidate_info: dict[tuple, CandidateInfo] = {}
+        self.candidate_info: dict[CandidateKey, CandidateInfo] = {}
         self._read_lockfile(lockfile)
 
     @property
@@ -428,7 +432,7 @@ class LockedRepository(BaseRepository):
                 Link(item["url"]): item["hash"] for item in hashes if "url" in item
             }
 
-    def _identify_candidate(self, candidate: Candidate) -> tuple:
+    def _identify_candidate(self, candidate: Candidate) -> CandidateKey:
         url = getattr(candidate.req, "url", None)
         if url is not None:
             url = url_without_fragments(url)
@@ -452,17 +456,22 @@ class LockedRepository(BaseRepository):
             self._get_dependencies_from_lockfile,
         )
 
-    def _matching_keys(self, requirement: Requirement) -> Iterable[tuple]:
+    def _matching_keys(self, requirement: Requirement) -> Iterable[CandidateKey]:
+        from pdm.models.requirements import FileRequirement
+
         for key in self.candidate_info:
+            can_req = self.packages[key].req
             if requirement.name:
                 if key[0] != requirement.identify():
                     continue
-            elif key[2] is not None:
-                if key[2] != url_without_fragments(getattr(requirement, "url", "")):
-                    continue
             else:
-                can_req = self.packages[key].req
-                if can_req.path != getattr(requirement, "path", None):  # type: ignore[attr-defined]
+                assert isinstance(requirement, FileRequirement)
+                if not isinstance(can_req, FileRequirement):
+                    continue
+                if requirement.path and can_req.path:
+                    if requirement.path != can_req.path:
+                        continue
+                elif key[2] is not None and key[2] != url_without_fragments(requirement.url):
                     continue
 
             yield key
