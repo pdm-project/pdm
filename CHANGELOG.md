@@ -1,3 +1,18 @@
+Release v2.7.1 (2023-06-06)
+---------------------------
+
+### Features & Improvements
+
+- Switch HTTP data cache to use a split body setup, where the actual body contents are not written to disk unless changed. Previously, any changed headers would write the whole body to disk again. [#1971](https://github.com/pdm-project/pdm/issues/1971)
+- Show the specific install commands for different installations when checking update. This was removed before. [#1972](https://github.com/pdm-project/pdm/issues/1972)
+
+### Bug Fixes
+
+- PDM ignores env vars `PDM_PYPI_USERNAME` and `PDM_PYPI_PASSWORD` when there are no defaults in config. [#1961](https://github.com/pdm-project/pdm/issues/1961)
+- Guess the project name from VCS url if it is missing when importing from requirements.txt. [#1970](https://github.com/pdm-project/pdm/issues/1970)
+- Correctly read the config from environment variables. [#1977](https://github.com/pdm-project/pdm/issues/1977)
+
+
 Release v2.7.0 (2023-05-29)
 ---------------------------
 
