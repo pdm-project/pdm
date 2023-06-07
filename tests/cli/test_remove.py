@@ -6,7 +6,7 @@ from pdm.models.specifiers import PySpecSet
 
 
 def test_remove_command(project, pdm, mocker):
-    do_remove = mocker.patch.object(actions, "do_remove")
+    do_remove = mocker.patch("pdm.cli.commands.remove.Command.do_remove")
     pdm(["remove", "demo"], obj=project)
     do_remove.assert_called_once()
 

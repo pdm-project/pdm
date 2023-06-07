@@ -678,3 +678,11 @@ def use_venv(project: Project, name: str) -> None:
         f"In virtual environment: [success]{venv.root}[/]", err=True, style="info", verbosity=termui.Verbosity.DETAIL
     )
     project.environment = PythonEnvironment(project, python=str(venv.interpreter))
+
+
+def populate_requirement_names(req_mapping: dict[str, Requirement]) -> None:
+    # Update the requirement key if the name changed.
+    for key, req in list(req_mapping.items()):
+        if key and key.startswith(":empty:"):
+            req_mapping[req.identify()] = req
+            del req_mapping[key]

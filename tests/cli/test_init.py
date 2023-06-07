@@ -3,7 +3,6 @@ from unittest.mock import ANY
 
 import pytest
 
-from pdm.cli import actions
 from pdm.cli.commands.init import Command
 from pdm.models.backends import get_backend
 from pdm.models.python import PythonInfo
@@ -71,7 +70,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
         return_value=("Testing", "me@example.org"),
     )
     do_init = mocker.patch.object(Command, "do_init")
-    do_use = mocker.patch.object(actions, "do_use", return_value=PythonInfo.from_path(sys.executable))
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
     result = pdm(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
