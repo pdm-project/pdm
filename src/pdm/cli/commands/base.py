@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import argparse
 from argparse import _SubParsersAction
-from typing import Any
+from typing import Any, TypeVar
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.project import Project
+
+C = TypeVar("C", bound="BaseCommand")
 
 
 class BaseCommand:
@@ -19,10 +21,16 @@ class BaseCommand:
     # Rewrite this if you don't want the default ones
     arguments: list[Option] = [verbose_option, global_option, project_option]
 
-    def __init__(self, parser: argparse.ArgumentParser) -> None:
-        for arg in self.arguments:
+    def __init__(self, parser: argparse.ArgumentParser | None = None) -> None:
+        """For compatibility, the parser is optional and won't be used."""
+
+    @classmethod
+    def init_parser(cls: type[C], parser: argparse.ArgumentParser) -> C:
+        cmd = cls()
+        for arg in cmd.arguments:
             arg.add_to_parser(parser)
-        self.add_arguments(parser)
+        cmd.add_arguments(parser)
+        return cmd
 
     @classmethod
     def register_to(cls, subparsers: _SubParsersAction, name: str | None = None, **kwargs: Any) -> None:
@@ -41,7 +49,7 @@ class BaseCommand:
             help=help_text,
             **kwargs,
         )
-        command = cls(parser)
+        command = cls.init_parser(parser)
         command.name = name
         # Store the command instance in the parsed args. See pdm/core.py for more details
         parser.set_defaults(command=command)

@@ -3,7 +3,6 @@ import shutil
 import pytest
 from unearth import Link
 
-from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import path_to_url
@@ -26,7 +25,7 @@ def test_add_package(project, working_set, dev_option, pdm):
 
 
 def test_add_command(project, pdm, mocker):
-    do_add = mocker.patch.object(actions, "do_add")
+    do_add = mocker.patch("pdm.cli.commands.add.Command.do_add")
     pdm(["add", "requests"], obj=project)
     do_add.assert_called_once()
 

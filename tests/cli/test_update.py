@@ -1,6 +1,5 @@
 import pytest
 
-from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
 
 
@@ -12,7 +11,7 @@ def test_update_packages_with_top(project, pdm):
 
 
 def test_update_command(project, pdm, mocker):
-    do_update = mocker.patch.object(actions, "do_update")
+    do_update = mocker.patch("pdm.cli.commands.update.Command.do_update")
     pdm(["update"], obj=project)
     do_update.assert_called_once()
 

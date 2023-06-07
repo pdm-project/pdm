@@ -22,8 +22,7 @@ if TYPE_CHECKING:
 class Command(BaseCommand):
     """Initialize a pyproject.toml for PDM"""
 
-    def __init__(self, parser: argparse.ArgumentParser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
         self.interactive = True
 
     @staticmethod
@@ -112,15 +111,17 @@ class Command(BaseCommand):
         parser.set_defaults(search_parent=False)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        from pdm.cli.commands.use import Command as UseCommand
+
         hooks = HookManager(project, options.skip)
         if project.pyproject.exists():
             project.core.ui.echo("pyproject.toml already exists, update it now.", style="primary")
         else:
             project.core.ui.echo("Creating a pyproject.toml for PDM...", style="primary")
         self.set_interactive(not options.non_interactive)
-
+        do_use = UseCommand().do_use
         if self.interactive:
-            python = actions.do_use(
+            python = do_use(
                 project,
                 options.python or "",
                 first=bool(options.python),
@@ -129,7 +130,7 @@ class Command(BaseCommand):
                 hooks=hooks,
             )
         else:
-            python = actions.do_use(
+            python = do_use(
                 project,
                 options.python or "3",
                 first=True,

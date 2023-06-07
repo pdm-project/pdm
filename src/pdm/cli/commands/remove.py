@@ -1,11 +1,18 @@
-import argparse
+from __future__ import annotations
 
-from pdm.cli import actions
+import argparse
+from typing import TYPE_CHECKING, cast
+
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import dry_run_option, install_group, lockfile_option, skip_option, venv_option
-from pdm.project import Project
+from pdm.exceptions import PdmUsageError, ProjectError
+
+if TYPE_CHECKING:
+    from typing import Collection
+
+    from pdm.project import Project
 
 
 class Command(BaseCommand):
@@ -32,7 +39,7 @@ class Command(BaseCommand):
         parser.add_argument("packages", nargs="+", help="Specify the packages to remove")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        actions.do_remove(
+        self.do_remove(
             project,
             selection=GroupSelection.from_options(project, options),
             sync=options.sync,
@@ -43,3 +50,65 @@ class Command(BaseCommand):
             fail_fast=options.fail_fast,
             hooks=HookManager(project, options.skip),
         )
+
+    @staticmethod
+    def do_remove(
+        project: Project,
+        selection: GroupSelection,
+        sync: bool = True,
+        packages: Collection[str] = (),
+        no_editable: bool = False,
+        no_self: bool = False,
+        dry_run: bool = False,
+        fail_fast: bool = False,
+        hooks: HookManager | None = None,
+    ) -> None:
+        """Remove packages from working set and pyproject.toml"""
+        from tomlkit.items import Array
+
+        from pdm.cli.actions import do_lock, do_sync
+        from pdm.cli.utils import check_project_file
+        from pdm.models.requirements import parse_requirement
+        from pdm.utils import cd
+
+        hooks = hooks or HookManager(project)
+        check_project_file(project)
+        if not packages:
+            raise PdmUsageError("Must specify at least one package to remove.")
+        group = selection.one()
+        lock_groups = project.lockfile.groups
+
+        deps, _ = project.get_pyproject_dependencies(group, selection.dev or False)
+        project.core.ui.echo(
+            f"Removing packages from [primary]{group}[/] "
+            f"{'dev-' if selection.dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
+        )
+        with cd(project.root):
+            for name in packages:
+                req = parse_requirement(name)
+                matched_indexes = sorted((i for i, r in enumerate(deps) if req.matches(r)), reverse=True)
+                if not matched_indexes:
+                    raise ProjectError(f"[req]{name}[/] does not exist in [primary]{group}[/] dependencies.")
+                for i in matched_indexes:
+                    del deps[i]
+        cast(Array, deps).multiline(True)
+
+        if not dry_run:
+            project.pyproject.write()
+        if lock_groups and group not in lock_groups:
+            project.core.ui.echo(
+                f"Group [success]{group}[/] isn't in lockfile, skipping lock.", style="warning", err=True
+            )
+            return
+        do_lock(project, "reuse", dry_run=dry_run, hooks=hooks, groups=lock_groups)
+        if sync:
+            do_sync(
+                project,
+                selection=GroupSelection(project, default=False, groups=[group]),
+                clean=True,
+                no_editable=no_editable,
+                no_self=no_self,
+                dry_run=dry_run,
+                fail_fast=fail_fast,
+                hooks=hooks,
+            )

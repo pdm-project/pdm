@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from pdm.cli import actions
+from pdm.cli.commands.use import Command as UseCommand
 from pdm.exceptions import NoPythonVersion
 from pdm.models.caches import JSONFileCache
 
@@ -42,7 +42,7 @@ exec "{}" "$@"
     shim_path.write_text(wrapper_script)
     shim_path.chmod(0o755)
 
-    actions.do_use(project, shim_path.as_posix())
+    UseCommand().do_use(project, shim_path.as_posix())
     assert project.python.executable == Path(sys.executable)
 
 
@@ -55,20 +55,21 @@ echo hello
     shim_path.write_text(wrapper_script)
     shim_path.chmod(0o755)
     with pytest.raises(NoPythonVersion):
-        actions.do_use(project, shim_path.as_posix())
+        UseCommand().do_use(project, shim_path.as_posix())
 
 
 def test_use_remember_last_selection(project, mocker):
     cache = JSONFileCache(project.cache_dir / "use_cache.json")
     cache.clear()
-    actions.do_use(project, first=True)
+    do_use = UseCommand().do_use
+    do_use(project, first=True)
     cache._read_cache()
     assert not cache._cache
-    actions.do_use(project, "3", first=True)
+    do_use(project, "3", first=True)
     cache._read_cache()
     assert "3" in cache
     mocker.patch.object(project, "find_interpreters")
-    actions.do_use(project, "3")
+    do_use(project, "3")
     project.find_interpreters.assert_not_called()
 
 
@@ -77,9 +78,10 @@ def test_use_venv_python(project, pdm):
     pdm(["venv", "create", "--name", "test"], obj=project, strict=True)
     project.global_config["python.use_venv"] = True
     venv_location = project.config["venv.location"]
-    actions.do_use(project, venv="in-project")
+    do_use = UseCommand().do_use
+    do_use(project, venv="in-project")
     assert project.python.executable.parent.parent == project.root.joinpath(".venv")
-    actions.do_use(project, venv="test")
+    do_use(project, venv="test")
     assert project.python.executable.parent.parent.parent == Path(venv_location)
     with pytest.raises(Exception, match="No virtualenv with key 'non-exists' is found"):
-        actions.do_use(project, venv="non-exists")
+        do_use(project, venv="non-exists")
