@@ -237,7 +237,7 @@ class UpdateCommand(BaseCommand):
                 project.core.ui.echo(f"Already up-to-date: [primary]{__version__}[/]")
                 return
             package = f"pdm=={version}"
-        pip_args = ["install", "--upgrade", *shlex.split(options.pip_args)] + [package]
+        pip_args = ["install", "--upgrade", *shlex.split(options.pip_args), package]
         project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
             with project.core.ui.open_spinner(f"Updating pdm to version [primary]{version}[/]"):
