@@ -127,6 +127,7 @@ class Command(BaseCommand):
                 first=bool(options.python),
                 ignore_remembered=True,
                 ignore_requires_python=True,
+                save=False,
                 hooks=hooks,
             )
         else:
@@ -136,6 +137,7 @@ class Command(BaseCommand):
                 first=True,
                 ignore_remembered=True,
                 ignore_requires_python=True,
+                save=False,
                 hooks=hooks,
             )
         if project.config["python.use_venv"] and python.get_venv() is None:
@@ -143,9 +145,10 @@ class Command(BaseCommand):
                 f"Would you like to create a virtualenv with [success]{python.executable}[/]?",
                 default=True,
             ):
+                project._python = python
                 try:
                     path = project._create_virtualenv()
-                    python = project.python = PythonInfo.from_path(get_venv_python(path))
+                    python = PythonInfo.from_path(get_venv_python(path))
                 except Exception as e:  # pragma: no cover
                     project.core.ui.echo(
                         f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later.",
@@ -196,6 +199,7 @@ class Command(BaseCommand):
         email = self.ask("Author email", git_email)
         python_version = f"{python.major}.{python.minor}"
         python_requires = self.ask("Python requires('*' to allow any)", f">={python_version}")
+        project.python = python
 
         self.do_init(
             project,
