@@ -136,7 +136,6 @@ class Command(BaseCommand):
                 first=True,
                 ignore_remembered=True,
                 ignore_requires_python=True,
-                save=False,
                 hooks=hooks,
             )
         if project.config["python.use_venv"] and python.get_venv() is None:
