@@ -288,7 +288,7 @@ dev2 = ["mkdocs"]
 
 | Command                         | What it does                                                         | Comments                  |
 | ------------------------------- | -------------------------------------------------------------------- | ------------------------- |
-| `pdm install`                   | install prod and dev deps (no optional)                              |                           |
+| `pdm install`                   | install all groups locked in the lockfile                            |                           |
 | `pdm install -G extra1`         | install prod deps, dev deps, and "extra1" optional group             |                           |
 | `pdm install -G dev1`           | install prod deps and only "dev1" dev group                          |                           |
 | `pdm install -G:all`            | install prod deps, dev deps and "extra1", "extra2" optional groups   |                           |
