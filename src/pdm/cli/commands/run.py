@@ -234,7 +234,7 @@ class TaskRunner:
             assert isinstance(value, list)
 
         self.project.core.ui.echo(
-            f"Running {task}: [success]{str(args)}[/]",
+            f"Running {task}: [success]{args}[/]",
             err=True,
             verbosity=termui.Verbosity.DETAIL,
         )
@@ -351,7 +351,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Output all scripts infos in JSON",
         )
-        exec = action.add_argument_group("execution", "Execution parameters")
+        exec = parser.add_argument_group("Execution parameters")
         exec.add_argument(
             "-s",
             "--site-packages",
