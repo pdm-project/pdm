@@ -131,7 +131,7 @@ You can achieve this by installing the plugin in editable mode. To do this, spec
 ```toml
 [tool.pdm]
 plugins = [
-    "-e file:///{PROJECT_ROOT}"
+    "-e file:///${PROJECT_ROOT}"
 ]
 ```
 
