@@ -199,7 +199,13 @@ def parse_setup(path: str) -> Dict[str, Any]:
     return parsed
 
 
+def json_default(o):
+    return "<unserializable object>"
+
+
 if __name__ == "__main__":
     import json
 
-    print(json.dumps(parse_setup(sys.argv[1])))
+    outfile = sys.argv[2]
+    with open(outfile, "w") as f:
+        json.dump(parse_setup(sys.argv[1]), f, default=json_default)

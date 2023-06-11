@@ -8,6 +8,7 @@ import functools
 import json
 import os
 import subprocess
+import tempfile
 from typing import Any, Generator
 
 from pdm.compat import resources_path
@@ -47,5 +48,8 @@ def get_pep508_environment(executable: str) -> dict[str, str]:
 def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
     """Parse setup.py and return the kwargs"""
     with _in_process_script("parse_setup.py") as script:
-        cmd = [executable, "-Es", script, path]
-        return json.loads(subprocess.check_output(cmd))
+        _, outfile = tempfile.mkstemp(suffix=".json")
+        cmd = [executable, "-Es", script, path, outfile]
+        subprocess.check_call(cmd)
+        with open(outfile, "rb") as fp:
+            return json.load(fp)
