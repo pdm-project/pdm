@@ -29,7 +29,7 @@ def test_convert_pipfile(project):
 def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    options = Namespace(dev=is_dev, group=None)
+    options = Namespace(dev=is_dev, group=None, expandvars=False)
     result, settings = requirements.convert(project, golden_file, options)
     group = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
     dev_group = settings["dev-dependencies"]["dev"]
@@ -50,7 +50,7 @@ def test_convert_requirements_file_without_name(project, vcs):
     req_file = project.root.joinpath("reqs.txt")
     project.root.joinpath("reqs.txt").write_text("git+https://github.com/test-root/demo.git\n")
     assert requirements.check_fingerprint(project, str(req_file))
-    result, _ = requirements.convert(project, str(req_file), Namespace(dev=False, group=None))
+    result, _ = requirements.convert(project, str(req_file), Namespace(dev=False, group=None, expandvars=None))
 
     assert result["dependencies"] == ["demo @ git+https://github.com/test-root/demo.git"]
 
@@ -124,7 +124,7 @@ def test_convert_flit(project):
 def test_import_requirements_with_group(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    result, settings = requirements.convert(project, golden_file, Namespace(dev=False, group="test"))
+    result, settings = requirements.convert(project, golden_file, Namespace(dev=False, group="test", expandvars=False))
 
     group = result["optional-dependencies"]["test"]
     dev_group = settings["dev-dependencies"]["dev"]
@@ -139,8 +139,16 @@ def test_keep_env_vars_in_source(project, monkeypatch):
     monkeypatch.setenv("USER", "foo")
     monkeypatch.setenv("PASSWORD", "bar")
     project.pyproject.settings["source"] = [{"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}]
-    result = requirements.export(project, [], Namespace())
+    result = requirements.export(project, [], Namespace(expandvars=False))
     assert result.strip().splitlines()[-1] == "--index-url https://${USER}:${PASSWORD}@test.pypi.org/simple"
+
+
+def test_expand_env_vars_in_source(project, monkeypatch):
+    monkeypatch.setenv("USER", "foo")
+    monkeypatch.setenv("PASSWORD", "bar")
+    project.pyproject.settings["source"] = [{"url": "https://foo:bar@test.pypi.org/simple", "name": "pypi"}]
+    result = requirements.export(project, [], Namespace(expandvars=True))
+    assert result.strip().splitlines()[-1] == "--index-url https://foo:bar@test.pypi.org/simple"
 
 
 def test_export_replace_project_root(project):
@@ -148,7 +156,7 @@ def test_export_replace_project_root(project):
     shutil.copy2(artifact, project.root)
     with cd(project.root):
         req = parse_requirement(f"./{artifact.name}")
-    result = requirements.export(project, [req], Namespace(hashes=False))
+    result = requirements.export(project, [req], Namespace(hashes=False, expandvars=False))
     assert "${PROJECT_ROOT}" not in result
 
 

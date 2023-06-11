@@ -45,6 +45,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Read the list of packages from pyproject.toml",
         )
+        parser.add_argument("--expandvars", action="store_true", help="Expand environment variables in requirements")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.pyproject:

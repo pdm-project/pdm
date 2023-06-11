@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
+from pdm.utils import expand_env_vars_in_auth
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -187,7 +188,7 @@ def export(
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
-        lines.append(project.backend.expand_line(req.as_line()))
+        lines.append(project.backend.expand_line(req.as_line(), options.expandvars))
         if options.hashes and getattr(candidate, "hashes", None):
             for item in sorted(set(candidate.hashes.values())):  # type: ignore[attr-defined]
                 lines.append(f" \\\n    --hash={item}")
@@ -195,6 +196,8 @@ def export(
     sources = project.pyproject.settings.get("source", [])
     for source in sources:
         url = source["url"]
+        if options.expandvars:
+            url = expand_env_vars_in_auth(url)
         prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"
         lines.append(f"{prefix} {url}\n")
         if not source.get("verify_ssl", True):

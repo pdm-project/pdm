@@ -14,7 +14,7 @@ class BuildBackend(metaclass=abc.ABCMeta):
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def expand_line(self, line: str) -> str:
+    def expand_line(self, line: str, expand_env: bool = True) -> str:
         return line
 
     def relative_path_to_url(self, path: str) -> str:
@@ -45,8 +45,11 @@ class SetuptoolsBackend(BuildBackend):
 
 
 class PDMBackend(BuildBackend):
-    def expand_line(self, req: str) -> str:
-        return expand_env_vars(req).replace("file:///${PROJECT_ROOT}", path_to_url(self.root.as_posix()))
+    def expand_line(self, req: str, expand_env: bool = True) -> str:
+        line = req.replace("file:///${PROJECT_ROOT}", path_to_url(self.root.as_posix()))
+        if expand_env:
+            line = expand_env_vars(line)
+        return line
 
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
@@ -86,8 +89,13 @@ class PathContext:
 
 
 class EnvContext:
+    def __init__(self, expand: bool = True) -> None:
+        self.expand = expand
+
     def __format__(self, __format_spec: str) -> str:
         name, sep, default = __format_spec.partition(":")
+        if not self.expand:
+            return f"${{{name}}}"
         if name in os.environ:
             return os.environ[name]
         if not sep:
@@ -96,9 +104,9 @@ class EnvContext:
 
 
 class HatchBackend(BuildBackend):
-    def expand_line(self, line: str) -> str:
+    def expand_line(self, line: str, expand_env: bool = True) -> str:
         return line.format(
-            env=EnvContext(),
+            env=EnvContext(expand=expand_env),
             root=PathContext(self.root),
             home=PathContext(Path.home()),
         )
