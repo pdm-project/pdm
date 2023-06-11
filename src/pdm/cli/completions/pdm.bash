@@ -49,7 +49,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (export)
-            opts="--dev --format --global --group --help --lockfile --no-default --output --production --project --pyproject --verbose --without-hashes"
+            opts="--dev --expandvars --format --global --group --help --lockfile --no-default --output --production --project --pyproject --verbose --without-hashes"
             ;;
 
             (fix)
