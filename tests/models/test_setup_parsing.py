@@ -84,9 +84,10 @@ setup(name="foo", version="0.1.0", install_requires=['click', 'requests'],
             Setup("foo", "0.1.0", ["click", "requests"], {"tui": ["rich"]}, ">=3.6"),
         ),
         (
-            """from setuptools import setup
+            """from pathlib import Path
+from setuptools import setup
 
-version = open('__version__.py').read().strip()
+version = Path('__version__.py').read_text().strip()
 
 setup(name="foo", version=version)
 """,
