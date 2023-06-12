@@ -214,7 +214,9 @@ class Installer:
                     parts.append(rest)
             return tuple(parts)
 
-        installable_versions = {k for k, v in metadata["releases"].items() if version_okay(k) and not v[0].get("yanked")}
+        installable_versions = {
+            k for k, v in metadata["releases"].items() if version_okay(k) and not v[0].get("yanked")
+        }
         releases = sorted(installable_versions, key=sort_version, reverse=True)
 
         return releases[0]
