@@ -442,6 +442,7 @@ def filter_requirements_with_extras(
     If extras are given, return those with matching extra markers.
     Otherwise, return those without extra markers.
     """
+    extras = [normalize_name(e) for e in extras]
     result: list[str] = []
     extras_in_meta: set[str] = set()
     for req in requirement_lines:
