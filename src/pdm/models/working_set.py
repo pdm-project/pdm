@@ -19,7 +19,8 @@ class EgglinkFinder(im.DistributionFinder):
         meta_finder = im.MetadataPathFinder()
         for link in found_links:
             name = link.stem
-            link_pointer = Path(link.open("rb").readline().decode().strip())
+            with link.open("rb") as file_link:
+                link_pointer = Path(file_link.readline().decode().strip())
             dist = next(
                 iter(
                     meta_finder.find_distributions(im.DistributionFinder.Context(name=name, path=[str(link_pointer)]))
