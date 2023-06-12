@@ -30,6 +30,8 @@ concurrency:
 
 jobs:
   Testing:
+    env:
+      PYTHONDEVMODE: 1
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
