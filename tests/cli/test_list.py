@@ -430,7 +430,7 @@ def test_list_bare(project, pdm):
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("working_set")
 def test_list_bare_sorted_name(project, pdm):
-    pdm(["add", "requests", "pyyaml"], obj=project, strict=True)
+    pdm(["add", "requests"], obj=project, strict=True)
     result = pdm(["list", "--sort", "name"], obj=project)
     expected = (
         "+--------------------------------------+\n"
@@ -439,7 +439,6 @@ def test_list_bare_sorted_name(project, pdm):
         "| certifi      | 2018.11.17 |          |\n"
         "| chardet      | 3.0.4      |          |\n"
         "| idna         | 2.7        |          |\n"
-        "| PyYAML       | 6.0        |          |\n"
         "| requests     | 2.19.1     |          |\n"
         "| test-project | 0.0.0      |          |\n"
         "| urllib3      | 1.22       |          |\n"

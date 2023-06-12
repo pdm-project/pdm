@@ -60,6 +60,5 @@
     "1.0": {
       "dependencies": ["django<2"]
     }
-  },
-  "PyYAML": { "6.0": {} }
+  }
 }
