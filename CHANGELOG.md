@@ -1,3 +1,20 @@
+Release v2.7.2 (2023-06-12)
+---------------------------
+
+### Features & Improvements
+
+- Add option to expand environment variables when exporting requirements. [#1997](https://github.com/pdm-project/pdm/issues/1997)
+
+### Bug Fixes
+
+- Case-insensitive sorting in `pdm list`. [#1973](https://github.com/pdm-project/pdm/issues/1973)
+- Make a compatible cache reader to read the old cache files. [#1981](https://github.com/pdm-project/pdm/issues/1981)
+- Fix a bug that `pdm init -n` doesn't respect the `--python` option. [#1984](https://github.com/pdm-project/pdm/issues/1984)
+- Do not use the deprecated nested argument groups. [#1988](https://github.com/pdm-project/pdm/issues/1988)
+- Fix an error parsing `setup.py` if it prints something to stdout. [#1995](https://github.com/pdm-project/pdm/issues/1995)
+- Exclude yanked versions when running `install-pdm.py`. [#1996](https://github.com/pdm-project/pdm/issues/1996)
+
+
 Release v2.7.1 (2023-06-06)
 ---------------------------
 
