@@ -23,10 +23,13 @@ class BaseCommand:
     # Rewrite this if you don't want the default ones
     arguments: list[Option] = [verbose_option, global_option, project_option]
 
+    def __init__(self, parser: argparse.ArgumentParser | None = None) -> None:
+        """For compatibility, the parser is optional and won't be used."""
+
     @classmethod
     def init_parser(cls: type[C], parser: argparse.ArgumentParser) -> C:
         args = inspect.signature(cls).parameters
-        if "parser" in args:
+        if "parser" in args and args["parser"].default is inspect._empty:
             deprecation_warning(
                 f"The `parser` argument of `{cls.__name__}.__init__()` is deprecated. It won't be used."
             )
