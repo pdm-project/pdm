@@ -1,3 +1,13 @@
+Release v2.7.3 (2023-06-13)
+---------------------------
+
+### Bug Fixes
+
+- Fix the warning of extras not found due to extra names not normalized. [#2006](https://github.com/pdm-project/pdm/issues/2006)
+- Pop up a warning when the deprecated `parser` argument is passed to `BaseCommand.__init__()` method. [#2007](https://github.com/pdm-project/pdm/issues/2007)
+- Fix a bug that merging settings with AoTs causing a failure. [#2011](https://github.com/pdm-project/pdm/issues/2011)
+
+
 Release v2.7.2 (2023-06-12)
 ---------------------------
 
