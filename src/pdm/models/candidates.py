@@ -481,7 +481,7 @@ class PreparedCandidate:
             if isinstance(medata_hash, dict):
                 hash_name, hash_value = next(iter(medata_hash.items()))
                 if hashlib.new(hash_name, resp.content).hexdigest() != hash_value:
-                    termui.logger.warn("Metadata hash mismatch for %s, ignoring the metadata", link)
+                    termui.logger.warning("Metadata hash mismatch for %s, ignoring the metadata", link)
                     return None
             return MetadataDistribution(resp.text)
 
@@ -497,7 +497,7 @@ class PreparedCandidate:
         pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
         metadata = pyproject.metadata.unwrap()
         if not metadata:
-            termui.logger.warn("Failed to parse pyproject.toml")
+            termui.logger.warning("Failed to parse pyproject.toml")
             return None
 
         dynamic_fields = metadata.get("dynamic", [])
@@ -542,12 +542,12 @@ class PreparedCandidate:
             termui.logger.info("Running PEP 517 backend to get metadata for %s", self.link)
             self._metadata_dir = builder(source_dir, self.environment).prepare_metadata(metadata_parent)
         except BuildError:
-            termui.logger.warn("Failed to build package, try parsing project files.")
+            termui.logger.warning("Failed to build package, try parsing project files.")
             try:
                 setup = Setup.from_directory(source_dir)
             except Exception:
                 message = "Failed to parse the project files, dependencies may be missing"
-                termui.logger.warn(message)
+                termui.logger.warning(message)
                 warnings.warn(message, RuntimeWarning, stacklevel=1)
                 setup = Setup()
             return setup.as_dist()
