@@ -413,8 +413,8 @@ def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | No
 
     if raise_since is not None:
         if Version(__version__) >= Version(raise_since):
-            raise DeprecationWarning(message)
-    warnings.warn(message, DeprecationWarning, stacklevel=stacklevel + 1)
+            raise FutureWarning(message)
+    warnings.warn(message, FutureWarning, stacklevel=stacklevel + 1)
 
 
 def is_pip_compatible_with_python(python_version: Version | str) -> bool:
