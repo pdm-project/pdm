@@ -613,7 +613,8 @@ def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any])
             merge_dictionary(target[key], value)
         elif isinstance(value, list):
             target[key].extend(x for x in value if x not in target[key])
-            target[key].multiline(True)  # type: ignore[attr-defined]
+            if hasattr(target[key], "multiline"):
+                target[key].multiline(True)  # type: ignore[attr-defined]
         else:
             target[key] = value
 
