@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
 from cachecontrol.cache import SeparateBodyBaseCache
 from cachecontrol.caches import FileCache
 from packaging.utils import canonicalize_name, parse_wheel_filename
+
 from pdm._types import CandidateInfo
 from pdm.exceptions import PdmException
 from pdm.models.candidates import Candidate
@@ -128,6 +129,11 @@ class HashCache:
             h.update(chunk)
         return ":".join([h.name, h.hexdigest()])
 
+    def _should_cache(self, link: Link) -> bool:
+        # For now, we only disable caching for local files.
+        # We may add more when we know better about it.
+        return not link.is_file
+
     def get_hash(self, link: Link, session: Session) -> str:
         # If there is no link hash (i.e., md5, sha256, etc.), we don't want
         # to store it.
@@ -142,7 +148,8 @@ class HashCache:
                 hash_value = f"{link.hash_name}:{link.hash}"
             else:
                 hash_value = self._get_file_hash(link, session)
-            self.set(link.url_without_fragment, hash_value)
+            if self._should_cache(link):
+                self.set(link.url_without_fragment, hash_value)
         return hash_value
 
     def _get_path_for_key(self, key: str) -> Path:
