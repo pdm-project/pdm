@@ -45,7 +45,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (config)
-            opts="--delete --global --help --local --project --verbose"
+            opts="--delete --edit --global --help --local --project --verbose"
             ;;
 
             (export)

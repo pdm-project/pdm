@@ -94,6 +94,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from completion' -l help -d 'Show 
 
 # config
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l delete -d 'Unset a configuration key'
+complete -c pdm -A -n '__fish_seen_subcommand_from config' -l edit -d 'Edit the configuration file in the default editor(defined by EDITOR env var)'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l local -d 'Set config in the project\'s local configuration file'
@@ -102,7 +103,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from config' -l verbose -d 'Use `-
 
 # export
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l dev -d 'Select dev dependencies'
-complete -c pdm -A -n '__fish_seen_subcommand_from export' -l expandvars -d 'Expand environment variables in pyproject.toml'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l expandvars -d 'Expand environment variables in requirements'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l format -d 'Specify the export file format'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l group -d 'Select group of optional-dependencies separated by comma or dev-dependencies (with `-d`). Can be supplied multiple times, use ":all" to include all groups under the same species.'

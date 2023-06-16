@@ -241,7 +241,7 @@ function TabExpansion($line, $lastWord) {
             }
             "completion" { $completer.AddParams(@("powershell", "bash", "zsh", "fish")); break }
             "config" {
-                $completer.AddOpts(@([Option]::new(@("--delete", "--global", "--local", "-d", "-l", "-g")), $projectOption))
+                $completer.AddOpts(@([Option]::new(@("--delete", "--global", "--local", "--edit", "-e", "-d", "-l", "-g")), $projectOption))
                 $completer.AddParams(@(getConfigKeys), $false)
                 break
             }
