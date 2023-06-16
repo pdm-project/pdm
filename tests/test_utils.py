@@ -138,10 +138,10 @@ def test_prod_should_not_be_with_dev(project):
 
 
 def test_deprecation_warning():
-    with pytest.warns(DeprecationWarning) as record:
+    with pytest.warns(FutureWarning) as record:
         utils.deprecation_warning("Test warning", raise_since="99.99")
     assert len(record) == 1
     assert str(record[0].message) == "Test warning"
 
-    with pytest.raises(DeprecationWarning):
+    with pytest.raises(FutureWarning):
         utils.deprecation_warning("Test warning", raise_since="0.0")
