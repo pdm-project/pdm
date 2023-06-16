@@ -85,17 +85,17 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
 **For Linux/Mac**
 
 ```bash
-curl -sSL https://pdm.fming.dev/latest/install-pdm.py | python3 -
+curl -sSL https://pdm.fming.dev/dev/install-pdm.py | python3 -
 ```
 
 **For Windows**
 
 ```powershell
-(Invoke-WebRequest -Uri https://pdm.fming.dev/latest/install-pdm.py -UseBasicParsing).Content | python -
+(Invoke-WebRequest -Uri https://pdm.fming.dev/dev/install-pdm.py -UseBasicParsing).Content | python -
 ```
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
-It can be downloaded from [install-pdm.py.sha256](https://pdm.fming.dev/latest/install-pdm.py.sha256).
+It can be downloaded from [install-pdm.py.sha256](https://pdm.fming.dev/dev/install-pdm.py.sha256).
 
 The installer will install PDM into the user site and the location depends on the system:
 
