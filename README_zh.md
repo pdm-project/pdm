@@ -73,17 +73,17 @@ PDM 需要 Python 3.7 或更高版本。
 **Linux/Mac 安装命令**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3 -
+curl -sSL https://pdm.fming.dev/latest/install-pdm.py | python3 -
 ```
 
 **Windows 安装命令**
 
 ```powershell
-(Invoke-WebRequest -Uri https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py -UseBasicParsing).Content | python -
+(Invoke-WebRequest -Uri https://pdm.fming.dev/latest/install-pdm.py -UseBasicParsing).Content | python -
 ```
 
 为安全起见，你应该检查 `install-pdm.py` 文件的正确性。
-SHA256 校验和: `965900c551b4d1ba5127ecf95c127c99b5a1cccef4c183a5ecf447e876fa3160`
+校验和文件下载地址：[install-pdm.py.sha256](https://pdm.fming.dev/latest/install-pdm.py.sha256)
 
 默认情况下，此脚本会将 PDM 安装在 Python 的用户目录下，具体位置取决于当前系统：
 
