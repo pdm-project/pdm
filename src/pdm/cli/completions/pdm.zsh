@@ -128,6 +128,7 @@ _pdm() {
          {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
          {-l,--local}"[Set config in the project's local configuration file]" \
          {-d,--delete}'[Unset a configuration key]' \
+         {-e,--edit}'[Edit the configuration file in the default editor(defined by EDITOR env var)]' \
          '1:key:->keys' \
          '2:value:_files' && return 0
       if [[ $state == keys ]]; then

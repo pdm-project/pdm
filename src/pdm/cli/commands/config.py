@@ -1,9 +1,12 @@
 import argparse
+import os
+from pathlib import Path
 from typing import Any, Mapping
 
 from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.cli.commands.base import BaseCommand
+from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES, REPOSITORY, SOURCE, Config
 
@@ -21,10 +24,46 @@ class Command(BaseCommand):
             help="Set config in the project's local configuration file",
         )
         parser.add_argument("-d", "--delete", action="store_true", help="Unset a configuration key")
+        parser.add_argument(
+            "-e",
+            "--edit",
+            action="store_true",
+            help="Edit the configuration file in the default editor(defined by EDITOR env var)",
+        )
         parser.add_argument("key", help="Config key", nargs="?")
         parser.add_argument("value", help="Config value", nargs="?")
 
+    @staticmethod
+    def get_editor() -> str:
+        for key in "VISUAL", "EDITOR":
+            rv = os.getenv(key)
+            if rv:
+                return rv
+        if os.name == "nt":
+            return "notepad"
+        for editor in "sensible-editor", "vim", "nano":
+            if os.system(f"which {editor} >/dev/null 2>&1") == 0:
+                return editor
+        return "vi"
+
+    def edit_file(self, path: Path) -> None:
+        import subprocess
+
+        editor = self.get_editor()
+        proc = subprocess.Popen(f'{editor} "{path}"', shell=True)
+
+        if proc.wait() != 0:
+            raise PdmUsageError(f"Editor {editor} exited abnormally")
+
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        self.ui = project.core.ui
+        if options.edit:
+            if options.key:
+                raise PdmUsageError("Cannot specify an argument when `--edit` is given")
+            if options.delete:
+                raise PdmUsageError("`--delete` doesn't work when `--edit` is given")
+            config = project.project_config if options.local else project.global_config
+            return self.edit_file(config.config_file)
         if options.delete:
             self._delete_config(project, options)
         elif options.value:
@@ -101,7 +140,6 @@ class Command(BaseCommand):
             )
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
-        self.ui = project.core.ui
         assert Config.site is not None
         self.ui.echo(
             f"Site/default configuration ([success]{Config.site.config_file}[/]):",
