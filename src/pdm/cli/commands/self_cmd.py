@@ -13,7 +13,7 @@ from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
-from pdm.compat import Distribution, importlib_metadata
+from pdm.compat import Distribution
 from pdm.environments import BareEnvironment
 from pdm.models.working_set import WorkingSet
 from pdm.project import Project
@@ -23,7 +23,8 @@ PDM_REPO = "https://github.com/pdm-project/pdm"
 
 
 def _get_distributions() -> Iterable[Distribution]:
-    return importlib_metadata.distributions()
+    working_set = WorkingSet()
+    return working_set.values()
 
 
 def list_distributions(plugin_only: bool = False) -> list[Distribution]:
