@@ -583,7 +583,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
     """
-    A fixture alloowing to execute PDM commands
+    A fixture allowing to execute PDM commands
 
     Returns:
         A `pdm` fixture command.
