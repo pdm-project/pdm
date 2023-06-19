@@ -10,19 +10,20 @@ from packaging.markers import default_environment
 from pdm.compat import tomllib
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import FileRequirement, Requirement
 
 if TYPE_CHECKING:
     from argparse import Namespace
     from os import PathLike
 
     from pdm._types import RequirementDict
+    from pdm.models.backends import BuildBackend
     from pdm.project import Project
 
 MARKER_KEYS = list(default_environment().keys())
 
 
-def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
+def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildBackend) -> str:
     if isinstance(req, dict):
         markers: list[Marker] = []
         if "markers" in req:
@@ -36,7 +37,10 @@ def convert_pipfile_requirement(name: str, req: RequirementDict) -> str:
         if markers:
             marker = functools.reduce(operator.and_, markers)
             req["marker"] = str(marker).replace('"', "'")
-    return Requirement.from_req_dict(name, req).as_line()
+    r = Requirement.from_req_dict(name, req)
+    if isinstance(r, FileRequirement):
+        r.relocate(backend)
+    return r.as_line()
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
@@ -48,6 +52,7 @@ def convert(project: Project, filename: PathLike, options: Namespace | None) -> 
         data = tomllib.load(fp)
     result = {}
     settings = {}
+    backend = project.backend
     if "pipenv" in data:
         settings["allow_prereleases"] = data["pipenv"].get("allow_prereleases", False)
     if "requires" in data:
@@ -56,12 +61,12 @@ def convert(project: Project, filename: PathLike, options: Namespace | None) -> 
     if "source" in data:
         settings["source"] = data["source"]
     result["dependencies"] = make_array(  # type: ignore[assignment]
-        [convert_pipfile_requirement(k, req) for k, req in data.get("packages", {}).items()],
+        [convert_pipfile_requirement(k, req, backend) for k, req in data.get("packages", {}).items()],
         True,
     )
     settings["dev-dependencies"] = {
         "dev": make_array(
-            [convert_pipfile_requirement(k, req) for k, req in data.get("dev-packages", {}).items()],
+            [convert_pipfile_requirement(k, req, backend) for k, req in data.get("dev-packages", {}).items()],
             True,
         )
     }

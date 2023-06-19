@@ -332,7 +332,10 @@ class FileRequirement(Requirement):
             return
         # self.path is relative
         self.path = path_without_fragments(os.path.relpath(self.path, backend.root))
-        self.url = backend.relative_path_to_url(self.path.as_posix())
+        path = self.path.as_posix()
+        if path == ".":
+            path = ""
+        self.url = backend.relative_path_to_url(path)
 
     @property
     def is_local(self) -> bool:
