@@ -50,11 +50,12 @@ class BaseProvider(AbstractProvider):
         """
         editable = requirement.editable
         is_named = requirement.is_named
+        is_pinned = requirement.is_pinned
         is_prerelease = (
             requirement.prerelease or requirement.specifier is not None and bool(requirement.specifier.prereleases)
         )
         specifier_parts = len(requirement.specifier) if requirement.specifier else 0
-        return (not editable, is_named, not is_prerelease, -specifier_parts)
+        return (not editable, is_named, not is_pinned, not is_prerelease, -specifier_parts)
 
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
         return requirement_or_candidate.identify()
