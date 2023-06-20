@@ -80,7 +80,8 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      restrict_base_path: false
   - admonition
   - tables
   - toc:
