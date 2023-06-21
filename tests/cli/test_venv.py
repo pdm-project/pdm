@@ -51,6 +51,16 @@ def test_venv_create_in_project(pdm, project):
 
 
 @pytest.mark.usefixtures("fake_create")
+def test_venv_create_other_location(pdm, project):
+    pdm(["venv", "-p", project.root.as_posix(), "create"], strict=True)
+    venv_path = project.root / ".venv"
+    assert venv_path.exists()
+    result = pdm(["venv", "-p", project.root.as_posix(), "create"])
+    assert result.exit_code == 1
+    assert "is not empty" in result.stderr
+
+
+@pytest.mark.usefixtures("fake_create")
 def test_venv_show_path(pdm, project):
     project.project_config["venv.in_project"] = True
     pdm(["venv", "create"], obj=project, strict=True)
