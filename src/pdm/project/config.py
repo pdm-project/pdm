@@ -260,7 +260,7 @@ class Config(MutableMapping[str, str]):
 
     def iter_sources(self) -> Iterator[RepositoryConfig]:
         for name, data in self._data.items():
-            if name.startswith(f"{SOURCE}.") and name not in self._config_map:
+            if name.startswith(f"{SOURCE}.") and name not in self._config_map and data:
                 yield RepositoryConfig(**data, name=name[len(SOURCE) + 1 :], config_prefix=SOURCE)
 
     def _save_config(self) -> None:
