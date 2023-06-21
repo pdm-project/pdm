@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     pass
 
 
-def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
+def _get_shebang_path(executable: str, is_launcher: bool) -> str:
     """Get the interpreter path in the shebang line
 
     The launcher can just use the command as-is.
@@ -23,29 +23,32 @@ def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
     where the interpreter path is quoted.
     """
     if is_launcher or " " not in executable and (len(executable) + 3) <= 127:
-        return executable.encode("utf-8")
-    return shlex.quote(executable).encode("utf-8")
+        return executable
+    return shlex.quote(executable)
 
 
-def _replace_shebang(path: Path, new_executable: bytes) -> None:
-    """Replace the python executable from the shebeng line, which can be in two forms:
+def _replace_shebang(path: Path, new_executable: str) -> None:
+    """Replace the python executable from the shebang line, which can be in two forms:
 
     1. #!python_executable
     2. #!/bin/sh
        '''exec' '/path to/python' "$0" "$@"
        ' '''
     """
-    _complex_shebang_re = rb"^'''exec' ('.+?') \"\$0\""
-    _simple_shebang_re = rb"^#!(.+?)\s*$"
-    contents = path.read_bytes()
+    _complex_shebang_re = r"^'''exec' ('.+?') \"\$0\""
+    _simple_shebang_re = r"^#!(.+?)\s*$"
+    try:
+        contents = path.read_text()
+    except UnicodeDecodeError:
+        return
     match = re.search(_complex_shebang_re, contents, flags=re.M)
     if match:
-        path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+        path.write_text(contents.replace(match.group(1), new_executable, 1))
         return
 
     match = re.search(_simple_shebang_re, contents, flags=re.M)
     if match:
-        path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+        path.write_text(contents.replace(match.group(1), new_executable, 1))
 
 
 class PythonLocalEnvironment(BaseEnvironment):
