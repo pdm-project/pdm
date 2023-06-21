@@ -380,7 +380,7 @@ class Project:
             merge_sources(self.project_config.iter_sources())
             merge_sources(self.global_config.iter_sources())
         for source in result.values():
-            assert source.url, "Source URL must not be empty"
+            assert source.url, f"Source URL must not be empty for {source.name}"
             source.url = expand_env_vars_in_auth(source.url)
         return list(result.values())
 
