@@ -9,7 +9,7 @@ from pdm.cli.commands.venv.list import ListCommand
 from pdm.cli.commands.venv.purge import PurgeCommand
 from pdm.cli.commands.venv.remove import RemoveCommand
 from pdm.cli.commands.venv.utils import get_venv_with_name
-from pdm.cli.options import Option
+from pdm.cli.options import project_option
 from pdm.project import Project
 
 
@@ -17,7 +17,7 @@ class Command(BaseCommand):
     """Virtualenv management"""
 
     name = "venv"
-    arguments: list[Option] = []
+    arguments = [project_option]
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         group = parser.add_mutually_exclusive_group()
