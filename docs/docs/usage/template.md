@@ -20,3 +20,16 @@ ownership to `pdm-project` organization(it can be found at the bottom of the rep
 
 A template repository must be a pyproject-based project, which contains a `pyproject.toml` file with PEP-621 compliant metadata.
 No other special config files are required.
+
+## Project name replacement
+
+On initialization, the project name in the template will be replaced by the name of the new project. This is done by a recursive full-text search and replace. The import name, which is derived from the project name by replacing all non-alphanumeric characters with underscores and lowercasing, will also be replaced in the same way.
+
+For example, if the project name is `foo-project` in the template and you want to initialize a new project named `bar-project`, the following replacements will be made:
+
+- `foo-project` -> `bar-project` in all `.md` files and `.rst` files
+- `foo_project` -> `bar_project` in all `.py` files
+- `foo_project` -> `bar_project` in the directory name
+- `foo_project.py` -> `bar_project.py` in the file name
+
+Therefore, we don't support name replacement if the import name isn't derived from the project name.
