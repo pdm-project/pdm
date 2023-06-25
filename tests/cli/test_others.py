@@ -162,7 +162,7 @@ def test_show_self_package(project, pdm):
 
     result = pdm(["show", "--name", "--version"], obj=project)
     assert result.exit_code == 0
-    assert "test_project\n0.0.0\n" == result.output
+    assert "test-project\n0.0.0\n" == result.output
 
 
 def test_export_to_requirements_txt(pdm, fixture_project):
