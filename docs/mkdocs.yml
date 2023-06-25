@@ -60,6 +60,7 @@ nav:
       - usage/advanced.md
       - usage/venv.md
       - usage/pep582.md
+      - usage/template.md
   - Reference:
       - reference/pep621.md
       - reference/configuration.md

@@ -8,6 +8,7 @@ pdm init
 ```
 
 You will need to answer a few questions, to help PDM to create a `pyproject.toml` file for you.
+For more usages of `pdm init`, please read [Create your project from a template](./template.md).
 
 ## Choose a Python interpreter
 
