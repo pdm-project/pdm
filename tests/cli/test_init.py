@@ -19,7 +19,7 @@ def test_init_command(project_no_init, pdm, mocker):
         return_value=("Testing", "me@example.org"),
     )
     pdm(["init"], input="\n\n\n\n\n\n", strict=True, obj=project_no_init)
-
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     data = {
         "project": {
             "authors": [{"email": "me@example.org", "name": "Testing"}],
@@ -27,7 +27,7 @@ def test_init_command(project_no_init, pdm, mocker):
             "description": "",
             "license": {"text": "MIT"},
             "name": "",
-            "requires-python": ">=3.11",
+            "requires-python": f">={python_version}",
             "readme": "README.md",
             "version": "",
         },
@@ -49,6 +49,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
         obj=project_no_init,
     )
     assert result.exit_code == 0
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     data = {
         "project": {
             "authors": [{"email": "me@example.org", "name": "Testing"}],
@@ -56,7 +57,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
             "description": "Test Project",
             "license": {"text": "MIT"},
             "name": "test-project",
-            "requires-python": ">=3.11",
+            "requires-python": f">={python_version}",
             "readme": "README.md",
             "version": "0.1.0",
         },
@@ -75,6 +76,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
     do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
     result = pdm(["init", "-n"], obj=project_no_init)
     assert result.exit_code == 0
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     do_use.assert_called_once_with(
         project_no_init,
         ANY,
@@ -91,7 +93,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
             "description": "",
             "license": {"text": "MIT"},
             "name": "",
-            "requires-python": ">=3.11",
+            "requires-python": f">={python_version}",
             "readme": "README.md",
             "version": "",
         },
