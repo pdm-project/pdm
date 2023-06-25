@@ -431,6 +431,7 @@ def project(project_no_init: Project) -> Project:
             "authors": [],
             "license": {"text": "MIT"},
             "dependencies": [],
+            "requires-python": ">=3.7",
         },
         "build-system": DEFAULT_BACKEND.build_system(),
     }
