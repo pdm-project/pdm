@@ -115,13 +115,13 @@ class ProjectTemplate:
         from pdm.cli.utils import merge_dictionary
 
         try:
-            with open(path, "rb") as fp:
-                content = tomlkit.parse(fp.read())
+            with open(path, encoding="utf-8") as fp:
+                content = tomlkit.load(fp)
         except FileNotFoundError:
             content = tomlkit.document()
 
-        with open(self._path / "pyproject.toml", "rb") as fp:
-            template_content = tomlkit.parse(fp.read())
+        with open(self._path / "pyproject.toml", encoding="utf-8") as fp:
+            template_content = tomlkit.load(fp)
 
         merge_dictionary(content, template_content, False)
         merge_dictionary(content, metadata, False)
