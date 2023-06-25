@@ -113,7 +113,7 @@ class Command(BaseCommand):
         group = selection.one()
         tracked_names: set[str] = set()
         requirements: dict[str, Requirement] = {}
-        lock_groups = [] if project.lockfile.empty() else project.lockfile.groups
+        lock_groups = ["default"] if project.lockfile.empty() else project.lockfile.groups
         if lock_groups is not None and group not in lock_groups:
             project.core.ui.echo(f"Adding group [success]{group}[/] to lockfile", err=True, style="info")
             lock_groups.append(group)
