@@ -90,8 +90,8 @@ class ProjectTemplate:
     def mirror(
         src: ST,
         dst: Path,
-        skip: list[Path] | None = None,
-        copyfunc: Callable[[ST, Path], Path] = shutil.copy2,  # type: ignore[assignment]
+        skip: list[ST] | None = None,
+        copyfunc: Callable[[ST, Path], Any] = shutil.copy2,  # type: ignore[assignment]
     ) -> None:
         if skip and src in skip:
             return
@@ -131,7 +131,9 @@ class ProjectTemplate:
     def _prepare_package_template(self, import_name: str) -> None:
         from pdm.compat import importlib_resources
 
-        self.mirror(importlib_resources.files(import_name), self._path, copyfunc=self._copy_package_file)
+        files = importlib_resources.files(import_name)
+
+        self.mirror(files, self._path, skip=[files / "__init__.py"], copyfunc=self._copy_package_file)
 
     def _prepare_git_template(self, url: str) -> None:
         git_command = ["git", "clone", "--depth", "1", "--recursive", url, self._path.as_posix()]
