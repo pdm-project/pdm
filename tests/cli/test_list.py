@@ -624,7 +624,7 @@ def test_list_json_fields_licences(project, pdm):
 def test_list_markdown_fields_licences(project, pdm):
     result = pdm(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
     expected = (
-        "# test_project licenses\n"
+        "# test-project licenses\n"
         "## foo\n\n"
         "| Name | foo |\n"
         "|----|----|\n"

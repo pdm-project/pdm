@@ -425,7 +425,7 @@ def project(project_no_init: Project) -> Project:
     hooks = HookManager(project_no_init, ["post_init"])
     data = {
         "project": {
-            "name": "test_project",
+            "name": "test-project",
             "version": "0.0.0",
             "description": "",
             "authors": [],
