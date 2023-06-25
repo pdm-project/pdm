@@ -80,8 +80,11 @@ class ProjectTemplate:
             self._prepare_package_template(BUILTIN_TEMPLATE)
         elif "://" in self.template or self.template.startswith("git@"):
             self._prepare_git_template(self.template)
-        else:  # local path
+        elif os.path.exists(self.template):
             self._prepare_local_template(self.template)
+        else:  # template name
+            template = f"https://github.com/pdm-project/template-{self.template}"
+            self._prepare_git_template(template)
 
     @staticmethod
     def mirror(
