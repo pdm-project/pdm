@@ -49,27 +49,27 @@ def _replace_shebang(path: Path, new_executable: bytes) -> None:
        '''exec' '/path to/python' "$0" "$@"
        ' '''
     """
-    _complex_shebang_re = rb"^'''exec' ('.+?') \"\$0\""
-    _simple_shebang_re = rb"^#!(.+?)\s*$"
+    _complex_shebang_re = rb"^(#!/bin/sh\n'''exec' )('.+?')( \"\$0\")"
+    _simple_shebang_re = rb"^(#!)(.+?)\s*$"
     contents = path.read_bytes()
 
     if not _is_console_script(contents):
         return
 
     if os.name == "nt":
-        match = re.search(_simple_shebang_re, contents, flags=re.M)
-        if match:
-            path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+        new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, 1, flags=re.M)
+        if count > 0:
+            path.write_bytes(new_content)
         return
 
-    match = re.search(_complex_shebang_re, contents)
-    if match:
-        path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+    new_content, count = re.subn(_complex_shebang_re, rb"\1" + new_executable + rb"\3", contents, 1)
+    if count > 0:
+        path.write_bytes(new_content)
         return
 
-    match = re.search(_simple_shebang_re, contents)
-    if match:
-        path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+    new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, 1)
+    if count > 0:
+        path.write_bytes(new_content)
 
 
 class PythonLocalEnvironment(BaseEnvironment):
