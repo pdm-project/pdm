@@ -4,14 +4,10 @@ import os
 import re
 import shlex
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pdm.compat import cached_property
 from pdm.environments.base import BaseEnvironment
 from pdm.utils import pdm_scheme
-
-if TYPE_CHECKING:
-    pass
 
 
 def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
@@ -27,6 +23,24 @@ def _get_shebang_path(executable: str, is_launcher: bool) -> bytes:
     return shlex.quote(executable).encode("utf-8")
 
 
+def _is_console_script(content: bytes) -> bool:
+    import io
+    import zipfile
+
+    if os.name == "nt":  # Windows .exe should be a zip file.
+        try:
+            with zipfile.ZipFile(io.BytesIO(content)):
+                return True
+        except zipfile.BadZipFile:
+            return False
+
+    try:
+        text = content.decode("utf-8")
+        return text.startswith("#!")
+    except UnicodeDecodeError:
+        return False
+
+
 def _replace_shebang(path: Path, new_executable: bytes) -> None:
     """Replace the python executable from the shebeng line, which can be in two forms:
 
@@ -38,12 +52,22 @@ def _replace_shebang(path: Path, new_executable: bytes) -> None:
     _complex_shebang_re = rb"^'''exec' ('.+?') \"\$0\""
     _simple_shebang_re = rb"^#!(.+?)\s*$"
     contents = path.read_bytes()
-    match = re.search(_complex_shebang_re, contents, flags=re.M)
+
+    if not _is_console_script(contents):
+        return
+
+    if os.name == "nt":
+        match = re.search(_simple_shebang_re, contents, flags=re.M)
+        if match:
+            path.write_bytes(contents.replace(match.group(1), new_executable, 1))
+        return
+
+    match = re.search(_complex_shebang_re, contents)
     if match:
         path.write_bytes(contents.replace(match.group(1), new_executable, 1))
         return
 
-    match = re.search(_simple_shebang_re, contents, flags=re.M)
+    match = re.search(_simple_shebang_re, contents)
     if match:
         path.write_bytes(contents.replace(match.group(1), new_executable, 1))
 
