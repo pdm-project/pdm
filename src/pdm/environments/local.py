@@ -50,7 +50,7 @@ def _replace_shebang(path: Path, new_executable: bytes) -> None:
        ' '''
     """
     _complex_shebang_re = rb"^(#!/bin/sh\n'''exec' )('.+?')( \"\$0\")"
-    _simple_shebang_re = rb"^(#!)(.+?)\s*$"
+    _simple_shebang_re = rb"^(#!)(.+?)\s*(?=\n)"
     contents = path.read_bytes()
 
     if not _is_console_script(contents):
