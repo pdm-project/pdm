@@ -147,8 +147,6 @@ class ProjectTemplate:
         shutil.rmtree(self._path / ".git", ignore_errors=True)
 
     def _prepare_local_template(self, path: str) -> None:
-        self.mirror(Path(path), self._path)
+        src = Path(path)
 
-        for scm_dir in ".git", ".svn", ".hg":
-            if (self._path / scm_dir).exists():
-                shutil.rmtree(self._path / scm_dir, ignore_errors=True)
+        self.mirror(src, self._path, skip=[src / ".git", src / ".svn", src / ".hg"])
