@@ -11,7 +11,7 @@ INSTALL_REQUIRES = [
 ]
 
 setup_kwargs = {
-    'name': 'demo-package',
+    'name': 'my-package',
     'version': '0.1.0',
     'description': '',
     'long_description': long_description,

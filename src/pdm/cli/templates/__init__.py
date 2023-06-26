@@ -37,6 +37,13 @@ class ProjectTemplate:
     def generate(self, target_path: Path, metadata: dict[str, Any]) -> None:
         from pdm.compat import tomllib
 
+        def replace_all(path: str, old: str, new: str) -> None:
+            with open(path, encoding=encoding) as fp:
+                content = fp.read()
+            content = re.sub(rf"\b{old}\b", new, content)
+            with open(path, "w", encoding=encoding) as fp:
+                fp.write(content)
+
         if metadata.get("project", {}).get("name"):
             try:
                 with open(self._path / "pyproject.toml", "rb") as fp:
@@ -57,19 +64,13 @@ class ProjectTemplate:
                         os.rename(os.path.join(root, d), os.path.join(root, new_import_name))
                 for f in filenames:
                     if f.endswith(".py"):
-                        with open(os.path.join(root, f), encoding=encoding) as fp:
-                            content = fp.read()
-                        content = re.sub(rf"\b{import_name}\b", new_import_name, content)
-                        with open(os.path.join(root, f), "w", encoding=encoding) as fp:
-                            fp.write(content)
+                        replace_all(os.path.join(root, f), import_name, new_import_name)
                         if f == import_name + ".py":
                             os.rename(os.path.join(root, f), os.path.join(root, new_import_name + ".py"))
                     elif f.endswith((".md", ".rst")):
-                        with open(os.path.join(root, f), encoding=encoding) as fp:
-                            content = fp.read()
-                        content = re.sub(rf"\b{original_name}\b", new_name, content)
-                        with open(os.path.join(root, f), "w", encoding=encoding) as fp:
-                            fp.write(content)
+                        replace_all(os.path.join(root, f), original_name, new_name)
+                    elif Path(root) == self._path and f == "pyproject.toml":
+                        replace_all(os.path.join(root, f), import_name, new_import_name)
 
         target_path.mkdir(exist_ok=True, parents=True)
         self.mirror(self._path, target_path, [self._path / "pyproject.toml"])
@@ -119,9 +120,11 @@ class ProjectTemplate:
                 content = tomlkit.load(fp)
         except FileNotFoundError:
             content = tomlkit.document()
-
-        with open(self._path / "pyproject.toml", encoding="utf-8") as fp:
-            template_content = tomlkit.load(fp)
+        try:
+            with open(self._path / "pyproject.toml", encoding="utf-8") as fp:
+                template_content = tomlkit.load(fp)
+        except FileNotFoundError:
+            template_content = tomlkit.document()
 
         merge_dictionary(content, template_content)
         merge_dictionary(content, metadata)
