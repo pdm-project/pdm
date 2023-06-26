@@ -123,8 +123,12 @@ class ProjectTemplate:
         with open(self._path / "pyproject.toml", encoding="utf-8") as fp:
             template_content = tomlkit.load(fp)
 
-        merge_dictionary(content, template_content, False)
-        merge_dictionary(content, metadata, False)
+        merge_dictionary(content, template_content)
+        merge_dictionary(content, metadata)
+        if "build_system" in metadata:
+            content["build-system"] = metadata["build_system"]
+        else:
+            content.pop("build-system", None)
         with open(path, "w", encoding="utf-8") as fp:
             fp.write(tomlkit.dumps(content))
 
