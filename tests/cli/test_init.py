@@ -31,7 +31,6 @@ def test_init_command(project_no_init, pdm, mocker):
             "readme": "README.md",
             "version": "",
         },
-        "build-system": {"build-backend": "pdm.backend", "requires": ["pdm-backend"]},
     }
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
@@ -97,7 +96,6 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
             "readme": "README.md",
             "version": "",
         },
-        "build-system": {"build-backend": "pdm.backend", "requires": ["pdm-backend"]},
     }
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:

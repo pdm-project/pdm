@@ -125,8 +125,8 @@ class ProjectTemplate:
 
         merge_dictionary(content, template_content)
         merge_dictionary(content, metadata)
-        if "build_system" in metadata:
-            content["build-system"] = metadata["build_system"]
+        if "build-system" in metadata:
+            content["build-system"] = metadata["build-system"]
         else:
             content.pop("build-system", None)
         with open(path, "w", encoding="utf-8") as fp:
