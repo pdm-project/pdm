@@ -29,8 +29,8 @@ def _is_console_script(content: bytes) -> bool:
 
     if os.name == "nt":  # Windows .exe should be a zip file.
         try:
-            with zipfile.ZipFile(io.BytesIO(content)):
-                return True
+            with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                return zf.namelist() == ["__main__.py"]
         except zipfile.BadZipFile:
             return False
 
