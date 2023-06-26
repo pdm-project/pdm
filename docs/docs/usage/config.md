@@ -141,6 +141,23 @@ name = "private"
 url = "https://${PRIVATE_PYPI_USERNAME}:${PRIVATE_PYPI_PASSWORD}/private.pypi.org/simple"
 ```
 
+### Configure HTTPS certificates
+
+You can use a custom CA bundle or client certificate for HTTPS requests. It can be configured for both indexes(for package download) and repositories(for upload):
+
+```bash
+pdm config pypi.ca_certs /path/to/ca_bundle.pem
+pdm config repository.pypi.ca_certs /path/to/ca_bundle.pem
+```
+
+Besides, it is possible to use the system trust store, instead of the bundled certifi certificates for verifying HTTPS certificates. This approach will typically support corporate proxy certificates without additional configuration.
+
+To use `truststore`, you need Python 3.10 or newer and install `truststore` into the same environment as PDM:
+
+```bash
+$ pdm self add truststore
+```
+
 ### Index configuration merging
 
 Index configurations are merged with the `name` field of `[[tool.pdm.source]]` table or `pypi.<name>` key in the config file.

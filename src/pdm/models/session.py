@@ -2,20 +2,47 @@ from __future__ import annotations
 
 import functools
 from pathlib import Path
-from typing import IO, Any, Mapping
+from typing import IO, TYPE_CHECKING, Any, Mapping
 
-from cachecontrol.adapter import CacheControlAdapter
+from cachecontrol import CacheControlAdapter as BaseCCAdapter
 from cachecontrol.serialize import Serializer
 from requests import Request
 from requests_toolbelt.utils import user_agent
 from unearth.session import InsecureMixin, PyPISession
-from urllib3 import HTTPResponse
 
 from pdm.__version__ import __version__
+from pdm.termui import logger
+
+if TYPE_CHECKING:
+    from ssl import SSLContext
+
+    from urllib3 import HTTPResponse
 
 
-class InsecureCacheControlAdapter(InsecureMixin, CacheControlAdapter):
+def _create_truststore_ssl_context() -> SSLContext | None:
+    try:
+        import ssl
+    except ImportError:
+        logger.warning("Disabling truststore since ssl support is missing")
+        return None
+
+    try:
+        import truststore
+    except ImportError:
+        return None
+
+    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+
+class InsecureCacheControlAdapter(InsecureMixin, BaseCCAdapter):
     pass
+
+
+class CacheControlAdapter(BaseCCAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):  # type: ignore[no-untyped-def]
+        context = _create_truststore_ssl_context()
+        pool_kwargs.setdefault("ssl_context", context)
+        return super().init_poolmanager(connections, maxsize, block, **pool_kwargs)
 
 
 class CompatibleSerializer(Serializer):
