@@ -59,9 +59,10 @@ class ProjectTemplate:
             import_name = normalize_name(original_name).replace("-", "_")
             encoding = "utf-8"
             for root, dirs, filenames in os.walk(self._path):
-                for d in dirs:
+                for i, d in enumerate(dirs):
                     if d == import_name:
                         os.rename(os.path.join(root, d), os.path.join(root, new_import_name))
+                        dirs[i] = new_import_name
                 for f in filenames:
                     if f.endswith(".py"):
                         replace_all(os.path.join(root, f), import_name, new_import_name)
