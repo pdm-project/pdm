@@ -25,6 +25,7 @@ import json
 import os
 import shutil
 import sys
+from argparse import Namespace
 from dataclasses import dataclass
 from io import BufferedReader, BytesIO, StringIO
 from pathlib import Path
@@ -54,7 +55,7 @@ from pdm.core import Core
 from pdm.environments import BaseEnvironment, PythonEnvironment
 from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers.installers import install_wheel
-from pdm.models.backends import get_backend
+from pdm.models.backends import DEFAULT_BACKEND
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import (
@@ -422,13 +423,20 @@ def project(project_no_init: Project) -> Project:
     from pdm.cli.commands.init import Command
 
     hooks = HookManager(project_no_init, ["post_init"])
-    Command.do_init(
-        project_no_init,
-        "test_project",
-        "0.0.0",
-        hooks=hooks,
-        build_backend=get_backend("pdm-pep517"),
-    )
+    data = {
+        "project": {
+            "name": "test-project",
+            "version": "0.0.0",
+            "description": "",
+            "authors": [],
+            "license": {"text": "MIT"},
+            "dependencies": [],
+            "requires-python": ">=3.7",
+        },
+        "build-system": DEFAULT_BACKEND.build_system(),
+    }
+
+    Command().do_init(project_no_init, data, hooks=hooks, options=Namespace(template=None))
     # Clean the cached property
     project_no_init._environment = None
     return project_no_init

@@ -188,6 +188,7 @@ _pdm() {
         '--backend[Specify the build backend]:backend:(pdm-backend setuptools hatchling flit pdm-pep517)'
         '--lib[Create a library project]'
         '--python[Specify the Python version/path to use]:python:'
+        '1:filename:_files'
       )
       ;;
     install)

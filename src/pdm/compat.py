@@ -67,7 +67,13 @@ else:
     import importlib_metadata
 
 
+if sys.version_info >= (3, 9):
+    import importlib.resources as importlib_resources
+else:
+    import importlib_resources
+
+
 Distribution = importlib_metadata.Distribution
 
 
-__all__ = ["tomllib", "cached_property", "importlib_metadata", "Distribution"]
+__all__ = ["tomllib", "cached_property", "importlib_metadata", "Distribution", "importlib_resources"]

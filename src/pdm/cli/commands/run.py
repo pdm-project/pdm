@@ -248,7 +248,7 @@ class TaskRunner:
                 split = shlex.split(script)
                 cmd = split[0]
                 subargs = split[1:] + ([] if should_interpolate else args)
-                code = self.run(cmd, subargs, options)
+                code = self.run(cmd, subargs, options, chdir=True)
                 if code != 0:
                     return code
             return code
@@ -259,7 +259,7 @@ class TaskRunner:
             **exec_opts(self.global_options, options, opts),
         )
 
-    def run(self, command: str, args: list[str], opts: TaskOptions | None = None) -> int:
+    def run(self, command: str, args: list[str], opts: TaskOptions | None = None, chdir: bool = False) -> int:
         if command in self.hooks.skip:
             return 0
         task = self.get_task(command)
@@ -281,6 +281,7 @@ class TaskRunner:
         else:
             return self._run_process(
                 [command, *args],
+                chdir=chdir,
                 **exec_opts(self.global_options, opts),
             )
 

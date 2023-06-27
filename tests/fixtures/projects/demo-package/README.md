@@ -1,1 +1,1 @@
-# This is a demo module
+# my-package
