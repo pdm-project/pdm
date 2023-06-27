@@ -1,3 +1,11 @@
+Release v2.8.0a1 (2023-06-27)
+-----------------------------
+
+### Features & Improvements
+
+- Add support for `cookiecutter` and `copier` as project generator. [#2059](https://github.com/pdm-project/pdm/issues/2059)
+
+
 Release v2.8.0a0 (2023-06-27)
 -----------------------------
 

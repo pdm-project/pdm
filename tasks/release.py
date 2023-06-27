@@ -45,7 +45,10 @@ def bump_version(pre=None, major=False, minor=False, patch=True):
     else:
         version = current_version
     if pre:
-        version = version.bump_pre(pre)
+        if version.pre_tag == pre:
+            pass
+        else:
+            version = version.replace(pre_tag=pre, pre=0)
     else:
         version = version.replace(pre=None, post=None)
     version = version.replace(local=None, dev=None)
