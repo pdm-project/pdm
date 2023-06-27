@@ -109,6 +109,12 @@ You can either pass the options after the script or set the env var value.
     pipx install git+https://github.com/pdm-project/pdm.git@main#egg=pdm
     ```
 
+    To install PDM with all features:
+
+    ```bash
+    pipx install pdm[all]
+    ```
+
     See also: <https://pypa.github.io/pipx/>
 
 === "pip"

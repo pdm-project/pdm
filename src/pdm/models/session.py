@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import sys
 from pathlib import Path
 from typing import IO, TYPE_CHECKING, Any, Mapping
 
@@ -20,6 +21,10 @@ if TYPE_CHECKING:
 
 
 def _create_truststore_ssl_context() -> SSLContext | None:
+    if sys.version_info < (3, 10):
+        logger.warning("truststore is not available on Python < 3.10")
+        return None
+
     try:
         import ssl
     except ImportError:

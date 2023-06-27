@@ -20,6 +20,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Check prerelease
+        id: check_version
+        run: |
+          if [[ "${{ github.ref }}" =~ ^[0-9.]+$ ]]; then
+            echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+          else
+            echo "PRERELEASE=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build artifacts
         run: |
           python -m pip install build
@@ -59,7 +68,7 @@ jobs:
           release_name: v${{ github.ref }}
           body_path: .changelog.md
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.check_version.outputs.PRERELEASE }}
 
       - name: Trigger Bucket Update
         uses: benc-uk/workflow-dispatch@v1

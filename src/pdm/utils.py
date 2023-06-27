@@ -438,3 +438,13 @@ def path_without_fragments(path: str) -> Path:
 def is_in_zipapp() -> bool:
     """Check if the current process is running in a zipapp"""
     return not os.path.exists(__file__)
+
+
+@functools.lru_cache(None)
+def package_installed(package_name: str) -> bool:
+    try:
+        importlib_metadata.distribution(package_name)
+    except importlib_metadata.PackageNotFoundError:
+        return False
+    else:
+        return True
