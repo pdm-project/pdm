@@ -1,3 +1,26 @@
+Release v2.8.0a0 (2023-06-27)
+-----------------------------
+
+### Features & Improvements
+
+- Replace the `DeprecationWarning` with `FutureWarning` for better exposure. [#2012](https://github.com/pdm-project/pdm/issues/2012)
+- Serve `install-pdm.py` and its checksum file on the docs site. [#2026](https://github.com/pdm-project/pdm/issues/2026)
+- Add new option `--edit/-e` to `pdm config` to edit the config file in default editor. [#2028](https://github.com/pdm-project/pdm/issues/2028)
+- Add `--project` option to `pdm venv` to support another path as the project root. [#2042](https://github.com/pdm-project/pdm/issues/2042)
+- Add support for using `truststore` as the SSL backend. This only works on Python 3.10 or newer. [#2049](https://github.com/pdm-project/pdm/issues/2049)
+
+### Bug Fixes
+
+- Fix the breaking change by adding the functions back to the old location with deprecation warnings. [#2013](https://github.com/pdm-project/pdm/issues/2013)
+- Fix the duplicate entries in the output of `pdm self list`. [#2018](https://github.com/pdm-project/pdm/issues/2018)
+- Disable hashes caching for local files. [#2019](https://github.com/pdm-project/pdm/issues/2019)
+- Populate the `url` field when converting requirements from a Pipfile-style file requirement. [#2032](https://github.com/pdm-project/pdm/issues/2032)
+- Fix a bug that empty source tables in configuration files causes errors when running pdm commands. [#2034](https://github.com/pdm-project/pdm/issues/2034)
+- Fix a resolution conflict caused by requested yanked version also in other transitive dependencies. [#2038](https://github.com/pdm-project/pdm/issues/2038)
+- Fix a bug that binary executables are corrupted when replacing shebangs. [#2045](https://github.com/pdm-project/pdm/issues/2045)
+- Do not normalize the package name when uploading to PyPI. [#2057](https://github.com/pdm-project/pdm/issues/2057)
+
+
 Release v2.7.4 (2023-06-13)
 ---------------------------
 
