@@ -3,6 +3,7 @@ Release v2.8.0a0 (2023-06-27)
 
 ### Features & Improvements
 
+- `pdm init` now accepts a template argument to initialize project from a built-in or Git template. [#2053](https://github.com/pdm-project/pdm/issues/2053)
 - Replace the `DeprecationWarning` with `FutureWarning` for better exposure. [#2012](https://github.com/pdm-project/pdm/issues/2012)
 - Serve `install-pdm.py` and its checksum file on the docs site. [#2026](https://github.com/pdm-project/pdm/issues/2026)
 - Add new option `--edit/-e` to `pdm config` to edit the config file in default editor. [#2028](https://github.com/pdm-project/pdm/issues/2028)
