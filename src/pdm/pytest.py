@@ -25,7 +25,6 @@ import json
 import os
 import shutil
 import sys
-from argparse import Namespace
 from dataclasses import dataclass
 from io import BufferedReader, BytesIO, StringIO
 from pathlib import Path
@@ -50,7 +49,6 @@ from packaging.version import parse as parse_version
 from pytest_mock import MockerFixture
 from unearth import Link
 
-from pdm.cli.hooks import HookManager
 from pdm.core import Core
 from pdm.environments import BaseEnvironment, PythonEnvironment
 from pdm.exceptions import CandidateInfoNotFound
@@ -420,9 +418,8 @@ def project(project_no_init: Project) -> Project:
     Returns:
         The initialized project
     """
-    from pdm.cli.commands.init import Command
+    from pdm.cli.utils import merge_dictionary
 
-    hooks = HookManager(project_no_init, ["post_init"])
     data = {
         "project": {
             "name": "test-project",
@@ -436,7 +433,8 @@ def project(project_no_init: Project) -> Project:
         "build-system": DEFAULT_BACKEND.build_system(),
     }
 
-    Command().do_init(project_no_init, data, hooks=hooks, options=Namespace(template=None))
+    merge_dictionary(project_no_init.pyproject._data, data)
+    project_no_init.pyproject.write()
     # Clean the cached property
     project_no_init._environment = None
     return project_no_init

@@ -33,3 +33,16 @@ For example, if the project name is `foo-project` in the template and you want t
 - `foo_project.py` -> `bar_project.py` in the file name
 
 Therefore, we don't support name replacement if the import name isn't derived from the project name.
+
+## Use other project generators
+
+If you are seeking for a more powerful project generator, you can use [cookiecutter](https://github.com/cookiecutter/cookiecutter) via `--cookiecutter` option and [copier](https://github.com/copier-org/copier) via `--copier` option.
+
+You need to install `cookiecutter` and `copier` respectively to use them. You can do this by running `pdm self add <package>`.
+To use them:
+
+```bash
+pdm init --cookiecutter gh:cjolowicz/cookiecutter-hypermodern-python
+# or
+pdm init --copier gh:pawamoy/copier-pdm
+```
