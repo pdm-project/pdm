@@ -13,7 +13,6 @@ from typing import IO, Any, cast
 
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.termui import logger
-from pdm.utils import normalize_name
 
 DIST_EXTENSIONS = {
     ".whl": "bdist_wheel",
@@ -179,7 +178,7 @@ class PackageFile:
         meta = self.metadata
         data = {
             # identify release
-            "name": normalize_name(meta["Name"]),
+            "name": meta["Name"],
             "version": meta["Version"],
             # file content
             "filetype": self.filetype,
