@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
 
 import tomlkit
 from tomlkit.items import Array
@@ -524,31 +524,40 @@ class Project:
         content_hash = self.pyproject.content_hash(algo)
         return content_hash == hash_value
 
-    def get_pyproject_dependencies(self, group: str, dev: bool = False) -> tuple[list[str], bool]:
-        """Get the dependencies array in the pyproject.toml
+    def use_pyproject_dependencies(
+        self, group: str, dev: bool = False
+    ) -> tuple[list[str], Callable[[list[str]], None]]:
+        """Get the dependencies array and setter in the pyproject.toml
         Return a tuple of two elements, the first is the dependencies array,
-        and the second tells whether it is a dev-dependencies group.
+        and the second value is a callable to set the dependencies array back.
         """
+
+        def update_dev_dependencies(deps: list[str]) -> None:
+            from tomlkit.container import OutOfOrderTableProxy
+
+            settings.setdefault("dev-dependencies", {})[group] = deps
+            if isinstance(self.pyproject._data["tool"], OutOfOrderTableProxy):
+                # In case of a separate table, we have to remove and re-add it to make the write correct.
+                # This may change the order of tables in the TOML file, but it's the best we can do.
+                # see bug pdm-project/pdm#2056 for details
+                del self.pyproject._data["tool"]["pdm"]
+                self.pyproject._data["tool"]["pdm"] = settings
+
         metadata, settings = self.pyproject.metadata, self.pyproject.settings
         if group == "default":
-            return metadata.setdefault("dependencies", []), False
-        deps_dict = {
-            False: metadata.get("optional-dependencies", {}),
-            True: settings.get("dev-dependencies", {}),
-        }
-        for is_dev, deps in deps_dict.items():
+            return metadata.get("dependencies", tomlkit.array()), lambda x: metadata.__setitem__("dependencies", x)
+        deps_setter = [
+            (
+                metadata.get("optional-dependencies", {}),
+                lambda x: metadata.setdefault("optional-dependencies", {}).__setitem__(group, x),
+            ),
+            (settings.get("dev-dependencies", {}), update_dev_dependencies),
+        ]
+        for deps, setter in deps_setter:
             if group in deps:
-                return deps[group], is_dev
-        if dev:
-            return (
-                settings.setdefault("dev-dependencies", {}).setdefault(group, []),
-                dev,
-            )
-        else:
-            return (
-                metadata.setdefault("optional-dependencies", {}).setdefault(group, []),
-                dev,
-            )
+                return deps[group], setter
+        # If not found, return an empty list and a setter to add the group
+        return tomlkit.array(), deps_setter[int(dev)][1]
 
     def add_dependencies(
         self,
@@ -557,8 +566,7 @@ class Project:
         dev: bool = False,
         show_message: bool = True,
     ) -> None:
-        deps, is_dev = self.get_pyproject_dependencies(to_group, dev)
-        cast(Array, deps).multiline(True)
+        deps, setter = self.use_pyproject_dependencies(to_group, dev)
         for _, dep in requirements.items():
             matched_index = next(
                 (i for i, r in enumerate(deps) if dep.matches(r)),
@@ -569,6 +577,7 @@ class Project:
                 deps.append(req)
             else:
                 deps[matched_index] = req
+        setter(cast(Array, deps).multiline(True))
         self.pyproject.write(show_message)
 
     def init_global_project(self) -> None:

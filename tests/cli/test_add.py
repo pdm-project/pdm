@@ -256,7 +256,7 @@ def test_add_editable_package_with_extras(project, working_set, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     dep_path = FIXTURES.joinpath("projects/demo").as_posix()
     pdm(["add", "-dGdev", "-e", f"{dep_path}[security]"], obj=project, strict=True)
-    assert f"-e {path_to_url(dep_path)}#egg=demo[security]" in project.get_pyproject_dependencies("dev", True)[0]
+    assert f"-e {path_to_url(dep_path)}#egg=demo[security]" in project.use_pyproject_dependencies("dev", True)[0]
     assert "demo" in working_set
     assert "requests" in working_set
     assert "urllib3" in working_set
@@ -266,7 +266,7 @@ def test_add_package_with_local_version(project, repository, working_set, pdm):
     repository.add_candidate("foo", "1.0-alpha.0+local")
     pdm(["add", "foo"], obj=project, strict=True)
     assert working_set["foo"].version == "1.0-alpha.0+local"
-    dependencies, _ = project.get_pyproject_dependencies("default")
+    dependencies, _ = project.use_pyproject_dependencies("default")
     assert dependencies[0] == "foo>=1.0a0"
 
 

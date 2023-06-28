@@ -78,7 +78,7 @@ class Command(BaseCommand):
         group = selection.one()
         lock_groups = project.lockfile.groups
 
-        deps, _ = project.get_pyproject_dependencies(group, selection.dev or False)
+        deps, setter = project.use_pyproject_dependencies(group, selection.dev or False)
         project.core.ui.echo(
             f"Removing packages from [primary]{group}[/] "
             f"{'dev-' if selection.dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
@@ -91,7 +91,7 @@ class Command(BaseCommand):
                     raise ProjectError(f"[req]{name}[/] does not exist in [primary]{group}[/] dependencies.")
                 for i in matched_indexes:
                     del deps[i]
-        cast(Array, deps).multiline(True)
+        setter(cast(Array, deps).multiline(True))
 
         if not dry_run:
             project.pyproject.write()
