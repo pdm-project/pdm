@@ -154,15 +154,20 @@ class Command(BaseCommand):
                 for dep in deps.values():
                     dep.specifier = get_specifier("")
         reqs = [r for deps in all_dependencies.values() for r in deps.values()]
-        resolved = do_lock(
-            project,
-            strategy,
-            chain.from_iterable(updated_deps.values()),
-            reqs,
-            dry_run=True,
-            hooks=hooks,
-            groups=locked_groups,
-        )
+        # Since dry run is always true in the locking,
+        # we need to emit the hook manually with the real dry_run value
+        hooks.try_emit("pre_lock", requirements=reqs, dry_run=dry_run)
+        with hooks.skipping("pre_lock", "post_lock"):
+            resolved = do_lock(
+                project,
+                strategy,
+                chain.from_iterable(updated_deps.values()),
+                reqs,
+                dry_run=True,
+                hooks=hooks,
+                groups=locked_groups,
+            )
+        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         for deps in updated_deps.values():
             populate_requirement_names(deps)
         if unconstrained:
