@@ -146,7 +146,12 @@ class ProjectTemplate:
         self.mirror(files, self._path, skip=[files / "__init__.py"], copyfunc=self._copy_package_file)
 
     def _prepare_git_template(self, url: str) -> None:
-        git_command = ["git", "clone", "--depth", "1", "--recursive", url, self._path.as_posix()]
+        left, amp, right = url.rpartition("@")
+        if left != "git" and amp:
+            extra_args = [f"--branch={right}"]
+        else:
+            extra_args = []
+        git_command = ["git", "clone", "--recursive", "--depth=1", *extra_args, url, self._path.as_posix()]
         result = subprocess.run(git_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if result.returncode != 0:
             raise PdmException(f"Failed to clone template from git repository {url}: {result.stderr}")
