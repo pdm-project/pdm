@@ -142,7 +142,7 @@ def test_cli_build_with_config_settings(fixture_project, pdm):
     assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
 
 
-@pytest.mark.network
+@pytest.mark.usefixtures("local_finder")
 @pytest.mark.parametrize("isolated", (True, False))
 def test_build_with_no_isolation(fixture_project, pdm, isolated):
     project = fixture_project("demo-failure")
