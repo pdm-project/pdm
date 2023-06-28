@@ -22,11 +22,6 @@ def install_requirements(
     for req in reqs:
         if req.is_file_or_url:
             req.relocate(backend)  # type: ignore[attr-defined]
-    resolved, _ = resolve(
-        resolver,
-        reqs,
-        environment.python_requires,
-        max_rounds=resolve_max_rounds,
-    )
+    resolved, _ = resolve(resolver, reqs, environment.python_requires, max_rounds=resolve_max_rounds, keep_self=True)
     syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0, use_install_cache=use_install_cache)
     syncer.synchronize()

@@ -181,6 +181,8 @@ class BaseSynchronizer:
 
     @property
     def self_key(self) -> str | None:
+        if not self.install_self:
+            return None
         name = self.environment.project.name
         if name:
             return normalize_name(name)

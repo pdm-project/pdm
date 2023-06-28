@@ -57,6 +57,7 @@ class Command(BaseCommand):
                     plugins, environment, clean=True, use_install_cache=project.config["install.cache"]
                 )
             if not plugin_root.joinpath(".gitignore").exists():
+                plugin_root.mkdir(exist_ok=True)
                 plugin_root.joinpath(".gitignore").write_text("*\n")
         project.core.ui.echo("Plugins are installed successfully into [primary].pdm-plugins[/].")
 
