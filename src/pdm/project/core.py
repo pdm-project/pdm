@@ -679,10 +679,10 @@ class Project:
     # compatibility, shouldn't be used directly
     @property
     def meta(self) -> dict[str, Any]:
-        deprecation_warning("project.meta is deprecated, use project.pyproject.metadata instead")
+        deprecation_warning("project.meta is deprecated, use project.pyproject.metadata instead", stacklevel=2)
         return self.pyproject.metadata
 
     @property
     def tool_settings(self) -> dict[str, Any]:
-        deprecation_warning("project.tool_settings is deprecated, use project.pyproject.settings instead")
+        deprecation_warning("project.tool_settings is deprecated, use project.pyproject.settings instead", stacklevel=2)
         return self.pyproject.settings

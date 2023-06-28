@@ -360,7 +360,8 @@ def do_add(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
 
     deprecation_warning(
         "`pdm.actions.do_add` has been moved to `pdm.cli.commands.add:Command.do_add` method, "
-        "This function will be removed in the future."
+        "This function will be removed in the future.",
+        stacklevel=2,
     )
     AddCommand().do_add(*args, **kwargs)
 
@@ -370,7 +371,8 @@ def do_update(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
 
     deprecation_warning(
         "`pdm.actions.do_update` has been moved to `pdm.cli.commands.update:Command.do_update` method, "
-        "This function will be removed in the future."
+        "This function will be removed in the future.",
+        stacklevel=2,
     )
     UpdateCommand().do_update(*args, **kwargs)
 
@@ -380,7 +382,8 @@ def do_use(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
 
     deprecation_warning(
         "`pdm.actions.do_use` has been moved to `pdm.cli.commands.use:Command.do_use` method, "
-        "This function will be removed in the future."
+        "This function will be removed in the future.",
+        stacklevel=2,
     )
     UseCommand().do_use(*args, **kwargs)
 
@@ -390,7 +393,8 @@ def do_remove(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
 
     deprecation_warning(
         "`pdm.actions.do_remove` has been moved to `pdm.cli.commands.remove:Command.do_remove` method, "
-        "This function will be removed in the future."
+        "This function will be removed in the future.",
+        stacklevel=2,
     )
     RemoveCommand().do_remove(*args, **kwargs)
 
@@ -400,6 +404,7 @@ def do_import(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
 
     deprecation_warning(
         "`pdm.actions.do_import` has been moved to `pdm.cli.commands.import_:Command.do_import` method, "
-        "This function will be removed in the future."
+        "This function will be removed in the future.",
+        stacklevel=2,
     )
     ImportCommand().do_import(*args, **kwargs)
