@@ -128,6 +128,8 @@ class ProjectTemplate:
             template_content = tomlkit.document()
 
         merge_dictionary(content, template_content)
+        if "version" in content.get("project", {}).get("dynamic", []):
+            metadata["project"].pop("version", None)
         merge_dictionary(content, metadata)
         if "build-system" in metadata:
             content["build-system"] = metadata["build-system"]

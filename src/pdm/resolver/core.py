@@ -21,6 +21,7 @@ def resolve(
     requirements: list[Requirement],
     requires_python: PySpecSet,
     max_rounds: int = 10000,
+    keep_self: bool = False,
 ) -> tuple[dict[str, Candidate], dict[tuple[str, str | None], list[Requirement]]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 2 items:
@@ -49,7 +50,7 @@ def resolve(
             mapping[new_key] = mapping.pop(key)
             key = new_key
 
-        if strip_extras(key)[0] == local_name:
+        if not keep_self and strip_extras(key)[0] == local_name:
             del mapping[key]
 
     return mapping, provider.fetched_dependencies
