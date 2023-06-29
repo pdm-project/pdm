@@ -83,6 +83,15 @@ class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
     candidate -> (dependencies, requires_python, summary) mapping.
     """
 
+    @staticmethod
+    def get_url_part(link: Link) -> str:
+        import base64
+
+        from pdm.utils import url_without_fragments
+
+        url = url_without_fragments(link.split_auth()[1])
+        return base64.urlsafe_b64encode(url.encode()).decode()
+
     @classmethod
     def _get_key(cls, obj: Candidate) -> str:
         # Name and version are set when dependencies are resolved,
@@ -90,7 +99,11 @@ class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
         if not obj.name or not obj.version:
             raise KeyError("The package is missing a name or version")
         extras = "[{}]".format(",".join(sorted(obj.req.extras))) if obj.req.extras else ""
-        return f"{obj.name}{extras}-{obj.version}"
+        version = obj.version
+        if not obj.req.is_named:
+            assert obj.link is not None
+            version = cls.get_url_part(obj.link)
+        return f"{obj.name}{extras}-{version}"
 
 
 class HashCache:
