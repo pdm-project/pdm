@@ -1,3 +1,14 @@
+Release v2.8.0a2 (2023-06-30)
+-----------------------------
+
+### Bug Fixes
+
+- Fix a bug that dependencies can't be updated when the table is separated by another table. [#2056](https://github.com/pdm-project/pdm/issues/2056)
+- Fix a bug that `*_lock` hooks are always emitted with dry_run=True in `pdm update`. [#2060](https://github.com/pdm-project/pdm/issues/2060)
+- Fix a bug that `pdm install --plugins` can't install self. [#2062](https://github.com/pdm-project/pdm/issues/2062)
+- Fix a cache collision between named requirements and url requirements. [#2064](https://github.com/pdm-project/pdm/issues/2064)
+
+
 Release v2.8.0a1 (2023-06-27)
 -----------------------------
 
