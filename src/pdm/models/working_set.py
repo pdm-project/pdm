@@ -63,7 +63,11 @@ class WorkingSet(Mapping[str, im.Distribution]):
     def __init__(self, paths: list[str] | None = None):
         if paths is None:
             paths = sys.path
-        self._dist_map = {normalize_name(dist.metadata["Name"]): dist for dist in distributions(path=paths)}
+        self._dist_map = {
+            normalize_name(dist.metadata["Name"]): dist
+            for dist in distributions(path=list(dict.fromkeys(paths)))
+            if dist.metadata["Name"]
+        }
 
     def __getitem__(self, key: str) -> im.Distribution:
         return self._dist_map[key]
