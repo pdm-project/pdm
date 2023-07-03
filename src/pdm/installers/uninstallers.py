@@ -165,6 +165,9 @@ class BaseRemovePaths(abc.ABC):
                     # .pyc files are added by add_path()
                     instance.add_path(bare_name + ".pyo")
 
+            # installed-files.txt isn't recorded in SOURCES.txt for egg-info
+            instance.add_path(os.path.join(meta_location, "installed-files.txt"))
+
         bin_dir = scheme["scripts"]
 
         if os.path.isdir(os.path.join(meta_location, "scripts")):  # pragma: no cover
