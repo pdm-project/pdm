@@ -42,7 +42,7 @@ class EgglinkFinder(im.DistributionFinder):
                 yield from Path(path).glob("*.egg-link")
 
 
-def distributions(path: Iterable[str]) -> Iterable[im.Distribution]:
+def distributions(path: list[str]) -> Iterable[im.Distribution]:
     """Find distributions in the paths. Similar to `importlib.metadata`'s
     implementation but with the ability to discover egg-links.
     """
@@ -60,12 +60,12 @@ def distributions(path: Iterable[str]) -> Iterable[im.Distribution]:
 class WorkingSet(Mapping[str, im.Distribution]):
     """A dictionary of currently installed distributions"""
 
-    def __init__(self, paths: Iterable[str] | None = None):
+    def __init__(self, paths: list[str] | None = None):
         if paths is None:
             paths = sys.path
         self._dist_map = {
             normalize_name(dist.metadata["Name"]): dist
-            for dist in distributions(path=dict.fromkeys(paths))
+            for dist in distributions(path=list(dict.fromkeys(paths)))
             if dist.metadata["Name"]
         }
 
