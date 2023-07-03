@@ -65,7 +65,7 @@ class WorkingSet(Mapping[str, im.Distribution]):
             paths = sys.path
         self._dist_map = {
             normalize_name(dist.metadata["Name"]): dist
-            for dist in distributions(path=set(paths))
+            for dist in distributions(path=dict.fromkeys(paths))
             if dist.metadata["Name"]
         }
 
