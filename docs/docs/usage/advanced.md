@@ -176,6 +176,9 @@ FROM python:3.8
 ENV PYTHONPATH=/project/pkgs
 COPY --from=builder /project/__pypackages__/3.8/lib /project/pkgs
 
+# retrieve executables
+COPY --from=builder /project/__pypackages__/3.8/bin/* /bin/
+
 # set command/entrypoint, adapt to fit your needs
 CMD ["python", "-m", "project"]
 ```
