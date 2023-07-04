@@ -1,8 +1,8 @@
 ci:
   autoupdate_schedule: monthly
 repos:
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.270'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 'v0.0.276'
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --show-fixes]
@@ -13,12 +13,12 @@ repos:
       - id: black
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.2.5
     hooks:
       - id: codespell  # See setup.cfg for args
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
+    rev: v1.4.1
     hooks:
       - id: mypy
         args: [src]
