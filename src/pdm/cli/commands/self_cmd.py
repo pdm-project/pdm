@@ -52,7 +52,7 @@ def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[st
 class Command(BaseCommand):
     """Manage the PDM program itself (previously known as plugin)"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
     name = "self"
 
     @classmethod
@@ -81,7 +81,7 @@ class Command(BaseCommand):
 class ListCommand(BaseCommand):
     """List all packages installed with PDM"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
     name = "list"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -111,7 +111,7 @@ class ListCommand(BaseCommand):
 class AddCommand(BaseCommand):
     """Install packages to the PDM's environment"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
     name = "add"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -143,7 +143,7 @@ class AddCommand(BaseCommand):
 class RemoveCommand(BaseCommand):
     """Remove packages from PDM's environment"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
     name = "remove"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -205,7 +205,7 @@ class RemoveCommand(BaseCommand):
 class UpdateCommand(BaseCommand):
     """Update PDM itself"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
     name = "update"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:

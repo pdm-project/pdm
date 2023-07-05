@@ -67,7 +67,7 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
     ) -> str:
         if prefix is None:
             prefix = "Usage: "
-        result = super()._format_usage(usage, actions, groups, prefix)
+        result = super()._format_usage(usage, actions, groups, prefix)  # type: ignore[arg-type]
         if prefix:
             return result.replace(prefix, termui.style(prefix, style="warning"))
         return result

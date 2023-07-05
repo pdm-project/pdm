@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import inspect
 from argparse import _SubParsersAction
-from typing import Any, TypeVar
+from typing import Any, Sequence, TypeVar
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.project import Project
@@ -21,7 +21,7 @@ class BaseCommand:
     description: str | None = None
     # A list of pre-defined options which will be loaded on initializing
     # Rewrite this if you don't want the default ones
-    arguments: list[Option] = [verbose_option, global_option, project_option]
+    arguments: Sequence[Option] = (verbose_option, global_option, project_option)
 
     def __init__(self, parser: argparse.ArgumentParser | None = None) -> None:
         """For compatibility, the parser is optional and won't be used."""

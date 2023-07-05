@@ -13,7 +13,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Control the caches of PDM"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         subparsers = parser.add_subparsers(title="commands", metavar="cache")
@@ -74,7 +74,7 @@ def remove_cache_files(project: Project, pattern: str) -> None:
 class ClearCommand(BaseCommand):
     """Clean all the files under cache directory"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
     CACHE_TYPES = ("hashes", "http", "wheels", "metadata", "packages")
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -140,7 +140,7 @@ class ClearCommand(BaseCommand):
 class RemoveCommand(BaseCommand):
     """Remove files matching the given pattern"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("pattern", help="The pattern to remove")
@@ -152,7 +152,7 @@ class RemoveCommand(BaseCommand):
 class ListCommand(BaseCommand):
     """List the built wheels stored in the cache"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("pattern", nargs="?", default="*", help="The pattern to list")
@@ -167,7 +167,7 @@ class ListCommand(BaseCommand):
 class InfoCommand(BaseCommand):
     """Show the info and current size of caches"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         with project.core.ui.open_spinner("Calculating cache files"):

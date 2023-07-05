@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class Command(BaseCommand):
     """Add package(s) to pyproject.toml and install them"""
 
-    arguments = [
+    arguments = (
         *BaseCommand.arguments,
         lockfile_option,
         save_strategy_group,
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         dry_run_option,
         venv_option,
         skip_option,
-    ]
+    )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

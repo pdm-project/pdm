@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class Command(BaseCommand):
     """Update package(s) in pyproject.toml"""
 
-    arguments = [
+    arguments = (
         *BaseCommand.arguments,
         groups_group,
         install_group,
@@ -41,7 +41,7 @@ class Command(BaseCommand):
         unconstrained_option,
         skip_option,
         venv_option,
-    ]
+    )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

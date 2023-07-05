@@ -13,7 +13,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Install dependencies from lock file"""
 
-    arguments = [
+    arguments = (
         *BaseCommand.arguments,
         groups_group,
         install_group,
@@ -21,7 +21,7 @@ class Command(BaseCommand):
         lockfile_option,
         skip_option,
         venv_option,
-    ]
+    )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
