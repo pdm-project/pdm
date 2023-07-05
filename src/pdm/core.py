@@ -153,7 +153,8 @@ class Core:
             use_venv(project, cast(str, options.use_venv))
 
         if command is None:
-            self.parser.error("No command given")
+            self.parser.print_help()
+            sys.exit(0)
         command.handle(project, options)
 
     def _get_cli_args(self, args: list[str], obj: Project | None) -> list[str]:
