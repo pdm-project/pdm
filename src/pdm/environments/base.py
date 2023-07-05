@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Generator
 
 from pdm.compat import cached_property
 from pdm.exceptions import BuildError, PdmUsageError
-from pdm.models.in_process import get_pep508_environment, get_python_abi_tag
+from pdm.models.in_process import get_pep508_environment, get_python_abi_tag, get_uname
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
 from pdm.utils import get_trusted_hosts, is_pip_compatible_with_python
@@ -94,6 +94,28 @@ class BaseEnvironment(abc.ABC):
         return session
 
     @contextmanager
+    def _patch_target_python(self) -> Generator[None, None, None]:
+        """Patch the packaging modules to respect the arch of target python."""
+        import packaging.tags
+
+        old_32bit = packaging.tags._32_BIT_INTERPRETER
+        old_os_uname = getattr(os, "uname", None)
+
+        if old_os_uname is not None:
+
+            def uname() -> os.uname_result:
+                return get_uname(str(self.interpreter.executable))
+
+            os.uname = uname
+        packaging.tags._32_BIT_INTERPRETER = self.interpreter.is_32bit
+        try:
+            yield
+        finally:
+            packaging.tags._32_BIT_INTERPRETER = old_32bit
+            if old_os_uname is not None:
+                os.uname = old_os_uname
+
+    @contextmanager
     def get_finder(
         self,
         sources: list[RepositoryConfig] | None = None,
@@ -119,28 +141,29 @@ class BaseEnvironment(abc.ABC):
         trusted_hosts = get_trusted_hosts(sources)
 
         session = self._build_session(trusted_hosts)
-        finder = PackageFinder(
-            session=session,
-            target_python=self.target_python,
-            ignore_compatibility=ignore_compatibility,
-            no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
-            only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
-            prefer_binary=os.getenv("PDM_PREFER_BINARY", "").split(","),
-            respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
-                "respect-source-order", False
-            ),
-            verbosity=self.project.core.ui.verbosity,
-        )
-        for source in sources:
-            assert source.url
-            if source.type == "find_links":
-                finder.add_find_links(source.url)
-            else:
-                finder.add_index_url(source.url)
-        try:
-            yield finder
-        finally:
-            session.close()
+        with self._patch_target_python():
+            finder = PackageFinder(
+                session=session,
+                target_python=self.target_python,
+                ignore_compatibility=ignore_compatibility,
+                no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
+                only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
+                prefer_binary=os.getenv("PDM_PREFER_BINARY", "").split(","),
+                respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
+                    "respect-source-order", False
+                ),
+                verbosity=self.project.core.ui.verbosity,
+            )
+            for source in sources:
+                assert source.url
+                if source.type == "find_links":
+                    finder.add_find_links(source.url)
+                else:
+                    finder.add_index_url(source.url)
+            try:
+                yield finder
+            finally:
+                session.close()
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
