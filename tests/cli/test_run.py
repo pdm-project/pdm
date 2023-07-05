@@ -806,7 +806,6 @@ def test_run_shortcut_fail_with_usage_if_script_not_found(project, pdm):
 @pytest.mark.parametrize(
     "args",
     [
-        pytest.param([], id="no args"),
         pytest.param(["-ko"], id="unknown param"),
         pytest.param(["pip", "--version"], id="not an user script"),
     ],
@@ -815,3 +814,11 @@ def test_empty_positionnal_args_still_display_usage(project, pdm, args):
     result = pdm(args, obj=project)
     assert result.exit_code != 0
     assert "Usage" in result.stderr
+
+
+def test_empty_positional_args_display_help(project, pdm):
+    result = pdm([], obj=project)
+    assert result.exit_code == 0
+    assert "Usage" in result.output
+    assert "Commands" in result.output
+    assert "Options" in result.output
