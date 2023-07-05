@@ -116,7 +116,7 @@ class HashCache:
     """
 
     FAVORITE_HASH = "sha256"
-    STRONG_HASHES = ["sha256", "sha384", "sha512"]
+    STRONG_HASHES = ("sha256", "sha384", "sha512")
 
     def __init__(self, directory: Path) -> None:
         self.directory = directory

@@ -1,17 +1,17 @@
 import argparse
 import shutil
 
-from pdm.project import Project
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.utils import iter_central_venvs
 from pdm.cli.options import verbose_option
+from pdm.project import Project
 
 
 class PurgeCommand(BaseCommand):
     """Purge selected/all created Virtualenvs"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

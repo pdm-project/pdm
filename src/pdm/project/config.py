@@ -4,7 +4,7 @@ import collections
 import dataclasses
 import os
 from pathlib import Path
-from typing import Any, Callable, Iterator, Mapping, MutableMapping, cast
+from typing import Any, Callable, ClassVar, Iterator, Mapping, MutableMapping, cast
 
 import platformdirs
 import rich.theme
@@ -87,7 +87,7 @@ class ConfigItem:
 class Config(MutableMapping[str, str]):
     """A dict-like object for configuration key and values"""
 
-    _config_map: dict[str, ConfigItem] = {
+    _config_map: ClassVar[dict[str, ConfigItem]] = {
         "cache_dir": ConfigItem(
             "The root directory of cached files",
             platformdirs.user_cache_dir("pdm"),

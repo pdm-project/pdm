@@ -20,7 +20,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Build artifacts for distribution"""
 
-    arguments = [verbose_option, project_option, no_isolation_option, skip_option]
+    arguments = (verbose_option, project_option, no_isolation_option, skip_option)
 
     @staticmethod
     def do_build(

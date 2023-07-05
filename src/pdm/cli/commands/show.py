@@ -20,7 +20,7 @@ def filter_stable(candidate: Candidate) -> bool:
 class Command(BaseCommand):
     """Show the package information"""
 
-    metadata_keys = ["name", "version", "summary", "license", "platform", "keywords"]
+    metadata_keys = ("name", "version", "summary", "license", "platform", "keywords")
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         venv_option.add_to_parser(parser)

@@ -53,7 +53,7 @@ def print_results(
 class Command(BaseCommand):
     """Search for PyPI packages"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument("query", help="Query string to search")

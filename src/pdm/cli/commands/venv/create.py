@@ -13,7 +13,7 @@ class CreateCommand(BaseCommand):
     """
 
     description = "Create a virtualenv"
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

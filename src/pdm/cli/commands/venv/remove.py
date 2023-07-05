@@ -12,7 +12,7 @@ from pdm.project import Project
 class RemoveCommand(BaseCommand):
     """Remove the virtualenv with the given name"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

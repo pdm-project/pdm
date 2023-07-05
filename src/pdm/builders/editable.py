@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Mapping
+from typing import Any, ClassVar, Mapping
 
 from pyproject_hooks import HookMissing
 
@@ -12,7 +12,7 @@ from pdm.termui import logger
 class EditableBuilder(EnvBuilder):
     """Build egg-info in isolated env with managed Python."""
 
-    FALLBACK_BACKEND = {
+    FALLBACK_BACKEND: ClassVar[dict[str, Any]] = {
         "build-backend": "setuptools_pep660",
         "requires": ["setuptools_pep660"],
     }

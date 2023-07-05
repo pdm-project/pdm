@@ -18,7 +18,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Resolve and lock dependencies"""
 
-    arguments = [*BaseCommand.arguments, lockfile_option, no_isolation_option, skip_option, groups_group]
+    arguments = (*BaseCommand.arguments, lockfile_option, no_isolation_option, skip_option, groups_group)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

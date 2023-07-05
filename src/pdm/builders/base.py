@@ -8,7 +8,7 @@ import textwrap
 import threading
 from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, cast
 
 from pyproject_hooks import BuildBackendHookCaller
 
@@ -149,13 +149,13 @@ class _Prefix:
 class EnvBuilder:
     """A simple PEP 517 builder for an isolated environment"""
 
-    DEFAULT_BACKEND = {
+    DEFAULT_BACKEND: ClassVar[dict[str, Any]] = {
         "build-backend": "setuptools.build_meta:__legacy__",
         "requires": ["setuptools >= 40.8.0", "wheel"],
     }
 
-    _shared_envs: dict[int, str] = {}
-    _overlay_envs: dict[str, str] = {}
+    _shared_envs: ClassVar[dict[int, str]] = {}
+    _overlay_envs: ClassVar[dict[str, str]] = {}
 
     if TYPE_CHECKING:
         _hook: BuildBackendHookCaller

@@ -17,7 +17,7 @@ class Command(BaseCommand):
     """Virtualenv management"""
 
     name = "venv"
-    arguments = [project_option]
+    arguments = (project_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         group = parser.add_mutually_exclusive_group()

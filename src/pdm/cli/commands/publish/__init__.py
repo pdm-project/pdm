@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 class Command(BaseCommand):
     """Build and publish the project to PyPI"""
 
-    arguments = [verbose_option, project_option, skip_option]
+    arguments = (verbose_option, project_option, skip_option)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

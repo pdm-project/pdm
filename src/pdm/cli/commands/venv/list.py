@@ -10,7 +10,7 @@ from pdm.project import Project
 class ListCommand(BaseCommand):
     """List all virtualenvs associated with this project"""
 
-    arguments = [verbose_option]
+    arguments = (verbose_option,)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         project.core.ui.echo("Virtualenvs created with this project:\n")

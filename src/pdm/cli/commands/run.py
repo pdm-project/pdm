@@ -82,8 +82,8 @@ class Task(NamedTuple):
 class TaskRunner:
     """The task runner for pdm project"""
 
-    TYPES = ["cmd", "shell", "call", "composite"]
-    OPTIONS = ["env", "env_file", "help", "site_packages"]
+    TYPES = ("cmd", "shell", "call", "composite")
+    OPTIONS = ("env", "env_file", "help", "site_packages")
 
     def __init__(self, project: Project, hooks: HookManager) -> None:
         self.project = project
@@ -336,7 +336,7 @@ class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
     runner_cls: type[TaskRunner] = TaskRunner
-    arguments = [*BaseCommand.arguments, skip_option, venv_option]
+    arguments = (*BaseCommand.arguments, skip_option, venv_option)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         action = parser.add_mutually_exclusive_group()
