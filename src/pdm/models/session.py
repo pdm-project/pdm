@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 def _create_truststore_ssl_context() -> SSLContext | None:
     if sys.version_info < (3, 10):
-        logger.warning("truststore is not available on Python < 3.10")
         return None
 
     try:
