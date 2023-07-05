@@ -821,4 +821,4 @@ def test_empty_positional_args_display_help(project, pdm):
     assert result.exit_code == 0
     assert "Usage" in result.output
     assert "Commands" in result.output
-    assert "Options" in result.output
+    assert "Option" in result.output
