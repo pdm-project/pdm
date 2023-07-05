@@ -34,7 +34,7 @@ def get_sys_config_paths(executable: str, vars: dict[str, str] | None = None, ki
         env["_SYSCONFIG_VARS"] = json.dumps(vars)
 
     with _in_process_script("sysconfig_get_paths.py") as script:
-        cmd = [executable, "-EsS", script, kind]
+        cmd = [executable, "-Es", script, kind]
         return json.loads(subprocess.check_output(cmd, env=env))
 
 
