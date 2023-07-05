@@ -177,8 +177,9 @@ class Core:
     ) -> None:
         """The main entry function"""
 
-        # Ensure same behavior while testing and using the CLI
-        args = self._get_cli_args(args or sys.argv[1:], obj)
+        if args is None:
+            args = []
+        args = self._get_cli_args(args, obj)
         # Keep it for after project parsing to check if its a defined script
         root_script = None
         try:
@@ -287,4 +288,4 @@ class Core:
 
 def main(args: list[str] | None = None) -> None:
     """The CLI entry function"""
-    return Core().main(args)
+    return Core().main(args or sys.argv[1:])
