@@ -81,9 +81,9 @@ class Command(BaseCommand):
                 sys.exit(1)
             if options.lock:
                 project.core.ui.echo("Updating the lock file...", style="success", err=True)
-
+                unseleted = GroupSelection(project)
                 actions.do_lock(
-                    project, strategy=strategy, dry_run=options.dry_run, hooks=hooks, groups=selection.all()
+                    project, strategy=strategy, dry_run=options.dry_run, hooks=hooks, groups=unseleted.all()
                 )
 
         actions.do_sync(
