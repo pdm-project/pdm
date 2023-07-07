@@ -83,7 +83,13 @@ class Command(BaseCommand):
                 project.core.ui.echo("Updating the lock file...", style="success", err=True)
                 unseleted = GroupSelection(project)
                 actions.do_lock(
-                    project, strategy=strategy, dry_run=options.dry_run, hooks=hooks, groups=unseleted.all()
+                    project,
+                    strategy=strategy,
+                    dry_run=options.dry_run,
+                    hooks=hooks,
+                    # We would like to keep the selected groups when the lockfile exists
+                    # but use the groups passed-in when creating a new lockfile.
+                    groups=unseleted.all() if strategy != "all" else selection.all(),
                 )
 
         actions.do_sync(
