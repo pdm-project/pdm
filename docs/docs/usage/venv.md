@@ -36,6 +36,14 @@ $ pdm venv create --with venv 3.9
 For the first time, PDM will try to create a virtualenv **in project**, unless `.venv` already exists.
 Other virtualenvs go to the location specified by the `venv.location` configuration. They are named as `<project_name>-<path_hash>-<name_or_python_version>` to avoid name collision. A virtualenv created with `--name` option will always go to this location. You can disable the in-project virtualenv creation by `pdm config venv.in_project false`.
 
+## Reuse the virtualenv you created elsewhere
+
+You can tell PDM to use a virtualenv you created in preceding steps, with [`pdm use`](../reference/cli.md#use):
+
+```bash
+pdm use -f /path/to/venv
+```
+
 ## Virtualenv auto-detection
 
 When no interpreter is stored in the project config or `PDM_IGNORE_SAVED_PYTHON` env var is set, PDM will try to detect possible virtualenvs to use:
