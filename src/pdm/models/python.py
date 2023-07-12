@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from packaging.version import InvalidVersion, Version
+from packaging.version import Version
 
 from pdm.compat import cached_property
 from pdm.models.venv import VirtualEnv
@@ -25,7 +25,7 @@ class PythonInfo:
     def from_path(cls, path: str | Path) -> PythonInfo:
         from findpython import PythonVersion
 
-        py_ver = PythonVersion(Path(path))
+        py_ver = PythonVersion(path)
         return cls(py_ver)
 
     @cached_property
@@ -48,21 +48,21 @@ class PythonInfo:
     def executable(self) -> Path:
         return self._py_ver.interpreter
 
-    @property
+    @cached_property
     def version(self) -> Version:
-        return self._py_ver.version
+        return Version(str(self._py_ver.version))
 
     @property
     def major(self) -> int:
-        return self._py_ver.major
+        return self.version.major
 
     @property
     def minor(self) -> int:
-        return self._py_ver.minor
+        return self.version.minor
 
     @property
     def micro(self) -> int:
-        return self._py_ver.patch
+        return self.version.micro
 
     @property
     def version_tuple(self) -> tuple[int, ...]:
@@ -81,7 +81,7 @@ class PythonInfo:
             if os.name == "nt" and self.is_32bit:
                 return f"{self.major}.{self.minor}-32"
             return f"{self.major}.{self.minor}"
-        except InvalidVersion:
+        except Exception:
             return "unknown"
 
     def get_venv(self) -> VirtualEnv | None:

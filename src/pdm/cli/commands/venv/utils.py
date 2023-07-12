@@ -5,8 +5,7 @@ import hashlib
 from pathlib import Path
 from typing import Iterable, TypeVar
 
-from findpython import PythonVersion
-from findpython.providers import BaseProvider
+from findpython import BaseProvider, PythonVersion
 
 from pdm.exceptions import PdmUsageError
 from pdm.models.venv import VirtualEnv
@@ -65,13 +64,11 @@ class VenvProvider(BaseProvider):
     def __init__(self, project: Project) -> None:
         self.project = project
 
-    @classmethod
-    def create(cls: type[T]) -> T | None:  # pragma: no cover
-        return None
-
-    def find_pythons(self) -> Iterable[PythonVersion]:
+    def find_pythons(self) -> list[PythonVersion]:
+        results: list[PythonVersion] = []
         for _, venv in iter_venvs(self.project):
-            yield PythonVersion(venv.interpreter, _interpreter=venv.interpreter, keep_symlink=True)
+            results.append(PythonVersion(venv.interpreter, interpreter=venv.interpreter, keep_symlink=True))
+        return results
 
 
 def get_venv_with_name(project: Project, name: str) -> VirtualEnv:

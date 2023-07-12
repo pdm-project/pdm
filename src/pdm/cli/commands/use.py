@@ -46,7 +46,7 @@ class Command(BaseCommand):
 
         def version_matcher(py_version: PythonInfo) -> bool:
             return py_version.valid and (
-                ignore_requires_python or project.python_requires.contains(str(py_version.version), True)
+                ignore_requires_python or project.python_requires.contains(py_version.version, True)
             )
 
         if venv:

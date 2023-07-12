@@ -671,9 +671,11 @@ class Project:
 
         from pdm.cli.commands.venv.utils import VenvProvider
 
-        finder = Finder(resolve_symlinks=True)
-        if self.config["python.use_venv"]:
-            finder.add_provider(VenvProvider(self), 0)
+        providers: list[str] = self.config["python.providers"]
+        finder = Finder(resolve_symlinks=True, selected_providers=providers or None)
+        if self.config["python.use_venv"] and (not providers or "venv" in providers):
+            venv_pos = providers.index("venv") if providers else 0
+            finder.add_provider(VenvProvider(self), venv_pos)
         return finder
 
     # compatibility, shouldn't be used directly

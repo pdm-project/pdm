@@ -53,6 +53,24 @@ If `-g/--global` option is used, the first item will be replaced by `<CONFIG_ROO
 
 You can find all available configuration items in [Configuration Page](../reference/configuration.md).
 
+## Configure the Python finder
+
+By default, PDM will try to find Python interpreters in the following sources:
+
+- `venv`: The PDM virtualenv location
+- `path`: The `PATH` environment variable
+- `pyenv`: The [pyenv](https://github.com/pyenv/pyenv) install root
+- `rye`: The [rye](https://rye-up.com/) toolchain install root
+- `asdf`: The [asdf](https://asdf-vm.com/) python install root
+- `winreg`: The Windows registry
+
+You can unselect some of them or change the order by setting `python.providers` config key:
+
+```bash
+pdm config python.providers rye   # Rye source only
+pdm config python.providers pyenv,asdf  # pyenv and asdf
+```
+
 ## Allow prereleases in resolution result
 
 By default, `pdm`'s dependency resolver will ignore prereleases unless there are no stable versions for the given version range of a dependency. This behavior can be changed by setting `allow_prereleases` to `true` in `[tool.pdm]` table:

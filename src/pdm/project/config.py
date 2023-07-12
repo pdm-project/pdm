@@ -55,6 +55,13 @@ def ensure_boolean(val: Any) -> bool:
     return bool(val) and val.lower() not in ("false", "no", "0")
 
 
+def split_by_comma(val: list[str] | str) -> list[str]:
+    """Split a string value by comma"""
+    if isinstance(val, str):
+        return [v.strip() for v in val.split(",")]
+    return val
+
+
 DEFAULT_PYPI_INDEX = "https://pypi.org/simple"
 
 
@@ -154,6 +161,9 @@ class Config(MutableMapping[str, str]):
         "install.cache_method": ConfigItem(
             "`symlink` or `pth` to create links to the cached installation",
             "symlink",
+        ),
+        "python.providers": ConfigItem(
+            "List of python provider names for findpython", default=[], coerce=split_by_comma
         ),
         "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True, coerce=ensure_boolean),
         "python.use_venv": ConfigItem(

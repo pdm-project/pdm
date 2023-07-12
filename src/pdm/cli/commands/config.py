@@ -74,6 +74,8 @@ class Command(BaseCommand):
             self._list_config(project, options)
 
     def _get_config(self, project: Project, options: argparse.Namespace) -> None:
+        from findpython import ALL_PROVIDERS
+
         if options.key in project.project_config.deprecated:  # pragma: no cover
             project.core.ui.echo(
                 f"DEPRECATED: the config has been renamed to {project.project_config.deprecated[options.key]}",
@@ -87,6 +89,8 @@ class Command(BaseCommand):
             value = project.global_config[options.key]
         if options.key.endswith(".password"):
             value = "[i]<hidden>[/i]"
+        elif options.key == "python.providers" and not value:
+            value = ["venv", *ALL_PROVIDERS]
         project.core.ui.echo(value)
 
     def _set_config(self, project: Project, options: argparse.Namespace) -> None:
@@ -100,6 +104,8 @@ class Command(BaseCommand):
         config[options.key] = options.value
 
     def _show_config(self, config: Mapping[str, Any], supersedes: Mapping[str, Any]) -> None:
+        from findpython import ALL_PROVIDERS
+
         assert Config.site is not None
         for key in sorted(config):
             deprecated = ""
@@ -133,7 +139,12 @@ class Command(BaseCommand):
                 style=extra_style,
                 verbosity=termui.Verbosity.DETAIL,
             )
-            value = "[i]<hidden>[/]" if key.endswith("password") else config[key]
+            if key.endswith("password"):
+                value: Any = "[i]<hidden>[/i]"
+            else:
+                value = config[key]
+                if key == "python.providers" and not value:
+                    value = ["venv", *ALL_PROVIDERS]
             self.ui.echo(
                 f"[primary]{canonical_key}[/]{deprecated} = {value}",
                 style=extra_style,
