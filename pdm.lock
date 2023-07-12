@@ -234,9 +234,12 @@ summary = "A platform independent file lock."
 
 [[package]]
 name = "findpython"
-version = "1.0.0a3"
+version = "0.3.0"
 requires_python = ">=3.7"
 summary = "A utility to find python versions on your system"
+dependencies = [
+    "packaging>=20",
+]
 
 [[package]]
 name = "funcy"
@@ -987,7 +990,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
-content_hash = "sha256:0f030239d36d443d94f591793e6013e2af187039253c74dd0b02a5f527879102"
+content_hash = "sha256:25c9d5ba5ddbabe606a6631fe9b237b2bae87e6ae86df0288f155bdb53ee9656"
 
 [metadata.files]
 "arpeggio 2.0.0" = [
@@ -1303,18 +1306,9 @@ content_hash = "sha256:0f030239d36d443d94f591793e6013e2af187039253c74dd0b02a5f52
     {url = "https://files.pythonhosted.org/packages/00/0b/c506e9e44e4c4b6c89fcecda23dc115bf8e7ff7eb127e0cb9c114cbc9a15/filelock-3.12.2.tar.gz", hash = "sha256:002740518d8aa59a26b0c76e10fb8c6e15eae825d34b6fdf670333fd7b938d81"},
     {url = "https://files.pythonhosted.org/packages/00/45/ec3407adf6f6b5bf867a4462b2b0af27597a26bd3cd6e2534cb6ab029938/filelock-3.12.2-py3-none-any.whl", hash = "sha256:cbb791cdea2a72f23da6ac5b5269ab0a0d161e9ef0100e653b69049a7706d1ec"},
 ]
-"findpython 1.0.0a3" = [
-    {url = "https://files.pythonhosted.org/packages/06/90/51eb7b41ff99dbd566e4507bb8fcbf0ef098691cf780bf53b5313124c4cd/findpython-1.0.0a3-cp37-abi3-win32.whl", hash = "sha256:4e878052d59512a4f470738d03d171cfeb8991898ce232568a5d005244d16ec2"},
-    {url = "https://files.pythonhosted.org/packages/1d/4e/df273fcdd0e04ab1e532508388b1e0b267c9a0f6afd3a05cd7bf69328163/findpython-1.0.0a3-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8fb93ebcb6e7813dfcfb2fa8724465a09d5bc1160bb9320ea7c101336df7968a"},
-    {url = "https://files.pythonhosted.org/packages/28/7c/512106f9c32aeaaed779ebfc483fb688779e5cadae7e922d61fe3608bfd7/findpython-1.0.0a3-cp37-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:536b4bf401113cac4854f3342c608e0f854db704a95a286e981f14f4d206ae23"},
-    {url = "https://files.pythonhosted.org/packages/51/18/7d3325a82c7da26dac8120a7e70b66cac41b2104ec9d93c8a95e7280dffc/findpython-1.0.0a3-cp37-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:122f245812f44c9511583ce6c950aa5c909d72cf507a3314a6a36884474c9aa4"},
-    {url = "https://files.pythonhosted.org/packages/68/25/e28abfae5974065ad6e9c528d9c5150e49790974ddac5298f3bdf09fd454/findpython-1.0.0a3-cp37-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f69a78483cb74ceca41b60f2870424fa2f97154476149f616b1fdb57474dc94a"},
-    {url = "https://files.pythonhosted.org/packages/74/ba/add99f9da46170922d7beffd7fbcfce3e6665908bd76c17da2c818be28f4/findpython-1.0.0a3-cp37-abi3-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:d5cc2c8e23af6af2218ea735e4e4cbc90d5f29645eb4826c3850322c760db397"},
-    {url = "https://files.pythonhosted.org/packages/ab/fe/9a940da77097423a57e1f18f6ce837728d60ef3178b7ddf7175412259eab/findpython-1.0.0a3.tar.gz", hash = "sha256:49eb546b4af15e7d9bb394c2290e70efe02947ae87efe1a21193b0df3219fc7d"},
-    {url = "https://files.pythonhosted.org/packages/b5/5a/5f3f46a7448fb85af970b248ac627555985b81642e798cd03914c96256ab/findpython-1.0.0a3-cp37-abi3-win_amd64.whl", hash = "sha256:de22adb181bd7a9e54d18650fb55384e31f5cb3b77fcd2c619e2cdaee2961c5c"},
-    {url = "https://files.pythonhosted.org/packages/b5/ed/262ab76a9a2a6618b618cab71b094147f3a12c315ddcb2d181debddd4e54/findpython-1.0.0a3-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:973ca19a3e9e7f68e55d9b5832078830241297a5f018c9c6be3714f118390224"},
-    {url = "https://files.pythonhosted.org/packages/e3/08/4213b71d0d85a7d75a9f82d00f1c76311013c8b4ceaae615d0424f6c41cf/findpython-1.0.0a3-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:2c61bca8199bde89658a7ca080d15e188522ec94e6cdb5d7ff3b0d9ac0f71b68"},
-    {url = "https://files.pythonhosted.org/packages/e5/eb/b6e4b2aca88de968becf8df350d434abf81111f27ca96dbc6eeeae8d2748/findpython-1.0.0a3-cp37-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f5839a4ad9c9d7e06202e4809f7c2d50bcbfc704a03311c25650151dc6153641"},
+"findpython 0.3.0" = [
+    {url = "https://files.pythonhosted.org/packages/7b/35/8edee643b70783adda91c29c3ba7a48816d03944c63d4e41ef65ec086af6/findpython-0.3.0.tar.gz", hash = "sha256:e6c6d6c48ce7cfd6959ccdce12d6121d576cff395f493fd46667e7d5a9aa2474"},
+    {url = "https://files.pythonhosted.org/packages/fb/20/2d9de6905176113c267edce92fdd018cf6f6a0e0f6b306ebad39c91c4244/findpython-0.3.0-py3-none-any.whl", hash = "sha256:665503316f2de554d09bdf44ffe25832a99d78b8534ce04df99fb324d44e959a"},
 ]
 "funcy 2.0" = [
     {url = "https://files.pythonhosted.org/packages/70/b8/c6081521ff70afdff55cd9512b2220bbf4fa88804dae51d1b57b4b58ef32/funcy-2.0.tar.gz", hash = "sha256:3963315d59d41c6f30c04bc910e10ab50a3ac4a225868bfa96feed133df075cb"},

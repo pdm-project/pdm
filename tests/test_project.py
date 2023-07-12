@@ -13,7 +13,6 @@ from pdm.models.venv import get_venv_python
 from pdm.utils import cd
 
 
-@pytest.mark.skip(reason="findpython is not patchable")
 def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
     project._saved_python = None
     project._python = None

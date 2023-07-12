@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import typing as t
 from pathlib import Path
-from typing import Iterable, TypeVar
 
 from findpython import BaseProvider, PythonVersion
 
@@ -33,7 +33,7 @@ def get_venv_prefix(project: Project) -> str:
     return f"{path.name}-{name_hash}-"
 
 
-def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
+def iter_venvs(project: Project) -> t.Iterable[tuple[str, VirtualEnv]]:
     """Return an iterable of venv paths associated with the project"""
     in_project_venv = get_in_project_venv(project.root)
     if in_project_venv is not None:
@@ -47,15 +47,12 @@ def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
             yield ident, venv
 
 
-def iter_central_venvs(project: Project) -> Iterable[tuple[str, Path]]:
+def iter_central_venvs(project: Project) -> t.Iterable[tuple[str, Path]]:
     """Return an iterable of all managed venvs and their paths."""
     venv_parent = Path(project.config["venv.location"])
     for venv in venv_parent.glob("*"):
         ident = venv.name
         yield ident, venv
-
-
-T = TypeVar("T", bound=BaseProvider)
 
 
 class VenvProvider(BaseProvider):
@@ -64,11 +61,13 @@ class VenvProvider(BaseProvider):
     def __init__(self, project: Project) -> None:
         self.project = project
 
-    def find_pythons(self) -> list[PythonVersion]:
-        results: list[PythonVersion] = []
+    @classmethod
+    def create(cls) -> t.Self | None:
+        return None
+
+    def find_pythons(self) -> t.Iterable[PythonVersion]:
         for _, venv in iter_venvs(self.project):
-            results.append(PythonVersion(venv.interpreter, interpreter=venv.interpreter, keep_symlink=True))
-        return results
+            yield PythonVersion(venv.interpreter, _interpreter=venv.interpreter, keep_symlink=True)
 
 
 def get_venv_with_name(project: Project, name: str) -> VirtualEnv:
