@@ -641,7 +641,7 @@ class Project:
                     yield PythonInfo.from_path(pyenv_shim)
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
                     yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
-            python = shutil.which("python")
+            python = shutil.which("python") or shutil.which("python3")
             if python:
                 yield PythonInfo.from_path(python)
             args = []
