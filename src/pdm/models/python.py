@@ -48,21 +48,21 @@ class PythonInfo:
     def executable(self) -> Path:
         return self._py_ver.interpreter
 
-    @property
+    @cached_property
     def version(self) -> Version:
         return self._py_ver.version
 
     @property
     def major(self) -> int:
-        return self._py_ver.major
+        return self.version.major
 
     @property
     def minor(self) -> int:
-        return self._py_ver.minor
+        return self.version.minor
 
     @property
     def micro(self) -> int:
-        return self._py_ver.patch
+        return self.version.micro
 
     @property
     def version_tuple(self) -> tuple[int, ...]:
