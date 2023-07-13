@@ -20,7 +20,7 @@ pytest_plugins = [
 """
 from __future__ import annotations
 
-import collections
+import collections.abc
 import json
 import os
 import shutil
@@ -71,7 +71,7 @@ if TYPE_CHECKING:
 
     from _pytest.fixtures import SubRequest
 
-    from pdm._types import CandidateInfo, RepositoryConfig
+    from pdm._types import CandidateInfo, FileHash, RepositoryConfig
 
 
 class LocalFileAdapter(requests.adapters.BaseAdapter):
@@ -191,8 +191,8 @@ class TestRepository(BaseRepository):
             self._get_dependencies_from_metadata,
         )
 
-    def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
-        return {}
+    def get_hashes(self, candidate: Candidate) -> list[FileHash]:
+        return []
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         for version, candidate in sorted(

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from unearth import Link
 
-    from pdm._types import CandidateInfo, RepositoryConfig, SearchResult
+    from pdm._types import CandidateInfo, FileHash, RepositoryConfig, SearchResult
     from pdm.environments import BaseEnvironment
 
     CandidateKey = tuple[str, str | None, str | None, bool]
@@ -243,7 +243,7 @@ class BaseRepository:
             project.pyproject.metadata.get("description", "UNKNOWN"),
         )
 
-    def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
+    def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         """Get hashes of all possible installable candidates
         of a given package version.
         """
@@ -252,12 +252,12 @@ class BaseRepository:
             or candidate.req.is_file_or_url
             and candidate.req.is_local_dir  # type: ignore[attr-defined]
         ):
-            return None
+            return []
         if candidate.hashes:
             return candidate.hashes
         req = candidate.req.as_pinned_version(candidate.version)
         comes_from = candidate.link.comes_from if candidate.link else None
-        result: dict[Link, str] = {}
+        result: list[FileHash] = []
         logged = False
         respect_source_order = self.environment.project.pyproject.settings.get("resolution", {}).get(
             "respect-source-order", False
@@ -279,8 +279,14 @@ class BaseRepository:
                 if not logged:
                     termui.logger.info("Fetching hashes for %s", candidate)
                     logged = True
-                result[link] = self._hash_cache.get_hash(link, finder.session)
-        return result or None
+                result.append(
+                    {
+                        "url": link.url_without_fragment,
+                        "file": link.filename,
+                        "hash": self._hash_cache.get_hash(link, finder.session),
+                    }
+                )
+        return result
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         """Return an iterable of getter functions to get dependencies, which will be
@@ -395,7 +401,6 @@ class LockedRepository(BaseRepository):
     ) -> None:
         super().__init__(sources, environment, ignore_compatibility=False)
         self.packages: dict[CandidateKey, Candidate] = {}
-        self.file_hashes: dict[tuple[str, str], dict[Link, str]] = {}
         self.candidate_info: dict[CandidateKey, CandidateInfo] = {}
         self._read_lockfile(lockfile)
 
@@ -404,8 +409,6 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
-        from unearth import Link
-
         root = self.environment.project.root
         with cd(root):
             for package in lockfile.get("package", []):
@@ -413,11 +416,14 @@ class LockedRepository(BaseRepository):
                 if version:
                     package["version"] = f"=={version}"
                 package_name = package.pop("name")
-                req_dict = {k: v for k, v in package.items() if k not in ("dependencies", "requires_python", "summary")}
+                req_dict = {
+                    k: v for k, v in package.items() if k not in ("dependencies", "requires_python", "summary", "files")
+                }
                 req = Requirement.from_req_dict(package_name, req_dict)
                 if req.is_file_or_url and req.path and not req.url:  # type: ignore[attr-defined]
                     req.url = path_to_url(posixpath.join(root, req.path))  # type: ignore[attr-defined]
                 can = make_candidate(req, name=package_name, version=version)
+                can.hashes = package.get("files", [])
                 can_id = self._identify_candidate(can)
                 self.packages[can_id] = can
                 candidate_info: CandidateInfo = (
@@ -426,11 +432,6 @@ class LockedRepository(BaseRepository):
                     package.get("summary", ""),
                 )
                 self.candidate_info[can_id] = candidate_info
-
-        for key, hashes in lockfile.get("metadata", {}).get("files", {}).items():
-            self.file_hashes[tuple(key.split(None, 1))] = {  # type: ignore[index]
-                Link(item["url"]): item["hash"] for item in hashes if "url" in item
-            }
 
     def _identify_candidate(self, candidate: Candidate) -> CandidateKey:
         url = getattr(candidate.req, "url", None)
@@ -499,6 +500,5 @@ class LockedRepository(BaseRepository):
             can.req = requirement
             yield can
 
-    def get_hashes(self, candidate: Candidate) -> dict[Link, str] | None:
-        assert candidate.name
-        return self.file_hashes.get((normalize_name(candidate.name), candidate.version or ""))
+    def get_hashes(self, candidate: Candidate) -> list[FileHash]:
+        return candidate.hashes

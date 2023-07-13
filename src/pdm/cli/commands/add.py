@@ -171,7 +171,7 @@ class Command(BaseCommand):
         save_version_specifiers({group: deps_to_update}, resolved, save)
         if not dry_run:
             project.add_dependencies(deps_to_update, group, selection.dev or False)
-            project.write_lockfile(project.lockfile._data, False, groups=lock_groups)
+            project.write_lockfile(project.lockfile._data, False)
             hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         populate_requirement_names(group_deps)
         if sync:

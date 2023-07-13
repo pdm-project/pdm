@@ -85,6 +85,7 @@ SearchResult = List[Package]
 
 
 if TYPE_CHECKING:
+    from typing import TypedDict
 
     class Comparable(Protocol):
         def __lt__(self, __other: Any) -> bool:
@@ -105,3 +106,8 @@ if TYPE_CHECKING:
     class RichProtocol(Protocol):
         def __rich__(self) -> str:
             ...
+
+    class FileHash(TypedDict, total=False):
+        url: str
+        hash: str
+        file: str

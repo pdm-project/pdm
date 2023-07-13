@@ -214,10 +214,12 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l lockfile -d 'Specify
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-cross-platform -d 'Only lock packages for the current platform'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-default -d 'Don\'t include dependencies from the default group'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-static-urls -d 'Do not store static file URLs in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d 'Store static file URLs in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin

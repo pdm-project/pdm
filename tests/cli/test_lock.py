@@ -12,7 +12,7 @@ from pdm.models.specifiers import PySpecSet
 def test_lock_command(project, pdm, mocker):
     m = mocker.patch.object(actions, "do_lock")
     pdm(["lock"], obj=project)
-    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY, cross_platform=True)
+    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY, cross_platform=True, static_urls=None)
 
 
 @pytest.mark.usefixtures("repository")
@@ -30,23 +30,32 @@ def test_lock_refresh(pdm, project, repository):
     result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
-    assert not project.lockfile["metadata"]["files"].get("requests 2.19.1")
+    package = next(p for p in project.lockfile["package"] if p["name"] == "requests")
+    assert not package.get("files")
     project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
     url_hashes = {
         "http://example.com/requests-2.19.1-py3-none-any.whl": "sha256:abcdef123456",
         "http://example2.com/requests-2.19.1-py3-none-AMD64.whl": "sha256:abcdef123456",
         "http://example1.com/requests-2.19.1-py3-none-any.whl": "sha256:abcdef123456",
     }
-    repository.get_hashes = lambda c: (
-        {Link(url): hash for url, hash in url_hashes.items()} if c.identify() == "requests" else {}
+    repository.get_hashes = (
+        lambda c: [{"url": url, "file": Link(url).filename, "hash": hash} for url, hash in url_hashes.items()]
+        if c.identify() == "requests"
+        else []
     )
     assert not project.is_lockfile_hash_match()
     result = pdm(["lock", "--refresh", "-v"], obj=project)
     assert result.exit_code == 0
-    assert project.is_lockfile_hash_match()
-    assert project.lockfile["metadata"]["files"]["requests 2.19.1"] == [
-        {"url": url, "hash": hash} for url, hash in sorted(url_hashes.items())
+    package = next(p for p in project.lockfile["package"] if p["name"] == "requests")
+    assert package["files"] == [
+        {"file": "requests-2.19.1-py3-none-AMD64.whl", "hash": "sha256:abcdef123456"},
+        {"file": "requests-2.19.1-py3-none-any.whl", "hash": "sha256:abcdef123456"},
     ]
+    assert project.is_lockfile_hash_match()
+    result = pdm(["lock", "--refresh", "--static-urls", "-v"], obj=project)
+    assert result.exit_code == 0
+    package = next(p for p in project.lockfile["package"] if p["name"] == "requests")
+    assert package["files"] == [{"url": url, "hash": hash} for url, hash in sorted(url_hashes.items())]
 
 
 def test_lock_refresh_keep_consistent(pdm, project, repository):
@@ -136,7 +145,8 @@ def test_lock_multiple_platform_wheels(project, pdm):
     project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")})
     pdm(["lock"], obj=project, strict=True)
     assert project.lockfile.cross_platform
-    file_hashes = project.lockfile["metadata"]["files"]["pdm-hello 0.1.0"]
+    package = next(p for p in project.lockfile["package"] if p["name"] == "pdm-hello")
+    file_hashes = package["files"]
     assert len(file_hashes) == 2
 
 
@@ -146,6 +156,7 @@ def test_lock_current_platform_wheels(project, pdm):
     project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")})
     pdm(["lock", "--no-cross-platform"], obj=project, strict=True)
     assert project.lockfile.cross_platform is False
-    file_hashes = project.lockfile["metadata"]["files"]["pdm-hello 0.1.0"]
+    package = next(p for p in project.lockfile["package"] if p["name"] == "pdm-hello")
+    file_hashes = package["files"]
     wheels_num = 2 if sys.platform == "win32" and not project.python.is_32bit else 1
     assert len(file_hashes) == wheels_num

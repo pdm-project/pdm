@@ -43,11 +43,14 @@ def do_lock(
     refresh: bool = False,
     groups: list[str] | None = None,
     cross_platform: bool | None = None,
+    static_urls: bool | None = None,
     hooks: HookManager | None = None,
 ) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
     hooks = hooks or HookManager(project)
     check_project_file(project)
+    if static_urls is None:
+        static_urls = project.lockfile.static_urls
     if refresh:
         locked_repo = project.locked_repository
         repo = project.get_repository()
@@ -61,9 +64,13 @@ def do_lock(
                 mapping[candidate.identify()] = candidate
                 dependencies[candidate.dep_key] = list(map(parse_requirement, reqs))
             with project.core.ui.logging("lock"):
+                for c in mapping.values():
+                    c.hashes.clear()
                 fetch_hashes(repo, mapping)
-            lockfile = format_lockfile(project, mapping, dependencies)
-        project.write_lockfile(lockfile, groups=groups)
+            lockfile = format_lockfile(
+                project, mapping, dependencies, groups=project.lockfile.groups, static_urls=static_urls
+            )
+        project.write_lockfile(lockfile)
         return mapping
     # TODO: multiple dependency definitions for the same package.
     if cross_platform is None:
@@ -109,9 +116,11 @@ def do_lock(
             ui.echo(format_resolution_impossible(err), err=True)
             raise ResolutionImpossible("Unable to find a resolution") from None
         else:
-            data = format_lockfile(project, mapping, dependencies)
+            data = format_lockfile(
+                project, mapping, dependencies, groups=groups, cross_platform=cross_platform, static_urls=static_urls
+            )
             ui.echo(f"{termui.Emoji.LOCK} Lock successful")
-            project.write_lockfile(data, write=not dry_run, groups=groups, cross_platform=cross_platform)
+            project.write_lockfile(data, write=not dry_run)
             hooks.try_emit("post_lock", resolution=mapping, dry_run=dry_run)
 
     return mapping
