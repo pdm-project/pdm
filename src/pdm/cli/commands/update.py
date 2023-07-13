@@ -176,7 +176,7 @@ class Command(BaseCommand):
             for group, deps in updated_deps.items():
                 project.add_dependencies(deps, group, selection.dev or False)
         if not dry_run:
-            project.write_lockfile(project.lockfile._data, False, groups=locked_groups)
+            project.write_lockfile(project.lockfile._data, False)
         if sync or dry_run:
             do_sync(
                 project,

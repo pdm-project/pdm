@@ -14,7 +14,7 @@ GENERATED_COMMENTS = [
 
 
 class Lockfile(TOMLBase):
-    spec_version = "4.2"
+    spec_version = "4.3"
 
     @property
     def hash(self) -> str:
@@ -33,6 +33,10 @@ class Lockfile(TOMLBase):
         if self.empty():
             return True
         return self._data.get("metadata", {}).get("cross_platform", True)
+
+    @property
+    def static_urls(self) -> bool:
+        return self._data.get("metadata", {}).get("static_urls", False)
 
     def compare_groups(self, groups: Iterable[str]) -> list[str]:
         if not self.groups:
@@ -64,5 +68,5 @@ class Lockfile(TOMLBase):
             return False
         if "." not in lockfile_version:
             lockfile_version += ".0"
-        accepted = get_specifier(f"~={lockfile_version},>={lockfile_version}")
+        accepted = get_specifier(f"~={lockfile_version}")
         return accepted.contains(self.spec_version)

@@ -190,7 +190,7 @@ def export(
             req = candidate
         lines.append(project.backend.expand_line(req.as_line(), options.expandvars))
         if options.hashes and getattr(candidate, "hashes", None):
-            for item in sorted(set(candidate.hashes.values())):  # type: ignore[attr-defined]
+            for item in sorted({row["hash"] for row in candidate.hashes}):  # type: ignore[attr-defined]
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
     sources = project.pyproject.settings.get("source", [])

@@ -339,6 +339,17 @@ to create a lockfile that works for **this platform** only, trimming the wheels 
 pdm lock --no-cross-platform
 ```
 
+## Store static URLs or filenames in lockfile
+
+By default, PDM only stores the filenames of the packages in the lockfile, which benefits the reusability across different package indexes.
+However, if you want to store the static URLs of the packages in the lockfile, you can pass the `--static-urls` option to `pdm lock`:
+
+```bash
+pdm lock --static-urls
+```
+
+The settings will be saved and remembered for the same lockfile. You can also pass `--no-static-urls` to disable it.
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:

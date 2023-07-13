@@ -77,7 +77,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (lock)
-            opts="--check --dev --global --group --help --lockfile --no-cross-platform --no-default --no-isolation --production --project --refresh --skip --verbose"
+            opts="--check --dev --global --group --help --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --production --project --refresh --skip --static-urls --verbose"
             ;;
 
             (plugin)

@@ -433,6 +433,9 @@ def format_lockfile(
     project: Project,
     mapping: dict[str, Candidate],
     fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
+    groups: list[str] | None = None,
+    cross_platform: bool | None = None,
+    static_urls: bool | None = None,
 ) -> dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
@@ -440,30 +443,39 @@ def format_lockfile(
     from pdm.formats.base import make_array, make_inline_table
 
     packages = tomlkit.aot()
-    file_hashes = tomlkit.table()
-    for k, v in sorted(mapping.items()):
+    for _k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))
         base.add("summary", v.summary or "")
         deps = make_array(sorted(r.as_line() for r in fetched_dependencies[v.dep_key]), True)
         if len(deps) > 0:
             base.add("dependencies", deps)
-        packages.append(base)
         if v.hashes:
-            key = f"{strip_extras(k)[0]} {v.version}"
-            if key in file_hashes:
-                continue
-            array = tomlkit.array().multiline(True)
-            for link, hash_value in sorted(v.hashes.items(), key=lambda l_h: (l_h[0].url_without_fragment, l_h[1])):
-                inline = make_inline_table({"url": link.url_without_fragment, "hash": hash_value})
-                array.append(inline)
-            if array:
-                file_hashes.add(key, array)
+            collected = {}
+            for item in v.hashes:
+                if static_urls:
+                    row = {"url": item["url"], "hash": item["hash"]}
+                else:
+                    row = {"file": item["file"], "hash": item["hash"]}
+                inline = make_inline_table(row)
+                # deduplicate and sort
+                collected[tuple(row.values())] = inline
+            if collected:
+                base.add("files", make_array([collected[k] for k in sorted(collected)], True))
+        packages.append(base)
     doc = tomlkit.document()
-    doc.add("package", packages)
     metadata = tomlkit.table()
-    metadata.add("files", file_hashes)
+    if groups is None:
+        groups = list(project.iter_groups())
+    metadata.update(
+        {
+            "groups": sorted(groups, key=lambda k: k != "default"),
+            "cross_platform": cross_platform if cross_platform is not None else project.lockfile.cross_platform,
+            "static_urls": static_urls if static_urls is not None else project.lockfile.static_urls,
+        }
+    )
     doc.add("metadata", metadata)
+    doc.add("package", packages)
     return cast(dict, doc)
 
 

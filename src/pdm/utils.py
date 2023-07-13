@@ -27,9 +27,7 @@ if TYPE_CHECKING:
     from re import Match
     from typing import IO, Any, Iterator
 
-    from unearth import Link
-
-    from pdm._types import RepositoryConfig
+    from pdm._types import FileHash, RepositoryConfig
     from pdm.compat import Distribution
 
 _egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
@@ -94,18 +92,18 @@ def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
     return None
 
 
-def convert_hashes(hashes: dict[Link, str]) -> dict[str, list[str]]:
+def convert_hashes(files: list[FileHash]) -> dict[str, list[str]]:
     """Convert Pipfile.lock hash lines into InstallRequirement option format.
 
     The option format uses a str-list mapping. Keys are hash algorithms, and
     the list contains all values of that algorithm.
     """
     result: dict[str, list[str]] = {}
-    for hash_value in hashes.values():
-        try:
-            name, hash_value = hash_value.split(":", 1)
-        except ValueError:
-            name = "sha256"
+    for f in files:
+        hash_value = f.get("hash", "")
+        name, has_name, hash_value = hash_value.partition(":")
+        if not has_name:
+            name, hash_value = "sha256", name
         result.setdefault(name, []).append(hash_value)
     return result
 

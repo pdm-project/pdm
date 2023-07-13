@@ -8,7 +8,7 @@ import warnings
 from functools import lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, Iterable, cast, no_type_check
+from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
 from packaging.utils import parse_wheel_filename
@@ -41,6 +41,7 @@ from pdm.utils import (
 if TYPE_CHECKING:
     from unearth import Link, Package, PackageFinder
 
+    from pdm._types import FileHash
     from pdm.environments import BaseEnvironment
 
 
@@ -75,7 +76,7 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
 def _find_best_match_link(
     finder: PackageFinder,
     req: Requirement,
-    links: Iterable[Link] | None = None,
+    files: list[FileHash],
     ignore_compatibility: bool = False,
 ) -> Link | None:
     """Get the best matching link for a requirement"""
@@ -84,9 +85,12 @@ def _find_best_match_link(
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
     # If links are not empty, find the best match from the links, otherwise find from
     # the package sources.
+    links = [Link(f["url"]) for f in files if "url" in f]
+    hashes = convert_hashes(files)
+
     def attempt_to_find() -> Link | None:
-        if links is None:
-            best = finder.find_best_match(req.as_line()).best
+        if not links:
+            best = finder.find_best_match(req.as_line(), hashes=hashes).best
         else:
             # this branch won't be executed twice if ignore_compatibility is True
             evaluator = finder.build_evaluator(req.name)
@@ -160,7 +164,7 @@ class Candidate:
             link = cast("Link", req.as_file_link())  # type: ignore[attr-defined]
         self.link = link
         self.summary = ""
-        self.hashes: dict[Link, str] | None = None
+        self.hashes: list[FileHash] = []
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None

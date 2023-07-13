@@ -39,6 +39,16 @@ class Command(BaseCommand):
             dest="cross_platform",
             help="Only lock packages for the current platform",
         )
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument(
+            "--static-urls", action="store_true", help="Store static file URLs in the lockfile", default=None
+        )
+        group.add_argument(
+            "--no-static-urls",
+            action="store_false",
+            dest="static_urls",
+            help="Do not store static file URLs in the lockfile",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.check:
@@ -63,5 +73,6 @@ class Command(BaseCommand):
             refresh=options.refresh,
             groups=selection.all(),
             cross_platform=options.cross_platform,
+            static_urls=options.static_urls,
             hooks=HookManager(project, options.skip),
         )
