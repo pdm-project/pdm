@@ -36,16 +36,22 @@ def fix_legacy_specifier(specifier: str) -> str:
     """Since packaging 22.0, legacy specifiers like '>=4.*' are no longer
     supported. We try to normalize them to the new format.
     """
+    from pdm.utils import deprecation_warning
 
     def fix_wildcard(match: Match[str]) -> str:
         operator, _, version = match.groups()
-        if ".*" not in version or operator in ("==", "!="):
+        if operator in ("==", "!="):
             return match.group(0)
-        version = version.replace(".*", ".0")
-        if operator in ("<", "<="):  # <4.* and <=4.* are equivalent to <4.0
-            operator = "<"
-        elif operator in (">", ">="):  # >4.* and >=4.* are equivalent to >=4.0
-            operator = ">="
+        if ".*" in version:
+            deprecation_warning(".* suffix can only be used with `==` or `!=` operators", stacklevel=4)
+            version = version.replace(".*", ".0")
+            if operator in ("<", "<="):  # <4.* and <=4.* are equivalent to <4.0
+                operator = "<"
+            elif operator in (">", ">="):  # >4.* and >=4.* are equivalent to >=4.0
+                operator = ">="
+        elif "+" in version:  # Drop the local version
+            deprecation_warning("Local version label can only be used with `==` or `!=` operators", stacklevel=4)
+            version = version.split("+")[0]
         return f"{operator}{version}"
 
     return _legacy_specifier_re.sub(fix_wildcard, specifier)

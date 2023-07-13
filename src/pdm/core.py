@@ -83,7 +83,7 @@ class Core:
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
-        self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser, metavar="__root__")
+        self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser, dest="fooo")
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:
