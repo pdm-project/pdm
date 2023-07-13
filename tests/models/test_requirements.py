@@ -61,9 +61,15 @@ REQUIREMENTS = [
         "foo<5.0,>=4.0",
         marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
     ),
+    pytest.param(
+        "foo>=3.0+g1234; python_version>='3.6'",
+        'foo>=3.0; python_version >= "3.6"',
+        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
+    ),
 ]
 
 
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.parametrize("req, result", REQUIREMENTS)
 def test_convert_req_dict_to_req_line(req, result):
     r = parse_requirement(req)

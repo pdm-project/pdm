@@ -289,6 +289,7 @@ def test_legacy_pep345_tag_link(project):
     assert candidate.requires_python == ">=3,<4"
 
 
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 def test_ignore_invalid_py_version(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("wheel")

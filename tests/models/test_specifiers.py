@@ -3,6 +3,7 @@ import pytest
 from pdm.models.specifiers import PySpecSet
 
 
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.parametrize(
     "original,normalized",
     [
@@ -23,6 +24,8 @@ from pdm.models.specifiers import PySpecSet
         (">3.4.*", ">=3.4"),
         ("<=3.4.*", "<3.4"),
         ("<3.4.*", "<3.4"),
+        (">=3.0+g1234", ">=3.0"),
+        ("<3.0+g1234", "<3.0"),
         ("<3.10.0a6", "<3.10.0a6"),
         ("<3.10.2a3", "<3.10.2a3"),
     ],
@@ -79,6 +82,7 @@ def test_impossible_pyspec():
     assert str(spec_copy) == "impossible"
 
 
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.parametrize(
     "left,right",
     [
