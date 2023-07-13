@@ -331,6 +331,8 @@ Check the `metadata.groups` field in the lockfile to see which groups are includ
 
 ## Cross-platform lockfile
 
+_New in version 2.6.0_
+
 By default, the generated lockfile is **cross-platform**, which means the current platform isn't taken into account when resolving the dependencies. The result lockfile will contain wheels and dependencies for all possible platforms and Python versions.
 However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels. To avoid this, you can tell PDM
 to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform. This can be done by passing the `--no-cross-platform` option to `pdm lock`:
@@ -340,6 +342,8 @@ pdm lock --no-cross-platform
 ```
 
 ## Store static URLs or filenames in lockfile
+
+_New in version 2.8.0_
 
 By default, PDM only stores the filenames of the packages in the lockfile, which benefits the reusability across different package indexes.
 However, if you want to store the static URLs of the packages in the lockfile, you can pass the `--static-urls` option to `pdm lock`:
