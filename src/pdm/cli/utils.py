@@ -4,6 +4,7 @@ import argparse
 import dataclasses as dc
 import json
 import os
+import re
 import sys
 from collections import ChainMap, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
@@ -68,6 +69,8 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
         if prefix is None:
             prefix = "Usage: "
         result = super()._format_usage(usage, actions, groups, prefix)  # type: ignore[arg-type]
+        # Remove continuous spaces
+        result = re.sub(r" +", " ", result)
         if prefix:
             return result.replace(prefix, termui.style(prefix, style="warning"))
         return result
@@ -96,6 +99,14 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
             action_header = "%*s%s\n" % tup
             indent_first = help_position
 
+        # Special format for empty action_header
+        # - No extra indent block
+        # - Help info in the same indent level as subactions
+        if not action_header.strip():
+            action_header = ""
+            help_position = self._current_indent
+            indent_first = self._current_indent
+
         # collect the pieces of the action help
         parts = [termui.style(action_header, style="primary")]
 
@@ -109,11 +120,18 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
 
         # or add a newline if the description doesn't end with one
         elif not action_header.endswith("\n"):
-            parts.append("\n")
+            if action_header:
+                parts.append("\n")
 
+        # cancel out extra indent when action_header is empty
+        if not action_header:
+            self._dedent()
         # if there are any sub-actions, add their help as well
         for subaction in self._iter_indented_subactions(action):
             parts.append(self._format_action(subaction))
+        # cancel out extra dedent when action_header is empty
+        if not action_header:
+            self._indent()
 
         # return a single string
         return self._join_parts(parts)
@@ -129,6 +147,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument(
             "-h", "--help", action="help", default=argparse.SUPPRESS, help="Show this help message and exit."
         )
+        self._optionals.title = "options"
 
 
 class ErrorArgumentParser(ArgumentParser):

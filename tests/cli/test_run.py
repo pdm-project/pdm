@@ -819,6 +819,6 @@ def test_empty_positionnal_args_still_display_usage(project, pdm, args):
 def test_empty_positional_args_display_help(project, pdm):
     result = pdm([], obj=project)
     assert result.exit_code == 0
-    assert "Usage" in result.output
-    assert "Commands" in result.output
-    assert "Option" in result.output
+    assert "Usage:" in result.output
+    assert "Commands:" in result.output
+    assert "Options:" in result.output

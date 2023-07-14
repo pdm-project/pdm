@@ -65,7 +65,7 @@ class Command(BaseCommand):
         return super().register_to(subparsers, name, aliases=["plugin"], **kwargs)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        subparsers = parser.add_subparsers(title="commands", metavar="self")
+        subparsers = parser.add_subparsers(title="commands", metavar="")
         ListCommand.register_to(subparsers)
         if not is_in_zipapp():
             AddCommand.register_to(subparsers)

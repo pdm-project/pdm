@@ -78,12 +78,11 @@ class Core:
             "--config",
             help="Specify another config file path [env var: PDM_CONFIG_FILE] ",
         )
-        self.parser._positionals.title = "Commands"
         verbose_option.add_to_parser(self.parser)
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
-        self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser, dest="fooo")
+        self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser, title="commands", metavar="")
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
             module = importlib.import_module(f"pdm.cli.commands.{name}", __name__)
             try:
