@@ -44,6 +44,19 @@ def _is_python_package(root: str | Path) -> bool:
     return False
 
 
+_namespace_package_lines = frozenset(
+    [
+        # pkg_resources style
+        "__import__('pkg_resources').declare_namespace(__name__)",
+        "pkg_resources.declare_namespace(__name__)",
+        # pkgutil style
+        "__path__ = __import__('pkgutil').extend_path(__path__, __name__)",
+        "__path__ = pkgutil.extend_path(__path__, __name__)",
+    ]
+)
+_namespace_package_lines = _namespace_package_lines.union(line.replace("'", '"') for line in _namespace_package_lines)
+
+
 @lru_cache()
 def _is_namespace_package(root: str) -> bool:
     if not _is_python_package(root):
@@ -52,15 +65,7 @@ def _is_namespace_package(root: str) -> bool:
         return True
     with Path(root, "__init__.py").open(encoding="utf-8") as f:
         init_py_lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
-    namespace_identifiers = [
-        # pkg_resources style
-        "__import__('pkg_resources').declare_namespace(__name__)",
-        # pkgutil style
-        "__path__ = __import__('pkgutil').extend_path(__path__, __name__)",
-    ]
-    checker = namespace_identifiers[:]
-    checker.extend(item.replace("'", '"') for item in namespace_identifiers)
-    return any(line in checker for line in init_py_lines)
+    return not _namespace_package_lines.isdisjoint(init_py_lines)
 
 
 def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]:
