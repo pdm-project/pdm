@@ -1,3 +1,27 @@
+Release v2.8.0 (2023-07-15)
+---------------------------
+
+### Features & Improvements
+
+- Support target python with other architectures. [#2078](https://github.com/pdm-project/pdm/issues/2078)
+- Display the help information when running pdm directly. [#2081](https://github.com/pdm-project/pdm/issues/2081)
+- Allow to change the python providers from the config. Support finding pythons from Rye installation location with the new findpython. [#2099](https://github.com/pdm-project/pdm/issues/2099)
+- Option to save static URLs in the lockfile. By default only filenames are saved. [#2101](https://github.com/pdm-project/pdm/issues/2101)
+
+### Bug Fixes
+
+- Fix a bug that egg-info directories are not removed completely, leading to incomplete distribution. [#2027](https://github.com/pdm-project/pdm/issues/2027)
+- Skip distributions with wrong package meta information and duplicate path. [#2075](https://github.com/pdm-project/pdm/issues/2075)
+- Avoid mistakenly passing command-line arguments while testing. [#2083](https://github.com/pdm-project/pdm/issues/2083)
+- Fix a bug that lockfile groups are overwritten when running locking in a preceding step of `pdm install`. [#2086](https://github.com/pdm-project/pdm/issues/2086)
+- Tolerate and actually ignore the local versions in version specifiers. [#2102](https://github.com/pdm-project/pdm/issues/2102)
+- Fix a bug that shared cache cannot support overlapping namespace packages. [#2105](https://github.com/pdm-project/pdm/issues/2105)
+
+### Documentation
+
+- Add notes about using custom venv path. [#2096](https://github.com/pdm-project/pdm/issues/2096)
+
+
 Release v2.8.0a2 (2023-06-30)
 -----------------------------
 
