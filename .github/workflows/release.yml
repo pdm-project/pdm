@@ -23,7 +23,7 @@ jobs:
       - name: Check prerelease
         id: check_version
         run: |
-          if [[ "${{ github.ref }}" =~ ^[0-9.]+$ ]]; then
+          if [[ "${{ github.ref }}" =~ ^refs/tags/[0-9.]+$ ]]; then
             echo "PRERELEASE=false" >> $GITHUB_OUTPUT
           else
             echo "PRERELEASE=true" >> $GITHUB_OUTPUT
