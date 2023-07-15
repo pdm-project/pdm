@@ -23,7 +23,7 @@ class Command(BaseCommand):
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--path", help="Show the path to the given virtualenv")
         group.add_argument("--python", help="Show the python interpreter path for the given virtualenv")
-        subparser = parser.add_subparsers(metavar="venv", title="commands")
+        subparser = parser.add_subparsers(title="commands", metavar="")
         CreateCommand.register_to(subparser, "create")
         ListCommand.register_to(subparser, "list")
         RemoveCommand.register_to(subparser, "remove")
