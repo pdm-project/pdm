@@ -153,11 +153,11 @@ class InstallDestination(SchemeDictionaryDestination):
     ) -> None:
         if self.symlink_to:
             # Create symlinks to the cached location
-            for relpath in _create_symlinks_recursively(self.symlink_to, self.scheme_dict[scheme]):
-                records = itertools.chain(
-                    records,
-                    [(scheme, RecordEntry(relpath.replace("\\", "/"), None, None))],
-                )
+            def _symlink_files(symlink_to: str) -> Iterator[tuple[Scheme, RecordEntry]]:
+                for relpath in _create_symlinks_recursively(symlink_to, self.scheme_dict[scheme]):
+                    yield (scheme, RecordEntry(relpath.replace("\\", "/"), None, None))
+
+            records = itertools.chain(records, _symlink_files(self.symlink_to))
         return super().finalize_installation(scheme, record_file_path, records)
 
 
