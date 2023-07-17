@@ -53,6 +53,9 @@ pytest = [
     "pytest",
     "pytest-mock",
 ]
+keyring = [
+    "keyring",
+]
 all = [
     "copier",
     "cookiecutter",
