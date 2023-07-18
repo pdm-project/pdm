@@ -268,7 +268,14 @@ class BaseRepository:
             return True
         python_requires = self.environment.python_requires
         tags = parse_wheel_filename(link.filename)[-1]
-        return any(is_tag_match(tag, python_requires) for tag in tags)
+        result = any(is_tag_match(tag, python_requires) for tag in tags)
+        if not result:
+            termui.logger.debug(
+                "Skipping %r because it is not compatible with %r",
+                link,
+                python_requires,
+            )
+        return result
 
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         """Get hashes of all possible installable candidates
