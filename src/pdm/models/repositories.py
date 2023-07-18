@@ -243,6 +243,33 @@ class BaseRepository:
             project.pyproject.metadata.get("description", "UNKNOWN"),
         )
 
+    def _is_python_match(self, link: Link) -> bool:
+        from packaging.tags import Tag
+        from packaging.utils import parse_wheel_filename
+
+        def is_tag_match(tag: Tag, python_requires: PySpecSet) -> bool:
+            if tag.interpreter.startswith(("cp", "py")):
+                major, minor = tag.interpreter[2], tag.interpreter[3:]
+                if not minor:
+                    version = f"{major}.0"
+                else:
+                    version = f"{major}.{minor}.0"
+                if tag.abi == "abi3":
+                    spec = PySpecSet(f">={version}")  # cp37-abi3 is compatible with >=3.7
+                else:
+                    spec = PySpecSet(f"~={version}")  # cp37-cp37 is only compatible with 3.7.*
+                return not (spec & python_requires).is_impossible
+            else:
+                # we don't know about compatility for non-cpython implementations
+                # assume it is compatible
+                return True
+
+        if not link.is_wheel:
+            return True
+        python_requires = self.environment.python_requires
+        tags = parse_wheel_filename(link.filename)[-1]
+        return any(is_tag_match(tag, python_requires) for tag in tags)
+
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         """Get hashes of all possible installable candidates
         of a given package version.
@@ -272,6 +299,8 @@ class BaseRepository:
                 links: list[Link] = [this_link]
             else:  # the req must be a named requirement
                 links = [package.link for package in finder.find_matches(req.as_line())]
+                if self.ignore_compatibility:
+                    links = [link for link in links if self._is_python_match(link)]
             for link in links:
                 if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
                     # The links found can still be a local directory or vcs, skippping it.
