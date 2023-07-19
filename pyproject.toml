@@ -57,8 +57,7 @@ copier = ["copier"]
 cookiecutter = ["cookiecutter"]
 keyring = ["keyring"]
 template = [
-    "pdm[copier]",
-    "pdm[cookiecutter]",
+    "pdm[copier,cookiecutter]",
 ]
 truststore = ["truststore; python_version >= \"3.10\""]
 all = [
