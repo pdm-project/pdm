@@ -53,11 +53,15 @@ pytest = [
     "pytest",
     "pytest-mock",
 ]
+copier = ["copier"]
+cookiecutter = ["cookiecutter"]
+keyring = ["keyring"]
+template = [
+    "pdm[copier,cookiecutter]",
+]
+truststore = ["truststore; python_version >= \"3.10\""]
 all = [
-    "copier",
-    "cookiecutter",
-    "keyring",
-    "truststore; python_version >= \"3.10\"",
+    "pdm[keyring,template,truststore]",
 ]
 
 [project.scripts]
