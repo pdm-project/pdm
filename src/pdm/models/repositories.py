@@ -470,10 +470,10 @@ class LockedRepository(BaseRepository):
                 self.candidate_info[can_id] = candidate_info
 
     def _identify_candidate(self, candidate: Candidate) -> CandidateKey:
-        url = getattr(candidate.req, "url", None)
-        if url is not None:
-            url = url_without_fragments(url)
-            url = self.environment.project.backend.expand_line(url)
+        url: str | None = None
+        if candidate.link is not None:
+            url = candidate.link.url_without_fragment
+            url = self.environment.project.backend.expand_line(cast(str, url))
             if url.startswith("file://"):
                 path = posixpath.normpath(url_to_path(url))
                 url = path_to_url(path)
@@ -533,7 +533,6 @@ class LockedRepository(BaseRepository):
             if not requirement.name:
                 # make sure can.identify() won't return a randomly-generated name
                 requirement.name = can.name
-            can.req = requirement
             yield can
 
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
