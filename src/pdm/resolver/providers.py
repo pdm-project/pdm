@@ -166,7 +166,10 @@ class BaseProvider(AbstractProvider):
         if not requirement.is_named:
             if candidate.req.is_named:
                 return False
-            return self._compare_file_reqs(requirement, candidate.req)  # type: ignore[arg-type]
+            can_req = candidate.req
+            if requirement.is_vcs and can_req.is_vcs:
+                return can_req.vcs == requirement.vcs and can_req.repo == requirement.repo  # type: ignore[attr-defined]
+            return self._compare_file_reqs(requirement, can_req)  # type: ignore[arg-type]
         version = candidate.version
         this_name = self.repository.environment.project.name
         if version is None or candidate.name == this_name:
