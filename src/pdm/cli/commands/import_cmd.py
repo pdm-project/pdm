@@ -83,7 +83,7 @@ class Command(BaseCommand):
 
         merge_dictionary(pyproject["project"], project_data)
         merge_dictionary(pyproject["tool"]["pdm"], settings)
-        pyproject.setdefault("build-system", DEFAULT_BACKEND.build_system())
+        pyproject["build-system"] = DEFAULT_BACKEND.build_system()
 
         if "requires-python" not in pyproject["project"]:
             python_version = f"{project.python.major}.{project.python.minor}"

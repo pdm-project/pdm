@@ -4,8 +4,14 @@ import abc
 import os
 import urllib.parse
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pdm.utils import expand_env_vars, path_to_url
+
+if TYPE_CHECKING:
+    from typing import TypedDict
+
+    BuildSystem = TypedDict("BuildSystem", {"requires": list[str], "build-backend": str})
 
 
 class BuildBackend(metaclass=abc.ABCMeta):
@@ -22,13 +28,13 @@ class BuildBackend(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def build_system(cls) -> dict:
+    def build_system(cls) -> BuildSystem:
         pass
 
 
 class FlitBackend(BuildBackend):
     @classmethod
-    def build_system(cls) -> dict:
+    def build_system(cls) -> BuildSystem:
         return {
             "requires": ["flit_core>=3.2,<4"],
             "build-backend": "flit_core.buildapi",
@@ -37,7 +43,7 @@ class FlitBackend(BuildBackend):
 
 class SetuptoolsBackend(BuildBackend):
     @classmethod
-    def build_system(cls) -> dict:
+    def build_system(cls) -> BuildSystem:
         return {
             "requires": ["setuptools>=61", "wheel"],
             "build-backend": "setuptools.build_meta",
@@ -57,7 +63,7 @@ class PDMBackend(BuildBackend):
         return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path)}"
 
     @classmethod
-    def build_system(cls) -> dict:
+    def build_system(cls) -> BuildSystem:
         return {
             "requires": ["pdm-backend"],
             "build-backend": "pdm.backend",
@@ -66,7 +72,7 @@ class PDMBackend(BuildBackend):
 
 class PDMLegacyBackend(PDMBackend):
     @classmethod
-    def build_system(cls) -> dict:
+    def build_system(cls) -> BuildSystem:
         return {
             "requires": ["pdm-pep517>=1.0"],
             "build-backend": "pdm.pep517.api",
@@ -117,7 +123,7 @@ class HatchBackend(BuildBackend):
         return f"{{root:uri}}/{urllib.parse.quote(path)}"
 
     @classmethod
-    def build_system(cls) -> dict:
+    def build_system(cls) -> BuildSystem:
         return {
             "requires": ["hatchling"],
             "build-backend": "hatchling.build",

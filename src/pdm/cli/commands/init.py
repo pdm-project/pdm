@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pdm import termui
 from pdm.cli import actions
@@ -145,7 +145,7 @@ class Command(BaseCommand):
             get_specifier(python_requires)
             data["project"]["requires-python"] = python_requires
         if build_backend is not None:
-            data["build-system"] = build_backend.build_system()
+            data["build-system"] = cast(dict, build_backend.build_system())
 
         return data
 
