@@ -173,9 +173,10 @@ class Command(BaseCommand):
         if unconstrained:
             # Need to update version constraints
             save_version_specifiers(updated_deps, resolved, save)
-            for group, deps in updated_deps.items():
-                project.add_dependencies(deps, group, selection.dev or False)
         if not dry_run:
+            if unconstrained:
+                for group, deps in updated_deps.items():
+                    project.add_dependencies(deps, group, selection.dev or False)
             project.write_lockfile(project.lockfile._data, False)
         if sync or dry_run:
             do_sync(
