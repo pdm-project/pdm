@@ -379,10 +379,13 @@ class Project:
                 result["pypi"].passive_update(self.default_source)
             merge_sources(self.project_config.iter_sources())
             merge_sources(self.global_config.iter_sources())
+        sources: list[RepositoryConfig] = []
         for source in result.values():
-            assert source.url, f"Source URL must not be empty for {source.name}"
+            if not source.url:
+                continue
             source.url = expand_env_vars_in_auth(source.url)
-        return list(result.values())
+            sources.append(source)
+        return sources
 
     def get_repository(
         self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True
