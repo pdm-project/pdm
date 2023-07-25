@@ -286,7 +286,9 @@ project_option = Option(
     "-p",
     "--project",
     dest="project_path",
-    help="Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__",
+    help="Specify another path as the project root, which changes the base of pyproject.toml "
+    "and __pypackages__ [env var: PDM_PROJECT]",
+    default=os.getenv("PDM_PROJECT"),
 )
 
 
