@@ -148,9 +148,8 @@ class Requirement:
                 raise RequirementError("Invalid marker: %s" % str(e)) from None
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(e.strip() for e in kwargs["extras"][1:-1].split(","))
-        version = kwargs.pop("version", None)
-        if version:
-            kwargs["specifier"] = get_specifier(version)
+        version = kwargs.pop("version", "")
+        kwargs["specifier"] = get_specifier(version)
         return cls(**{k: v for k, v in kwargs.items() if k in inspect.signature(cls).parameters})
 
     @classmethod
@@ -240,7 +239,7 @@ class Requirement:
 class NamedRequirement(Requirement):
     def as_line(self) -> str:
         extras = f"[{','.join(sorted(self.extras))}]" if self.extras else ""
-        return f"{self.project_name}{extras}{self.specifier}{self._format_marker()}"
+        return f"{self.project_name}{extras}{self.specifier or ''}{self._format_marker()}"
 
 
 @dataclasses.dataclass(eq=False)
