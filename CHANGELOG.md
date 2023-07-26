@@ -1,3 +1,25 @@
+Release v2.8.1 (2023-07-26)
+---------------------------
+
+### Features & Improvements
+
+- Add `keyring`, `copier`, `cookiecutter`, `template`, `truststore` dependency groups. [#2109](https://github.com/pdm-project/pdm/issues/2109)
+- Ignore wheels for python versions not in range. [#2113](https://github.com/pdm-project/pdm/issues/2113)
+- Read default value from env var `PDM_PROJECT` for `-p/--project` option. [#2126](https://github.com/pdm-project/pdm/issues/2126)
+
+### Bug Fixes
+
+- Fix the comparison of the candidate keys in the lockfile. [#2120](https://github.com/pdm-project/pdm/issues/2120)
+- Don't update `pyproject.toml` if both `--unconstrained` and `--dry-run` are passed to `pdm update`. [#2125](https://github.com/pdm-project/pdm/issues/2125)
+- Overwrite the `build-system` table when importing from other package manager. [#2126](https://github.com/pdm-project/pdm/issues/2126)
+- Skip sources with empty URL when merging sources. [#2130](https://github.com/pdm-project/pdm/issues/2130)
+- Fix the invalid requirement converted from poetry metadata. [#2133](https://github.com/pdm-project/pdm/issues/2133)
+
+### Dependencies
+
+- Update `unearth` to 0.10.0 [#2113](https://github.com/pdm-project/pdm/issues/2113)
+
+
 Release v2.8.0 (2023-07-15)
 ---------------------------
 
