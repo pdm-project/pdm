@@ -122,7 +122,7 @@ class _Prefix:
             # Clear existing site dir as .pyc may be cached.
             shutil.rmtree(self.site_dir)
         os.makedirs(self.site_dir)
-        with open(os.path.join(self.site_dir, "sitecustomize.py"), "w") as fp:
+        with open(os.path.join(self.site_dir, "sitecustomize.py"), "w", encoding="utf-8") as fp:
             fp.write(
                 textwrap.dedent(
                     f"""
