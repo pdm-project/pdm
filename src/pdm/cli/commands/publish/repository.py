@@ -43,11 +43,14 @@ class Repository:
     def _ensure_credentials(self, username: str | None, password: str | None) -> tuple[str, str]:
         from pdm.models.auth import keyring
 
-        netloc = urlparse(self.url).netloc
+        parsed_url = urlparse(self.url)
+        netloc = parsed_url.netloc
         if username and password:
             return username, password
         if password:
             return "__token__", password
+        if parsed_url.username is not None and parsed_url.password is not None:
+            return parsed_url.username, parsed_url.password
         if keyring.enabled:
             auth = keyring.get_auth_info(self.url, username)
             if auth is not None:
