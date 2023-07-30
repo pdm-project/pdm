@@ -4,7 +4,7 @@
 click==7.1.2
 flask==1.1.4
 itsdangerous==1.1.0
-jinja2==2.11.3
-markupsafe==1.1.1
-werkzeug==1.0.1
+Jinja2==2.11.3
+MarkupSafe==1.1.1
+Werkzeug==1.0.1
 --extra-index-url https://test.pypi.org/simple
