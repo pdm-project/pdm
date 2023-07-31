@@ -1,3 +1,15 @@
+Release v2.8.2 (2023-07-31)
+---------------------------
+
+### Features & Improvements
+
+- Allow setting username and password in URL for publish command [#2140](https://github.com/pdm-project/pdm/issues/2140)
+
+### Bug Fixes
+
+- Use UTF-8 encoding when writing `sitecustomize.py`. [#2139](https://github.com/pdm-project/pdm/issues/2139)
+
+
 Release v2.8.1 (2023-07-26)
 ---------------------------
 
