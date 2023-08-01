@@ -57,17 +57,17 @@ def _replace_shebang(path: Path, new_executable: bytes) -> None:
         return
 
     if os.name == "nt":
-        new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, 1, flags=re.M)
+        new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, count=1, flags=re.M)
         if count > 0:
             path.write_bytes(new_content)
         return
 
-    new_content, count = re.subn(_complex_shebang_re, rb"\1" + new_executable + rb"\3", contents, 1)
+    new_content, count = re.subn(_complex_shebang_re, rb"\1" + new_executable + rb"\3", contents, count=1)
     if count > 0:
         path.write_bytes(new_content)
         return
 
-    new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, 1)
+    new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, count=1)
     if count > 0:
         path.write_bytes(new_content)
 
