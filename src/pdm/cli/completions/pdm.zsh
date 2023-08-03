@@ -216,18 +216,19 @@ _pdm() {
     list)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-r,--reverse}'[Reverse the dependency graph]'
+        {-r,--reverse}'[Reverse the dependency tree]'
         '--fields[Select information to output as a comma separated string.]:fields:'
         "--sort[Sort the output using a given field name. If nothing is set, no sort is applied. Multiple fields can be combined with ',']:sort:"
         '--json[Output dependencies in JSON document format]'
         '--csv[Output dependencies in CSV document format]'
         '--markdown[Output dependencies and legal notices in markdown document format - best effort basis]'
-        '--graph[Display a graph of dependencies]'
+        '{--tree,--graph}[Display a tree of dependencies]'
         "--freeze[Show the installed dependencies as pip's requirements.txt format]"
         "--include[Dependency groups to include in the output. By default all are included]:include:"
         "--exclude[Dependency groups to exclude from the output]:exclude:"
         "--resolve[Resolve all requirements to output licenses (instead of just showing those currently installed)]"
         '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '*:patterns:'
       )
       ;;
     lock)
