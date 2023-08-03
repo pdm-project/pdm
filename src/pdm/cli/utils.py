@@ -8,6 +8,7 @@ import re
 import sys
 from collections import ChainMap, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from fnmatch import fnmatch
 from json import dumps
 from pathlib import Path
 from typing import (
@@ -256,7 +257,7 @@ def add_package_to_tree(
     root: Tree,
     graph: DirectedGraph,
     package: Package,
-    required: str = "",
+    required: list[str],
     visited: frozenset[str] = frozenset(),
 ) -> None:
     """Format one package.
@@ -270,20 +271,21 @@ def add_package_to_tree(
         "[error][ not installed ][/]"
         if not package.version
         else f"[error]{package.version}[/]"
-        if required and required not in ("Any", "This project") and not SpecifierSet(required).contains(package.version)
+        if required
+        and not any(s in ("Any", "This project") or SpecifierSet(s).contains(package.version) for s in required)
         else f"[warning]{package.version}[/]"
     )
     # escape deps with extras
     name = package.name.replace("[", r"\[") if "[" in package.name else package.name
     if package.name in visited:
         version = r"[error]\[circular][/]"
-    required = f"[ required: {required} ]" if required else "[ Not required ]"
-    node = root.add(f"[req]{name}[/] {version} {required}")
+    req_str = f"[ required: {'&&'.join(required)} ]" if required else "[ Not required ]"
+    node = root.add(f"[req]{name}[/] {version} {req_str}")
     if package.name in visited:
         return
     children = sorted(graph.iter_children(package), key=lambda p: p.name)
     for child in children:
-        required = specifier_from_requirement(package.requirements[child.name])
+        required = [specifier_from_requirement(package.requirements[child.name])]
         add_package_to_tree(node, graph, child, required, visited | {package.name})
 
 
@@ -325,30 +327,60 @@ def package_is_project(package: Package, project: Project) -> bool:
     return project.name is not None and package.name == normalize_name(project.name)
 
 
-def _format_forward_dependency_graph(project: Project, graph: DirectedGraph) -> Tree:
+def _format_forward_dependency_graph(
+    project: Project, graph: DirectedGraph[Package | None], patterns: list[str]
+) -> Tree:
     """Format dependency graph for output."""
     root = Tree("Dependencies", hide_root=True)
+
+    def find_package_to_add(package: Package) -> Package | None:
+        if not patterns:
+            return package
+        to_check = [package]
+        while to_check:
+            package = to_check.pop(0)
+            if package and package_match_patterns(package, patterns):
+                return package
+            to_check.extend(graph.iter_children(package))
+        return None
+
     all_dependencies = ChainMap(*project.all_dependencies.values())
-    top_level_dependencies = sorted(graph.iter_children(None), key=lambda p: p.name)
-    for package in top_level_dependencies:
-        if package.name in all_dependencies:
-            required = specifier_from_requirement(all_dependencies[package.name])
-        elif package_is_project(package, project):
-            required = "This project"
-        else:
-            required = ""
-        add_package_to_tree(root, graph, package, required)
+    top_level_dependencies = {find_package_to_add(node) for node in graph.iter_children(None) if node}
+    for package in sorted((node for node in top_level_dependencies if node), key=lambda p: p.name):
+        required: set[str] = set()
+        for parent in graph.iter_parents(package):
+            if parent:
+                r = specifier_from_requirement(parent.requirements[package.name])
+            elif package.name in all_dependencies:
+                r = specifier_from_requirement(all_dependencies[package.name])
+            elif package_is_project(package, project):
+                r = "This project"
+            else:
+                continue
+            required.add(r)
+        add_package_to_tree(root, graph, package, sorted(required))
     return root
 
 
-def _format_reverse_dependency_graph(project: Project, graph: DirectedGraph[Package | None]) -> Tree:
+def _format_reverse_dependency_graph(
+    project: Project, graph: DirectedGraph[Package | None], patterns: list[str]
+) -> Tree:
     """Format reverse dependency graph for output."""
+
+    def find_package_to_add(package: Package) -> Package | None:
+        if not patterns:
+            return package
+        to_check = [package]
+        while to_check:
+            package = to_check.pop(0)
+            if package and package_match_patterns(package, patterns):
+                return package
+            to_check.extend(graph.iter_parents(package))
+        return None
+
     root = Tree("Dependencies", hide_root=True)
-    leaf_nodes = sorted(
-        (node for node in graph if not list(graph.iter_children(node)) and node),
-        key=lambda p: p.name,
-    )
-    for package in leaf_nodes:
+    leaf_nodes = {find_package_to_add(node) for node in graph if not list(graph.iter_children(node)) and node}
+    for package in sorted((node for node in leaf_nodes if node), key=lambda p: p.name):
         if not package:
             continue
         add_package_to_reverse_tree(root, graph, package)
@@ -362,21 +394,26 @@ def build_forward_dependency_json_subtree(
     required_by: Package | None = None,
     visited: frozenset[str] = frozenset(),
 ) -> dict:
-    if not package_is_project(root, project):
-        requirements = required_by.requirements if required_by else ChainMap(*project.all_dependencies.values())
-        if root.name in requirements:
-            required = specifier_from_requirement(requirements[root.name])
+    required: set[str] = set()
+    for parent in graph.iter_parents(root):
+        if parent:
+            r = specifier_from_requirement(parent.requirements[root.name])
+        elif not package_is_project(root, project):
+            requirements = required_by.requirements if required_by else ChainMap(*project.all_dependencies.values())
+            if root.name in requirements:
+                r = specifier_from_requirement(requirements[root.name])
+            else:
+                continue
         else:
-            required = "Not required"
-    else:
-        required = "This project"
+            r = "This project"
+        required.add(r)
 
     children = graph.iter_children(root) if root.name not in visited else []
 
     return OrderedDict(
         package=root.name,
         version=root.version,
-        required=required,
+        required="&&".join(sorted(required)),
         dependencies=sorted(
             (
                 build_forward_dependency_json_subtree(p, project, graph, root, visited | {root.name})
@@ -411,17 +448,38 @@ def build_reverse_dependency_json_subtree(
     )
 
 
-def build_dependency_json_tree(project: Project, graph: DirectedGraph[Package | None], reverse: bool) -> list[dict]:
+def package_match_patterns(package: Package, patterns: list[str]) -> bool:
+    return not patterns or any(fnmatch(package.name, pattern) for pattern in patterns)
+
+
+def build_dependency_json_tree(
+    project: Project, graph: DirectedGraph[Package | None], reverse: bool, patterns: list[str]
+) -> list[dict]:
+    def find_package_to_add(package: Package) -> Package | None:
+        if not patterns:
+            return package
+        to_check = [package]
+        while to_check:
+            package = to_check.pop(0)
+            if package and package_match_patterns(package, patterns):
+                return package
+            if reverse:
+                to_check.extend(graph.iter_parents(package))
+            else:
+                to_check.extend(graph.iter_children(package))
+        return None
+
+    top_level_packages: Iterable[Package | None]
     if reverse:
         top_level_packages = filter(lambda n: not list(graph.iter_children(n)), graph)  # leaf nodes
         build_dependency_json_subtree: Callable = build_reverse_dependency_json_subtree
     else:
         top_level_packages = graph.iter_children(None)  # root nodes
         build_dependency_json_subtree = build_forward_dependency_json_subtree
+    top_level_packages = {find_package_to_add(node) for node in top_level_packages if node}
     return [
         build_dependency_json_subtree(p, project, graph)
-        for p in sorted(top_level_packages, key=lambda p: p.name if p else "")
-        if p
+        for p in sorted((node for node in top_level_packages if node), key=lambda p: p.name)
     ]
 
 
@@ -430,21 +488,24 @@ def show_dependency_graph(
     graph: DirectedGraph[Package | None],
     reverse: bool = False,
     json: bool = False,
+    patterns: list[str] | None = None,
 ) -> None:
     echo = project.core.ui.echo
+    if patterns is None:
+        patterns = []
     if json:
         echo(
             dumps(
-                build_dependency_json_tree(project, graph, reverse),
+                build_dependency_json_tree(project, graph, reverse, patterns),
                 indent=2,
             )
         )
         return
 
     if reverse:
-        tree = _format_reverse_dependency_graph(project, graph)
+        tree = _format_reverse_dependency_graph(project, graph, patterns)
     else:
-        tree = _format_forward_dependency_graph(project, graph)
+        tree = _format_forward_dependency_graph(project, graph, patterns)
     echo(tree)
 
 

@@ -23,7 +23,7 @@ def test_list_command(project, pdm, mocker):
 def test_list_graph_command(project, pdm, mocker):
     # Calls the correct handler within the list command
     m = mocker.patch.object(Command, "handle_graph")
-    pdm(["list", "--graph"], obj=project)
+    pdm(["list", "--tree"], obj=project)
     m.assert_called_once()
 
 
@@ -32,7 +32,7 @@ def test_list_graph_command(project, pdm, mocker):
 def test_list_dependency_graph(project, pdm):
     # Shows a line that contains a sub requirement (any order).
     pdm(["add", "requests"], obj=project, strict=True)
-    result = pdm(["list", "--graph"], obj=project)
+    result = pdm(["list", "--tree"], obj=project)
     expected = "-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in result.outputs
     assert expected
 
@@ -46,7 +46,7 @@ def test_list_dependency_graph_include_exclude(project, pdm):
     pdm(["add", "-de", f"{dep_path}[security]"], obj=project, strict=True)
 
     # Output full graph
-    result = pdm(["list", "--graph"], obj=project)
+    result = pdm(["list", "--tree"], obj=project)
     expects = (
         "demo 0.0.1 [ Not required ]\n",
         "+-- chardet 3.0.4 [ required: Any ]\n" if os.name == "nt" else "",
@@ -61,12 +61,12 @@ def test_list_dependency_graph_include_exclude(project, pdm):
     assert expects == result.outputs
 
     # Now exclude the dev dep.
-    result = pdm(["list", "--graph", "--exclude", "dev"], obj=project)
+    result = pdm(["list", "--tree", "--exclude", "dev"], obj=project)
     expects = ""
     assert expects == result.outputs
 
     # Only include the dev dep
-    result = pdm(["list", "--graph", "--include", "dev", "--exclude", "*"], obj=project)
+    result = pdm(["list", "--tree", "--include", "dev", "--exclude", "*"], obj=project)
     expects = "demo[security] 0.0.1 [ required: Any ]\n"
     expects = "".join(expects)
     assert expects == result.outputs
@@ -80,7 +80,7 @@ def test_list_dependency_graph_with_circular_forward(project, pdm, repository):
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
     pdm(["add", "foo"], obj=project, strict=True)
-    result = pdm(["list", "--graph"], obj=project)
+    result = pdm(["list", "--tree"], obj=project)
     circular_found = "foo [circular]" in result.outputs
     assert circular_found
 
@@ -97,7 +97,7 @@ def test_list_dependency_graph_with_circular_reverse(project, pdm, repository):
     pdm(["add", "foo"], obj=project, strict=True)
 
     # --reverse flag shows packages reversed and with [circular]
-    result = pdm(["list", "--graph", "--reverse"], obj=project)
+    result = pdm(["list", "--tree", "--reverse"], obj=project)
     expected = (
         "baz 0.1.0 \n"
         "`-- foo-bar 0.1.0 [ requires: Any ]\n"
@@ -108,19 +108,19 @@ def test_list_dependency_graph_with_circular_reverse(project, pdm, repository):
     assert expected in result.outputs
 
     # -r flag shows packages reversed and with [circular]
-    result = pdm(["list", "--graph", "-r"], obj=project)
+    result = pdm(["list", "--tree", "-r"], obj=project)
     assert expected in result.outputs
 
 
 def test_list_reverse_without_graph_flag(project, pdm):
-    # results in PDMUsageError since --reverse needs --graph
+    # results in PDMUsageError since --reverse needs --tree
     result = pdm(["list", "--reverse"], obj=project)
     assert "[PdmUsageError]" in result.stderr
-    assert "--reverse cannot be used without --graph" in result.stderr
+    assert "--reverse cannot be used without --tree" in result.stderr
 
     result = pdm(["list", "-r"], obj=project)
     assert "[PdmUsageError]" in result.stderr
-    assert "--reverse cannot be used without --graph" in result.stderr
+    assert "--reverse cannot be used without --tree" in result.stderr
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)
@@ -128,7 +128,7 @@ def test_list_reverse_without_graph_flag(project, pdm):
 def test_list_reverse_dependency_graph(project, pdm):
     # requests visible on leaf node
     pdm(["add", "requests"], obj=project, strict=True)
-    result = pdm(["list", "--graph", "--reverse"], obj=project)
+    result = pdm(["list", "--tree", "--reverse"], obj=project)
     assert "`-- requests 2.19.1 [ requires: <1.24,>=1.21.1 ]" in result.outputs
 
 
@@ -136,7 +136,7 @@ def test_list_reverse_dependency_graph(project, pdm):
 def test_list_json(project, pdm):
     # check json output matches graph output
     pdm(["add", "requests", "--no-self"], obj=project, strict=True)
-    result = pdm(["list", "--graph", "--json"], obj=project)
+    result = pdm(["list", "--tree", "--json"], obj=project)
 
     expected = [
         {
@@ -175,10 +175,26 @@ def test_list_json(project, pdm):
 
 
 @pytest.mark.usefixtures("working_set")
+def test_list_json_with_pattern(project, pdm):
+    pdm(["add", "requests", "--no-self"], obj=project, strict=True)
+    result = pdm(["list", "--tree", "--json", "chardet"], obj=project)
+
+    expected = [
+        {
+            "package": "chardet",
+            "version": "3.0.4",
+            "required": "<3.1.0,>=3.0.2",
+            "dependencies": [],
+        },
+    ]
+    assert expected == json.loads(result.outputs)
+
+
+@pytest.mark.usefixtures("working_set")
 def test_list_json_reverse(project, pdm):
     # check json output matches reversed graph
     pdm(["add", "requests", "--no-self"], obj=project, strict=True)
-    result = pdm(["list", "--graph", "--reverse", "--json"], obj=project)
+    result = pdm(["list", "--tree", "--reverse", "--json"], obj=project)
     expected = [
         {
             "package": "certifi",
@@ -238,6 +254,30 @@ def test_list_json_reverse(project, pdm):
 
 
 @pytest.mark.usefixtures("working_set")
+def test_list_reverse_json_with_pattern(project, pdm):
+    # check json output matches reversed graph
+    pdm(["add", "requests", "--no-self"], obj=project, strict=True)
+    result = pdm(["list", "--tree", "--reverse", "--json", "certifi"], obj=project)
+    expected = [
+        {
+            "package": "certifi",
+            "version": "2018.11.17",
+            "requires": None,
+            "dependents": [
+                {
+                    "package": "requests",
+                    "version": "2.19.1",
+                    "requires": ">=2017.4.17",
+                    "dependents": [],
+                }
+            ],
+        },
+    ]
+
+    assert expected == json.loads(result.outputs)
+
+
+@pytest.mark.usefixtures("working_set")
 def test_list_json_with_circular_forward(project, pdm, repository):
     # circulars are handled in json exports
     repository.add_candidate("foo", "0.1.0")
@@ -247,7 +287,7 @@ def test_list_json_with_circular_forward(project, pdm, repository):
     repository.add_dependencies("foo", "0.1.0", ["foo-bar"])
     repository.add_dependencies("foo-bar", "0.1.0", ["foo"])
     pdm(["add", "baz", "--no-self"], obj=project, strict=True)
-    result = pdm(["list", "--graph", "--json"], obj=project)
+    result = pdm(["list", "--tree", "--json"], obj=project)
     expected = [
         {
             "package": "baz",
@@ -290,7 +330,7 @@ def test_list_json_with_circular_reverse(project, pdm, repository):
     repository.add_dependencies("foo-bar", "0.1.0", ["foo", "baz"])
     repository.add_dependencies("baz", "0.1.0", [])
     pdm(["add", "foo", "--no-self"], obj=project, strict=True)
-    result = pdm(["list", "--graph", "--reverse", "--json"], obj=project)
+    result = pdm(["list", "--tree", "--reverse", "--json"], obj=project)
     expected = [
         {
             "package": "baz",
@@ -339,16 +379,16 @@ def test_list_sort_unknown(project, pdm):
 
 def test_list_freeze_banned_options(project, pdm):
     # other flags cannot be used with --freeze
-    result = pdm(["list", "--freeze", "--graph"], obj=project)
-    expected = "--graph cannot be used with --freeze"
+    result = pdm(["list", "--freeze", "--tree"], obj=project)
+    expected = "--tree cannot be used with --freeze"
     assert expected in result.outputs
 
     result = pdm(["list", "--freeze", "--reverse"], obj=project)
-    expected = "--reverse cannot be used without --graph"
+    expected = "--reverse cannot be used without --tree"
     assert expected in result.outputs
 
     result = pdm(["list", "--freeze", "-r"], obj=project)
-    expected = "--reverse cannot be used without --graph"
+    expected = "--reverse cannot be used without --tree"
     assert expected in result.outputs
 
     result = pdm(["list", "--freeze", "--fields", "name"], obj=project)
@@ -443,6 +483,22 @@ def test_list_bare_sorted_name(project, pdm):
         "| test-project | 0.0.0      |          |\n"
         "| urllib3      | 1.22       |          |\n"
         "+--------------------------------------+\n"
+    )
+    assert expected == result.output
+
+
+@mock.patch("pdm.termui.ROUNDED", ASCII)
+@pytest.mark.usefixtures("working_set")
+def test_list_with_pattern(project, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    result = pdm(["list", "--sort", "name", "c*"], obj=project)
+    expected = (
+        "+---------------------------------+\n"
+        "| name    | version    | location |\n"
+        "|---------+------------+----------|\n"
+        "| certifi | 2018.11.17 |          |\n"
+        "| chardet | 3.0.4      |          |\n"
+        "+---------------------------------+\n"
     )
     assert expected == result.output
 

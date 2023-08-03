@@ -306,7 +306,7 @@ function TabExpansion($line, $lastWord) {
             "list" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--graph", "--global", "-g", "--reverse", "-r", "--freeze", "--json", "--csv", "--markdown", "--fields", "--sort", "--include", "--exclude", "--resolve")),
+                        [Option]::new(@("--graph", "--tree", "--global", "-g", "--reverse", "-r", "--freeze", "--json", "--csv", "--markdown", "--fields", "--sort", "--include", "--exclude", "--resolve")),
                         $venvOption,
                         $projectOption
                     ))

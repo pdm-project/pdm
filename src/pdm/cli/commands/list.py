@@ -4,7 +4,9 @@ import argparse
 import csv
 import io
 import json
+import re
 from collections import defaultdict
+from fnmatch import fnmatch
 from typing import Iterable, Mapping, Sequence
 
 from pdm.cli import actions
@@ -27,6 +29,10 @@ from pdm.project import Project
 SUBDEP_GROUP_LABEL = ":sub"
 
 
+def normalize_pattern(pattern: str) -> str:
+    return re.sub(r"[^A-Za-z0-9*?]+", "-", pattern).lower()
+
+
 class Command(BaseCommand):
     """List packages installed in the current working set"""
 
@@ -42,9 +48,8 @@ class Command(BaseCommand):
             help="Show the installed dependencies in pip's requirements.txt format",
         )
 
-        graph.add_argument("--graph", action="store_true", help="Display a graph of dependencies")
-
-        parser.add_argument("-r", "--reverse", action="store_true", help="Reverse the dependency graph")
+        graph.add_argument("--tree", "--graph", action="store_true", help="Display a tree of dependencies", dest="tree")
+        parser.add_argument("-r", "--reverse", action="store_true", help="Reverse the dependency tree")
 
         parser.add_argument(
             "--resolve",
@@ -57,7 +62,7 @@ class Command(BaseCommand):
             "--fields",
             default=Command.DEFAULT_FIELDS,
             help="Select information to output as a comma separated string. "
-            "For example: name,version,homepage,licenses,groups.",
+            f"All fields: {','.join(sorted(Listable.KEYS))}.",
         )
 
         parser.add_argument(
@@ -98,6 +103,22 @@ class Command(BaseCommand):
             default="",
             help="Exclude dependency groups from the output",
         )
+        parser.add_argument(
+            "patterns",
+            nargs="*",
+            help="Filter packages by patterns. e.g. pdm list requests-* flask-*. "
+            "In --tree mode, only show the subtree of the matched packages.",
+            type=normalize_pattern,
+        )
+
+    @staticmethod
+    def filter_by_patterns(
+        packages: Mapping[str, im.Distribution], patterns: Iterable[str]
+    ) -> Mapping[str, im.Distribution]:
+        """Filter packages by patterns"""
+        if not patterns:
+            return packages
+        return {k: v for k, v in packages.items() if any(fnmatch(k, p) for p in patterns)}
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         # Raise an error if the project is not defined.
@@ -157,18 +178,20 @@ class Command(BaseCommand):
         )
 
         # Process as a graph or list.
-        if options.graph:
+        if options.tree:
             self.handle_graph(dep_graph, project, options)
         else:
             selected_packages = [k.name.split("[")[0] for k in dep_graph if k]
-            packages = {k: v for k, v in packages.items() if k in selected_packages}
+            packages = self.filter_by_patterns(
+                {k: v for k, v in packages.items() if k in selected_packages}, options.patterns
+            )
             self.handle_list(packages, name_to_groups, project, options)
 
     def hande_freeze(self, project: Project, options: argparse.Namespace) -> None:
-        if options.graph:
-            raise PdmUsageError("--graph cannot be used with --freeze")
+        if options.tree:
+            raise PdmUsageError("--tree cannot be used with --freeze")
         if options.reverse:
-            raise PdmUsageError("--reverse cannot be used without --graph")
+            raise PdmUsageError("--reverse cannot be used without --tree")
         if options.fields != Command.DEFAULT_FIELDS:
             raise PdmUsageError("--fields cannot be used with --freeze")
         if options.resolve:
@@ -184,7 +207,7 @@ class Command(BaseCommand):
         if options.include or options.exclude:
             raise PdmUsageError("--include/--exclude cannot be used with --freeze")
 
-        working_set = project.environment.get_working_set()
+        working_set = self.filter_by_patterns(project.environment.get_working_set(), options.patterns)
         requirements = sorted(
             (Requirement.from_dist(dist).as_line() for dist in working_set.values()),
             key=lambda x: x.lower(),
@@ -198,13 +221,13 @@ class Command(BaseCommand):
         options: argparse.Namespace,
     ) -> None:
         if options.csv:
-            raise PdmUsageError("--csv cannot be used with --graph")
+            raise PdmUsageError("--csv cannot be used with --tree")
         if options.markdown:
-            raise PdmUsageError("--markdown cannot be used with --graph")
+            raise PdmUsageError("--markdown cannot be used with --tree")
         if options.sort:
-            raise PdmUsageError("--sort cannot be used with --graph")
+            raise PdmUsageError("--sort cannot be used with --tree")
 
-        show_dependency_graph(project, dep_graph, reverse=options.reverse, json=options.json)
+        show_dependency_graph(project, dep_graph, reverse=options.reverse, json=options.json, patterns=options.patterns)
 
     def handle_list(
         self,
@@ -214,7 +237,7 @@ class Command(BaseCommand):
         options: argparse.Namespace,
     ) -> None:
         if options.reverse:
-            raise PdmUsageError("--reverse cannot be used without --graph")
+            raise PdmUsageError("--reverse cannot be used without --tree")
 
         # Check the fields are specified OK.
         fields = parse_comma_separated_string(options.fields, asterisk_values=Listable.KEYS)

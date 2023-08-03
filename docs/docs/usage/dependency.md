@@ -362,10 +362,38 @@ Similar to `pip list`, you can list all packages installed in the packages direc
 pdm list
 ```
 
-Or show a dependency graph by:
+### Include and exclude groups
+
+By default, all packages installed in the working set will be listed. You can specify which groups to be listed
+by `--include/--exclude` options, and `include` has a higher priority than `exclude`.
+
+```bash
+pdm list --include dev
+pdm list --exclude test
+```
+
+There is a special group `:sub`, when included, all transitive dependencies will also be shown. It is included by default.
+
+You can also pass `--resolve` to `pdm list`, which will show the packages resolved in `pdm.lock`, rather than installed in the working set.
+
+### Change the output fields and format
+
+By default, name, version and location will be shown in the list output, you can view more fields or specify the order of fields by `--fields` option:
+
+```bash
+pdm list --fields name,license,version
+```
+
+For all supported fields, please refer to the [CLI reference](../reference/cli.md#list_1).
+
+Also, you can specify the output format other than the default table output. The supported formats and options are `--csv`, `--json`, `--markdown` and `--freeze`.
+
+### Show the dependency tree
+
+Or show a dependency tree by:
 
 ```
-$ pdm list --graph
+$ pdm list --tree
 tempenv 0.0.0
 └── click 7.0 [ required: <7.0.0,>=6.7 ]
 black 19.10b0
@@ -379,6 +407,28 @@ black 19.10b0
 bump2version 1.0.0
 ```
 
+Note that `--fields` option doesn't work with `--tree`.
+
+### Filter packages by patterns
+
+You can also limit the packages to show by passing the patterns to `pdm list`:
+
+```bash
+pdm list flask-* requests-*
+```
+
+??? warning "Be careful with the shell expansion"
+    In most shells, the wildcard `*` will be expanded if there are matching files under the current directory.
+    To avoid getting unexpected results, you can quote the patterns: `pdm list 'flask-*' 'requests-*'`.
+
+In `--tree` mode, only the subtree of the matched packages will be displayed. This can be used to achieve the same purpose as `pnpm why`, which is to show why a specific package is required.
+
+```bash
+$ pdm list --tree --reverse certifi
+certifi 2023.7.22
+└── requests 2.31.0 [ requires: >=2017.4.17 ]
+    └── cachecontrol[filecache] 0.13.1 [ requires: >=2.16.0 ]
+```
 ## Allow prerelease versions to be installed
 
 Include the following setting in `pyproject.toml` to enable:
