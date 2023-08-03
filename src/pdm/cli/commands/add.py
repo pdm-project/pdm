@@ -179,7 +179,7 @@ class Command(BaseCommand):
                 project,
                 selection=GroupSelection(project, groups=[group], default=False),
                 no_editable=no_editable and tracked_names,
-                no_self=no_self,
+                no_self=no_self or group != "default",
                 requirements=list(group_deps.values()),
                 dry_run=dry_run,
                 fail_fast=fail_fast,
