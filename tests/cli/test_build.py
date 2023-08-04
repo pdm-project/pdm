@@ -33,7 +33,7 @@ def test_build_single_module(fixture_project):
     project = fixture_project("demo-module")
 
     Command.do_build(project)
-    tar_names = get_tarball_names(project.root / "dist/demo-module-0.1.0.tar.gz")
+    tar_names = get_tarball_names(project.root / "dist/demo_module-0.1.0.tar.gz")
     for name in [
         "foo_module.py",
         "bar_module.py",
@@ -41,7 +41,7 @@ def test_build_single_module(fixture_project):
         "pyproject.toml",
         "PKG-INFO",
     ]:
-        assert f"demo-module-0.1.0/{name}" in tar_names
+        assert f"demo_module-0.1.0/{name}" in tar_names
 
     zip_names = get_wheel_names(project.root / "dist/demo_module-0.1.0-py3-none-any.whl")
     for name in ["foo_module.py", "bar_module.py"]:
@@ -56,18 +56,18 @@ def test_build_single_module_with_readme(fixture_project):
     project.pyproject.metadata["readme"] = "README.md"
     project.pyproject.write()
     Command.do_build(project)
-    assert "demo-module-0.1.0/README.md" in get_tarball_names(project.root / "dist/demo-module-0.1.0.tar.gz")
+    assert "demo_module-0.1.0/README.md" in get_tarball_names(project.root / "dist/demo_module-0.1.0.tar.gz")
 
 
 def test_build_package(fixture_project):
     project = fixture_project("demo-package")
     Command.do_build(project)
 
-    tar_names = get_tarball_names(project.root / "dist/my-package-0.1.0.tar.gz")
-    assert "my-package-0.1.0/my_package/__init__.py" in tar_names
-    assert "my-package-0.1.0/my_package/data.json" in tar_names
-    assert "my-package-0.1.0/single_module.py" not in tar_names
-    assert "my-package-0.1.0/data_out.json" not in tar_names
+    tar_names = get_tarball_names(project.root / "dist/my_package-0.1.0.tar.gz")
+    assert "my_package-0.1.0/my_package/__init__.py" in tar_names
+    assert "my_package-0.1.0/my_package/data.json" in tar_names
+    assert "my_package-0.1.0/single_module.py" not in tar_names
+    assert "my_package-0.1.0/data_out.json" not in tar_names
 
     zip_names = get_wheel_names(project.root / "dist/my_package-0.1.0-py3-none-any.whl")
     assert "my_package/__init__.py" in zip_names
@@ -80,9 +80,9 @@ def test_build_src_package(fixture_project):
     project = fixture_project("demo-src-package")
     Command.do_build(project)
 
-    tar_names = get_tarball_names(project.root / "dist/demo-package-0.1.0.tar.gz")
-    assert "demo-package-0.1.0/src/my_package/__init__.py" in tar_names
-    assert "demo-package-0.1.0/src/my_package/data.json" in tar_names
+    tar_names = get_tarball_names(project.root / "dist/demo_package-0.1.0.tar.gz")
+    assert "demo_package-0.1.0/src/my_package/__init__.py" in tar_names
+    assert "demo_package-0.1.0/src/my_package/data.json" in tar_names
 
     zip_names = get_wheel_names(project.root / "dist/demo_package-0.1.0-py3-none-any.whl")
     assert "my_package/__init__.py" in zip_names
@@ -91,20 +91,21 @@ def test_build_src_package(fixture_project):
 
 def test_build_package_include(fixture_project):
     project = fixture_project("demo-package")
-    project.pyproject.settings["includes"] = [
+    build_config = project.pyproject.settings.setdefault("build", {})
+    build_config["includes"] = [
         "my_package/",
         "single_module.py",
         "data_out.json",
     ]
-    project.pyproject.settings["excludes"] = ["my_package/*.json"]
+    build_config["excludes"] = ["my_package/*.json"]
     project.pyproject.write()
     Command.do_build(project)
 
-    tar_names = get_tarball_names(project.root / "dist/my-package-0.1.0.tar.gz")
-    assert "my-package-0.1.0/my_package/__init__.py" in tar_names
-    assert "my-package-0.1.0/my_package/data.json" not in tar_names
-    assert "my-package-0.1.0/single_module.py" in tar_names
-    assert "my-package-0.1.0/data_out.json" in tar_names
+    tar_names = get_tarball_names(project.root / "dist/my_package-0.1.0.tar.gz")
+    assert "my_package-0.1.0/my_package/__init__.py" in tar_names
+    assert "my_package-0.1.0/my_package/data.json" not in tar_names
+    assert "my_package-0.1.0/single_module.py" in tar_names
+    assert "my_package-0.1.0/data_out.json" in tar_names
 
     zip_names = get_wheel_names(project.root / "dist/my_package-0.1.0-py3-none-any.whl")
     assert "my_package/__init__.py" in zip_names
@@ -115,13 +116,13 @@ def test_build_package_include(fixture_project):
 
 def test_build_src_package_by_include(fixture_project):
     project = fixture_project("demo-src-package")
-    project.pyproject.settings["includes"] = ["src/my_package"]
+    project.pyproject.settings.setdefault("build", {})["includes"] = ["src/my_package"]
     project.pyproject.write()
     Command.do_build(project)
 
-    tar_names = get_tarball_names(project.root / "dist/demo-package-0.1.0.tar.gz")
-    assert "demo-package-0.1.0/src/my_package/__init__.py" in tar_names
-    assert "demo-package-0.1.0/src/my_package/data.json" in tar_names
+    tar_names = get_tarball_names(project.root / "dist/demo_package-0.1.0.tar.gz")
+    assert "demo_package-0.1.0/src/my_package/__init__.py" in tar_names
+    assert "demo_package-0.1.0/src/my_package/data.json" in tar_names
 
     zip_names = get_wheel_names(project.root / "dist/demo_package-0.1.0-py3-none-any.whl")
     assert "my_package/__init__.py" in zip_names

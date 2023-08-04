@@ -58,4 +58,4 @@ def test_package_project_template(project_no_init):
     assert project_no_init.pyproject._data["build-system"] == metadata["build-system"]
     assert (project_no_init.root / "foo").is_dir()
     assert (project_no_init.root / "foo/__init__.py").exists()
-    assert project_no_init.pyproject.settings["version"] == {"from": "foo/__init__.py"}
+    assert project_no_init.pyproject.settings["version"] == {"path": "foo/__init__.py", "source": "file"}

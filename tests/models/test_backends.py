@@ -38,7 +38,7 @@ def test_project_backend(project, working_set, backend, pdm):
         dep = project.pyproject.metadata["dependencies"][0]
         demo_path = project.root.joinpath("demo").as_posix()
         demo_url = path_to_url(demo_path)
-        if backend in ("pdm-pep517", "pdm-backend"):
+        if backend == "pdm-backend":
             assert dep == "demo @ file:///${PROJECT_ROOT}/demo"
         elif backend == "hatchling":
             assert dep == "demo @ {root:uri}/demo"
@@ -63,10 +63,10 @@ def test_hatch_expand_variables(monkeypatch):
     assert backend.relative_path_to_url("../demo") == "{root:uri}/../demo"
 
 
-def test_pdm_pep517_expand_variables(monkeypatch):
+def test_pdm_backend_expand_variables(monkeypatch):
     root = Path().absolute()
     root_url = path_to_url(root.as_posix())
-    backend = get_backend("pdm-pep517")(root)
+    backend = get_backend("pdm-backend")(root)
     monkeypatch.setenv("BAR", "bar")
     assert backend.expand_line("demo @ file:///${PROJECT_ROOT}/demo") == f"demo @ {root_url}/demo"
     assert backend.expand_line("demo==${BAR}") == "demo==bar"

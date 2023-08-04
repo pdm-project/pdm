@@ -17,5 +17,5 @@ te = ["chardet"]
 all = ["idna", "chardet"]
 
 [build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
