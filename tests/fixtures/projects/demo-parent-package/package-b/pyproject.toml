@@ -1,11 +1,12 @@
 [build-system]
-requires = ["pdm-pep517>=0.3.0"]
-build-backend = "pdm.pep517.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
 name = "package-b"
 dependencies = ["django"]
 dynamic = ["version"]
 
-[tool.pdm]
-version = {from="bar.py"}
+[tool.pdm.version]
+source = "file"
+path = "bar.py"

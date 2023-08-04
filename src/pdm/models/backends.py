@@ -70,15 +70,6 @@ class PDMBackend(BuildBackend):
         }
 
 
-class PDMLegacyBackend(PDMBackend):
-    @classmethod
-    def build_system(cls) -> BuildSystem:
-        return {
-            "requires": ["pdm-pep517>=1.0"],
-            "build-backend": "pdm.pep517.api",
-        }
-
-
 # Context formatting helpers for hatch
 class PathContext:
     def __init__(self, path: Path) -> None:
@@ -135,7 +126,6 @@ _BACKENDS: dict[str, type[BuildBackend]] = {
     "setuptools": SetuptoolsBackend,
     "flit-core": FlitBackend,
     "hatchling": HatchBackend,
-    "pdm-pep517": PDMLegacyBackend,
 }
 # Fallback to the first backend
 DEFAULT_BACKEND = next(iter(_BACKENDS.values()))

@@ -117,7 +117,7 @@ def test_publish_and_build_in_one_run(fixture_project, pdm, mock_pypi):
 
     mock_pypi.assert_called()
     assert "Uploading demo_module-0.1.0-py3-none-any.whl" in result
-    assert "Uploading demo-module-0.1.0.tar.gz" in result
+    assert "Uploading demo_module-0.1.0.tar.gz" in result, result
     assert "https://pypi.org/project/demo-module/0.1.0/" in result
 
 

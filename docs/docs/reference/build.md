@@ -54,20 +54,6 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
 
     [:book: Read the docs](https://hatch.pypa.io/)
 
-=== "pdm-pep517(deprecated)"
-
-    *This backend is deprecated, please migrate to `pdm-backend`.*
-
-    `pyproject.toml` configuration:
-
-    ```toml
-    [build-system]
-    requires = ["pdm-pep517"]
-    build-backend = "pdm.pep517.api"
-    ```
-
-    [:book: Read the docs](https://pypi.org/project/pdm-pep517/)
-
 
 Apart from the above mentioned backends, you can also use any other backend that supports PEP 621, however, [poetry-core](https://python-poetry.org/) is not supported because it does not support reading PEP 621 metadata.
 

@@ -4,7 +4,3 @@ dependencies = [
     "package_a @ file:///${PROJECT_ROOT}/package_a",
     "package_b @ file:///${PROJECT_ROOT}/package_b",
 ]
-
-[build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"

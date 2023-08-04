@@ -1,6 +1,6 @@
 [build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
 # PEP 621 project metadata
@@ -17,5 +17,6 @@ name = "demo-package"
 
 [project.optional-dependencies]
 
-[tool.pdm]
-version = { from = "src/my_package/__init__.py" }
+[tool.pdm.version]
+source = "file"
+path = "src/my_package/__init__.py"

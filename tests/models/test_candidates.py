@@ -210,7 +210,8 @@ def test_vcs_candidate_in_subdirectory(project, is_editable):
     candidate = Candidate(req)
     expected_deps = ["django"]
     assert candidate.prepare(project.environment).get_dependencies_from_metadata() == expected_deps
-    assert candidate.version == "0.1.0"
+    tail = "+editable" if is_editable else ""
+    assert candidate.version == f"0.1.0{tail}"
 
 
 @pytest.mark.usefixtures("local_finder")

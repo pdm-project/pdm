@@ -64,11 +64,11 @@ The value of `requires-python` is a [version specifier as defined in PEP 440](ht
 
 ## Working with Python < 3.7
 
-Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-pep517` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
+Although PDM run on Python 3.7 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-backend` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
 
 | Backend               | Supported Python | Support PEP 621 |
 | --------------------- | ---------------- | --------------- |
-| `pdm-pep517`          | `>=3.7`          | Yes             |
+| `pdm-backend`         | `>=3.7`          | Yes             |
 | `setuptools>=60`      | `>=3.7`          | Experimental    |
 | `hatchling`           | `>=3.7`          | Yes             |
 | `flit-core>=3.4`      | `>=3.6`          | Yes             |

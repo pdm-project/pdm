@@ -285,7 +285,7 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new(@("-g", "--global", "--non-interactive", "-n", "--python", "--lib", "--copier", "--cookiecutter", "--overwrite")),
                         $projectOption,
                         $skipOption,
-                        [Option]::new(@("--backend")).WithValues(@("pdm-backend", "setuptools", "flit", "hatching", "pdm-pep517"))
+                        [Option]::new(@("--backend")).WithValues(@("pdm-backend", "setuptools", "flit", "hatching"))
                     ))
                 break
             }
