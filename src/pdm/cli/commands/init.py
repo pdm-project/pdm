@@ -76,7 +76,7 @@ class Command(BaseCommand):
     def _init_builtin(self, project: Project, options: argparse.Namespace) -> None:
         metadata = self.get_metadata_from_input(project, options)
         with ProjectTemplate(options.template) as template:
-            template.generate(project.root, metadata)
+            template.generate(project.root, metadata, options.overwrite)
         project.pyproject.reload()
 
     def set_interactive(self, value: bool) -> None:
@@ -185,6 +185,7 @@ class Command(BaseCommand):
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )
         parser.add_argument("generator_args", nargs=argparse.REMAINDER, help="Arguments passed to the generator")
+        parser.add_argument("-r", "--overwrite", action="store_true", help="Overwrite existing files")
         parser.set_defaults(search_parent=False, generator="builtin")
 
     def set_python(self, project: Project, python: str | None, hooks: HookManager) -> None:
