@@ -157,6 +157,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the g
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l lib -d 'Create a library project'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don\'t ask questions but use default values'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l overwrite -d 'Overwrite existing files'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l python -d 'Specify the Python version/path to use'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'

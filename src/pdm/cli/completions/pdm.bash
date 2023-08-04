@@ -65,7 +65,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (init)
-            opts="--backend --cookiecutter --copier --global --help --lib --non-interactive --project --python --skip --verbose"
+            opts="--backend --cookiecutter --copier --global --help --lib --non-interactive --overwrite --project --python --skip --verbose"
             ;;
 
             (install)

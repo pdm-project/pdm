@@ -131,7 +131,6 @@ extend-select = [
   "W",    # pycodestyle
   "YTT",  # flake8-2020
 ]
-extend-ignore = ["B018", "B019"]
 src = ["src"]
 exclude = ["tests/fixtures"]
 target-version = "py37"

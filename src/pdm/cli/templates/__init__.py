@@ -34,7 +34,7 @@ class ProjectTemplate:
     def __exit__(self, *args: Any) -> None:
         shutil.rmtree(self._path, ignore_errors=True)
 
-    def generate(self, target_path: Path, metadata: dict[str, Any]) -> None:
+    def generate(self, target_path: Path, metadata: dict[str, Any], overwrite: bool = False) -> None:
         from pdm.compat import tomllib
 
         def replace_all(path: str, old: str, new: str) -> None:
@@ -74,7 +74,7 @@ class ProjectTemplate:
                         replace_all(os.path.join(root, f), import_name, new_import_name)
 
         target_path.mkdir(exist_ok=True, parents=True)
-        self.mirror(self._path, target_path, [self._path / "pyproject.toml"])
+        self.mirror(self._path, target_path, [self._path / "pyproject.toml"], overwrite=overwrite)
         self._generate_pyproject(target_path / "pyproject.toml", metadata)
 
     def prepare_template(self) -> None:
@@ -94,6 +94,8 @@ class ProjectTemplate:
         dst: Path,
         skip: list[ST] | None = None,
         copyfunc: Callable[[ST, Path], Any] = shutil.copy2,  # type: ignore[assignment]
+        *,
+        overwrite: bool = False,
     ) -> None:
         if skip and src in skip:
             return
@@ -101,7 +103,7 @@ class ProjectTemplate:
             dst.mkdir(exist_ok=True)
             for child in src.iterdir():
                 ProjectTemplate.mirror(child, dst / child.name, skip, copyfunc)
-        else:
+        elif overwrite or not dst.exists():
             copyfunc(src, dst)
 
     @staticmethod
