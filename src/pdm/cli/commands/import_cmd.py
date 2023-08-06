@@ -92,4 +92,9 @@ class Command(BaseCommand):
                 "The project's [primary]requires-python[/] has been set to [primary]>="
                 f"{python_version}[/]. You can change it later if necessary."
             )
+
+        unused_keys = [key for key in pyproject["tool"].keys() if key not in ["pdm"]]
+        for key in unused_keys:
+            pyproject["tool"].pop(key)
+
         project.pyproject.write()
