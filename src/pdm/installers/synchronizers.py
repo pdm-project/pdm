@@ -199,8 +199,12 @@ class BaseSynchronizer:
             dreq = Requirement.from_dist(dist)
             if not isinstance(dreq, FileRequirement):
                 return True
+            url = dreq.get_full_url()
+            if url.startswith("file:"):
+                # We don't know whether local files are changed, always update
+                return True
             assert can.link is not None
-            return dreq.get_full_url() != backend.expand_line(can.link.url_without_fragment)
+            return url != backend.expand_line(can.link.url_without_fragment)
         specifier = can.req.as_pinned_version(can.version).specifier
         assert specifier is not None
         return not specifier.contains(dist.version, prereleases=True)
