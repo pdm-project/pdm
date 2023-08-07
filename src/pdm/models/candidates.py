@@ -85,6 +85,8 @@ def _find_best_match_link(
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
     # If links are not empty, find the best match from the links, otherwise find from
     # the package sources.
+    from unearth import Link
+
     links = [Link(f["url"]) for f in files if "url" in f]
     hashes = convert_hashes(files)
 
