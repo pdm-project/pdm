@@ -53,7 +53,7 @@ pytest = [
     "pytest",
     "pytest-mock",
 ]
-copier = ["copier"]
+copier = ["copier>=8.0.0"]
 cookiecutter = ["cookiecutter"]
 keyring = ["keyring"]
 template = [

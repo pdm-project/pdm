@@ -6,7 +6,7 @@ groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:ac589b0b9f40317e0a1c3109d28ec8b02acfa1ce164e4ef69d090fdcb70987a3"
+content_hash = "sha256:ad6e1f6a51451097dfee550fb24daf4a09f43adc3bb8facc5e6512021d604526"
 
 [[package]]
 name = "arpeggio"
