@@ -18,6 +18,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option, venv_option
 from pdm.cli.utils import check_project_file, get_pep582_path
+from pdm.compat import sh_join
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.signals import pdm_signals
@@ -51,7 +52,7 @@ def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
 
     def replace(m: re.Match[str]) -> str:
         default = m.group("default") or ""
-        return " ".join(args) if args else default
+        return sh_join(args) if args else default
 
     interpolated, count = RE_ARGS_PLACEHOLDER.subn(replace, script)
     return interpolated, count > 0
