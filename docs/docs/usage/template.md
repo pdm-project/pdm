@@ -45,5 +45,5 @@ To use them:
 ```bash
 pdm init --cookiecutter gh:cjolowicz/cookiecutter-hypermodern-python
 # or
-pdm init --copier gh:pawamoy/copier-pdm
+pdm init --copier gh:pawamoy/copier-pdm --UNSAFE
 ```
