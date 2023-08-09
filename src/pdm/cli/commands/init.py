@@ -48,7 +48,9 @@ class Command(BaseCommand):
 
         if not options.template:
             raise PdmUsageError("template argument is required when --copier is passed")
-        _, retval = CopierApp.run([options.template, str(project.root), *options.generator_args], exit=False)
+        _, retval = CopierApp.run(
+            ["copier", "copy", options.template, str(project.root), *options.generator_args], exit=False
+        )
         if retval != 0:
             raise RuntimeError("Copier exited with non-zero status code")
 
