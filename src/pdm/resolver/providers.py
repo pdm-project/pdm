@@ -206,10 +206,10 @@ class BaseProvider(AbstractProvider):
         # requires-python=">=2.7". But it is eligible if A has environment marker
         # A1; python_version>='3.8'
         new_requires_python = candidate.req.requires_python & self.repository.environment.python_requires
-        if (
-            candidate.identify() not in self.overrides
-            and not new_requires_python.is_impossible
-            and requires_python.is_superset(new_requires_python)
+        if not (
+            candidate.identify() in self.overrides
+            or new_requires_python.is_impossible
+            or requires_python.is_superset(new_requires_python)
         ):
             valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))
         return valid_deps
