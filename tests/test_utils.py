@@ -3,6 +3,7 @@ import sys
 
 import pytest
 import tomlkit
+from packaging.version import Version
 
 from pdm import utils
 from pdm.cli import utils as cli_utils
@@ -145,3 +146,7 @@ def test_deprecation_warning():
 
     with pytest.raises(FutureWarning):
         utils.deprecation_warning("Test warning", raise_since="0.0")
+
+def test_comparable_version():
+    assert utils.comparable_version("1.2.3") == Version("1.2.3")
+    assert utils.comparable_version("1.2.3a1+local1") == Version("1.2.3a1")
