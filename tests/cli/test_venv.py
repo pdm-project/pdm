@@ -5,6 +5,7 @@ import sys
 from unittest.mock import ANY
 
 import pytest
+import shellingham
 
 from pdm.cli.commands.venv import backends
 from pdm.cli.commands.venv.utils import get_venv_prefix
@@ -166,6 +167,26 @@ def test_venv_activate_error(pdm, project):
     result = pdm(["venv", "activate"], obj=project)
     assert result.exit_code != 0, result.output + result.stderr
     assert "Can't activate a non-venv Python" in result.stderr
+
+
+@pytest.mark.usefixtures("venv_backends")
+def test_venv_activate_no_shell(pdm, mocker, project):
+    project.project_config["venv.in_project"] = False
+    result = pdm(["venv", "create"], obj=project)
+    assert result.exit_code == 0, result.stderr
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
+    key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
+
+    mocker.patch("shellingham.detect_shell", side_effect=shellingham.ShellDetectionFailure())
+    result = pdm(["venv", "activate", key], obj=project)
+    assert result.exit_code == 0, result.stderr
+    backend = project.config["venv.backend"]
+
+    if backend == "conda":
+        assert result.output.startswith("conda activate")
+    else:
+        assert result.output.strip("'\"\n").endswith("activate")
+        assert result.output.startswith("source")
 
 
 @pytest.mark.usefixtures("fake_create")

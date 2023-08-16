@@ -45,7 +45,10 @@ class ActivateCommand(BaseCommand):
         project.core.ui.echo(self.get_activate_command(venv))
 
     def get_activate_command(self, venv: VirtualEnv) -> str:  # pragma: no cover
-        shell, _ = shellingham.detect_shell()
+        try:
+            shell, _ = shellingham.detect_shell()
+        except shellingham.ShellDetectionFailure:
+            shell = None
         if shell == "fish":
             command, filename = "source", "activate.fish"
         elif shell == "csh":
