@@ -32,7 +32,7 @@ class JSONFileCache(Generic[KT, VT]):
     """A file cache that stores key-value pairs in a json file."""
 
     def __init__(self, cache_file: Path) -> None:
-        self.cache_file = cache_file
+        self.cache_file = Path(cache_file)
         self._cache: dict[str, VT] = {}
         self._read_cache()
 
