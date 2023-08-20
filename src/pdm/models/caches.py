@@ -31,8 +31,8 @@ VT = TypeVar("VT")
 class JSONFileCache(Generic[KT, VT]):
     """A file cache that stores key-value pairs in a json file."""
 
-    def __init__(self, cache_file: Path) -> None:
-        self.cache_file = cache_file
+    def __init__(self, cache_file: Path | str) -> None:
+        self.cache_file = Path(cache_file)
         self._cache: dict[str, VT] = {}
         self._read_cache()
 
@@ -118,8 +118,8 @@ class HashCache:
     FAVORITE_HASH = "sha256"
     STRONG_HASHES = ("sha256", "sha384", "sha512")
 
-    def __init__(self, directory: Path) -> None:
-        self.directory = directory
+    def __init__(self, directory: Path | str) -> None:
+        self.directory = Path(directory)
 
     def _read_from_link(self, link: Link, session: Session) -> Iterable[bytes]:
         if link.is_file:
@@ -192,8 +192,8 @@ class WheelCache:
     one sdist, the one with most preferred tag will be returned.
     """
 
-    def __init__(self, directory: Path) -> None:
-        self.directory = directory
+    def __init__(self, directory: Path | str) -> None:
+        self.directory = Path(directory)
         self.ephemeral_directory = Path(create_tracked_tempdir(prefix="pdm-wheel-cache-"))
 
     def _get_candidates(self, path: Path) -> Iterable[Path]:
@@ -321,5 +321,5 @@ class SafeFileCache(SeparateBodyBaseCache):
 
 
 @lru_cache(maxsize=128)
-def get_wheel_cache(directory: Path) -> WheelCache:
+def get_wheel_cache(directory: Path | str) -> WheelCache:
     return WheelCache(directory)
