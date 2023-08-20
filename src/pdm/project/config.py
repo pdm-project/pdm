@@ -14,6 +14,7 @@ from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.compat import cached_property
 from pdm.exceptions import NoConfigError, PdmUsageError
+from pdm.utils import find_project_root
 
 REPOSITORY = "repository"
 SOURCE = "pypi"
@@ -248,8 +249,11 @@ class Config(MutableMapping[str, str]):
         """Add or modify a config item"""
         cls._config_map[name] = item
 
-    def __init__(self, config_file: Path, is_global: bool = False):
+    def __init__(self, config_file: Path | str | None = None, is_global: bool = False):
         self.is_global = is_global
+        if config_file is None:
+            root = find_project_root()
+            config_file = root / "pdm.toml"  # reference: project/core.py L135: Config(self.root / "pdm.toml")
         self.config_file = config_file.resolve()
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
