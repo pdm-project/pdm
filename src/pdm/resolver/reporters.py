@@ -78,7 +78,9 @@ class SpinnerReporter(BaseReporter):
             " that conflicts with other requirements:\n  %s",
             candidate,
             last.requirement.as_line(),  # type: ignore[attr-defined]
-            "  \n".join(f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in others),
+            "  \n".join(
+                sorted({f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in others})
+            ),
         )
 
     def pinning(self, candidate: Candidate) -> None:
@@ -87,5 +89,5 @@ class SpinnerReporter(BaseReporter):
         logger.info("Pinning: %s %s", candidate.name, candidate.version)
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
-        conflicts = [f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in causes]
+        conflicts = sorted({f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in causes})
         logger.info("Conflicts detected: \n%s", "\n".join(conflicts))
