@@ -19,7 +19,7 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from packaging.version import Version
+from packaging.version import Version, _cmpkey
 
 from pdm.compat import importlib_metadata
 
@@ -344,6 +344,17 @@ def comparable_version(version: str) -> Version:
     if parsed.local is not None:
         # strip the local part
         parsed._version = parsed._version._replace(local=None)
+
+        # To make comparable_version("1.2.3+local1") == Version("1.2.3")
+        parsed._key = _cmpkey(
+            parsed._version.epoch,
+            parsed._version.release,
+            parsed._version.pre,
+            parsed._version.post,
+            parsed._version.dev,
+            parsed._version.local,
+        )
+
     return parsed
 
 
