@@ -74,7 +74,8 @@ Although PDM run on Python 3.7 and above, you can still have lower Python versio
 | `flit-core>=3.4`      | `>=3.6`          | Yes             |
 | `flit-core>=3.2,<3.4` | `>=3.4`          | Yes             |
 
-Note that if your project is an application(without `name` metadata), the above limitation of backends don't apply, since you don't need a build backend after all, and you can use a Python version up to `2.7`.
+Note that if your project is an application (i.e. without the `name` metadata),
+the above limitation of backends does not apply. Therefore, if you don't need a build backend you can use any Python version `>=2.7`.
 
 ## Import the project from other package managers
 
