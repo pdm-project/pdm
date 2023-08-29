@@ -701,9 +701,9 @@ def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any],
     for key, value in input.items():
         if key not in target:
             target[key] = value
-        elif isinstance(value, dict):
+        elif isinstance(target[key], dict):
             merge_dictionary(target[key], value, append_array=append_array)
-        elif isinstance(value, list) and append_array:
+        elif isinstance(target[key], list) and append_array:
             target[key].extend(x for x in value if x not in target[key])
             if hasattr(target[key], "multiline"):
                 target[key].multiline(True)  # type: ignore[attr-defined]
