@@ -67,12 +67,16 @@ class _SetupReader:
     def read_pyproject_toml(file: Path) -> Setup:
         from pdm import termui
         from pdm.exceptions import ProjectError
+        from pdm.formats import MetaConvertError
         from pdm.project.project_file import PyProject
 
         try:
             metadata = PyProject(file, ui=termui.UI()).metadata.unwrap()
         except ProjectError:
             return Setup()
+        except MetaConvertError as e:
+            termui.logger.warning("Error parsing pyproject.toml, metadata may be incomplete. %s", e)
+            metadata = e.data
         return Setup(
             name=metadata.get("name"),
             summary=metadata.get("description"),

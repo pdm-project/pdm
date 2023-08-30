@@ -23,6 +23,18 @@ class Unset(Exception):
     pass
 
 
+class MetaConvertError(Exception):
+    """A special exception that preserves the partial metadata that are already resolved."""
+
+    def __init__(self, errors: list[str], *, data: dict[str, Any], settings: dict[str, Any]) -> None:
+        self.errors = errors
+        self.data = data
+        self.settings = settings
+
+    def __str__(self) -> str:
+        return "\n" + "\n".join(self.errors)
+
+
 class _MetaConverterMeta(type):
     def __init__(cls, name: str, bases: tuple[type, ...], ns: dict[str, Any]) -> None:
         super().__init__(name, bases, ns)
@@ -47,6 +59,7 @@ class MetaConverter(metaclass=_MetaConverterMeta):
 
     def convert(self) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
         source = self.source
+        errors: list[str] = []
         for key, func in self._converters.items():
             if func._convert_from and func._convert_from not in source:  # type: ignore[attr-defined]
                 continue
@@ -55,6 +68,8 @@ class MetaConverter(metaclass=_MetaConverterMeta):
                 self._data[key] = func(self, value)
             except Unset:
                 pass
+            except Exception as e:
+                errors.append(f"{key}: {e}")
 
         # Delete all used fields
         for func in self._converters.values():
@@ -66,6 +81,8 @@ class MetaConverter(metaclass=_MetaConverterMeta):
                 pass
         # Add remaining items to the data
         self._data.update(source)
+        if errors:
+            raise MetaConvertError(errors, data=self._data, settings=self.settings)
         return self._data, self.settings
 
 
