@@ -254,7 +254,9 @@ class Config(MutableMapping[str, str]):
         if config_file is None:
             root = find_project_root()
             config_file = Path(root) / "pdm.toml"  # reference: project/core.py L135: Config(self.root / "pdm.toml")
-        self.config_file = Path(config_file).resolve()
+            self.config_file = config_file.resolve()
+        else:
+            self.config_file = Path(config_file).resolve()
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
