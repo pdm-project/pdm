@@ -253,7 +253,9 @@ class Config(MutableMapping[str, str]):
         self.is_global = is_global
         if config_file is None:
             root = find_project_root()
-            config_file_path = Path(root) / "pdm.toml"  # reference: project/core.py L135: Config(self.root / "pdm.toml")
+            config_file_path = (
+                Path(root) / "pdm.toml"
+            )  # reference: project/core.py L135: Config(self.root / "pdm.toml")
             self.config_file = config_file_path.resolve()
         else:
             self.config_file = Path(config_file).resolve()
