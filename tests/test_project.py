@@ -113,7 +113,7 @@ def test_project_use_venv(project):
     project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
-    venv.create(project.root / "venv")
+    venv.create(project.root / "venv", symlinks=True)
 
     project.project_config["python.use_venv"] = True
     env = project.environment
@@ -149,7 +149,7 @@ def test_ignore_saved_python(project, monkeypatch):
     project._python = None
     scripts = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
-    venv.create(project.root / "venv")
+    venv.create(project.root / "venv", symlinks=True)
     monkeypatch.setenv("PDM_IGNORE_SAVED_PYTHON", "1")
     assert project.python.executable != project._saved_python
     assert project.python.executable == project.root / "venv" / scripts / f"python{suffix}"
