@@ -10,7 +10,6 @@ You can configure a `tox.ini` like the following to integrate your testing with 
 ```ini
 [tox]
 env_list = py{36,37,38},lint
-isolated_build = true
 
 [testenv]
 setenv =
