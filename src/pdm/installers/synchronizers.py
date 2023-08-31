@@ -215,6 +215,7 @@ class BaseSynchronizer:
         candidates = self.candidates.copy()
         to_update: set[str] = set()
         to_remove: set[str] = set()
+        to_add: set[str] = set()
         locked_repository = self.environment.project.locked_repository
         all_candidate_keys = list(locked_repository.all_candidates)
 
@@ -224,23 +225,24 @@ class BaseSynchronizer:
             if key in candidates:
                 can = candidates.pop(key)
                 if self._should_update(dist, can):
-                    to_update.add(key)
+                    if working_set.is_owned(key):
+                        to_update.add(key)
+                    else:
+                        to_add.add(key)
             elif (
-                self.only_keep or self.clean and key not in all_candidate_keys
-            ) and key not in self.SEQUENTIAL_PACKAGES:
+                (self.only_keep or self.clean and key not in all_candidate_keys)
+                and key not in self.SEQUENTIAL_PACKAGES
+                and working_set.is_owned(key)
+            ):
                 # Remove package only if it is not required by any group
                 # Packages for packaging will never be removed
                 to_remove.add(key)
-        to_add = {
+        to_add.update(
             strip_extras(name)[0]
             for name, _ in candidates.items()
             if name != self.self_key and strip_extras(name)[0] not in working_set
-        }
-        return (
-            sorted(to_add),
-            sorted(to_update),
-            sorted(to_remove),
         )
+        return (sorted(to_add), sorted(to_update), sorted(to_remove))
 
     def synchronize(self) -> None:
         """Synchronize the working set with pinned candidates."""
