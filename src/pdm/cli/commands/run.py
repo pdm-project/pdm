@@ -119,6 +119,15 @@ class TaskRunner:
             raise PdmUsageError(f"Unknown options for task {script_name}: {', '.join(unknown_options)}")
         return Task(kind, script_name, value, cast("TaskOptions", options))
 
+    def expand_command(self, command: str) -> str:
+        expanded_command = os.path.expanduser(os.path.expandvars(command))
+        if os.path.exists(expanded_command):
+            return os.path.abspath(expanded_command)
+        result = self.project.environment.which(command)
+        if not result:
+            raise PdmUsageError(f"Command [success]'{command}'[/] is not found in your PATH.")
+        return result
+
     def _run_process(
         self,
         args: Sequence[str] | str,
@@ -167,10 +176,7 @@ class TaskRunner:
             if command.endswith(".py"):
                 args = [command, *args]
                 command = str(project.environment.interpreter.executable)
-            expanded_command = project_env.which(command)
-            if not expanded_command:
-                raise PdmUsageError(f"Command [success]'{command}'[/] is not found in your PATH.")
-            expanded_command = os.path.expanduser(os.path.expandvars(expanded_command))
+            expanded_command = self.expand_command(command)
             real_command = os.path.realpath(expanded_command)
             expanded_args = [os.path.expandvars(arg) for arg in [expanded_command, *args]]
             if (
