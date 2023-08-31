@@ -142,7 +142,7 @@ def test_run_shell_script(project, pdm):
 
 def test_run_script_with_relative_path(project, pdm, capfd):
     if os.name == "nt":
-        (project.root / "test_script.bat").write_text("echo Hello\n")
+        (project.root / "test_script.bat").write_text("@echo Hello\n")
     else:
         (project.root / "test_script.sh").write_text("#!/bin/bash\necho Hello\n")
         (project.root / "test_script.sh").chmod(0o755)
