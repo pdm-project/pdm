@@ -1,3 +1,31 @@
+Release v2.9.0 (2023-08-31)
+---------------------------
+
+### Features & Improvements
+
+- Add an `--overwrite` option to `pdm init` to overwrite existing files(default False). [#2163](https://github.com/pdm-project/pdm/issues/2163)
+- Support passing filter patterns as positional arguments to `pdm list` command.
+  Add `--tree` as an alias and preferred name of `--graph` option. [#2165](https://github.com/pdm-project/pdm/issues/2165)
+- Switch to truststore by default. [#2195](https://github.com/pdm-project/pdm/issues/2195)
+- Consider packages as installed if the venv includes them from the system-site-packages. [#2216](https://github.com/pdm-project/pdm/issues/2216)
+- Allow `pdm run` to run a script with the relative or absolute path. [#2217](https://github.com/pdm-project/pdm/issues/2217)
+
+### Bug Fixes
+
+- Fix a bug that removing dev dependency uninstalls the project as well. [#2150](https://github.com/pdm-project/pdm/issues/2150)
+- Fix a bug that `@ file://` dependencies can not be updated. [#2169](https://github.com/pdm-project/pdm/issues/2169)
+- Fix a bug that dependencies requested out of the range of `requires-python` cause PDM to crash. [#2175](https://github.com/pdm-project/pdm/issues/2175)
+- Fix the compatibility issue with copier 8.0+. [#2177](https://github.com/pdm-project/pdm/issues/2177)
+- Makes `comarable_version("1.2.3+local1") == Version("1.2.3")`. [#2182](https://github.com/pdm-project/pdm/issues/2182)
+- Default behavior for pdm venv activate when shell detection fails. [#2187](https://github.com/pdm-project/pdm/issues/2187)
+- Handle parsing errors when converting from poetry-style metadata. [#2203](https://github.com/pdm-project/pdm/issues/2203)
+- Don't copy .pyc files from the template directory. [#2213](https://github.com/pdm-project/pdm/issues/2213)
+
+### Removals and Deprecations
+
+- Remove the legacy build backend `pdm-pep517`. [#2167](https://github.com/pdm-project/pdm/issues/2167)
+
+
 Release v2.8.2 (2023-07-31)
 ---------------------------
 
