@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import sys
+from collections import ChainMap
 from pathlib import Path
 from typing import Iterable, Iterator, Mapping
 
@@ -60,23 +61,34 @@ def distributions(path: list[str]) -> Iterable[im.Distribution]:
 class WorkingSet(Mapping[str, im.Distribution]):
     """A dictionary of currently installed distributions"""
 
-    def __init__(self, paths: list[str] | None = None):
+    def __init__(self, paths: list[str] | None = None, shared_paths: list[str] | None = None) -> None:
         if paths is None:
             paths = sys.path
+        if shared_paths is None:
+            shared_paths = []
         self._dist_map = {
             normalize_name(dist.metadata["Name"]): dist
             for dist in distributions(path=list(dict.fromkeys(paths)))
             if dist.metadata["Name"]
         }
+        self._shared_map = {
+            normalize_name(dist.metadata["Name"]): dist
+            for dist in distributions(path=list(dict.fromkeys(shared_paths)))
+            if dist.metadata["Name"]
+        }
+        self._iter_map = ChainMap(self._dist_map, self._shared_map)
 
     def __getitem__(self, key: str) -> im.Distribution:
-        return self._dist_map[key]
+        return self._iter_map[key]
+
+    def is_owned(self, key: str) -> bool:
+        return key in self._dist_map
 
     def __len__(self) -> int:
-        return len(self._dist_map)
+        return len(self._iter_map)
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self._dist_map)
+        return iter(self._iter_map)
 
     def __repr__(self) -> str:
-        return repr(self._dist_map)
+        return repr(self._iter_map)

@@ -265,6 +265,9 @@ class MockWorkingSet(collections.abc.MutableMapping):
     def add_distribution(self, dist: Distribution) -> None:
         self._data[dist.name] = dist
 
+    def is_owned(self, key: str) -> bool:
+        return key in self._data
+
     def __getitem__(self, key: str) -> Distribution:
         return self._data[key]
 
