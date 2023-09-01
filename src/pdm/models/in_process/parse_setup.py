@@ -179,7 +179,7 @@ def parse_setup(path: str) -> Dict[str, Any]:
 
         # Execute setup.py and get the kwargs
         __file__ = sys.argv[0] = setup_path
-        sys.path.insert(0, setup_path)
+        sys.path.insert(0, path)
         setup_kwargs.clear()
 
         with tokenize.open(setup_path) as f:
