@@ -165,33 +165,39 @@ def clean_metadata(metadata: Dict[str, Any]) -> None:
 def parse_setup(path: str) -> Dict[str, Any]:
     import tokenize
 
-    import setuptools
-
-    setuptools.setup = fake_setup
-
     parsed: Dict[str, Any] = {}
     path = os.path.abspath(path)
-    project_path = os.path.dirname(path)
-    os.chdir(project_path)
+    os.chdir(path)
     if os.path.exists("setup.cfg"):
         parsed.update(_parse_setup_cfg("setup.cfg"))
 
-    # Execute setup.py and get the kwargs
-    __file__ = sys.argv[0] = path
-    sys.path.insert(0, project_path)
-    setup_kwargs.clear()
+    setup_path = os.path.join(path, "setup.py")
+    if os.path.exists(setup_path):
+        try:
+            import setuptools
+        except ModuleNotFoundError:
+            raise RuntimeError(
+                "setuptools is required to convert setup.py, install it by `pdm add setuptools`"
+            ) from None
 
-    with tokenize.open(path) as f:
-        code = f.read()
-    exec(
-        compile(code, __file__, "exec"),
-        {"__name__": "__main__", "__file__": __file__, "setup_kwargs": setup_kwargs},
-    )
-    parsed.update(setup_kwargs)
+        setuptools.setup = fake_setup
+
+        # Execute setup.py and get the kwargs
+        __file__ = sys.argv[0] = setup_path
+        sys.path.insert(0, path)
+        setup_kwargs.clear()
+
+        with tokenize.open(setup_path) as f:
+            code = f.read()
+        exec(
+            compile(code, __file__, "exec"),
+            {"__name__": "__main__", "__file__": __file__, "setup_kwargs": setup_kwargs},
+        )
+        parsed.update(setup_kwargs)
 
     if "readme" not in parsed:
         for readme_file in ("README.md", "README.rst", "README.txt"):
-            readme_path = os.path.join(project_path, readme_file)
+            readme_path = os.path.join(path, readme_file)
             if os.path.exists(readme_path):
                 parsed["readme"] = readme_file
                 break

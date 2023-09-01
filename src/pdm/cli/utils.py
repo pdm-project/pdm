@@ -602,13 +602,7 @@ def find_importable_files(project: Project) -> Iterable[tuple[str, Path]]:
     """Find all possible files that can be imported"""
     from pdm.formats import FORMATS
 
-    for filename in (
-        "Pipfile",
-        "pyproject.toml",
-        "requirements.in",
-        "requirements.txt",
-        "setup.py",
-    ):
+    for filename in ("Pipfile", "pyproject.toml", "requirements.in", "requirements.txt", "setup.py", "setup.cfg"):
         project_file = project.root / filename
         if not project_file.exists():
             continue
