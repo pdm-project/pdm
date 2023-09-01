@@ -121,8 +121,11 @@ class TaskRunner:
 
     def expand_command(self, command: str) -> str:
         expanded_command = os.path.expanduser(os.path.expandvars(command))
-        if os.path.exists(expanded_command):
-            return os.path.abspath(expanded_command)
+        if expanded_command.replace(os.sep, "/").startswith(("./", "../")):
+            abspath = os.path.abspath(expanded_command)
+            if not os.path.isfile(abspath):
+                raise PdmUsageError(f"Command [success]'{command}'[/] is not a valid executable.")
+            return abspath
         result = self.project.environment.which(command)
         if not result:
             raise PdmUsageError(f"Command [success]'{command}'[/] is not found in your PATH.")
