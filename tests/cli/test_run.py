@@ -152,6 +152,13 @@ def test_run_script_with_relative_path(project, pdm, capfd):
     assert out.strip() == "Hello"
 
 
+def test_run_non_existing_local_script(project, pdm):
+    with cd(project.root):
+        result = pdm(["run", "./test_script.sh"], obj=project)
+    assert result.exit_code != 0
+    assert "not a valid executable" in result.stderr
+
+
 @pytest.mark.parametrize(
     "args,expected",
     (
