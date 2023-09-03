@@ -1,3 +1,15 @@
+Release v2.9.1 (2023-09-03)
+---------------------------
+
+### Features & Improvements
+
+- Support convert setup.cfg without existing setup.py. [#2222](https://github.com/pdm-project/pdm/issues/2222)
+
+### Bug Fixes
+
+- `pdm run` should only find local file if the command starts with `./`. [#2221](https://github.com/pdm-project/pdm/issues/2221)
+
+
 Release v2.9.0 (2023-08-31)
 ---------------------------
 
