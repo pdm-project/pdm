@@ -617,6 +617,7 @@ class Project:
         """
         config = self.config
         python: str | Path | None = None
+        finder_arg: str | None = None
 
         if not python_spec:
             if config.get("python.use_pyenv", True) and os.path.exists(PYENV_ROOT):
@@ -630,7 +631,6 @@ class Project:
             python = shutil.which("python") or shutil.which("python3")
             if python:
                 yield PythonInfo.from_path(python)
-            args = []
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
                 path = Path(python_spec)
@@ -638,14 +638,15 @@ class Project:
                     python = find_python_in_path(python_spec)
                     if python:
                         yield PythonInfo.from_path(python)
+                        return
                 if len(path.parts) == 1:  # only check for spec with only one part
                     python = shutil.which(python_spec)
                     if python:
                         yield PythonInfo.from_path(python)
-                return
-            args = [int(v) for v in python_spec.split(".") if v != ""]
+                        return
+            finder_arg = python_spec
         finder = self._get_python_finder()
-        for entry in finder.find_all(*args):
+        for entry in finder.find_all(finder_arg):
             yield PythonInfo(entry)
         if not python_spec:
             # Lastly, return the host Python as well
