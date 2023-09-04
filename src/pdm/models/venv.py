@@ -55,7 +55,7 @@ class VirtualEnv:
         if not venv_cfg.exists():
             return {}
         parsed: dict[str, str] = {}
-        with venv_cfg.open() as fp:
+        with venv_cfg.open(encoding="utf-8") as fp:
             for line in fp:
                 if "=" in line:
                     k, v = line.split("=", 1)
