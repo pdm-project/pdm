@@ -17,7 +17,11 @@ def get_venv_python(venv: Path) -> Path:
     suffix = ".exe" if IS_WIN else ""
     result = venv / BIN_DIR / f"python{suffix}"
     if IS_WIN and not result.exists():
-        return venv / "python.exe"  # for conda
+        result = venv / "bin" / f"python{suffix}"  # for mingw64/msys2
+        if result.exists():
+            return result
+        else:
+            return venv / "python.exe"  # for conda
     return result
 
 
