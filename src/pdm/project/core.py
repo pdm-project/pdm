@@ -88,7 +88,7 @@ class Project:
                 if not is_global
                 else global_project
             )
-        if not is_global and root_path is None and self.global_config["global_project.fallback"]:
+        if not is_global and (root_path == Path(".") and not root_path.is_absolute()) and self.global_config["global_project.fallback"]:
             root_path = global_project
             is_global = True
             if self.global_config["global_project.fallback_verbose"]:
