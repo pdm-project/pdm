@@ -30,6 +30,7 @@ from rich.tree import Tree
 from pdm import termui
 from pdm.exceptions import PdmArgumentError, ProjectError
 from pdm.models.requirements import (
+    FileRequirement,
     Requirement,
     filter_requirements_with_extras,
     parse_requirement,
@@ -523,13 +524,23 @@ def format_lockfile(
     from pdm.formats.base import make_array, make_inline_table
 
     packages = tomlkit.aot()
+    backend = project.backend
     for _k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))
         base.add("summary", v.summary or "")
-        deps = make_array(sorted(r.as_line() for r in fetched_dependencies[v.dep_key]), True)
+        deps: list[str] = []
+        for r in fetched_dependencies[v.dep_key]:
+            # Try to convert to relative paths to make it portable
+            if isinstance(r, FileRequirement) and r.path and r.path.is_absolute():
+                try:
+                    r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(project.root))
+                    r.url = backend.relative_path_to_url(r.path.as_posix())
+                except ValueError:
+                    pass
+            deps.append(r.as_line())
         if len(deps) > 0:
-            base.add("dependencies", deps)
+            base.add("dependencies", make_array(sorted(deps), True))
         if v.hashes:
             collected = {}
             for item in v.hashes:
