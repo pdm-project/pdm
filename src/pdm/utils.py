@@ -75,7 +75,7 @@ def join_list_with(items: list[Any], sep: Any) -> list[Any]:
     return new_items[:-1]
 
 
-def find_project_root(cwd: str = ".", max_depth: int = 5, default: str = ".") -> str:
+def find_project_root(cwd: str = ".", max_depth: int = 5, default: str | None = None) -> str | None:
     """Recursively find a `pyproject.toml` at given path or current working directory.
     If none if found, go to the parent directory, at most `max_depth` levels will be
     looked for.
