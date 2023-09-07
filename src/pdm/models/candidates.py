@@ -498,9 +498,14 @@ class PreparedCandidate:
 
     def _get_metadata_from_project(self, pyproject_toml: Path) -> im.Distribution | None:
         # Try getting from PEP 621 metadata
+        from pdm.formats import MetaConvertError
         from pdm.project.project_file import PyProject
 
-        pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
+        try:
+            pyproject = PyProject(pyproject_toml, ui=self.environment.project.core.ui)
+        except MetaConvertError as e:
+            termui.logger.warning("Failed to parse pyproject.toml: %s", e)
+            return None
         metadata = pyproject.metadata.unwrap()
         if not metadata:
             termui.logger.warning("Failed to parse pyproject.toml")

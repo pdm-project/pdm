@@ -140,6 +140,25 @@ def test_run_shell_script(project, pdm):
     assert (project.root / "output.txt").read_text().strip() == "hello"
 
 
+def test_run_script_with_relative_path(project, pdm, capfd):
+    if os.name == "nt":
+        (project.root / "test_script.bat").write_text("@echo Hello\n")
+    else:
+        (project.root / "test_script.sh").write_text("#!/bin/bash\necho Hello\n")
+        (project.root / "test_script.sh").chmod(0o755)
+    with cd(project.root):
+        pdm(["run", "./test_script.bat" if os.name == "nt" else "./test_script.sh"], obj=project, strict=True)
+    out, _ = capfd.readouterr()
+    assert out.strip() == "Hello"
+
+
+def test_run_non_existing_local_script(project, pdm):
+    with cd(project.root):
+        result = pdm(["run", "./test_script.sh"], obj=project)
+    assert result.exit_code != 0
+    assert "not a valid executable" in result.stderr
+
+
 @pytest.mark.parametrize(
     "args,expected",
     (

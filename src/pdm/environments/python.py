@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from pdm.environments.base import BaseEnvironment
 from pdm.models.in_process import get_sys_config_paths
+from pdm.models.working_set import WorkingSet
 
 if TYPE_CHECKING:
     from pdm.project import Project
@@ -40,3 +41,12 @@ class PythonEnvironment(BaseEnvironment):
         if venv is not None and self.prefix is None:
             env.update(venv.env_vars())
         return env
+
+    def get_working_set(self) -> WorkingSet:
+        scheme = self.get_paths()
+        paths = [scheme["platlib"], scheme["purelib"]]
+        venv = self.interpreter.get_venv()
+        shared_paths = []
+        if venv is not None and venv.include_system_site_packages:
+            shared_paths.extend(venv.base_paths)
+        return WorkingSet(paths, shared_paths=list(dict.fromkeys(shared_paths)))

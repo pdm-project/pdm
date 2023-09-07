@@ -3,7 +3,7 @@ from argparse import Namespace
 
 import pytest
 
-from pdm.formats import flit, pipfile, poetry, requirements, setup_py
+from pdm.formats import MetaConvertError, flit, pipfile, poetry, requirements, setup_py
 from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
 from tests import FIXTURES
@@ -119,6 +119,17 @@ def test_convert_flit(project):
     build = settings["build"]
     assert build["includes"] == ["doc/"]
     assert build["excludes"] == ["doc/*.html"]
+
+
+def test_convert_error_preserve_metadata(project):
+    pyproject_file = FIXTURES / "poetry-error.toml"
+    try:
+        poetry.convert(project, pyproject_file, Namespace(dev=False, group=None))
+    except MetaConvertError as e:
+        assert e.data["name"] == "test-poetry"
+        assert "dependencies: Invalid specifier" in str(e)
+    else:
+        pytest.fail("Should raise MetaConvertError")
 
 
 def test_import_requirements_with_group(project):

@@ -4,7 +4,9 @@ import dataclasses as dc
 import sys
 from pathlib import Path
 
-from pdm.utils import get_venv_like_prefix
+from pdm.compat import cached_property
+from pdm.models.in_process import get_sys_config_paths
+from pdm.utils import find_python_in_path, get_venv_like_prefix
 
 IS_WIN = sys.platform == "win32"
 BIN_DIR = "Scripts" if IS_WIN else "bin"
@@ -15,7 +17,11 @@ def get_venv_python(venv: Path) -> Path:
     suffix = ".exe" if IS_WIN else ""
     result = venv / BIN_DIR / f"python{suffix}"
     if IS_WIN and not result.exists():
-        return venv / "python.exe"  # for conda
+        result = venv / "bin" / f"python{suffix}"  # for mingw64/msys2
+        if result.exists():
+            return result
+        else:
+            return venv / "python.exe"  # for conda
     return result
 
 
@@ -46,3 +52,32 @@ class VirtualEnv:
     def env_vars(self) -> dict[str, str]:
         key = "CONDA_PREFIX" if self.is_conda else "VIRTUAL_ENV"
         return {key: str(self.root)}
+
+    @cached_property
+    def venv_config(self) -> dict[str, str]:
+        venv_cfg = self.root / "pyvenv.cfg"
+        if not venv_cfg.exists():
+            return {}
+        parsed: dict[str, str] = {}
+        with venv_cfg.open(encoding="utf-8") as fp:
+            for line in fp:
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    k = k.strip().lower()
+                    v = v.strip()
+                    if k == "include-system-site-packages":
+                        v = v.lower()
+                    parsed[k] = v
+        return parsed
+
+    @property
+    def include_system_site_packages(self) -> bool:
+        return self.venv_config.get("include-system-site-packages") == "true"
+
+    @cached_property
+    def base_paths(self) -> list[str]:
+        home = Path(self.venv_config["home"])
+        base_executable = find_python_in_path(home) or find_python_in_path(home.parent)
+        assert base_executable is not None
+        paths = get_sys_config_paths(str(base_executable))
+        return [paths["purelib"], paths["platlib"]]

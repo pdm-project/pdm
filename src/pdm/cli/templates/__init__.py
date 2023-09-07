@@ -103,6 +103,8 @@ class ProjectTemplate:
             dst.mkdir(exist_ok=True)
             for child in src.iterdir():
                 ProjectTemplate.mirror(child, dst / child.name, skip, copyfunc)
+        elif src.name.endswith(".pyc"):
+            return
         elif overwrite or not dst.exists():
             copyfunc(src, dst)
 

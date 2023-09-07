@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pdm.formats import flit, pipfile, poetry, requirements, setup_py
+from pdm.formats.base import MetaConvertError as MetaConvertError
 
 if TYPE_CHECKING:
     from argparse import Namespace

@@ -66,7 +66,7 @@ instead using a custom `[tool.poetry]` table. This is partly because Poetry came
 
 ### [Hatch](https://hatch.pypa.io)
 
-Hatch can also manage environments, allowing multiple environments per project. By default it has a central location for all environments but it can be configured to put a project's environment(s) in the project root directory. It can manage packages but without lockfile support. It can also be used to package a project (with PEP 621/631-compliant pyproject.toml files) and upload it to PyPI.
+Hatch can also manage environments, allowing multiple environments per project. By default it has a central location for all environments but it can be configured to put a project's environment(s) in the project root directory. It can manage packages but without lockfile support. It can also be used to package a project (with PEP 621 compliant pyproject.toml files) and upload it to PyPI.
 
 ### This project
 

@@ -59,12 +59,7 @@ class ArgumentGroup(Option):
     to add more arguments. And itself will be registered to the parser later.
     """
 
-    def __init__(
-        self,
-        name: str,
-        is_mutually_exclusive: bool = False,
-        required: bool | None = None,
-    ) -> None:
+    def __init__(self, name: str, is_mutually_exclusive: bool = False, required: bool = False) -> None:
         self.name = name
         self.options: list[Option] = []
         self.required = required
