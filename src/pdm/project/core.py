@@ -90,7 +90,7 @@ class Project:
             )
         if (
             not is_global
-            and (Path(root_path) == Path(".") and not Path(root_path).is_absolute())
+            and root_path is None
             and self.global_config["global_project.fallback"]
         ):
             root_path = global_project
