@@ -132,7 +132,7 @@ $ pdm info --env
   "platform_system": "Windows",
   "platform_version": "10.0.18362",
   "python_full_version": "3.8.0",
-  "platform_python_implementaiton": "CPython",
+  "platform_python_implementation": "CPython",
   "python_version": "3.8",
   "sys_platform": "win32"
 }

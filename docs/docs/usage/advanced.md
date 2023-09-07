@@ -31,7 +31,7 @@ dependencies from [`pdm lock`](../reference/cli.md#lock) into the virtualenv. In
 of `pdm run pytest tests/`.
 
 You should also make sure you don't run `pdm add/pdm remove/pdm update/pdm lock` in the test commands, otherwise the [`pdm lock`](../reference/cli.md#lock)
-file will be modified unexpectedly. Additional dependencies can be supplied with the `deps` config. Besides, `isolated_buid` and `passenv`
+file will be modified unexpectedly. Additional dependencies can be supplied with the `deps` config. Besides, `isolated_build` and `passenv`
 config should be set as the above example to make PDM work properly.
 
 To get rid of these constraints, there is a Tox plugin [tox-pdm](https://github.com/pdm-project/tox-pdm) which can ease the usage. You can install it by
