@@ -17,7 +17,7 @@ import tempfile
 import urllib.parse as parse
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from packaging.version import Version, _cmpkey
 
@@ -74,6 +74,13 @@ def join_list_with(items: list[Any], sep: Any) -> list[Any]:
         new_items.extend([item, sep])
     return new_items[:-1]
 
+@overload
+def find_project_root(cwd: str = ".", max_depth: int = 5, default: None = ...) -> str | None:
+     ...
+
+@overload
+def find_project_root(cwd: str = ".", max_depth: int = 5, default: str = ...) -> str:
+     ...
 
 def find_project_root(cwd: str = ".", max_depth: int = 5, default: str | None = None) -> str | None:
     """Recursively find a `pyproject.toml` at given path or current working directory.
