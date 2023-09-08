@@ -75,7 +75,7 @@ write_to = "pdm/models/VERSION"
 excludes = ["./**/.git"]
 package-dir = "src"
 includes = ["src/pdm"]
-source-includes = ["tests", "CHANGELOG.md", "LICENSE", "README.md"]
+source-includes = ["tests", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
 
