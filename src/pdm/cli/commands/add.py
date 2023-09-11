@@ -10,6 +10,7 @@ from pdm.cli.options import (
     dry_run_option,
     install_group,
     lockfile_option,
+    no_lock_option,
     packages_group,
     prerelease_option,
     save_strategy_group,
@@ -33,6 +34,7 @@ class Command(BaseCommand):
     arguments = (
         *BaseCommand.arguments,
         lockfile_option,
+        no_lock_option,
         save_strategy_group,
         update_strategy_group,
         prerelease_option,
@@ -169,10 +171,10 @@ class Command(BaseCommand):
         # Update dependency specifiers and lockfile hash.
         deps_to_update = group_deps if unconstrained else requirements
         save_version_specifiers({group: deps_to_update}, resolved, save)
+        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         if not dry_run:
             project.add_dependencies(deps_to_update, group, selection.dev or False)
             project.write_lockfile(project.lockfile._data, False)
-            hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         populate_requirement_names(group_deps)
         if sync:
             do_sync(

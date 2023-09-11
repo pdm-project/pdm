@@ -170,6 +170,15 @@ def test_install_with_dry_run(project, pdm, repository):
     assert "pytz 2019.3" in result.output
 
 
+def test_install_no_lock(project, pdm, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests")}, "default")
+    result = pdm(["install", "--no-lock"], obj=project)
+    assert result.exit_code == 0
+    assert not project.lockfile.exists()
+    assert "urllib3" in working_set
+    assert "requests" in working_set
+
+
 def test_install_check(pdm, project, repository):
     result = pdm(["install", "--check"], obj=project)
     assert result.exit_code == 1

@@ -29,7 +29,7 @@ _pdm_a919b69078acdf0a_complete()
         case "$com" in
 
             (add)
-            opts="--dev --dry-run --editable --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
+            opts="--dev --dry-run --editable --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-lock --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
             ;;
 
             (build)
@@ -89,7 +89,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (remove)
-            opts="--dev --dry-run --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --skip --venv --verbose"
+            opts="--dev --dry-run --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-lock --no-self --no-sync --project --skip --venv --verbose"
             ;;
 
             (run)
@@ -113,7 +113,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (update)
-            opts="--dev --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
+            opts="--dev --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
             ;;
 
             (use)

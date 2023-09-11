@@ -349,7 +349,7 @@ class Synchronizer(BaseSynchronizer):
         if not any((add, update, remove)):
             self.ui.echo("All packages are synced to date, nothing to do.")
             return
-        results = ["[bold]Synchronizing working set with lock file[/]:"]
+        results = ["[bold]Synchronizing working set with resolved packages[/]:"]
         results.extend(
             [
                 f"[success]{len(add)}[/] to add,",

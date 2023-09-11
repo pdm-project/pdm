@@ -32,6 +32,15 @@ def test_remove_package(project, working_set, dev_option, pdm):
     assert "pytz" not in working_set
 
 
+def test_remove_package_no_lock(project, working_set, dev_option, pdm):
+    pdm(["add", *dev_option, "requests", "pytz"], obj=project, strict=True)
+    pdm(["remove", *dev_option, "--no-lock", "pytz"], obj=project, strict=True)
+    assert "pytz" not in working_set
+    project.lockfile.reload()
+    locked_candidates = project.locked_repository.all_candidates
+    assert "pytz" in locked_candidates
+
+
 def test_remove_package_with_dry_run(project, working_set, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     result = pdm(["remove", "requests", "--dry-run"], obj=project, strict=True)

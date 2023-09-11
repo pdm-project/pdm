@@ -100,6 +100,7 @@ class Project:
 
         self.root: Path = Path(root_path or "").absolute()
         self.is_global = is_global
+        self.enable_write_lockfile = os.getenv("PDM_NO_LOCK", "0").lower() not in ("1", "true")
         self.init_global_project()
 
     def __repr__(self) -> str:
@@ -487,7 +488,7 @@ class Project:
         toml_data["metadata"].update(self.get_lock_metadata())
         self.lockfile.set_data(toml_data)
 
-        if write:
+        if write and self.enable_write_lockfile:
             self.lockfile.write(show_message)
 
     def make_self_candidate(self, editable: bool = True) -> Candidate:

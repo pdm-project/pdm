@@ -6,7 +6,15 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import dry_run_option, groups_group, install_group, lockfile_option, skip_option, venv_option
+from pdm.cli.options import (
+    dry_run_option,
+    groups_group,
+    install_group,
+    lockfile_option,
+    no_lock_option,
+    skip_option,
+    venv_option,
+)
 from pdm.project import Project
 
 
@@ -19,18 +27,12 @@ class Command(BaseCommand):
         install_group,
         dry_run_option,
         lockfile_option,
+        no_lock_option,
         skip_option,
         venv_option,
     )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "--no-lock",
-            dest="lock",
-            action="store_false",
-            default=True,
-            help="Don't do lock if the lock file is not found or outdated",
-        )
         parser.add_argument(
             "--check",
             action="store_true",
@@ -79,18 +81,21 @@ class Command(BaseCommand):
                     err=True,
                 )
                 sys.exit(1)
-            if options.lock:
+            if project.enable_write_lockfile:
                 project.core.ui.echo("Updating the lock file...", style="success", err=True)
-                unseleted = GroupSelection(project)
-                actions.do_lock(
-                    project,
-                    strategy=strategy,
-                    dry_run=options.dry_run,
-                    hooks=hooks,
-                    # We would like to keep the selected groups when the lockfile exists
-                    # but use the groups passed-in when creating a new lockfile.
-                    groups=unseleted.all() if strategy != "all" else selection.all(),
-                )
+            # We would like to keep the selected groups when the lockfile exists
+            # but use the groups passed-in when creating a new lockfile or doing a non-lock install.
+            if strategy == "all" or not project.enable_write_lockfile:
+                lock_selection = selection
+            else:
+                lock_selection = GroupSelection(project)
+            actions.do_lock(
+                project,
+                strategy=strategy,
+                dry_run=options.dry_run,
+                hooks=hooks,
+                groups=lock_selection.all(),
+            )
 
         actions.do_sync(
             project,
