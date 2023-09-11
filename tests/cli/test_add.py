@@ -24,6 +24,20 @@ def test_add_package(project, working_set, dev_option, pdm):
         assert package in working_set
 
 
+def test_add_package_no_lock(project, working_set, dev_option, pdm):
+    pdm(["add", *dev_option, "--no-lock", "-v", "requests"], obj=project, strict=True)
+    group = (
+        project.pyproject.settings["dev-dependencies"]["dev"]
+        if dev_option
+        else project.pyproject.metadata["dependencies"]
+    )
+
+    assert group[0] == "requests>=2.19.1"
+    assert not project.lockfile.exists()
+    for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
+        assert package in working_set
+
+
 def test_add_command(project, pdm, mocker):
     do_add = mocker.patch("pdm.cli.commands.add.Command.do_add")
     pdm(["add", "requests"], obj=project)

@@ -211,7 +211,7 @@ function TabExpansion($line, $lastWord) {
                             "-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global",
                             "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation",
-                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x"
+                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock"
                         )),
                         $sectionOption,
                         $projectOption,
@@ -282,7 +282,10 @@ function TabExpansion($line, $lastWord) {
             "init" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("-g", "--global", "--non-interactive", "-n", "--python", "--lib", "--copier", "--cookiecutter", "--overwrite")),
+                        [Option]::new(@(
+                            "-g", "--global", "--non-interactive", "-n", "--python", "--lib", "--copier",
+                            "--cookiecutter", "--overwrite"
+                        )),
                         $projectOption,
                         $skipOption,
                         [Option]::new(@("--backend")).WithValues(@("pdm-backend", "setuptools", "flit", "hatching"))
@@ -306,7 +309,10 @@ function TabExpansion($line, $lastWord) {
             "list" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--graph", "--tree", "--global", "-g", "--reverse", "-r", "--freeze", "--json", "--csv", "--markdown", "--fields", "--sort", "--include", "--exclude", "--resolve")),
+                        [Option]::new(@(
+                            "--graph", "--tree", "--global", "-g", "--reverse", "-r", "--freeze","--json", "--csv",
+                            "--markdown", "--fields", "--sort", "--include", "--exclude", "--resolve"
+                        )),
                         $venvOption,
                         $projectOption
                     ))
@@ -315,7 +321,10 @@ function TabExpansion($line, $lastWord) {
             "lock" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile", "--check", "--dev", "--prod", "--production", "-d", "--no-default", "--no-cross-platform", "--static-urls", "--no-static-urls")),
+                        [Option]::new(@(
+                            "--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile", "--check", "--dev", "--prod",
+                            "--production", "-d", "--no-default", "--no-cross-platform", "--static-urls", "--no-static-urls"
+                        )),
                         $skipOption,
                         $sectionOption,
                         $projectOption
@@ -362,7 +371,7 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@(
                             "--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self",
-                            "--no-isolation", "-L", "--lockfile", "--fail-fast", "-x"
+                            "--no-isolation", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock"
                         )),
                         $projectOption,
                         $skipOption,
@@ -413,7 +422,7 @@ function TabExpansion($line, $lastWord) {
                             "-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run",
                             "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation",
-                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x"
+                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock"
                         )),
                         $sectionOption,
                         $skipOption,

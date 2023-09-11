@@ -142,6 +142,11 @@ lockfile_option = Option(
 )
 
 
+@Option("--no-lock", nargs=0, help="Don't try to create or update the lockfile. [env var: PDM_NO_LOCK]")
+def no_lock_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+    project.enable_write_lockfile = False
+
+
 @Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
 def pep582_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
     from pdm.cli.actions import print_pep582_command
