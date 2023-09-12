@@ -1,3 +1,19 @@
+Release v2.9.2 (2023-09-12)
+---------------------------
+
+### Features & Improvements
+
+- Fix an issue that `--no-lock` option doesn't work as expected. Also support `--no-lock` option for `add`, `remove` and `update` commands. [#2245](https://github.com/pdm-project/pdm/issues/2245)
+
+### Bug Fixes
+
+- Use `findpython` to find pythons with the spec given by the user. [#2225](https://github.com/pdm-project/pdm/issues/2225)
+- Use UTF-8 to read pyvenv.cfg. [#2227](https://github.com/pdm-project/pdm/issues/2227)
+- On Windows, try looking for the `virtualenv` `python.exe` binary under `bin/`
+  as well as `Scripts/` and the `virtualenv`/`conda` root. [#2236](https://github.com/pdm-project/pdm/issues/2236)
+- Write relocatable dependency URLs with `${PROJECT_ROOT}` variable in the lockfile. [#2240](https://github.com/pdm-project/pdm/issues/2240)
+
+
 Release v2.9.1 (2023-09-03)
 ---------------------------
 
