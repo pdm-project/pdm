@@ -176,7 +176,8 @@ install_group.add_argument("--fail-fast", "-x", action="store_true", help="Abort
     "--no-isolation",
     dest="build_isolation",
     nargs=0,
-    help="Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.",
+    help="Disable isolation when building a source distribution that follows PEP 517, "
+    "as in: build dependencies specified by PEP 518 must be already installed if this option is used.",
 )
 def no_isolation_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
     os.environ["PDM_BUILD_ISOLATION"] = "no"
