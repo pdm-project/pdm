@@ -80,7 +80,7 @@ Removed C:\Users\Frost Ming\AppData\Local\pdm\pdm\venvs\test-project-8Sgn_62n-fo
 
 ## Activate a virtualenv
 
-Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` doesn't create the shell for you but print the activate command to the console. In this way you won't leave the current shell. You can then feed the output to `eval` to activate the virtualenv:
+Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm venv` doesn't create the shell for you but print the activate command to the console. In this way you won't leave the current shell. You can then feed the output to `eval` to activate the virtualenv:
 
 === "bash/csh/zsh"
 
@@ -98,22 +98,33 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm-venv` do
     PS1> Invoke-Expression (pdm venv activate for-test)
     ```
 
-    You can make your own shell shortcut function to avoid the input of long command. Here is an example of Bash:
-
-    ```ps1
-    pdm_venv_activate() {
-        eval $('pdm' 'venv' 'activate' "$1")
-    }
-    ```
-
-    Then you can activate it by `pdm_venv_activate $venv_name` and deactivate by deactivate directly.
-
     Additionally, if the project interpreter is a venv Python, you can omit the name argument following activate.
 
 !!! NOTE
     `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the forementioned purpose, use the `pdm use` command.
 
 For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation.
+
+!!! TIP "Looking for `pdm shell`?"
+    PDM doesn't provide a `shell` command because many fancy shell functions may not work perfectly in a subshell, which brings a maintenance burden to support all the corner cases. However, you can still gain the ability via the following ways:
+
+    - Use `pdm run $SHELL`, this will spawn a subshell with the environment variables set properly. **The subshell can be quit with `exit` or `Ctrl+D`.**
+    - Add a shell function to activate the virtualenv, here is an example of BASH function that also works on ZSH:
+
+      ```bash
+      pdm() {
+        local command=$1
+
+        if [[ "$command" == "shell" ]]; then
+            eval $(pdm venv activate)
+        else
+            command pdm $@
+        fi
+      }
+      ```
+
+      Copy and paste this function to your `~/.bashrc` file and restart your shell. Now you can run `pdm shell` to activate the virtualenv.
+      **The virtualenv can be deactivated with `deactivate` command as usual.**
 
 ## Prompt customization
 
