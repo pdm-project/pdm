@@ -6,7 +6,7 @@ groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:2cc7c5f987c1b11a6636f57e0d6c28f86f97c04f45c95f2756eda43dd0873ccb"
+content_hash = "sha256:a981bd6e57936e05ef989e690cff324b4e3c88858f026db22afc1caa35013ff8"
 
 [[package]]
 name = "arpeggio"
@@ -620,15 +620,15 @@ files = [
 
 [[package]]
 name = "findpython"
-version = "0.3.1"
+version = "0.4.0"
 requires_python = ">=3.7"
 summary = "A utility to find python versions on your system"
 dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "findpython-0.3.1-py3-none-any.whl", hash = "sha256:b57a67fc95cc687bfcfa4944c730a5e368b8cbe20f84ad4cdbc9d6bfe128f50b"},
-    {file = "findpython-0.3.1.tar.gz", hash = "sha256:7621f8a9c199a70d219831cddaeb84ca7e83e20b8358172bff47871a18a5eda4"},
+    {file = "findpython-0.4.0-py3-none-any.whl", hash = "sha256:087148ac5935f9be458f36a05f3fa479efdf2c629f5d386c73ea481cfecff15e"},
+    {file = "findpython-0.4.0.tar.gz", hash = "sha256:18b14d115678da18ae92ee22d7001cc30915ea531053f77010ee05a39680f438"},
 ]
 
 [[package]]

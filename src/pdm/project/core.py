@@ -647,7 +647,7 @@ class Project:
                         return
             finder_arg = python_spec
         finder = self._get_python_finder()
-        for entry in finder.find_all(finder_arg):
+        for entry in finder.find_all(finder_arg, allow_prereleases=True):
             yield PythonInfo(entry)
         if not python_spec:
             # Lastly, return the host Python as well
