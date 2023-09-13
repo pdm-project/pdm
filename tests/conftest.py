@@ -69,7 +69,7 @@ def build_env_wheels() -> Iterable[Path]:
         for wheel_name in (
             "pdm_pep517-1.0.0-py3-none-any.whl",
             "poetry_core-1.3.2-py3-none-any.whl",
-            "setuptools-68.2.2-py3-none-any.whl",
+            "setuptools-68.0.0-py3-none-any.whl",
             "wheel-0.37.1-py2.py3-none-any.whl",
             "flit_core-3.6.0-py3-none-any.whl",
             "pdm_backend-2.1.4-py3-none-any.whl",
