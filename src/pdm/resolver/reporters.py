@@ -72,6 +72,9 @@ class SpinnerReporter(BaseReporter):
         logger.info("  Adding requirement %s%s", requirement.as_line(), parent_line)
 
     def rejecting_candidate(self, criterion: Criterion, candidate: Candidate) -> None:
+        if not criterion.information:
+            logger.info("Candidate rejected because it contains invalid metadata: %s", candidate)
+            return
         *others, last = criterion.information
         logger.info(
             "Candidate rejected: %s because it introduces a new requirement %s"
