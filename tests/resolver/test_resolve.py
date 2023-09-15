@@ -320,3 +320,10 @@ def test_resolve_extra_and_underlying_to_the_same_version(resolve, repository):
     repository.add_dependencies("bar", "0.1.0", ["foo[enc]>=0.1.0"])
     result = resolve(["foo==0.1.0", "bar"])
     assert result["foo"].version == result["foo[enc]"].version == "0.1.0"
+
+
+def test_resolve_skip_candidate_with_invalid_metadata(resolve, repository):
+    repository.add_candidate("sqlparse", "0.4.0")
+    repository.add_dependencies("sqlparse", "0.4.0", ["django>=1.11'"])
+    result = resolve(["sqlparse"], ">=3.6")
+    assert result["sqlparse"].version == "0.3.0"
