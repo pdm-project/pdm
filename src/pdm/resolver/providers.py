@@ -89,7 +89,7 @@ class BaseProvider(AbstractProvider):
             try:
                 deps = self.get_dependencies(candidate)
             except RequirementsConflicted:
-                pass
+                continue
             break
         self._known_depth[self.identify(candidate)] = dep_depth
         is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in deps)
