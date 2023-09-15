@@ -101,7 +101,7 @@ class Command(BaseCommand):
             project,
             selection=selection,
             no_editable=options.no_editable,
-            no_self=options.no_self,
+            no_self=options.no_self or "default" not in selection,
             dry_run=options.dry_run,
             fail_fast=options.fail_fast,
             hooks=hooks,

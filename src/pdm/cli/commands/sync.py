@@ -40,13 +40,14 @@ class Command(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         actions.check_lockfile(project)
+        selection = GroupSelection.from_options(project, options)
         actions.do_sync(
             project,
-            selection=GroupSelection.from_options(project, options),
+            selection=selection,
             dry_run=options.dry_run,
             clean=options.clean,
             no_editable=options.no_editable,
-            no_self=options.no_self,
+            no_self=options.no_self or "default" not in selection,
             reinstall=options.reinstall,
             only_keep=options.only_keep,
             hooks=HookManager(project, options.skip),
