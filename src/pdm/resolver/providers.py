@@ -5,8 +5,10 @@ import os
 from typing import TYPE_CHECKING, Callable, cast
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
-from resolvelib import AbstractProvider
+from resolvelib import AbstractProvider, RequirementsConflicted
+from resolvelib.resolvers import Criterion
 
+from pdm.exceptions import InvalidPyVersion, RequirementError
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
@@ -16,6 +18,7 @@ from pdm.resolver.python import (
     find_python_matches,
     is_python_satisfied_by,
 )
+from pdm.termui import logger
 from pdm.utils import is_url, url_without_fragments
 
 if TYPE_CHECKING:
@@ -81,9 +84,15 @@ class BaseProvider(AbstractProvider):
             )
             dep_depth = min(parent_depths, default=0) + 1
         # Use the REAL identifier as it may be updated after candidate preparation.
-        candidate = next(candidates[identifier])
+        deps: list[Requirement] = []
+        for candidate in candidates[identifier]:
+            try:
+                deps = self.get_dependencies(candidate)
+            except RequirementsConflicted:
+                pass
+            break
         self._known_depth[self.identify(candidate)] = dep_depth
-        is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in self.get_dependencies(candidate))
+        is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in deps)
         is_file_or_url = any(not requirement.is_named for requirement, _ in information[identifier])
         operators = [
             spec.operator for req, _ in information[identifier] if req.specifier is not None for spec in req.specifier
@@ -183,7 +192,13 @@ class BaseProvider(AbstractProvider):
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         if isinstance(candidate, PythonCandidate):
             return []
-        deps, requires_python, _ = self.repository.get_dependencies(candidate)
+        try:
+            deps, requires_python, _ = self.repository.get_dependencies(candidate)
+        except (RequirementError, InvalidPyVersion, InvalidSpecifier) as e:
+            # When the metadata is invalid, skip this candidate by marking it as conflicting.
+            # Here we pass an empty criterion so it doesn't provide any info to the resolution.
+            logger.error("Invalid metadata in %s: %s", candidate, e)
+            raise RequirementsConflicted(Criterion([], [], [])) from None
 
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
