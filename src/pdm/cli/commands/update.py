@@ -189,7 +189,7 @@ class Command(BaseCommand):
                 requirements=[r for deps in updated_deps.values() for r in deps.values()],
                 tracked_names=list(chain.from_iterable(updated_deps.values())) if top else None,
                 no_editable=no_editable,
-                no_self=no_self,
+                no_self=no_self or "default" not in selection,
                 fail_fast=fail_fast,
                 hooks=hooks,
             )
