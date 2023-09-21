@@ -487,7 +487,8 @@ But PDM also leave the decision to users, just set the config `global_project.fa
 By default, when `pdm` uses global project implicitly the following message is printed: `Project is not found, fallback to the global project`. To disable this message set the config `global_project.fallback_verbose` to `false`.
 
 If you want global project to track another project file other than `<CONFIG_ROOT>/global-project`, you can provide the
-project path via `-p/--project <path>` option.
+project path via `-p/--project <path>` option. Especially if you pass `--global --project .`, PDM will install the dependencies
+of the current project into the global Python.
 
 !!! warning
     Be careful with `remove` and `sync --clean/--pure` commands when global project is used, because it may remove packages installed in your system Python.
