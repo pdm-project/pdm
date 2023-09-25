@@ -1,3 +1,17 @@
+Release v2.9.3 (2023-09-25)
+---------------------------
+
+### Bug Fixes
+
+- Revert the changes to the behavior of installing self, introduced in #2162.
+  Self package won't be installed when `--no-default` is requested. [#2230](https://github.com/pdm-project/pdm/issues/2230)
+- Reject the candidate if it contains invalid metadata, to avoid a crash in the process of resolution. [#2261](https://github.com/pdm-project/pdm/issues/2261)
+
+### Documentation
+
+- Clarify what `--no-isolated` does. [#2071](https://github.com/pdm-project/pdm/issues/2071)
+
+
 Release v2.9.2 (2023-09-12)
 ---------------------------
 
