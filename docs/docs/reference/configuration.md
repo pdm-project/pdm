@@ -33,7 +33,7 @@ The following configuration items can be retrieved and modified by [`pdm config`
 
 | Config Item                       | Description                                                               | Default Value                                                         | Available in Project | Env var                   |
 | --------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------- | ------------------------- |
-| `build_isolation`                 | Isolate the build environment from the project environment                | Yes                                                                   | True                 | `PDM_BUILD_ISOLATION`     |
+| `build_isolation`                 | Isolate the build environment from the project environment                | Yes                                                                   | Yes                  | `PDM_BUILD_ISOLATION`     |
 | `cache_dir`                       | The root directory of cached files                                        | The default cache location on OS                                      | No                   |                           |
 | `check_update`                    | Check if there is any newer version available                             | True                                                                  | No                   | `PDM_CHECK_UPDATE`        |
 | `global_project.fallback`         | Use the global project implicitly if no local project is found            | `False`                                                               | No                   |                           |
@@ -72,7 +72,7 @@ The following configuration items can be retrieved and modified by [`pdm config`
 | `repository.<name>.url`           | The URL of custom package source                                          | `https://pypi.org/simple`                                             | Yes                  |                           |
 | `repository.<name>.username`      | The username to access custom repository                                  |                                                                       | Yes                  |                           |
 | `repository.<name>.password`      | The password to access custom repository                                  |                                                                       | Yes                  |                           |
-| `repository.<name>.ca_certs`      | Path to a PEM-encoded CA cert bundle (used for server cert verification)  | The CA certificates from [certifi](https://pypi.org/project/certifi/) | No                   |                           |
+| `repository.<name>.ca_certs`      | Path to a PEM-encoded CA cert bundle (used for server cert verification)  | The CA certificates from [certifi](https://pypi.org/project/certifi/) | Yes                  |                           |
 | `repository.<name>.verify_ssl`    | Verify SSL certificate when uploading to repository                       | `True`                                                                | Yes                  |                           |
 
 _If the corresponding env var is set, the value will take precedence over what is saved in the config file._
