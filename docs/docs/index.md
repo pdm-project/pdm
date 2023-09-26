@@ -153,6 +153,15 @@ You can either pass the options after the script or set the env var value.
         .\pw --init pdm
         ```
 
+    When installing pdm with this method, you need to run all `pdm` commands through the `pw` wrapper:
+
+    === "Linux/Mac/Windows"
+
+        ```
+        ./pw pdm install
+        ```
+
+
 ### Update the PDM version
 
 ```bash
