@@ -185,7 +185,8 @@ class EnvBuilder:
         self.executable = self._env.interpreter.executable.as_posix()
         self.src_dir = src_dir
         self.isolated = environment.project.config["build_isolation"]
-        logger.info("Preparing isolated env for PEP 517 build...")
+        mode = "Isolated" if self.isolated else "Non-isolated"
+        logger.info("Preparing environment(%s mode) for PEP 517 build...", mode)
         try:
             with open(os.path.join(src_dir, "pyproject.toml"), "rb") as f:
                 spec = tomllib.load(f)
