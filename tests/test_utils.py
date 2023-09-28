@@ -67,6 +67,21 @@ def test_get_trusted_hosts():
 
 
 @pytest.mark.parametrize(
+    "given, expected",
+    [
+        ("scheme://netloc", "scheme://netloc"),
+        ("scheme://netloc/path", "scheme://netloc/path"),
+        ("scheme://netloc/path/#", "scheme://netloc/path/"),
+        ("scheme://netloc/path#fragment", "scheme://netloc/path"),
+        ("scheme://netloc/path;parameters?query#fragment", "scheme://netloc/path;parameters?query"),
+    ],
+)
+def test_url_without_fragments(given, expected):
+    received = utils.url_without_fragments(given)
+    assert received == expected
+
+
+@pytest.mark.parametrize(
     "given,expected",
     [
         ("test", "test"),
