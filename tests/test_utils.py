@@ -82,6 +82,20 @@ def test_url_without_fragments(given, expected):
 
 
 @pytest.mark.parametrize(
+    "given, expected",
+    [
+        ((["abc", "def", "ghi"], "/"), ["abc", "/", "def", "/", "ghi"]),
+        (([], "/"), []),
+        ((["abc"], "/"), ["abc"]),
+    ],
+)
+def test_join_list_with(given, expected):
+    items, sep = given
+    received = utils.join_list_with(items, sep)
+    assert received == expected
+
+
+@pytest.mark.parametrize(
     "given,expected",
     [
         ("test", "test"),
