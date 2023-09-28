@@ -1,5 +1,6 @@
 import pathlib
 import sys
+import unittest.mock as mock
 
 import pytest
 import tomlkit
@@ -9,6 +10,33 @@ from pdm import utils
 from pdm.cli import utils as cli_utils
 from pdm.cli.filters import GroupSelection
 from pdm.exceptions import PdmUsageError
+
+
+@pytest.mark.parametrize(
+    "given, dirname",
+    [
+        ((None, None, None), "test_dirname1"),
+        (("test_suffix", None, None), "test_dirname2"),
+        (("test_suffix", "test_prefix", None), "test_dirname3"),
+        (("test_suffix", "test_prefix", "test_dir"), "test_dirname4"),
+        ((None, "test_prefix", None), "test_dirname5"),
+        ((None, "test_prefix", "test_dir"), "test_dirname6"),
+        ((None, None, "test_dir"), "test_dirname7"),
+        ((None, "test_prefix", "test_dir"), "test_dirname8"),
+        (("test_prefix", None, "test_dir"), "test_dirname9"),
+    ],
+)
+@mock.patch("pdm.utils.atexit.register")
+@mock.patch("pdm.utils.os.makedirs")
+@mock.patch("pdm.utils.tempfile.mkdtemp")
+def test_create_tracked_tempdir(mock_tempfile_mkdtemp, mock_os_makedirs, mock_atexit_register, given, dirname):
+    test_suffix, test_prefix, test_dir = given
+    mock_tempfile_mkdtemp.return_value = dirname
+    received_dirname = utils.create_tracked_tempdir(suffix=test_suffix, prefix=test_prefix, dir=dirname)
+    mock_tempfile_mkdtemp.assert_called_once_with(suffix=test_suffix, prefix=test_prefix, dir=dirname)
+    mock_os_makedirs.assert_called_once_with(dirname, mode=0o777, exist_ok=True)
+    mock_atexit_register.assert_called()
+    assert received_dirname == dirname
 
 
 @pytest.mark.parametrize(

@@ -41,7 +41,7 @@ PACKAGING_22 = Version(_packaging_version) >= Version("22")
 
 
 def create_tracked_tempdir(suffix: str | None = None, prefix: str | None = None, dir: str | None = None) -> str:
-    name = tempfile.mkdtemp(suffix, prefix, dir)
+    name = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
 
     def clean_up() -> None:

@@ -83,6 +83,14 @@ editable-backend = "path"
 pre_release = "python tasks/max_versions.py"
 release = "python tasks/release.py"
 test = "pytest"
+coverage = {shell = """\
+                    python -m pytest \
+                              --verbosity=3 \
+                              --cov=src/pdm \
+                              --cov-branch \
+                              --cov-report term-missing \
+                              tests/
+                    """}
 tox = "tox"
 doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
 lint = "pre-commit run --all-files"
