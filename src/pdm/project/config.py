@@ -132,13 +132,6 @@ class Config(MutableMapping[str, str]):
             True,
         ),
         "global_project.user_site": ConfigItem("Whether to install to user site", False, True, coerce=ensure_boolean),
-        "project_max_depth": ConfigItem(
-            "The max depth to search for a project through the parents",
-            5,
-            True,
-            env_var="PDM_PROJECT_MAX_DEPTH",
-            coerce=int,
-        ),
         "strategy.update": ConfigItem("The default strategy for updating packages", "reuse", False),
         "strategy.save": ConfigItem("Specify how to save versions when a package is added", "minimum", False),
         "strategy.resolve_max_rounds": ConfigItem(
