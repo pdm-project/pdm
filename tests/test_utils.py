@@ -7,7 +7,6 @@ import tomlkit
 from packaging.version import Version
 
 from pdm import utils
-from pdm._types import RepositoryConfig
 from pdm.cli import utils as cli_utils
 from pdm.cli.filters import GroupSelection
 from pdm.exceptions import PdmUsageError
@@ -40,29 +39,33 @@ def test_create_tracked_tempdir(mock_tempfile_mkdtemp, mock_os_makedirs, mock_at
     assert received_dirname == dirname
 
 
-def test_get_trusted_hosts():
-    test_source1 = mock.create_autospec(RepositoryConfig, instance=False, url="https://pypi.org", verify_ssl=False)
-    test_source2 = mock.create_autospec(
-        RepositoryConfig, instance=False, url="https://untrusted.pypi.org", verify_ssl=True
-    )
-    test_source3 = mock.create_autospec(
-        RepositoryConfig, instance=False, url="https://user:password@trusted.pypi.org", verify_ssl=False
-    )
-    test_source4 = mock.create_autospec(
-        RepositoryConfig, instance=False, url="https://user:password@another.trusted.pypi.org", verify_ssl=False
-    )
-    test_sources = [
-        test_source1,
-        test_source2,
-        test_source3,
-        test_source4,
-    ]
+@pytest.mark.parametrize(
+    "repository_configs",
+    [
+        {
+            "config_params": [
+                {
+                    "url": "https://pypi.org",
+                    "verify_ssl": False,
+                },
+                {"url": "https://untrusted.pypi.index", "verify_ssl": True},
+                {"url": "https://user:password@trusted1.pypi.index", "verify_ssl": False},
+                {"url": "https://user:password@trusted2.pypi.index", "verify_ssl": False},
+            ]
+        }
+    ],
+    indirect=[
+        "repository_configs",
+    ],
+)
+def test_get_trusted_hosts(repository_configs):
+    sources = repository_configs
     expected = [
         "pypi.org",
-        "trusted.pypi.org",
-        "another.trusted.pypi.org",
+        "trusted1.pypi.index",
+        "trusted2.pypi.index",
     ]
-    received = utils.get_trusted_hosts(test_sources)
+    received = utils.get_trusted_hosts(sources)
     assert received == expected
 
 

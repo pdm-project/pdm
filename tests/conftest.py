@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import unittest.mock as mock
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
 from urllib.parse import unquote, urlparse
@@ -9,6 +10,7 @@ from urllib.parse import unquote, urlparse
 import pytest
 from unearth.vcs import Git, vcs_support
 
+from pdm._types import RepositoryConfig
 from tests import FIXTURES
 
 if TYPE_CHECKING:
@@ -123,3 +125,17 @@ def is_editable(request):
 @pytest.fixture(params=[False, True])
 def dev_option(request) -> Iterable[str]:
     return ("--dev",) if request.param else ()
+
+
+class _RepositoryConfigFactory:
+    @classmethod
+    def get_repository_config(cls, **kwargs):
+        return mock.create_autospec(RepositoryConfig, instance=False, **kwargs)
+
+
+@pytest.fixture(scope="function")
+def repository_configs(request):
+    return [
+        _RepositoryConfigFactory.get_repository_config(**config_params)
+        for config_params in request.param["config_params"]
+    ]
