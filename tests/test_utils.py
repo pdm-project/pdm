@@ -98,6 +98,56 @@ def test_join_list_with(given, expected):
     assert received == expected
 
 
+class TestGetUserEmailFromGit:
+    @mock.patch("pdm.utils.shutil.which", return_value=None)
+    def test_no_git(self, no_git_patch):
+        with no_git_patch:
+            assert utils.get_user_email_from_git() == ("", "")
+
+    @mock.patch(
+        "pdm.utils.subprocess.check_output",
+        side_effect=[
+            utils.subprocess.CalledProcessError(-1, ["git", "config", "user.name"], "No username"),
+            utils.subprocess.CalledProcessError(-1, ["git", "config", "user.email"], "No email"),
+        ],
+    )
+    @mock.patch("pdm.utils.shutil.which", return_value="git")
+    def test_no_git_username_and_email(self, git_patch, no_git_username_and_email_patch):
+        with git_patch:
+            with no_git_username_and_email_patch:
+                assert utils.get_user_email_from_git() == ("", "")
+
+    @mock.patch(
+        "pdm.utils.subprocess.check_output",
+        side_effect=[
+            "username",
+            utils.subprocess.CalledProcessError(-1, ["git", "config", "user.email"], "No email"),
+        ],
+    )
+    @mock.patch("pdm.utils.shutil.which", return_value="git")
+    def test_no_git_email(self, git_patch, no_git_email_patch):
+        with git_patch:
+            with no_git_email_patch:
+                assert utils.get_user_email_from_git() == ("username", "")
+
+    @mock.patch(
+        "pdm.utils.subprocess.check_output",
+        side_effect=[utils.subprocess.CalledProcessError(-1, ["git", "config", "user.name"], "No username"), "email"],
+    )
+    @mock.patch("pdm.utils.shutil.which", return_value="git")
+    def test_no_git_username(self, git_patch, no_git_username_patch):
+        with git_patch:
+            with no_git_username_patch:
+                assert utils.get_user_email_from_git() == ("", "email")
+
+    @mock.patch("pdm.utils.subprocess.check_output", side_effect=["username", "email"])
+    @mock.patch("pdm.utils.shutil.which", return_value="git")
+    def test_git_username_and_email(self, git_patch, git_username_and_email_patch):
+        with git_patch:
+            with git_username_and_email_patch:
+                assert utils.get_user_email_from_git() == ("username", "email")
+
+
 @pytest.mark.parametrize(
     "given,expected",
     [
