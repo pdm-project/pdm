@@ -1,3 +1,4 @@
+import os
 import pathlib
 import sys
 import unittest.mock as mock
@@ -160,6 +161,25 @@ class TestGetUserEmailFromGit:
 )
 def test_add_ssh_scheme_to_git_uri(given, expected):
     assert utils.add_ssh_scheme_to_git_uri(given) == expected
+
+
+# Only testing POSIX-style paths here
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        ("/path/to/my/pdm", "file:///path/to/my/pdm"),
+        ("../path/to/my/pdm", "file:///abs/path/to/my/pdm"),
+        ("/path/to/my/pdm/pyproject.toml", "file:///path/to/my/pdm/pyproject.toml"),
+        ("../path/to/my/pdm/pyproject.toml", "file:///abs/path/to/my/pdm/pyproject.toml"),
+    ],
+)
+def test_path_to_url(given, expected):
+    if os.path.isabs(given):
+        assert utils.path_to_url(given) == expected
+    else:
+        abs_given = "abs" + given.replace("..", "")
+        with mock.patch("pdm.utils.os.path.abspath", return_value=abs_given):
+            assert utils.path_to_url(given) == expected
 
 
 @pytest.mark.parametrize(
