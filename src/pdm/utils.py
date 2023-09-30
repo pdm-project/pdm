@@ -18,6 +18,7 @@ import urllib.parse as parse
 import warnings
 from itertools import chain as iter_chain
 from itertools import product as iter_product
+from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -258,7 +259,7 @@ def path_replace(pattern: str, replace_with: str, dest: str) -> str:
     :param dest: the path to replace
     :return the replaced path
     """
-    sub_flags = re.IGNORECASE if os.name == "nt" else 0
+    sub_flags = re.IGNORECASE if os_name == "nt" else 0
     return re.sub(
         pattern.replace("\\", "/"),
         replace_with,

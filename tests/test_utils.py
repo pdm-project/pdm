@@ -223,6 +223,25 @@ def test_expend_env_vars_in_auth(given, expected, monkeypatch):
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
+@pytest.mark.parametrize(
+    "os_name,given,expected",
+    [
+        ("posix", ("match", "repl", "/a/b/match/c/match/d/e"), "/a/b/repl/c/repl/d/e"),
+        ("posix", ("old", "new", "/path/to/old/pdm"), "/path/to/new/pdm"),
+        ("posix", ("match", "repl", "match/a/math/b/match/c"), "repl/a/math/b/repl/c"),
+        ("posix", ("match", "repl", "/some/path"), "/some/path"),
+        ("posix", ("match", "repl", ""), ""),
+        ("nt", ("old", "new", "C:\\Path\\tO\\old\\pdm"), "C:/Path/tO/new/pdm"),
+        ("nt", ("old", "new", "C:\\Path\\tO\\Old\\pdm"), "C:/Path/tO/new/pdm"),
+        ("nt", ("old", "new", "C:\\no\\matching\\path"), "C:/no/matching/path"),
+    ],
+)
+def test_path_replace(os_name, given, expected):
+    with mock.patch("pdm.utils.os_name", os_name):
+        pattern, replace_with, dest = given
+        assert utils.path_replace(pattern, replace_with, dest) == expected
+
+
 def compare_python_paths(path1, path2):
     return path1.parent == path2.parent
 
