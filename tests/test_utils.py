@@ -151,6 +151,20 @@ class TestGetUserEmailFromGit:
 @pytest.mark.parametrize(
     "given,expected",
     [
+        ("git@github.com/pdm-project/pdm", "ssh://git@github.com/pdm-project/pdm"),
+        ("ssh://git@github.com/pdm-project/pdm", "ssh://git@github.com/pdm-project/pdm"),
+        ("git+ssh://git@github.com/pdm-project/pdm", "git+ssh://git@github.com/pdm-project/pdm"),
+        ("https://git@github.com/pdm-project/pdm", "https://git@github.com/pdm-project/pdm"),
+        ("file:////my/local/pdm-project/pdm", "file:////my/local/pdm-project/pdm"),
+    ],
+)
+def test_add_ssh_scheme_to_git_uri(given, expected):
+    assert utils.add_ssh_scheme_to_git_uri(given) == expected
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
         ("test", "test"),
         ("", ""),
         ("${FOO}", "hello"),
