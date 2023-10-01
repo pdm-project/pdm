@@ -217,7 +217,7 @@ def test_expand_env_vars(given, expected, monkeypatch):
         ),
     ],
 )
-def test_expend_env_vars_in_auth(given, expected, monkeypatch):
+def test_expand_env_vars_in_auth(given, expected, monkeypatch):
     monkeypatch.setenv("FOO", "hello")
     monkeypatch.setenv("BAR", "wo:rld")
     assert utils.expand_env_vars_in_auth(given) == expected
