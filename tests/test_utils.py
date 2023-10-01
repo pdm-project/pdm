@@ -242,6 +242,25 @@ def test_path_replace(os_name, given, expected):
         assert utils.path_replace(pattern, replace_with, dest) == expected
 
 
+# Only testing POSIX-style paths here
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (("/", "/"), True),
+        (("/a", "/"), True),
+        (("/a/b", "/a"), True),
+        (("/a", "/b"), False),
+        (("a", "b"), False),
+        (("/a/b", "/c/d"), False),
+        (("/a/b/c", "/a"), True),
+        (("../a/b/c", "../a"), True),
+    ],
+)
+def test_is_path_relative_to(given, expected):
+    path, other = given
+    assert utils.is_path_relative_to(path, other) == expected
+
+
 def compare_python_paths(path1, path2):
     return path1.parent == path2.parent
 
