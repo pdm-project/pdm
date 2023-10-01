@@ -348,6 +348,19 @@ def test_find_python_in_path(tmp_path):
     assert not utils.find_python_in_path(tmp_path)
 
 
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        ("scheme://netloc/path@rev#fragment", "rev"),
+        ("scheme://netloc/path@rev", "rev"),
+        ("scheme://netloc/path", ""),
+        ("scheme://netloc/path#fragment", ""),
+    ],
+)
+def test_get_rev_from_url(given, expected):
+    assert utils.get_rev_from_url(given) == expected
+
+
 def test_merge_dictionary():
     target = tomlkit.item(
         {
