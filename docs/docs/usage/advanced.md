@@ -200,14 +200,14 @@ dev = [
 `packages/foo-cli/pyproject.toml`:
 
 ```toml
-[projects]
+[project]
 dependencies = ["foo-core"]
 ```
 
 `packages/foo-app/pyproject.toml`:
 
 ```toml
-[projects]
+[project]
 dependencies = ["foo-core"]
 ```
 
