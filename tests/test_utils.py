@@ -164,6 +164,21 @@ def test_add_ssh_scheme_to_git_uri(given, expected):
     assert utils.add_ssh_scheme_to_git_uri(given) == expected
 
 
+class TestUrlToPath:
+    def test_non_file_url(self):
+        with pytest.raises(AssertionError):
+            utils.url_to_path("not_a_file_scheme://netloc/path")
+
+    def test_non_windows_non_local_file_url(self):
+        with mock.patch("pdm.utils.sys.platform", "non_windows"):
+            with pytest.raises(ValueError):
+                utils.url_to_path("file://non_local_netloc/file/url")
+
+    def test_non_windows_localhost_local_file_url(self):
+        with mock.patch("pdm.utils.sys.platform", "non_windows"):
+            assert utils.url_to_path("file://localhost/local/file/path") == "/local/file/path"
+
+
 # Only testing POSIX-style paths here
 @pytest.mark.parametrize(
     "given,expected",
