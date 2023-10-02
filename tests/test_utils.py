@@ -376,6 +376,29 @@ def test_get_rev_from_url(given, expected):
     assert utils.get_rev_from_url(given) == expected
 
 
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (("ProjectName", False), "ProjectName"),
+        (("ProjectName", True), "projectname"),
+        (("1Project_Name", False), "1Project-Name"),
+        (("1Project_Name", True), "1project-name"),
+        (("Project-Name", False), "Project-Name"),
+        (("Project-Name", True), "project-name"),
+        (("Project123Name", False), "Project123Name"),
+        (("Project123name", True), "project123name"),
+        (("123$!ProjectName", False), "123-ProjectName"),
+        (("123$!ProjectName", True), "123-projectname"),
+        (("123$!Project_Name", False), "123-Project-Name"),
+        (("123$!Project_Name", True), "123-project-name"),
+        (("$!123Project_Name4", False), "-123Project-Name4"),
+        (("$!123Project_Name4", True), "-123project-name4"),
+    ],
+)
+def test_normalize_name(given, expected):
+    assert utils.normalize_name(*given) == expected
+
+
 def test_merge_dictionary():
     target = tomlkit.item(
         {
