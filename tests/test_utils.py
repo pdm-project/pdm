@@ -399,6 +399,28 @@ def test_normalize_name(given, expected):
     assert utils.normalize_name(*given) == expected
 
 
+class TestIsEditable:
+    @mock.patch("pdm.utils.is_egg_link", return_value=True)
+    @mock.patch("pdm.compat.Distribution")
+    def test_is_egg_link(self, distribution, is_egg_link_patch):
+        with is_egg_link_patch:
+            assert utils.is_editable(distribution) is True
+
+    @mock.patch("pdm.utils.is_egg_link", return_value=False)
+    @mock.patch("pdm.compat.Distribution")
+    def test_not_direct_url_distribution(self, distribution, is_egg_link_patch):
+        distribution.read_text.return_value = None
+        with is_egg_link_patch:
+            assert utils.is_editable(distribution) is False
+
+    @mock.patch("pdm.utils.is_egg_link", return_value=False)
+    @mock.patch("pdm.compat.Distribution")
+    def test_direct_url_distribution(self, distribution, is_egg_link_patch):
+        distribution.read_text.return_value = """{"dir_info": {"editable": true}}"""
+        with is_egg_link_patch:
+            assert utils.is_editable(distribution) is True
+
+
 def test_merge_dictionary():
     target = tomlkit.item(
         {
