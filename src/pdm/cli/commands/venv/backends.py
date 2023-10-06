@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import os
 import shutil
 import subprocess
 import sys
@@ -71,6 +72,8 @@ class Backend(abc.ABC):
     def _ensure_clean(self, location: Path, force: bool = False) -> None:
         if not location.exists():
             return
+        if location.is_dir() and not any(location.iterdir()):
+            return
         if not force:
             raise VirtualenvCreateError(f"The location {location} is not empty, add --force to overwrite it.")
         if location.is_file():
@@ -78,7 +81,12 @@ class Backend(abc.ABC):
             location.unlink()
         else:
             self.project.core.ui.echo(f"Cleaning existing target directory {location}", err=True)
-            shutil.rmtree(location)
+            with os.scandir(location) as entries:
+                for entry in entries:
+                    if entry.is_dir() and not entry.is_symlink():
+                        shutil.rmtree(entry.path)
+                    else:
+                        os.remove(entry.path)
 
     def get_location(self, name: str | None) -> Path:
         venv_parent = Path(self.project.config["venv.location"])
