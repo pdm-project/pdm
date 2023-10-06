@@ -1,22 +1,23 @@
 import os
 import site
 import sys
+from pathlib import Path
 
 
 def get_pypackages_path():
     def find_pypackage(path, version):
-        if not os.path.exists(path):
+        if not path.exists():
             return None
 
         packages_name = f"__pypackages__/{version}/lib"
-        for _ in range(int(os.getenv("PDM_PROJECT_MAX_DEPTH", "5"))):
-            if os.path.exists(os.path.join(path, packages_name)):
-                return os.path.join(path, packages_name)
-            if os.path.dirname(path) == path:
-                # Root path is reached
-                break
-            path = os.path.dirname(path)
-        return None
+        files = list(path.glob(packages_name))
+        if files:
+            return str(files[0])
+
+        if path == path.parent:
+            return None
+
+        return find_pypackage(path.parent, version)
 
     if "PEP582_PACKAGES" in os.environ:
         return os.path.join(os.getenv("PEP582_PACKAGES"), "lib")
@@ -30,13 +31,13 @@ def get_pypackages_path():
         find_paths.insert(0, script_dir)
 
     for path in find_paths:
-        result = find_pypackage(path, version)
+        result = find_pypackage(Path(path), version)
         if result:
             return result
 
     if bare_version != version:
         for path in find_paths:
-            result = find_pypackage(path, bare_version)
+            result = find_pypackage(Path(path), bare_version)
             if result:
                 return result
 

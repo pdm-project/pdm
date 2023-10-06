@@ -74,16 +74,16 @@ def test_config_project_global_precedence(project, pdm):
 
 
 def test_specify_config_file(tmp_path, pdm, monkeypatch):
-    tmp_path.joinpath("global_config.toml").write_text("project_max_depth = 9\n")
+    tmp_path.joinpath("global_config.toml").write_text("strategy.resolve_max_rounds = 1000\n")
     with cd(tmp_path):
-        result = pdm(["-c", "global_config.toml", "config", "project_max_depth"])
+        result = pdm(["-c", "global_config.toml", "config", "strategy.resolve_max_rounds"])
         assert result.exit_code == 0
-        assert result.output.strip() == "9"
+        assert result.output.strip() == "1000"
 
         monkeypatch.setenv("PDM_CONFIG_FILE", "global_config.toml")
-        result = pdm(["config", "project_max_depth"])
+        result = pdm(["config", "strategy.resolve_max_rounds"])
         assert result.exit_code == 0
-        assert result.output.strip() == "9"
+        assert result.output.strip() == "1000"
 
 
 def test_default_repository_setting(project):

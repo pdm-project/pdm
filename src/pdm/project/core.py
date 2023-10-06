@@ -83,11 +83,7 @@ class Project:
         global_project = Path(self.global_config["global_project.path"])
 
         if root_path is None:
-            root_path = (
-                find_project_root(max_depth=self.global_config["project_max_depth"])
-                if not is_global
-                else global_project
-            )
+            root_path = find_project_root() if not is_global else global_project
         if not is_global and root_path is None and self.global_config["global_project.fallback"]:
             root_path = global_project
             is_global = True

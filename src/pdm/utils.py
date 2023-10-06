@@ -75,21 +75,16 @@ def join_list_with(items: list[Any], sep: Any) -> list[Any]:
     return new_items[:-1]
 
 
-def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
-    """Recursively find a `pyproject.toml` at given path or current working directory.
-    If none if found, go to the parent directory, at most `max_depth` levels will be
-    looked for.
-    """
-    original_path = Path(cwd).absolute()
-    path = original_path
-    for _ in range(max_depth):
-        if path.joinpath("pyproject.toml").exists():
-            return path.as_posix()
-        if path.parent == path:
-            # Root path is reached
-            break
-        path = path.parent
-    return None
+def find_project_root(cwd: str = ".") -> str | None:
+    """Recursively find a `pyproject.toml` at given path or current working directory."""
+    path = Path(cwd).absolute()
+    if list(path.glob("pyproject.toml")):
+        return path.as_posix()
+
+    if path == path.parent:
+        return None
+
+    return find_project_root(str(path.parent))
 
 
 def convert_hashes(files: list[FileHash]) -> dict[str, list[str]]:
