@@ -3,11 +3,12 @@ from __future__ import annotations
 import dataclasses
 import posixpath
 import sys
+import warnings
 from functools import wraps
-from typing import TYPE_CHECKING, TypeVar, cast
+from typing import TYPE_CHECKING, Generator, TypeVar, cast
 
 from pdm import termui
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PDMWarning
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import (
     Requirement,
@@ -158,9 +159,30 @@ class BaseRepository:
             if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
         )
 
-        applicable_cans_python_compatible = LazySequence(
-            c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
-        )
+        def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate, None, None]:
+            project_requires_python = self.environment.python_requires
+            if ignore_requires_python:
+                yield from candidates
+                return
+
+            for candidate in candidates:
+                if not requires_python.is_subset(candidate.requires_python):
+                    working_requires_python = project_requires_python & PySpecSet(candidate.requires_python)
+                    if working_requires_python.is_impossible:  # pragma: no cover
+                        continue
+                    warnings.warn(
+                        f"Skipping {candidate!r} because it requires Python{candidate.requires_python} "
+                        f"but the project claims to work with  Python{project_requires_python}.\n"
+                        "Narrow down the `requires-python` range to include this version. For example, "
+                        f'"{working_requires_python}" should work.\n'
+                        "Use -q/--quiet to suppress this warning.",
+                        PDMWarning,
+                        stacklevel=4,
+                    )
+                else:
+                    yield candidate
+
+        applicable_cans_python_compatible = LazySequence(filter_candidates_with_requires_python(applicable_cans))
         # Evaluate data-requires-python attr and discard incompatible candidates
         # to reduce the number of candidates to resolve.
         if applicable_cans_python_compatible:
@@ -174,9 +196,7 @@ class BaseRepository:
             applicable_cans = LazySequence(
                 c for c in cans if requirement.specifier.contains(c.version, True)  # type: ignore[arg-type, union-attr]
             )
-            applicable_cans_python_compatible = LazySequence(
-                c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
-            )
+            applicable_cans_python_compatible = LazySequence(filter_candidates_with_requires_python(applicable_cans))
             if applicable_cans_python_compatible:
                 applicable_cans = applicable_cans_python_compatible
 

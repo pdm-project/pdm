@@ -12,7 +12,8 @@ _pdm() {
   local curcontext=$curcontext ret=1
   local -a arguments=(
     {-h,--help}'[Show help message and exit]'
-    {-v,--verbose}'[Show detailed output]'
+    {-v,--verbose}'[Use `-v` for detailed output and `-vv` for more detailed]'
+    {-q,--quiet}'[Suppress output]'
   )
   local sub_commands=(
     'add:Add package(s) to pyproject.toml and install them'

@@ -18,6 +18,7 @@ from installer.sources import WheelFile as _WheelFile
 from installer.sources import _WheelFileValidationError
 
 from pdm.compat import cached_property
+from pdm.exceptions import PDMWarning
 from pdm.installers.packages import CachedPackage
 from pdm.termui import logger
 from pdm.utils import fs_supports_symlink
@@ -262,7 +263,7 @@ def _install_wheel(
                 " Please report to the maintainers of that package so they can fix"
                 f" their build process. Details:\n{formatted_issues}\n"
             )
-            warnings.warn(warning, UserWarning, stacklevel=2)
+            warnings.warn(warning, PDMWarning, stacklevel=2)
         root_scheme = _process_WHEEL_file(source)
         source.exclude = excludes
         if additional_contents:

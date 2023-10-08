@@ -15,6 +15,7 @@ complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l confi
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l help -d 'Show this help message and exit.'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l ignore-python -d 'Ignore the Python path saved in .pdm-python. [env var: PDM_IGNORE_SAVED_PYTHON]'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l pep582 -d 'Print the command line to be eval\'d by the shell'
+complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l quiet -d 'Suppress output'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l version -d 'Show the version and exit'
 
@@ -30,12 +31,13 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l group -d 'Specify the
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-editable -d 'Install non-editable versions for all packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-lock -d 'Don\'t try to create or update the lockfile. [env var: PDM_NO_LOCK]'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-self -d 'Don\'t install the project itself. [env var: PDM_NO_SELF]'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l no-sync -d 'Only write pyproject.toml and do not sync the working set'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l prerelease -d 'Allow prereleases to be pinned'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-compatible -d 'Save compatible version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-exact -d 'Save exact version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l save-minimum -d 'Save minimum version specifiers'
@@ -54,37 +56,43 @@ complete -c pdm -A -n '__fish_seen_subcommand_from build' -l config-setting -d '
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l dest -d 'Target directory to put artifacts'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-clean -d 'Do not clean the target directory'
-complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-sdist -d 'Don\'t build source tarballs'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-wheel -d 'Don\'t build wheels'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from build' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # cache
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a cache -d 'Control the caches of PDM'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from cache' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 # cache subcommands
 set -l cache_subcommands clear info list remove
 # cache clear
 complete -c pdm -f -n '__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from $cache_subcommands' -a clear -d 'Clean all the files under cache directory'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clear' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clear' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clear' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # cache info
 complete -c pdm -f -n '__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from $cache_subcommands' -a info -d 'Show the info and current size of caches'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from info' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from info' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from info' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # cache list
 complete -c pdm -f -n '__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from $cache_subcommands' -a list -d 'List the built wheels stored in the cache'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from list' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from list' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # cache remove
 complete -c pdm -f -n '__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from $cache_subcommands' -a remove -d 'Remove files matching the given pattern'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # completion
@@ -99,6 +107,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from config' -l global -d 'Use the
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l local -d 'Set config in the project\'s local configuration file'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from config' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from config' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # export
@@ -115,6 +124,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from export' -l output -d 'Write o
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l pyproject -d 'Read the list of packages from pyproject.toml'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l without-hashes -d 'Don\'t include artifact hashes'
 
@@ -124,6 +134,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l dry-run -d 'Only show
 complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from fix' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # import
@@ -134,6 +145,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from import' -l global -d 'Use the
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l group -d 'Specify the target dependency group to import into'
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from import' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from import' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # info
@@ -145,6 +157,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l json -d 'Dump the in
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l packages -d 'Show the local packages root'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l python -d 'Show the interpreter path'
+complete -c pdm -A -n '__fish_seen_subcommand_from info' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the project root path'
@@ -161,6 +174,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d '
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l overwrite -d 'Overwrite existing files'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l python -d 'Specify the Python version/path to use'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
@@ -176,12 +190,13 @@ complete -c pdm -A -n '__fish_seen_subcommand_from install' -l help -d 'Show thi
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-default -d 'Don\'t include dependencies from the default group'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-editable -d 'Install non-editable versions for all packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-lock -d 'Don\'t try to create or update the lockfile. [env var: PDM_NO_LOCK]'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l no-self -d 'Don\'t install the project itself. [env var: PDM_NO_SELF]'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l plugins -d 'Install the plugins specified in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
@@ -199,6 +214,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from list' -l include -d 'Dependen
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l json -d 'Output dependencies in JSON document format'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l markdown -d 'Output dependencies and legal notices in markdown document format - best effort basis'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l resolve -d 'Resolve all requirements to output licenses (instead of just showing those currently installed)'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l reverse -d 'Reverse the dependency tree'
 complete -c pdm -A -n '__fish_seen_subcommand_from list' -l sort -d 'Sort the output using a given field name. If nothing is set, no sort is applied. Multiple fields can be combined with \',\'.'
@@ -215,10 +231,11 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l help -d 'Show this h
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-cross-platform -d 'Only lock packages for the current platform'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-default -d 'Don\'t include dependencies from the default group'
-complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-static-urls -d 'Do not store static file URLs in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d 'Store static file URLs in the lockfile'
@@ -227,6 +244,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v`
 # plugin
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a plugin -d 'Manage the PDM program itself (previously known as plugin)'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 # plugin subcommands
 set -l plugin_subcommands add list remove update
@@ -234,18 +252,21 @@ set -l plugin_subcommands add list remove update
 complete -c pdm -f -n '__fish_seen_subcommand_from plugin; and not __fish_seen_subcommand_from $plugin_subcommands' -a add -d 'Install packages to the PDM\'s environment'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from add' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from add' -l pip-args -d 'Arguments that will be passed to pip install'
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from add' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from add' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin list
 complete -c pdm -f -n '__fish_seen_subcommand_from plugin; and not __fish_seen_subcommand_from $plugin_subcommands' -a list -d 'List all packages installed with PDM'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from list' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from list' -l plugins -d 'List plugins only'
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from list' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin remove
 complete -c pdm -f -n '__fish_seen_subcommand_from plugin; and not __fish_seen_subcommand_from $plugin_subcommands' -a remove -d 'Remove packages from PDM\'s environment'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from remove' -l pip-args -d 'Arguments that will be passed to pip uninstall'
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from remove' -l yes -d 'Answer yes on the question'
 
@@ -255,6 +276,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subco
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from update' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from update' -l pip-args -d 'Additional arguments that will be passed to pip install'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from update' -l pre -d 'Update to the latest prerelease version'
+complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from update' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from update' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # publish
@@ -267,6 +289,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l no-build -d 'Don\
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l no-very-ssl -d 'Disable SSL verification'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l password -d 'The password to access the repository [env var: PDM_PUBLISH_PASSWORD]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l repository -d 'The repository name or url to publish the package to [env var: PDM_PUBLISH_REPO]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l sign -d 'Upload the package with PGP signature'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
@@ -283,11 +306,12 @@ complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l group -d 'Specify 
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-editable -d 'Install non-editable versions for all packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-lock -d 'Don\'t try to create or update the lockfile. [env var: PDM_NO_LOCK]'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-self -d 'Don\'t install the project itself. [env var: PDM_NO_SELF]'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l no-sync -d 'Only write pyproject.toml and do not uninstall packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
@@ -299,6 +323,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l help -d 'Show this he
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l json -d 'Output all scripts infos in JSON'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l list -d 'Show all available scripts defined in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from run' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l site-packages -d 'Load site-packages from the selected interpreter'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
@@ -307,11 +332,13 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l verbose -d 'Use `-v` 
 # search
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a search -d 'Search for PyPI packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from search' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from search' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from search' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # self
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a self -d 'Manage the PDM program itself (previously known as plugin)'
 complete -c pdm -A -n '__fish_seen_subcommand_from self' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from self' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from self' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 # self subcommands
 set -l self_subcommands add list remove update
@@ -319,18 +346,21 @@ set -l self_subcommands add list remove update
 complete -c pdm -f -n '__fish_seen_subcommand_from self; and not __fish_seen_subcommand_from $self_subcommands' -a add -d 'Install packages to the PDM\'s environment'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from add' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from add' -l pip-args -d 'Arguments that will be passed to pip install'
+complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from add' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from add' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # self list
 complete -c pdm -f -n '__fish_seen_subcommand_from self; and not __fish_seen_subcommand_from $self_subcommands' -a list -d 'List all packages installed with PDM'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from list' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from list' -l plugins -d 'List plugins only'
+complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from list' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # self remove
 complete -c pdm -f -n '__fish_seen_subcommand_from self; and not __fish_seen_subcommand_from $self_subcommands' -a remove -d 'Remove packages from PDM\'s environment'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from remove' -l pip-args -d 'Arguments that will be passed to pip uninstall'
+complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from remove' -l yes -d 'Answer yes on the question'
 
@@ -340,6 +370,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcomm
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from update' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from update' -l pip-args -d 'Additional arguments that will be passed to pip install'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from update' -l pre -d 'Update to the latest prerelease version'
+complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from update' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from self; and __fish_seen_subcommand_from update' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # show
@@ -351,6 +382,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from show' -l license -d 'Show lic
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l name -d 'Show name'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l platform -d 'Show platform'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from show' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l summary -d 'Show summary'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from show' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
@@ -368,11 +400,12 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l help -d 'Show this h
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-default -d 'Don\'t include dependencies from the default group'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-editable -d 'Install non-editable versions for all packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l no-self -d 'Don\'t install the project itself. [env var: PDM_NO_SELF]'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l only-keep -d 'Only keep the selected packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l reinstall -d 'Force reinstall existing dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
@@ -388,7 +421,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l help -d 'Show this
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-default -d 'Don\'t include dependencies from the default group'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-editable -d 'Install non-editable versions for all packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-isolation -d 'Do not isolate the build in a clean environment'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-isolation -d 'Disable isolation when building a source distribution that follows PEP 517, as in: build dependencies specified by PEP 518 must be already installed if this option is used.'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-lock -d 'Don\'t try to create or update the lockfile. [env var: PDM_NO_LOCK]'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-self -d 'Don\'t install the project itself. [env var: PDM_NO_SELF]'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l no-sync -d 'Only update lock file but do not sync packages'
@@ -396,6 +429,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l outdated -d 'Show 
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l prerelease -d 'Allow prereleases to be pinned'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-compatible -d 'Save compatible version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-exact -d 'Save exact version specifiers'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l save-minimum -d 'Save minimum version specifiers'
@@ -416,6 +450,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from use' -l global -d 'Use the gl
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l ignore-remembered -d 'Ignore the remembered selection'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from use' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l venv -d 'Use the interpreter in the virtual environment with the given name'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
@@ -431,6 +466,7 @@ set -l venv_subcommands activate create list purge remove
 # venv activate
 complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_subcommand_from $venv_subcommands' -a activate -d 'Activate the virtualenv with the given name'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from activate' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from activate' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from activate' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # venv create
@@ -438,6 +474,7 @@ complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_sub
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l force -d 'Recreate if the virtualenv already exists'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l name -d 'Specify the name of the virtualenv'
+complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l with -d 'Specify the backend to create the virtualenv'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from create' -l with-pip -d 'Install pip with the virtualenv'
@@ -445,6 +482,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcomm
 # venv list
 complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_subcommand_from $venv_subcommands' -a list -d 'List all virtualenvs associated with this project'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from list' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from list' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # venv purge
@@ -452,10 +490,12 @@ complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_sub
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from purge' -l force -d 'Force purging without prompting for confirmation'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from purge' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from purge' -l interactive -d 'Interactively purge selected Virtualenvs'
+complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from purge' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from purge' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # venv remove
 complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_subcommand_from $venv_subcommands' -a remove -d 'Remove the virtualenv with the given name'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from remove' -l yes -d 'Answer yes on the following question'

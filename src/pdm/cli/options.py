@@ -117,13 +117,15 @@ def from_splitted_env(name: str, separator: str) -> list[str] | None:
     return [v.strip() for v in value.split(separator) if v.strip()] or None
 
 
-verbose_option = Option(
+verbose_option = ArgumentGroup("Verbosity options", is_mutually_exclusive=True)
+verbose_option.add_argument(
     "-v",
     "--verbose",
     action="count",
     default=0,
     help="Use `-v` for detailed output and `-vv` for more detailed",
 )
+verbose_option.add_argument("-q", "--quiet", action="store_const", const=-1, dest="verbose", help="Suppress output")
 
 
 dry_run_option = Option(
