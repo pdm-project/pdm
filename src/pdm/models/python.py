@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class PythonInfo:
     """
-    A convenient helper class that holds all information of a Python interepreter.
+    A convenient helper class that holds all information of a Python interpreter.
     """
 
     def __init__(self, py_version: PythonVersion) -> None:

@@ -2640,7 +2640,7 @@ Release v0.0.2 (2020-01-22)
 ### Features
 
 - A complete functioning PEP 517 build backend.
-- `pdm builld` command.
+- `pdm build` command.
 
 ### Miscellany
 
