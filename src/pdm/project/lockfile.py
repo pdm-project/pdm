@@ -4,6 +4,7 @@ from typing import Any, Iterable, Mapping
 
 import tomlkit
 
+from pdm import termui
 from pdm.models.specifiers import get_specifier
 from pdm.project.toml_file import TOMLBase
 
@@ -52,7 +53,7 @@ class Lockfile(TOMLBase):
     def write(self, show_message: bool = True) -> None:
         super().write()
         if show_message:
-            self.ui.echo(f"Changes are written to [success]{self._path.name}[/].")
+            self.ui.echo(f"Changes are written to [success]{self._path.name}[/].", verbosity=termui.Verbosity.NORMAL)
 
     def __getitem__(self, key: str) -> dict:
         return self._data[key]

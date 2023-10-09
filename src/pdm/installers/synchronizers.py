@@ -76,8 +76,9 @@ class DummyExecutor:
 
 def editables_candidate(environment: BaseEnvironment) -> Candidate | None:
     """Return a candidate for `editables` package"""
-    repository = environment.project.get_repository()
-    return next(iter(repository.find_candidates(parse_requirement("editables"))), None)
+    with environment.get_finder() as finder:
+        best = finder.find_best_match("editables").best
+    return None if best is None else Candidate.from_installation_candidate(best, parse_requirement("editables"))
 
 
 class BaseSynchronizer:

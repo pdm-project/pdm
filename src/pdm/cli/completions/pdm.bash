@@ -24,20 +24,20 @@ _pdm_a919b69078acdf0a_complete()
 
     # completing for an option
     if [[ ${cur} == --* ]] ; then
-        opts="--config --help --ignore-python --pep582 --verbose --version"
+        opts="--config --help --ignore-python --pep582 --quiet --verbose --version"
 
         case "$com" in
 
             (add)
-            opts="--dev --dry-run --editable --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-lock --no-self --no-sync --prerelease --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
+            opts="--dev --dry-run --editable --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-lock --no-self --no-sync --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
             ;;
 
             (build)
-            opts="--config-setting --dest --help --no-clean --no-isolation --no-sdist --no-wheel --project --skip --verbose"
+            opts="--config-setting --dest --help --no-clean --no-isolation --no-sdist --no-wheel --project --quiet --skip --verbose"
             ;;
 
             (cache)
-            opts="--help --verbose"
+            opts="--help --quiet --verbose"
             ;;
 
             (completion)
@@ -45,79 +45,79 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (config)
-            opts="--delete --edit --global --help --local --project --verbose"
+            opts="--delete --edit --global --help --local --project --quiet --verbose"
             ;;
 
             (export)
-            opts="--dev --expandvars --format --global --group --help --lockfile --no-default --output --production --project --pyproject --verbose --without-hashes"
+            opts="--dev --expandvars --format --global --group --help --lockfile --no-default --output --production --project --pyproject --quiet --verbose --without-hashes"
             ;;
 
             (fix)
-            opts="--dry-run --global --help --project --verbose"
+            opts="--dry-run --global --help --project --quiet --verbose"
             ;;
 
             (import)
-            opts="--dev --format --global --group --help --project --verbose"
+            opts="--dev --format --global --group --help --project --quiet --verbose"
             ;;
 
             (info)
-            opts="--env --global --help --json --packages --project --python --venv --verbose --where"
+            opts="--env --global --help --json --packages --project --python --quiet --venv --verbose --where"
             ;;
 
             (init)
-            opts="--backend --cookiecutter --copier --global --help --lib --non-interactive --overwrite --project --python --skip --verbose"
+            opts="--backend --cookiecutter --copier --global --help --lib --non-interactive --overwrite --project --python --quiet --skip --verbose"
             ;;
 
             (install)
-            opts="--check --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --plugins --production --project --skip --venv --verbose"
+            opts="--check --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --plugins --production --project --quiet --skip --venv --verbose"
             ;;
 
             (list)
-            opts="--csv --exclude --fields --freeze --global --graph --help --include --json --markdown --project --resolve --reverse --sort --venv --verbose"
+            opts="--csv --exclude --fields --freeze --global --graph --help --include --json --markdown --project --quiet --resolve --reverse --sort --venv --verbose"
             ;;
 
             (lock)
-            opts="--check --dev --global --group --help --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --production --project --refresh --skip --static-urls --verbose"
+            opts="--check --dev --global --group --help --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --production --project --quiet --refresh --skip --static-urls --verbose"
             ;;
 
             (plugin)
-            opts="--help --verbose"
+            opts="--help --quiet --verbose"
             ;;
 
             (publish)
-            opts="--ca-certs --comment --help --identity --no-build --no-very-ssl --password --project --repository --sign --skip --username --verbose"
+            opts="--ca-certs --comment --help --identity --no-build --no-very-ssl --password --project --quiet --repository --sign --skip --username --verbose"
             ;;
 
             (remove)
-            opts="--dev --dry-run --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-lock --no-self --no-sync --project --skip --venv --verbose"
+            opts="--dev --dry-run --fail-fast --global --group --help --lockfile --no-editable --no-isolation --no-lock --no-self --no-sync --project --quiet --skip --venv --verbose"
             ;;
 
             (run)
-            opts="--global --help --json --list --project --site-packages --skip --venv --verbose"
+            opts="--global --help --json --list --project --quiet --site-packages --skip --venv --verbose"
             ;;
 
             (search)
-            opts="--help --verbose"
+            opts="--help --quiet --verbose"
             ;;
 
             (self)
-            opts="--help --verbose"
+            opts="--help --quiet --verbose"
             ;;
 
             (show)
-            opts="--global --help --keywords --license --name --platform --project --summary --venv --verbose --version"
+            opts="--global --help --keywords --license --name --platform --project --quiet --summary --venv --verbose --version"
             ;;
 
             (sync)
-            opts="--clean --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --only-keep --production --project --reinstall --skip --venv --verbose"
+            opts="--clean --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --only-keep --production --project --quiet --reinstall --skip --venv --verbose"
             ;;
 
             (update)
-            opts="--dev --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --no-sync --outdated --prerelease --production --project --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
+            opts="--dev --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-lock --no-self --no-sync --outdated --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --top --unconstrained --update-all --update-eager --update-reuse --venv --verbose"
             ;;
 
             (use)
-            opts="--first --global --help --ignore-remembered --project --skip --venv --verbose"
+            opts="--first --global --help --ignore-remembered --project --quiet --skip --venv --verbose"
             ;;
 
             (venv)

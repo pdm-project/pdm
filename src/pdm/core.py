@@ -211,7 +211,12 @@ class Core:
                 err=True,
             )
             if should_show_tb:
-                self.ui.echo("Add '-v' to see the detailed traceback", style="warning", err=True)
+                self.ui.echo(
+                    "Add '-v' to see the detailed traceback",
+                    style="warning",
+                    err=True,
+                    verbosity=termui.Verbosity.NORMAL,
+                )
             sys.exit(1)
         else:
             if project.config["check_update"] and not is_in_zipapp():

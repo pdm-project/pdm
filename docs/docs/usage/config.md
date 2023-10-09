@@ -315,3 +315,28 @@ lock = ["--no-cross-platform"]
 
 These options will be added right after the command name. For instance, based on the configuration above,
 `pdm add requests` is equivalent to `pdm add --no-isolation --no-self requests`.
+
+
+## Ignore package warnings
+
+_New in version 2.10.0_
+
+You may see some warnings when resolving dependencies like this:
+
+```
+PackageWarning: Skipping scipy@1.10.0 because it requires Python
+<3.12,>=3.8 but the project claims to work with Python>=3.9.
+Narrow down the `requires-python` range to include this version. For example, ">=3.9,<3.12" should work.
+  warnings.warn(record.message, PackageWarning, stacklevel=1)
+Use `-q/--quiet` to suppress these warnings, or ignore them per-package with `ignore_package_warnings` config in [tool.pdm] table.
+```
+
+This is because the supported range of Python versions of the package doesn't cover the `requires-python` value specified in the `pyproject.toml`.
+You can ignore these warnings in a per-package basis by adding the following config:
+
+```toml
+[tool.pdm]
+ignore_package_warnings = ["scipy", "tensorflow-*"]
+```
+
+Where each item is a case-insensitive glob pattern to match the package name.

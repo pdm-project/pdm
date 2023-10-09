@@ -17,7 +17,7 @@ from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import cached_property
 from pdm.compat import importlib_metadata as im
-from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion
+from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning
 from pdm.models.backends import get_backend, get_backend_by_spec
 from pdm.models.requirements import (
     FileRequirement,
@@ -559,7 +559,7 @@ class PreparedCandidate:
             except Exception:
                 message = "Failed to parse the project files, dependencies may be missing"
                 termui.logger.warning(message)
-                warnings.warn(message, RuntimeWarning, stacklevel=1)
+                warnings.warn(message, PDMWarning, stacklevel=1)
                 setup = Setup()
             return setup.as_dist()
         else:

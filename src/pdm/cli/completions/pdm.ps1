@@ -196,7 +196,7 @@ function TabExpansion($line, $lastWord) {
         [string[]]$commands = $words.Where( { $_ -notlike "-*" })
         $command = $commands[0]
         $completer = [Completer]::new()
-        $completer.AddOpts(([Option]::new(("-h", "--help", "-v", "--verbose"))))
+        $completer.AddOpts(([Option]::new(("-h", "--help", "-v", "--verbose", "-q", "--quiet"))))
         $sectionOption = [Option]::new(@("-G", "--group")).WithValues(@(getSections))
         $projectOption = [Option]::new(@("-p", "--project")).WithValues(@())
         $skipOption = [Option]::new(@("-k", "--skip")).WithValues(@())

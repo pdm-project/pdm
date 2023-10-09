@@ -6,6 +6,7 @@ from typing import Mapping
 
 from tomlkit import TOMLDocument, items
 
+from pdm import termui
 from pdm.project.toml_file import TOMLBase
 from pdm.utils import deprecation_warning
 
@@ -41,7 +42,7 @@ class PyProject(TOMLBase):
         _remove_empty_tables(self._data)
         super().write()
         if show_message:
-            self.ui.echo("Changes are written to [success]pyproject.toml[/].")
+            self.ui.echo("Changes are written to [success]pyproject.toml[/].", verbosity=termui.Verbosity.NORMAL)
 
     @property
     def is_valid(self) -> bool:

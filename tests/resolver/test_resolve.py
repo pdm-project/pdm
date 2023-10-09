@@ -2,6 +2,7 @@ import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
+from pdm.exceptions import PackageWarning
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve as _resolve
@@ -50,7 +51,9 @@ def test_resolve_named_requirement(resolve):
 
 
 def test_resolve_requires_python(resolve):
-    result = resolve(["django"])
+    with pytest.warns(PackageWarning) as records:
+        result = resolve(["django"])
+    assert len(records) > 0
     assert result["django"].version == "1.11.8"
     assert "sqlparse" not in result
 

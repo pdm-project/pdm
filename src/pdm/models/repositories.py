@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import dataclasses
+import fnmatch
 import posixpath
+import re
 import sys
+import warnings
 from functools import wraps
-from typing import TYPE_CHECKING, TypeVar, cast
+from typing import TYPE_CHECKING, Generator, TypeVar, cast
 
 from pdm import termui
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import (
     Requirement,
@@ -70,6 +73,7 @@ class BaseRepository:
         self.ignore_compatibility = ignore_compatibility
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
+        self.has_warnings = False
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -135,6 +139,16 @@ class BaseRepository:
         candidate.prepare(self.environment).metadata
         return candidate
 
+    def _should_ignore_package_warning(self, requirement: Requirement) -> bool:
+        ignore_settings = self.environment.project.pyproject.settings.get("ignore_package_warnings", [])
+        package_name = requirement.key
+        assert package_name is not None
+        for pat in ignore_settings:
+            pat = re.sub(r"[^A-Za-z0-9?*\[\]]+", "-", pat).lower()
+            if fnmatch.fnmatch(package_name, pat):
+                return True
+        return False
+
     def find_candidates(
         self,
         requirement: Requirement,
@@ -158,9 +172,37 @@ class BaseRepository:
             if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
         )
 
-        applicable_cans_python_compatible = LazySequence(
-            c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
-        )
+        def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate, None, None]:
+            project_requires_python = self.environment.python_requires
+            if ignore_requires_python:
+                yield from candidates
+                return
+
+            def python_specifier(spec: str | PySpecSet) -> str:
+                if isinstance(spec, PySpecSet):
+                    spec = str(spec)
+                return "all Python versions" if not spec else f"Python{spec}"
+
+            for candidate in candidates:
+                if not requires_python.is_subset(candidate.requires_python):
+                    if self._should_ignore_package_warning(requirement):
+                        continue
+                    working_requires_python = project_requires_python & PySpecSet(candidate.requires_python)
+                    if working_requires_python.is_impossible:  # pragma: no cover
+                        continue
+                    warnings.warn(
+                        f"Skipping {candidate.name}@{candidate.version} because it requires "
+                        f"{python_specifier(candidate.requires_python)} but the project claims to work with "
+                        f"{python_specifier(project_requires_python)}.\nNarrow down the `requires-python` range to "
+                        f'include this version. For example, "{working_requires_python}" should work.',
+                        PackageWarning,
+                        stacklevel=4,
+                    )
+                    self.has_warnings = True
+                else:
+                    yield candidate
+
+        applicable_cans_python_compatible = LazySequence(filter_candidates_with_requires_python(applicable_cans))
         # Evaluate data-requires-python attr and discard incompatible candidates
         # to reduce the number of candidates to resolve.
         if applicable_cans_python_compatible:
@@ -174,9 +216,7 @@ class BaseRepository:
             applicable_cans = LazySequence(
                 c for c in cans if requirement.specifier.contains(c.version, True)  # type: ignore[arg-type, union-attr]
             )
-            applicable_cans_python_compatible = LazySequence(
-                c for c in applicable_cans if ignore_requires_python or requires_python.is_subset(c.requires_python)
-            )
+            applicable_cans_python_compatible = LazySequence(filter_candidates_with_requires_python(applicable_cans))
             if applicable_cans_python_compatible:
                 applicable_cans = applicable_cans_python_compatible
 

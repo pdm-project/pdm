@@ -5,6 +5,7 @@ import contextlib
 import enum
 import logging
 import os
+import warnings
 from tempfile import mktemp
 from typing import TYPE_CHECKING
 
@@ -14,6 +15,8 @@ from rich.progress import Progress, ProgressColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
 from rich.theme import Theme
+
+from pdm.exceptions import PDMWarning
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Sequence
@@ -85,9 +88,10 @@ def ask(*args: str, prompt_type: type[str] | type[int] | None = None, **kwargs: 
 
 
 class Verbosity(enum.IntEnum):
+    QUIET = -1
     NORMAL = 0
-    DETAIL = enum.auto()
-    DEBUG = enum.auto()
+    DETAIL = 1
+    DEBUG = 2
 
 
 LOG_LEVELS = {
@@ -157,6 +161,9 @@ class UI:
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = Verbosity(verbosity)
+        if self.verbosity == Verbosity.QUIET:
+            warnings.simplefilter("ignore", PDMWarning, append=True)
+            warnings.simplefilter("ignore", FutureWarning, append=True)
 
     def set_theme(self, theme: Theme) -> None:
         """set theme for rich console
@@ -170,7 +177,7 @@ class UI:
         self,
         message: str | RichProtocol = "",
         err: bool = False,
-        verbosity: Verbosity = Verbosity.NORMAL,
+        verbosity: Verbosity = Verbosity.QUIET,
         **kwargs: Any,
     ) -> None:
         """print message using rich console
