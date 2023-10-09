@@ -73,6 +73,7 @@ class BaseRepository:
         self.ignore_compatibility = ignore_compatibility
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
+        self.has_warnings = False
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -197,6 +198,7 @@ class BaseRepository:
                         PackageWarning,
                         stacklevel=4,
                     )
+                    self.has_warnings = True
                 else:
                     yield candidate
 

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Dict, cast
 
 from pdm import termui
-from pdm.exceptions import PackageWarning
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import strip_extras
@@ -35,12 +33,9 @@ def resolve(
     requirements.append(PythonRequirement.from_pyspec_set(requires_python))
     provider = cast(BaseProvider, resolver.provider)
     repository = cast(BaseRepository, provider.repository)
-    with warnings.catch_warnings(record=True, category=PackageWarning) as records:
-        result = resolver.resolve(requirements, max_rounds)
+    result = resolver.resolve(requirements, max_rounds)
 
-    if records:
-        for record in records:
-            warnings.warn(record.message, PackageWarning, stacklevel=1)
+    if repository.has_warnings:
         repository.environment.project.core.ui.echo(
             "Use `-q/--quiet` to suppress these warnings, or ignore them per-package with "
             r"`ignore_package_warnings` config in \[tool.pdm] table.",
