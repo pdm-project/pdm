@@ -45,6 +45,10 @@ class PDMWarning(UserWarning):
     pass
 
 
+class PackageWarning(PDMWarning):
+    pass
+
+
 class ExtrasWarning(PDMWarning):
     def __init__(self, project_name: str, extras: list[str]) -> None:
         super().__init__(f"Extras not found for {project_name}: [{','.join(extras)}]")

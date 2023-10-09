@@ -9,6 +9,8 @@ from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
 from pdm.exceptions import PdmException
+from pdm.models.requirements import parse_requirement
+from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
 from pdm.utils import cd
 
@@ -328,3 +330,36 @@ def test_invoke_pdm_adding_configured_args(project, pdm, mocker):
     parser.assert_called_with(["install", "--no-self", "--no-editable", "--check"])
     pdm(["lock", "--lockfile", "pdm.2.lock"], obj=project)
     parser.assert_called_with(["lock", "--no-cross-platform", "--lockfile", "pdm.2.lock"])
+
+
+@pytest.fixture()
+def prepare_repository(repository, project):
+    repository.add_candidate("foo", "3.0", ">=3.8,<3.13")
+    repository.add_candidate("foo", "2.0", ">=3.7,<3.12")
+    repository.add_candidate("foo", "1.0", ">=3.7")
+    repository.environment.python_requires = PySpecSet(">=3.9")
+    project.add_dependencies({"foo": parse_requirement("foo")})
+
+
+@pytest.mark.usefixtures("prepare_repository")
+@pytest.mark.parametrize("is_quiet,extra_args", [(True, ("-q",)), (False, ())])
+def test_quiet_mode(pdm, project, is_quiet, extra_args, recwarn):
+    result = pdm(["lock", *extra_args], obj=project)
+
+    assert result.exit_code == 0
+    assert len(recwarn) > 0
+
+    assert 'For example, ">=3.9,<3.13"' in str(recwarn[0].message)
+    assert 'For example, ">=3.9,<3.12"' in str(recwarn[1].message)
+    assert ("to suppress these warnings" in result.stderr) is not is_quiet
+    assert project.locked_repository.all_candidates["foo"].version == "1.0"
+
+
+@pytest.mark.usefixtures("prepare_repository")
+@pytest.mark.parametrize("pattern,suppressed", [("foo", True), ("bar", False), ("*", True), ("f?o", True)])
+def test_ignore_package_warning(pdm, project, recwarn, pattern, suppressed):
+    project.pyproject.settings["ignore_package_warnings"] = [pattern]
+    result = pdm(["lock"], obj=project)
+
+    assert result.exit_code == 0
+    assert (len(recwarn) == 0) is suppressed

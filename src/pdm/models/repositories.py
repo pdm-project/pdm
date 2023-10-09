@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import dataclasses
+import fnmatch
 import posixpath
+import re
 import sys
 import warnings
 from functools import wraps
 from typing import TYPE_CHECKING, Generator, TypeVar, cast
 
 from pdm import termui
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PDMWarning
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import (
     Requirement,
@@ -136,6 +138,16 @@ class BaseRepository:
         candidate.prepare(self.environment).metadata
         return candidate
 
+    def _should_ignore_package_warning(self, requirement: Requirement) -> bool:
+        ignore_settings = self.environment.project.pyproject.settings.get("ignore_package_warnings", [])
+        package_name = requirement.key
+        assert package_name is not None
+        for pat in ignore_settings:
+            pat = re.sub(r"[^A-Za-z0-9?*\[\]]+", "-", pat).lower()
+            if fnmatch.fnmatch(package_name, pat):
+                return True
+        return False
+
     def find_candidates(
         self,
         requirement: Requirement,
@@ -165,18 +177,24 @@ class BaseRepository:
                 yield from candidates
                 return
 
+            def python_specifier(spec: str | PySpecSet) -> str:
+                if isinstance(spec, PySpecSet):
+                    spec = str(spec)
+                return "all Python versions" if not spec else f"Python{spec}"
+
             for candidate in candidates:
                 if not requires_python.is_subset(candidate.requires_python):
+                    if self._should_ignore_package_warning(requirement):
+                        continue
                     working_requires_python = project_requires_python & PySpecSet(candidate.requires_python)
                     if working_requires_python.is_impossible:  # pragma: no cover
                         continue
                     warnings.warn(
-                        f"Skipping {candidate!r} because it requires Python{candidate.requires_python} "
-                        f"but the project claims to work with  Python{project_requires_python}.\n"
-                        "Narrow down the `requires-python` range to include this version. For example, "
-                        f'"{working_requires_python}" should work.\n'
-                        "Use -q/--quiet to suppress this warning.",
-                        PDMWarning,
+                        f"Skipping {candidate.name}@{candidate.version} because it requires "
+                        f"{python_specifier(candidate.requires_python)} but the project claims to work with "
+                        f"{python_specifier(project_requires_python)}.\nNarrow down the `requires-python` range to "
+                        f'include this version. For example, "{working_requires_python}" should work.',
+                        PackageWarning,
                         stacklevel=4,
                     )
                 else:

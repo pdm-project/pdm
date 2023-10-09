@@ -25,6 +25,7 @@ import json
 import os
 import shutil
 import sys
+import warnings
 from dataclasses import dataclass
 from io import BufferedReader, BytesIO, StringIO
 from pathlib import Path
@@ -367,7 +368,8 @@ def core() -> Iterator[Core]:
     # Turn off use_venv by default, for testing
     Config._config_map["python.use_venv"].default = False
     main = Core()
-    yield main
+    with warnings.catch_warnings():
+        yield main
     # Restore the config items
     Config._config_map = old_config_map
 

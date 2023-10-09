@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import argparse
+from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
@@ -11,10 +14,13 @@ from pdm.models.requirements import parse_requirement
 from pdm.project import Project
 from pdm.utils import normalize_name
 
+if TYPE_CHECKING:
+    from unearth import Package
 
-def filter_stable(candidate: Candidate) -> bool:
-    assert candidate.version
-    return not Version(candidate.version).is_prerelease
+
+def filter_stable(package: Package) -> bool:
+    assert package.version
+    return not Version(package.version).is_prerelease
 
 
 class Command(BaseCommand):
@@ -36,19 +42,17 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         package = options.package
         if package:
-            req = parse_requirement(package)
-            repository = project.get_repository()
-            # reverse the result so that latest is at first.
-            matches = repository.find_candidates(req, True, True)
-            latest = next(iter(matches), None)
-            if not latest:
+            with project.environment.get_finder() as finder:
+                best_match = finder.find_best_match(package, allow_prereleases=True)
+            if not best_match.applicable:
                 project.core.ui.echo(
                     f"No match found for the package {package!r}",
                     err=True,
                     style="warning",
                 )
                 return
-            latest_stable = next(filter(filter_stable, matches), None)
+            latest = Candidate.from_installation_candidate(best_match.best, parse_requirement(package))
+            latest_stable = next(filter(filter_stable, best_match.applicable), None)
             metadata = latest.prepare(project.environment).metadata
         else:
             if not project.name:
