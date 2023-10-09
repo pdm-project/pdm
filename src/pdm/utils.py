@@ -16,8 +16,6 @@ import sysconfig
 import tempfile
 import urllib.parse as parse
 import warnings
-from itertools import chain as iter_chain
-from itertools import product as iter_product
 from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -72,7 +70,10 @@ def url_without_fragments(url: str) -> str:
 
 
 def join_list_with(items: list[Any], sep: Any) -> list[Any]:
-    return list(iter_chain.from_iterable(iter_product(items, [sep])))[:-1]
+    new_items = []
+    for item in items:
+        new_items.extend([item, sep])
+    return new_items[:-1]
 
 
 def find_project_root(cwd: str = ".", max_depth: int = 5) -> str | None:
