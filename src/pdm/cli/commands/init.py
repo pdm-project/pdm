@@ -71,9 +71,10 @@ class Command(BaseCommand):
                 err=True,
                 style="warning",
             )
-        retval = cookiecutter.main([options.template, *options.generator_args], standalone_mode=False)
-        if retval != 0:
-            raise RuntimeError("Cookiecutter exited with non-zero status code")
+        try:
+            cookiecutter.main([options.template, *options.generator_args], standalone_mode=False)
+        except SystemExit as e:
+            raise RuntimeError("Cookiecutter exited with an error") from e
 
     def _init_builtin(self, project: Project, options: argparse.Namespace) -> None:
         metadata = self.get_metadata_from_input(project, options)
