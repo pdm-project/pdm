@@ -126,6 +126,7 @@ class Command(BaseCommand):
         if not packages:
             if prerelease:
                 raise PdmUsageError("--prerelease must be used with packages given")
+            selection.validate()
             for group in selection:
                 updated_deps[group] = all_dependencies[group]
         else:
