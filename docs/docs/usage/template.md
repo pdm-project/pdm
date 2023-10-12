@@ -5,7 +5,7 @@ The template is given as a positional argument of `pdm init`, in one of the foll
 
 - `pdm init flask` - Initialize the project from the template `https://github.com/pdm-project/template-flask`
 - `pdm init https://github.com/frostming/pdm-template-flask` - Initialize the project from a Git URL. Both HTTPS and SSH URL are acceptable.
-- `pdm init django@v2` - To checkout the specific branch or tag. Full Git URL also supports it.
+- `pdm init django@v2` - To check out the specific branch or tag. Full Git URL also supports it.
 - `pdm init /path/to/template` - Initialize the project from a template directory on local filesystem.
 
 And `pdm init` will use the default template built in.
