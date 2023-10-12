@@ -117,7 +117,8 @@ class Command(BaseCommand):
         requirements: dict[str, Requirement] = {}
         lock_groups = ["default"] if project.lockfile.empty() else project.lockfile.groups
         if lock_groups is not None and group not in lock_groups:
-            project.core.ui.echo(f"Adding group [success]{group}[/] to lockfile", err=True, style="info")
+            if project.enable_write_lockfile:
+                project.core.ui.echo(f"Adding group [success]{group}[/] to lockfile", err=True, style="info")
             lock_groups.append(group)
         if (
             group == "default"
