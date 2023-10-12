@@ -143,5 +143,5 @@ $ pdm info --env
 - If *Project Packages* is `None`, [virtualenv mode](./venv.md) is enabled.
 - Otherwise, [PEP 582 mode](./pep582.md) is enabled.
 
-Now, you have setup a new PDM project and get a `pyproject.toml` file. Refer to [metadata section](../reference/pep621.md)
+Now, you have set up a new PDM project and get a `pyproject.toml` file. Refer to [metadata section](../reference/pep621.md)
 about how to write `pyproject.toml` properly.

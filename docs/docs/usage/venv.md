@@ -4,7 +4,7 @@ When you run [`pdm init`](../reference/cli.md#init) command, PDM will [ask for t
 
 Compared to [PEP 582](https://www.python.org/dev/peps/pep-0582/), virtual environments are considered more mature and have better support in the Python ecosystem as well as IDEs. Therefore, virtualenv is the default mode if not configured otherwise.
 
-**Virtual environments will be used if the project interpreter(the interpreter stored in `.pdm-python`, which can be checked by `pdm info`) is from a virtualenv.**
+**Virtual environments will be used if the project interpreter (the interpreter stored in `.pdm-python`, which can be checked by `pdm info`) is from a virtualenv.**
 
 ## Virtualenv auto-creation
 
