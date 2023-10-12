@@ -143,9 +143,17 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from("dev-dependencies")
     def dev_dependencies(self, value: dict) -> None:
-        self.settings["dev-dependencies"] = {
-            "dev": make_array([r for key, req in value.items() for r in _convert_req(key, req)], True),
-        }
+        self.settings.setdefault("dev-dependencies", {})["dev"] = make_array(
+            [r for key, req in value.items() for r in _convert_req(key, req)], True
+        )
+        raise Unset()
+
+    @convert_from("group")
+    def group_dependencies(self, value: dict[str, dict[str, Any]]) -> None:
+        for name, group in value.items():
+            self.settings.setdefault("dev-dependencies", {})[name] = make_array(
+                [r for key, req in group.get("dependencies", {}).items() for r in _convert_req(key, req)], True
+            )
         raise Unset()
 
     @convert_from()

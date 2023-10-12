@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "test-poetry"
+version = "0.1.0"
+description = ""
+authors = ["Frost Ming <me@frostming.com>"]
+readme = "README.md"
+packages = [{include = "test_poetry"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+httpx = "*"
+pendulum = "*"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.0.0"
+pytest-mock = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -87,6 +87,15 @@ def test_convert_poetry(project):
     assert build["excludes"] == ["my_package/excluded.py"]
 
 
+def test_convert_poetry_12(project):
+    golden_file = FIXTURES / "poetry-new.toml"
+    with cd(FIXTURES):
+        result, settings = poetry.convert(project, golden_file, Namespace(dev=False, group=None))
+
+    assert result["dependencies"] == ["httpx", "pendulum"]
+    assert settings["dev-dependencies"]["test"] == ["pytest<7.0.0,>=6.0.0", "pytest-mock"]
+
+
 def test_convert_flit(project):
     golden_file = FIXTURES / "projects/flit-demo/pyproject.toml"
     assert flit.check_fingerprint(project, golden_file)
