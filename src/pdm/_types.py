@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import dataclasses as dc
+import re
 from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Tuple, TypeVar, Union
 
 if TYPE_CHECKING:
     from typing import Protocol
+
+
+def _normalize_pattern(pattern: str) -> str:
+    return re.sub(r"[^A-Za-z0-9?*\[\]-]+", "-", pattern).lower()
 
 
 @dc.dataclass
@@ -20,6 +25,12 @@ class _RepositoryConfig:
     verify_ssl: bool | None = None
     type: str | None = None
     ca_certs: str | None = None
+    include_packages: list[str] = dc.field(default_factory=list)
+    exclude_packages: list[str] = dc.field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        self.include_packages = [_normalize_pattern(p) for p in self.include_packages]
+        self.exclude_packages = [_normalize_pattern(p) for p in self.exclude_packages]
 
 
 class RepositoryConfig(_RepositoryConfig):
