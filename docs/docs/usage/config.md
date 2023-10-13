@@ -156,7 +156,7 @@ You can specify credentials in the URL with `${ENV_VAR}` variable expansion and 
 ```toml
 [[tool.pdm.source]]
 name = "private"
-url = "https://${PRIVATE_PYPI_USERNAME}:${PRIVATE_PYPI_PASSWORD}/private.pypi.org/simple"
+url = "https://${PRIVATE_PYPI_USERNAME}:${PRIVATE_PYPI_PASSWORD}@private.pypi.org/simple"
 ```
 
 ### Configure HTTPS certificates
