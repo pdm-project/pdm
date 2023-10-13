@@ -294,7 +294,7 @@ class EnvBuilder:
         if not missing:
             return
         path = self._prefix.shared if shared else self._prefix.overlay
-        env = PythonEnvironment(self._env.project, prefix=path)
+        env = PythonEnvironment(self._env.project, python=str(self._env.interpreter.path), prefix=path)
         install_requirements(missing, env)
 
         if shared:
