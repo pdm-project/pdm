@@ -180,19 +180,50 @@ class TestUrlToPath:
 
 # Only testing POSIX-style paths here
 @pytest.mark.parametrize(
-    "given,expected",
+    """platform_paths, expected""",
     [
-        ("/path/to/my/pdm", "file:///path/to/my/pdm"),
-        ("../path/to/my/pdm", "file:///abs/path/to/my/pdm"),
-        ("/path/to/my/pdm/pyproject.toml", "file:///path/to/my/pdm/pyproject.toml"),
-        ("../path/to/my/pdm/pyproject.toml", "file:///abs/path/to/my/pdm/pyproject.toml"),
+        (
+            {
+                "path_params": [
+                    {"pathstr": "/path/to/my/pdm"},
+                ]
+            },
+            "file:///path/to/my/pdm",
+        ),
+        (
+            {
+                "path_params": [
+                    {"pathstr": "/abs/path/to/my/pdm"},
+                ]
+            },
+            "file:///abs/path/to/my/pdm",
+        ),
+        (
+            {
+                "path_params": [
+                    {"pathstr": "/path/to/my/pdm/pyproject.toml"},
+                ]
+            },
+            "file:///path/to/my/pdm/pyproject.toml",
+        ),
+        (
+            {
+                "path_params": [
+                    {"pathstr": "../path/to/my/pdm/pyproject.toml"},
+                ]
+            },
+            "file:///abs/path/to/my/pdm/pyproject.toml",
+        ),
     ],
+    indirect=["platform_paths"],
 )
-def test_path_to_url(given, expected):
+def test_path_to_url(platform_paths, expected):
+    given = platform_paths[0]
     if os.path.isabs(given):
         assert utils.path_to_url(given) == expected
     else:
-        abs_given = "abs" + given.replace("..", "")
+        abs_given = "abs" + str(given).replace("..", "")
+
         with mock.patch("pdm.utils.os.path.abspath", return_value=abs_given):
             assert utils.path_to_url(given) == expected
 
