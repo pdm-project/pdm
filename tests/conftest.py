@@ -145,7 +145,7 @@ def repository_configs(request):
 class _PathFactory:
     is_win_platform = sys.platform.startswith("win")
     win_home_drive = Path.home().drive
-    is_py312 = sys.version_info == (3, 12)
+    is_pre_py312 = sys.version_info < (3, 12)
 
     @classmethod
     def get_platform_path(cls, **kwargs):
@@ -156,9 +156,17 @@ class _PathFactory:
 
     @classmethod
     def get_py_compatible_mock_path(cls, **kwargs):
+        """
+        Equality checking of``pathlib.Path`` objects is different in
+        pre-Python 3.12 and Python 3.12 versions.
+
+        This factory method returns a mock ``pathlib.Path`` object from a
+        real path, which will satisfy an ``__eq__`` tests on pre-Python 3.12
+        and Python 3.12 versions.
+        """
         path = cls.get_platform_path(**kwargs)
 
-        if not cls.is_py312:
+        if cls.is_pre_py312:
             return mock.create_autospec(path, instance=True, _cparts=path._cparts, _flavour=path._flavour)
         else:
             return mock.create_autospec(path, instance=True, _str_normcase=path._str_normcase, _flavour=path._flavour)
