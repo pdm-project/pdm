@@ -2,7 +2,6 @@ import os
 import pathlib
 import sys
 import unittest.mock as mock
-from pathlib import PosixPath
 
 import pytest
 import tomlkit
@@ -278,71 +277,148 @@ def test_is_path_relative_to(given, expected):
 
 
 class TestGetVenvLikePrefix:
+    @pytest.mark.parametrize(
+        """platform_paths,
+           py_compatible_mock_paths""",
+        [
+            (
+                {
+                    "path_params": [
+                        {"pathstr": "/my/conda/bin/python3"},
+                    ]
+                },
+                {"path_params": [{"pathstr": "/my/conda/bin"}]},
+            )
+        ],
+        indirect=["platform_paths", "py_compatible_mock_paths"],
+    )
     @mock.patch("pdm.utils.Path")
-    def test__posix_path__conda_env_with_conda_meta_in_bin(self, path_patch):
-        path = PosixPath("/my/conda/bin/python3")
-        interpreter_bin_path = mock.create_autospec(
-            path.parent, instance=True, _cparts=path.parent._cparts, _flavour=path.parent._flavour
-        )
+    def test_conda_env_with_conda_meta_in_bin(self, path_patch, platform_paths, py_compatible_mock_paths):
+        path = platform_paths[0]
+        interpreter_bin_path = py_compatible_mock_paths[0]
         interpreter_bin_path.joinpath.return_value.exists.return_value = True
         path_patch.return_value.parent = interpreter_bin_path
         with path_patch:
-            received = utils.get_venv_like_prefix("/my/conda/bin/python3")
+            received = utils.get_venv_like_prefix(str(path))
             expected = interpreter_bin_path, True
             assert received == expected
 
+    @pytest.mark.parametrize(
+        """platform_paths,
+           py_compatible_mock_paths""",
+        [
+            (
+                {
+                    "path_params": [
+                        {"pathstr": "/my/local/py/bin/python3"},
+                    ]
+                },
+                {"path_params": [{"pathstr": "/my/local/py/bin"}, {"pathstr": "/my/local/py"}]},
+            )
+        ],
+        indirect=["platform_paths", "py_compatible_mock_paths"],
+    )
     @mock.patch("pdm.utils.Path")
-    def test__posix_path__py_env_with_pyvenv_cfg(self, path_patch):
-        path = PosixPath("/my/local/py/bin/python3")
-        interpreter_bin_path = mock.create_autospec(
-            path.parent, instance=True, _cparts=path.parent._cparts, _flavour=path.parent._flavour
-        )
-        interpreter_bin_parent_path = mock.create_autospec(
-            path.parent.parent, instance=True, _cparts=path.parent.parent._cparts, _flavour=path.parent.parent._flavour
-        )
+    def test_py_env_with_pyvenv_cfg(self, path_patch, platform_paths, py_compatible_mock_paths):
+        path = platform_paths[0]
+        interpreter_bin_path = py_compatible_mock_paths[0]
+        interpreter_bin_parent_path = py_compatible_mock_paths[1]
         interpreter_bin_path.joinpath.return_value.exists.return_value = False
         interpreter_bin_parent_path.joinpath.return_value.exists.return_value = True
         path_patch.return_value.parent = interpreter_bin_path
         path_patch.return_value.parent.parent = interpreter_bin_parent_path
         with path_patch:
-            received = utils.get_venv_like_prefix("/my/local/py/bin/python3")
+            received = utils.get_venv_like_prefix(str(path))
             expected = interpreter_bin_parent_path, False
             assert received == expected
 
+    @pytest.mark.parametrize(
+        """platform_paths,
+           py_compatible_mock_paths""",
+        [
+            (
+                {
+                    "path_params": [
+                        {"pathstr": "/my/conda/bin/python3"},
+                    ]
+                },
+                {"path_params": [{"pathstr": "/my/conda/bin/"}, {"pathstr": "/my/conda"}]},
+            )
+        ],
+        indirect=["platform_paths", "py_compatible_mock_paths"],
+    )
     @mock.patch("pdm.utils.Path")
-    def test__posix_path__conda_env_with_conda_meta(self, path_patch):
-        path = PosixPath("/my/conda/bin/python3")
-        interpreter_bin_path = mock.create_autospec(
-            path.parent, instance=True, _cparts=path.parent._cparts, _flavour=path.parent._flavour
-        )
-        interpreter_bin_parent_path = mock.create_autospec(
-            path.parent.parent, instance=True, _cparts=path.parent.parent._cparts, _flavour=path.parent.parent._flavour
-        )
+    def test_conda_env_with_conda_meta(self, path_patch, platform_paths, py_compatible_mock_paths):
+        path = platform_paths[0]
+        interpreter_bin_path = py_compatible_mock_paths[0]
+        interpreter_bin_parent_path = py_compatible_mock_paths[1]
         interpreter_bin_path.joinpath.return_value.exists.return_value = False
         interpreter_bin_parent_path.joinpath.return_value.exists.side_effect = [False, True]
         path_patch.return_value.parent = interpreter_bin_path
         path_patch.return_value.parent.parent = interpreter_bin_parent_path
         with path_patch:
-            received = utils.get_venv_like_prefix("/my/conda/bin/python3")
+            received = utils.get_venv_like_prefix(str(path))
             expected = interpreter_bin_parent_path, True
             assert received == expected
 
-    def test__posix_path__virtual_env(self):
-        expected = PosixPath("/my/venv"), False
-        with mock.patch.dict("pdm.utils.os.environ", {"VIRTUAL_ENV": "/my/venv"}, clear=True):
-            received = utils.get_venv_like_prefix("/my/venv/bin/python3")
+    @pytest.mark.parametrize(
+        "platform_paths",
+        [
+            {
+                "path_params": [
+                    {"pathstr": "/my/venv"},
+                ]
+            },
+        ],
+        indirect=[
+            "platform_paths",
+        ],
+    )
+    def test_virtual_env(self, platform_paths):
+        path = platform_paths[0]
+        expected = path, False
+        with mock.patch.dict("pdm.utils.os.environ", {"VIRTUAL_ENV": str(path)}, clear=True):
+            received = utils.get_venv_like_prefix(path.joinpath("bin", "python3"))
             assert received == expected
 
-    def test__posix_path__conda_virtual_env(self):
-        expected = PosixPath("/my/conda/venv"), True
-        with mock.patch.dict("pdm.utils.os.environ", {"CONDA_PREFIX": "/my/conda/venv"}, clear=True):
-            received = utils.get_venv_like_prefix("/my/conda/venv/bin/python3")
+    @pytest.mark.parametrize(
+        "platform_paths",
+        [
+            {
+                "path_params": [
+                    {"pathstr": "/my/conda/venv"},
+                ]
+            },
+        ],
+        indirect=[
+            "platform_paths",
+        ],
+    )
+    def test_conda_virtual_env(self, platform_paths):
+        path = platform_paths[0]
+        expected = path, True
+        with mock.patch.dict("pdm.utils.os.environ", {"CONDA_PREFIX": str(path)}, clear=True):
+            received = utils.get_venv_like_prefix(path.joinpath("bin", "python3"))
             assert received == expected
 
-    def test__posix_path__no_virtual_env(self):
+    @pytest.mark.parametrize(
+        "platform_paths",
+        [
+            {
+                "path_params": [
+                    {"pathstr": "/not/a/venv/bin/python3"},
+                ]
+            },
+        ],
+        indirect=[
+            "platform_paths",
+        ],
+    )
+    def test_no_virtual_env(self, platform_paths):
+        path = platform_paths[0]
         expected = None, False
         with mock.patch.dict("pdm.utils.os.environ", {"VIRTUAL_ENV": "", "CONDA_PREFIX": ""}, clear=True):
-            received = utils.get_venv_like_prefix("/not/a/venv/bin/python3")
+            received = utils.get_venv_like_prefix(str(path))
             assert received == expected
 
 

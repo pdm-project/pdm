@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 import unittest.mock as mock
-from pathlib import Path
+from pathlib import Path, PosixPath, WindowsPath
 from typing import TYPE_CHECKING, Iterable
 from urllib.parse import unquote, urlparse
 
@@ -139,3 +140,35 @@ def repository_configs(request):
         _RepositoryConfigFactory.get_repository_config(**config_params)
         for config_params in request.param["config_params"]
     ]
+
+
+class _PathFactory:
+    is_win_platform = sys.platform.startswith("win")
+    win_home_drive = Path.home().drive
+    is_py312 = sys.version_info == (3, 12)
+
+    @classmethod
+    def get_platform_path(cls, **kwargs):
+        if not cls.is_win_platform:
+            return PosixPath(kwargs["pathstr"])
+        else:
+            return WindowsPath(f"{cls.win_home_drive}:{kwargs['pathstr']}")
+
+    @classmethod
+    def get_py_compatible_mock_path(cls, **kwargs):
+        path = cls.get_platform_path(**kwargs)
+
+        if not cls.is_py312:
+            return mock.create_autospec(path, instance=True, _cparts=path._cparts, _flavour=path._flavour)
+        else:
+            return mock.create_autospec(path, instance=True, _str_normcase=path._str_normcase, _flavour=path._flavour)
+
+
+@pytest.fixture(scope="function")
+def platform_paths(request):
+    return [_PathFactory.get_platform_path(**path_params) for path_params in request.param["path_params"]]
+
+
+@pytest.fixture(scope="function")
+def py_compatible_mock_paths(request):
+    return [_PathFactory.get_py_compatible_mock_path(**path_params) for path_params in request.param["path_params"]]
