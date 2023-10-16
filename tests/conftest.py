@@ -153,13 +153,13 @@ class _PathFactory:
         return mock.create_autospec(path, instance=False, **kwargs)
 
     @classmethod
-    def get_py_compatible_path(cls, **kwargs):
+    def get_py312_compatible_path(cls, **kwargs):
         """
         Equality checking of``pathlib.Path`` objects is different in
         pre-Python 3.12 and Python 3.12 versions.
 
         This factory method returns a mock ``pathlib.Path`` object from a
-        real path, which will satisfy an ``__eq__`` tests on pre-Python 3.12
+        real path, which will satisfy an ``__eq__`` test on pre-Python 3.12
         and Python 3.12 versions.
         """
         path = Path(kwargs["pathstr"])
@@ -172,9 +172,9 @@ class _PathFactory:
 
 @pytest.fixture(scope="function")
 def paths(request):
-    return [_PathFactory.path(**path_params) for path_params in request.param["path_params"]]
+    return [_PathFactory.get_path(**path_params) for path_params in request.param["path_params"]]
 
 
 @pytest.fixture(scope="function")
-def py_compatible_paths(request):
-    return [_PathFactory.get_py_compatible_path(**path_params) for path_params in request.param["path_params"]]
+def py312_compatible_paths(request):
+    return [_PathFactory.get_py312_compatible_path(**path_params) for path_params in request.param["path_params"]]

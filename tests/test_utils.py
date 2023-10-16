@@ -169,14 +169,21 @@ class TestUrlToPath:
         with pytest.raises(AssertionError):
             utils.url_to_path("not_a_file_scheme://netloc/path")
 
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows test")
     def test_non_windows_non_local_file_url(self):
         with mock.patch("pdm.utils.sys.platform", "non_windows"):
             with pytest.raises(ValueError):
                 utils.url_to_path("file://non_local_netloc/file/url")
 
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows test")
     def test_non_windows_localhost_local_file_url(self):
         with mock.patch("pdm.utils.sys.platform", "non_windows"):
             assert utils.url_to_path("file://localhost/local/file/path") == "/local/file/path"
+
+    @pytest.mark.skipif(not sys.platform.startswith("win"), reason="Windows test")
+    def test_windows_localhost_local_file_url(self):
+        with mock.patch("pdm.utils.sys.platform", "windows"):
+            assert utils.url_to_path("file://localhost/local/file/path") == "\\local\\file\\path"
 
 
 # Only testing POSIX-style paths here
@@ -282,16 +289,16 @@ def test_is_path_relative_to(given, expected):
 class TestGetVenvLikePrefix:
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
     @pytest.mark.parametrize(
-        "py_compatible_paths",
+        "py312_compatible_paths",
         [
             {"path_params": [{"pathstr": "/my/conda/bin"}]},
         ],
-        indirect=["py_compatible_paths"],
+        indirect=["py312_compatible_paths"],
     )
     @mock.patch("pdm.utils.Path")
-    def test_conda_env_with_conda_meta_in_bin(self, path_patch, py_compatible_paths):
+    def test_conda_env_with_conda_meta_in_bin(self, path_patch, py312_compatible_paths):
         path = Path("/my/conda/bin/python3")
-        interpreter_bin_path = py_compatible_paths[0]
+        interpreter_bin_path = py312_compatible_paths[0]
         interpreter_bin_path.joinpath.return_value.exists.return_value = True
         path_patch.return_value.parent = interpreter_bin_path
         with path_patch:
@@ -301,17 +308,17 @@ class TestGetVenvLikePrefix:
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
     @pytest.mark.parametrize(
-        "py_compatible_paths",
+        "py312_compatible_paths",
         [
             {"path_params": [{"pathstr": "/my/local/py/bin"}, {"pathstr": "/my/local/py"}]},
         ],
-        indirect=["py_compatible_paths"],
+        indirect=["py312_compatible_paths"],
     )
     @mock.patch("pdm.utils.Path")
-    def test_py_env_with_pyvenv_cfg(self, path_patch, py_compatible_paths):
+    def test_py_env_with_pyvenv_cfg(self, path_patch, py312_compatible_paths):
         path = Path("/my/local/py/bin/python3")
-        interpreter_bin_path = py_compatible_paths[0]
-        interpreter_bin_parent_path = py_compatible_paths[1]
+        interpreter_bin_path = py312_compatible_paths[0]
+        interpreter_bin_parent_path = py312_compatible_paths[1]
         interpreter_bin_path.joinpath.return_value.exists.return_value = False
         interpreter_bin_parent_path.joinpath.return_value.exists.return_value = True
         path_patch.return_value.parent = interpreter_bin_path
@@ -323,17 +330,17 @@ class TestGetVenvLikePrefix:
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
     @pytest.mark.parametrize(
-        "py_compatible_paths",
+        "py312_compatible_paths",
         [
             {"path_params": [{"pathstr": "/my/conda/bin/"}, {"pathstr": "/my/conda"}]},
         ],
-        indirect=["py_compatible_paths"],
+        indirect=["py312_compatible_paths"],
     )
     @mock.patch("pdm.utils.Path")
-    def test_conda_env_with_conda_meta(self, path_patch, py_compatible_paths):
+    def test_conda_env_with_conda_meta(self, path_patch, py312_compatible_paths):
         path = Path("/my/conda/bin/python3")
-        interpreter_bin_path = py_compatible_paths[0]
-        interpreter_bin_parent_path = py_compatible_paths[1]
+        interpreter_bin_path = py312_compatible_paths[0]
+        interpreter_bin_parent_path = py312_compatible_paths[1]
         interpreter_bin_path.joinpath.return_value.exists.return_value = False
         interpreter_bin_parent_path.joinpath.return_value.exists.side_effect = [False, True]
         path_patch.return_value.parent = interpreter_bin_path
