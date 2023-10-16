@@ -171,7 +171,7 @@ By default, if you use `pdm use` and select a non-venv Python, the project will 
 # Switch to a virtualenv named test
 $ pdm use --venv test
 # Switch to the in-project venv located at $PROJECT_ROOT/.venv
-$ pdm use --venv
+$ pdm use --venv in-project
 ```
 
 ## Disable virtualenv mode
