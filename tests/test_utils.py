@@ -2,6 +2,7 @@ import os
 import pathlib
 import sys
 import unittest.mock as mock
+from pathlib import Path
 
 import pytest
 import tomlkit
@@ -179,46 +180,17 @@ class TestUrlToPath:
 
 
 # Only testing POSIX-style paths here
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
 @pytest.mark.parametrize(
-    """platform_paths, expected""",
+    "given, expected",
     [
-        (
-            {
-                "path_params": [
-                    {"pathstr": "/path/to/my/pdm"},
-                ]
-            },
-            "file:///path/to/my/pdm",
-        ),
-        (
-            {
-                "path_params": [
-                    {"pathstr": "/abs/path/to/my/pdm"},
-                ]
-            },
-            "file:///abs/path/to/my/pdm",
-        ),
-        (
-            {
-                "path_params": [
-                    {"pathstr": "/path/to/my/pdm/pyproject.toml"},
-                ]
-            },
-            "file:///path/to/my/pdm/pyproject.toml",
-        ),
-        (
-            {
-                "path_params": [
-                    {"pathstr": "../path/to/my/pdm/pyproject.toml"},
-                ]
-            },
-            "file:///abs/path/to/my/pdm/pyproject.toml",
-        ),
+        ("/path/to/my/pdm", "file:///path/to/my/pdm"),
+        ("/abs/path/to/my/pdm", "file:///abs/path/to/my/pdm"),
+        ("/path/to/my/pdm/pyproject.toml", "file:///path/to/my/pdm/pyproject.toml"),
+        ("../path/to/my/pdm/pyproject.toml", "file:///abs/path/to/my/pdm/pyproject.toml"),
     ],
-    indirect=["platform_paths"],
 )
-def test_path_to_url(platform_paths, expected):
-    given = platform_paths[0]
+def test_path_to_url(given, expected):
     if os.path.isabs(given):
         assert utils.path_to_url(given) == expected
     else:
@@ -308,25 +280,18 @@ def test_is_path_relative_to(given, expected):
 
 
 class TestGetVenvLikePrefix:
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
     @pytest.mark.parametrize(
-        """platform_paths,
-           py_compatible_mock_paths""",
+        "py_compatible_paths",
         [
-            (
-                {
-                    "path_params": [
-                        {"pathstr": "/my/conda/bin/python3"},
-                    ]
-                },
-                {"path_params": [{"pathstr": "/my/conda/bin"}]},
-            )
+            {"path_params": [{"pathstr": "/my/conda/bin"}]},
         ],
-        indirect=["platform_paths", "py_compatible_mock_paths"],
+        indirect=["py_compatible_paths"],
     )
     @mock.patch("pdm.utils.Path")
-    def test_conda_env_with_conda_meta_in_bin(self, path_patch, platform_paths, py_compatible_mock_paths):
-        path = platform_paths[0]
-        interpreter_bin_path = py_compatible_mock_paths[0]
+    def test_conda_env_with_conda_meta_in_bin(self, path_patch, py_compatible_paths):
+        path = Path("/my/conda/bin/python3")
+        interpreter_bin_path = py_compatible_paths[0]
         interpreter_bin_path.joinpath.return_value.exists.return_value = True
         path_patch.return_value.parent = interpreter_bin_path
         with path_patch:
@@ -334,26 +299,19 @@ class TestGetVenvLikePrefix:
             expected = interpreter_bin_path, True
             assert received == expected
 
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
     @pytest.mark.parametrize(
-        """platform_paths,
-           py_compatible_mock_paths""",
+        "py_compatible_paths",
         [
-            (
-                {
-                    "path_params": [
-                        {"pathstr": "/my/local/py/bin/python3"},
-                    ]
-                },
-                {"path_params": [{"pathstr": "/my/local/py/bin"}, {"pathstr": "/my/local/py"}]},
-            )
+            {"path_params": [{"pathstr": "/my/local/py/bin"}, {"pathstr": "/my/local/py"}]},
         ],
-        indirect=["platform_paths", "py_compatible_mock_paths"],
+        indirect=["py_compatible_paths"],
     )
     @mock.patch("pdm.utils.Path")
-    def test_py_env_with_pyvenv_cfg(self, path_patch, platform_paths, py_compatible_mock_paths):
-        path = platform_paths[0]
-        interpreter_bin_path = py_compatible_mock_paths[0]
-        interpreter_bin_parent_path = py_compatible_mock_paths[1]
+    def test_py_env_with_pyvenv_cfg(self, path_patch, py_compatible_paths):
+        path = Path("/my/local/py/bin/python3")
+        interpreter_bin_path = py_compatible_paths[0]
+        interpreter_bin_parent_path = py_compatible_paths[1]
         interpreter_bin_path.joinpath.return_value.exists.return_value = False
         interpreter_bin_parent_path.joinpath.return_value.exists.return_value = True
         path_patch.return_value.parent = interpreter_bin_path
@@ -363,26 +321,19 @@ class TestGetVenvLikePrefix:
             expected = interpreter_bin_parent_path, False
             assert received == expected
 
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
     @pytest.mark.parametrize(
-        """platform_paths,
-           py_compatible_mock_paths""",
+        "py_compatible_paths",
         [
-            (
-                {
-                    "path_params": [
-                        {"pathstr": "/my/conda/bin/python3"},
-                    ]
-                },
-                {"path_params": [{"pathstr": "/my/conda/bin/"}, {"pathstr": "/my/conda"}]},
-            )
+            {"path_params": [{"pathstr": "/my/conda/bin/"}, {"pathstr": "/my/conda"}]},
         ],
-        indirect=["platform_paths", "py_compatible_mock_paths"],
+        indirect=["py_compatible_paths"],
     )
     @mock.patch("pdm.utils.Path")
-    def test_conda_env_with_conda_meta(self, path_patch, platform_paths, py_compatible_mock_paths):
-        path = platform_paths[0]
-        interpreter_bin_path = py_compatible_mock_paths[0]
-        interpreter_bin_parent_path = py_compatible_mock_paths[1]
+    def test_conda_env_with_conda_meta(self, path_patch, py_compatible_paths):
+        path = Path("/my/conda/bin/python3")
+        interpreter_bin_path = py_compatible_paths[0]
+        interpreter_bin_parent_path = py_compatible_paths[1]
         interpreter_bin_path.joinpath.return_value.exists.return_value = False
         interpreter_bin_parent_path.joinpath.return_value.exists.side_effect = [False, True]
         path_patch.return_value.parent = interpreter_bin_path
@@ -392,61 +343,25 @@ class TestGetVenvLikePrefix:
             expected = interpreter_bin_parent_path, True
             assert received == expected
 
-    @pytest.mark.parametrize(
-        "platform_paths",
-        [
-            {
-                "path_params": [
-                    {"pathstr": "/my/venv"},
-                ]
-            },
-        ],
-        indirect=[
-            "platform_paths",
-        ],
-    )
-    def test_virtual_env(self, platform_paths):
-        path = platform_paths[0]
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
+    def test_virtual_env(self):
+        path = Path("/my/venv")
         expected = path, False
         with mock.patch.dict("pdm.utils.os.environ", {"VIRTUAL_ENV": str(path)}, clear=True):
             received = utils.get_venv_like_prefix(path.joinpath("bin", "python3"))
             assert received == expected
 
-    @pytest.mark.parametrize(
-        "platform_paths",
-        [
-            {
-                "path_params": [
-                    {"pathstr": "/my/conda/venv"},
-                ]
-            },
-        ],
-        indirect=[
-            "platform_paths",
-        ],
-    )
-    def test_conda_virtual_env(self, platform_paths):
-        path = platform_paths[0]
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
+    def test_conda_virtual_env(self):
+        path = Path("/my/conda/venv")
         expected = path, True
         with mock.patch.dict("pdm.utils.os.environ", {"CONDA_PREFIX": str(path)}, clear=True):
             received = utils.get_venv_like_prefix(path.joinpath("bin", "python3"))
             assert received == expected
 
-    @pytest.mark.parametrize(
-        "platform_paths",
-        [
-            {
-                "path_params": [
-                    {"pathstr": "/not/a/venv/bin/python3"},
-                ]
-            },
-        ],
-        indirect=[
-            "platform_paths",
-        ],
-    )
-    def test_no_virtual_env(self, platform_paths):
-        path = platform_paths[0]
+    @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
+    def test_no_virtual_env(self):
+        path = Path("/not/a/venv/bin/python3")
         expected = None, False
         with mock.patch.dict("pdm.utils.os.environ", {"VIRTUAL_ENV": "", "CONDA_PREFIX": ""}, clear=True):
             received = utils.get_venv_like_prefix(str(path))

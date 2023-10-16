@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 import unittest.mock as mock
-from pathlib import Path, PosixPath, WindowsPath
+from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
 from urllib.parse import unquote, urlparse
 
@@ -143,19 +143,17 @@ def repository_configs(request):
 
 
 class _PathFactory:
-    is_win_platform = sys.platform.startswith("win")
-    win_home_drive = Path.home().drive
     is_pre_py312 = sys.version_info < (3, 12)
 
     @classmethod
-    def get_platform_path(cls, **kwargs):
-        if not cls.is_win_platform:
-            return PosixPath(kwargs["pathstr"])
-        else:
-            return WindowsPath(f"{cls.win_home_drive}:{kwargs['pathstr']}")
+    def get_path(cls, **kwargs):
+        path = Path(kwargs["pathstr"])
+        kwargs.pop("pathstr")
+
+        return mock.create_autospec(path, instance=False, **kwargs)
 
     @classmethod
-    def get_py_compatible_mock_path(cls, **kwargs):
+    def get_py_compatible_path(cls, **kwargs):
         """
         Equality checking of``pathlib.Path`` objects is different in
         pre-Python 3.12 and Python 3.12 versions.
@@ -164,7 +162,7 @@ class _PathFactory:
         real path, which will satisfy an ``__eq__`` tests on pre-Python 3.12
         and Python 3.12 versions.
         """
-        path = cls.get_platform_path(**kwargs)
+        path = Path(kwargs["pathstr"])
 
         if cls.is_pre_py312:
             return mock.create_autospec(path, instance=True, _cparts=path._cparts, _flavour=path._flavour)
@@ -173,10 +171,10 @@ class _PathFactory:
 
 
 @pytest.fixture(scope="function")
-def platform_paths(request):
-    return [_PathFactory.get_platform_path(**path_params) for path_params in request.param["path_params"]]
+def paths(request):
+    return [_PathFactory.path(**path_params) for path_params in request.param["path_params"]]
 
 
 @pytest.fixture(scope="function")
-def py_compatible_mock_paths(request):
-    return [_PathFactory.get_py_compatible_mock_path(**path_params) for path_params in request.param["path_params"]]
+def py_compatible_paths(request):
+    return [_PathFactory.get_py_compatible_path(**path_params) for path_params in request.param["path_params"]]
