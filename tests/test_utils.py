@@ -178,7 +178,7 @@ class TestUrlToPath:
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows test")
     def test_non_windows_localhost_local_file_url(self):
         with mock.patch("pdm.utils.sys.platform", "non_windows"):
-            assert utils.url_to_path("file://localhost/local/file/path") == "/local/file/path"
+            assert utils.url_to_path("file://localhost/local/file/path") == r"\local\file\path"
 
     @pytest.mark.skipif(not sys.platform.startswith("win"), reason="Windows test")
     def test_windows_localhost_local_file_url(self):
