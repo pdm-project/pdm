@@ -16,6 +16,7 @@ import sysconfig
 import tempfile
 import urllib.parse as parse
 import warnings
+from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -41,7 +42,7 @@ PACKAGING_22 = Version(_packaging_version) >= Version("22")
 
 
 def create_tracked_tempdir(suffix: str | None = None, prefix: str | None = None, dir: str | None = None) -> str:
-    name = tempfile.mkdtemp(suffix, prefix, dir)
+    name = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
     os.makedirs(name, mode=0o777, exist_ok=True)
 
     def clean_up() -> None:
@@ -254,7 +255,7 @@ def path_replace(pattern: str, replace_with: str, dest: str) -> str:
     :param dest: the path to replace
     :return the replaced path
     """
-    sub_flags = re.IGNORECASE if os.name == "nt" else 0
+    sub_flags = re.IGNORECASE if os_name == "nt" else 0
     return re.sub(
         pattern.replace("\\", "/"),
         replace_with,

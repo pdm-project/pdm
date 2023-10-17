@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
+import unittest.mock as mock
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
 from urllib.parse import unquote, urlparse
@@ -9,6 +11,7 @@ from urllib.parse import unquote, urlparse
 import pytest
 from unearth.vcs import Git, vcs_support
 
+from pdm._types import RepositoryConfig
 from tests import FIXTURES
 
 if TYPE_CHECKING:
@@ -123,3 +126,55 @@ def is_editable(request):
 @pytest.fixture(params=[False, True])
 def dev_option(request) -> Iterable[str]:
     return ("--dev",) if request.param else ()
+
+
+class _RepositoryConfigFactory:
+    @classmethod
+    def get_repository_config(cls, **kwargs):
+        return mock.create_autospec(RepositoryConfig, instance=False, **kwargs)
+
+
+@pytest.fixture(scope="function")
+def repository_configs(request):
+    return [
+        _RepositoryConfigFactory.get_repository_config(**config_params)
+        for config_params in request.param["config_params"]
+    ]
+
+
+class _PathFactory:
+    is_pre_py312 = sys.version_info < (3, 12)
+
+    @classmethod
+    def get_path(cls, **kwargs):
+        path = Path(kwargs["pathstr"])
+        kwargs.pop("pathstr")
+
+        return mock.create_autospec(path, instance=False, **kwargs)
+
+    @classmethod
+    def get_py312_compatible_path(cls, **kwargs):
+        """
+        Equality checking of``pathlib.Path`` objects is different in
+        pre-Python 3.12 and Python 3.12 versions.
+
+        This factory method returns a mock ``pathlib.Path`` object from a
+        real path, which will satisfy an ``__eq__`` test on pre-Python 3.12
+        and Python 3.12 versions.
+        """
+        path = Path(kwargs["pathstr"])
+
+        if cls.is_pre_py312:
+            return mock.create_autospec(path, instance=True, _cparts=path._cparts, _flavour=path._flavour)
+        else:
+            return mock.create_autospec(path, instance=True, _str_normcase=path._str_normcase, _flavour=path._flavour)
+
+
+@pytest.fixture(scope="function")
+def paths(request):
+    return [_PathFactory.get_path(**path_params) for path_params in request.param["path_params"]]
+
+
+@pytest.fixture(scope="function")
+def py312_compatible_paths(request):
+    return [_PathFactory.get_py312_compatible_path(**path_params) for path_params in request.param["path_params"]]

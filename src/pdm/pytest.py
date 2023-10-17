@@ -155,9 +155,7 @@ class TestRepository(BaseRepository):
 
     def __init__(self, sources: list[RepositoryConfig], environment: BaseEnvironment, pypi_json: Path):
         super().__init__(sources, environment)
-        self._pypi_data: dict[str, Any] = {}
-        self._pypi_json = pypi_json
-        self.load_fixtures()
+        self._pypi_data = self.load_fixtures(pypi_json)
 
     def get_raw_dependencies(self, candidate: Candidate) -> list[str]:
         try:
@@ -210,8 +208,9 @@ class TestRepository(BaseRepository):
             c.link = cast(Link, _FakeLink())
             yield c
 
-    def load_fixtures(self) -> None:
-        self._pypi_data = json.loads(self._pypi_json.read_text())
+    @staticmethod
+    def load_fixtures(pypi_json: Path) -> dict[str, Any]:
+        return json.loads(pypi_json.read_text())
 
 
 class Metadata(dict):
