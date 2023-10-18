@@ -10,7 +10,7 @@ from functools import wraps
 from typing import TYPE_CHECKING, Generator, TypeVar, cast
 
 from pdm import termui
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning
+from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning, PdmException
 from pdm.models.candidates import Candidate, make_candidate
 from pdm.models.requirements import (
     Requirement,
@@ -486,6 +486,7 @@ class LockedRepository(BaseRepository):
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
         root = self.environment.project.root
+        static_urls = self.environment.project.lockfile.static_urls
         with cd(root):
             for package in lockfile.get("package", []):
                 version = package.get("version")
@@ -500,6 +501,10 @@ class LockedRepository(BaseRepository):
                     req.url = path_to_url(posixpath.join(root, req.path))  # type: ignore[attr-defined]
                 can = make_candidate(req, name=package_name, version=version)
                 can.hashes = package.get("files", [])
+                if not static_urls and any("url" in f for f in can.hashes):
+                    raise PdmException(
+                        "Static URLs are not allowed in lockfile unless enabled by `pdm lock --static-urls`."
+                    )
                 can_id = self._identify_candidate(can)
                 self.packages[can_id] = can
                 candidate_info: CandidateInfo = (
