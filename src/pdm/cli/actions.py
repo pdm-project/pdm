@@ -325,11 +325,22 @@ def get_latest_version(project: Project) -> str | None:
     return latest_version
 
 
-def check_update(project: Project) -> None:
+def check_update(project: Project) -> None:  # pragma: no cover
     """Check if there is a new version of PDM available"""
     from packaging.version import Version
 
     from pdm.cli.utils import is_homebrew_installation, is_pipx_installation, is_scoop_installation
+
+    if project.core.ui.verbosity < termui.Verbosity.NORMAL:
+        return
+
+    if sys.version_info < (3, 8):
+        project.core.ui.echo(
+            "Python 3.7 has reached EOL in June 2023 and will be no longer supported starting from PDM 2.11.0. "
+            "Please upgrade to Python 3.8 or higher.",
+            err=True,
+            style="warning",
+        )
 
     this_version = project.core.version
     latest_version = get_latest_version(project)
