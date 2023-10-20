@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 import venv
@@ -378,7 +380,7 @@ def test_filter_sources_with_config(project):
     ]
     repository = project.get_repository()
 
-    def expect_sources(requirement: str, expected: list[str]):
+    def expect_sources(requirement: str, expected: list[str]) -> bool:
         sources = repository.get_filtered_sources(parse_requirement(requirement))
         assert sorted([source.name for source in sources]) == sorted(expected)
 
