@@ -87,8 +87,11 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm venv` do
     ```bash
     $ eval $(pdm venv activate for-test)
     (test-project-for-test) $  # Virtualenv entered
-    Fish
+    ```
 
+=== "Fish"
+
+    ```bash
     $ eval (pdm venv activate for-test)
     ```
 
