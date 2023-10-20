@@ -363,3 +363,27 @@ def test_ignore_package_warning(pdm, project, recwarn, pattern, suppressed):
 
     assert result.exit_code == 0
     assert (len(recwarn) == 0) is suppressed
+
+
+def test_filter_sources_with_config(project):
+    project.pyproject.settings["source"] = [
+        {"name": "source1", "url": "https://source1.org/simple", "include_packages": ["foo", "foo-*"]},
+        {
+            "name": "source2",
+            "url": "https://source2.org/simple",
+            "include_packages": ["foo-bar", "bar*"],
+            "exclude_packages": ["baz-*"],
+        },
+        {"name": "pypi", "url": "https://pypi.org/simple"},
+    ]
+    repository = project.get_repository()
+
+    def expect_sources(requirement: str, expected: list[str]):
+        sources = repository.get_filtered_sources(parse_requirement(requirement))
+        assert sorted([source.name for source in sources]) == sorted(expected)
+
+    expect_sources("foo", ["source1"])
+    expect_sources("foo-baz", ["source1"])
+    expect_sources("foo-bar", ["source1", "source2"])
+    expect_sources("bar-extra", ["source2"])
+    expect_sources("baz-extra", ["source1", "pypi"])
