@@ -149,6 +149,22 @@ In some cases you may want to return packages from the preferred source, and sea
 respect-source-order = true
 ```
 
+### Specify index for individual packages
+
+You can bind packages to specific sources with `include_packages` and `exclude_packages` config under `tool.pdm.source` table.
+
+```toml
+[[tool.pdm.source]]
+name = "private"
+url = "https://private.pypi.org/simple"
+include_packages = ["foo", "foo-*"]
+exclude_packages = ["bar-*"]
+```
+
+With the above configuration, any package matching `foo` or `foo-*` will only be searched from the `private` index, and any package matching `bar-*` will be searched from all indexes except `private`.
+
+Both `include_packages` and `exclude_packages` are optional and accept a list of glob patterns, and `include_packages` takes effect exclusively when the pattern matches.
+
 ### Store credentials with the index
 
 You can specify credentials in the URL with `${ENV_VAR}` variable expansion and these variables will be read from the environment variables:

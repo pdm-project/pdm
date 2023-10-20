@@ -37,7 +37,6 @@ if TYPE_CHECKING:
 
     CandidateKey = tuple[str, str | None, str | None, bool]
 
-ALLOW_ALL_PYTHON = PySpecSet()
 T = TypeVar("T", bound="BaseRepository")
 
 
@@ -77,7 +76,22 @@ class BaseRepository:
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
-        return self.sources
+        source_preferences = [(s, self.source_preference(req, s)) for s in self.sources]
+        included_by = [s for s, p in source_preferences if p is True]
+        if included_by:
+            return included_by
+        return [s for s, p in source_preferences if p is None]
+
+    @staticmethod
+    def source_preference(req: Requirement, source: RepositoryConfig) -> bool | None:
+        key = req.key
+        if key is None:
+            return None
+        if any(fnmatch.fnmatch(key, pat) for pat in source.include_packages):
+            return True
+        if any(fnmatch.fnmatch(key, pat) for pat in source.exclude_packages):
+            return False
+        return None
 
     def get_dependencies(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
         """Get (dependencies, python_specifier, summary) of the candidate."""
@@ -336,10 +350,10 @@ class BaseRepository:
         respect_source_order = self.environment.project.pyproject.settings.get("resolution", {}).get(
             "respect-source-order", False
         )
+        sources = self.get_filtered_sources(candidate.req)
         if req.is_named and respect_source_order and comes_from:
-            sources = [s for s in self.sources if comes_from.startswith(s.url)]
-        else:
-            sources = self.sources
+            sources = [s for s in sources if comes_from.startswith(s.url)]
+
         with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
             if req.is_file_or_url:
                 this_link = cast("Link", candidate.prepare(self.environment).link)
