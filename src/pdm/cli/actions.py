@@ -30,6 +30,7 @@ from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS
 from pdm.resolver import resolve
 from pdm.utils import deprecation_warning
 
@@ -42,15 +43,13 @@ def do_lock(
     dry_run: bool = False,
     refresh: bool = False,
     groups: list[str] | None = None,
-    cross_platform: bool | None = None,
-    static_urls: bool | None = None,
+    strategy_change: list[str] | None = None,
     hooks: HookManager | None = None,
 ) -> dict[str, Candidate]:
     """Performs the locking process and update lockfile."""
     hooks = hooks or HookManager(project)
     check_project_file(project)
-    if static_urls is None:
-        static_urls = project.lockfile.static_urls
+    lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if refresh:
         locked_repo = project.locked_repository
         repo = project.get_repository()
@@ -68,19 +67,23 @@ def do_lock(
                     c.hashes.clear()
                 fetch_hashes(repo, mapping)
             lockfile = format_lockfile(
-                project, mapping, dependencies, groups=project.lockfile.groups, static_urls=static_urls
+                project, mapping, dependencies, groups=project.lockfile.groups, strategy=lock_strategy
             )
         project.write_lockfile(lockfile)
         return mapping
     # TODO: multiple dependency definitions for the same package.
-    if cross_platform is None:
-        cross_platform = project.lockfile.cross_platform
-    provider = project.get_provider(strategy, tracked_names, ignore_compatibility=cross_platform)
+
+    provider = project.get_provider(
+        strategy,
+        tracked_names,
+        ignore_compatibility=FLAG_CROSS_PLATFORM in lock_strategy,
+        direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
+    )
     if not requirements:
         requirements = [
             r for g, deps in project.all_dependencies.items() if groups is None or g in groups for r in deps.values()
         ]
-    if not cross_platform:
+    if FLAG_CROSS_PLATFORM not in lock_strategy:
         this_env = project.environment.marker_environment
         requirements = [req for req in requirements if not req.marker or req.marker.evaluate(this_env)]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
@@ -116,9 +119,7 @@ def do_lock(
             ui.echo(format_resolution_impossible(err), err=True)
             raise ResolutionImpossible("Unable to find a resolution") from None
         else:
-            data = format_lockfile(
-                project, mapping, dependencies, groups=groups, cross_platform=cross_platform, static_urls=static_urls
-            )
+            data = format_lockfile(project, mapping, dependencies, groups=groups, strategy=lock_strategy)
             if project.enable_write_lockfile:
                 ui.echo(f"{termui.Emoji.LOCK} Lock successful")
             project.write_lockfile(data, write=not dry_run)

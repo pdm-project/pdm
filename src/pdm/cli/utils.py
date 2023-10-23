@@ -37,6 +37,7 @@ from pdm.models.requirements import (
     strip_extras,
 )
 from pdm.models.specifiers import PySpecSet, get_specifier
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_STATIC_URLS
 from pdm.utils import (
     comparable_version,
     is_path_relative_to,
@@ -515,8 +516,7 @@ def format_lockfile(
     mapping: dict[str, Candidate],
     fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
     groups: list[str] | None = None,
-    cross_platform: bool | None = None,
-    static_urls: bool | None = None,
+    strategy: set[str] | None = None,
 ) -> dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
@@ -525,6 +525,8 @@ def format_lockfile(
 
     packages = tomlkit.aot()
     backend = project.backend
+    if strategy is None:
+        strategy = project.lockfile.strategy
     for _k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))
@@ -544,7 +546,7 @@ def format_lockfile(
         if v.hashes:
             collected = {}
             for item in v.hashes:
-                if static_urls:
+                if FLAG_STATIC_URLS in strategy:
                     row = {"url": item["url"], "hash": item["hash"]}
                 else:
                     row = {"file": item["file"], "hash": item["hash"]}
@@ -561,10 +563,11 @@ def format_lockfile(
     metadata.update(
         {
             "groups": sorted(groups, key=lambda k: k != "default"),
-            "cross_platform": cross_platform if cross_platform is not None else project.lockfile.cross_platform,
-            "static_urls": static_urls if static_urls is not None else project.lockfile.static_urls,
+            "strategy": sorted(strategy),
         }
     )
+    metadata.pop(FLAG_STATIC_URLS, None)
+    metadata.pop(FLAG_CROSS_PLATFORM, None)
     doc.add("metadata", metadata)
     doc.add("package", packages)
     return cast(dict, doc)

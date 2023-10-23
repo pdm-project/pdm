@@ -6,19 +6,21 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import (
-    groups_group,
-    lockfile_option,
-    no_isolation_option,
-    skip_option,
-)
+from pdm.cli.options import groups_group, lock_strategy_group, lockfile_option, no_isolation_option, skip_option
 from pdm.project import Project
 
 
 class Command(BaseCommand):
     """Resolve and lock dependencies"""
 
-    arguments = (*BaseCommand.arguments, lockfile_option, no_isolation_option, skip_option, groups_group)
+    arguments = (
+        *BaseCommand.arguments,
+        lockfile_option,
+        no_isolation_option,
+        skip_option,
+        groups_group,
+        lock_strategy_group,
+    )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -31,23 +33,6 @@ class Command(BaseCommand):
             "--check",
             action="store_true",
             help="Check if the lock file is up to date and quit",
-        )
-        parser.add_argument(
-            "--no-cross-platform",
-            action="store_false",
-            default=True,
-            dest="cross_platform",
-            help="Only lock packages for the current platform",
-        )
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument(
-            "--static-urls", action="store_true", help="Store static file URLs in the lockfile", default=None
-        )
-        group.add_argument(
-            "--no-static-urls",
-            action="store_false",
-            dest="static_urls",
-            help="Do not store static file URLs in the lockfile",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
@@ -72,7 +57,6 @@ class Command(BaseCommand):
             project,
             refresh=options.refresh,
             groups=selection.all(),
-            cross_platform=options.cross_platform,
-            static_urls=options.static_urls,
+            strategy_change=options.strategy_change,
             hooks=HookManager(project, options.skip),
         )

@@ -193,11 +193,11 @@ class TestRepository(BaseRepository):
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         return []
 
-    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+    def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:
         for version, candidate in sorted(
             self._pypi_data.get(cast(str, requirement.key), {}).items(),
             key=lambda item: parse_version(item[0]),
-            reverse=True,
+            reverse=not minimal_version,
         ):
             c = Candidate(
                 requirement,

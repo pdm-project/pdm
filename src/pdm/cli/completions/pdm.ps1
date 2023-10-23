@@ -323,7 +323,8 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@(
                             "--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile", "--check", "--dev", "--prod",
-                            "--production", "-d", "--no-default", "--no-cross-platform", "--static-urls", "--no-static-urls"
+                            "--production", "-d", "--no-default", "--no-cross-platform", "--static-urls", "--no-static-urls",
+                            "--strategy", "-S"
                         )),
                         $skipOption,
                         $sectionOption,

@@ -329,30 +329,57 @@ pdm lock --prod -L pdm.prod.lock
 
 Check the `metadata.groups` field in the lockfile to see which groups are included.
 
-## Cross-platform lockfile
+## Lock strategies
+
+Currently, we support three flags to control the locking behavior: `cross_platform`, `static_urls` and `direct_minimal_versions`, with the meanings as follows.
+You can pass one or more flags to `pdm lock` by `--strategy/-S` option, either by giving a comma-separated list or by passing the option multiple times.
+Both of these commands function in the same way:
+
+```bash
+pdm lock -S cross_platform,static_urls
+pdm lock -S cross_platform -S static_urls
+```
+
+The flags will be encoded in the lockfile and get read when you run `pdm lock` next time. But you can disable flags by prefixing the flag name with `no_`:
+
+```bash
+pdm lock -S no_cross_platform
+```
+
+This command makes the lockfile not cross-platform.
+
+### Cross platform
 
 _New in version 2.6.0_
 
 By default, the generated lockfile is **cross-platform**, which means the current platform isn't taken into account when resolving the dependencies. The result lockfile will contain wheels and dependencies for all possible platforms and Python versions.
 However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels. To avoid this, you can tell PDM
-to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform. This can be done by passing the `--no-cross-platform` option to `pdm lock`:
+to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform. This can be done by passing the `--strategy no_cross_platform` option to `pdm lock`:
 
 ```bash
-pdm lock --no-cross-platform
+pdm lock --strategy no_cross_platform
 ```
 
-## Store static URLs or filenames in lockfile
+### Static URLs
 
 _New in version 2.8.0_
 
 By default, PDM only stores the filenames of the packages in the lockfile, which benefits the reusability across different package indexes.
-However, if you want to store the static URLs of the packages in the lockfile, you can pass the `--static-urls` option to `pdm lock`:
+However, if you want to store the static URLs of the packages in the lockfile, you can pass the `--strategy static_urls` option to `pdm lock`:
 
 ```bash
-pdm lock --static-urls
+pdm lock --strategy static_urls
 ```
 
-The settings will be saved and remembered for the same lockfile. You can also pass `--no-static-urls` to disable it.
+The settings will be saved and remembered for the same lockfile. You can also pass `--strategy no_static_urls` to disable it.
+
+### Direct minimal versions
+
+_New in version 2.10.0_
+
+When it is enabled by passing `--strategy direct_minimal_versions`, dependencies specified in the `pyproject.toml` will be resolved to the minimal versions available, rather than the latest versions. This is useful when you want to test the compatibility of your project within a range of dependency versions.
+
+For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will be resolved to version `2.0.0` if there is no other compatibility issue.
 
 ## Show what packages are installed
 
