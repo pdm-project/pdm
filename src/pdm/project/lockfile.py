@@ -50,11 +50,11 @@ class Lockfile(TOMLBase):
             change = change.replace("-", "_").lower()
             if change.startswith("no_"):
                 if change[3:] not in SUPPORTED_FLAGS:
-                    raise PdmUsageError(f"Invalid strategy flag: {change[3:]}, supported: {SUPPORTED_FLAGS}")
+                    raise PdmUsageError(f"Invalid strategy flag: {change[3:]}, supported: {', '.join(SUPPORTED_FLAGS)}")
                 original.discard(change[3:])
             else:
                 if change not in SUPPORTED_FLAGS:
-                    raise PdmUsageError(f"Invalid strategy flag: {change}, supported: {SUPPORTED_FLAGS}")
+                    raise PdmUsageError(f"Invalid strategy flag: {change}, supported: {', '.join(SUPPORTED_FLAGS)}")
                 original.add(change)
         return original
 
