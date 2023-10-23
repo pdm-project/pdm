@@ -515,8 +515,8 @@ def format_lockfile(
     project: Project,
     mapping: dict[str, Candidate],
     fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
-    groups: list[str] | None = None,
-    strategy: set[str] | None = None,
+    groups: list[str] | None,
+    strategy: set[str],
 ) -> dict:
     """Format lock file from a dict of resolved candidates, a mapping of dependencies
     and a collection of package summaries.
@@ -525,8 +525,6 @@ def format_lockfile(
 
     packages = tomlkit.aot()
     backend = project.backend
-    if strategy is None:
-        strategy = project.lockfile.strategy
     for _k, v in sorted(mapping.items()):
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))

@@ -199,3 +199,15 @@ def test_lock_direct_minimal_versions(project, repository, pdm):
     locked_repository = project.locked_repository
     assert locked_repository.all_candidates["django"].version == "1.11.8"
     assert locked_repository.all_candidates["pytz"].version == "2019.6"
+
+
+@pytest.mark.usefixtures("local_finder")
+@pytest.mark.parametrize("args", [(), ("-S", "direct_minimal_versions")])
+def test_lock_direct_minimal_versions_real(project, pdm, args):
+    project.add_dependencies({"zipp": parse_requirement("zipp")})
+    pdm(["lock", *args], obj=project, strict=True)
+    locked_candidate = project.locked_repository.all_candidates["zipp"]
+    if args:
+        assert locked_candidate.version == "3.6.0"
+    else:
+        assert locked_candidate.version == "3.7.0"
