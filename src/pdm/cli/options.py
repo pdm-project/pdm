@@ -363,3 +363,36 @@ venv_option = Option(
     help="Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]",
     default=os.getenv("PDM_IN_VENV"),
 )
+
+
+lock_strategy_group = ArgumentGroup("lock_strategy")
+lock_strategy_group.add_argument(
+    "--strategy",
+    "-S",
+    dest="strategy_change",
+    metavar="STRATEGY",
+    action=split_lists(","),
+    help="Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add 'no_' prefix to disable."
+    " Support given multiple times or split by comma.",
+)
+lock_strategy_group.add_argument(
+    "--no-cross-platform",
+    action="append_const",
+    dest="strategy_change",
+    const="no_cross_platform",
+    help="[DEPRECATED] Only lock packages for the current platform",
+)
+lock_strategy_group.add_argument(
+    "--static-urls",
+    action="append_const",
+    dest="strategy_change",
+    help="[DEPRECATED] Store static file URLs in the lockfile",
+    const="static_urls",
+)
+lock_strategy_group.add_argument(
+    "--no-static-urls",
+    action="append_const",
+    dest="strategy_change",
+    help="[DEPRECATED] Do not store static file URLs in the lockfile",
+    const="no_static_urls",
+)

@@ -408,12 +408,15 @@ class Project:
         tracked_names: Iterable[str] | None = None,
         for_install: bool = False,
         ignore_compatibility: bool = True,
+        direct_minimal_versions: bool = False,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
         :param strategy: the resolve strategy
         :param tracked_names: the names of packages that needs to update
         :param for_install: if the provider is for install
+        :param ignore_compatibility: if the provider should ignore the compatibility when evaluating candidates
+        :param direct_minimal_versions: if the provider should prefer minimal versions instead of latest
         :returns: The provider object
         """
 
@@ -440,9 +443,13 @@ class Project:
                 )
 
         if locked_repository is None:
-            return BaseProvider(repository, allow_prereleases, overrides)
+            return BaseProvider(
+                repository, allow_prereleases, overrides, direct_minimal_versions=direct_minimal_versions
+            )
         if for_install:
-            return BaseProvider(locked_repository, allow_prereleases, overrides)
+            return BaseProvider(
+                locked_repository, allow_prereleases, overrides, direct_minimal_versions=direct_minimal_versions
+            )
         provider_class = ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
         tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
         return provider_class(
@@ -451,6 +458,7 @@ class Project:
             repository,
             allow_prereleases,
             overrides,
+            direct_minimal_versions=direct_minimal_versions,
         )
 
     def get_reporter(

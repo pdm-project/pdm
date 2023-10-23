@@ -18,6 +18,7 @@ def resolve(project, repository):
         allow_prereleases=None,
         strategy="all",
         tracked_names=None,
+        direct_minimal_versions=False,
     ):
         repository.environment.python_requires = PySpecSet(requires_python)
         if allow_prereleases is not None:
@@ -28,7 +29,7 @@ def resolve(project, repository):
                 requirements.append(parse_requirement(line[3:], True))
             else:
                 requirements.append(parse_requirement(line))
-        provider = project.get_provider(strategy, tracked_names)
+        provider = project.get_provider(strategy, tracked_names, direct_minimal_versions=direct_minimal_versions)
 
         ui = project.core.ui
         with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
@@ -330,3 +331,11 @@ def test_resolve_skip_candidate_with_invalid_metadata(resolve, repository):
     repository.add_dependencies("sqlparse", "0.4.0", ["django>=1.11'"])
     result = resolve(["sqlparse"], ">=3.6")
     assert result["sqlparse"].version == "0.3.0"
+
+
+def test_resolve_direct_minimal_versions(resolve, repository, project):
+    repository.add_candidate("pytz", "2019.6")
+    project.add_dependencies({"django": parse_requirement("django")})
+    result = resolve(["django"], ">=3.6", direct_minimal_versions=True)
+    assert result["django"].version == "1.11.8"
+    assert result["pytz"].version == "2019.6"

@@ -37,11 +37,13 @@ class BaseProvider(AbstractProvider):
         repository: BaseRepository,
         allow_prereleases: bool | None = None,
         overrides: dict[str, str] | None = None,
+        direct_minimal_versions: bool = False,
     ) -> None:
         self.repository = repository
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
         self.overrides = overrides or {}
+        self.direct_minimal_versions = direct_minimal_versions
         self._known_depth: dict[str, int] = {}
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
@@ -124,6 +126,13 @@ class BaseProvider(AbstractProvider):
                 req = f"{identifier}{requested}"
         return self._find_candidates(parse_requirement(req))
 
+    def _is_direct_requirement(self, requirement: Requirement) -> bool:
+        from collections import ChainMap
+
+        project = self.repository.environment.project
+        all_dependencies = ChainMap(*project.all_dependencies.values())
+        return requirement.identify() in all_dependencies
+
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named and not isinstance(self.repository, LockedRepository):
             can = make_candidate(requirement)
@@ -131,7 +140,11 @@ class BaseProvider(AbstractProvider):
                 can.prepare(self.repository.environment).metadata
             return [can]
         else:
-            return self.repository.find_candidates(requirement, requirement.prerelease or self.allow_prereleases)
+            return self.repository.find_candidates(
+                requirement,
+                requirement.prerelease or self.allow_prereleases,
+                minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
+            )
 
     def find_matches(
         self,

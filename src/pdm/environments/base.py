@@ -120,6 +120,7 @@ class BaseEnvironment(abc.ABC):
         self,
         sources: list[RepositoryConfig] | None = None,
         ignore_compatibility: bool = False,
+        minimal_version: bool = False,
     ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
@@ -127,7 +128,7 @@ class BaseEnvironment(abc.ABC):
         :param ignore_compatibility: whether to ignore the python version
             and wheel tags.
         """
-        from unearth import PackageFinder
+        from pdm.models.finder import PDMPackageFinder
 
         if sources is None:
             sources = self.project.sources
@@ -142,7 +143,7 @@ class BaseEnvironment(abc.ABC):
 
         session = self._build_session(trusted_hosts)
         with self._patch_target_python():
-            finder = PackageFinder(
+            finder = PDMPackageFinder(
                 session=session,
                 target_python=self.target_python,
                 ignore_compatibility=ignore_compatibility,
@@ -153,6 +154,7 @@ class BaseEnvironment(abc.ABC):
                     "respect-source-order", False
                 ),
                 verbosity=self.project.core.ui.verbosity,
+                minimal_version=minimal_version,
             )
             for source in sources:
                 assert source.url

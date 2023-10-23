@@ -132,7 +132,7 @@ class BaseRepository:
             reqs = [req for req in reqs if not req.marker or req.marker.evaluate(pep508_env)]
         return reqs, PySpecSet(requires_python), summary
 
-    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+    def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:
         raise NotImplementedError
 
     def is_this_package(self, requirement: Requirement) -> bool:
@@ -168,9 +168,15 @@ class BaseRepository:
         requirement: Requirement,
         allow_prereleases: bool | None = None,
         ignore_requires_python: bool = False,
+        minimal_version: bool = False,
     ) -> Iterable[Candidate]:
         """Find candidates of the given NamedRequirement. Let it to be implemented in
         subclasses.
+
+        :param requirement: the requirement to find
+        :param allow_prereleases: whether to include pre-releases
+        :param ignore_requires_python: whether to ignore the requires-python marker
+        :param minimal_version: whether to prefer the minimal versions of the package
         """
         # `allow_prereleases` is None means leave it to specifier to decide whether to
         # include prereleases
@@ -179,7 +185,7 @@ class BaseRepository:
         if self.is_this_package(requirement):
             return [self.make_this_candidate(requirement)]
         requires_python = requirement.requires_python & self.environment.python_requires
-        cans = LazySequence(self._find_candidates(requirement))
+        cans = LazySequence(self._find_candidates(requirement, minimal_version=minimal_version))
         applicable_cans = LazySequence(
             c
             for c in cans
@@ -440,11 +446,11 @@ class PyPIRepository(BaseRepository):
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata
 
-    def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
+    def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:
         from unearth.utils import LazySequence
 
         sources = self.get_filtered_sources(requirement)
-        with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
+        with self.environment.get_finder(sources, self.ignore_compatibility, minimal_version=minimal_version) as finder:
             cans = LazySequence(
                 Candidate.from_installation_candidate(c, requirement)
                 for c in finder.find_all_packages(requirement.project_name, allow_yanked=requirement.is_pinned)
@@ -499,8 +505,10 @@ class LockedRepository(BaseRepository):
         return {can.req.identify(): can for can in self.packages.values()}
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
+        from pdm.project.lockfile import FLAG_STATIC_URLS
+
         root = self.environment.project.root
-        static_urls = self.environment.project.lockfile.static_urls
+        static_urls = FLAG_STATIC_URLS in self.environment.project.lockfile.strategy
         with cd(root):
             for package in lockfile.get("package", []):
                 version = package.get("version")
@@ -577,6 +585,7 @@ class LockedRepository(BaseRepository):
         requirement: Requirement,
         allow_prereleases: bool | None = None,
         ignore_requires_python: bool = False,
+        minimal_version: bool = False,
     ) -> Iterable[Candidate]:
         if self.is_this_package(requirement):
             candidate = self.make_this_candidate(requirement)
