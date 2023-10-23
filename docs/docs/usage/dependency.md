@@ -381,6 +381,10 @@ When it is enabled by passing `--strategy direct_minimal_versions`, dependencies
 
 For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will be resolved to version `2.0.0` if there is no other compatibility issue.
 
+!!! NOTE
+    Version constraints in package dependencies are not future-proof. If you resolve the dependencies to the minimal versions, there will likely be backwards-compatibility issues.
+    For example, `flask==2.0.0` requires `werkzeug>=2.0`, but in fact, it can not work with `Werkzeug 3.0.0`, which is released 2 years after it.
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:
