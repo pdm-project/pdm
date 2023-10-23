@@ -187,7 +187,7 @@ def no_isolation_option(project: Project, namespace: argparse.Namespace, values:
 
 install_group.options.append(no_isolation_option)
 
-groups_group = ArgumentGroup("Dependencies selection")
+groups_group = ArgumentGroup("Dependencies Selection")
 groups_group.add_argument(
     "-G",
     "--group",
@@ -365,15 +365,15 @@ venv_option = Option(
 )
 
 
-lock_strategy_group = ArgumentGroup("lock_strategy")
+lock_strategy_group = ArgumentGroup("Lock Strategy")
 lock_strategy_group.add_argument(
     "--strategy",
     "-S",
     dest="strategy_change",
     metavar="STRATEGY",
     action=split_lists(","),
-    help="Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add 'no_' prefix to disable."
-    " Support given multiple times or split by comma.",
+    help="Specify lock strategy (cross_platform, static_urls, direct_minimal_versions). Add 'no_' prefix to disable."
+    " Can be supplied multiple times or split by comma.",
 )
 lock_strategy_group.add_argument(
     "--no-cross-platform",
