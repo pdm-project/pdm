@@ -19,6 +19,7 @@ from pdm.compat import cached_property
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning
 from pdm.models.backends import get_backend, get_backend_by_spec
+from pdm.models.reporter import BaseReporter
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -276,22 +277,29 @@ class Candidate:
         """Format for output."""
         return f"[req]{self.name}[/] [warning]{self.version}[/]"
 
-    def prepare(self, environment: BaseEnvironment) -> PreparedCandidate:
+    def prepare(self, environment: BaseEnvironment, reporter: BaseReporter | None = None) -> PreparedCandidate:
         """Prepare the candidate for installation."""
         if self._prepared is None:
-            self._prepared = PreparedCandidate(self, environment)
+            self._prepared = PreparedCandidate(self, environment, reporter=reporter or BaseReporter())
+        else:
+            self._prepared.environment = environment
+            if reporter is not None:
+                self._prepared.reporter = reporter
         return self._prepared
 
 
+@dataclasses.dataclass
 class PreparedCandidate:
     """A candidate that has been prepared for installation.
     The metadata and built wheel are available.
     """
 
-    def __init__(self, candidate: Candidate, environment: BaseEnvironment) -> None:
-        self.candidate = candidate
-        self.environment = environment
-        self.req = candidate.req
+    candidate: Candidate
+    environment: BaseEnvironment
+    reporter: BaseReporter = dataclasses.field(default_factory=BaseReporter)
+
+    def __post_init__(self) -> None:
+        self.req = self.candidate.req
 
         self.wheel: Path | None = None
         self.link = self._replace_url_vars(self.candidate.link)
@@ -392,7 +400,9 @@ class PreparedCandidate:
         build_dir = self._get_wheel_dir()
         os.makedirs(build_dir, exist_ok=True)
         termui.logger.info("Running PEP 517 backend to build a wheel for %s", self.link)
+        self.reporter.report_build_start(self.link.filename)  # type: ignore[union-attr]
         self.wheel = Path(builder.build(build_dir, metadata_directory=self._metadata_dir))
+        self.reporter.report_build_end(self.link.filename)  # type: ignore[union-attr]
         return self.wheel
 
     def obtain(self, allow_all: bool = False, unpack: bool = True) -> None:
@@ -444,7 +454,14 @@ class PreparedCandidate:
                     download_dir = build_dir
                 else:
                     download_dir = tmpdir
-                result = finder.download_and_unpack(self.link, build_dir, download_dir, hash_options)
+                result = finder.download_and_unpack(
+                    self.link,
+                    build_dir,
+                    download_dir,
+                    hash_options,
+                    download_reporter=self.reporter.report_download,
+                    unpack_reporter=self.reporter.report_unpack,
+                )
                 if self.link.is_wheel:
                     self.wheel = result
                 else:
@@ -551,7 +568,9 @@ class PreparedCandidate:
         builder = EditableBuilder if self.req.editable else WheelBuilder
         try:
             termui.logger.info("Running PEP 517 backend to get metadata for %s", self.link)
+            self.reporter.report_build_start(self.link.filename)  # type: ignore[union-attr]
             self._metadata_dir = builder(source_dir, self.environment).prepare_metadata(metadata_parent)
+            self.reporter.report_build_end(self.link.filename)  # type: ignore[union-attr]
         except BuildError:
             termui.logger.warning("Failed to build package, try parsing project files.")
             try:

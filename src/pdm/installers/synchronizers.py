@@ -8,7 +8,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
 
-from rich.progress import SpinnerColumn
+from rich.progress import SpinnerColumn, TaskProgressColumn
 
 from pdm import termui
 from pdm.compat import cached_property
@@ -16,6 +16,7 @@ from pdm.environments import BaseEnvironment
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate, make_candidate
+from pdm.models.reporter import BaseReporter, RichProgressReporter
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable, normalize_name
 
@@ -279,7 +280,8 @@ class Synchronizer(BaseSynchronizer):
     def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
-        job = progress.add_task(f"Installing {can.format()}...", total=1)
+        job = progress.add_task(f"Installing {can.format()}...", text="", total=None)
+        can.prepare(self.environment, RichProgressReporter(progress, job))
         try:
             self.manager.install(can)
         except Exception:
@@ -288,7 +290,8 @@ class Synchronizer(BaseSynchronizer):
         else:
             progress.live.console.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
         finally:
-            progress.update(job, completed=1, visible=False)
+            progress.update(job, visible=False)
+            can.prepare(self.environment, BaseReporter())
         return can
 
     def update_candidate(self, key: str, progress: Progress) -> tuple[Distribution, Candidate]:
@@ -297,9 +300,9 @@ class Synchronizer(BaseSynchronizer):
         dist = self.working_set[strip_extras(key)[0]]
         dist_version = dist.version
         job = progress.add_task(
-            f"Updating [req]{key}[/] [warning]{dist_version}[/] -> [warning]{can.version}[/]...",
-            total=1,
+            f"Updating [req]{key}[/] [warning]{dist_version}[/] -> [warning]{can.version}[/]...", text="", total=None
         )
+        can.prepare(self.environment, RichProgressReporter(progress, job))
         try:
             self.manager.uninstall(dist)
             self.manager.install(can)
@@ -317,7 +320,8 @@ class Synchronizer(BaseSynchronizer):
                 f"-> [warning]{can.version}[/] successful",
             )
         finally:
-            progress.update(job, completed=1, visible=False)
+            progress.update(job, visible=False)
+            can.prepare(self.environment, BaseReporter())
 
         return dist, can
 
@@ -326,10 +330,7 @@ class Synchronizer(BaseSynchronizer):
         dist = self.working_set[key]
         dist_version = dist.version
 
-        job = progress.add_task(
-            f"Removing [req]{key}[/] [warning]{dist_version}[/]...",
-            total=1,
-        )
+        job = progress.add_task(f"Removing [req]{key}[/] [warning]{dist_version}[/]...", text="", total=None)
         try:
             self.manager.uninstall(dist)
         except Exception:
@@ -342,7 +343,7 @@ class Synchronizer(BaseSynchronizer):
                 f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] [warning]{dist_version}[/] successful"
             )
         finally:
-            progress.update(job, completed=1, visible=False)
+            progress.update(job, visible=False)
         return dist
 
     def _show_headline(self, packages: dict[str, list[str]]) -> None:
@@ -428,6 +429,8 @@ class Synchronizer(BaseSynchronizer):
             " ",
             SpinnerColumn(termui.SPINNER, speed=1, style="primary"),
             "{task.description}",
+            "[info]{task.fields[text]}",
+            TaskProgressColumn("[info]{task.percentage:>3.0f}%[/]"),
         ) as progress:
             live = progress.live
             for kind, key in sequential_jobs:
