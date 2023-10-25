@@ -3,10 +3,9 @@
 
 [metadata]
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
-cross_platform = true
-static_urls = false
-lock_version = "4.3"
-content_hash = "sha256:a981bd6e57936e05ef989e690cff324b4e3c88858f026db22afc1caa35013ff8"
+strategy = ["cross_platform"]
+lock_version = "4.4"
+content_hash = "sha256:82e53197b4afcc358fdc567b55686a65c13652ec746879a4ba708ecb251234e5"
 
 [[package]]
 name = "arpeggio"
@@ -1919,7 +1918,7 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.12.0"
+version = "0.12.1"
 requires_python = ">=3.7"
 summary = "A utility to fetch and download python packages"
 dependencies = [
@@ -1928,8 +1927,8 @@ dependencies = [
     "requests>=2.25",
 ]
 files = [
-    {file = "unearth-0.12.0-py3-none-any.whl", hash = "sha256:48e0ac07dadf2530f31385f4be605ec4fbf4604fbb3ff654bc8a9e3e8e243dc5"},
-    {file = "unearth-0.12.0.tar.gz", hash = "sha256:a9809c2069640010eb588f3179a96a873d7a18c4ad686c3023a0e141ebe2dfcb"},
+    {file = "unearth-0.12.1-py3-none-any.whl", hash = "sha256:a5a5c51ca44965cbe3618116bd592bb0bbe3705af5fe14e5792660d904aad7c8"},
+    {file = "unearth-0.12.1.tar.gz", hash = "sha256:4caad941b60f51e50fdc109866234d407910aef77f1233aa1b6b5d168c7427ee"},
 ]
 
 [[package]]
