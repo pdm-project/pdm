@@ -3,7 +3,7 @@ from __future__ import annotations
 import urllib.parse
 
 from unearth.auth import MaybeAuth, MultiDomainBasicAuth, get_keyring_provider
-from unearth.utils import split_auth_from_netloc
+from unearth.utils import commonprefix, split_auth_from_url
 
 from pdm._types import RepositoryConfig
 from pdm.exceptions import PdmException
@@ -22,18 +22,28 @@ class PdmBasicAuth(MultiDomainBasicAuth):
         self.sources = sources
         self.ui = ui
 
-    def _get_auth_from_index_url(self, netloc: str) -> tuple[MaybeAuth, str | None]:
+    def _get_auth_from_index_url(self, url: str) -> tuple[MaybeAuth, str | None]:
         if not self.sources:
             return None, None
+
+        target = urllib.parse.urlsplit(url.rstrip("/") + "/")
+        candidates: list[tuple[MaybeAuth, str, urllib.parse.SplitResult]] = []
         for source in self.sources:
             assert source.url
-            parsed = urllib.parse.urlparse(source.url)
-            auth, index_netloc = split_auth_from_netloc(parsed.netloc)
-            if index_netloc == netloc:
-                if source.username:
-                    auth = (source.username, source.password)
-                return auth, source.url
-        return None, None
+            index = source.url.rstrip("/") + "/"
+            auth, url_no_auth = split_auth_from_url(index)
+            parsed = urllib.parse.urlparse(url_no_auth)
+            if source.username:
+                auth = (source.username, source.password)
+            if parsed == target:
+                return auth, index
+            if parsed.netloc == target.netloc:
+                candidates.append((auth, index, parsed))
+
+        if not candidates:
+            return None, None
+        auth, index, _ = max(candidates, key=lambda x: commonprefix(x[2].path, target.path).rfind("/"))
+        return auth, index
 
     def _prompt_for_password(self, netloc: str) -> tuple[str | None, str | None, bool]:
         if self.ui.verbosity < Verbosity.DETAIL:
