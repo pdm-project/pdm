@@ -1,3 +1,28 @@
+Release v2.10.0 (2023-10-26)
+----------------------------
+
+### Features & Improvements
+
+- Allow binding packages to specific sources with `include_packages` and `exclude_packages` config under `tool.pdm.source` table. [#1645](https://github.com/pdm-project/pdm/issues/1645)
+- Show warnings when a package is rejected by the resolve because of uncovered `requires-python` range. And provide a way to ignore them per-package. [#2304](https://github.com/pdm-project/pdm/issues/2304)
+- Add `-q/--quiet` option to suppress some warnings printed to the console. This option is mutually exclusive with `-v/--verbose`. [#2304](https://github.com/pdm-project/pdm/issues/2304)
+- Introduce a new `--strategy/-S` option for `lock` command, to specify one or more strategy flags for resolving dependencies. `--static-urls` and `--no-cross-platform` are deprecated at the same time. [#2310](https://github.com/pdm-project/pdm/issues/2310)
+- Add lock option to resolve direct dependencies to the minimal versions available. [#2310](https://github.com/pdm-project/pdm/issues/2310)
+- Report the progress of download and unpacking when installing packages. [#2328](https://github.com/pdm-project/pdm/issues/2328)
+
+### Bug Fixes
+
+- Change the venv backend clean function `pdm.cli.commands.venv.backend.Backend._ensure_clean` to empty the `.venv` folder instead of deleting it. [#2282](https://github.com/pdm-project/pdm/issues/2282)
+- Fix a bug that dependency groups from Poetry 1.2+ do not migrate properly to PDM. [#2285](https://github.com/pdm-project/pdm/issues/2285)
+- Fix a bug that build requirements are installed into wrong location when using `--venv` option. [#2314](https://github.com/pdm-project/pdm/issues/2314)
+- Fix a bug that global repository setting results in TypeError . [#2330](https://github.com/pdm-project/pdm/issues/2330)
+- Fix a credentials error when working with two indices on the same host [#2333](https://github.com/pdm-project/pdm/issues/2333)
+
+### Miscellany
+
+- Officially supports python3.12 now. [#2301](https://github.com/pdm-project/pdm/issues/2301)
+
+
 Release v2.9.3 (2023-09-25)
 ---------------------------
 
