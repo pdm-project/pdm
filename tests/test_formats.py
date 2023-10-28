@@ -171,6 +171,13 @@ def test_expand_env_vars_in_source(project, monkeypatch):
     assert result.strip().splitlines()[-1] == "--index-url https://foo:bar@test.pypi.org/simple"
 
 
+def test_export_find_links(project, monkeypatch):
+    url = "https://storage.googleapis.com/jax-releases/jax_cuda_releases.html"
+    project.pyproject.settings["source"] = [{"url": url, "name": "jax", "type": "find_links"}]
+    result = requirements.export(project, [], Namespace(expandvars=False))
+    assert result.strip().splitlines()[-1] == f"--find-links {url}"
+
+
 def test_export_replace_project_root(project):
     artifact = FIXTURES / "artifacts/first-2.0.2-py2.py3-none-any.whl"
     shutil.copy2(artifact, project.root)

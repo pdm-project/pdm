@@ -199,7 +199,13 @@ def export(
         url = source["url"]
         if options.expandvars:
             url = expand_env_vars_in_auth(url)
-        prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"
+        source_type = source.get("type", "index")
+        if source_type == "index":
+            prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"
+        elif source_type == "find_links":
+            prefix = "--find-links"
+        else:
+            raise ValueError(f"Unknown source type: {source_type}")
         lines.append(f"{prefix} {url}\n")
         if not source.get("verify_ssl", True):
             host = urllib.parse.urlparse(url).hostname
