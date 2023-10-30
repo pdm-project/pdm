@@ -73,7 +73,7 @@ def build_error(e: subprocess.CalledProcessError) -> BuildError:
     """
     output = cast("list[str]", e.output)
     errors: list[str] = []
-    if output[-1].strip().startswith("ModuleNotFoundError"):
+    if output and output[-1].strip().startswith("ModuleNotFoundError"):
         package = output[-1].strip().split()[-1]
         errors.append(
             f"Module {package} is missing, please make sure it is specified in the "
