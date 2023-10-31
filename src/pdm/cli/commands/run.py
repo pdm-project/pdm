@@ -198,7 +198,7 @@ class TaskRunner:
 
         def forward_signal(signum: int, frame: FrameType | None) -> None:
             if sys.platform == "win32" and signum == signal.SIGINT:
-                signum = signal.CTRL_C_EVENT
+                signum = signal.SIGTERM
             process.send_signal(signum)
 
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
