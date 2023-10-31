@@ -12,7 +12,7 @@ from pdm.project import Project
 
 
 class ActivateCommand(BaseCommand):
-    """Activate the virtualenv with the given name"""
+    """Print the command to activate the virtualenv with the given name"""
 
     arguments = (verbose_option,)
 
