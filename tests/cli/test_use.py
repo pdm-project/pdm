@@ -35,9 +35,7 @@ def test_use_python_by_version(project, pdm):
 def test_use_wrapper_python(project):
     wrapper_script = """#!/bin/bash
 exec "{}" "$@"
-""".format(
-        sys.executable
-    )
+""".format(sys.executable)
     shim_path = project.root.joinpath("python_shim.sh")
     shim_path.write_text(wrapper_script)
     shim_path.chmod(0o755)

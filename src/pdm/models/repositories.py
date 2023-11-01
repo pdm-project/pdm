@@ -234,7 +234,9 @@ class BaseRepository:
         if not applicable_cans and allow_prereleases is None:
             # No non-pre-releases is found, force pre-releases now
             applicable_cans = LazySequence(
-                c for c in cans if requirement.specifier.contains(c.version, True)  # type: ignore[arg-type, union-attr]
+                c
+                for c in cans
+                if requirement.specifier.contains(c.version, True)  # type: ignore[arg-type, union-attr]
             )
             applicable_cans_python_compatible = LazySequence(filter_candidates_with_requires_python(applicable_cans))
             if applicable_cans_python_compatible:
@@ -342,9 +344,7 @@ class BaseRepository:
         of a given package version.
         """
         if (
-            candidate.req.is_vcs
-            or candidate.req.is_file_or_url
-            and candidate.req.is_local_dir  # type: ignore[attr-defined]
+            candidate.req.is_vcs or candidate.req.is_file_or_url and candidate.req.is_local_dir  # type: ignore[attr-defined]
         ):
             return []
         if candidate.hashes:

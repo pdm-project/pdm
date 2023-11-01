@@ -601,7 +601,9 @@ class PreparedCandidate:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         return filter_requirements_with_extras(
-            self.req.project_name, self.metadata.requires or [], extras  # type: ignore[arg-type]
+            self.req.project_name,
+            self.metadata.requires or [],
+            extras,  # type: ignore[arg-type]
         )
 
     def should_cache(self) -> bool:
