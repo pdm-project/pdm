@@ -137,7 +137,7 @@ def _add_to_path(target: Path) -> None:
                 winreg.SetValueEx(env_key, "PATH", 0, type_, new_value)
 
         _echo(
-            "Post-install: {} is added to PATH env, please restart your terminal " "to take effect".format(
+            "Post-install: {} is added to PATH env, please restart your terminal to take effect".format(
                 colored("green", value)
             )
         )
