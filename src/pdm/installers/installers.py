@@ -4,6 +4,7 @@ import io
 import itertools
 import json
 import os
+import shutil
 import warnings
 import zipfile
 from functools import lru_cache
@@ -92,7 +93,11 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             # A package, create link for the parent dir and don't proceed
             # for child directories
             if os.path.exists(destination_root):
-                os.remove(destination_root)
+                warnings.warn(f"Overwriting existing package: {destination_root}", PDMWarning, stacklevel=2)
+                if os.path.isdir(destination_root):
+                    shutil.rmtree(destination_root)
+                else:
+                    os.remove(destination_root)
             os.symlink(root, destination_root, True)
             yield relpath
             dirs[:] = []
