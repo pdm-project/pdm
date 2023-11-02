@@ -110,9 +110,7 @@ def test_sync_with_index_change(project, index, pdm):
     project.pyproject.metadata["requires-python"] = ">=3.6"
     project.pyproject.metadata["dependencies"] = ["future-fstrings"]
     project.pyproject.write()
-    index[
-        "/simple/future-fstrings/"
-    ] = b"""
+    index["/simple/future-fstrings/"] = b"""
     <html>
     <body>
         <h1>future-fstrings</h1>

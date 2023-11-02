@@ -125,10 +125,6 @@ workflow = [
     "pycomplete~=0.3"
 ]
 
-[tool.black]
-line-length = 120
-target-version = ["py37", "py38", "py39", "py310"]
-
 [tool.ruff]
 line-length = 120
 extend-select = [

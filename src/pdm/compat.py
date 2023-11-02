@@ -10,8 +10,7 @@ else:
 
 
 if (
-    sys.version_info >= (3, 9)
-    and not (sys.version_info[:2] == (3, 9) and sys.platform == "win32")
+    sys.version_info >= (3, 9) and not (sys.version_info[:2] == (3, 9) and sys.platform == "win32")
     # a bug on windows+py39 that zipfile path is not normalized
 ):
 

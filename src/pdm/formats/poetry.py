@@ -87,7 +87,8 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
             req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace('"', "'")
         if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:
             req_dict["ref"] = req_dict.pop(
-                "rev", req_dict.pop("tag", req_dict.pop("branch", None))  # type: ignore[arg-type]
+                "rev",
+                req_dict.pop("tag", req_dict.pop("branch", None)),  # type: ignore[arg-type]
             )
         yield Requirement.from_req_dict(name, req_dict).as_line()
 
