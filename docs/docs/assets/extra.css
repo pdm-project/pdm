@@ -4,10 +4,24 @@ a.pdm-expansions {
   color: currentColor;
 }
 
-.bot-button {
+.bot-container {
   position: fixed;
+  width: 400px;
   right: 20px;
   bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items:end;
+}
+
+.bot-container > iframe {
+  width:100%;
+  border:none;
+  border-radius:0.5rem;
+  transition: height 0.3s ease-in-out;
+  height: 0;
+}
+.bot-button {
   padding: 0.8rem;
   border-radius: 50%;
   width: 80px;

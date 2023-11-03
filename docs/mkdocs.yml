@@ -114,7 +114,7 @@ extra:
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Phn8smztpv
   chatbot:
-    url: https://2prxfnwkygf4vexczrbpcq.streamlit.app/
+    url: https://2prxfnwkygf4vexczrbpcq.streamlit.app/?embed=true
 extra_css:
   - assets/extra.css
 extra_javascript:
