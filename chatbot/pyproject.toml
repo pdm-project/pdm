@@ -1,0 +1,19 @@
+[project]
+description = ""
+authors = [
+    {name = "Frost Ming", email = "me@frostming.com"},
+]
+dependencies = [
+    "llama-index>=0.8.59",
+    "setuptools>=68.2.2",
+    "openai>=0.28.1",
+    "streamlit>=1.28.1",
+]
+requires-python = ">=3.10,<3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
