@@ -113,6 +113,8 @@ extra:
       link: https://twitter.com/pdm_project
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Phn8smztpv
+  chatbot:
+    url: https://2prxfnwkygf4vexczrbpcq.streamlit.app/
 extra_css:
   - assets/extra.css
 extra_javascript:

@@ -3,3 +3,21 @@ a.pdm-expansions {
   font-weight: bold;
   color: currentColor;
 }
+
+.bot-button {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 0.8rem;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  background-color: #7e56c2;
+  transition: all 0.2s ease-in-out;
+  fill: white;
+}
+
+.bot-button:hover {
+  transform: translateY(-3px);
+  padding: 0.7rem;
+}
