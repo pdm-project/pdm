@@ -62,7 +62,9 @@ _namespace_package_lines = _namespace_package_lines.union(line.replace("'", '"')
 @lru_cache()
 def _is_namespace_package(root: str) -> bool:
     if not _is_python_package(root):
-        return False
+        # Treat non-Python packages as namespace packages to avoid package overwriting such as PyQt6
+        # Fixes: https://github.com/pdm-project/pdm/issues/2303
+        return True
     if not os.path.exists(os.path.join(root, "__init__.py")):  # PEP 420 style
         return True
     with Path(root, "__init__.py").open(encoding="utf-8") as f:
@@ -73,11 +75,16 @@ def _is_namespace_package(root: str) -> bool:
 def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]:
     """Create symlinks recursively from source to destination.
     Caveats: This don't work for pkgutil or pkg_resources namespace packages.
-    package  <-- link
+    package  <-- soft link
         __init__.py
     namespace_package  <-- mkdir
-        foo.py  <-- link
-        bar.py  <-- link
+        foo.py         <-- soft link
+        bar.py         <-- soft link
+        package        <-- soft link
+            __init__.py
+    non_python_package  <-- mkdir
+        foo.so          <-- hard link
+        bar.dll         <-- hard link
     """
     is_top = True
     for root, dirs, files in os.walk(source):
@@ -113,7 +120,16 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             destination_path = os.path.join(destination_root, f)
             if os.path.exists(destination_path):
                 os.remove(destination_path)
-            os.symlink(source_path, destination_path, False)
+            if f.endswith(".py"):
+                os.symlink(source_path, destination_path, False)
+            else:
+                # Some compiled files use relative paths to themeselves so symbolic links don't work.
+                # We use hard links and fall back to copy when crossing file systems.
+                # Fixes: https://github.com/pdm-project/pdm/issues/2303
+                try:
+                    os.link(source_path, destination_path)
+                except OSError:
+                    shutil.copy(source_path, destination_path)
             yield os.path.join(relpath, f)
 
 
