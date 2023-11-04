@@ -123,7 +123,8 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             if any(f.endswith(x) for x in [".py", ".pyi", ".pyx", ".ipynb"]):
                 os.symlink(source_path, destination_path, False)
             else:
-                # Some compiled files use relative paths to themeselves so symbolic links don't work.
+                # Some compiled files use relative paths to themeselves to reference other files,
+                # symlink doesn't work when the references are cross-package but in the same namespace.
                 # We use hard links and fall back to copy when crossing file systems.
                 # Fixes: https://github.com/pdm-project/pdm/issues/2303
                 try:
