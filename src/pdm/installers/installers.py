@@ -120,7 +120,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             destination_path = os.path.join(destination_root, f)
             if os.path.exists(destination_path):
                 os.remove(destination_path)
-            if any(f.endswith(x) for x in [".py", ".pyi", ".pyx", ".ipynb"]):
+            if any(f.endswith(x) for x in [".py", ".pyi", ".pyx", ".ipynb", ".pth"]):
                 os.symlink(source_path, destination_path, False)
             else:
                 # Some compiled files use relative paths to themeselves to reference other files,
