@@ -45,10 +45,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://pdm.fming.dev"
+Homepage = "https://pdm-project.org"
 Repository = "https://github.com/pdm-project/pdm"
-Documentation = "https://pdm.fming.dev"
-Changelog = "https://pdm.fming.dev/latest/dev/changelog/"
+Documentation = "https://pdm-project.org"
+Changelog = "https://pdm-project.org/latest/dev/changelog/"
 
 [project.optional-dependencies]
 pytest = [

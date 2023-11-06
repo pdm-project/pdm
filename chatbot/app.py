@@ -16,7 +16,7 @@ openai.api_key = st.secrets.openai_key
 st.title("Chat with the PDM docs, powered by LlamaIndex 💬🦙")
 st.info(
     "PDM - A modern Python package and dependency manager. "
-    "Check out the full documentation at [PDM docs](https://pdm.fming.dev).",
+    "Check out the full documentation at [PDM docs](https://pdm-project.org).",
     icon="📃",
 )
 

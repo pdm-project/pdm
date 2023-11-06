@@ -693,7 +693,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
     result.extend(sorted(info_lines))
     result.append(
         "To fix this, you could loosen the dependency version constraints in "
-        "pyproject.toml. See https://pdm.fming.dev/latest/usage/dependency/"
+        "pyproject.toml. See https://pdm-project.org/latest/usage/dependency/"
         "#solve-the-locking-failure for more details."
     )
     return "\n".join(result)

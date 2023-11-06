@@ -7,7 +7,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 
 ![PDM logo](https://raw.githubusercontent.com/pdm-project/pdm/main/docs/docs/assets/logo_big.png)
 
-[![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm.fming.dev)
+[![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm-project.org)
 [![Twitter Follow](https://img.shields.io/twitter/follow/pdm_project?label=get%20updates&logo=twitter&style=for-the-badge)](https://twitter.com/pdm_project)
 [![Discord](https://img.shields.io/discord/824472774965329931?label=discord&logo=discord&style=for-the-badge)](https://discord.gg/Phn8smztpv)
 
@@ -16,7 +16,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 [![codecov](https://codecov.io/gh/pdm-project/pdm/branch/main/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
 [![Packaging status](https://repology.org/badge/tiny-repos/pdm.svg)](https://repology.org/project/pdm/versions)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
 <a href="https://trackgit.com">
 <img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/l4eztudjnh9bfay668fl" alt="trackgit-views" />
 </a>
@@ -85,17 +85,17 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
 **For Linux/Mac**
 
 ```bash
-curl -sSL https://pdm.fming.dev/install-pdm.py | python3 -
+curl -sSL https://pdm-project.org/install-pdm.py | python3 -
 ```
 
 **For Windows**
 
 ```powershell
-(Invoke-WebRequest -Uri https://pdm.fming.dev/install-pdm.py -UseBasicParsing).Content | python -
+(Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | python -
 ```
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
-It can be downloaded from [install-pdm.py.sha256](https://pdm.fming.dev/install-pdm.py.sha256).
+It can be downloaded from [install-pdm.py.sha256](https://pdm-project.org/install-pdm.py.sha256).
 
 The installer will install PDM into the user site and the location depends on the system:
 
@@ -176,10 +176,10 @@ You can add multiple dependencies in the same command. After a while, check the 
 Tell people you are using PDM in your project by including the markdown code in README.md:
 
 ```markdown
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
 ```
 
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
+[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
 
 
 ## Packaging Status
