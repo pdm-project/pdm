@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 
     from pdm.environments import BaseEnvironment
 
+TEXT_FILE_SUFFIXES = (".py", ".pyi", ".ipynb", ".pth")
+
 
 @lru_cache()
 def _is_python_package(root: str | Path) -> bool:
@@ -120,7 +122,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             destination_path = os.path.join(destination_root, f)
             if os.path.exists(destination_path):
                 os.remove(destination_path)
-            if any(f.endswith(x) for x in [".py", ".pyi", ".pyx", ".ipynb", ".pth"]):
+            if f.endswith(TEXT_FILE_SUFFIXES):
                 os.symlink(source_path, destination_path, False)
             else:
                 # Some compiled files use relative paths to themeselves to reference other files,
