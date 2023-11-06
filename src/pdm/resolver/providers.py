@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import os
 from typing import TYPE_CHECKING, Callable, cast
 
@@ -159,15 +158,21 @@ class BaseProvider(AbstractProvider):
                 return (c for c in candidates if c not in incompat)
             elif identifier in self.overrides:
                 return iter(self.get_override_candidates(identifier))
-            reqs_iter = requirements[identifier]
+            reqs = sorted(requirements[identifier], key=self.requirement_preference)
+            original_req = reqs[0]
             bare_name, extras = strip_extras(identifier)
             if extras and bare_name in requirements:
                 # We should consider the requirements for both foo and foo[extra]
-                reqs_iter = itertools.chain(reqs_iter, requirements[bare_name])
-            reqs = sorted(reqs_iter, key=self.requirement_preference)
+                reqs.extend(requirements[bare_name])
+                reqs.sort(key=self.requirement_preference)
             candidates = self._find_candidates(reqs[0])
             return (
-                can for can in candidates if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
+                # In some cases we will use candidates from the bare requirement,
+                # this will miss the extra dependencies if any. So we associate the original
+                # requirement back with the candidate since it is used by `get_dependencies()`.
+                can.copy_with(original_req) if extras else can
+                for can in candidates
+                if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
             )
 
         return matches_gen
