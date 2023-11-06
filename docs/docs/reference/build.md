@@ -16,7 +16,7 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
     build-backend = "pdm.backend"
     ```
 
-    [:book: Read the docs](https://pdm-backend.fming.dev/)
+    [:book: Read the docs](https://backend.pdm-project.org/)
 
 === "setuptools"
 
