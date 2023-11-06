@@ -175,6 +175,16 @@ class Candidate:
     def identify(self) -> str:
         return self.req.identify()
 
+    def copy_with(self, requirement: Requirement) -> Candidate:
+        can = Candidate(requirement, name=self.name, version=self.version, link=self.link)
+        can.summary = self.summary
+        can.hashes = self.hashes
+        can._requires_python = self._requires_python
+        can._prepared = self._prepared
+        if can._prepared:
+            can._prepared.req = requirement
+        return can
+
     @property
     def dep_key(self) -> tuple[str, str | None]:
         """Key for retrieving and storing dependencies from the provider.

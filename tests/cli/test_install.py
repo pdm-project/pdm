@@ -287,3 +287,11 @@ def test_install_groups_and_lock(project, pdm, working_set):
     assert project.lockfile.groups == ["tz"]
     assert "pytz" in project.locked_repository.all_candidates
     assert "urllib3" not in project.locked_repository.all_candidates
+
+
+def test_install_requirement_with_extras(project, pdm, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests==2.19.1")})
+    project.add_dependencies({"requests[socks]": parse_requirement("requests[socks]")}, to_group="socks")
+    pdm(["lock", "-Gsocks"], obj=project, strict=True)
+    pdm(["sync", "-Gsocks"], obj=project, strict=True)
+    assert "pysocks" in working_set

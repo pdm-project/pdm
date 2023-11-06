@@ -601,8 +601,7 @@ class LockedRepository(BaseRepository):
             if not requirement.name:
                 # make sure can.identify() won't return a randomly-generated name
                 requirement.name = can.name
-            can.req = requirement
-            yield can
+            yield can.copy_with(requirement)
 
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         return candidate.hashes
