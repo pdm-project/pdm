@@ -1,3 +1,19 @@
+Release v2.10.1 (2023-11-07)
+----------------------------
+
+### Bug Fixes
+
+- Fix a bug preventing ctrl-c from interrupting program execution on 2nd invocation when using "pdm run" (Windows only). [#2292](https://github.com/pdm-project/pdm/issues/2292)
+- Fix list index out of range when build error message is empty. [#2337](https://github.com/pdm-project/pdm/issues/2337)
+- Fix find_link sources being exported as `--extra--index-url` [#2342](https://github.com/pdm-project/pdm/issues/2342)
+- Fix an installation failure when install.cache = true. [#2355](https://github.com/pdm-project/pdm/issues/2355)
+- Fix a resolution issue that extra dependencies are not resolved when the bare dependency has more specific version constraint. [#2369](https://github.com/pdm-project/pdm/issues/2369)
+
+### Documentation
+
+- Set up a chatbot powered by LLM on the doc page. [#2365](https://github.com/pdm-project/pdm/issues/2365)
+
+
 Release v2.10.0 (2023-10-26)
 ----------------------------
 
