@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import os
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from packaging.version import InvalidVersion, Version
 
-from pdm.compat import cached_property
 from pdm.models.venv import VirtualEnv
 
 if TYPE_CHECKING:

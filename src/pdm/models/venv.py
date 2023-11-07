@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import dataclasses as dc
 import sys
+from functools import cached_property
 from pathlib import Path
 
-from pdm.compat import cached_property
 from pdm.models.in_process import get_sys_config_paths
 from pdm.utils import find_python_in_path, get_venv_like_prefix
 

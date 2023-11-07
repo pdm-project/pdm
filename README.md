@@ -76,7 +76,7 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
 
 ## Installation
 
-PDM requires python version 3.7 or higher.
+PDM requires python version 3.8 or higher.
 
 ### Via Install Script
 

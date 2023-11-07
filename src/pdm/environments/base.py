@@ -8,10 +8,10 @@ import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
-from pdm.compat import cached_property
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_pep508_environment, get_python_abi_tag, get_uname
 from pdm.models.python import PythonInfo

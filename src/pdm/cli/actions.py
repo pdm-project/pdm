@@ -335,14 +335,6 @@ def check_update(project: Project) -> None:  # pragma: no cover
     if project.core.ui.verbosity < termui.Verbosity.NORMAL:
         return
 
-    if sys.version_info < (3, 8):
-        project.core.ui.echo(
-            "Python 3.7 has reached EOL in June 2023 and will be no longer supported starting from PDM 2.11.0. "
-            "Please upgrade to Python 3.8 or higher.",
-            err=True,
-            style="warning",
-        )
-
     this_version = project.core.version
     latest_version = get_latest_version(project)
     if latest_version is None or Version(this_version) >= Version(latest_version):
