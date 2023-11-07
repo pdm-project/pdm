@@ -64,7 +64,7 @@ PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从�
 
 ## 安装
 
-PDM 需要 Python 3.7 或更高版本。
+PDM 需要 Python 3.8 或更高版本。
 
 ### 通过安装脚本
 

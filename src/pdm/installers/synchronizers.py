@@ -5,13 +5,13 @@ import functools
 import multiprocessing
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
+from functools import cached_property
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
 
 from rich.progress import SpinnerColumn, TaskProgressColumn
 
 from pdm import termui
-from pdm.compat import cached_property
 from pdm.environments import BaseEnvironment
 from pdm.exceptions import InstallationError
 from pdm.installers.manager import InstallManager

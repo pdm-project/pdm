@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import sys
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
 
@@ -14,7 +15,6 @@ from tomlkit.items import Array
 
 from pdm import termui
 from pdm._types import RepositoryConfig
-from pdm.compat import cached_property
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
 from pdm.models.python import PythonInfo

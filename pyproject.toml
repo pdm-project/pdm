@@ -7,7 +7,7 @@ authors = [
     {name = "Frost Ming", email = "mianghong@gmail.com"},
 ]
 dynamic = ["version"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = {text = "MIT"}
 dependencies = [
     "blinker",
@@ -36,7 +36,6 @@ keywords = ["packaging", "dependency", "workflow"]
 classifiers = [
     "Topic :: Software Development :: Build Tools",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
