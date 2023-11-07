@@ -93,7 +93,7 @@ class ProjectTemplate:
         src: ST,
         dst: Path,
         skip: list[ST] | None = None,
-        copyfunc: Callable[[ST, Path], Any] = shutil.copy2,  # type: ignore[assignment]
+        copyfunc: Callable[[ST, Path], Any] = shutil.copyfile,  # type: ignore[assignment]
         *,
         overwrite: bool = False,
     ) -> None:
@@ -113,7 +113,7 @@ class ProjectTemplate:
         from pdm.compat import importlib_resources
 
         with importlib_resources.as_file(src) as f:
-            return shutil.copy2(f, dst)
+            return shutil.copyfile(f, dst)
 
     def _generate_pyproject(self, path: Path, metadata: dict[str, Any]) -> None:
         import tomlkit
