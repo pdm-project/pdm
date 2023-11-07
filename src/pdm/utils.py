@@ -246,7 +246,7 @@ def expand_env_vars_in_auth(url: str) -> str:
     return parse.urlunparse((scheme, netloc, path, params, query, fragment))
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def path_replace(pattern: str, replace_with: str, dest: str) -> str:
     """Safely replace the pattern in a path with given string.
 
@@ -393,7 +393,7 @@ def is_url(url: str) -> bool:
     return bool(parse.urlparse(url).scheme)
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def fs_supports_symlink() -> bool:
     if not hasattr(os, "symlink"):
         return False

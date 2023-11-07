@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections
 import dataclasses
 import os
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Callable, ClassVar, Iterator, Mapping, MutableMapping, cast
 
@@ -12,7 +13,6 @@ import tomlkit
 
 from pdm import termui
 from pdm._types import RepositoryConfig
-from pdm.compat import cached_property
 from pdm.exceptions import NoConfigError, PdmUsageError
 
 REPOSITORY = "repository"
@@ -376,7 +376,7 @@ class Config(MutableMapping[str, str]):
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
             ui.echo(
-                "WARNING: the config is shadowed by env var '{}', set value won't take effect.".format(env_var),
+                f"WARNING: the config is shadowed by env var '{env_var}', set value won't take effect.",
                 style="warning",
             )
         self._save_config()
