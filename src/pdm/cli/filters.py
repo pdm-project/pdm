@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
+from functools import cached_property
 from typing import TYPE_CHECKING
 
-from pdm.compat import cached_property
 from pdm.exceptions import PdmUsageError
 
 if TYPE_CHECKING:

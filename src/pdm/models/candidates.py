@@ -5,7 +5,7 @@ import hashlib
 import os
 import re
 import warnings
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast, no_type_check
@@ -15,7 +15,6 @@ from packaging.utils import parse_wheel_filename
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
-from pdm.compat import cached_property
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning
 from pdm.models.backends import get_backend, get_backend_by_spec

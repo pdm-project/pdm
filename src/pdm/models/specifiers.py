@@ -19,7 +19,7 @@ def _read_max_versions() -> dict[Version, int]:
         return {Version(k): v for k, v in json.load(fp).items()}
 
 
-@lru_cache()
+@lru_cache
 def get_specifier(version_str: SpecifierSet | str) -> SpecifierSet:
     if isinstance(version_str, SpecifierSet):
         return version_str
@@ -31,7 +31,7 @@ def get_specifier(version_str: SpecifierSet | str) -> SpecifierSet:
 _legacy_specifier_re = re.compile(r"(==|!=|<=|>=|<|>)(\s*)([^,;\s)]*)")
 
 
-@lru_cache()
+@lru_cache
 def fix_legacy_specifier(specifier: str) -> str:
     """Since packaging 22.0, legacy specifiers like '>=4.*' are no longer
     supported. We try to normalize them to the new format.
@@ -266,7 +266,7 @@ class PySpecSet(SpecifierSet):
         instance._excludes = self._excludes[:]
         return instance
 
-    @lru_cache()
+    @lru_cache
     def __and__(self, other: PySpecSet) -> PySpecSet:
         if any(s.is_impossible for s in (self, other)):
             return ImpossiblePySpecSet()
@@ -281,7 +281,7 @@ class PySpecSet(SpecifierSet):
         rv._rearrange(lower, upper, excludes)
         return rv
 
-    @lru_cache()
+    @lru_cache
     def __or__(self, other: PySpecSet) -> PySpecSet:
         if self.is_impossible:
             return other.copy()
@@ -340,7 +340,7 @@ class PySpecSet(SpecifierSet):
                     prev = prev.bump()
                 break
 
-    @lru_cache()
+    @lru_cache
     def is_superset(self, other: str | SpecifierSet) -> bool:
         if self.is_impossible:
             return False
@@ -356,7 +356,7 @@ class PySpecSet(SpecifierSet):
             return False
         return lower <= other._lower_bound and upper >= other._upper_bound and set(excludes) <= set(other._excludes)
 
-    @lru_cache()
+    @lru_cache
     def is_subset(self, other: str | SpecifierSet) -> bool:
         if self.is_impossible:
             return False
