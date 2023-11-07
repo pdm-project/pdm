@@ -3,9 +3,9 @@ from __future__ import annotations
 import os
 import re
 import shlex
+from functools import cached_property
 from pathlib import Path
 
-from pdm.compat import cached_property
 from pdm.environments.base import BaseEnvironment
 from pdm.utils import pdm_scheme
 

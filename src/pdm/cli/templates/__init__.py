@@ -26,7 +26,7 @@ class ProjectTemplate:
     def __init__(self, path_or_url: str | None) -> None:
         self.template = path_or_url
 
-    def __enter__(self) -> "ProjectTemplate":
+    def __enter__(self) -> ProjectTemplate:
         self._path = Path(tempfile.mkdtemp(suffix="-template", prefix="pdm-"))
         self.prepare_template()
         return self
@@ -156,7 +156,7 @@ class ProjectTemplate:
         else:
             extra_args = []
         git_command = ["git", "clone", "--recursive", "--depth=1", *extra_args, url, self._path.as_posix()]
-        result = subprocess.run(git_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(git_command, capture_output=True, text=True)
         if result.returncode != 0:
             raise PdmException(f"Failed to clone template from git repository {url}: {result.stderr}")
         shutil.rmtree(self._path / ".git", ignore_errors=True)

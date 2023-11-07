@@ -1,7 +1,7 @@
 import importlib.resources
 import sys
 from pathlib import Path
-from typing import BinaryIO, ContextManager, Iterable
+from typing import BinaryIO, ContextManager
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -30,43 +30,6 @@ else:
     resources_path = importlib.resources.path
 
 
-if sys.version_info >= (3, 8):
-    from functools import cached_property
-    from shlex import join as sh_join
-else:
-    from typing import Any, Callable, Generic, TypeVar, overload
-
-    _T = TypeVar("_T")
-    _C = TypeVar("_C")
-
-    class cached_property(Generic[_T]):
-        def __init__(self, func: Callable[[Any], _T]):
-            self.func = func
-            self.attr_name = func.__name__
-            self.__doc__ = func.__doc__
-
-        @overload
-        def __get__(self: _C, inst: None, cls: Any = ...) -> _C:
-            ...
-
-        @overload
-        def __get__(self, inst: object, cls: Any = ...) -> _T:
-            ...
-
-        def __get__(self, inst, cls=None):
-            if inst is None:
-                return self
-            if self.attr_name not in inst.__dict__:
-                inst.__dict__[self.attr_name] = self.func(inst)
-            return inst.__dict__[self.attr_name]
-
-    def sh_join(split_command: Iterable[str]) -> str:
-        """Return a shell-escaped string from *split_command*."""
-        import shlex
-
-        return " ".join(shlex.quote(arg) for arg in split_command)
-
-
 if sys.version_info >= (3, 10):
     import importlib.metadata as importlib_metadata
 else:
@@ -82,4 +45,4 @@ else:
 Distribution = importlib_metadata.Distribution
 
 
-__all__ = ["tomllib", "cached_property", "sh_join", "importlib_metadata", "Distribution", "importlib_resources"]
+__all__ = ["tomllib", "importlib_metadata", "Distribution", "importlib_resources"]

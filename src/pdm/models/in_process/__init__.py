@@ -20,7 +20,7 @@ def _in_process_script(name: str) -> Generator[str, None, None]:
         yield str(script)
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_python_abi_tag(executable: str) -> str:
     with _in_process_script("get_abi_tag.py") as script:
         return json.loads(subprocess.check_output(args=[executable, "-EsS", script]))
@@ -55,7 +55,7 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
             return json.load(fp)
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_uname(executable: str) -> os.uname_result:
     """Get uname of the system"""
     script = "import os, json; print(json.dumps(os.uname()))"

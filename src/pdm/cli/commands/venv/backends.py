@@ -5,12 +5,12 @@ import os
 import shutil
 import subprocess
 import sys
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
-from pdm.compat import cached_property
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.python import PythonInfo
 from pdm.project import Project

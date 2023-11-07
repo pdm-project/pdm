@@ -7,7 +7,7 @@ import os
 import shutil
 import warnings
 import zipfile
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator
 
@@ -18,7 +18,6 @@ from installer.records import RecordEntry
 from installer.sources import WheelFile as _WheelFile
 from installer.sources import _WheelFileValidationError
 
-from pdm.compat import cached_property
 from pdm.exceptions import PDMWarning
 from pdm.installers.packages import CachedPackage
 from pdm.termui import logger
@@ -33,7 +32,7 @@ if TYPE_CHECKING:
     from pdm.environments import BaseEnvironment
 
 
-@lru_cache()
+@lru_cache
 def _is_python_package(root: str | Path) -> bool:
     for child in Path(root).iterdir():
         if (
@@ -59,7 +58,7 @@ _namespace_package_lines = frozenset(
 _namespace_package_lines = _namespace_package_lines.union(line.replace("'", '"') for line in _namespace_package_lines)
 
 
-@lru_cache()
+@lru_cache
 def _is_namespace_package(root: str) -> bool:
     if not _is_python_package(root):
         return False
