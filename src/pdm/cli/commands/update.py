@@ -155,7 +155,12 @@ class Command(BaseCommand):
             for deps in updated_deps.values():
                 for dep in deps.values():
                     dep.specifier = get_specifier("")
-        reqs = [r for deps in all_dependencies.values() for r in deps.values()]
+        reqs = [
+            r
+            for g, deps in all_dependencies.items()
+            for r in deps.values()
+            if locked_groups is None or g in locked_groups
+        ]
         # Since dry run is always true in the locking,
         # we need to emit the hook manually with the real dry_run value
         hooks.try_emit("pre_lock", requirements=reqs, dry_run=dry_run)
