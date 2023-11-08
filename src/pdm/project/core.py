@@ -95,11 +95,7 @@ class Project:
             root_path = global_project
             is_global = True
             if self.global_config["global_project.fallback_verbose"]:
-                self.core.ui.echo(
-                    "Project is not found, fallback to the global project",
-                    style="warning",
-                    err=True,
-                )
+                self.core.ui.info("Project is not found, fallback to the global project")
 
         self.root: Path = Path(root_path or "").absolute()
         self.is_global = is_global
@@ -200,7 +196,7 @@ class Project:
 
         def note(message: str) -> None:
             if not self.is_global:
-                self.core.ui.echo(message, style="info", err=True)
+                self.core.ui.info(message)
 
         config = self.config
         saved_path = self._saved_python
@@ -306,11 +302,9 @@ class Project:
             deps = metadata.get("dependencies", [])
         else:
             if group in optional_dependencies and group in dev_dependencies:
-                self.core.ui.echo(
-                    f"The {group} group exists in both [optional-dependencies] "
-                    "and [dev-dependencies], the former is taken.",
-                    err=True,
-                    style="warning",
+                self.core.ui.info(
+                    f"The {group} group exists in both \\[optional-dependencies] "
+                    "and \\[dev-dependencies], the former is taken."
                 )
             if group in optional_dependencies:
                 deps = optional_dependencies[group]
@@ -323,12 +317,10 @@ class Project:
             for line in deps:
                 if line.startswith("-e "):
                     if in_metadata:
-                        self.core.ui.echo(
-                            f"WARNING: Skipping editable dependency [b]{line}[/] in the"
+                        self.core.ui.warn(
+                            f"Skipping editable dependency [b]{line}[/] in the"
                             r" [success]\[project][/] table. Please move it to the "
-                            r"[success]\[tool.pdm.dev-dependencies][/] table",
-                            err=True,
-                            style="warning",
+                            r"[success]\[tool.pdm.dev-dependencies][/] table"
                         )
                         continue
                     req = parse_requirement(line[3:].strip(), True)
@@ -447,11 +439,7 @@ class Project:
             except Exception:
                 if for_install:
                     raise
-                self.core.ui.echo(
-                    "Unable to reuse the lock file as it is not compatible with PDM",
-                    style="warning",
-                    err=True,
-                )
+                self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
         if locked_repository is None:
             return BaseProvider(
