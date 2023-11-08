@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from pdm.cli.templates import ProjectTemplate
@@ -26,6 +28,7 @@ def test_module_project_template(project_no_init):
     assert project_no_init.pyproject.metadata["dependencies"] == ["idna", "chardet; os_name=='nt'"]
     assert project_no_init.pyproject.metadata["optional-dependencies"]["tests"] == ["pytest"]
     assert (project_no_init.root / "foo.py").exists()
+    assert os.access(project_no_init.root / "foo.py", os.W_OK)
 
 
 def test_module_project_template_generate_application(project_no_init):
