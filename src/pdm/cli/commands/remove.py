@@ -104,9 +104,7 @@ class Command(BaseCommand):
         if not dry_run:
             project.pyproject.write()
         if lock_groups and group not in lock_groups:
-            project.core.ui.echo(
-                f"Group [success]{group}[/] isn't in lockfile, skipping lock.", style="warning", err=True
-            )
+            project.core.ui.warn(f"Group [success]{group}[/] isn't in lockfile, skipping lock.")
             return
         do_lock(project, "reuse", dry_run=dry_run, hooks=hooks, groups=lock_groups)
         if sync:

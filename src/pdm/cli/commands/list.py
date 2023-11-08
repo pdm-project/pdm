@@ -281,11 +281,9 @@ class Command(BaseCommand):
             try:
                 ui.echo(text_body, highlight=True)
             except UnicodeEncodeError:
-                ui.echo(
+                ui.error(
                     "Markdown output contains non-ASCII characters. "
                     "Setting env var PYTHONIOENCODING to 'utf8' may fix this.",
-                    err=True,
-                    style="error",
                 )
                 ui.echo(text_body.encode().decode("ascii", errors="ignore"), highlight=True)
                 ui.echo("**Problem decoding file as UTF-8.  Some characters may be omit.**")
