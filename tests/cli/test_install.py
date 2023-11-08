@@ -151,11 +151,11 @@ def test_install_with_lockfile(project, pdm):
     result = pdm(["lock", "-v"], obj=project)
     assert result.exit_code == 0
     result = pdm(["install"], obj=project)
-    assert "Lock file" not in result.stderr
+    assert "Lockfile" not in result.stderr
 
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "default")
     result = pdm(["install"], obj=project)
-    assert "Lock file hash doesn't match" in result.stderr
+    assert "Lockfile hash doesn't match" in result.stderr
     assert "pytz" in project.locked_repository.all_candidates
     assert project.is_lockfile_hash_match()
 
