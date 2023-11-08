@@ -211,12 +211,7 @@ class Core:
                 err=True,
             )
             if should_show_tb:
-                self.ui.echo(
-                    "Add '-v' to see the detailed traceback",
-                    style="warning",
-                    err=True,
-                    verbosity=termui.Verbosity.NORMAL,
-                )
+                self.ui.warn("Add '-v' to see the detailed traceback", verbosity=termui.Verbosity.NORMAL)
             sys.exit(1)
         else:
             if project.config["check_update"] and not is_in_zipapp():
@@ -283,10 +278,8 @@ class Core:
             try:
                 plugin.load()(self)
             except Exception as e:
-                self.ui.echo(
+                self.ui.error(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
-                    style="error",
-                    err=True,
                 )
 
 

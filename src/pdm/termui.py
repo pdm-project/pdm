@@ -275,3 +275,15 @@ class UI:
             disable=self.verbosity >= Verbosity.DETAIL,
             **kwargs,
         )
+
+    def info(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
+        """Print a message to stdout."""
+        self.echo(f"[info]INFO:[/] [dim]{message}[/]", err=True, verbosity=verbosity)
+
+    def warn(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
+        """Print a message to stdout."""
+        self.echo(f"[warning]WARNING:[/] {message}", err=True, verbosity=verbosity)
+
+    def error(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
+        """Print a message to stdout."""
+        self.echo(f"[error]WARNING:[/] {message}", err=True, verbosity=verbosity)

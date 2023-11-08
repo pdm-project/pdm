@@ -334,10 +334,7 @@ class Config(MutableMapping[str, str]):
 
         value = config.coerce(value)
         if key in self.env_map:
-            ui.echo(
-                f"WARNING: the config is shadowed by env var '{config.env_var}', the value set won't take effect.",
-                style="warning",
-            )
+            ui.warn(f"the config is shadowed by env var '{config.env_var}', the value set won't take effect.")
         self._file_data[config_key] = value
         if config.replace:
             self._file_data.pop(config.replace, None)
@@ -375,10 +372,7 @@ class Config(MutableMapping[str, str]):
 
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
-            ui.echo(
-                f"WARNING: the config is shadowed by env var '{env_var}', set value won't take effect.",
-                style="warning",
-            )
+            ui.warn(f"The config is shadowed by env var '{env_var}', set value won't take effect.")
         self._save_config()
 
     def get_repository_config(self, name_or_url: str, prefix: str) -> RepositoryConfig | None:

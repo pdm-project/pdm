@@ -173,11 +173,7 @@ class Command(BaseCommand):
                 logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason)
 
                 if options.skip_existing and self._skip_upload(resp):
-                    project.core.ui.echo(
-                        f"Skipping {package.base_filename} because it appears to already exist",
-                        style="warning",
-                        err=True,
-                    )
+                    project.core.ui.warn(f"Skipping {package.base_filename} because it appears to already exist")
                     continue
                 self._check_response(resp)
                 uploaded.append(package)
