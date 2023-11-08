@@ -361,7 +361,10 @@ function TabExpansion($line, $lastWord) {
             "publish" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment", "--no-build", "--ca-certs", "--no-verify-ssl")),
+                        [Option]::new(@(
+                            "-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment",
+                            "--no-build", "--ca-certs", "--no-verify-ssl", "--skip-existing"
+                        )),
                         $skipOption,
                         $projectOption
                     ))

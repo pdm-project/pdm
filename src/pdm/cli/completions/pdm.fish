@@ -239,7 +239,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l quiet -d 'Suppress o
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d '[DEPRECATED] Store static file URLs in the lockfile'
-complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add \'no_\' prefix to disable. Support given multiple times or split by comma.'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy (cross_platform, static_urls, direct_minimal_versions). Add \'no_\' prefix to disable. Can be supplied multiple times or split by comma.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin
@@ -294,6 +294,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l quiet -d 'Suppres
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l repository -d 'The repository name or url to publish the package to [env var: PDM_PUBLISH_REPO]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l sign -d 'Upload the package with PGP signature'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
+complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l skip-existing -d 'Skip uploading files that already exist. This may not work with some repository implementations.'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l username -d 'The username to access the repository [env var: PDM_PUBLISH_USERNAME]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
@@ -465,7 +466,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from venv' -l python -d 'Show the 
 # venv subcommands
 set -l venv_subcommands activate create list purge remove
 # venv activate
-complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_subcommand_from $venv_subcommands' -a activate -d 'Activate the virtualenv with the given name'
+complete -c pdm -f -n '__fish_seen_subcommand_from venv; and not __fish_seen_subcommand_from $venv_subcommands' -a activate -d 'Print the command to activate the virtualenv with the given name'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from activate' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from activate' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from venv; and __fish_seen_subcommand_from activate' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
