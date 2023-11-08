@@ -101,6 +101,7 @@ class Command(BaseCommand):
                 "the project name and build backend"
             )
         build_backend: type[BuildBackend] | None = None
+        python = project.python
         if is_library:
             name = self.ask("Project name", project.root.name)
             version = self.ask("Project version", "0.1.0")
@@ -122,16 +123,16 @@ class Command(BaseCommand):
                 build_backend = get_backend(all_backends[int(selected_backend)])
             else:
                 build_backend = DEFAULT_BACKEND
+            default_python_requires = f">={python.major}.{python.minor}"
         else:
             name, version, description = "", "", ""
+            default_python_requires = f"=={python.major}.{python.minor}.*"
         license = self.ask("License(SPDX name)", "MIT")
 
         git_user, git_email = get_user_email_from_git()
         author = self.ask("Author name", git_user)
         email = self.ask("Author email", git_email)
-        python = project.python
-        python_version = f"{python.major}.{python.minor}"
-        python_requires = self.ask("Python requires('*' to allow any)", f">={python_version}")
+        python_requires = self.ask("Python requires('*' to allow any)", default_python_requires)
 
         data = {
             "project": {
