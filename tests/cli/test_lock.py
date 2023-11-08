@@ -2,13 +2,14 @@ import sys
 from unittest.mock import ANY
 
 import pytest
+from packaging.version import Version
 from unearth import Link
 
 from pdm.cli import actions
 from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, Compatibility
 
 
 def test_lock_command(project, pdm, mocker):
@@ -211,3 +212,23 @@ def test_lock_direct_minimal_versions_real(project, pdm, args):
         assert locked_candidate.version == "3.6.0"
     else:
         assert locked_candidate.version == "3.7.0"
+
+
+@pytest.mark.parametrize(
+    "lock_version,expected",
+    [
+        ("4.1.0", Compatibility.BACKWARD),
+        ("4.1.1", Compatibility.SAME),
+        ("4.1.2", Compatibility.FORWARD),
+        ("4.2", Compatibility.NONE),
+        ("3.0", Compatibility.NONE),
+        ("4.0.1", Compatibility.BACKWARD),
+    ],
+)
+def test_lockfile_compatibility(project, monkeypatch, lock_version, expected, pdm):
+    pdm(["lock"], obj=project, strict=True)
+    monkeypatch.setattr("pdm.project.lockfile.Lockfile.spec_version", Version("4.1.1"))
+    project.lockfile._data["metadata"]["lock_version"] = lock_version
+    assert project.lockfile.compatibility() == expected
+    result = pdm(["lock", "--check"], obj=project)
+    assert result.exit_code == (1 if expected == Compatibility.NONE else 0)
