@@ -494,7 +494,7 @@ class Project:
 
     def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = "sha256:" + self.pyproject.content_hash("sha256")
-        return {"lock_version": self.lockfile.spec_version, "content_hash": content_hash}
+        return {"lock_version": str(self.lockfile.spec_version), "content_hash": content_hash}
 
     def write_lockfile(self, toml_data: dict, show_message: bool = True, write: bool = True, **_kwds: Any) -> None:
         """Write the lock file to disk."""
