@@ -6,7 +6,7 @@ import weakref
 from typing import TYPE_CHECKING, Any, Iterable
 from urllib.parse import urlparse, urlunparse
 
-import rich.progress
+from rich.progress import BarColumn, DownloadColumn, TimeRemainingColumn, TransferSpeedColumn
 
 from pdm import termui
 from pdm.cli.commands.publish.package import PackageFile
@@ -138,7 +138,7 @@ class Repository:
             return set()
         return {f"{base}project/{package.metadata['name']}/{package.metadata['version']}/" for package in packages}
 
-    def upload(self, package: PackageFile, progress: rich.progress.Progress) -> Response:
+    def upload(self, package: PackageFile) -> Response:
         import requests_toolbelt
 
         payload = package.metadata_dict
@@ -149,24 +149,35 @@ class Repository:
             }
         )
         field_parts = self._convert_to_list_of_tuples(payload)
+        with self.ui.make_progress(
+            " [progress.percentage]{task.percentage:>3.0f}%",
+            BarColumn(),
+            DownloadColumn(),
+            "•",
+            TimeRemainingColumn(
+                compact=True,
+                elapsed_when_finished=True,
+            ),
+            "•",
+            TransferSpeedColumn(),
+        ) as progress:
+            progress.console.print(f"Uploading [success]{package.base_filename}")
 
-        progress.live.console.print(f"Uploading [success]{package.base_filename}")
+            with open(package.filename, "rb") as fp:
+                field_parts.append(("content", (package.base_filename, fp, "application/octet-stream")))
 
-        with open(package.filename, "rb") as fp:
-            field_parts.append(("content", (package.base_filename, fp, "application/octet-stream")))
+                def on_upload(monitor: requests_toolbelt.MultipartEncoderMonitor) -> None:
+                    progress.update(job, completed=monitor.bytes_read)
 
-            def on_upload(monitor: requests_toolbelt.MultipartEncoderMonitor) -> None:
-                progress.update(job, completed=monitor.bytes_read)
-
-            monitor = requests_toolbelt.MultipartEncoderMonitor.from_fields(field_parts, callback=on_upload)
-            job = progress.add_task("", total=monitor.len)
-            resp = self.session.post(
-                self.url,
-                data=monitor,
-                headers={"Content-Type": monitor.content_type},
-                allow_redirects=False,
-            )
-            if resp.status_code < 400 and self._credentials_to_save is not None:
-                self._save_credentials(*self._credentials_to_save)
-                self._credentials_to_save = None
-            return resp
+                monitor = requests_toolbelt.MultipartEncoderMonitor.from_fields(field_parts, callback=on_upload)
+                job = progress.add_task("", total=monitor.len)
+                resp = self.session.post(
+                    self.url,
+                    data=monitor,
+                    headers={"Content-Type": monitor.content_type},
+                    allow_redirects=False,
+                )
+                if resp.status_code < 400 and self._credentials_to_save is not None:
+                    self._save_credentials(*self._credentials_to_save)
+                    self._credentials_to_save = None
+                return resp

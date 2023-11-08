@@ -313,6 +313,7 @@ _pdm() {
         "--no-verify-ssl[Disable SSL verification]"
         "--ca-certs[The path to a PEM-encoded Certificate Authority bundle to use for publish server validation]:cacerts:_files"
         "--no-build[Don't build the package before publishing]"
+        "--skip-existing[Skip uploading files that already exist. This may not work with some repository implementations.]"
       )
       ;;
     remove)
