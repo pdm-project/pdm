@@ -474,12 +474,10 @@ class PyPIRepository(BaseRepository):
             session = finder.session
             resp = session.get(search_url, params={"q": query})
             if resp.status_code == 404:
-                self.environment.project.core.ui.echo(
+                self.environment.project.core.ui.warn(
                     f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
                     f"to {self.DEFAULT_INDEX_URL!r} now.\n"
                     "This may take longer depending on your network condition.",
-                    err=True,
-                    style="warning",
                 )
                 resp = session.get(f"{self.DEFAULT_INDEX_URL}/search", params={"q": query})
             parser = SearchResultParser()

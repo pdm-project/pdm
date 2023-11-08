@@ -34,7 +34,7 @@ class PurgeCommand(BaseCommand):
             return
 
         if not options.force:
-            project.core.ui.echo("The following Virtualenvs will be purged:", style="error")
+            project.core.ui.echo("The following Virtualenvs will be purged:", style="warning")
             for i, venv in enumerate(all_central_venvs):
                 project.core.ui.echo(f"{i}. [success]{venv[0]}[/]")
 

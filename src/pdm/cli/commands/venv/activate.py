@@ -26,19 +26,15 @@ class ActivateCommand(BaseCommand):
             # Use what is saved in .pdm-python
             interpreter = project._saved_python
             if not interpreter:
-                project.core.ui.echo(
-                    "The project doesn't have a saved python.path. Run [success]pdm use[/] to pick one.",
-                    style="warning",
-                    err=True,
+                project.core.ui.warn(
+                    "The project doesn't have a saved python.path. Run [success]pdm use[/] to pick one."
                 )
                 raise SystemExit(1)
             venv_like = VirtualEnv.from_interpreter(Path(interpreter))
             if venv_like is None:
-                project.core.ui.echo(
+                project.core.ui.warn(
                     f"Can't activate a non-venv Python [success]{interpreter}[/], "
                     "you can specify one with [success]pdm venv activate <env_name>[/]",
-                    style="warning",
-                    err=True,
                 )
                 raise SystemExit(1)
             venv = venv_like

@@ -61,17 +61,11 @@ class Command(BaseCommand):
             path = use_cache.get(python)
             cached_python = PythonInfo.from_path(path)
             if not cached_python.valid:
-                project.core.ui.echo(
+                project.core.ui.error(
                     f"The last selection is corrupted. {path!r}",
-                    style="error",
-                    err=True,
                 )
             elif version_matcher(cached_python):
-                project.core.ui.echo(
-                    "Using the last selection, add '-i' to ignore it.",
-                    style="warning",
-                    err=True,
-                )
+                project.core.ui.info("Using the last selection, add '-i' to ignore it.")
                 return cached_python
 
         found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
