@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import enum
 from typing import Any, Iterable, Mapping
 
 import tomlkit
+from packaging.version import Version
 
 from pdm import termui
 from pdm.exceptions import PdmUsageError
-from pdm.models.specifiers import get_specifier
 from pdm.project.toml_file import TOMLBase
 
 GENERATED_COMMENTS = [
@@ -19,8 +20,15 @@ FLAG_DIRECT_MINIMAL_VERSIONS = "direct_minimal_versions"
 SUPPORTED_FLAGS = frozenset((FLAG_STATIC_URLS, FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS))
 
 
+class Compatibility(enum.IntEnum):
+    NONE = 0  # The lockfile can't be read by the current version of PDM.
+    SAME = 1  # The lockfile version is the same as the current version of PDM.
+    BACKWARD = 2  # The current version of PDM is newer than the lockfile version.
+    FORWARD = 3  # The current version of PDM is older than the lockfile version.
+
+
 class Lockfile(TOMLBase):
-    spec_version = "4.4"
+    spec_version = Version("4.4")
 
     @property
     def hash(self) -> str:
@@ -77,16 +85,19 @@ class Lockfile(TOMLBase):
     def __getitem__(self, key: str) -> dict:
         return self._data[key]
 
-    def is_compatible(self) -> bool:
-        """Within the same major version, the higher lockfile generator can work with
-        lower lockfile but not vice versa.
+    def compatibility(self) -> Compatibility:
+        """We use a three-part versioning scheme for lockfiles:
+        The first digit represents backward compatibility and the second digit represents forward compatibility.
         """
         if not self.exists():
-            return True
-        lockfile_version = str(self.file_version)
-        if not lockfile_version:
-            return False
-        if "." not in lockfile_version:
-            lockfile_version += ".0"
-        accepted = get_specifier(f"~={lockfile_version}")
-        return accepted.contains(self.spec_version)
+            return Compatibility.SAME
+        if not self.file_version:
+            return Compatibility.NONE
+        lockfile_version = Version(self.file_version)
+        if lockfile_version == self.spec_version:
+            return Compatibility.SAME
+        if lockfile_version.major != self.spec_version.major or lockfile_version.minor > self.spec_version.minor:
+            return Compatibility.NONE
+        if lockfile_version.minor < self.spec_version.minor:
+            return Compatibility.BACKWARD
+        return Compatibility.BACKWARD if lockfile_version.micro < self.spec_version.micro else Compatibility.FORWARD

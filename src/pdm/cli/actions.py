@@ -151,22 +151,25 @@ def resolve_candidates_from_lockfile(project: Project, requirements: Iterable[Re
 
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
-    """Check if the lock file exists and is up to date. Return the update strategy."""
+    """Check if the lock file exists and is up to date. Return the lock strategy."""
+    from pdm.project.lockfile import Compatibility
+
     if not project.lockfile.exists():
         if raise_not_exist:
-            raise ProjectError("Lock file does not exist, nothing to install")
-        project.core.ui.echo("Lock file does not exist", style="warning", err=True)
+            raise ProjectError("Lockfile does not exist, nothing to install")
+        project.core.ui.echo("Lockfile does not exist", style="warning", err=True)
         return "all"
-    elif not project.lockfile.is_compatible():
-        project.core.ui.echo(
-            "Lock file version is not compatible with PDM, installation may fail",
-            style="warning",
-            err=True,
-        )
-        return "reuse"  # try to reuse the lockfile if possible
+    compat = project.lockfile.compatibility()
+    if compat == Compatibility.NONE:
+        project.core.ui.echo("Lockfile is not compatible with PDM", style="warning", err=True)
+        return "reuse"
+    elif compat == Compatibility.BACKWARD:
+        project.core.ui.echo("Lockfile is generated on an older version of PDM", style="warning", err=True)
+    elif compat == Compatibility.FORWARD:
+        project.core.ui.echo("Lockfile is generated on a newer version of PDM", style="warning", err=True)
     elif not project.is_lockfile_hash_match():
         project.core.ui.echo(
-            "Lock file hash doesn't match pyproject.toml, packages may be outdated",
+            "Lockfile hash doesn't match pyproject.toml, packages may be outdated",
             style="warning",
             err=True,
         )
