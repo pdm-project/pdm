@@ -4,13 +4,6 @@ import argparse
 import os
 from typing import TYPE_CHECKING
 
-from rich.progress import (
-    BarColumn,
-    DownloadColumn,
-    TimeRemainingColumn,
-    TransferSpeedColumn,
-)
-
 from pdm.cli.commands import build
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.publish.package import PackageFile
@@ -69,6 +62,11 @@ class Command(BaseCommand):
             dest="build",
             help="Don't build the package before publishing",
         )
+        parser.add_argument(
+            "--skip-existing",
+            action="store_true",
+            help="Skip uploading files that already exist. This may not work with some repository implementations.",
+        )
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
             "--no-very-ssl", action="store_false", dest="verify_ssl", help="Disable SSL verification", default=None
@@ -88,6 +86,26 @@ class Command(BaseCommand):
         elif options.sign:
             p.sign(options.identity)
         return p
+
+    @staticmethod
+    def _skip_upload(response: Response) -> bool:
+        status = response.status_code
+        reason = response.reason.lower()
+        text = response.text.lower()
+
+        # Borrowed from https://github.com/pypa/twine/blob/main/twine/commands/upload.py#L149
+        return (
+            # pypiserver (https://pypi.org/project/pypiserver)
+            status == 409
+            # PyPI / TestPyPI / GCP Artifact Registry
+            or (status == 400 and any("already exist" in x for x in [reason, text]))
+            # Nexus Repository OSS (https://www.sonatype.com/nexus-repository-oss)
+            or (status == 400 and any("updating asset" in x for x in [reason, text]))
+            # Artifactory (https://jfrog.com/artifactory/)
+            or (status == 403 and "overwrite artifact" in text)
+            # Gitlab Enterprise Edition (https://about.gitlab.com)
+            or (status == 400 and "already been taken" in text)
+        )
 
     @staticmethod
     def _check_response(response: Response) -> None:
@@ -146,26 +164,23 @@ class Command(BaseCommand):
 
         repository = self.get_repository(project, options)
         uploaded: list[PackageFile] = []
-        with project.core.ui.make_progress(
-            " [progress.percentage]{task.percentage:>3.0f}%",
-            BarColumn(),
-            DownloadColumn(),
-            "•",
-            TimeRemainingColumn(
-                compact=True,
-                elapsed_when_finished=True,
-            ),
-            "•",
-            TransferSpeedColumn(),
-        ) as progress, project.core.ui.logging("publish"):
+        with project.core.ui.logging("publish"):
             packages = sorted(
                 (self._make_package(p, signatures, options) for p in package_files),
                 # Upload wheels first if they exist.
                 key=lambda p: not p.base_filename.endswith(".whl"),
             )
             for package in packages:
-                resp = repository.upload(package, progress)
+                resp = repository.upload(package)
                 logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason)
+
+                if options.skip_existing and self._skip_upload(resp):
+                    project.core.ui.echo(
+                        f"Skipping {package.base_filename} because it appears to already exist",
+                        style="warning",
+                        err=True,
+                    )
+                    continue
                 self._check_response(resp)
                 uploaded.append(package)
 

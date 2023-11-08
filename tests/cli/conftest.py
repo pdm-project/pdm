@@ -57,7 +57,7 @@ def mock_pypi(mocker: MockerFixture):
 def uploaded(mocker: MockerFixture):
     packages = []
 
-    def fake_upload(package, progress):
+    def fake_upload(package):
         packages.append(package)
         resp = requests.Response()
         resp.status_code = 200
