@@ -56,7 +56,7 @@ def test_config_env_var_shadowing(project, pdm, monkeypatch):
     assert result.output.strip() == "https://example.org/simple"
 
     result = pdm(["config", "pypi.url", "https://test.pypi.org/pypi"], obj=project)
-    assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.output
+    assert "config is shadowed by env var 'PDM_PYPI_URL'" in result.stderr
     result = pdm(["config", "pypi.url"], obj=project)
     assert result.output.strip() == "https://example.org/simple"
 

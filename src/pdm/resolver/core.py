@@ -36,11 +36,9 @@ def resolve(
     result = resolver.resolve(requirements, max_rounds)
 
     if repository.has_warnings:
-        repository.environment.project.core.ui.echo(
+        repository.environment.project.core.ui.info(
             "Use `-q/--quiet` to suppress these warnings, or ignore them per-package with "
             r"`ignore_package_warnings` config in \[tool.pdm] table.",
-            err=True,
-            style="info",
             verbosity=termui.Verbosity.NORMAL,
         )
 

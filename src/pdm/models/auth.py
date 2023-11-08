@@ -55,12 +55,10 @@ class PdmBasicAuth(MultiDomainBasicAuth):
 
     def _should_save_password_to_keyring(self) -> bool:
         if get_keyring_provider() is None:
-            self.ui.echo(
+            self.ui.info(
                 "The provided credentials will not be saved into the keyring.\n"
                 "You can enable this by installing keyring:\n"
-                "    [success]pdm self add keyring[/]",
-                err=True,
-                style="info",
+                "    [success]pdm self add keyring[/]"
             )
         return super()._should_save_password_to_keyring()
 

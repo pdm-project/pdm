@@ -387,11 +387,7 @@ class Command(BaseCommand):
         if options.site_packages:
             runner.global_options.update({"site_packages": options.site_packages})
         if not options.script:
-            project.core.ui.echo(
-                "No command is given, default to the Python REPL.",
-                style="warning",
-                err=True,
-            )
+            project.core.ui.warn("No command is given, default to the Python REPL.")
             options.script = "python"
         hooks.try_emit("pre_run", script=options.script, args=options.args)
         exit_code = runner.run(options.script, options.args)

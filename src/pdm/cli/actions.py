@@ -157,22 +157,18 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
     if not project.lockfile.exists():
         if raise_not_exist:
             raise ProjectError("Lockfile does not exist, nothing to install")
-        project.core.ui.echo("Lockfile does not exist", style="warning", err=True)
+        project.core.ui.warn("Lockfile does not exist")
         return "all"
     compat = project.lockfile.compatibility()
     if compat == Compatibility.NONE:
-        project.core.ui.echo("Lockfile is not compatible with PDM", style="warning", err=True)
+        project.core.ui.warn("Lockfile is not compatible with PDM")
         return "reuse"
     elif compat == Compatibility.BACKWARD:
-        project.core.ui.echo("Lockfile is generated on an older version of PDM", style="warning", err=True)
+        project.core.ui.warn("Lockfile is generated on an older version of PDM")
     elif compat == Compatibility.FORWARD:
-        project.core.ui.echo("Lockfile is generated on a newer version of PDM", style="warning", err=True)
+        project.core.ui.warn("Lockfile is generated on a newer version of PDM")
     elif not project.is_lockfile_hash_match():
-        project.core.ui.echo(
-            "Lockfile hash doesn't match pyproject.toml, packages may be outdated",
-            style="warning",
-            err=True,
-        )
+        project.core.ui.warn("Lockfile hash doesn't match pyproject.toml, packages may be outdated")
         return "reuse"
     return None
 
@@ -253,15 +249,8 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
         try:
             set_env_in_reg("PYTHONPATH", pep582_path)
         except PermissionError:
-            ui.echo(
-                "Permission denied, please run the terminal as administrator.",
-                style="error",
-                err=True,
-            )
-        ui.echo(
-            "The environment variable has been saved, please restart the session to take effect.",
-            style="success",
-        )
+            ui.error("Permission denied, please run the terminal as administrator.")
+        ui.info("The environment variable has been saved, please restart the session to take effect.")
         return
     lib_path = pep582_path.replace("'", "\\'")
     if shell == "AUTO":
@@ -360,7 +349,7 @@ def check_update(project: Project) -> None:  # pragma: no cover
             install_command = f"{sys.executable} -m {install_command}"
 
     message = [
-        f"\nPDM [primary]{this_version}[/]",
+        f"PDM [primary]{this_version}[/]",
         f" is installed, while [primary]{latest_version}[/]",
         " is available.\n",
         f"Please run [req]`{install_command}`[/]",
@@ -368,7 +357,7 @@ def check_update(project: Project) -> None:  # pragma: no cover
         f"Run [req]`{disable_command}`[/]",
         " to disable the check.",
     ]
-    project.core.ui.echo("".join(message), err=True, style="info")
+    project.core.ui.info("".join(message))
 
 
 # Moved functions
