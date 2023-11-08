@@ -77,10 +77,8 @@ class Command(BaseCommand):
         from findpython import ALL_PROVIDERS
 
         if options.key in project.project_config.deprecated:  # pragma: no cover
-            project.core.ui.echo(
-                f"DEPRECATED: the config has been renamed to {project.project_config.deprecated[options.key]}",
-                style="warning",
-                err=True,
+            project.core.ui.warn(
+                f"[warning]DEPRECATED:[/] the config has been renamed to {project.project_config.deprecated[options.key]}",
             )
             options.key = project.project_config.deprecated[options.key]
         try:
@@ -96,10 +94,8 @@ class Command(BaseCommand):
     def _set_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
         if options.key in config.deprecated:  # pragma: no cover
-            project.core.ui.echo(
-                f"DEPRECATED: the config has been renamed to {config.deprecated[options.key]}",
-                style="warning",
-                err=True,
+            project.core.ui.warn(
+                f"[warning]DEPRECATED:[/] the config has been renamed to {config.deprecated[options.key]}",
             )
         config[options.key] = options.value
 
@@ -176,9 +172,7 @@ class Command(BaseCommand):
     def _delete_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
         if options.key in config.deprecated:  # pragma: no cover
-            project.core.ui.echo(
-                f"DEPRECATED: the config has been renamed to {config.deprecated[options.key]}",
-                style="warning",
-                err=True,
+            project.core.ui.warn(
+                f"[warning]DEPRECATED:[/] the config has been renamed to {config.deprecated[options.key]}",
             )
         del config[options.key]

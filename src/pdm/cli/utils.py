@@ -775,9 +775,7 @@ def use_venv(project: Project, name: str) -> None:
     from pdm.environments import PythonEnvironment
 
     venv = get_venv_with_name(project, cast(str, name))
-    project.core.ui.echo(
-        f"In virtual environment: [success]{venv.root}[/]", err=True, style="info", verbosity=termui.Verbosity.DETAIL
-    )
+    project.core.ui.info(f"In virtual environment: [success]{venv.root}[/]", verbosity=termui.Verbosity.DETAIL)
     project.environment = PythonEnvironment(project, python=str(venv.interpreter))
 
 

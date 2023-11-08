@@ -45,11 +45,7 @@ class Command(BaseCommand):
             with project.environment.get_finder() as finder:
                 best_match = finder.find_best_match(package, allow_prereleases=True)
             if not best_match.applicable:
-                project.core.ui.echo(
-                    f"No match found for the package {package!r}",
-                    err=True,
-                    style="warning",
-                )
+                project.core.ui.warn(f"No match found for the package {package!r}")
                 return
             latest = Candidate.from_installation_candidate(best_match.best, parse_requirement(package))
             latest_stable = next(filter(filter_stable, best_match.applicable), None)

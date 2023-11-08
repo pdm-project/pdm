@@ -71,11 +71,9 @@ class Command(BaseCommand):
         if not options.template:
             raise PdmUsageError("template argument is required when --cookiecutter is passed")
         if options.project_path:
-            project.core.ui.echo(
+            project.core.ui.warn(
                 "Cookiecutter generator does not respect --project option. "
                 "It will always create a project dir under the current directory",
-                err=True,
-                style="warning",
             )
         try:
             cookiecutter.main([options.template, *options.generator_args], standalone_mode=False)
@@ -235,16 +233,13 @@ class Command(BaseCommand):
                     path = project._create_virtualenv()
                     python_info = PythonInfo.from_path(get_venv_python(path))
                 except Exception as e:  # pragma: no cover
-                    project.core.ui.echo(
-                        f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later.",
-                        style="error",
-                        err=True,
+                    project.core.ui.error(
+                        f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later."
                     )
         if python_info.get_venv() is None:
-            project.core.ui.echo(
+            project.core.ui.info(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"
-                "For more info, please visit https://peps.python.org/pep-0582/",
-                style="success",
+                "For more info, please visit https://peps.python.org/pep-0582/"
             )
         project.python = python_info
 

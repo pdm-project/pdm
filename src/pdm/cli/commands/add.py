@@ -118,7 +118,7 @@ class Command(BaseCommand):
         lock_groups = ["default"] if project.lockfile.empty() else project.lockfile.groups
         if lock_groups is not None and group not in lock_groups:
             if project.enable_write_lockfile:
-                project.core.ui.echo(f"Adding group [success]{group}[/] to lockfile", err=True, style="info")
+                project.core.ui.info(f"Adding group [success]{group}[/] to lockfile")
             lock_groups.append(group)
         if (
             group == "default"
@@ -129,11 +129,7 @@ class Command(BaseCommand):
                 raise PdmUsageError("Cannot add editables to the default or optional dependency group")
         for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
             if project.name and normalize_name(project.name) == r.key and not r.extras:
-                project.core.ui.echo(
-                    f"Package [req]{project.name}[/] is the project itself.",
-                    err=True,
-                    style="warning",
-                )
+                project.core.ui.warn(f"Package [req]{project.name}[/] is the project itself.")
                 continue
             if r.is_file_or_url:
                 r.relocate(project.backend)  # type: ignore[attr-defined]
