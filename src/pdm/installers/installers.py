@@ -51,9 +51,11 @@ _namespace_package_lines = frozenset(
         # pkg_resources style
         "__import__('pkg_resources').declare_namespace(__name__)",
         "pkg_resources.declare_namespace(__name__)",
+        "declare_namespace(__name__)",
         # pkgutil style
         "__path__ = __import__('pkgutil').extend_path(__path__, __name__)",
         "__path__ = pkgutil.extend_path(__path__, __name__)",
+        "__path__ = extend_path(__path__, __name__)",
     ]
 )
 _namespace_package_lines = _namespace_package_lines.union(line.replace("'", '"') for line in _namespace_package_lines)
@@ -94,7 +96,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             # for child directories
             if os.path.exists(destination_root):
                 warnings.warn(f"Overwriting existing package: {destination_root}", PDMWarning, stacklevel=2)
-                if os.path.isdir(destination_root):
+                if os.path.isdir(destination_root) and not os.path.islink(destination_root):
                     shutil.rmtree(destination_root)
                 else:
                     os.remove(destination_root)
