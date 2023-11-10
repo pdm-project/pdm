@@ -4,7 +4,7 @@ import argparse
 import shlex
 import subprocess
 import sys
-from typing import Any, Iterable
+from typing import Any
 
 from packaging.version import parse
 
@@ -22,14 +22,10 @@ from pdm.utils import is_in_zipapp, normalize_name
 PDM_REPO = "https://github.com/pdm-project/pdm"
 
 
-def _get_distributions() -> Iterable[Distribution]:
-    working_set = WorkingSet()
-    return working_set.values()
-
-
 def list_distributions(plugin_only: bool = False) -> list[Distribution]:
     result: list[Distribution] = []
-    for dist in _get_distributions():
+    working_set = WorkingSet()
+    for dist in working_set.values():
         if not plugin_only or any(ep.group in ("pdm", "pdm.plugin") for ep in dist.entry_points):
             result.append(dist)
     return sorted(result, key=lambda d: d.metadata["Name"] or "UNKNOWN")
@@ -39,6 +35,7 @@ def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[st
     env = BareEnvironment(project)
     project.environment = env
     run_args = env.pip_command + args
+    project.core.ui.echo(f"Running pip command: {run_args}", verbosity=termui.Verbosity.DETAIL)
 
     return subprocess.run(
         run_args,
@@ -129,7 +126,6 @@ class AddCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         pip_args = ["install", *shlex.split(options.pip_args), *options.packages]
 
-        project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
             with project.core.ui.open_spinner(f"Installing packages: {options.packages}"):
                 run_pip(project, pip_args)
@@ -191,7 +187,6 @@ class RemoveCommand(BaseCommand):
             return
         pip_args = ["uninstall", "-y", *shlex.split(options.pip_args), *packages_to_remove]
 
-        project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
             with project.core.ui.open_spinner(f"Uninstalling packages: [success]{', '.join(options.packages)}[/]"):
                 run_pip(project, pip_args)
@@ -239,7 +234,6 @@ class UpdateCommand(BaseCommand):
                 return
             package = f"pdm=={version}"
         pip_args = ["install", "--upgrade", *shlex.split(options.pip_args), package]
-        project.core.ui.echo(f"Running pip command: {pip_args}", verbosity=termui.Verbosity.DETAIL)
         try:
             with project.core.ui.open_spinner(f"Updating pdm to version [primary]{version}[/]"):
                 run_pip(project, pip_args)
