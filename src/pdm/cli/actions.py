@@ -236,7 +236,7 @@ def ask_for_import(project: Project) -> None:
     if int(choice) == len(importable_files):
         return
     key, filepath = importable_files[int(choice)]
-    ImportCommand.do_import(project, str(filepath), key)
+    ImportCommand.do_import(project, str(filepath), key, reset_backend=False)
 
 
 def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
