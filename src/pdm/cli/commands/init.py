@@ -110,6 +110,8 @@ class Command(BaseCommand):
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 
         is_library = options.lib
+        name = self.ask("Project name", project.root.name)
+        version = self.ask("Project version", "0.1.0")
         if not is_library and self.interactive:
             is_library = termui.confirm(
                 "Is the project a library that is installable?\n"
@@ -119,8 +121,6 @@ class Command(BaseCommand):
         build_backend: type[BuildBackend] | None = None
         python = project.python
         if is_library:
-            name = self.ask_project(project)
-            version = self.ask("Project version", "0.1.0")
             description = self.ask("Project description", "")
             if options.backend:
                 build_backend = get_backend(options.backend)
@@ -141,7 +141,7 @@ class Command(BaseCommand):
                 build_backend = DEFAULT_BACKEND
             default_python_requires = f">={python.major}.{python.minor}"
         else:
-            name, version, description = "", "", ""
+            description = ""
             default_python_requires = f"=={python.major}.{python.minor}.*"
         license = self.ask("License(SPDX name)", "MIT")
 
@@ -154,16 +154,18 @@ class Command(BaseCommand):
             "project": {
                 "name": name,
                 "version": version,
-                "description": description,
                 "authors": array_of_inline_tables([{"name": author, "email": email}]),
                 "license": make_inline_table({"text": license}),
                 "dependencies": make_array([], True),
             },
+            "tool": {"pdm": {"package-type": "library" if is_library else "application"}},
         }
 
         if python_requires and python_requires != "*":
             get_specifier(python_requires)
-            data["project"]["requires-python"] = python_requires
+            data["project"]["requires-python"] = python_requires  # type: ignore[index]
+        if description:
+            data["project"]["description"] = description  # type: ignore[index]
         if build_backend is not None:
             data["build-system"] = cast(dict, build_backend.build_system())
 
