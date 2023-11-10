@@ -40,6 +40,7 @@ class Command(BaseCommand):
         filename: str,
         format: str | None = None,
         options: argparse.Namespace | None = None,
+        reset_backend: bool = True,
     ) -> None:
         """Import project metadata from given file.
 
@@ -83,7 +84,8 @@ class Command(BaseCommand):
 
         merge_dictionary(pyproject["project"], project_data)
         merge_dictionary(pyproject["tool"]["pdm"], settings)
-        pyproject["build-system"] = DEFAULT_BACKEND.build_system()
+        if reset_backend:
+            pyproject["build-system"] = DEFAULT_BACKEND.build_system()
 
         if "requires-python" not in pyproject["project"]:
             python_version = f"{project.python.major}.{project.python.minor}"
