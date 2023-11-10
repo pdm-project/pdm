@@ -51,8 +51,8 @@ class Command(BaseCommand):
             latest_stable = next(filter(filter_stable, best_match.applicable), None)
             metadata = latest.prepare(project.environment).metadata
         else:
-            if not project.name:
-                raise PdmUsageError("This project is not a package")
+            if not project.is_library:
+                raise PdmUsageError("This project is not a library")
             package = normalize_name(project.name)
             metadata = project.make_self_candidate(False).prepare(project.environment).prepare_metadata(True)
             latest_stable = None

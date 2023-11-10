@@ -133,7 +133,7 @@ class Project:
         return config
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         return self.pyproject.metadata.get("name")
 
     @property
@@ -668,3 +668,7 @@ class Project:
     def tool_settings(self) -> dict[str, Any]:
         deprecation_warning("project.tool_settings is deprecated, use project.pyproject.settings instead", stacklevel=2)
         return self.pyproject.settings
+
+    @property
+    def is_library(self) -> bool:
+        return bool(self.name) and self.pyproject.settings.get("package-type", "library") == "library"
