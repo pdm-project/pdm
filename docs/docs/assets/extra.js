@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   const expansionRepo = 'https://github.com/pdm-project/pdm-expansions';
-  const expansionsApi = 'https://pdm-expansions.vercel.app/api/sample';
+  const expansionsApi = 'https://expansion.pdm-project.org/api/sample';
   const el = document.querySelector('a.pdm-expansions');
 
   function loadExpansions() {
