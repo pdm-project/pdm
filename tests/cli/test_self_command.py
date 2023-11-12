@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import ANY, Mock
+from unittest.mock import ANY
 
 import pytest
 
@@ -11,23 +11,22 @@ def mock_distribution(metadata, entry_points=()):
     return SimpleNamespace(metadata=metadata, entry_points=entry_points)
 
 
-DISTRIBUTIONS = [
-    mock_distribution({"Name": "foo", "Version": "1.0.0", "Summary": "Foo package"}, ["pdm.plugin"]),
-    mock_distribution({"Name": "bar", "Version": "2.0.0", "Summary": "Bar package"}, ["pdm"]),
-    mock_distribution({"Name": "baz", "Version": "3.0.0", "Summary": "Baz package"}),
-]
+DISTRIBUTIONS = {
+    "foo": mock_distribution({"Name": "foo", "Version": "1.0.0", "Summary": "Foo package"}, ["pdm.plugin"]),
+    "bar": mock_distribution({"Name": "bar", "Version": "2.0.0", "Summary": "Bar package"}, ["pdm"]),
+    "baz": mock_distribution({"Name": "baz", "Version": "3.0.0", "Summary": "Baz package"}),
+}
 
 
 @pytest.fixture()
-def mock_pip(monkeypatch):
-    mocked = Mock()
-    monkeypatch.setattr(self_cmd, "run_pip", mocked)
+def mock_pip(mocker):
+    mocked = mocker.patch("pdm.cli.commands.self_cmd.run_pip")
     return mocked
 
 
 @pytest.fixture()
-def mock_all_distributions(monkeypatch):
-    monkeypatch.setattr(self_cmd, "_get_distributions", Mock(return_value=DISTRIBUTIONS))
+def mock_all_distributions(mocker):
+    mocker.patch("pdm.cli.commands.self_cmd.WorkingSet", return_value=DISTRIBUTIONS)
 
 
 @pytest.fixture()
