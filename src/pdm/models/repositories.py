@@ -558,7 +558,7 @@ class LockedRepository(BaseRepository):
         )
         try:
             return self.candidate_info[self._identify_candidate(candidate)]
-        except KeyError as e:
+        except KeyError as e:  # pragma: no cover
             raise CandidateNotFound(err) from e
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
