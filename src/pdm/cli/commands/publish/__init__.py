@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 
     from pdm.project import Project
 
+LIMIT_SIZE_RESPONSEDATA = 4096
+
 
 class Command(BaseCommand):
     """Build and publish the project to PyPI"""
@@ -71,7 +73,11 @@ class Command(BaseCommand):
         )
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "--no-very-ssl", action="store_false", dest="verify_ssl", help="Disable SSL verification", default=None
+            "--no-very-ssl",
+            action="store_false",
+            dest="verify_ssl",
+            help="Disable SSL verification",
+            default=None,
         )
         group.add_argument(
             "--ca-certs",
@@ -81,7 +87,9 @@ class Command(BaseCommand):
         )
 
     @staticmethod
-    def _make_package(filename: str, signatures: dict[str, str], options: argparse.Namespace) -> PackageFile:
+    def _make_package(
+        filename: str, signatures: dict[str, str], options: argparse.Namespace
+    ) -> PackageFile:
         p = PackageFile.from_filename(filename, options.comment)
         if p.base_filename in signatures:
             p.add_gpg_signature(signatures[p.base_filename], p.base_filename + ".asc")
@@ -106,7 +114,13 @@ class Command(BaseCommand):
             try:
                 response.raise_for_status()
             except requests.HTTPError as err:
-                message = str(err)
+                message = str(err) + "\n"
+                if len(response.text) <= LIMIT_SIZE_RESPONSEDATA:
+                    message += response.text
+                else:
+                    message += (
+                        response.text[:LIMIT_SIZE_RESPONSEDATA] + "\n...\n(truncated)\n"
+                    )
         if message:
             raise PublishError(message)
 
@@ -129,7 +143,14 @@ class Command(BaseCommand):
             config.ca_certs = ca_certs
         if options.verify_ssl is False:
             config.verify_ssl = options.verify_ssl
-        return Repository(project, config.url, config.username, config.password, config.ca_certs, config.verify_ssl)
+        return Repository(
+            project,
+            config.url,
+            config.username,
+            config.password,
+            config.ca_certs,
+            config.verify_ssl,
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         hooks = HookManager(project, options.skip)
@@ -139,8 +160,16 @@ class Command(BaseCommand):
         if options.build:
             build.Command.do_build(project, hooks=hooks)
 
-        package_files = [str(p) for p in project.root.joinpath("dist").iterdir() if not p.name.endswith(".asc")]
-        signatures = {p.stem: str(p) for p in project.root.joinpath("dist").iterdir() if p.name.endswith(".asc")}
+        package_files = [
+            str(p)
+            for p in project.root.joinpath("dist").iterdir()
+            if not p.name.endswith(".asc")
+        ]
+        signatures = {
+            p.stem: str(p)
+            for p in project.root.joinpath("dist").iterdir()
+            if p.name.endswith(".asc")
+        }
 
         repository = self.get_repository(project, options)
         uploaded: list[PackageFile] = []
@@ -163,7 +192,9 @@ class Command(BaseCommand):
             )
             for package in packages:
                 resp = repository.upload(package, progress)
-                logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason)
+                logger.debug(
+                    "Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason
+                )
                 self._check_response(resp)
                 uploaded.append(package)
 
