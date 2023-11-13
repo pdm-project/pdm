@@ -75,4 +75,5 @@ class Command(BaseCommand):
         if options.output:
             Path(options.output).write_text(content, encoding="utf-8")
         else:
-            project.core.ui.echo(content, markup=False)
+            # Use a regular print to avoid any formatting / wrapping.
+            print(content)
