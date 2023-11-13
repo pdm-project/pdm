@@ -87,9 +87,7 @@ class Command(BaseCommand):
         )
 
     @staticmethod
-    def _make_package(
-        filename: str, signatures: dict[str, str], options: argparse.Namespace
-    ) -> PackageFile:
+    def _make_package(filename: str, signatures: dict[str, str], options: argparse.Namespace) -> PackageFile:
         p = PackageFile.from_filename(filename, options.comment)
         if p.base_filename in signatures:
             p.add_gpg_signature(signatures[p.base_filename], p.base_filename + ".asc")
@@ -118,9 +116,7 @@ class Command(BaseCommand):
                 if len(response.text) <= LIMIT_SIZE_RESPONSEDATA:
                     message += response.text
                 else:
-                    message += (
-                        response.text[:LIMIT_SIZE_RESPONSEDATA] + "\n...\n(truncated)\n"
-                    )
+                    message += response.text[:LIMIT_SIZE_RESPONSEDATA] + "\n...\n(truncated)\n"
         if message:
             raise PublishError(message)
 
@@ -160,16 +156,8 @@ class Command(BaseCommand):
         if options.build:
             build.Command.do_build(project, hooks=hooks)
 
-        package_files = [
-            str(p)
-            for p in project.root.joinpath("dist").iterdir()
-            if not p.name.endswith(".asc")
-        ]
-        signatures = {
-            p.stem: str(p)
-            for p in project.root.joinpath("dist").iterdir()
-            if p.name.endswith(".asc")
-        }
+        package_files = [str(p) for p in project.root.joinpath("dist").iterdir() if not p.name.endswith(".asc")]
+        signatures = {p.stem: str(p) for p in project.root.joinpath("dist").iterdir() if p.name.endswith(".asc")}
 
         repository = self.get_repository(project, options)
         uploaded: list[PackageFile] = []
@@ -192,9 +180,7 @@ class Command(BaseCommand):
             )
             for package in packages:
                 resp = repository.upload(package, progress)
-                logger.debug(
-                    "Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason
-                )
+                logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason)
                 self._check_response(resp)
                 uploaded.append(package)
 
