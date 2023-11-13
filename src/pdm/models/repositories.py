@@ -552,7 +552,14 @@ class LockedRepository(BaseRepository):
         )
 
     def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
-        return self.candidate_info[self._identify_candidate(candidate)]
+        err = (
+            f"Missing package {candidate.identify()} from the lockfile, "
+            "the lockfile may be broken. Run `pdm update` to fix it."
+        )
+        try:
+            return self.candidate_info[self._identify_candidate(candidate)]
+        except KeyError as e:  # pragma: no cover
+            raise CandidateNotFound(err) from e
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
         return (
