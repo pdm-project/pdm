@@ -116,7 +116,7 @@ def do_lock(
             raise
         except ResolutionImpossible as err:
             ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
-            ui.echo(format_resolution_impossible(err), err=True)
+            ui.error(format_resolution_impossible(err))
             raise ResolutionImpossible("Unable to find a resolution") from None
         else:
             data = format_lockfile(project, mapping, dependencies, groups=groups, strategy=lock_strategy)
