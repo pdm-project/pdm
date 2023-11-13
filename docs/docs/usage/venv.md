@@ -33,8 +33,9 @@ $ pdm venv create --with venv 3.9
 
 ## The location of virtualenvs
 
-For the first time, PDM will try to create a virtualenv **in project**, unless `.venv` already exists.
-Other virtualenvs go to the location specified by the `venv.location` configuration. They are named as `<project_name>-<path_hash>-<name_or_python_version>` to avoid name collision. A virtualenv created with `--name` option will always go to this location. You can disable the in-project virtualenv creation by `pdm config venv.in_project false`.
+If no `--name` is given, PDM will create the venv in `<project_root>/.venv`. Otherwise, virtualenvs go to the location specified by the `venv.location` configuration.
+They are named as `<project_name>-<path_hash>-<name_or_python_version>` to avoid name collision.
+You can disable the in-project virtualenv creation by `pdm config venv.in_project false`. And all virtualenvs will be created under `venv.location`.
 
 ## Reuse the virtualenv you created elsewhere
 
