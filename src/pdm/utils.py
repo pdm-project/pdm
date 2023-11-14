@@ -456,9 +456,9 @@ def package_installed(package_name: str) -> bool:
 
 
 def validate_project_name(name: str) -> bool:
-    """Check if the project name is validate or not"""
-
-    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
+    """Check if the project name is valid or not"""
+    import string
+    allowed_chars = set(string.ascii_letters + string.digits + "_-")
     if set(name) - allowed_chars:
         return False
 

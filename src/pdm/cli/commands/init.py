@@ -95,7 +95,7 @@ class Command(BaseCommand):
         if validate_project_name(name):
             return name
         project.core.ui.echo(
-            "Project name is not validate \n"
+            "Project name is not valid \n"
             "For a valid Python project name, it should follow these rules:\n"
             "1. Only contains letters, numbers, underscores and hyphens\n"
             "2. Cannot start with a number\n"
