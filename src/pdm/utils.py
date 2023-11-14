@@ -453,3 +453,26 @@ def package_installed(package_name: str) -> bool:
         return False
     else:
         return True
+
+
+def validate_project_name(name: str) -> bool:
+    """Check if the project name is validate or not"""
+
+    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
+    if set(name) - allowed_chars:
+        return False
+
+    if name[0].isdigit():
+        return False
+
+    import keyword
+
+    if keyword.iskeyword(name):
+        return False
+
+    import builtins
+
+    if name in dir(builtins):
+        return False
+
+    return True
