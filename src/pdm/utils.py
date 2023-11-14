@@ -457,23 +457,12 @@ def package_installed(package_name: str) -> bool:
 
 def validate_project_name(name: str) -> bool:
     """Check if the project name is valid or not"""
-    import string
 
-    allowed_chars = set(string.ascii_letters + string.digits + "_-")
-    if set(name) - allowed_chars:
-        return False
+    pattern = r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$"
+    return re.fullmatch(pattern, name, flags=re.IGNORECASE) is not None
 
-    if name[0].isdigit():
-        return False
 
-    import keyword
-
-    if keyword.iskeyword(name):
-        return False
-
-    import builtins
-
-    if name in dir(builtins):
-        return False
-
-    return True
+def sanitize_project_name(name: str) -> str:
+    """Sanitize the project name and remove all illegal characters"""
+    pattern = r"[^a-zA-Z0-9\-_\.]"
+    return re.sub(pattern, "", name)

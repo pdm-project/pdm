@@ -14,7 +14,7 @@ from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_ba
 from pdm.models.python import PythonInfo
 from pdm.models.specifiers import get_specifier
 from pdm.models.venv import get_venv_python
-from pdm.utils import get_user_email_from_git, package_installed, validate_project_name
+from pdm.utils import get_user_email_from_git, package_installed, sanitize_project_name, validate_project_name
 
 if TYPE_CHECKING:
     from pdm.project import Project
@@ -91,15 +91,12 @@ class Command(BaseCommand):
         return termui.ask(question, default=default)
 
     def ask_project(self, project: Project) -> str:
-        name = self.ask("Project name", project.root.name)
-        if validate_project_name(name):
+        default = sanitize_project_name(project.root.name)
+        name = self.ask("Project name", default)
+        if default == name or validate_project_name(name):
             return name
         project.core.ui.echo(
-            "Project name is not valid \n"
-            "For a valid Python project name, it should follow these rules:\n"
-            "1. Only contains letters, numbers, underscores and hyphens\n"
-            "2. Cannot start with a number\n"
-            "3. Does not conflict with Python keywords or built-in functions",
+            "Project name is not valid, it should follow PEP 426",
             err=True,
             style="warning",
         )
