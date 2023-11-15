@@ -45,9 +45,10 @@ def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
 
 
 RE_ARGS_PLACEHOLDER = re.compile(r"{args(?::(?P<default>[^}]*))?}")
+RE_PDM_PLACEHOLDER = re.compile(r"{pdm}")
 
 
-def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
+def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
     """Interpolate the `{args:[defaults]} placeholder in a string"""
 
     def replace(m: re.Match[str]) -> str:
@@ -56,6 +57,24 @@ def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
 
     interpolated, count = RE_ARGS_PLACEHOLDER.subn(replace, script)
     return interpolated, count > 0
+
+
+def _interpolate_pdm(script: str) -> tuple[str, bool]:
+    """Interpolate the `{pdm} placeholder in a string"""
+
+    def replace(m: re.Match[str]) -> str:
+        return sh_join([sys.executable, "-m", "pdm"])
+
+    interpolated, count = RE_PDM_PLACEHOLDER.subn(replace, script)
+    return interpolated, count > 0
+
+
+def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
+    """Interpolate the `{args:[defaults]} placeholder in a string"""
+
+    script, args_interpolated = _interpolate_args(script, args)
+    script, pdm_interpolated = _interpolate_pdm(script)
+    return script, args_interpolated or pdm_interpolated
 
 
 class Task(NamedTuple):

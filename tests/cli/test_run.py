@@ -308,6 +308,20 @@ def test_run_script_with_args_placeholder_with_default(project, pdm, capfd, scri
     assert out.strip().splitlines()[1:] == expected
 
 
+def test_run_shell_script_with_pdm_placeholder(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "{pdm} -V > output.txt",
+            "help": "test it won't fail",
+        }
+    }
+    project.pyproject.write()
+    with cd(project.root):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip().startswith("PDM, version")
+
+
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {
