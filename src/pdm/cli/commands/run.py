@@ -270,6 +270,7 @@ class TaskRunner:
         if kind == "composite":
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
+            should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
             code = 0
             for script in value:
                 if should_interpolate:
