@@ -245,11 +245,10 @@ $ pdm run test
 
 ### `{pdm}` placeholder
 
-Sometimes, you may have multiple PDM installations, or `pdm` installed with a different name. This
+Sometimes you may have multiple PDM installations, or `pdm` installed with a different name. This
 could for example occur in a CI/CD situation, or when working with different PDM versions in
-different repos. To make your scripts more robust you can use `{pdm}` in your shell scripts. This
-will expand to `{sys.executable} -m pdm`, which should invoke the same PDM variant with the same
-interpreter.
+different repos. To make your scripts more robust you can use `{pdm}` to use the PDM entrypoint
+executing the script. This will expand to `{sys.executable} -m pdm`.
 
 ```toml
 [tool.pdm.scripts]
