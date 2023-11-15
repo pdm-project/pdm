@@ -14,7 +14,7 @@ from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_ba
 from pdm.models.python import PythonInfo
 from pdm.models.specifiers import get_specifier
 from pdm.models.venv import get_venv_python
-from pdm.utils import get_user_email_from_git, package_installed
+from pdm.utils import get_user_email_from_git, package_installed, sanitize_project_name, validate_project_name
 
 if TYPE_CHECKING:
     from pdm.project import Project
@@ -90,6 +90,18 @@ class Command(BaseCommand):
             return default
         return termui.ask(question, default=default)
 
+    def ask_project(self, project: Project) -> str:
+        default = sanitize_project_name(project.root.name)
+        name = self.ask("Project name", default)
+        if default == name or validate_project_name(name):
+            return name
+        project.core.ui.echo(
+            "Project name is not valid, it should follow PEP 426",
+            err=True,
+            style="warning",
+        )
+        return self.ask_project(project)
+
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 
@@ -102,7 +114,7 @@ class Command(BaseCommand):
             )
         build_backend: type[BuildBackend] | None = None
         if is_library:
-            name = self.ask("Project name", project.root.name)
+            name = self.ask_project(project)
             version = self.ask("Project version", "0.1.0")
             description = self.ask("Project description", "")
             if options.backend:

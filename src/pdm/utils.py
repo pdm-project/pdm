@@ -453,3 +453,16 @@ def package_installed(package_name: str) -> bool:
         return False
     else:
         return True
+
+
+def validate_project_name(name: str) -> bool:
+    """Check if the project name is valid or not"""
+
+    pattern = r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$"
+    return re.fullmatch(pattern, name, flags=re.IGNORECASE) is not None
+
+
+def sanitize_project_name(name: str) -> str:
+    """Sanitize the project name and remove all illegal characters"""
+    pattern = r"[^a-zA-Z0-9\-_\.]"
+    return re.sub(pattern, "", name)
