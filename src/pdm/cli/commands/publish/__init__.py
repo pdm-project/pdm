@@ -25,8 +25,6 @@ if TYPE_CHECKING:
 
     from pdm.project import Project
 
-LIMIT_SIZE_RESPONSEDATA = 4096
-
 
 class Command(BaseCommand):
     """Build and publish the project to PyPI"""
@@ -73,11 +71,7 @@ class Command(BaseCommand):
         )
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "--no-very-ssl",
-            action="store_false",
-            dest="verify_ssl",
-            help="Disable SSL verification",
-            default=None,
+            "--no-very-ssl", action="store_false", dest="verify_ssl", help="Disable SSL verification", default=None
         )
         group.add_argument(
             "--ca-certs",
@@ -112,11 +106,9 @@ class Command(BaseCommand):
             try:
                 response.raise_for_status()
             except requests.HTTPError as err:
-                message = str(err) + "\n"
-                if len(response.text) <= LIMIT_SIZE_RESPONSEDATA:
-                    message += response.text
-                else:
-                    message += response.text[:LIMIT_SIZE_RESPONSEDATA] + "\n...\n(truncated)\n"
+                message = str(err)
+                if response.text:
+                    logger.debug(response.text)
         if message:
             raise PublishError(message)
 
@@ -139,14 +131,7 @@ class Command(BaseCommand):
             config.ca_certs = ca_certs
         if options.verify_ssl is False:
             config.verify_ssl = options.verify_ssl
-        return Repository(
-            project,
-            config.url,
-            config.username,
-            config.password,
-            config.ca_certs,
-            config.verify_ssl,
-        )
+        return Repository(project, config.url, config.username, config.password, config.ca_certs, config.verify_ssl)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         hooks = HookManager(project, options.skip)
