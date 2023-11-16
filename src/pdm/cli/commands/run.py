@@ -8,6 +8,7 @@ import shlex
 import signal
 import subprocess
 import sys
+from pathlib import Path
 from types import FrameType
 from typing import TYPE_CHECKING, Mapping, NamedTuple, Sequence, cast
 
@@ -44,9 +45,10 @@ def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
 
 
 RE_ARGS_PLACEHOLDER = re.compile(r"{args(?::(?P<default>[^}]*))?}")
+RE_PDM_PLACEHOLDER = re.compile(r"{pdm}")
 
 
-def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
+def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
     """Interpolate the `{args:[defaults]} placeholder in a string"""
     import shlex
 
@@ -56,6 +58,25 @@ def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
 
     interpolated, count = RE_ARGS_PLACEHOLDER.subn(replace, script)
     return interpolated, count > 0
+
+
+def _interpolate_pdm(script: str) -> str:
+    """Interpolate the `{pdm} placeholder in a string"""
+    executable_path = Path(sys.executable)
+
+    def replace(m: re.Match[str]) -> str:
+        return sh_join([executable_path.as_posix(), "-m", "pdm"])
+
+    interpolated = RE_PDM_PLACEHOLDER.sub(replace, script)
+    return interpolated
+
+
+def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
+    """Interpolate the `{args:[defaults]} placeholder in a string"""
+
+    script, args_interpolated = _interpolate_args(script, args)
+    script = _interpolate_pdm(script)
+    return script, args_interpolated
 
 
 class Task(NamedTuple):
@@ -251,6 +272,7 @@ class TaskRunner:
         if kind == "composite":
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
+            should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
             code = 0
             for script in value:
                 if should_interpolate:
