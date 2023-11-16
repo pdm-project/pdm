@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from pdm import termui
@@ -227,7 +229,10 @@ class Command(BaseCommand):
                 save=False,
                 hooks=hooks,
             )
-        if project.config["python.use_venv"] and python_info.get_venv() is None:
+        is_conda_base = (
+            os.getenv("CONDA_DEFAULT_ENV", "") == "base" and Path(os.environ["CONDA_PYTHON_EXE"]) == python_info.path
+        )
+        if project.config["python.use_venv"] and (python_info.get_venv() is None or is_conda_base):
             if not self.interactive or termui.confirm(
                 f"Would you like to create a virtualenv with [success]{python_info.executable}[/]?",
                 default=True,
