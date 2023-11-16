@@ -243,6 +243,31 @@ $ pdm run test
     `call` scripts don't support the `{args}` placeholder as they have
     access to `sys.argv` directly to handle such complexe cases and more.
 
+### `{pdm}` placeholder
+
+Sometimes you may have multiple PDM installations, or `pdm` installed with a different name. This
+could for example occur in a CI/CD situation, or when working with different PDM versions in
+different repos. To make your scripts more robust you can use `{pdm}` to use the PDM entrypoint
+executing the script. This will expand to `{sys.executable} -m pdm`.
+
+```toml
+[tool.pdm.scripts]
+whoami = { shell = "echo `{pdm} -V` was called as '{pdm} -V'" }
+```
+will produce the following output:
+```shell
+$ pdm whoami
+PDM, version 0.1.dev2501+g73651b7.d20231115 was called as /usr/bin/python3 -m pdm -V
+
+$ pdm2.8 whoami
+PDM, version 2.8.0 was called as <snip>/venvs/pdm2-8/bin/python -m pdm -V
+```
+
+!!! note
+    While the above example uses PDM 2.8, this functionality was introduced in the 2.10 series and only backported for the showcase.
+
+
+
 ## Show the List of Scripts
 
 Use `pdm run --list/-l` to show the list of available script shortcuts:
