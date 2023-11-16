@@ -1,3 +1,21 @@
+Release v2.10.2 (2023-11-16)
+----------------------------
+
+### Features & Improvements
+
+- Log the response text when `pdm publish` fails with HTTP error. [#2400](https://github.com/pdm-project/pdm/issues/2400)
+
+### Bug Fixes
+
+- Improve the error message when a specific package can't be found in the lockfile. [#2358](https://github.com/pdm-project/pdm/issues/2358)
+- prevent wrong project name (including space and illegal characters) [#2360](https://github.com/pdm-project/pdm/issues/2360)
+- Fix a bug that PDM cannot detect namespace packages correctly when creating symlinks. The package's `__init__.py` contains an unusual line. [#2378](https://github.com/pdm-project/pdm/issues/2378)
+- Fix template files created by `pdm init` being read-only when copied from a read-only PDM installation. [#2379](https://github.com/pdm-project/pdm/issues/2379)
+- Don't reset the build backend when asking for import. [#2388](https://github.com/pdm-project/pdm/issues/2388)
+- Never wrap the output of the `export` command. [#2390](https://github.com/pdm-project/pdm/issues/2390)
+- Forbid global project in conda base environment, since it may remove conda-managed packages. [#2409](https://github.com/pdm-project/pdm/issues/2409)
+
+
 Release v2.10.1 (2023-11-07)
 ----------------------------
 
