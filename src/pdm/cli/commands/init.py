@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import os
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from pdm import termui
@@ -16,7 +14,13 @@ from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_ba
 from pdm.models.python import PythonInfo
 from pdm.models.specifiers import get_specifier
 from pdm.models.venv import get_venv_python
-from pdm.utils import get_user_email_from_git, package_installed, sanitize_project_name, validate_project_name
+from pdm.utils import (
+    get_user_email_from_git,
+    is_conda_base_python,
+    package_installed,
+    sanitize_project_name,
+    validate_project_name,
+)
 
 if TYPE_CHECKING:
     from pdm.project import Project
@@ -229,10 +233,10 @@ class Command(BaseCommand):
                 save=False,
                 hooks=hooks,
             )
-        is_conda_base = (
-            os.getenv("CONDA_DEFAULT_ENV", "") == "base" and Path(os.environ["CONDA_PYTHON_EXE"]) == python_info.path
-        )
-        if project.config["python.use_venv"] and (python_info.get_venv() is None or is_conda_base):
+
+        if project.config["python.use_venv"] and (
+            python_info.get_venv() is None or is_conda_base_python(python_info.path)
+        ):
             if not self.interactive or termui.confirm(
                 f"Would you like to create a virtualenv with [success]{python_info.executable}[/]?",
                 default=True,

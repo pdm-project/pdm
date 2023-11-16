@@ -30,6 +30,8 @@ from pdm.utils import (
     expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
+    is_conda_base,
+    is_conda_base_python,
     normalize_name,
     path_to_url,
 )
@@ -81,11 +83,15 @@ class Project:
             global_config = platformdirs.user_config_path("pdm") / "config.toml"
         self.global_config = Config(Path(global_config), is_global=True)
         global_project = Path(self.global_config["global_project.path"])
-        is_conda_base = os.getenv("CONDA_DEFAULT_ENV", "") == "base"
 
         if root_path is None:
             root_path = find_project_root() if not is_global else global_project
-        if not is_global and root_path is None and self.global_config["global_project.fallback"] and not is_conda_base:
+        if (
+            not is_global
+            and root_path is None
+            and self.global_config["global_project.fallback"]
+            and not is_conda_base()
+        ):
             root_path = global_project
             is_global = True
             if self.global_config["global_project.fallback_verbose"]:
@@ -150,10 +156,7 @@ class Project:
                     "Python 2.7 has reached EOL and PDM no longer supports it. "
                     "Please upgrade your Python to 3.6 or later.",
                 )
-            is_conda_base = os.getenv("CONDA_DEFAULT_ENV", "") == "base"
-            if (
-                self.is_global and is_conda_base and python.path == Path(os.environ["CONDA_PYTHON_EXE"])
-            ):  # pragma: no cover
+            if self.is_global and is_conda_base_python(python.path):  # pragma: no cover
                 raise PdmUsageError("Can't use global project in conda base environment since it is managed by conda")
             self._python = python
         return self._python
@@ -215,9 +218,8 @@ class Project:
         if config.get("python.use_venv") and not self.is_global and not os.getenv("PDM_IGNORE_ACTIVE_VENV"):
             # Resolve virtual environments from env-vars
             venv_in_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
-            conda_base = os.getenv("CONDA_DEFAULT_ENV", "") == "base"
             # We don't auto reuse conda's base env since it may cause breakage when removing packages.
-            if venv_in_env and not conda_base:
+            if venv_in_env and not is_conda_base():
                 python = PythonInfo.from_path(get_venv_python(Path(venv_in_env)))
                 if match_version(python):
                     note(

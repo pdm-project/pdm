@@ -466,3 +466,18 @@ def sanitize_project_name(name: str) -> str:
     """Sanitize the project name and remove all illegal characters"""
     pattern = r"[^a-zA-Z0-9\-_\.]"
     return re.sub(pattern, "", name)
+
+
+def is_conda_base() -> bool:
+    return os.getenv("CONDA_DEFAULT_ENV", "") == "base"
+
+
+def is_conda_base_python(python: Path) -> bool:
+    if not is_conda_base():
+        return False
+    prefix = os.environ["CONDA_PREFIX"]
+    try:
+        python.relative_to(prefix)
+    except ValueError:
+        return False
+    return True
