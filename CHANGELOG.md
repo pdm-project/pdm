@@ -1,3 +1,11 @@
+Release v2.10.3 (2023-11-16)
+----------------------------
+
+### Bug Fixes
+
+- Create virtualenv for conda base Python. [#2409](https://github.com/pdm-project/pdm/issues/2409)
+
+
 Release v2.10.2 (2023-11-16)
 ----------------------------
 
