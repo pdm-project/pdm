@@ -107,6 +107,8 @@ class Command(BaseCommand):
                 response.raise_for_status()
             except requests.HTTPError as err:
                 message = str(err)
+                if response.text:
+                    logger.debug(response.text)
         if message:
             raise PublishError(message)
 
