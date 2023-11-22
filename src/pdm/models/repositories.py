@@ -547,7 +547,7 @@ class LockedRepository(BaseRepository):
     def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
         err = (
             f"Missing package {candidate.identify()} from the lockfile, "
-            "the lockfile may be broken. Run `pdm update` to fix it."
+            "the lockfile may be broken. Run `pdm lock --update-reuse` to fix it."
         )
         try:
             return self.candidate_info[self._identify_candidate(candidate)]

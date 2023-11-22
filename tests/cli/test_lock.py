@@ -15,7 +15,7 @@ from pdm.project.lockfile import FLAG_CROSS_PLATFORM, Compatibility
 def test_lock_command(project, pdm, mocker):
     m = mocker.patch.object(actions, "do_lock")
     pdm(["lock"], obj=project)
-    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY, strategy_change=None)
+    m.assert_called_with(project, refresh=False, groups=["default"], hooks=ANY, strategy_change=None, strategy="all")
 
 
 @pytest.mark.usefixtures("repository")
