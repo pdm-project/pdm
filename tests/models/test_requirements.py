@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from pdm.models.requirements import RequirementError, parse_requirement
+from pdm.models.requirements import RequirementError, filter_requirements_with_extras, parse_requirement
 from pdm.utils import PACKAGING_22, path_to_url
 from tests import FIXTURES
 
@@ -94,3 +94,33 @@ def test_illegal_requirement_line(line, expected):
 def test_not_supported_editable_requirement(line):
     with pytest.raises(RequirementError, match="Editable requirement is only supported"):
         parse_requirement(line, True)
+
+
+def test_filter_requirements_with_extras():
+    requirements = [
+        "foo; extra == 'a'",
+        "bar; extra == 'b'",
+        "baz; extra == 'a' or extra == 'b'",
+        "qux; extra == 'a' and extra == 'b'",
+        "ping; os_name == 'nt' and extra == 'a'",
+        "blah",
+    ]
+    assert filter_requirements_with_extras(requirements, ()) == ["blah"]
+    assert filter_requirements_with_extras(requirements, ("a",)) == ["foo", "baz", 'ping; os_name == "nt"']
+    assert filter_requirements_with_extras(requirements, ("b",)) == ["bar", "baz"]
+    assert filter_requirements_with_extras(requirements, ("a", "b")) == [
+        "foo",
+        "bar",
+        "baz",
+        "qux",
+        'ping; os_name == "nt"',
+    ]
+    assert filter_requirements_with_extras(requirements, ("c",)) == []
+    assert filter_requirements_with_extras(requirements, ("a", "b"), include_default=True) == [
+        "foo",
+        "bar",
+        "baz",
+        "qux",
+        'ping; os_name == "nt"',
+        "blah",
+    ]

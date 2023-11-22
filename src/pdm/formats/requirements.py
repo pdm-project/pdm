@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import dataclasses
 import hashlib
 import shlex
 import urllib.parse
@@ -9,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Mapping
 
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
-from pdm.models.specifiers import get_specifier
 from pdm.utils import expand_env_vars_in_auth
 
 if TYPE_CHECKING:
@@ -186,7 +184,7 @@ def export(
     collected_req: set[str] = set()
     for candidate in sorted(candidates, key=lambda x: x.identify()):  # type: ignore[attr-defined]
         if isinstance(candidate, Candidate):
-            req = dataclasses.replace(candidate.req, specifier=get_specifier(f"=={candidate.version}"), marker=None)
+            req = candidate.req.as_pinned_version(candidate.version)
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
