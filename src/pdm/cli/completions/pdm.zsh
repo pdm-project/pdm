@@ -245,6 +245,7 @@ _pdm() {
         {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
+        '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         "--static-urls[(DEPRECATED) Store static file URLs in the lockfile]"
         "--no-static-urls[(DEPRECATED) Do not store static file URLs in the lockfile]"
         "--no-default[Don\'t include dependencies from the default group]"
