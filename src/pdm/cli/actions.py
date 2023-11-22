@@ -128,7 +128,9 @@ def do_lock(
     return mapping
 
 
-def resolve_candidates_from_lockfile(project: Project, requirements: Iterable[Requirement]) -> dict[str, Candidate]:
+def resolve_candidates_from_lockfile(
+    project: Project, requirements: Iterable[Requirement], cross_platform: bool = False
+) -> dict[str, Candidate]:
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     reqs = [
@@ -138,12 +140,15 @@ def resolve_candidates_from_lockfile(project: Project, requirements: Iterable[Re
         with ui.open_spinner("Resolving packages from lockfile...") as spinner:
             reporter = BaseReporter()
             provider = project.get_provider(for_install=True)
+            if cross_platform:
+                provider.repository.ignore_compatibility = True
             resolver: Resolver = project.core.resolver_class(provider, reporter)
             mapping, *_ = resolve(
                 resolver,
                 reqs,
                 project.environment.python_requires,
                 resolve_max_rounds,
+                record_markers=cross_platform,
             )
             spinner.update("Fetching hashes for resolved packages...")
             fetch_hashes(provider.repository, mapping)
