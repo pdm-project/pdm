@@ -240,6 +240,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t u
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d '[DEPRECATED] Store static file URLs in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy (cross_platform, static_urls, direct_minimal_versions). Add \'no_\' prefix to disable. Can be supplied multiple times or split by comma.'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin
