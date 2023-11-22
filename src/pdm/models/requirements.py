@@ -145,7 +145,7 @@ class Requirement:
             try:
                 kwargs["marker"] = get_marker(kwargs["marker"])
             except InvalidMarker as e:
-                raise RequirementError("Invalid marker: %s" % str(e)) from None
+                raise RequirementError(f"Invalid marker: {e}") from None
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(e.strip() for e in kwargs["extras"][1:-1].split(","))
         version = kwargs.pop("version", "")
@@ -497,10 +497,10 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         except InvalidRequirement as e:
             m = _file_req_re.match(line)
             if m is None:
-                raise RequirementError(str(e)) from None
+                raise RequirementError(f"{line}: {e}") from None
             args = m.groupdict()
             if not line.startswith(".") and not args["url"] and args["path"] and not os.path.exists(args["path"]):
-                raise RequirementError(str(e)) from None
+                raise RequirementError(f"{line}: {e}") from None
             r = FileRequirement.create(**args)
         else:
             r = Requirement.from_pkg_requirement(pkg_req)
@@ -514,5 +514,5 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             assert isinstance(r, FileRequirement)
             r.editable = True
         else:
-            raise RequirementError("Editable requirement is only supported for VCS link or local directory.")
+            raise RequirementError(f"{line}: Editable requirement is only supported for VCS link or local directory.")
     return r
