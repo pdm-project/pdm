@@ -19,7 +19,7 @@ def resolve(project, repository):
         strategy="all",
         tracked_names=None,
         direct_minimal_versions=False,
-        record_markers=False,
+        inherit_metadata=False,
     ):
         repository.environment.python_requires = PySpecSet(requires_python)
         if allow_prereleases is not None:
@@ -37,7 +37,7 @@ def resolve(project, repository):
             reporter = SpinnerReporter(spin, requirements)
             resolver = Resolver(provider, reporter)
             mapping, *_ = _resolve(
-                resolver, requirements, repository.environment.python_requires, record_markers=record_markers
+                resolver, requirements, repository.environment.python_requires, inherit_metadata=inherit_metadata
             )
             return mapping
 
@@ -360,7 +360,7 @@ def test_resolve_record_markers(resolve, repository, project):
     repository.add_dependencies("E", "1.0", ["F; platform_machine=='x86_64'"])
     repository.add_dependencies("F", "1.0", ["B"])
 
-    result = resolve(["A"], ">=3.6", record_markers=True)
+    result = resolve(["A"], ">=3.6", inherit_metadata=True)
     assert result["a"].version == "1.0"
     assert "d" not in result
     assert (

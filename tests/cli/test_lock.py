@@ -232,3 +232,32 @@ def test_lockfile_compatibility(project, monkeypatch, lock_version, expected, pd
     assert project.lockfile.compatibility() == expected
     result = pdm(["lock", "--check"], obj=project)
     assert result.exit_code == (1 if expected == Compatibility.NONE else 0)
+
+
+def test_lock_default_inherit_metadata(project, pdm, mocker, working_set):
+    project.project_config["strategy.inherit_metadata"] = True
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    pdm(["lock"], obj=project, strict=True)
+    assert "inherit_metadata" in project.lockfile.strategy
+    packages = project.lockfile["package"]
+    assert all(package["groups"] == ["default"] for package in packages)
+
+    resolver = mocker.patch("pdm.cli.actions.resolve")
+    pdm(["sync"], obj=project, strict=True)
+    resolver.assert_not_called()
+    for key in ("requests", "idna", "chardet", "urllib3"):
+        assert key in working_set
+
+
+def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
+    project.add_dependencies({"requests": parse_requirement("requests")})
+    pdm(["lock", "-S", "inherit_metadata"], obj=project, strict=True)
+    assert "inherit_metadata" in project.lockfile.strategy
+    packages = project.lockfile["package"]
+    assert all(package["groups"] == ["default"] for package in packages)
+
+    resolver = mocker.patch("pdm.cli.actions.resolve")
+    pdm(["sync"], obj=project, strict=True)
+    resolver.assert_not_called()
+    for key in ("requests", "idna", "chardet", "urllib3"):
+        assert key in working_set

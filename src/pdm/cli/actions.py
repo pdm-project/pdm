@@ -28,9 +28,10 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
+from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver import resolve
 from pdm.termui import logger
 from pdm.utils import deprecation_warning
@@ -50,6 +51,8 @@ def do_lock(
     """Performs the locking process and update lockfile."""
     hooks = hooks or HookManager(project)
     check_project_file(project)
+    if project.config["strategy.inherit_metadata"]:
+        project.lockfile.default_strategies.append(FLAG_INHERIT_METADATA)
     lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if refresh:
         locked_repo = project.locked_repository
@@ -102,6 +105,7 @@ def do_lock(
                     requirements,
                     project.environment.python_requires,
                     resolve_max_rounds,
+                    inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
                 )
                 spin.update("Fetching hashes for resolved packages...")
                 fetch_hashes(provider.repository, mapping)
@@ -130,7 +134,10 @@ def do_lock(
 
 
 def resolve_candidates_from_lockfile(
-    project: Project, requirements: Iterable[Requirement], cross_platform: bool = False
+    project: Project,
+    requirements: Iterable[Requirement],
+    cross_platform: bool = False,
+    groups: Collection[str] | None = None,
 ) -> dict[str, Candidate]:
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
@@ -143,6 +150,10 @@ def resolve_candidates_from_lockfile(
             provider = project.get_provider(for_install=True)
             if cross_platform:
                 provider.repository.ignore_compatibility = True
+            if FLAG_INHERIT_METADATA in project.lockfile.strategy and groups is not None:
+                return {
+                    c.identify(): c for c in cast(LockedRepository, provider.repository).evaluate_candidates(groups)
+                }
             resolver: Resolver = project.core.resolver_class(provider, reporter)
             try:
                 mapping, *_ = resolve(
@@ -150,7 +161,7 @@ def resolve_candidates_from_lockfile(
                     reqs,
                     project.environment.python_requires,
                     resolve_max_rounds,
-                    record_markers=cross_platform,
+                    inherit_metadata=cross_platform,
                 )
             except ResolutionImpossible as e:
                 logger.exception("Broken lockfile")
@@ -208,7 +219,7 @@ def do_sync(
         selection.validate()
         for group in selection:
             requirements.extend(project.get_dependencies(group).values())
-    candidates = resolve_candidates_from_lockfile(project, requirements)
+    candidates = resolve_candidates_from_lockfile(project, requirements, groups=list(selection))
     if tracked_names and dry_run:
         candidates = {name: c for name, c in candidates.items() if name in tracked_names}
     synchronizer = project.core.synchronizer_class(

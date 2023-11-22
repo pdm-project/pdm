@@ -7,11 +7,11 @@ import re
 import sys
 import warnings
 from functools import wraps
-from typing import TYPE_CHECKING, Generator, TypeVar, cast
+from typing import TYPE_CHECKING, Collection, Generator, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning, PdmException
-from pdm.models.candidates import Candidate, make_candidate
+from pdm.models.candidates import Candidate
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -148,7 +148,7 @@ class BaseRepository:
 
         project = self.environment.project
         link = Link.from_path(project.root)
-        candidate = make_candidate(requirement, project.name, link=link)
+        candidate = Candidate(requirement, project.name, link=link)
         candidate.prepare(self.environment).metadata
         return candidate
 
@@ -514,7 +514,7 @@ class LockedRepository(BaseRepository):
                 req = Requirement.from_req_dict(package_name, req_dict)
                 if req.is_file_or_url and req.path and not req.url:  # type: ignore[attr-defined]
                     req.url = path_to_url(posixpath.join(root, req.path))  # type: ignore[attr-defined]
-                can = make_candidate(req, name=package_name, version=version)
+                can = Candidate(req, name=package_name, version=version)
                 can.hashes = package.get("files", [])
                 if not static_urls and any("url" in f for f in can.hashes):
                     raise PdmException(
@@ -605,3 +605,15 @@ class LockedRepository(BaseRepository):
 
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         return candidate.hashes
+
+    def evaluate_candidates(self, groups: Collection[str]) -> Iterable[Candidate]:
+        for can in self.packages.values():
+            if not any(g in can.req.groups for g in groups):
+                continue
+            if (
+                not self.ignore_compatibility
+                and can.req.marker is not None
+                and not can.req.marker.evaluate(self.environment.marker_environment)
+            ):
+                continue
+            yield can
