@@ -16,7 +16,7 @@ from pdm.formats.base import (
     make_inline_table,
     parse_name_email,
 )
-from pdm.models.markers import Marker
+from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import cd
@@ -80,9 +80,9 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
             req_dict["version"] = _convert_specifier(str(req_dict["version"]))
         markers: list[Marker] = []
         if "markers" in req_dict:
-            markers.append(Marker(req_dict.pop("markers")))  # type: ignore[arg-type]
+            markers.append(get_marker(req_dict.pop("markers")))  # type: ignore[arg-type]
         if "python" in req_dict:
-            markers.append(Marker(_convert_python(str(req_dict.pop("python"))).as_marker_string()))
+            markers.append(get_marker(_convert_python(str(req_dict.pop("python"))).as_marker_string()))
         if markers:
             req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace('"', "'")
         if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:

@@ -60,11 +60,8 @@ class Command(BaseCommand):
         else:
             if not project.lockfile.exists():
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
-            project.core.ui.warn(
-                "The exported requirements file is no longer cross-platform. "
-                "Using it on other platforms may cause unexpected result.",
-            )
-            candidates = resolve_candidates_from_lockfile(project, requirements.values())
+
+            candidates = resolve_candidates_from_lockfile(project, requirements.values(), cross_platform=True)
             # Remove candidates with [extras] because the bare candidates are already
             # included
             packages = (candidate for candidate in candidates.values() if not candidate.req.extras)

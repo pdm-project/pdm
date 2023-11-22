@@ -19,6 +19,7 @@ def resolve(project, repository):
         strategy="all",
         tracked_names=None,
         direct_minimal_versions=False,
+        record_markers=False,
     ):
         repository.environment.python_requires = PySpecSet(requires_python)
         if allow_prereleases is not None:
@@ -35,7 +36,9 @@ def resolve(project, repository):
         with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
             reporter = SpinnerReporter(spin, requirements)
             resolver = Resolver(provider, reporter)
-            mapping, *_ = _resolve(resolver, requirements, repository.environment.python_requires)
+            mapping, *_ = _resolve(
+                resolver, requirements, repository.environment.python_requires, record_markers=record_markers
+            )
             return mapping
 
     return resolve_func
@@ -339,3 +342,37 @@ def test_resolve_direct_minimal_versions(resolve, repository, project):
     result = resolve(["django"], ">=3.6", direct_minimal_versions=True)
     assert result["django"].version == "1.11.8"
     assert result["pytz"].version == "2019.6"
+
+
+def test_resolve_record_markers(resolve, repository, project):
+    repository.add_candidate("A", "1.0")
+    repository.add_candidate("B", "1.0")
+    repository.add_candidate("C", "1.0")
+    repository.add_candidate("D", "1.0")
+    repository.add_candidate("E", "1.0")
+    repository.add_candidate("F", "1.0")
+    repository.add_dependencies("A", "1.0", ["B; os_name == 'posix'", "C; os_name=='nt'"])
+    # package D has transitive markers that conflict
+    repository.add_dependencies("C", "1.0", ["D; os_name!='nt'", "E; python_version < '3.8'"])
+    # package E has union markers
+    repository.add_dependencies("B", "1.0", ["E; python_version >= '3.7'"])
+    # B -> E -> F -> B has circular dependency
+    repository.add_dependencies("E", "1.0", ["F; platform_machine=='x86_64'"])
+    repository.add_dependencies("F", "1.0", ["B"])
+
+    result = resolve(["A"], ">=3.6", record_markers=True)
+    assert result["a"].version == "1.0"
+    assert "d" not in result
+    assert (
+        str(result["e"].req.marker)
+        == 'python_version >= "3.7" and os_name == "posix" or python_version < "3.8" and os_name == "nt"'
+    )
+    assert (
+        str(result["f"].req.marker)
+        == 'python_version >= "3.7" and os_name == "posix" and platform_machine == "x86_64" or '
+        'python_version < "3.8" and os_name == "nt" and platform_machine == "x86_64"'
+    )
+    assert (
+        str(result["b"].req.marker) == 'os_name == "posix" or (os_name == "posix" or os_name == "nt") and '
+        'platform_machine == "x86_64" and python_version < "3.8"'
+    )

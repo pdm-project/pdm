@@ -65,7 +65,7 @@ def _interpolate_pdm(script: str) -> str:
     executable_path = Path(sys.executable)
 
     def replace(m: re.Match[str]) -> str:
-        return sh_join([executable_path.as_posix(), "-m", "pdm"])
+        return shlex.join([executable_path.as_posix(), "-m", "pdm"])
 
     interpolated = RE_PDM_PLACEHOLDER.sub(replace, script)
     return interpolated

@@ -9,20 +9,18 @@ import posixpath
 import re
 import secrets
 import urllib.parse as urlparse
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar, cast
 
-from packaging.markers import InvalidMarker
 from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
 
 from pdm.compat import Distribution
-from pdm.exceptions import ExtrasWarning, RequirementError
+from pdm.exceptions import RequirementError
 from pdm.models.backends import BuildBackend, get_relative_path
-from pdm.models.markers import Marker, get_marker, split_marker_extras
+from pdm.models.markers import Marker, get_marker
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, fix_legacy_specifier, get_specifier
 from pdm.utils import (
@@ -142,10 +140,7 @@ class Requirement:
     @classmethod
     def create(cls: type[T], **kwargs: Any) -> T:
         if "marker" in kwargs:
-            try:
-                kwargs["marker"] = get_marker(kwargs["marker"])
-            except InvalidMarker as e:
-                raise RequirementError(f"Invalid marker: {e}") from None
+            kwargs["marker"] = get_marker(kwargs["marker"])
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(e.strip() for e in kwargs["extras"][1:-1].split(","))
         version = kwargs.pop("version", "")
@@ -435,33 +430,26 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    project_name: str,
-    requirement_lines: list[str],
-    extras: Sequence[str],
-    include_default: bool = False,
+    requirement_lines: list[str], extras: Sequence[str], include_default: bool = False
 ) -> list[str]:
     """Filter the requirements with extras.
     If extras are given, return those with matching extra markers.
     Otherwise, return those without extra markers.
     """
-    extras = [normalize_name(e) for e in extras]
     result: list[str] = []
-    extras_in_meta: set[str] = set()
     for req in requirement_lines:
         _r = parse_requirement(req)
+        req_extras = get_marker("")
         if _r.marker:
-            req_extras, rest = split_marker_extras(str(_r.marker))
-            if req_extras:
-                extras_in_meta.update(req_extras)
-                _r.marker = Marker(rest) if rest else None
-        else:
-            req_extras = set()
-        if req_extras and not req_extras.isdisjoint(extras) or not req_extras and (include_default or not extras):
+            rest, req_extras = _r.marker.split_extras()
+            _r.marker = rest if not rest.is_any() else None
+            if not req_extras.evaluate({"extra": extras or ""}):
+                continue
+        # Add to the requirements if:
+        # The requirement has no extras while requested extras are empty or include_default is True, or
+        # The requirement has extras, in which case the `evaluate()` test must have been passed.
+        if not req_extras.is_any() or include_default or not extras:
             result.append(_r.as_line())
-
-    extras_not_found = [e for e in extras if e not in extras_in_meta]
-    if extras_not_found:
-        warnings.warn(ExtrasWarning(project_name, extras_not_found), stacklevel=2)
 
     return result
 
