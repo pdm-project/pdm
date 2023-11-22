@@ -4,7 +4,6 @@ import pytest
 from unearth import Link
 
 from pdm._types import RepositoryConfig
-from pdm.exceptions import ExtrasWarning
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
 from pdm.utils import path_to_url
@@ -86,19 +85,6 @@ def test_parse_remote_link_metadata(project):
         "idna",
         'chardet; os_name == "nt"',
     ]
-    assert candidate.name == "demo"
-    assert candidate.version == "0.0.1"
-
-
-@pytest.mark.usefixtures("local_finder")
-def test_extras_warning(project, recwarn):
-    req = parse_requirement("demo[foo] @ http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl")
-    candidate = Candidate(req)
-    prepared = candidate.prepare(project.environment)
-    assert prepared.link.is_wheel
-    assert prepared.get_dependencies_from_metadata() == []
-    warning = recwarn.pop(ExtrasWarning)
-    assert str(warning.message) == "Extras not found for demo: [foo]"
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
 

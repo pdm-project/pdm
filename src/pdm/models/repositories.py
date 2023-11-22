@@ -430,11 +430,7 @@ class PyPIRepository(BaseRepository):
                     requirement_lines = info["requires_dist"] or []
                 except KeyError:
                     requirement_lines = info["requires"] or []
-                requirements = filter_requirements_with_extras(
-                    cast(str, candidate.req.project_name),
-                    requirement_lines,
-                    candidate.req.extras or (),
-                )
+                requirements = filter_requirements_with_extras(requirement_lines, candidate.req.extras or ())
                 return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
 

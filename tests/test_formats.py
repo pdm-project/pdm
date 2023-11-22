@@ -71,10 +71,7 @@ def test_convert_poetry(project):
     assert "repository" in result["urls"]
     assert result["requires-python"] == ">=2.7,<4.0,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
     assert 'cleo<1.0.0,>=0.7.6; python_version ~= "2.7"' in result["dependencies"]
-    assert (
-        'cachecontrol[filecache]<1.0.0,>=0.12.4; python_version >= "3.4" '
-        'and python_version < "4.0"' in result["dependencies"]
-    )
+    assert 'cachecontrol[filecache]<1.0.0,>=0.12.4; python_version ~= "3.4"' in result["dependencies"]
     assert "babel==2.9.0" in result["dependencies"]
     assert "mysql" in result["optional-dependencies"]
     assert "psycopg2<3.0,>=2.7" in result["optional-dependencies"]["pgsql"]
