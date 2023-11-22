@@ -5,6 +5,7 @@ import dataclasses
 import hashlib
 import shlex
 import urllib.parse
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping
 
 from pdm.formats.base import make_array
@@ -98,8 +99,9 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
         try:
             tomllib.load(fp)
         except ValueError:
-            # the file should be a requirements.txt if it not a TOML document.
-            return True
+            # the file should be a requirements.txt
+            # if it's not a TOML document nor py script.
+            return Path(filename).suffix not in (".py",)
         else:
             return False
 
