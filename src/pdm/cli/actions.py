@@ -26,12 +26,13 @@ from pdm.cli.utils import (
     set_env_in_reg,
 )
 from pdm.environments import BareEnvironment
-from pdm.exceptions import PdmUsageError, ProjectError
+from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS
 from pdm.resolver import resolve
+from pdm.termui import logger
 from pdm.utils import deprecation_warning
 
 
@@ -143,16 +144,23 @@ def resolve_candidates_from_lockfile(
             if cross_platform:
                 provider.repository.ignore_compatibility = True
             resolver: Resolver = project.core.resolver_class(provider, reporter)
-            mapping, *_ = resolve(
-                resolver,
-                reqs,
-                project.environment.python_requires,
-                resolve_max_rounds,
-                record_markers=cross_platform,
-            )
-            spinner.update("Fetching hashes for resolved packages...")
-            fetch_hashes(provider.repository, mapping)
-    return mapping
+            try:
+                mapping, *_ = resolve(
+                    resolver,
+                    reqs,
+                    project.environment.python_requires,
+                    resolve_max_rounds,
+                    record_markers=cross_platform,
+                )
+            except ResolutionImpossible as e:
+                logger.exception("Broken lockfile")
+                raise PdmException(
+                    "Resolving from lockfile failed. You may fix the lockfile by `pdm lock --update-reuse` and retry."
+                ) from e
+            else:
+                spinner.update("Fetching hashes for resolved packages...")
+                fetch_hashes(provider.repository, mapping)
+                return mapping
 
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:

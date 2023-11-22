@@ -34,6 +34,14 @@ class Command(BaseCommand):
             action="store_true",
             help="Check if the lock file is up to date and quit",
         )
+        parser.add_argument(
+            "--update-reuse",
+            action="store_const",
+            dest="update_strategy",
+            default="all",
+            const="reuse",
+            help="Reuse pinned versions already present in lock file if possible",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.check:
@@ -56,6 +64,7 @@ class Command(BaseCommand):
         actions.do_lock(
             project,
             refresh=options.refresh,
+            strategy=options.update_strategy,
             groups=selection.all(),
             strategy_change=options.strategy_change,
             hooks=HookManager(project, options.skip),
