@@ -410,7 +410,7 @@ class SetupDistribution(Distribution):
 
     @property
     def requires(self) -> list[str] | None:
-        from pdm.models.markers import Marker
+        from pdm.models.markers import get_marker
         from pdm.models.requirements import parse_requirement
 
         result = self._data.install_requires
@@ -426,6 +426,6 @@ class SetupDistribution(Distribution):
                         new_marker = f"{old_marker} and {extra_marker}"
                 else:
                     new_marker = extra_marker
-                parsed.marker = Marker(new_marker)
+                parsed.marker = get_marker(new_marker)
                 result.append(parsed.as_line())
         return result

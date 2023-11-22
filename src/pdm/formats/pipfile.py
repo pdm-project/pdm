@@ -9,7 +9,7 @@ from packaging.markers import default_environment
 
 from pdm.compat import tomllib
 from pdm.formats.base import make_array
-from pdm.models.markers import Marker
+from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import FileRequirement, Requirement
 
 if TYPE_CHECKING:
@@ -27,10 +27,10 @@ def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildB
     if isinstance(req, dict):
         markers: list[Marker] = []
         if "markers" in req:
-            markers.append(Marker(req["markers"]))  # type: ignore[arg-type]
+            markers.append(get_marker(req["markers"]))  # type: ignore[arg-type]
         for key in MARKER_KEYS:
             if key in req:
-                marker = Marker(f"{key}{req[key]}")
+                marker = get_marker(f"{key}{req[key]}")
                 markers.append(marker)
                 del req[key]
 

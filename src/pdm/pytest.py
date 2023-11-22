@@ -179,7 +179,7 @@ class TestRepository(BaseRepository):
         except KeyError:
             raise CandidateInfoNotFound(candidate) from None
         deps = pypi_data.get("dependencies", [])
-        deps = filter_requirements_with_extras(cast(str, candidate.req.name), deps, candidate.req.extras or ())
+        deps = filter_requirements_with_extras(deps, candidate.req.extras or ())
         return deps, pypi_data.get("requires_python", ""), ""
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:

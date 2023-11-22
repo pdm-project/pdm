@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:82e53197b4afcc358fdc567b55686a65c13652ec746879a4ba708ecb251234e5"
+content_hash = "sha256:499eec45ab2d719e55dfe76faab2a2756e493d1a9baac105317f7453f32fd417"
 
 [[package]]
 name = "arpeggio"
@@ -23,7 +23,6 @@ requires_python = ">=3.6"
 summary = "Better dates & times for Python"
 dependencies = [
     "python-dateutil>=2.7.0",
-    "typing-extensions; python_version < \"3.8\"",
 ]
 files = [
     {file = "arrow-1.2.3-py3-none-any.whl", hash = "sha256:5a49ab92e3b7b71d96cd6bfcc4df14efefc9dfa96ea19045815914a6ab6b1fe2"},
@@ -35,22 +34,9 @@ name = "attrs"
 version = "23.1.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
-dependencies = [
-    "importlib-metadata; python_version < \"3.8\"",
-]
 files = [
     {file = "attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04"},
     {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
-]
-
-[[package]]
-name = "backports-cached-property"
-version = "1.0.2"
-requires_python = ">=3.6.0"
-summary = "cached_property() - computed once per instance, cached as attribute"
-files = [
-    {file = "backports.cached-property-1.0.2.tar.gz", hash = "sha256:9306f9eed6ec55fd156ace6bc1094e2c86fae5fb2bf07b6a9c00745c656e75dd"},
-    {file = "backports.cached_property-1.0.2-py3-none-any.whl", hash = "sha256:baeb28e1cd619a3c9ab8941431fe34e8490861fb998c6c4590693d50171db0cc"},
 ]
 
 [[package]]
@@ -102,15 +88,6 @@ dependencies = [
 files = [
     {file = "cachecontrol-0.13.1-py3-none-any.whl", hash = "sha256:95dedbec849f46dda3137866dc28b9d133fc9af55f5b805ab1291833e4457aa4"},
     {file = "cachecontrol-0.13.1.tar.gz", hash = "sha256:f012366b79d2243a6118309ce73151bf52a38d4a5dac8ea57f09bd29087e506b"},
-]
-
-[[package]]
-name = "cached-property"
-version = "1.5.2"
-summary = "A decorator for caching properties in classes."
-files = [
-    {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
-    {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
 ]
 
 [[package]]
@@ -307,7 +284,6 @@ requires_python = ">=3.7"
 summary = "Composable command line interface toolkit"
 dependencies = [
     "colorama; platform_system == \"Windows\"",
-    "importlib-metadata; python_version < \"3.8\"",
 ]
 files = [
     {file = "click-8.1.3-py3-none-any.whl", hash = "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"},
@@ -360,12 +336,10 @@ version = "8.0.0"
 requires_python = ">=3.7,<4.0"
 summary = "A library for rendering project templates."
 dependencies = [
-    "backports-cached-property>=1.0.0; python_version < \"3.8\"",
     "colorama>=0.4.3",
     "decorator>=5.1.1",
     "dunamai>=1.7.0",
     "funcy>=1.17",
-    "importlib-metadata<7.0,>=3.4; python_version < \"3.8\"",
     "jinja2-ansible-filters>=1.3.1",
     "jinja2>=3.1.1",
     "packaging>=23.0",
@@ -376,7 +350,6 @@ dependencies = [
     "pyyaml-include>=1.2",
     "pyyaml>=5.3.1",
     "questionary>=1.8.1",
-    "typing-extensions<5.0.0,>=3.7.4; python_version < \"3.8\"",
 ]
 files = [
     {file = "copier-8.0.0-py3-none-any.whl", hash = "sha256:adad3b4c8101584ea2c2e2580e34f37e791940ae103e2480ae9f509d32e6cb0b"},
@@ -565,6 +538,19 @@ files = [
 ]
 
 [[package]]
+name = "dep-logic"
+version = "0.0.2"
+requires_python = ">=3.8"
+summary = "Python dependency specifications supporting logical operations"
+dependencies = [
+    "packaging>=22",
+]
+files = [
+    {file = "dep_logic-0.0.2-py3-none-any.whl", hash = "sha256:693869adfae132d99e39b0bf24aae16b96c9bca839bf8d02eaaa16719507a0d7"},
+    {file = "dep_logic-0.0.2.tar.gz", hash = "sha256:7fcbda5908c3caf800dc07638c3a3d376ec886fb12691ac39ac0106b41a47b28"},
+]
+
+[[package]]
 name = "distlib"
 version = "0.3.7"
 summary = "Distribution utilities"
@@ -579,7 +565,6 @@ version = "1.17.0"
 requires_python = ">=3.5,<4.0"
 summary = "Dynamic version generation"
 dependencies = [
-    "importlib-metadata>=1.6.0; python_version < \"3.8\"",
     "packaging>=20.9",
 ]
 files = [
@@ -657,7 +642,6 @@ version = "0.29.0"
 requires_python = ">=3.7"
 summary = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 dependencies = [
-    "cached-property; python_version < \"3.8\"",
     "colorama>=0.4",
 ]
 files = [
@@ -681,7 +665,6 @@ version = "6.7.0"
 requires_python = ">=3.7"
 summary = "Read metadata from Python packages"
 dependencies = [
-    "typing-extensions>=3.6.4; python_version < \"3.8\"",
     "zipp>=0.5",
 ]
 files = [
@@ -844,7 +827,6 @@ requires_python = ">=3.7"
 summary = "Python port of markdown-it. Markdown parsing, done right!"
 dependencies = [
     "mdurl~=0.1",
-    "typing-extensions>=3.7.4; python_version < \"3.8\"",
 ]
 files = [
     {file = "markdown-it-py-2.2.0.tar.gz", hash = "sha256:7c9a5e412688bc771c67432cbfebcdd686c93ce6484913dccf06cb5a0bea35a1"},
@@ -963,7 +945,6 @@ dependencies = [
     "platformdirs>=2.2.0",
     "pyyaml-env-tag>=0.1",
     "pyyaml>=5.1",
-    "typing-extensions>=3.10; python_version < \"3.8\"",
     "watchdog>=2.0",
 ]
 files = [
@@ -1207,9 +1188,6 @@ name = "platformdirs"
 version = "3.10.0"
 requires_python = ">=3.7"
 summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-dependencies = [
-    "typing-extensions>=4.7.1; python_version < \"3.8\"",
-]
 files = [
     {file = "platformdirs-3.10.0-py3-none-any.whl", hash = "sha256:d7c24979f292f916dc9cbf8648319032f551ea8c49a4c9bf2fb556a02070ec1d"},
     {file = "platformdirs-3.10.0.tar.gz", hash = "sha256:b45696dab2d7cc691a3226759c0d3b00c47c8b6e293d96f6436f733303f77f6d"},
@@ -1220,9 +1198,6 @@ name = "pluggy"
 version = "1.2.0"
 requires_python = ">=3.7"
 summary = "plugin and hook calling mechanisms for python"
-dependencies = [
-    "importlib-metadata>=0.12; python_version < \"3.8\"",
-]
 files = [
     {file = "pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849"},
     {file = "pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3"},
@@ -1380,7 +1355,6 @@ summary = "pytest: simple powerful testing with Python"
 dependencies = [
     "colorama; sys_platform == \"win32\"",
     "exceptiongroup>=1.0.0rc8; python_version < \"3.11\"",
-    "importlib-metadata>=0.12; python_version < \"3.8\"",
     "iniconfig",
     "packaging",
     "pluggy<2.0,>=0.12",
@@ -1437,7 +1411,6 @@ version = "12.0"
 requires_python = ">=3.7"
 summary = "pytest plugin to re-run tests to eliminate flaky failures"
 dependencies = [
-    "importlib-metadata>=1; python_version < \"3.8\"",
     "packaging>=17.1",
     "pytest>=6.2",
 ]
@@ -1868,13 +1841,11 @@ dependencies = [
     "chardet>=5.1",
     "colorama>=0.4.6",
     "filelock>=3.12.2",
-    "importlib-metadata>=6.7; python_version < \"3.8\"",
     "packaging>=23.1",
     "platformdirs>=3.8",
     "pluggy>=1.2",
     "pyproject-api>=1.5.2",
     "tomli>=2.0.1; python_version < \"3.11\"",
-    "typing-extensions>=4.6.3; python_version < \"3.8\"",
     "virtualenv>=20.23.1",
 ]
 files = [
@@ -1922,7 +1893,6 @@ version = "0.12.1"
 requires_python = ">=3.7"
 summary = "A utility to fetch and download python packages"
 dependencies = [
-    "cached-property>=1.5.2; python_version < \"3.8\"",
     "packaging>=20",
     "requests>=2.25",
 ]
@@ -1958,7 +1928,6 @@ summary = "Virtual Python Environment builder"
 dependencies = [
     "distlib<1,>=0.3.7",
     "filelock<4,>=3.12.2",
-    "importlib-metadata>=6.6; python_version < \"3.8\"",
     "platformdirs<4,>=3.9.1",
 ]
 files = [
