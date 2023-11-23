@@ -326,6 +326,7 @@ class Project:
                     req = parse_requirement(line[3:].strip(), True)
                 else:
                     req = parse_requirement(line)
+                req.groups = [group]
                 # make editable packages behind normal ones to override correctly.
                 result[req.identify()] = req
         return result
@@ -497,12 +498,12 @@ class Project:
     def make_self_candidate(self, editable: bool = True) -> Candidate:
         from unearth import Link
 
-        from pdm.models.candidates import make_candidate
+        from pdm.models.candidates import Candidate
 
         req = parse_requirement(path_to_url(self.root.as_posix()), editable)
         assert self.name
         req.name = self.name
-        can = make_candidate(req, name=self.name, link=Link.from_path(self.root))
+        can = Candidate(req, name=self.name, link=Link.from_path(self.root))
         can.prepare(self.environment).metadata
         return can
 

@@ -160,7 +160,9 @@ class Command(BaseCommand):
             r for g in selected_groups if g != SUBDEP_GROUP_LABEL for r in project.get_dependencies(g).values()
         ]
         if options.resolve:
-            candidates = actions.resolve_candidates_from_lockfile(project, requirements)
+            candidates = actions.resolve_candidates_from_lockfile(
+                project, requirements, groups=selected_groups - {SUBDEP_GROUP_LABEL}
+            )
             packages: Mapping[str, im.Distribution] = {
                 k: c.prepare(project.environment).metadata for k, c in candidates.items()
             }

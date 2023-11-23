@@ -61,7 +61,9 @@ class Command(BaseCommand):
             if not project.lockfile.exists():
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
 
-            candidates = resolve_candidates_from_lockfile(project, requirements.values(), cross_platform=True)
+            candidates = resolve_candidates_from_lockfile(
+                project, requirements.values(), groups=set(selection), cross_platform=True
+            )
             # Remove candidates with [extras] because the bare candidates are already
             # included
             packages = (candidate for candidate in candidates.values() if not candidate.req.extras)

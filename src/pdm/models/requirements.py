@@ -82,6 +82,7 @@ class Requirement:
     specifier: SpecifierSet | None = None
     editable: bool = False
     prerelease: bool = False
+    groups: list[str] = dataclasses.field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.requires_python = self.marker.split_pyspec()[1] if self.marker else PySpecSet()

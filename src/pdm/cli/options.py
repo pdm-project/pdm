@@ -372,8 +372,8 @@ lock_strategy_group.add_argument(
     dest="strategy_change",
     metavar="STRATEGY",
     action=split_lists(","),
-    help="Specify lock strategy (cross_platform, static_urls, direct_minimal_versions). Add 'no_' prefix to disable."
-    " Can be supplied multiple times or split by comma.",
+    help="Specify lock strategy (cross_platform, static_urls, direct_minimal_versions, inherit_metadata). "
+    "Add 'no_' prefix to disable. Can be supplied multiple times or split by comma.",
 )
 lock_strategy_group.add_argument(
     "--no-cross-platform",

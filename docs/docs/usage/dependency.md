@@ -385,6 +385,16 @@ For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will
     Version constraints in package dependencies are not future-proof. If you resolve the dependencies to the minimal versions, there will likely be backwards-compatibility issues.
     For example, `flask==2.0.0` requires `werkzeug>=2.0`, but in fact, it can not work with `Werkzeug 3.0.0`, which is released 2 years after it.
 
+### Inherit the metadata from parents
+
+_New in version 2.11.0_
+
+By default, `pdm lock` records package metadata as-is, and when installing, PDM will traverse from the top requirements till the leaf node of the dependency tree,
+evaluate any marker it encounters with the current environment, and discard the package if the marker is not satisfied. This requires an extra "resolution"
+step when installing.
+
+By specifying the strategy by `--strategy inherit_metadata`, PDM will however inherit and merge the environment markers from the ancestors of a given package and encode them in the lockfile. This will make the installation much faster. You can also turn it on in the config by `pdm config strategy.inherit_metadata true`.
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:
@@ -450,7 +460,7 @@ pdm list flask-* requests-*
 
 ??? warning "Be careful with the shell expansion"
     In most shells, the wildcard `*` will be expanded if there are matching files under the current directory.
-    To avoid getting unexpected results, you can quote the patterns: `pdm list 'flask-*' 'requests-*'`.
+    To avoid getting unexpected results, you can wrap the patterns with single quotes: `pdm list 'flask-*' 'requests-*'`.
 
 In `--tree` mode, only the subtree of the matched packages will be displayed. This can be used to achieve the same purpose as `pnpm why`, which is to show why a specific package is required.
 
