@@ -4,13 +4,22 @@ import os
 import pytest
 from unearth import Link
 
+from pdm import utils
 from pdm.installers import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
-from pdm.utils import fs_supports_symlink
 from tests import FIXTURES
 
 pytestmark = pytest.mark.usefixtures("local_finder")
+
+
+@pytest.fixture()
+def prefer_link(preferred: str | None, monkeypatch: pytest.MonkeyPatch):
+    if preferred == "hardlink":
+        monkeypatch.setattr("pdm.utils.SUPPORTS_SYMLINK", False)
+    elif preferred is None:
+        monkeypatch.setattr("pdm.utils.SUPPORTS_SYMLINK", False)
+        monkeypatch.setattr("pdm.utils.SUPPORTS_HARDLINK", False)
 
 
 def test_install_wheel_with_inconsistent_dist_info(project):
@@ -97,8 +106,11 @@ def test_uninstall_with_console_scripts(project, use_install_cache):
     assert not os.path.exists(celery_script)
 
 
+@pytest.mark.usefixtures("prefer_link")
+@pytest.mark.parametrize("preferred", ["symlink", "hardlink", None])
 def test_install_wheel_with_cache(project, pdm):
-    supports_symlink = fs_supports_symlink()
+    from pdm import utils
+
     req = parse_requirement("future-fstrings")
     candidate = Candidate(
         req,
@@ -108,9 +120,12 @@ def test_install_wheel_with_cache(project, pdm):
     installer.install(candidate)
 
     lib_path = project.environment.get_paths()["purelib"]
-    if supports_symlink:
+    if utils.SUPPORTS_SYMLINK:
         assert os.path.islink(os.path.join(lib_path, "future_fstrings.py"))
         assert os.path.islink(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    elif utils.SUPPORTS_HARDLINK:
+        assert os.path.isfile(os.path.join(lib_path, "future_fstrings.py"))
+        assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     else:
         assert os.path.isfile(os.path.join(lib_path, "aaa_future_fstrings.pth"))
         assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
@@ -123,7 +138,7 @@ def test_install_wheel_with_cache(project, pdm):
 
     dist = project.environment.get_working_set()["future-fstrings"]
     installer.uninstall(dist)
-    if supports_symlink:
+    if utils.SUPPORTS_SYMLINK or utils.SUPPORTS_HARDLINK:
         assert not os.path.exists(os.path.join(lib_path, "future_fstrings.py"))
         assert not os.path.exists(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     else:
@@ -183,3 +198,41 @@ def test_compress_file_list_for_rename():
     }
     abs_paths = {os.path.join(project_root, path) for path in paths}
     assert sorted(compress_for_rename(abs_paths)) == [os.path.join(project_root, "test-removal" + os.sep)]
+
+
+@pytest.mark.usefixtures("prefer_link")
+@pytest.mark.parametrize("preferred", ["symlink", "hardlink"])
+def test_install_cache_namespace_package(project):
+    if not utils.SUPPORTS_HARDLINK and not utils.SUPPORTS_SYMLINK:
+        pytest.skip("This test requires symlink or hardlink support")
+
+    req = parse_requirement("pdm-backend")
+    candidate = Candidate(
+        req,
+        link=Link("http://fixtures.test/artifacts/pdm_backend-2.1.4-py3-none-any.whl"),
+    )
+    installer = InstallManager(project.environment, use_install_cache=True)
+    installer.install(candidate)
+    lib_path = project.environment.get_paths()["purelib"]
+    assert os.path.isdir(top_dir := os.path.join(lib_path, "pdm")) and not os.path.islink(top_dir)
+    assert os.path.isdir(child_dir := os.path.join(top_dir, "backend"))
+    if utils.SUPPORTS_SYMLINK:
+        assert os.path.islink(child_dir)
+    else:
+        assert os.path.isfile(os.path.join(child_dir, "__init__.py"))
+
+
+@pytest.mark.skipif(not utils.SUPPORTS_SYMLINK, reason="This test requires symlink support")
+def test_install_cache_symlink_individual(project):
+    project.project_config["install.cache_method"] = "symlink_individual"
+    req = parse_requirement("pdm-backend")
+    candidate = Candidate(
+        req,
+        link=Link("http://fixtures.test/artifacts/pdm_backend-2.1.4-py3-none-any.whl"),
+    )
+    installer = InstallManager(project.environment, use_install_cache=True)
+    installer.install(candidate)
+    lib_path = project.environment.get_paths()["purelib"]
+    for path in ("pdm", "pdm/backend"):
+        assert os.path.exists(child := os.path.join(lib_path, path)) and not os.path.islink(child)
+    assert os.path.islink(os.path.join(lib_path, "pdm/backend/__init__.py"))

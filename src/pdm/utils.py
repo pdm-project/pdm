@@ -393,21 +393,25 @@ def is_url(url: str) -> bool:
     return bool(parse.urlparse(url).scheme)
 
 
-@functools.lru_cache
-def fs_supports_symlink() -> bool:
-    if not hasattr(os, "symlink"):
+def _fs_supports_link_method(method: str) -> bool:
+    if not hasattr(os, method):
         return False
     if sys.platform == "win32":
-        with tempfile.NamedTemporaryFile(prefix="TmP") as tmp_file:
-            temp_dir = os.path.dirname(tmp_file.name)
-            dest = os.path.join(temp_dir, "{}-{}".format(tmp_file.name, "b"))
+        with tempfile.TemporaryDirectory(prefix="TmP") as temp_dir:
+            with open(src := os.path.join(temp_dir, "a"), "w") as tmp_file:
+                tmp_file.write("foo")
+            dest = f"{src}-link"
             try:
-                os.symlink(tmp_file.name, dest)
+                getattr(os, method)(src, dest)
                 return True
             except (OSError, NotImplementedError):
                 return False
     else:
         return True
+
+
+SUPPORTS_SYMLINK = _fs_supports_link_method("symlink")
+SUPPORTS_HARDLINK = _fs_supports_link_method("link")
 
 
 def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:

@@ -21,15 +21,18 @@ from installer.sources import _WheelFileValidationError
 from pdm.exceptions import PDMWarning
 from pdm.installers.packages import CachedPackage
 from pdm.termui import logger
-from pdm.utils import fs_supports_symlink
 
 if TYPE_CHECKING:
-    from typing import Any, BinaryIO, Callable, Iterable
+    from typing import Any, BinaryIO, Callable, Iterable, Protocol
 
     from installer.destinations import Scheme
     from installer.sources import WheelContentElement
 
     from pdm.environments import BaseEnvironment
+
+    class LinkMethod(Protocol):
+        def __call__(self, src: str | Path, dst: str | Path, target_is_directory: bool = False) -> None:
+            ...
 
 
 @lru_cache
@@ -71,9 +74,11 @@ def _is_namespace_package(root: str) -> bool:
     return not _namespace_package_lines.isdisjoint(init_py_lines)
 
 
-def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]:
-    """Create symlinks recursively from source to destination. In the following ways:
-    package  <-- link
+def _create_links_recursively(
+    source: str, destination: str, link_method: LinkMethod, link_individual: bool
+) -> Iterable[str]:
+    """Create symlinks recursively from source to destination.
+    package(if not individual)  <-- link
         __init__.py
     namespace_package  <-- mkdir
         foo.py  <-- link
@@ -89,7 +94,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
         destination_root = os.path.join(destination, relpath)
         if is_top:
             is_top = False
-        elif not _is_namespace_package(root):
+        elif not _is_namespace_package(root) and not link_individual:
             # A package, create link for the parent dir and don't proceed
             # for child directories
             if os.path.exists(destination_root):
@@ -98,7 +103,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
                     shutil.rmtree(destination_root)
                 else:
                     os.remove(destination_root)
-            os.symlink(root, destination_root, True)
+            link_method(root, destination_root, True)
             yield relpath
             dirs[:] = []
             continue
@@ -113,7 +118,7 @@ def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]
             destination_path = os.path.join(destination_root, f)
             if os.path.exists(destination_path):
                 os.remove(destination_path)
-            os.symlink(source_path, destination_path, False)
+            link_method(source_path, destination_path, False)
             yield os.path.join(relpath, f)
 
 
@@ -141,9 +146,18 @@ class WheelFile(_WheelFile):
 
 
 class InstallDestination(SchemeDictionaryDestination):
-    def __init__(self, *args: Any, symlink_to: str | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        link_to: str | None = None,
+        link_method: LinkMethod | None = None,
+        link_individual: bool = False,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
-        self.symlink_to = symlink_to
+        self.link_to = link_to
+        self.link_method = link_method
+        self.link_individual = link_individual
 
     def write_to_fs(self, scheme: Scheme, path: str | Path, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         target_path = os.path.join(self.scheme_dict[scheme], path)
@@ -157,13 +171,17 @@ class InstallDestination(SchemeDictionaryDestination):
         record_file_path: str | Path,
         records: Iterable[tuple[Scheme, RecordEntry]],
     ) -> None:
-        if self.symlink_to:
+        if self.link_method is not None:
             # Create symlinks to the cached location
-            def _symlink_files(symlink_to: str) -> Iterator[tuple[Scheme, RecordEntry]]:
-                for relpath in _create_symlinks_recursively(symlink_to, self.scheme_dict[scheme]):
+            def _link_files() -> Iterator[tuple[Scheme, RecordEntry]]:
+                assert self.link_method is not None
+                assert self.link_to is not None
+                for relpath in _create_links_recursively(
+                    self.link_to, self.scheme_dict[scheme], self.link_method, self.link_individual
+                ):
                     yield (scheme, RecordEntry(relpath.replace("\\", "/"), None, None))
 
-            records = itertools.chain(records, _symlink_files(self.symlink_to))
+            records = itertools.chain(records, _link_files())
         return super().finalize_installation(scheme, record_file_path, records)
 
 
@@ -180,6 +198,20 @@ def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str
     _install_wheel(wheel=wheel, destination=destination, additional_metadata=additional_metadata)
 
 
+def _get_link_method_and_individual(cache_method: str) -> tuple[LinkMethod | None, bool]:
+    from pdm import utils
+
+    def _hardlink(src: str | Path, dst: str | Path, target_is_directory: bool = False) -> None:
+        os.link(src, dst)
+
+    if "symlink" in cache_method and utils.SUPPORTS_SYMLINK:
+        return os.symlink, "individual" in cache_method
+
+    if "link" in cache_method and utils.SUPPORTS_HARDLINK:
+        return _hardlink, True
+    return None, False
+
+
 def install_wheel_with_cache(
     wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None
 ) -> None:
@@ -191,7 +223,9 @@ def install_wheel_with_cache(
     package_cache = CachedPackage(cache_path)
     interpreter = str(environment.interpreter.executable)
     script_kind = _get_kind(environment)
-    use_symlink = environment.project.config["install.cache_method"] == "symlink" and fs_supports_symlink()
+    # the cache_method can be any of "symlink", "hardlink", "symlink_individual" and "pth"
+    cache_method: str = environment.project.config["install.cache_method"]
+    link_method, link_individual = _get_link_method_and_individual(cache_method)
     if not cache_path.is_dir():
         logger.info("Installing wheel into cached location %s", cache_path)
         cache_path.mkdir(exist_ok=True)
@@ -215,14 +249,14 @@ def install_wheel_with_cache(
             or path.split("/")[0].endswith(".dist-info")
             # We need to skip the *-nspkg.pth files generated by setuptools'
             # namespace_packages merchanism. See issue#623 for details
-            or not use_symlink
+            or link_method is None
             and path.endswith(".pth")
             and not path.endswith("-nspkg.pth")
         )
 
     additional_contents: list[WheelContentElement] = []
     lib_path = package_cache.scheme()["purelib"]
-    if not use_symlink:
+    if link_method is None:
         # HACK: Prefix with aaa_ to make it processed as early as possible
         filename = "aaa_" + wheel_stem.split("-")[0] + ".pth"
         # use site.addsitedir() rather than a plain path to properly process .pth files
@@ -233,7 +267,9 @@ def install_wheel_with_cache(
         scheme_dict=environment.get_paths(),
         interpreter=interpreter,
         script_kind=script_kind,
-        symlink_to=lib_path if use_symlink else None,
+        link_to=lib_path,
+        link_method=link_method,
+        link_individual=link_individual,
     )
 
     dist_info_dir = _install_wheel(
