@@ -8,7 +8,7 @@ from resolvelib import AbstractProvider, RequirementsConflicted
 from resolvelib.resolvers import Criterion
 
 from pdm.exceptions import InvalidPyVersion, RequirementError
-from pdm.models.candidates import Candidate, make_candidate
+from pdm.models.candidates import Candidate
 from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
 from pdm.resolver.python import (
@@ -134,7 +134,7 @@ class BaseProvider(AbstractProvider):
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named and not isinstance(self.repository, LockedRepository):
-            can = make_candidate(requirement)
+            can = Candidate(requirement)
             if not can.name:
                 can.prepare(self.repository.environment).metadata
             return [can]

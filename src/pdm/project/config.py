@@ -140,6 +140,9 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_RESOLVE_MAX_ROUNDS",
             coerce=int,
         ),
+        "strategy.inherit_metadata": ConfigItem(
+            "Inherit the groups and markers from parents for each package", False, coerce=ensure_boolean
+        ),
         "install.parallel": ConfigItem(
             "Whether to perform installation and uninstallation in parallel",
             True,
