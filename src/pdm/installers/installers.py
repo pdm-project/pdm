@@ -73,8 +73,7 @@ def _is_namespace_package(root: str) -> bool:
 
 
 def _create_symlinks_recursively(source: str, destination: str) -> Iterable[str]:
-    """Create symlinks recursively from source to destination.
-    Caveats: This don't work for pkgutil or pkg_resources namespace packages.
+    """Create symlinks recursively from source to destination. In the following ways:
     package  <-- link
         __init__.py
     namespace_package  <-- mkdir

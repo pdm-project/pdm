@@ -52,7 +52,7 @@ class RequirementParser:
             return ""
         return line.split(" #", 1)[0].strip()
 
-    def _parse_line(self, line: str) -> None:
+    def _parse_line(self, filename: str, line: str) -> None:
         if not line.startswith("-"):
             # Starts with a requirement, just ignore all per-requirement options
             req_string = line.split(" -", 1)[0].strip()
@@ -76,7 +76,8 @@ class RequirementParser:
         if args.editable:
             self.requirements.append(parse_requirement(" ".join(args.editable), True))
         if args.requirement:
-            self.parse(args.requirement)
+            referenced_requirements = str(Path(filename).parent.joinpath(args.requirement))
+            self.parse(referenced_requirements)
 
     def parse(self, filename: str) -> None:
         with open(filename, encoding="utf-8") as f:
@@ -86,10 +87,10 @@ class RequirementParser:
                     this_line += line[:-1].rstrip() + " "
                     continue
                 this_line += line
-                self._parse_line(this_line)
+                self._parse_line(filename, this_line)
                 this_line = ""
             if this_line:
-                self._parse_line(this_line)
+                self._parse_line(filename, this_line)
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
