@@ -111,6 +111,12 @@ def _get_file_root(path: str, base: str) -> str | None:
         return os.path.normcase(os.path.join(base, root))
 
 
+def _get_all_parents(path: NormalizedPath) -> Iterable[NormalizedPath]:
+    while (parent := NormalizedPath(os.path.split(path)[0])) != path:
+        yield path
+        path = parent
+
+
 class BaseRemovePaths(abc.ABC):
     """A collection of paths and/or pth entries to remove"""
 
@@ -122,8 +128,12 @@ class BaseRemovePaths(abc.ABC):
         self.refer_to: str | None = None
 
     def difference_update(self, other: BaseRemovePaths) -> None:
-        self._paths.difference_update(other._paths)
         self._pth_entries.difference_update(other._pth_entries)
+        for p in other._paths:
+            # if other_p is a file, remove all parent dirs of it
+            self._paths.difference_update(_get_all_parents(p))
+            # other_p is a symlink dir, remove all files under it
+            self._paths.difference_update({p2 for p2 in self._paths if p2.startswith(p + os.sep)})
 
     @abc.abstractmethod
     def remove(self) -> None:
