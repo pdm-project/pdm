@@ -112,8 +112,11 @@ def _get_file_root(path: str, base: str) -> str | None:
 
 
 def _get_all_parents(path: NormalizedPath) -> Iterable[NormalizedPath]:
-    while (parent := NormalizedPath(os.path.split(path)[0])) != path:
+    while True:
         yield path
+        parent = NormalizedPath(os.path.split(path)[0])
+        if parent == path:
+            break
         path = parent
 
 
