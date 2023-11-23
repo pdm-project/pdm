@@ -452,22 +452,27 @@ def working_set(mocker: MockerFixture, repository: TestRepository) -> MockWorkin
     Returns:
         a mock working set
     """
+    from pdm.installers import InstallManager
+
     rv = MockWorkingSet()
     mocker.patch.object(BaseEnvironment, "get_working_set", return_value=rv)
 
-    def install(candidate: Candidate) -> None:
-        key = normalize_name(candidate.name or "")
-        dist = Distribution(key, cast(str, candidate.version), candidate.req.editable)
-        dist.dependencies = repository.get_raw_dependencies(candidate)
-        rv.add_distribution(dist)
+    class MockInstallManager(InstallManager):
+        def install(self, candidate: Candidate) -> Distribution:  # type: ignore[override]
+            key = normalize_name(candidate.name or "")
+            dist = Distribution(key, cast(str, candidate.version), candidate.req.editable)
+            dist.dependencies = repository.get_raw_dependencies(candidate)
+            rv.add_distribution(dist)
+            return dist
 
-    def uninstall(dist: Distribution) -> None:
-        del rv[dist.name]
+        def uninstall(self, dist: Distribution) -> None:  # type: ignore[override]
+            del rv[dist.name]
 
-    install_manager = mocker.MagicMock()
-    install_manager.install.side_effect = install
-    install_manager.uninstall.side_effect = uninstall
-    mocker.patch("pdm.installers.Synchronizer.get_manager", return_value=install_manager)
+        def overwrite(self, dist: Distribution, candidate: Candidate) -> None:  # type: ignore[override]
+            self.uninstall(dist)
+            self.install(candidate)
+
+    mocker.patch.object(Core, "install_manager_class", MockInstallManager)
 
     return rv
 

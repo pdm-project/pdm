@@ -304,8 +304,7 @@ class Synchronizer(BaseSynchronizer):
         )
         can.prepare(self.environment, RichProgressReporter(progress, job))
         try:
-            self.manager.uninstall(dist)
-            self.manager.install(can)
+            self.manager.overwrite(dist, can)
         except Exception:
             progress.live.console.print(
                 f"  [error]{termui.Emoji.FAIL}[/] Update [req]{key}[/] "

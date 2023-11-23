@@ -168,7 +168,7 @@ class InstallDestination(SchemeDictionaryDestination):
         return super().finalize_installation(scheme, record_file_path, records)
 
 
-def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> None:
+def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
     """Install a normal wheel file into the environment."""
     additional_metadata = None
     if direct_url is not None:
@@ -178,12 +178,10 @@ def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str
         interpreter=str(environment.interpreter.executable),
         script_kind=_get_kind(environment),
     )
-    _install_wheel(wheel=wheel, destination=destination, additional_metadata=additional_metadata)
+    return _install_wheel(wheel=wheel, destination=destination, additional_metadata=additional_metadata)
 
 
-def install_wheel_with_cache(
-    wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None
-) -> None:
+def install_wheel_with_cache(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
     """Only create .pth files referring to the cached package.
     If the cache doesn't exist, create one.
     """
@@ -245,6 +243,7 @@ def install_wheel_with_cache(
         additional_metadata=additional_metadata,
     )
     package_cache.add_referrer(dist_info_dir)
+    return dist_info_dir
 
 
 def _install_wheel(
