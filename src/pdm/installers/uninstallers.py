@@ -6,7 +6,7 @@ import os
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Iterable, TypeVar, cast
+from typing import TYPE_CHECKING, Iterable, NewType, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import UninstallError
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from pdm.environments import BaseEnvironment
 
 _T = TypeVar("_T", bound="BaseRemovePaths")
+NormalizedPath = NewType("NormalizedPath", str)
 
 
 def renames(old: str, new: str) -> None:
@@ -37,26 +38,26 @@ def renames(old: str, new: str) -> None:
             pass
 
 
-def compress_for_rename(paths: Iterable[str]) -> set[str]:
+def compress_for_rename(paths: Iterable[NormalizedPath]) -> set[NormalizedPath]:
     """Returns a set containing the paths that need to be renamed.
 
     This set may include directories when the original sequence of paths
     included every file on disk.
     """
-    case_map = {os.path.normcase(p): p for p in paths if os.path.exists(p)}
+    case_map = {NormalizedPath(os.path.normcase(p)): p for p in paths if os.path.exists(p)}
     remaining = set(case_map)
-    unchecked = sorted({os.path.split(p)[0] for p in case_map.values()}, key=len)
-    wildcards: set[str] = set()
+    unchecked = sorted({NormalizedPath(os.path.split(p)[0]) for p in case_map.values()}, key=len)
+    wildcards: set[NormalizedPath] = set()
 
-    def norm_join(*a: str) -> str:
-        return os.path.normcase(os.path.join(*a))
+    def norm_join(*a: str) -> NormalizedPath:
+        return NormalizedPath(os.path.normcase(os.path.join(*a)))
 
     for root in unchecked:
         if any(os.path.normcase(root).startswith(w) for w in wildcards):
             # This directory has already been handled.
             continue
 
-        all_files: set[str] = set()
+        all_files: set[NormalizedPath] = set()
         for dirname, subdirs, files in os.walk(root):
             all_files.update(norm_join(root, dirname, f) for f in files)
             for d in subdirs:
@@ -69,10 +70,10 @@ def compress_for_rename(paths: Iterable[str]) -> set[str]:
         # for the directory.
         if not (all_files - remaining):
             remaining.difference_update(all_files)
-            wildcards.add(root + os.sep)
+            wildcards.add(NormalizedPath(root + os.sep))
 
     collected = set(map(case_map.__getitem__, remaining)) | wildcards
-    shortened: set[str] = set()
+    shortened: set[NormalizedPath] = set()
     # Filter out any paths that are sub paths of another path in the path collection.
     for path in sorted(collected, key=len):
         if not any(is_path_relative_to(path, p) for p in shortened):
@@ -91,13 +92,13 @@ def _script_names(script_name: str, is_gui: bool) -> Iterable[str]:
             yield script_name + "-script.py"
 
 
-def _cache_file_from_source(py_file: str) -> Iterable[str]:
+def _cache_file_from_source(py_file: NormalizedPath) -> Iterable[NormalizedPath]:
     py2_cache = py_file[:-3] + ".pyc"
     if os.path.isfile(py2_cache):
-        yield py2_cache
+        yield NormalizedPath(py2_cache)
     parent, base = os.path.split(py_file)
     cache_dir = os.path.join(parent, "__pycache__")
-    yield from glob.glob(os.path.join(cache_dir, base[:-3] + ".*.pyc"))
+    yield from map(NormalizedPath, glob.glob(os.path.join(cache_dir, base[:-3] + ".*.pyc")))
 
 
 def _get_file_root(path: str, base: str) -> str | None:
@@ -116,9 +117,13 @@ class BaseRemovePaths(abc.ABC):
     def __init__(self, dist: Distribution, environment: BaseEnvironment) -> None:
         self.dist = dist
         self.environment = environment
-        self._paths: set[str] = set()
+        self._paths: set[NormalizedPath] = set()
         self._pth_entries: set[str] = set()
         self.refer_to: str | None = None
+
+    def difference_update(self, other: BaseRemovePaths) -> None:
+        self._paths.difference_update(other._paths)
+        self._pth_entries.difference_update(other._pth_entries)
 
     @abc.abstractmethod
     def remove(self) -> None:
@@ -192,7 +197,7 @@ class BaseRemovePaths(abc.ABC):
         self._pth_entries.add(line)
 
     def add_path(self, path: str) -> None:
-        normalized_path = os.path.normcase(os.path.expanduser(os.path.abspath(path)))
+        normalized_path = NormalizedPath(os.path.normcase(os.path.expanduser(os.path.abspath(path))))
         self._paths.add(normalized_path)
         if path.endswith(".py"):
             self._paths.update(_cache_file_from_source(normalized_path))
