@@ -9,6 +9,22 @@ from pdm.utils import cd
 from tests import FIXTURES
 
 
+def ns(**kwargs):
+    default_options = {
+        "dev": False,
+        "group": None,
+        "expandvars": False,
+        "self": False,
+        "editable_self": False,
+        "hashes": True,
+    }
+    kwargs = {**default_options, **kwargs}
+    self = kwargs.pop("self")
+    rv = Namespace(**kwargs)
+    rv.self = self
+    return rv
+
+
 def test_convert_pipfile(project):
     golden_file = FIXTURES / "Pipfile"
     assert pipfile.check_fingerprint(project, golden_file)
@@ -29,7 +45,7 @@ def test_convert_pipfile(project):
 def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    options = Namespace(dev=is_dev, group=None, expandvars=False)
+    options = ns(dev=is_dev)
     result, settings = requirements.convert(project, golden_file, options)
     group = settings["dev-dependencies"]["dev"] if is_dev else result["dependencies"]
     dev_group = settings["dev-dependencies"]["dev"]
@@ -50,7 +66,7 @@ def test_convert_requirements_file_without_name(project, vcs):
     req_file = project.root.joinpath("reqs.txt")
     project.root.joinpath("reqs.txt").write_text("git+https://github.com/test-root/demo.git\n")
     assert requirements.check_fingerprint(project, str(req_file))
-    result, _ = requirements.convert(project, str(req_file), Namespace(dev=False, group=None, expandvars=None))
+    result, _ = requirements.convert(project, str(req_file), ns())
 
     assert result["dependencies"] == ["demo @ git+https://github.com/test-root/demo.git"]
 
@@ -59,7 +75,7 @@ def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject.toml"
     assert poetry.check_fingerprint(project, golden_file)
     with cd(FIXTURES):
-        result, settings = poetry.convert(project, golden_file, Namespace(dev=False, group=None))
+        result, settings = poetry.convert(project, golden_file, ns())
 
     assert result["authors"][0] == {
         "name": "Sébastien Eustace",
@@ -87,7 +103,7 @@ def test_convert_poetry(project):
 def test_convert_poetry_12(project):
     golden_file = FIXTURES / "poetry-new.toml"
     with cd(FIXTURES):
-        result, settings = poetry.convert(project, golden_file, Namespace(dev=False, group=None))
+        result, settings = poetry.convert(project, golden_file, ns())
 
     assert result["dependencies"] == ["httpx", "pendulum"]
     assert settings["dev-dependencies"]["test"] == ["pytest<7.0.0,>=6.0.0", "pytest-mock"]
@@ -130,7 +146,7 @@ def test_convert_flit(project):
 def test_convert_error_preserve_metadata(project):
     pyproject_file = FIXTURES / "poetry-error.toml"
     try:
-        poetry.convert(project, pyproject_file, Namespace(dev=False, group=None))
+        poetry.convert(project, pyproject_file, ns())
     except MetaConvertError as e:
         assert e.data["name"] == "test-poetry"
         assert "dependencies: Invalid specifier" in str(e)
@@ -141,7 +157,7 @@ def test_convert_error_preserve_metadata(project):
 def test_import_requirements_with_group(project):
     golden_file = FIXTURES / "requirements.txt"
     assert requirements.check_fingerprint(project, golden_file)
-    result, settings = requirements.convert(project, golden_file, Namespace(dev=False, group="test", expandvars=False))
+    result, settings = requirements.convert(project, golden_file, ns(group="test"))
 
     group = result["optional-dependencies"]["test"]
     dev_group = settings["dev-dependencies"]["dev"]
@@ -152,11 +168,21 @@ def test_import_requirements_with_group(project):
     assert not result.get("dependencies")
 
 
+def test_export_requirements_with_self(project):
+    result = requirements.export(project, [], ns(self=True))
+    assert result.strip().splitlines()[-1] == ".  # this package"
+
+
+def test_export_requirements_with_editable_self(project):
+    result = requirements.export(project, [], ns(editable_self=True))
+    assert result.strip().splitlines()[-1] == "-e .  # this package"
+
+
 def test_keep_env_vars_in_source(project, monkeypatch):
     monkeypatch.setenv("USER", "foo")
     monkeypatch.setenv("PASSWORD", "bar")
     project.pyproject.settings["source"] = [{"url": "https://${USER}:${PASSWORD}@test.pypi.org/simple", "name": "pypi"}]
-    result = requirements.export(project, [], Namespace(expandvars=False))
+    result = requirements.export(project, [], ns())
     assert result.strip().splitlines()[-1] == "--index-url https://${USER}:${PASSWORD}@test.pypi.org/simple"
 
 
@@ -164,14 +190,14 @@ def test_expand_env_vars_in_source(project, monkeypatch):
     monkeypatch.setenv("USER", "foo")
     monkeypatch.setenv("PASSWORD", "bar")
     project.pyproject.settings["source"] = [{"url": "https://foo:bar@test.pypi.org/simple", "name": "pypi"}]
-    result = requirements.export(project, [], Namespace(expandvars=True))
+    result = requirements.export(project, [], ns(expandvars=True))
     assert result.strip().splitlines()[-1] == "--index-url https://foo:bar@test.pypi.org/simple"
 
 
 def test_export_find_links(project, monkeypatch):
     url = "https://storage.googleapis.com/jax-releases/jax_cuda_releases.html"
     project.pyproject.settings["source"] = [{"url": url, "name": "jax", "type": "find_links"}]
-    result = requirements.export(project, [], Namespace(expandvars=False))
+    result = requirements.export(project, [], ns())
     assert result.strip().splitlines()[-1] == f"--find-links {url}"
 
 
@@ -180,14 +206,14 @@ def test_export_replace_project_root(project):
     shutil.copy2(artifact, project.root)
     with cd(project.root):
         req = parse_requirement(f"./{artifact.name}")
-    result = requirements.export(project, [req], Namespace(hashes=False, expandvars=False))
+    result = requirements.export(project, [req], ns(hashes=False))
     assert "${PROJECT_ROOT}" not in result
 
 
 def test_convert_setup_py_project(project):
     golden_file = FIXTURES / "projects/test-setuptools/setup.py"
     assert setup_py.check_fingerprint(project, golden_file)
-    result, settings = setup_py.convert(project, golden_file, Namespace())
+    result, settings = setup_py.convert(project, golden_file, ns())
     assert result == {
         "name": "mymodule",
         "version": "0.1.0",

@@ -7,6 +7,7 @@ import urllib.parse
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping
 
+from pdm.exceptions import PdmUsageError
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
 from pdm.utils import expand_env_vars_in_auth
@@ -200,6 +201,13 @@ def export(
             for item in sorted({row["hash"] for row in candidate.hashes}):  # type: ignore[attr-defined]
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
+    if (options.self or options.editable_self) and not project.is_library:
+        raise PdmUsageError("Cannot export the project itself in a non-library project.")
+    if options.self:
+        lines.append(".  # this package\n")
+    elif options.editable_self:
+        lines.append("-e .  # this package\n")
+
     sources = project.pyproject.settings.get("source", [])
     for source in sources:
         url = source["url"]
