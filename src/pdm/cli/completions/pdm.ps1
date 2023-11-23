@@ -247,7 +247,10 @@ function TabExpansion($line, $lastWord) {
             }
             "export" {
                 $completer.AddOpts(@(
-                        [Option]::new(@("--dev", "--output", "--global", "--no-default", "--expandvars", "--prod", "--production", "-g", "-d", "-o", "--without-hashes", "-L", "--lockfile")),
+                        [Option]::new(@(
+                            "--dev", "--output", "--global", "--no-default", "--expandvars", "--prod", "--production", "-g", "-d", "-o",
+                            "--without-hashes", "-L", "--lockfile", "--self", "--editable-self"
+                        )),
                         $formatOption,
                         $sectionOption,
                         $projectOption

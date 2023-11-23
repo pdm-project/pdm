@@ -46,6 +46,11 @@ class Command(BaseCommand):
             help="Read the list of packages from pyproject.toml",
         )
         parser.add_argument("--expandvars", action="store_true", help="Expand environment variables in requirements")
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("--self", action="store_true", help="Include the project itself")
+        group.add_argument(
+            "--editable-self", action="store_true", help="Include the project itself as an editable dependency"
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.pyproject:

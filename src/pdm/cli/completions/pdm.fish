@@ -113,6 +113,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from config' -l verbose -d 'Use `-
 # export
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a export -d 'Export the locked packages set to other formats'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l dev -d 'Select dev dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l editable-self -d 'Include the project itself as an editable dependency'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l expandvars -d 'Expand environment variables in requirements'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l format -d 'Specify the export file format'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l global -d 'Use the global project, supply the project root with `-p` option'
@@ -125,6 +126,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from export' -l production -d 'Uns
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l pyproject -d 'Read the list of packages from pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l self -d 'Include the project itself'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l without-hashes -d 'Don\'t include artifact hashes'
 
@@ -239,7 +241,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l quiet -d 'Suppress o
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d '[DEPRECATED] Store static file URLs in the lockfile'
-complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy (cross_platform, static_urls, direct_minimal_versions). Add \'no_\' prefix to disable. Can be supplied multiple times or split by comma.'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy (cross_platform, static_urls, direct_minimal_versions, inherit_metadata). Add \'no_\' prefix to disable. Can be supplied multiple times or split by comma.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
