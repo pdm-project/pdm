@@ -155,7 +155,7 @@ class Config(MutableMapping[str, str]):
             coerce=ensure_boolean,
         ),
         "install.cache_method": ConfigItem(
-            "`symlink` or `pth` to create links to the cached installation",
+            "Specify how to create links to the caches(`symlink/symlink_individual/hardlink/pth`)",
             "symlink",
         ),
         "python.providers": ConfigItem(

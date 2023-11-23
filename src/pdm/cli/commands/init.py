@@ -109,12 +109,14 @@ class Command(BaseCommand):
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 
+        name = self.ask_project(project)
+        version = self.ask("Project version", "0.1.0")
         is_library = options.lib or bool(options.backend)
         if not is_library and self.interactive:
             is_library = termui.confirm(
                 "Is the project a library that is installable?\n"
                 "If yes, we will need to ask a few more questions to include "
-                "the project name and build backend"
+                "the build backend"
             )
         build_backend: type[BuildBackend] | None = None
         python = project.python
