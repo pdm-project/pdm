@@ -175,6 +175,14 @@ def test_export_to_requirements_txt(pdm, fixture_project):
     assert result.exit_code == 0
     assert result.output.strip() == requirements_txt.read_text().strip()
 
+    result = pdm(["export", "--self"], obj=project)
+    assert result.exit_code == 0
+    assert ".  # this package\n" in result.output.strip()
+
+    result = pdm(["export", "--editable-self"], obj=project)
+    assert result.exit_code == 0
+    assert "-e .  # this package\n" in result.output.strip()
+
     result = pdm(["export", "--without-hashes"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == requirements_no_hashes.read_text().strip()
