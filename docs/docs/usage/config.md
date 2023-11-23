@@ -229,6 +229,14 @@ It can be enabled on a per-project basis by adding the `--local` option to the c
 
 The caches are located in `$(pdm config cache_dir)/packages`. You can view the cache usage with `pdm cache info`. Note that the cached installs are managed automatically -- they will be deleted if they are not linked to any projects. Manually deleting the caches from disk may break some projects on the system.
 
+In addition, several different ways of linking to cache entries are supported:
+
+- `symlink`(default), create symlinks to the package directories or children if the parent is a namespace package.
+- `symlink_individual`, for each individual files in the package directory, create a symlink to it.
+- `hardlink`, create hard links to the package files of the cache entry.
+
+You can switch between them by running `pdm config [-l] install.cache_method <method>`.
+
 !!! note
     Only the installation of _named requirements_ resolved from PyPI can be cached.
 
