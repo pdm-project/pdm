@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Callable
 
 import pytest
 from unearth import Link
@@ -16,12 +17,18 @@ pytestmark = pytest.mark.usefixtures("local_finder")
 
 
 @pytest.fixture()
-def prefer_link(preferred: str | None, monkeypatch: pytest.MonkeyPatch):
-    if preferred == "hardlink":
-        monkeypatch.setattr("pdm.utils.SUPPORTS_SYMLINK", False)
-    elif preferred is None:
-        monkeypatch.setattr("pdm.utils.SUPPORTS_SYMLINK", False)
-        monkeypatch.setattr("pdm.utils.SUPPORTS_HARDLINK", False)
+def supports_link(preferred: str | None, monkeypatch: pytest.MonkeyPatch) -> Callable[[str], bool]:
+    original = utils.fs_supports_link_method
+
+    def mocked_support(linker: str) -> bool:
+        if preferred is None:
+            return False
+        if preferred == "hardlink" and linker == "symlink":
+            return False
+        return original(linker)
+
+    monkeypatch.setattr(utils, "fs_supports_link_method", mocked_support)
+    return mocked_support
 
 
 def test_install_wheel_with_inconsistent_dist_info(project):
@@ -108,11 +115,8 @@ def test_uninstall_with_console_scripts(project, use_install_cache):
     assert not os.path.exists(celery_script)
 
 
-@pytest.mark.usefixtures("prefer_link")
 @pytest.mark.parametrize("preferred", ["symlink", "hardlink", None])
-def test_install_wheel_with_cache(project, pdm):
-    from pdm import utils
-
+def test_install_wheel_with_cache(project, pdm, supports_link):
     req = parse_requirement("future-fstrings")
     candidate = Candidate(
         req,
@@ -122,10 +126,10 @@ def test_install_wheel_with_cache(project, pdm):
     installer.install(candidate)
 
     lib_path = project.environment.get_paths()["purelib"]
-    if utils.SUPPORTS_SYMLINK:
+    if supports_link("symlink"):
         assert os.path.islink(os.path.join(lib_path, "future_fstrings.py"))
         assert os.path.islink(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
-    elif utils.SUPPORTS_HARDLINK:
+    elif supports_link("link"):
         assert os.path.isfile(os.path.join(lib_path, "future_fstrings.py"))
         assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     else:
@@ -140,7 +144,7 @@ def test_install_wheel_with_cache(project, pdm):
 
     dist = project.environment.get_working_set()["future-fstrings"]
     installer.uninstall(dist)
-    if utils.SUPPORTS_SYMLINK or utils.SUPPORTS_HARDLINK:
+    if supports_link("symlink") or supports_link("link"):
         assert not os.path.exists(os.path.join(lib_path, "future_fstrings.py"))
         assert not os.path.exists(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     else:
@@ -202,10 +206,9 @@ def test_compress_file_list_for_rename():
     assert sorted(compress_for_rename(abs_paths)) == [os.path.join(project_root, "test-removal" + os.sep)]
 
 
-@pytest.mark.usefixtures("prefer_link")
 @pytest.mark.parametrize("preferred", ["symlink", "hardlink"])
-def test_install_cache_namespace_package(project):
-    if not utils.SUPPORTS_HARDLINK and not utils.SUPPORTS_SYMLINK:
+def test_install_cache_namespace_package(project, supports_link):
+    if not supports_link("symlink") and not supports_link("link"):
         pytest.skip("This test requires symlink or hardlink support")
 
     req = parse_requirement("pdm-backend")
@@ -218,13 +221,13 @@ def test_install_cache_namespace_package(project):
     lib_path = project.environment.get_paths()["purelib"]
     assert os.path.isdir(top_dir := os.path.join(lib_path, "pdm")) and not os.path.islink(top_dir)
     assert os.path.isdir(child_dir := os.path.join(top_dir, "backend"))
-    if utils.SUPPORTS_SYMLINK:
+    if supports_link("symlink"):
         assert os.path.islink(child_dir)
     else:
         assert os.path.isfile(os.path.join(child_dir, "__init__.py"))
 
 
-@pytest.mark.skipif(not utils.SUPPORTS_SYMLINK, reason="This test requires symlink support")
+@pytest.mark.skipif(not utils.fs_supports_link_method("symlink"), reason="This test requires symlink support")
 def test_install_cache_symlink_individual(project):
     project.project_config["install.cache_method"] = "symlink_individual"
     req = parse_requirement("pdm-backend")

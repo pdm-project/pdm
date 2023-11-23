@@ -204,10 +204,10 @@ def _get_link_method_and_individual(cache_method: str) -> tuple[LinkMethod | Non
     def _hardlink(src: str | Path, dst: str | Path, target_is_directory: bool = False) -> None:
         os.link(src, dst)
 
-    if "symlink" in cache_method and utils.SUPPORTS_SYMLINK:
+    if "symlink" in cache_method and utils.fs_supports_link_method("symlink"):
         return os.symlink, "individual" in cache_method
 
-    if "link" in cache_method and utils.SUPPORTS_HARDLINK:
+    if "link" in cache_method and utils.fs_supports_link_method("link"):
         return _hardlink, True
     return None, False
 

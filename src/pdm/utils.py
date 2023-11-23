@@ -393,7 +393,8 @@ def is_url(url: str) -> bool:
     return bool(parse.urlparse(url).scheme)
 
 
-def _fs_supports_link_method(method: str) -> bool:
+@functools.lru_cache
+def fs_supports_link_method(method: str) -> bool:
     if not hasattr(os, method):
         return False
     if sys.platform == "win32":
@@ -408,10 +409,6 @@ def _fs_supports_link_method(method: str) -> bool:
                 return False
     else:
         return True
-
-
-SUPPORTS_SYMLINK = _fs_supports_link_method("symlink")
-SUPPORTS_HARDLINK = _fs_supports_link_method("link")
 
 
 def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:
