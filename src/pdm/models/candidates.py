@@ -5,7 +5,7 @@ import hashlib
 import os
 import re
 import warnings
-from functools import cached_property, lru_cache
+from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast, no_type_check
@@ -687,14 +687,3 @@ class PreparedCandidate:
             return wheel_cache.get_ephemeral_path_for_link(
                 self.candidate.link, self.environment.target_python
             ).as_posix()
-
-
-@lru_cache(maxsize=None)
-def make_candidate(
-    req: Requirement,
-    name: str | None = None,
-    version: str | None = None,
-    link: Link | None = None,
-) -> Candidate:
-    """Construct a candidate and cache it in memory"""
-    return Candidate(req, name, version, link)

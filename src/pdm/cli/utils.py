@@ -37,7 +37,7 @@ from pdm.models.requirements import (
     strip_extras,
 )
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_STATIC_URLS
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.utils import (
     comparable_version,
     is_path_relative_to,
@@ -524,6 +524,10 @@ def format_lockfile(
         base = tomlkit.table()
         base.update(v.as_lockfile_entry(project.root))
         base.add("summary", v.summary or "")
+        if FLAG_INHERIT_METADATA in strategy:
+            base.add("groups", v.req.groups)
+            if v.req.marker is not None:
+                base.add("marker", str(v.req.marker))
         deps: list[str] = []
         for r in fetched_dependencies[v.dep_key]:
             # Try to convert to relative paths to make it portable
