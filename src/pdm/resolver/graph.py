@@ -109,3 +109,27 @@ def _build_marker(
         # Use 'or' to connect metasets inherited from different parents.
         marker = marker | merged if marker is not None else merged
     return marker if marker is not None else get_marker("")
+
+
+def populate_groups(result: Result[Requirement, Candidate, str]) -> None:
+    """Find where the candidates come from by traversing
+    the dependency tree back to the top.
+    """
+
+    resolved: dict[str, set[str]] = {}
+
+    def get_candidate_groups(key: str) -> set[str]:
+        if key in resolved:
+            return resolved[key]
+        res = resolved[key] = set()
+        crit = result.criteria[key]
+        for req, parent in crit.information:
+            if parent is None:
+                res.update(req.groups)
+            else:
+                pkey = _identify_parent(parent)
+                res.update(get_candidate_groups(pkey))
+        return res
+
+    for k, can in result.mapping.items():
+        can.req.groups = sorted(get_candidate_groups(k))

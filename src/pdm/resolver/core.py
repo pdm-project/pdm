@@ -6,7 +6,7 @@ from pdm import termui
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import strip_extras
-from pdm.resolver.graph import merge_markers
+from pdm.resolver.graph import merge_markers, populate_groups
 from pdm.resolver.providers import BaseProvider
 from pdm.resolver.python import PythonRequirement
 from pdm.utils import normalize_name
@@ -24,7 +24,7 @@ def resolve(
     requires_python: PySpecSet,
     max_rounds: int = 10000,
     keep_self: bool = False,
-    record_markers: bool = False,
+    inherit_metadata: bool = False,
 ) -> tuple[dict[str, Candidate], dict[tuple[str, str | None], list[Requirement]]]:
     """Core function to perform the actual resolve process.
     Return a tuple containing 2 items:
@@ -50,8 +50,9 @@ def resolve(
     local_name = (
         normalize_name(repository.environment.project.name) if repository.environment.project.is_library else None
     )
-    if record_markers:
+    if inherit_metadata:
         all_markers = merge_markers(result)
+        populate_groups(result)
     else:
         all_markers = {}
     for key, candidate in list(mapping.items()):

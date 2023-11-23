@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+from functools import cached_property
 from typing import Any, Iterable, Mapping
 
 import tomlkit
@@ -17,7 +18,10 @@ GENERATED_COMMENTS = [
 FLAG_STATIC_URLS = "static_urls"
 FLAG_CROSS_PLATFORM = "cross_platform"
 FLAG_DIRECT_MINIMAL_VERSIONS = "direct_minimal_versions"
-SUPPORTED_FLAGS = frozenset((FLAG_STATIC_URLS, FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS))
+FLAG_INHERIT_METADATA = "inherit_metadata"
+SUPPORTED_FLAGS = frozenset(
+    (FLAG_STATIC_URLS, FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA)
+)
 
 
 class Compatibility(enum.IntEnum):
@@ -28,7 +32,11 @@ class Compatibility(enum.IntEnum):
 
 
 class Lockfile(TOMLBase):
-    spec_version = Version("4.4")
+    spec_version = Version("4.4.1")
+
+    @cached_property
+    def default_strategies(self) -> list[str]:
+        return [FLAG_CROSS_PLATFORM]
 
     @property
     def hash(self) -> str:
@@ -45,7 +53,7 @@ class Lockfile(TOMLBase):
     @property
     def strategy(self) -> set[str]:
         metadata = self._data.get("metadata", {})
-        result: set[str] = set(metadata.get("strategy", [FLAG_CROSS_PLATFORM]))
+        result: set[str] = set(metadata.get("strategy", self.default_strategies))
         if not metadata.get(FLAG_CROSS_PLATFORM, True):
             result.discard(FLAG_CROSS_PLATFORM)
         if metadata.get(FLAG_STATIC_URLS, False):
