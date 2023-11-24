@@ -1,3 +1,14 @@
+Release v2.10.4 (2023-11-24)
+----------------------------
+
+### Bug Fixes
+
+- Do not detect as requirements.txt if the file is a python script. [#2416](https://github.com/pdm-project/pdm/issues/2416)
+- Provide information of the original line when parsing requirement fails. [#2417](https://github.com/pdm-project/pdm/issues/2417)
+- Resolve `-r` requirements paths relative to the requirement file they are specified in [#2422](https://github.com/pdm-project/pdm/issues/2422)
+- Updating package now overwrites the old files instead of removing before installing. [#2423](https://github.com/pdm-project/pdm/issues/2423)
+
+
 Release v2.10.3 (2023-11-16)
 ----------------------------
 
