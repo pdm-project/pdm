@@ -59,7 +59,7 @@ The value of `requires-python` is a [version specifier as defined in PEP 440](ht
 | `requires-python`       | Meaning                                  |
 | ----------------------- | ---------------------------------------- |
 | `>=3.7`                 | Python 3.7 and above                     |
-| `>=3.7,<3.11`           | Python 3.7, 3.8 and 3.10                 |
+| `>=3.7,<3.11`           | Python 3.7, 3.8, 3.9 and 3.10            |
 | `>=3.6,!=3.8.*,!=3.9.*` | Python 3.6 and above, except 3.8 and 3.9 |
 
 ## Working with Python < 3.7
