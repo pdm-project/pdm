@@ -131,3 +131,13 @@ def test_init_auto_create_venv_answer_no(project_no_init, pdm, mocker):
     assert result.exit_code == 0
     creator.assert_not_called()
     assert project_no_init.python.executable.parent.parent != project_no_init.root / ".venv"
+
+
+def test_init_with_backend_default_library(project_no_init, pdm):
+    pdm(["init", "--backend", "flit-core"], input="\n\n\n\n\n\n\n\n\n", obj=project_no_init)
+    assert project_no_init.backend.__class__.__name__ == "FlitBackend"
+
+
+def test_init_with_backend_default_library_non_interactive(project_no_init, pdm):
+    pdm(["init", "-n", "--backend", "flit-core"], obj=project_no_init)
+    assert project_no_init.backend.__class__.__name__ == "FlitBackend"

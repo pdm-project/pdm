@@ -111,7 +111,7 @@ class Command(BaseCommand):
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 
-        is_library = options.lib
+        is_library = options.lib or bool(options.backend)
         if not is_library and self.interactive:
             is_library = termui.confirm(
                 "Is the project a library that is installable?\n"
@@ -200,8 +200,8 @@ class Command(BaseCommand):
             help="Don't ask questions but use default values",
         )
         group.add_argument("--python", help="Specify the Python version/path to use")
-        group.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend")
         group.add_argument("--lib", action="store_true", help="Create a library project")
+        group.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend, which implies --lib")
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )
