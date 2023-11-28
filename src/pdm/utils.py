@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from packaging.version import Version, _cmpkey
 
 from pdm.compat import importlib_metadata
+from pdm.exceptions import PdmException
 
 if TYPE_CHECKING:
     from re import Match
@@ -464,8 +465,12 @@ def validate_project_name(name: str) -> bool:
 
 def sanitize_project_name(name: str) -> str:
     """Sanitize the project name and remove all illegal characters"""
-    pattern = r"[^a-zA-Z0-9\-_\.]"
-    return re.sub(pattern, "", name)
+    pattern = r"[^a-zA-Z0-9\-_\.]+"
+    result = re.sub(pattern, "-", name)
+    result = re.sub(r"^[\._-]|[\._-]$", "", result)
+    if not result:
+        raise PdmException(f"Invalid project name: {name}")
+    return result
 
 
 def is_conda_base() -> bool:

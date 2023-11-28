@@ -529,3 +529,21 @@ def test_deprecation_warning():
 def test_comparable_version():
     assert utils.comparable_version("1.2.3") == Version("1.2.3")
     assert utils.comparable_version("1.2.3a1+local1") == Version("1.2.3a1")
+
+
+@pytest.mark.parametrize("name", ["foO", "f", "3d", "f3", "333", "foo.bar", "foo-bar", "foo_bar", "foo-_.bar"])
+def test_validate_project_name(name):
+    assert utils.validate_project_name(name)
+
+
+@pytest.mark.parametrize("name", ["", "-", ".foo", "foo_", "-3", "foo$bar", "a.3-"])
+def test_invalidate_project_name(name):
+    assert not utils.validate_project_name(name)
+
+
+@pytest.mark.parametrize(
+    "given,sanitized",
+    [("foo", "foo"), ("Foo.Bar", "Foo.Bar"), ("-foo", "foo"), ("Foo%$Bar", "Foo-Bar"), ("Foo$", "Foo")],
+)
+def test_sanitize_project_name(given, sanitized):
+    assert utils.sanitize_project_name(given) == sanitized
