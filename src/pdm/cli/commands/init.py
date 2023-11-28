@@ -212,27 +212,15 @@ class Command(BaseCommand):
     def set_python(self, project: Project, python: str | None, hooks: HookManager) -> None:
         from pdm.cli.commands.use import Command as UseCommand
 
-        do_use = UseCommand().do_use
-        if self.interactive:
-            python_info = do_use(
-                project,
-                python or "",
-                first=bool(python),
-                ignore_remembered=True,
-                ignore_requires_python=True,
-                save=False,
-                hooks=hooks,
-            )
-        else:
-            python_info = do_use(
-                project,
-                python or "3",
-                first=True,
-                ignore_remembered=True,
-                ignore_requires_python=True,
-                save=False,
-                hooks=hooks,
-            )
+        python_info = UseCommand().do_use(
+            project,
+            python or "",
+            first=bool(python) or not self.interactive,
+            ignore_remembered=True,
+            ignore_requires_python=True,
+            save=False,
+            hooks=hooks,
+        )
 
         if project.config["python.use_venv"] and (
             python_info.get_venv() is None or is_conda_base_python(python_info.path)
