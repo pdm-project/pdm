@@ -37,13 +37,17 @@ def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[st
     run_args = env.pip_command + args
     project.core.ui.echo(f"Running pip command: {run_args}", verbosity=termui.Verbosity.DETAIL)
 
-    return subprocess.run(
+    result = subprocess.run(
         run_args,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         check=True,
         text=True,
     )
+    project.core.ui.echo(
+        f"Run pip returns status {result.returncode}: {result.stdout}", verbosity=termui.Verbosity.DEBUG
+    )
+    return result
 
 
 class Command(BaseCommand):
