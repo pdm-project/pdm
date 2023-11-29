@@ -21,6 +21,7 @@ from pdm.models.search import SearchResultParser
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     cd,
+    filtered_sources,
     normalize_name,
     path_to_url,
     url_to_path,
@@ -76,22 +77,7 @@ class BaseRepository:
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
-        source_preferences = [(s, self.source_preference(req, s)) for s in self.sources]
-        included_by = [s for s, p in source_preferences if p is True]
-        if included_by:
-            return included_by
-        return [s for s, p in source_preferences if p is None]
-
-    @staticmethod
-    def source_preference(req: Requirement, source: RepositoryConfig) -> bool | None:
-        key = req.key
-        if key is None:
-            return None
-        if any(fnmatch.fnmatch(key, pat) for pat in source.include_packages):
-            return True
-        if any(fnmatch.fnmatch(key, pat) for pat in source.exclude_packages):
-            return False
-        return None
+        return filtered_sources(self.sources, req.key)
 
     def get_dependencies(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
         """Get (dependencies, python_specifier, summary) of the candidate."""

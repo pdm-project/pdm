@@ -486,3 +486,25 @@ def is_conda_base_python(python: Path) -> bool:
     except ValueError:
         return False
     return True
+
+
+def filtered_sources(sources: list[RepositoryConfig], package: str | None) -> list[RepositoryConfig]:
+    """Get matching sources based on the index attribute."""
+    source_preferences = [(s, _source_preference(package, s)) for s in sources]
+    included_by = [s for s, p in source_preferences if p is True]
+    if included_by:
+        return included_by
+    return [s for s, p in source_preferences if p is None]
+
+
+def _source_preference(package: str | None, source: RepositoryConfig) -> bool | None:
+    import fnmatch
+
+    if package is None:
+        return None
+    key = normalize_name(package)
+    if any(fnmatch.fnmatch(key, pat) for pat in source.include_packages):
+        return True
+    if any(fnmatch.fnmatch(key, pat) for pat in source.exclude_packages):
+        return False
+    return None

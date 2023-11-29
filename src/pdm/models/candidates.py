@@ -33,6 +33,7 @@ from pdm.utils import (
     cd,
     convert_hashes,
     create_tracked_tempdir,
+    filtered_sources,
     get_rev_from_url,
     normalize_name,
     path_to_url,
@@ -427,7 +428,8 @@ class PreparedCandidate:
         elif self._source_dir and self._source_dir.exists():
             return
 
-        with self.environment.get_finder() as finder:
+        sources = filtered_sources(self.environment.project.sources, self.req.key)
+        with self.environment.get_finder(sources) as finder:
             if not self.link or self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all):
                 if self.req.is_file_or_url:
                     raise CandidateNotFound(f"The URL requirement {self.req.as_line()} is a wheel but incompatible")
