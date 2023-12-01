@@ -51,7 +51,7 @@ Unable to find a resolution because the following dependencies don't work
 on all Python versions defined by the project's `requires-python`
 ```
 
-Because the dependency's `requires-python` is `>=3.7,<3.11`, it *doesn't* cover the project's `requires-python` range of `>=3.9`. In other words, the project promises to work on Python 3.11 and above, but the dependency doesn't support it. Since PDM creates a cross-platform lockfile that should work on all Python versions within the `requires-python` range, it can't find a valid resolution.
+Because the dependency's `requires-python` is `>=3.7,<3.11`, it *doesn't* cover the project's `requires-python` range of `>=3.9`. In other words, the project promises to work on Python 3.9, 3.10, 3.11 (and so on), but the dependency doesn't support Python 3.11 (or any higher). Since PDM creates a cross-platform lockfile that should work on all Python versions within the `requires-python` range, it can't find a valid resolution.
 To fix this, you need add a maximum version to `requires-python`, like `>=3.9,<3.11`.
 
 The value of `requires-python` is a [version specifier as defined in PEP 440](https://peps.python.org/pep-0440/#version-specifiers). Here are some examples:
