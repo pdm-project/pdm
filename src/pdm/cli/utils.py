@@ -650,6 +650,8 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
 
     causes: list[RequirementInformation] = err.causes
     info_lines: set[str] = set()
+    if not causes:
+        return ""
     if all(isinstance(cause.requirement, PythonRequirement) for cause in causes):
         project_requires: PythonRequirement = next(cause.requirement for cause in causes if cause.parent is None)
         pyspec = cast(PySpecSet, project_requires.specifier)
