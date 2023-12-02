@@ -184,7 +184,7 @@ class UI:
 
         :param message: message with rich markup, defaults to "".
         :param err: if true print to stderr, defaults to False.
-        :param verbosity: verbosity level, defaults to NORMAL.
+        :param verbosity: verbosity level, defaults to QUIET.
         """
         if self.verbosity >= verbosity:
             console = _err_console if err else _console
