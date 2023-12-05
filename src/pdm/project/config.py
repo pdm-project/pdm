@@ -318,7 +318,7 @@ class Config(MutableMapping[str, str]):
             if len(parts) < 3:
                 raise PdmUsageError(f"Set {parts[0]} config with [success]{parts[0]}.{{name}}.{{attr}}")
             index_key = ".".join(parts[:2])
-            username = self._data.get(index_key, {}).get("username")
+            username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
             service = f'pdm-{index_key.replace(".", "-")}'
             if parts[2] == "password" and self.is_global and keyring.save_auth_info(service, username, value):
                 return
