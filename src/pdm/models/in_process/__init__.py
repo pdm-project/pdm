@@ -60,3 +60,10 @@ def get_uname(executable: str) -> os.uname_result:
     """Get uname of the system"""
     script = "import os, json; print(json.dumps(os.uname()))"
     return os.uname_result(json.loads(subprocess.check_output([executable, "-EsSc", script])))
+
+
+@functools.lru_cache
+def sysconfig_get_platform(executable: str) -> str:
+    """Get platform from sysconfig"""
+    script = "import sysconfig; print(sysconfig.get_platform())"
+    return subprocess.check_output([executable, "-EsSc", script]).decode().strip()
