@@ -141,7 +141,7 @@ class Config(MutableMapping[str, str]):
             coerce=int,
         ),
         "strategy.inherit_metadata": ConfigItem(
-            "Inherit the groups and markers from parents for each package", False, coerce=ensure_boolean
+            "Inherit the groups and markers from parents for each package", True, coerce=ensure_boolean
         ),
         "install.parallel": ConfigItem(
             "Whether to perform installation and uninstallation in parallel",

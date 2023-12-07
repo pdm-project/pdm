@@ -35,8 +35,8 @@ class Lockfile(TOMLBase):
     spec_version = Version("4.4.1")
 
     @cached_property
-    def default_strategies(self) -> list[str]:
-        return [FLAG_CROSS_PLATFORM]
+    def default_strategies(self) -> set[str]:
+        return {FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA}
 
     @property
     def hash(self) -> str:
@@ -53,7 +53,10 @@ class Lockfile(TOMLBase):
     @property
     def strategy(self) -> set[str]:
         metadata = self._data.get("metadata", {})
-        result: set[str] = set(metadata.get("strategy", self.default_strategies))
+        if not metadata:
+            return self.default_strategies.copy()
+        result: set[str] = set(metadata.get("strategy", {FLAG_CROSS_PLATFORM}))
+        # Compatibility with old lockfiles
         if not metadata.get(FLAG_CROSS_PLATFORM, True):
             result.discard(FLAG_CROSS_PLATFORM)
         if metadata.get(FLAG_STATIC_URLS, False):

@@ -133,6 +133,7 @@ class Command(BaseCommand):
                 continue
             if r.is_file_or_url:
                 r.relocate(project.backend)  # type: ignore[attr-defined]
+            r.groups = [group]
             key = r.identify()
             r.prerelease = prerelease
             tracked_names.add(key)

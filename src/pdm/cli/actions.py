@@ -51,8 +51,8 @@ def do_lock(
     """Performs the locking process and update lockfile."""
     hooks = hooks or HookManager(project)
     check_project_file(project)
-    if project.config["strategy.inherit_metadata"]:
-        project.lockfile.default_strategies.append(FLAG_INHERIT_METADATA)
+    if not project.config["strategy.inherit_metadata"]:
+        project.lockfile.default_strategies.remove(FLAG_INHERIT_METADATA)
     lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if refresh:
         locked_repo = project.locked_repository

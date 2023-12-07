@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from typing import TYPE_CHECKING, Dict, cast
 
 from pdm import termui
@@ -64,7 +65,7 @@ def resolve(
             if marker.is_empty():
                 del mapping[key]
                 continue
-            candidate.req.marker = None if marker.is_any() else marker
+            candidate.req = dataclasses.replace(candidate.req, marker=None if marker.is_any() else marker)
 
         # For source distribution whose name can only be determined after it is built,
         # the key in the resolution map should be updated.
