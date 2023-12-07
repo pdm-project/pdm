@@ -44,7 +44,7 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
 === "Windows"
 
     ```powershell
-    (Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | python -
+    (Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | py -
     ```
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
