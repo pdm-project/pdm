@@ -180,10 +180,13 @@ def test_parse_lock_strategy_group_options(core):
 
 
 def test_apply_lock_strategy_changes(project):
-    assert project.lockfile.apply_strategy_change(["no_cross_platform", "static_urls"]) == {"static_urls"}
-    assert project.lockfile.apply_strategy_change(["no_static_urls"]) == {"cross_platform"}
-    assert project.lockfile.apply_strategy_change([]) == {"cross_platform"}
-    assert project.lockfile.apply_strategy_change(["no-cross-platform"]) == set()
+    assert project.lockfile.apply_strategy_change(["no_cross_platform", "static_urls"]) == {
+        "inherit_metadata",
+        "static_urls",
+    }
+    assert project.lockfile.apply_strategy_change(["no_static_urls"]) == {"cross_platform", "inherit_metadata"}
+    assert project.lockfile.apply_strategy_change([]) == {"cross_platform", "inherit_metadata"}
+    assert project.lockfile.apply_strategy_change(["no-cross-platform"]) == {"inherit_metadata"}
 
 
 @pytest.mark.parametrize("strategy", [["abc"], ["no_abc", "static_urls"]])
@@ -196,7 +199,7 @@ def test_lock_direct_minimal_versions(project, repository, pdm):
     project.add_dependencies({"django": parse_requirement("django")})
     repository.add_candidate("pytz", "2019.6")
     pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
-    assert project.lockfile.strategy == {"direct_minimal_versions", "cross_platform"}
+    assert project.lockfile.strategy == {"direct_minimal_versions", "cross_platform", "inherit_metadata"}
     locked_repository = project.locked_repository
     assert locked_repository.all_candidates["django"].version == "1.11.8"
     assert locked_repository.all_candidates["pytz"].version == "2019.6"
@@ -235,7 +238,6 @@ def test_lockfile_compatibility(project, monkeypatch, lock_version, expected, pd
 
 
 def test_lock_default_inherit_metadata(project, pdm, mocker, working_set):
-    project.project_config["strategy.inherit_metadata"] = True
     project.add_dependencies({"requests": parse_requirement("requests")})
     pdm(["lock"], obj=project, strict=True)
     assert "inherit_metadata" in project.lockfile.strategy

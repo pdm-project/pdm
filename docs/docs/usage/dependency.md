@@ -389,11 +389,9 @@ For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will
 
 _New in version 2.11.0_
 
-By default, `pdm lock` records package metadata as-is, and when installing, PDM will traverse from the top requirements till the leaf node of the dependency tree,
-evaluate any marker it encounters with the current environment, and discard the package if the marker is not satisfied. This requires an extra "resolution"
-step when installing.
+Previously, the `pdm lock` command would record package metadata as it is. When installing, PDM would start from the top requirements and traverse down to the leaf node of the dependency tree. It would then evaluate any marker it encounters against the current environment. If a marker is not satisfied, the package would be discarded. In other words, we need an additional "resolution" step in installation.
 
-By specifying the strategy by `--strategy inherit_metadata`, PDM will however inherit and merge the environment markers from the ancestors of a given package and encode them in the lockfile. This will make the installation much faster. You can also turn it on in the config by `pdm config strategy.inherit_metadata true`.
+When the `inherit_metadata` strategy is enabled, PDM will inherit and merge environment markers from a package's ancestors. These markers are then encoded in the lockfile during locking, resulting in faster installations. This has been enabled by default from version `2.11.0`, to disable this strategy in the config, use `pdm config strategy.inherit_metadata false`.
 
 ## Show what packages are installed
 

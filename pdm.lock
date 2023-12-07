@@ -3,14 +3,15 @@
 
 [metadata]
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
-strategy = ["cross_platform"]
-lock_version = "4.4"
+strategy = ["cross_platform", "inherit_metadata"]
+lock_version = "4.4.1"
 content_hash = "sha256:499eec45ab2d719e55dfe76faab2a2756e493d1a9baac105317f7453f32fd417"
 
 [[package]]
 name = "arpeggio"
 version = "2.0.0"
 summary = "Packrat parser interpreter"
+groups = ["workflow"]
 files = [
     {file = "Arpeggio-2.0.0-py2.py3-none-any.whl", hash = "sha256:448e332deb0e9ccd04046f1c6c14529d197f41bc2fdb3931e43fc209042fbdd3"},
     {file = "Arpeggio-2.0.0.tar.gz", hash = "sha256:d6b03839019bb8a68785f9292ee6a36b1954eb84b925b84a6b8a5e1e26d3ed3d"},
@@ -21,6 +22,7 @@ name = "arrow"
 version = "1.2.3"
 requires_python = ">=3.6"
 summary = "Better dates & times for Python"
+groups = ["all"]
 dependencies = [
     "python-dateutil>=2.7.0",
 ]
@@ -34,6 +36,7 @@ name = "attrs"
 version = "23.1.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
+groups = ["workflow"]
 files = [
     {file = "attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04"},
     {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
@@ -43,6 +46,7 @@ files = [
 name = "binaryornot"
 version = "0.4.4"
 summary = "Ultra-lightweight pure Python package to check if a file is binary or text."
+groups = ["all"]
 dependencies = [
     "chardet>=3.0.2",
 ]
@@ -56,6 +60,7 @@ name = "blinker"
 version = "1.6.2"
 requires_python = ">=3.7"
 summary = "Fast, simple object-to-object and broadcast signaling"
+groups = ["all", "default", "test"]
 files = [
     {file = "blinker-1.6.2-py3-none-any.whl", hash = "sha256:c3d739772abb7bc2860abf5f2ec284223d9ad5c76da018234f6f50d6f31ab1f0"},
     {file = "blinker-1.6.2.tar.gz", hash = "sha256:4afd3de66ef3a9f8067559fb7a1cbe555c17dcbe15971b05d1b625c3e7abe213"},
@@ -66,6 +71,7 @@ name = "cachecontrol"
 version = "0.13.1"
 requires_python = ">=3.7"
 summary = "httplib2 caching for requests"
+groups = ["all", "default", "test"]
 dependencies = [
     "msgpack>=0.5.2",
     "requests>=2.16.0",
@@ -81,6 +87,7 @@ version = "0.13.1"
 extras = ["filecache"]
 requires_python = ">=3.7"
 summary = "httplib2 caching for requests"
+groups = ["all", "default", "test"]
 dependencies = [
     "cachecontrol==0.13.1",
     "filelock>=3.8.0",
@@ -95,6 +102,7 @@ name = "cachetools"
 version = "5.3.1"
 requires_python = ">=3.7"
 summary = "Extensible memoizing collections and decorators"
+groups = ["tox"]
 files = [
     {file = "cachetools-5.3.1-py3-none-any.whl", hash = "sha256:95ef631eeaea14ba2e36f06437f36463aac3a096799e876ee55e5cdccb102590"},
     {file = "cachetools-5.3.1.tar.gz", hash = "sha256:dce83f2d9b4e1f732a8cd44af8e8fab2dbe46201467fc98b3ef8f269092bf62b"},
@@ -105,6 +113,7 @@ name = "certifi"
 version = "2023.7.22"
 requires_python = ">=3.6"
 summary = "Python package for providing Mozilla's CA Bundle."
+groups = ["all", "default", "doc", "test"]
 files = [
     {file = "certifi-2023.7.22-py3-none-any.whl", hash = "sha256:92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9"},
     {file = "certifi-2023.7.22.tar.gz", hash = "sha256:539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082"},
@@ -114,6 +123,8 @@ files = [
 name = "cffi"
 version = "1.15.1"
 summary = "Foreign Function Interface for Python calling C code."
+groups = ["all"]
+marker = "sys_platform == \"linux\""
 dependencies = [
     "pycparser",
 ]
@@ -189,6 +200,7 @@ name = "chardet"
 version = "5.1.0"
 requires_python = ">=3.7"
 summary = "Universal encoding detector for Python 3"
+groups = ["all", "tox"]
 files = [
     {file = "chardet-5.1.0-py3-none-any.whl", hash = "sha256:362777fb014af596ad31334fde1e8c327dfdb076e1960d1694662d46a6917ab9"},
     {file = "chardet-5.1.0.tar.gz", hash = "sha256:0d62712b956bc154f85fb0a266e2a3c5913c2967e00348701b32411d6def31e5"},
@@ -199,6 +211,7 @@ name = "charset-normalizer"
 version = "3.1.0"
 requires_python = ">=3.7.0"
 summary = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
+groups = ["all", "default", "doc", "test"]
 files = [
     {file = "charset-normalizer-3.1.0.tar.gz", hash = "sha256:34e0a2f9c370eb95597aae63bf85eb5e96826d81e3dcf88b8886012906f509b5"},
     {file = "charset_normalizer-3.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e0ac8959c929593fee38da1c2b64ee9778733cdf03c482c9ff1d508b6b593b2b"},
@@ -282,6 +295,7 @@ name = "click"
 version = "8.1.3"
 requires_python = ">=3.7"
 summary = "Composable command line interface toolkit"
+groups = ["all", "doc", "workflow"]
 dependencies = [
     "colorama; platform_system == \"Windows\"",
 ]
@@ -294,6 +308,7 @@ files = [
 name = "click-default-group"
 version = "1.2.2"
 summary = "Extends click.Group to invoke a command without explicit subcommand name"
+groups = ["workflow"]
 dependencies = [
     "click",
 ]
@@ -306,6 +321,7 @@ name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
+groups = ["all", "doc", "pytest", "test", "tox", "workflow"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -316,6 +332,7 @@ name = "cookiecutter"
 version = "2.1.1"
 requires_python = ">=3.7"
 summary = "A command-line utility that creates projects from project templates, e.g. creating a Python package project from a Python package project template."
+groups = ["all"]
 dependencies = [
     "Jinja2<4.0.0,>=2.7",
     "binaryornot>=0.4.4",
@@ -335,6 +352,7 @@ name = "copier"
 version = "8.0.0"
 requires_python = ">=3.7,<4.0"
 summary = "A library for rendering project templates."
+groups = ["all"]
 dependencies = [
     "colorama>=0.4.3",
     "decorator>=5.1.1",
@@ -361,6 +379,7 @@ name = "coverage"
 version = "7.2.7"
 requires_python = ">=3.7"
 summary = "Code coverage measurement for Python"
+groups = ["test"]
 files = [
     {file = "coverage-7.2.7-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d39b5b4f2a66ccae8b7263ac3c8170994b65266797fb96cbbfd3fb5b23921db8"},
     {file = "coverage-7.2.7-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:6d040ef7c9859bb11dfeb056ff5b3872436e3b5e401817d87a31e1750b9ae2fb"},
@@ -430,6 +449,7 @@ version = "7.2.7"
 extras = ["toml"]
 requires_python = ">=3.7"
 summary = "Code coverage measurement for Python"
+groups = ["test"]
 dependencies = [
     "coverage==7.2.7",
     "tomli; python_full_version <= \"3.11.0a6\"",
@@ -502,6 +522,8 @@ name = "cryptography"
 version = "41.0.1"
 requires_python = ">=3.7"
 summary = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
+groups = ["all"]
+marker = "sys_platform == \"linux\""
 dependencies = [
     "cffi>=1.12",
 ]
@@ -532,6 +554,7 @@ name = "decorator"
 version = "5.1.1"
 requires_python = ">=3.5"
 summary = "Decorators for Humans"
+groups = ["all"]
 files = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
     {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
@@ -542,6 +565,7 @@ name = "dep-logic"
 version = "0.0.2"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
+groups = ["all", "default", "test"]
 dependencies = [
     "packaging>=22",
 ]
@@ -554,6 +578,7 @@ files = [
 name = "distlib"
 version = "0.3.7"
 summary = "Distribution utilities"
+groups = ["all", "default", "test", "tox"]
 files = [
     {file = "distlib-0.3.7-py2.py3-none-any.whl", hash = "sha256:2e24928bc811348f0feb63014e97aaae3037f2cf48712d51ae61df7fd6075057"},
     {file = "distlib-0.3.7.tar.gz", hash = "sha256:9dafe54b34a028eafd95039d5e5d4851a13734540f1331060d31c9916e7147a8"},
@@ -564,6 +589,7 @@ name = "dunamai"
 version = "1.17.0"
 requires_python = ">=3.5,<4.0"
 summary = "Dynamic version generation"
+groups = ["all"]
 dependencies = [
     "packaging>=20.9",
 ]
@@ -577,6 +603,8 @@ name = "exceptiongroup"
 version = "1.1.1"
 requires_python = ">=3.7"
 summary = "Backport of PEP 654 (exception groups)"
+groups = ["pytest", "test"]
+marker = "python_version < \"3.11\""
 files = [
     {file = "exceptiongroup-1.1.1-py3-none-any.whl", hash = "sha256:232c37c63e4f682982c8b6459f33a8981039e5fb8756b2074364e5055c498c9e"},
     {file = "exceptiongroup-1.1.1.tar.gz", hash = "sha256:d484c3090ba2889ae2928419117447a14daf3c1231d5e30d0aae34f354f01785"},
@@ -587,6 +615,7 @@ name = "execnet"
 version = "1.9.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "execnet: rapid multi-Python deployment"
+groups = ["test"]
 files = [
     {file = "execnet-1.9.0-py2.py3-none-any.whl", hash = "sha256:a295f7cc774947aac58dde7fdc85f4aa00c42adf5d8f5468fc630c1acf30a142"},
     {file = "execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
@@ -597,6 +626,7 @@ name = "filelock"
 version = "3.12.2"
 requires_python = ">=3.7"
 summary = "A platform independent file lock."
+groups = ["all", "default", "test", "tox"]
 files = [
     {file = "filelock-3.12.2-py3-none-any.whl", hash = "sha256:cbb791cdea2a72f23da6ac5b5269ab0a0d161e9ef0100e653b69049a7706d1ec"},
     {file = "filelock-3.12.2.tar.gz", hash = "sha256:002740518d8aa59a26b0c76e10fb8c6e15eae825d34b6fdf670333fd7b938d81"},
@@ -607,6 +637,7 @@ name = "findpython"
 version = "0.4.0"
 requires_python = ">=3.7"
 summary = "A utility to find python versions on your system"
+groups = ["all", "default", "test"]
 dependencies = [
     "packaging>=20",
 ]
@@ -619,6 +650,7 @@ files = [
 name = "funcy"
 version = "2.0"
 summary = "A fancy and practical functional tools"
+groups = ["all"]
 files = [
     {file = "funcy-2.0-py2.py3-none-any.whl", hash = "sha256:53df23c8bb1651b12f095df764bfb057935d49537a56de211b098f4c79614bb0"},
     {file = "funcy-2.0.tar.gz", hash = "sha256:3963315d59d41c6f30c04bc910e10ab50a3ac4a225868bfa96feed133df075cb"},
@@ -628,6 +660,7 @@ files = [
 name = "ghp-import"
 version = "2.1.0"
 summary = "Copy your docs directly to the gh-pages branch."
+groups = ["doc"]
 dependencies = [
     "python-dateutil>=2.8.1",
 ]
@@ -641,6 +674,7 @@ name = "griffe"
 version = "0.29.0"
 requires_python = ">=3.7"
 summary = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
+groups = ["doc"]
 dependencies = [
     "colorama>=0.4",
 ]
@@ -654,6 +688,7 @@ name = "idna"
 version = "3.4"
 requires_python = ">=3.5"
 summary = "Internationalized Domain Names in Applications (IDNA)"
+groups = ["all", "default", "doc", "test"]
 files = [
     {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
     {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
@@ -664,6 +699,8 @@ name = "importlib-metadata"
 version = "6.7.0"
 requires_python = ">=3.7"
 summary = "Read metadata from Python packages"
+groups = ["all", "default", "doc", "test"]
+marker = "python_version < \"3.12\""
 dependencies = [
     "zipp>=0.5",
 ]
@@ -677,6 +714,8 @@ name = "importlib-resources"
 version = "5.12.0"
 requires_python = ">=3.7"
 summary = "Read resources from Python packages"
+groups = ["all", "default", "test", "workflow"]
+marker = "python_version < \"3.10\""
 dependencies = [
     "zipp>=3.1.0; python_version < \"3.10\"",
 ]
@@ -689,6 +728,7 @@ files = [
 name = "incremental"
 version = "22.10.0"
 summary = "\"A small library that versions your Python projects.\""
+groups = ["workflow"]
 files = [
     {file = "incremental-22.10.0-py2.py3-none-any.whl", hash = "sha256:b864a1f30885ee72c5ac2835a761b8fe8aa9c28b9395cacf27286602688d3e51"},
     {file = "incremental-22.10.0.tar.gz", hash = "sha256:912feeb5e0f7e0188e6f42241d2f450002e11bbc0937c65865045854c24c0bd0"},
@@ -699,6 +739,7 @@ name = "iniconfig"
 version = "2.0.0"
 requires_python = ">=3.7"
 summary = "brain-dead simple config-ini parsing"
+groups = ["pytest", "test"]
 files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
@@ -709,6 +750,7 @@ name = "installer"
 version = "0.7.0"
 requires_python = ">=3.7"
 summary = "A library for installing Python wheels."
+groups = ["all", "default", "test"]
 files = [
     {file = "installer-0.7.0-py3-none-any.whl", hash = "sha256:05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53"},
     {file = "installer-0.7.0.tar.gz", hash = "sha256:a26d3e3116289bb08216e0d0f7d925fcef0b0194eedfa0c944bcaaa106c4b631"},
@@ -719,6 +761,7 @@ name = "jaraco-classes"
 version = "3.2.3"
 requires_python = ">=3.7"
 summary = "Utility functions for Python class constructs"
+groups = ["all"]
 dependencies = [
     "more-itertools",
 ]
@@ -732,6 +775,8 @@ name = "jeepney"
 version = "0.8.0"
 requires_python = ">=3.7"
 summary = "Low-level, pure Python DBus protocol wrapper."
+groups = ["all"]
+marker = "sys_platform == \"linux\""
 files = [
     {file = "jeepney-0.8.0-py3-none-any.whl", hash = "sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755"},
     {file = "jeepney-0.8.0.tar.gz", hash = "sha256:5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806"},
@@ -742,6 +787,7 @@ name = "jinja2"
 version = "3.1.2"
 requires_python = ">=3.7"
 summary = "A very fast and expressive template engine."
+groups = ["all", "doc", "workflow"]
 dependencies = [
     "MarkupSafe>=2.0",
 ]
@@ -754,6 +800,7 @@ files = [
 name = "jinja2-ansible-filters"
 version = "1.3.2"
 summary = "A port of Ansible's jinja2 filters without requiring ansible core."
+groups = ["all"]
 dependencies = [
     "Jinja2",
     "PyYAML",
@@ -767,6 +814,7 @@ files = [
 name = "jinja2-time"
 version = "0.2.0"
 summary = "Jinja2 Extension for Dates and Times"
+groups = ["all"]
 dependencies = [
     "arrow",
     "jinja2",
@@ -781,6 +829,7 @@ name = "keyring"
 version = "24.1.1"
 requires_python = ">=3.7"
 summary = "Store and access your passwords safely."
+groups = ["all"]
 dependencies = [
     "SecretStorage>=3.2; sys_platform == \"linux\"",
     "importlib-metadata>=4.11.4; python_version < \"3.12\"",
@@ -799,6 +848,7 @@ name = "markdown"
 version = "3.3.7"
 requires_python = ">=3.6"
 summary = "Python implementation of Markdown."
+groups = ["doc"]
 dependencies = [
     "importlib-metadata>=4.4; python_version < \"3.10\"",
 ]
@@ -812,6 +862,7 @@ name = "markdown-exec"
 version = "1.6.0"
 requires_python = ">=3.7"
 summary = "Utilities to execute code blocks in Markdown files."
+groups = ["doc"]
 dependencies = [
     "pymdown-extensions>=9",
 ]
@@ -825,6 +876,7 @@ name = "markdown-it-py"
 version = "2.2.0"
 requires_python = ">=3.7"
 summary = "Python port of markdown-it. Markdown parsing, done right!"
+groups = ["all", "default", "test"]
 dependencies = [
     "mdurl~=0.1",
 ]
@@ -838,6 +890,7 @@ name = "markupsafe"
 version = "2.1.3"
 requires_python = ">=3.7"
 summary = "Safely add untrusted strings to HTML/XML markup."
+groups = ["all", "doc", "test", "workflow"]
 files = [
     {file = "MarkupSafe-2.1.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:cd0f502fe016460680cd20aaa5a76d241d6f35a1c3350c474bac1273803893fa"},
     {file = "MarkupSafe-2.1.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e09031c87a1e51556fdcb46e5bd4f59dfb743061cf93c4d6831bf894f125eb57"},
@@ -896,6 +949,7 @@ name = "mdurl"
 version = "0.1.2"
 requires_python = ">=3.7"
 summary = "Markdown URL utilities"
+groups = ["all", "default", "test"]
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
@@ -906,6 +960,7 @@ name = "mergedeep"
 version = "1.3.4"
 requires_python = ">=3.6"
 summary = "A deep merge function for 🐍."
+groups = ["doc"]
 files = [
     {file = "mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307"},
     {file = "mergedeep-1.3.4.tar.gz", hash = "sha256:0096d52e9dad9939c3d975a774666af186eda617e6ca84df4c94dec30004f2a8"},
@@ -915,6 +970,7 @@ files = [
 name = "mike"
 version = "1.1.2"
 summary = "Manage multiple versions of your MkDocs-powered documentation"
+groups = ["doc"]
 dependencies = [
     "jinja2",
     "mkdocs>=1.0",
@@ -931,6 +987,7 @@ name = "mkdocs"
 version = "1.5.2"
 requires_python = ">=3.7"
 summary = "Project documentation with Markdown."
+groups = ["doc"]
 dependencies = [
     "click>=7.0",
     "colorama>=0.4; platform_system == \"Windows\"",
@@ -957,6 +1014,7 @@ name = "mkdocs-autorefs"
 version = "0.4.1"
 requires_python = ">=3.7"
 summary = "Automatically link across pages in MkDocs."
+groups = ["doc"]
 dependencies = [
     "Markdown>=3.3",
     "mkdocs>=1.1",
@@ -971,6 +1029,7 @@ name = "mkdocs-material"
 version = "9.1.21"
 requires_python = ">=3.7"
 summary = "Documentation that simply works"
+groups = ["doc"]
 dependencies = [
     "colorama>=0.4",
     "jinja2>=3.0",
@@ -992,6 +1051,7 @@ name = "mkdocs-material-extensions"
 version = "1.1.1"
 requires_python = ">=3.7"
 summary = "Extension pack for Python Markdown and MkDocs Material."
+groups = ["doc"]
 files = [
     {file = "mkdocs_material_extensions-1.1.1-py3-none-any.whl", hash = "sha256:e41d9f38e4798b6617ad98ca8f7f1157b1e4385ac1459ca1e4ea219b556df945"},
     {file = "mkdocs_material_extensions-1.1.1.tar.gz", hash = "sha256:9c003da71e2cc2493d910237448c672e00cefc800d3d6ae93d2fc69979e3bd93"},
@@ -1002,6 +1062,7 @@ name = "mkdocs-redirects"
 version = "1.2.1"
 requires_python = ">=3.6"
 summary = "A MkDocs plugin for dynamic page redirects to prevent broken links."
+groups = ["doc"]
 dependencies = [
     "mkdocs>=1.1.1",
 ]
@@ -1014,6 +1075,7 @@ name = "mkdocstrings"
 version = "0.22.0"
 requires_python = ">=3.7"
 summary = "Automatic documentation from sources, for MkDocs."
+groups = ["doc"]
 dependencies = [
     "Jinja2>=2.11.1",
     "Markdown>=3.3",
@@ -1034,6 +1096,7 @@ name = "mkdocstrings-python"
 version = "1.1.0"
 requires_python = ">=3.7"
 summary = "A Python handler for mkdocstrings."
+groups = ["doc"]
 dependencies = [
     "griffe>=0.24",
     "mkdocstrings>=0.20",
@@ -1049,6 +1112,7 @@ version = "0.22.0"
 extras = ["python"]
 requires_python = ">=3.7"
 summary = "Automatic documentation from sources, for MkDocs."
+groups = ["doc"]
 dependencies = [
     "mkdocstrings-python>=0.5.2",
     "mkdocstrings==0.22.0",
@@ -1063,6 +1127,7 @@ name = "more-itertools"
 version = "9.1.0"
 requires_python = ">=3.7"
 summary = "More routines for operating on iterables, beyond itertools"
+groups = ["all"]
 files = [
     {file = "more-itertools-9.1.0.tar.gz", hash = "sha256:cabaa341ad0389ea83c17a94566a53ae4c9d07349861ecb14dc6d0345cf9ac5d"},
     {file = "more_itertools-9.1.0-py3-none-any.whl", hash = "sha256:d2bc7f02446e86a68911e58ded76d6561eea00cddfb2a91e7019bbb586c799f3"},
@@ -1072,6 +1137,7 @@ files = [
 name = "msgpack"
 version = "1.0.5"
 summary = "MessagePack serializer"
+groups = ["all", "default", "test"]
 files = [
     {file = "msgpack-1.0.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:525228efd79bb831cf6830a732e2e80bc1b05436b086d4264814b4b2955b2fa9"},
     {file = "msgpack-1.0.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:4f8d8b3bf1ff2672567d6b5c725a1b347fe838b912772aa8ae2bf70338d5a198"},
@@ -1143,6 +1209,7 @@ name = "packaging"
 version = "23.1"
 requires_python = ">=3.7"
 summary = "Core utilities for Python packages"
+groups = ["all", "default", "doc", "pytest", "test", "tox"]
 files = [
     {file = "packaging-23.1-py3-none-any.whl", hash = "sha256:994793af429502c4ea2ebf6bf664629d07c1a9fe974af92966e4b8d2df7edc61"},
     {file = "packaging-23.1.tar.gz", hash = "sha256:a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f"},
@@ -1153,6 +1220,7 @@ name = "parver"
 version = "0.4"
 requires_python = ">=3.7"
 summary = "Parse and manipulate version numbers."
+groups = ["workflow"]
 dependencies = [
     "arpeggio>=1.7",
     "attrs>=19.2",
@@ -1168,6 +1236,7 @@ name = "pathspec"
 version = "0.11.1"
 requires_python = ">=3.7"
 summary = "Utility library for gitignore style pattern matching of file paths."
+groups = ["all", "doc"]
 files = [
     {file = "pathspec-0.11.1-py3-none-any.whl", hash = "sha256:d8af70af76652554bd134c22b3e8a1cc46ed7d91edcdd721ef1a0c51a84a5293"},
     {file = "pathspec-0.11.1.tar.gz", hash = "sha256:2798de800fa92780e33acca925945e9a19a133b715067cf165b8866c15a31687"},
@@ -1178,6 +1247,7 @@ name = "pdm-pep517"
 version = "1.1.4"
 requires_python = ">=3.7"
 summary = "A PEP 517 backend for PDM that supports PEP 621 metadata"
+groups = ["workflow"]
 files = [
     {file = "pdm-pep517-1.1.4.tar.gz", hash = "sha256:7f49121e70b42dca296fac962210dd2da07a39575fc5673137ad661633b2cf3f"},
     {file = "pdm_pep517-1.1.4-py3-none-any.whl", hash = "sha256:c9fe65d06cf193f864ac2b38372a355450ff7f847aefc9b59e89fe2cf19f32b9"},
@@ -1188,6 +1258,7 @@ name = "platformdirs"
 version = "3.10.0"
 requires_python = ">=3.7"
 summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+groups = ["all", "default", "doc", "test", "tox"]
 files = [
     {file = "platformdirs-3.10.0-py3-none-any.whl", hash = "sha256:d7c24979f292f916dc9cbf8648319032f551ea8c49a4c9bf2fb556a02070ec1d"},
     {file = "platformdirs-3.10.0.tar.gz", hash = "sha256:b45696dab2d7cc691a3226759c0d3b00c47c8b6e293d96f6436f733303f77f6d"},
@@ -1198,6 +1269,7 @@ name = "pluggy"
 version = "1.2.0"
 requires_python = ">=3.7"
 summary = "plugin and hook calling mechanisms for python"
+groups = ["pytest", "test", "tox"]
 files = [
     {file = "pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849"},
     {file = "pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3"},
@@ -1208,6 +1280,7 @@ name = "plumbum"
 version = "1.8.2"
 requires_python = ">=3.6"
 summary = "Plumbum: shell combinators library"
+groups = ["all"]
 dependencies = [
     "pywin32; platform_system == \"Windows\" and platform_python_implementation != \"PyPy\"",
 ]
@@ -1221,6 +1294,7 @@ name = "prompt-toolkit"
 version = "3.0.38"
 requires_python = ">=3.7.0"
 summary = "Library for building powerful interactive command lines in Python"
+groups = ["all"]
 dependencies = [
     "wcwidth",
 ]
@@ -1234,6 +1308,7 @@ name = "pycomplete"
 version = "0.4.0"
 requires_python = ">=3.7"
 summary = "A Python library to generate static completion scripts for your CLI app"
+groups = ["workflow"]
 files = [
     {file = "pycomplete-0.4.0-py3-none-any.whl", hash = "sha256:aedeccb742a9cc8f86cc22563b92dc7edd8a3ee200e2eefb5c7a66a90bbf5f34"},
     {file = "pycomplete-0.4.0.tar.gz", hash = "sha256:8ae83fb5883c78da157d208aefdad4a989e0695e289ef738d05c9d14cb9a13b3"},
@@ -1244,6 +1319,8 @@ name = "pycparser"
 version = "2.21"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
+groups = ["all"]
+marker = "sys_platform == \"linux\""
 files = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
@@ -1254,6 +1331,7 @@ name = "pydantic"
 version = "1.10.9"
 requires_python = ">=3.7"
 summary = "Data validation and settings management using python type hints"
+groups = ["all"]
 dependencies = [
     "typing-extensions>=4.2.0",
 ]
@@ -1301,6 +1379,7 @@ name = "pygments"
 version = "2.15.1"
 requires_python = ">=3.7"
 summary = "Pygments is a syntax highlighting package written in Python."
+groups = ["all", "default", "doc", "test"]
 files = [
     {file = "Pygments-2.15.1-py3-none-any.whl", hash = "sha256:db2db3deb4b4179f399a09054b023b6a586b76499d36965813c71aa8ed7b5fd1"},
     {file = "Pygments-2.15.1.tar.gz", hash = "sha256:8ace4d3c1dd481894b2005f560ead0f9f19ee64fe983366be1a21e171d12775c"},
@@ -1311,6 +1390,7 @@ name = "pymdown-extensions"
 version = "10.0.1"
 requires_python = ">=3.7"
 summary = "Extension pack for Python Markdown."
+groups = ["doc"]
 dependencies = [
     "markdown>=3.2",
     "pyyaml",
@@ -1325,6 +1405,7 @@ name = "pyproject-api"
 version = "1.5.3"
 requires_python = ">=3.7"
 summary = "API to interact with the python pyproject.toml based projects"
+groups = ["tox"]
 dependencies = [
     "packaging>=23.1",
     "tomli>=2.0.1; python_version < \"3.11\"",
@@ -1339,6 +1420,7 @@ name = "pyproject-hooks"
 version = "1.0.0"
 requires_python = ">=3.7"
 summary = "Wrappers to call pyproject.toml-based build backend hooks."
+groups = ["all", "default", "test"]
 dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
 ]
@@ -1352,6 +1434,7 @@ name = "pytest"
 version = "7.4.0"
 requires_python = ">=3.7"
 summary = "pytest: simple powerful testing with Python"
+groups = ["pytest", "test"]
 dependencies = [
     "colorama; sys_platform == \"win32\"",
     "exceptiongroup>=1.0.0rc8; python_version < \"3.11\"",
@@ -1370,6 +1453,7 @@ name = "pytest-cov"
 version = "4.1.0"
 requires_python = ">=3.7"
 summary = "Pytest plugin for measuring coverage."
+groups = ["test"]
 dependencies = [
     "coverage[toml]>=5.2.1",
     "pytest>=4.6",
@@ -1384,6 +1468,7 @@ name = "pytest-httpserver"
 version = "1.0.6"
 requires_python = ">=3.7,<4.0"
 summary = "pytest-httpserver is a httpserver for pytest"
+groups = ["test"]
 dependencies = [
     "Werkzeug>=2.0.0",
 ]
@@ -1397,6 +1482,7 @@ name = "pytest-mock"
 version = "3.11.1"
 requires_python = ">=3.7"
 summary = "Thin-wrapper around the mock package for easier use with pytest"
+groups = ["pytest", "test"]
 dependencies = [
     "pytest>=5.0",
 ]
@@ -1410,6 +1496,7 @@ name = "pytest-rerunfailures"
 version = "12.0"
 requires_python = ">=3.7"
 summary = "pytest plugin to re-run tests to eliminate flaky failures"
+groups = ["test"]
 dependencies = [
     "packaging>=17.1",
     "pytest>=6.2",
@@ -1424,6 +1511,7 @@ name = "pytest-xdist"
 version = "3.3.1"
 requires_python = ">=3.7"
 summary = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
+groups = ["test"]
 dependencies = [
     "execnet>=1.1",
     "pytest>=6.2.0",
@@ -1438,6 +1526,7 @@ name = "python-dateutil"
 version = "2.8.2"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 summary = "Extensions to the standard Python datetime module"
+groups = ["all", "doc"]
 dependencies = [
     "six>=1.5",
 ]
@@ -1451,6 +1540,7 @@ name = "python-dotenv"
 version = "0.21.1"
 requires_python = ">=3.7"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
+groups = ["all", "default", "test"]
 files = [
     {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
     {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
@@ -1461,6 +1551,7 @@ name = "python-slugify"
 version = "8.0.1"
 requires_python = ">=3.7"
 summary = "A Python slugify application that also handles Unicode"
+groups = ["all"]
 dependencies = [
     "text-unidecode>=1.3",
 ]
@@ -1473,6 +1564,8 @@ files = [
 name = "pywin32"
 version = "306"
 summary = "Python for Window Extensions"
+groups = ["all"]
+marker = "platform_system == \"Windows\" and platform_python_implementation != \"PyPy\""
 files = [
     {file = "pywin32-306-cp310-cp310-win32.whl", hash = "sha256:06d3420a5155ba65f0b72f2699b5bacf3109f36acbe8923765c22938a69dfc8d"},
     {file = "pywin32-306-cp310-cp310-win_amd64.whl", hash = "sha256:84f4471dbca1887ea3803d8848a1616429ac94a4a8d05f4bc9c5dcfd42ca99c8"},
@@ -1495,6 +1588,8 @@ name = "pywin32-ctypes"
 version = "0.2.1"
 requires_python = ">=3.6"
 summary = "A (partial) reimplementation of pywin32 using ctypes/cffi"
+groups = ["all"]
+marker = "sys_platform == \"win32\""
 files = [
     {file = "pywin32-ctypes-0.2.1.tar.gz", hash = "sha256:934a2def1e5cbc472b2b6bf80680c0f03cd87df65dfd58bfd1846969de095b03"},
     {file = "pywin32_ctypes-0.2.1-py3-none-any.whl", hash = "sha256:b9a53ef754c894a525469933ab2a447c74ec1ea6b9d2ef446f40ec50d3dcec9f"},
@@ -1505,6 +1600,7 @@ name = "pyyaml"
 version = "6.0.1"
 requires_python = ">=3.6"
 summary = "YAML parser and emitter for Python"
+groups = ["all", "doc"]
 files = [
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a"},
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f"},
@@ -1557,6 +1653,7 @@ name = "pyyaml-env-tag"
 version = "0.1"
 requires_python = ">=3.6"
 summary = "A custom YAML tag for referencing environment variables in YAML files. "
+groups = ["doc"]
 dependencies = [
     "pyyaml",
 ]
@@ -1570,6 +1667,7 @@ name = "pyyaml-include"
 version = "1.3"
 requires_python = ">=3.5"
 summary = "Extending PyYAML with a custom constructor for including YAML files within YAML files"
+groups = ["all"]
 dependencies = [
     "PyYAML<7.0,>=5.1",
 ]
@@ -1583,6 +1681,7 @@ name = "questionary"
 version = "1.10.0"
 requires_python = ">=3.6,<4.0"
 summary = "Python library to build pretty command line user prompts ⭐️"
+groups = ["all"]
 dependencies = [
     "prompt-toolkit<4.0,>=2.0",
 ]
@@ -1596,6 +1695,7 @@ name = "regex"
 version = "2023.6.3"
 requires_python = ">=3.6"
 summary = "Alternative regular expression module, to replace re."
+groups = ["doc"]
 files = [
     {file = "regex-2023.6.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:824bf3ac11001849aec3fa1d69abcb67aac3e150a933963fb12bda5151fe1bfd"},
     {file = "regex-2023.6.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:05ed27acdf4465c95826962528f9e8d41dbf9b1aa8531a387dee6ed215a3e9ef"},
@@ -1692,6 +1792,7 @@ name = "requests"
 version = "2.31.0"
 requires_python = ">=3.7"
 summary = "Python HTTP for Humans."
+groups = ["all", "default", "doc", "test"]
 dependencies = [
     "certifi>=2017.4.17",
     "charset-normalizer<4,>=2",
@@ -1708,6 +1809,7 @@ name = "requests-toolbelt"
 version = "1.0.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "A utility belt for advanced users of python-requests"
+groups = ["all", "default", "test"]
 dependencies = [
     "requests<3.0.0,>=2.0.1",
 ]
@@ -1720,6 +1822,7 @@ files = [
 name = "resolvelib"
 version = "1.0.1"
 summary = "Resolve abstract dependencies into concrete ones"
+groups = ["all", "default", "test"]
 files = [
     {file = "resolvelib-1.0.1-py2.py3-none-any.whl", hash = "sha256:d2da45d1a8dfee81bdd591647783e340ef3bcb104b54c383f70d422ef5cc7dbf"},
     {file = "resolvelib-1.0.1.tar.gz", hash = "sha256:04ce76cbd63fded2078ce224785da6ecd42b9564b1390793f64ddecbe997b309"},
@@ -1730,6 +1833,7 @@ name = "rich"
 version = "13.5.2"
 requires_python = ">=3.7.0"
 summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
+groups = ["all", "default", "test"]
 dependencies = [
     "markdown-it-py>=2.2.0",
     "pygments<3.0.0,>=2.13.0",
@@ -1745,6 +1849,8 @@ name = "secretstorage"
 version = "3.3.3"
 requires_python = ">=3.6"
 summary = "Python bindings to FreeDesktop.org Secret Service API"
+groups = ["all"]
+marker = "sys_platform == \"linux\""
 dependencies = [
     "cryptography>=2.0",
     "jeepney>=0.6",
@@ -1759,6 +1865,7 @@ name = "setuptools"
 version = "68.0.0"
 requires_python = ">=3.7"
 summary = "Easily download, build, install, upgrade, and uninstall Python packages"
+groups = ["doc"]
 files = [
     {file = "setuptools-68.0.0-py3-none-any.whl", hash = "sha256:11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f"},
     {file = "setuptools-68.0.0.tar.gz", hash = "sha256:baf1fdb41c6da4cd2eae722e135500da913332ab3f2f5c7d33af9b492acb5235"},
@@ -1769,6 +1876,7 @@ name = "shellingham"
 version = "1.5.0.post1"
 requires_python = ">=3.7"
 summary = "Tool to Detect Surrounding Shell"
+groups = ["all", "default", "test"]
 files = [
     {file = "shellingham-1.5.0.post1-py2.py3-none-any.whl", hash = "sha256:368bf8c00754fd4f55afb7bbb86e272df77e4dc76ac29dbcbb81a59e9fc15744"},
     {file = "shellingham-1.5.0.post1.tar.gz", hash = "sha256:823bc5fb5c34d60f285b624e7264f4dda254bc803a3774a147bf99c0e3004a28"},
@@ -1779,6 +1887,7 @@ name = "six"
 version = "1.16.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 summary = "Python 2 and 3 compatibility utilities"
+groups = ["all", "doc"]
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
@@ -1788,6 +1897,7 @@ files = [
 name = "text-unidecode"
 version = "1.3"
 summary = "The most basic Text::Unidecode port"
+groups = ["all"]
 files = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
     {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
@@ -1798,6 +1908,8 @@ name = "tomli"
 version = "2.0.1"
 requires_python = ">=3.7"
 summary = "A lil' TOML parser"
+groups = ["all", "default", "pytest", "test", "tox", "workflow"]
+marker = "python_version < \"3.11\""
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
@@ -1808,6 +1920,7 @@ name = "tomlkit"
 version = "0.12.1"
 requires_python = ">=3.7"
 summary = "Style preserving TOML library"
+groups = ["all", "default", "test"]
 files = [
     {file = "tomlkit-0.12.1-py3-none-any.whl", hash = "sha256:712cbd236609acc6a3e2e97253dfc52d4c2082982a88f61b640ecf0817eab899"},
     {file = "tomlkit-0.12.1.tar.gz", hash = "sha256:38e1ff8edb991273ec9f6181244a6a391ac30e9f5098e7535640ea6be97a7c86"},
@@ -1818,6 +1931,7 @@ name = "towncrier"
 version = "23.6.0"
 requires_python = ">=3.7"
 summary = "Building newsfiles for your project."
+groups = ["workflow"]
 dependencies = [
     "click",
     "click-default-group",
@@ -1836,6 +1950,7 @@ name = "tox"
 version = "4.6.4"
 requires_python = ">=3.7"
 summary = "tox is a generic virtualenv management and test command line tool"
+groups = ["tox"]
 dependencies = [
     "cachetools>=5.3.1",
     "chardet>=5.1",
@@ -1858,6 +1973,7 @@ name = "tox-pdm"
 version = "0.6.1"
 requires_python = ">=3.7"
 summary = "A plugin for tox that utilizes PDM as the package manager and installer"
+groups = ["tox"]
 dependencies = [
     "tomli; python_version < \"3.11\"",
     "tox>=3.18.0",
@@ -1872,6 +1988,8 @@ name = "truststore"
 version = "0.7.0"
 requires_python = ">= 3.10"
 summary = "Verify certificates using native system trust stores"
+groups = ["all", "default", "test"]
+marker = "python_version >= \"3.10\""
 files = [
     {file = "truststore-0.7.0-py3-none-any.whl", hash = "sha256:a4b410a365cafec4c2b386b30df53d89a6a4466cc229c7026e41c2d847f94fe9"},
     {file = "truststore-0.7.0.tar.gz", hash = "sha256:72e784507a624375434381e4bad3eff8614bc8c845a7f5ae16a25a2624d0683f"},
@@ -1882,6 +2000,7 @@ name = "typing-extensions"
 version = "4.7.1"
 requires_python = ">=3.7"
 summary = "Backported and Experimental Type Hints for Python 3.7+"
+groups = ["all", "default", "doc", "test", "workflow"]
 files = [
     {file = "typing_extensions-4.7.1-py3-none-any.whl", hash = "sha256:440d5dd3af93b060174bf433bccd69b0babc3b15b1a8dca43789fd7f61514b36"},
     {file = "typing_extensions-4.7.1.tar.gz", hash = "sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2"},
@@ -1892,6 +2011,7 @@ name = "unearth"
 version = "0.12.1"
 requires_python = ">=3.7"
 summary = "A utility to fetch and download python packages"
+groups = ["all", "default", "test"]
 dependencies = [
     "packaging>=20",
     "requests>=2.25",
@@ -1906,6 +2026,7 @@ name = "urllib3"
 version = "2.0.3"
 requires_python = ">=3.7"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
+groups = ["all", "default", "doc", "test"]
 files = [
     {file = "urllib3-2.0.3-py3-none-any.whl", hash = "sha256:48e7fafa40319d358848e1bc6809b208340fafe2096f1725d05d67443d0483d1"},
     {file = "urllib3-2.0.3.tar.gz", hash = "sha256:bee28b5e56addb8226c96f7f13ac28cb4c301dd5ea8a6ca179c0b9835e032825"},
@@ -1915,6 +2036,7 @@ files = [
 name = "verspec"
 version = "0.1.0"
 summary = "Flexible version handling"
+groups = ["doc"]
 files = [
     {file = "verspec-0.1.0-py3-none-any.whl", hash = "sha256:741877d5633cc9464c45a469ae2a31e801e6dbbaa85b9675d481cda100f11c31"},
     {file = "verspec-0.1.0.tar.gz", hash = "sha256:c4504ca697b2056cdb4bfa7121461f5a0e81809255b41c03dda4ba823637c01e"},
@@ -1925,6 +2047,7 @@ name = "virtualenv"
 version = "20.24.2"
 requires_python = ">=3.7"
 summary = "Virtual Python Environment builder"
+groups = ["all", "default", "test", "tox"]
 dependencies = [
     "distlib<1,>=0.3.7",
     "filelock<4,>=3.12.2",
@@ -1940,6 +2063,7 @@ name = "watchdog"
 version = "3.0.0"
 requires_python = ">=3.7"
 summary = "Filesystem events monitoring"
+groups = ["doc"]
 files = [
     {file = "watchdog-3.0.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:336adfc6f5cc4e037d52db31194f7581ff744b67382eb6021c868322e32eef41"},
     {file = "watchdog-3.0.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a70a8dcde91be523c35b2bf96196edc5730edb347e374c7de7cd20c43ed95397"},
@@ -1974,6 +2098,7 @@ files = [
 name = "wcwidth"
 version = "0.2.6"
 summary = "Measures the displayed width of unicode strings in a terminal"
+groups = ["all"]
 files = [
     {file = "wcwidth-0.2.6-py2.py3-none-any.whl", hash = "sha256:795b138f6875577cd91bba52baf9e445cd5118fd32723b460e30a0af30ea230e"},
     {file = "wcwidth-0.2.6.tar.gz", hash = "sha256:a5220780a404dbe3353789870978e472cfe477761f06ee55077256e509b156d0"},
@@ -1984,6 +2109,7 @@ name = "werkzeug"
 version = "2.2.3"
 requires_python = ">=3.7"
 summary = "The comprehensive WSGI web application library."
+groups = ["test"]
 dependencies = [
     "MarkupSafe>=2.1.1",
 ]
@@ -1997,6 +2123,8 @@ name = "zipp"
 version = "3.15.0"
 requires_python = ">=3.7"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
+groups = ["all", "default", "doc", "test", "workflow"]
+marker = "python_version < \"3.12\""
 files = [
     {file = "zipp-3.15.0-py3-none-any.whl", hash = "sha256:48904fc76a60e542af151aded95726c1a5c34ed43ab4134b597665c86d7ad556"},
     {file = "zipp-3.15.0.tar.gz", hash = "sha256:112929ad649da941c23de50f356a2b5570c954b65150642bccdd66bf194d224b"},
