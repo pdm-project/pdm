@@ -244,3 +244,14 @@ This hook wraps the command `pdm lock --check` along with any valid argument. It
   hooks:
     - id: pdm-lock-check
 ```
+
+### Sync current working set with `pdm.lock`
+
+This hook wraps the command `pdm sync` along with any valid argument. It can be used as a hook to ensure that your current working set is synced with `pdm.lock` whenever you checkout or merge a branch.
+
+```yaml
+- repo: https://github.com/pdm-project/pdm
+  rev: 2.x.y # a PDM release exposing the hook
+  hooks:
+    - id: pdm-sync
+```
