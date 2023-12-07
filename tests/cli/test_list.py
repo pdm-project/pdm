@@ -399,7 +399,7 @@ def test_list_freeze_banned_options(project, pdm):
     expected = "--resolve cannot be used with --freeze"
     assert expected in result.outputs
 
-    result = pdm(["list", "--freeze", "--sort", "name"], obj=project)
+    result = pdm(["list", "--freeze", "--sort", "version"], obj=project)
     expected = "--sort cannot be used with --freeze"
     assert expected in result.outputs
 
@@ -638,11 +638,11 @@ def test_list_bare_fields_licences(project, pdm):
         "+---------------------------------------------------------+\n"
         "| name       | version | groups | licenses                |\n"
         "|------------+---------+--------+-------------------------|\n"
-        "| foo        | 0.1.0   | :sub   | A License               |\n"
         "| bar        | 3.0.1   | :sub   | B License               |\n"
         "| baz        | 2.7     | :sub   | C License               |\n"
-        "| unknown    | 1.0     | :sub   | Apache Software License |\n"
         "| classifier | 1.0     | :sub   | PDM TEST D              |\n"
+        "| foo        | 0.1.0   | :sub   | A License               |\n"
+        "| unknown    | 1.0     | :sub   | Apache Software License |\n"
         "+---------------------------------------------------------+\n"
     )
     assert expected == result.output
@@ -653,11 +653,11 @@ def test_list_csv_fields_licences(project, pdm):
     result = pdm(["list", "--csv", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "name,version,licenses\n"
-        "foo,0.1.0,A License\n"
         "bar,3.0.1,B License\n"
         "baz,2.7,C License\n"
-        "unknown,1.0,Apache Software License\n"
         "classifier,1.0,PDM TEST D\n"
+        "foo,0.1.0,A License\n"
+        "unknown,1.0,Apache Software License\n"
     )
     assert expected == result.output
 
@@ -666,11 +666,11 @@ def test_list_csv_fields_licences(project, pdm):
 def test_list_json_fields_licences(project, pdm):
     result = pdm(["list", "--json", "--fields", "name,version,licenses"], obj=project)
     expected = [
-        {"name": "foo", "version": "0.1.0", "licenses": "A License"},
         {"name": "bar", "version": "3.0.1", "licenses": "B License"},
         {"name": "baz", "version": "2.7", "licenses": "C License"},
-        {"name": "unknown", "version": "1.0", "licenses": "Apache Software License"},
         {"name": "classifier", "version": "1.0", "licenses": "PDM TEST D"},
+        {"name": "foo", "version": "0.1.0", "licenses": "A License"},
+        {"name": "unknown", "version": "1.0", "licenses": "Apache Software License"},
     ]
 
     assert expected == json.loads(result.outputs)
@@ -681,15 +681,6 @@ def test_list_markdown_fields_licences(project, pdm):
     result = pdm(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "# test-project licenses\n"
-        "## foo\n\n"
-        "| Name | foo |\n"
-        "|----|----|\n"
-        "| Version | 0.1.0 |\n"
-        "| Licenses | A License |\n\n"
-        "foo-0.1.0.dist-info/LICENSE\n\n\n"
-        "````\n"
-        "license text for foo here\n"
-        "````\n\n\n"
         "## bar\n\n"
         "| Name | bar |\n"
         "|----|----|\n"
@@ -708,15 +699,6 @@ def test_list_markdown_fields_licences(project, pdm):
         "````\n"
         "license text for baz here\n"
         "````\n\n\n"
-        "## unknown\n\n"
-        "| Name | unknown |\n"
-        "|----|----|\n"
-        "| Version | 1.0 |\n"
-        "| Licenses | Apache Software License |\n\n"
-        "unknown-1.0.dist-info/COPYING\n\n\n"
-        "````\n"
-        "license text for UNKNOWN here\n"
-        "````\n\n\n"
         "## classifier\n\n"
         "| Name | classifier |\n"
         "|----|----|\n"
@@ -725,6 +707,24 @@ def test_list_markdown_fields_licences(project, pdm):
         "classifier-1.0.dist-info/LICENCE\n\n\n"
         "````\n"
         "Problem finding license text: division by zero\n"
+        "````\n\n\n"
+        "## foo\n\n"
+        "| Name | foo |\n"
+        "|----|----|\n"
+        "| Version | 0.1.0 |\n"
+        "| Licenses | A License |\n\n"
+        "foo-0.1.0.dist-info/LICENSE\n\n\n"
+        "````\n"
+        "license text for foo here\n"
+        "````\n\n\n"
+        "## unknown\n\n"
+        "| Name | unknown |\n"
+        "|----|----|\n"
+        "| Version | 1.0 |\n"
+        "| Licenses | Apache Software License |\n\n"
+        "unknown-1.0.dist-info/COPYING\n\n\n"
+        "````\n"
+        "license text for UNKNOWN here\n"
         "````\n\n\n"
     )
     assert expected == result.output
