@@ -8,12 +8,12 @@ import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
-from functools import cached_property
+from functools import cached_property, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 from pdm.exceptions import BuildError, PdmUsageError
-from pdm.models.in_process import get_pep508_environment, get_python_abi_tag, get_uname
+from pdm.models.in_process import get_pep508_environment, get_python_abi_tag, get_uname, sysconfig_get_platform
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
 from pdm.utils import get_trusted_hosts, is_pip_compatible_with_python
@@ -74,7 +74,11 @@ class BaseEnvironment(abc.ABC):
 
         python_version = self.interpreter.version_tuple
         python_abi_tag = get_python_abi_tag(str(self.interpreter.executable))
-        return TargetPython(python_version, [python_abi_tag])
+        tp = TargetPython(python_version, [python_abi_tag])
+        # calculate the target platform tags
+        with self._patch_target_python():
+            tp.supported_tags()
+        return tp
 
     def _build_session(self, trusted_hosts: list[str]) -> PDMSession:
         from pdm.models.session import PDMSession
@@ -96,21 +100,26 @@ class BaseEnvironment(abc.ABC):
     @contextmanager
     def _patch_target_python(self) -> Generator[None, None, None]:
         """Patch the packaging modules to respect the arch of target python."""
+        import sysconfig
+
         import packaging.tags
 
         old_32bit = packaging.tags._32_BIT_INTERPRETER
         old_os_uname = getattr(os, "uname", None)
+        old_get_platform = sysconfig.get_platform
 
         if old_os_uname is not None:
 
             def uname() -> os.uname_result:
-                return get_uname(str(self.interpreter.executable))
+                return get_uname(str(self.interpreter.path))
 
             os.uname = uname
         packaging.tags._32_BIT_INTERPRETER = self.interpreter.is_32bit
+        sysconfig.get_platform = partial(sysconfig_get_platform, str(self.interpreter.path))
         try:
             yield
         finally:
+            sysconfig.get_platform = old_get_platform
             packaging.tags._32_BIT_INTERPRETER = old_32bit
             if old_os_uname is not None:
                 os.uname = old_os_uname
@@ -142,30 +151,29 @@ class BaseEnvironment(abc.ABC):
         trusted_hosts = get_trusted_hosts(sources)
 
         session = self._build_session(trusted_hosts)
-        with self._patch_target_python():
-            finder = PDMPackageFinder(
-                session=session,
-                target_python=self.target_python,
-                ignore_compatibility=ignore_compatibility,
-                no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
-                only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
-                prefer_binary=os.getenv("PDM_PREFER_BINARY", "").split(","),
-                respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
-                    "respect-source-order", False
-                ),
-                verbosity=self.project.core.ui.verbosity,
-                minimal_version=minimal_version,
-            )
-            for source in sources:
-                assert source.url
-                if source.type == "find_links":
-                    finder.add_find_links(source.url)
-                else:
-                    finder.add_index_url(source.url)
-            try:
-                yield finder
-            finally:
-                session.close()
+        finder = PDMPackageFinder(
+            session=session,
+            target_python=self.target_python,
+            ignore_compatibility=ignore_compatibility,
+            no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
+            only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
+            prefer_binary=os.getenv("PDM_PREFER_BINARY", "").split(","),
+            respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
+                "respect-source-order", False
+            ),
+            verbosity=self.project.core.ui.verbosity,
+            minimal_version=minimal_version,
+        )
+        for source in sources:
+            assert source.url
+            if source.type == "find_links":
+                finder.add_find_links(source.url)
+            else:
+                finder.add_index_url(source.url)
+        try:
+            yield finder
+        finally:
+            session.close()
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""
