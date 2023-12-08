@@ -40,7 +40,7 @@ def _is_python_package(root: str | Path) -> bool:
     for child in Path(root).iterdir():
         if (
             child.is_file()
-            and child.suffix in (".py", ".pyc", ".pyo", ".pyd")
+            and child.suffix in (".py", ".pyc", ".pyo", ".pyd", ".pyi")
             or child.is_dir()
             and _is_python_package(child)
         ):
