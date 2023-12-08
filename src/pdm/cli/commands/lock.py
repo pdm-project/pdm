@@ -42,6 +42,13 @@ class Command(BaseCommand):
             const="reuse",
             help="Reuse pinned versions already present in lock file if possible",
         )
+        parser.add_argument(
+            "--update-reuse-installed",
+            action="store_const",
+            dest="update_strategy",
+            const="reuse-installed",
+            help="Reuse installed packages if possible",
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.check:

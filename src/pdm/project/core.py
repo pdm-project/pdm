@@ -424,11 +424,7 @@ class Project:
         :returns: The provider object
         """
 
-        from pdm.resolver.providers import (
-            BaseProvider,
-            EagerUpdateProvider,
-            ReusePinProvider,
-        )
+        from pdm.resolver.providers import BaseProvider, ReusePinProvider, get_provider
 
         repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         allow_prereleases = self.allow_prereleases
@@ -450,7 +446,8 @@ class Project:
             return BaseProvider(
                 locked_repository, allow_prereleases, overrides, direct_minimal_versions=direct_minimal_versions
             )
-        provider_class = ReusePinProvider if strategy == "reuse" else EagerUpdateProvider
+        provider_class = get_provider(strategy)
+        assert issubclass(provider_class, ReusePinProvider)
         tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
         return provider_class(
             locked_repository.all_candidates,

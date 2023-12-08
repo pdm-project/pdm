@@ -230,6 +230,7 @@ Similarly, PDM also provides 3 different behaviors of updating dependencies and 
 which is given by `--update-<strategy>` option:
 
 - `reuse`: Keep all locked dependencies except for those given in the command line (default).
+- `reuse-installed`: Try to reuse the versions installed in the working set. **This will also affect the packages requested in the command line**.
 - `eager`: Try to lock a newer version of the packages in command line and their recursive sub-dependencies and keep other dependencies as they are.
 - `all`: Update all dependencies and sub-dependencies.
 

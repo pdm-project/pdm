@@ -162,6 +162,30 @@ def test_update_specified_packages_eager_mode(project, repository, pdm):
 
 
 @pytest.mark.usefixtures("working_set")
+def test_update_specified_packages_eager_mode_config(project, repository, pdm):
+    pdm(["add", "requests", "pytz", "--no-sync"], obj=project, strict=True)
+    repository.add_candidate("pytz", "2019.6")
+    repository.add_candidate("chardet", "3.0.5")
+    repository.add_candidate("requests", "2.20.0")
+    repository.add_dependencies(
+        "requests",
+        "2.20.0",
+        [
+            "certifi>=2017.4.17",
+            "chardet<3.1.0,>=3.0.2",
+            "idna<2.8,>=2.5",
+            "urllib3<1.24,>=1.21.1",
+        ],
+    )
+    pdm(["config", "strategy.update", "eager"], obj=project, strict=True)
+    pdm(["update", "requests"], obj=project, strict=True)
+    locked_candidates = project.locked_repository.all_candidates
+    assert locked_candidates["requests"].version == "2.20.0"
+    assert locked_candidates["chardet"].version == "3.0.5"
+    assert locked_candidates["pytz"].version == "2019.3"
+
+
+@pytest.mark.usefixtures("working_set")
 def test_update_with_package_and_groups_argument(project, pdm):
     pdm(["add", "-G", "web", "requests"], obj=project, strict=True)
     pdm(["add", "-Gextra", "pytz"], obj=project, strict=True)

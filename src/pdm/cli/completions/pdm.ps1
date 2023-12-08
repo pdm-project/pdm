@@ -211,7 +211,7 @@ function TabExpansion($line, $lastWord) {
                             "-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global",
                             "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation",
-                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock"
+                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock", "--update-reuse-installed"
                         )),
                         $sectionOption,
                         $projectOption,
@@ -327,7 +327,7 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new(@(
                             "--global", "-g", "--no-isolation", "--refresh", "-L", "--lockfile", "--check", "--dev", "--prod",
                             "--production", "-d", "--no-default", "--no-cross-platform", "--static-urls", "--no-static-urls",
-                            "--strategy", "-S", "--update-reuse"
+                            "--strategy", "-S", "--update-reuse", "--update-reuse-installed"
                         )),
                         $skipOption,
                         $sectionOption,
@@ -429,7 +429,8 @@ function TabExpansion($line, $lastWord) {
                             "-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run",
                             "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation",
-                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock"
+                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock",
+                            "--update-reuse-installed"
                         )),
                         $sectionOption,
                         $skipOption,

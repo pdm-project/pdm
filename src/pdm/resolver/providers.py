@@ -30,6 +30,22 @@ if TYPE_CHECKING:
     from pdm.models.requirements import Requirement
 
 
+_PROVIDER_REGISTORY: dict[str, type[BaseProvider]] = {}
+
+
+def get_provider(strategy: str) -> type[BaseProvider]:
+    return _PROVIDER_REGISTORY[strategy]
+
+
+def register_provider(strategy: str) -> Callable[[type[BaseProvider]], type[BaseProvider]]:
+    def wrapper(cls: type[BaseProvider]) -> type[BaseProvider]:
+        _PROVIDER_REGISTORY[strategy] = cls
+        return cls
+
+    return wrapper
+
+
+@register_provider("all")
 class BaseProvider(AbstractProvider):
     def __init__(
         self,
@@ -248,6 +264,7 @@ class BaseProvider(AbstractProvider):
         return valid_deps
 
 
+@register_provider("reuse")
 class ReusePinProvider(BaseProvider):
     """A provider that reuses preferred pins if possible.
 
@@ -266,6 +283,17 @@ class ReusePinProvider(BaseProvider):
         self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
+    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+        bare_name = strip_extras(identifier)[0]
+        if bare_name in self.tracked_names:
+            return None
+        pin = self.preferred_pins.get(identifier)
+        if pin is None:
+            return None
+        if requirement is not None:
+            pin.req = requirement
+        return pin
+
     def find_matches(
         self,
         identifier: str,
@@ -273,15 +301,12 @@ class ReusePinProvider(BaseProvider):
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Callable[[], Iterator[Candidate]]:
         super_find = super().find_matches(identifier, requirements, incompatibilities)
-        bare_name = strip_extras(identifier)[0]
 
         def matches_gen() -> Iterator[Candidate]:
-            if bare_name not in self.tracked_names and identifier in self.preferred_pins:
-                pin = self.preferred_pins[identifier]
+            requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
+            pin = self.get_reuse_candidate(identifier, requested_req)
+            if pin is not None:
                 incompat = list(incompatibilities[identifier])
-                demanded_req = next(requirements[identifier], None)
-                if demanded_req and demanded_req.is_named:
-                    pin.req = demanded_req
                 pin._preferred = True  # type: ignore[attr-defined]
                 if pin not in incompat and all(self.is_satisfied_by(r, pin) for r in requirements[identifier]):
                     yield pin
@@ -290,6 +315,7 @@ class ReusePinProvider(BaseProvider):
         return matches_gen
 
 
+@register_provider("eager")
 class EagerUpdateProvider(ReusePinProvider):
     """A specialized provider to handle an "eager" upgrade strategy.
 
@@ -330,3 +356,21 @@ class EagerUpdateProvider(ReusePinProvider):
         # Resolve tracking packages so we have a chance to unpin them first.
         (python, *others) = super().get_preference(identifier, resolutions, candidates, information, backtrack_causes)
         return (python, identifier not in self.tracked_names, *others)
+
+
+@register_provider("reuse-installed")
+class ReuseInstalledProvider(ReusePinProvider):
+    """A provider that reuses installed packages if possible."""
+
+    def __init__(
+        self, preferred_pins: dict[str, Candidate], tracked_names: Iterable[str], *args: Any, **kwargs: Any
+    ) -> None:
+        super().__init__(preferred_pins, tracked_names, *args, **kwargs)
+        self.installed = self.repository.environment.get_working_set()
+
+    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+        key = strip_extras(identifier)[0]
+        if key not in self.installed or requirement is None:
+            return super().get_reuse_candidate(identifier, requirement)
+        dist = self.installed[key]
+        return Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])
