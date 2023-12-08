@@ -13,4 +13,15 @@
   language: python
   language_version: python3
   pass_filenames: false
-  files: ^pdm.lock$  
+  files: ^pdm.lock$
+- id: pdm-sync
+  name: pdm-sync
+  description: sync current working set with pdm.lock
+  entry: pdm sync
+  language: python
+  language_version: python3
+  pass_filenames: false
+  stages:
+    - post-checkout
+    - post-merge
+  always_run: true
