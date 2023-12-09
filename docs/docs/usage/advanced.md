@@ -219,9 +219,9 @@ Look at the [🚀 Example repository](https://github.com/pdm-project/pdm-example
 
 [`pre-commit`](https://pre-commit.com/) is a powerful framework for managing git hooks in a centralized fashion. PDM already uses `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) for its internal QA checks. PDM exposes also several hooks that can be run locally or in CI pipelines.
 
-### Export `requirements.txt` or `setup.py`
+### Export `requirements.txt`
 
-This hook wraps the command `pdm export` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that you are going to check in the codebase a `requirements.txt` or a `setup.py` file, which reflects the actual content of [`pdm lock`](../reference/cli.md#lock).
+This hook wraps the command `pdm export` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that you are going to check in the codebase a `requirements.txt`, which reflects the actual content of [`pdm lock`](../reference/cli.md#lock).
 
 ```yaml
 # export python requirements
