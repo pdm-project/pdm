@@ -148,38 +148,219 @@ Testing:
 
 ## Use PDM in a multi-stage Dockerfile
 
-It is possible to use PDM in a multi-stage Dockerfile to first install the project and dependencies into `__pypackages__`
-and then copy this folder into the final stage, adding it to `PYTHONPATH`.
+The following Containerfile/Dockerfile template shows:
+
+- Using multiple stages to separate building from production and development container images.
+- Caching of PDM data. The caching approach is generic and doesn’t show how CI platform builders that distribute builds
+across ephemeral hosts could be adopted efficiently.
+- Copying the minimal amount of data.
+
+`.containerignore`/`.dockerignore`:
+
+```dockerignore
+*
+.*
+!/pdm.lock
+!/pdm.toml
+!/pyproject.toml
+!/README.md
+!/src/
+```
+
+`Containerfile`/`Dockerfile`:
 
 ```dockerfile
-# build stage
-FROM python:3.8 AS builder
-
-# install PDM
-RUN pip install -U pip setuptools wheel
-RUN pip install pdm
-
-# copy files
-COPY pyproject.toml pdm.lock README.md /project/
-COPY src/ /project/src
-
-# install dependencies and project into the local packages directory
-WORKDIR /project
-RUN mkdir __pypackages__ && pdm sync --prod --no-editable
-
-
-# run stage
-FROM python:3.8
-
-# retrieve packages from build stage
-ENV PYTHONPATH=/project/pkgs
-COPY --from=builder /project/__pypackages__/3.8/lib /project/pkgs
-
-# retrieve executables
-COPY --from=builder /project/__pypackages__/3.8/bin/* /bin/
-
-# set command/entrypoint, adapt to fit your needs
-CMD ["python", "-m", "project"]
+# syntax=docker/dockerfile:1
+ARG IMAGE_PREFIX=
+FROM ${IMAGE_PREFIX}alpine:3.18 AS builder
+ARG NAME_PRODUCT
+ARG REVISION
+# ,z for Podman, empty otherwise
+ARG SELINUXRELABEL
+ENV \
+  PDM_BUILD_SCM_VERSION=${REVISION:?} \
+  # Install packages as binary wheels only, unless one is not available (list below), for efficiency.
+  PDM_NO_BINARY='utm,eccodes,findlibs,backports-datetime-fromisoformat,parse' \
+  PDM_ONLY_BINARY=':all:' \
+  PYTHONDEVMODE=1 \
+  PYTHONDONTWRITEBYTECODE=1
+# Add OS packages, create user 10001, etc.
+# RUN ...
+# Copy PDM and source code related files into image, with specific ownership.
+RUN \
+  --mount=type=bind,source=./_template/python/pdm.toml,target=/tmp/sourcecode/pdm.toml${SELINUXRELABEL} \
+  --mount=type=bind,source=./pyproject.toml,target=/tmp/sourcecode/pyproject.toml${SELINUXRELABEL} \
+  --mount=type=bind,source=./README.md,target=/tmp/sourcecode/README.md${SELINUXRELABEL} \
+  --mount=type=bind,source=./src/,target=/tmp/sourcecode/src/${SELINUXRELABEL} \
+  set -eux ; \
+  # shellcheck disable=SC3040 \
+  set -o pipefail ; \
+  cd \
+    -- \
+    /tmp/sourcecode/ ; \
+  tar \
+    --create \
+    --dereference \
+    --directory=/tmp/sourcecode/ \
+    --file=- \
+    --group "${NAME_PRODUCT:?}" \
+    --owner "${NAME_PRODUCT:?}" \
+    --sparse \
+    -- \
+    'pdm.toml' \
+    'pyproject.toml' \
+    'README.md' \
+    'src' \
+  | tar \
+    --directory=/opt/ \
+    --extract \
+    --one-top-level="${NAME_PRODUCT:?}" ; \
+  chown \
+    -c \
+    "${NAME_PRODUCT:?}":"${NAME_PRODUCT:?}" \
+    /opt/${NAME_PRODUCT:?}/ \
+    /home/${NAME_PRODUCT:?}/ ;
+WORKDIR /opt/${NAME_PRODUCT:?}/
+USER ${NAME_PRODUCT:?}
+ENV \
+  PATH="${PATH:?}:/home/${NAME_PRODUCT:?}/.local/bin"
+# Install PDM (follow official instructions).
+# RUN ...
+RUN \
+  # Mount PDM cache
+  --mount=type=cache,target=/home/${NAME_PRODUCT:?}/.cache/,uid=10001,gid=10001${SELINUXRELABEL} \
+  set -eux ; \
+  # shellcheck disable=SC3040 \
+  set -o pipefail ; \
+  # Avoid installing packages already installed as OS packages, for efficiency.
+  pdm \
+    venv \
+      create \
+        --with-pip 3.11 \
+        --system-site-packages ; \
+  # Log debugging information, for traceability and troubleshooting.
+  pdm \
+    info ; \
+  pdm \
+    info \
+      --env ; \
+  pdm \
+    cache \
+      info ; \
+  pdm \
+    list \
+      --graph ; \
+  # Install product and its dependencies. Note that this could be split up using `--no-self` to avoid reinstalling
+  # dependencies when only the product has changed. But that would only save significant time without a PDM cache.
+  pdm \
+    install \
+      --fail-fast \
+      --no-editable \
+      --no-isolation \
+      --no-lock \
+      --production \
+      --verbose
+FROM builder AS builder-development
+ARG SELINUXRELABEL
+ARG NAME_PRODUCT
+USER 0
+# Install development related packages.
+RUN ...
+USER ${NAME_PRODUCT:?}
+ENV \
+  PDM_NO_BINARY='utm,eccodes,findlibs,backports-datetime-fromisoformat,parse' \
+  PDM_ONLY_BINARY=':all:' \
+  VIRTUAL_ENV=/opt/${NAME_PRODUCT:?}/.venv
+ENV \
+  PATH="${VIRTUAL_ENV:?}/bin/:${PATH:?}"
+WORKDIR /opt/${NAME_PRODUCT:?}/
+RUN \
+  --mount=type=cache,target=/home/${NAME_PRODUCT:?}/.cache,uid=10001,gid=10001${SELINUXRELABEL} \
+  set -eux ; \
+  # shellcheck disable=SC3040 \
+  set -o pipefail ; \
+  pdm \
+    info ; \
+  pdm \
+    info \
+      --env ; \
+  pdm \
+    cache \
+      info ; \
+  pdm \
+    list \
+      --graph ; \
+  # Install development-related PDM dependencies.
+  pdm \
+    install \
+      --dev \
+      --fail-fast \
+      --no-editable \
+      --no-isolation \
+      --no-lock \
+      --no-self \
+      --verbose
+ARG IMAGE_PREFIX=
+FROM ${IMAGE_PREFIX}alpine:3.18 AS production
+ARG SELINUXRELABEL
+ARG NAME_PRODUCT
+ENV \
+  PATH="${PATH:?}:/opt/${NAME_PRODUCT:?}/bin" \
+  PYTHONDONTWRITEBYTECODE=1
+# Set to correct entrypoint for your application.
+ENTRYPOINT ["/sbin/tini", "--", "sleep", "inf"]
+# Install production OS packages
+# RUN ...
+COPY \
+  --chown=${NAME_PRODUCT:?}:${NAME_PRODUCT:?} \
+  --from=builder \
+  /opt/${NAME_PRODUCT:?} \
+  /opt/${NAME_PRODUCT:?}
+COPY \
+  --from=builder \
+  /usr/local \
+  /usr/local
+# The Python version is hard coded here. A number of places have explicit Python version references in a PDM project.
+COPY \
+  --from=builder \
+  /usr/lib/python3.11/site-packages \
+  /usr/lib/python3.11/site-packages
+WORKDIR /opt/${NAME_PRODUCT:?}/
+USER ${NAME_PRODUCT:?}
+ENV \
+  PDM_NO_BINARY='utm,eccodes,findlibs,backports-datetime-fromisoformat' \
+  PDM_ONLY_BINARY=':all:' \
+  VIRTUAL_ENV=/opt/${NAME_PRODUCT:?}/.venv
+ENV \
+  PATH="${VIRTUAL_ENV:?}/bin/:${PATH:?}"
+FROM production AS development
+ARG SELINUXRELABEL
+ARG NAME_PRODUCT
+COPY \
+  --chown=${NAME_PRODUCT:?}:${NAME_PRODUCT:?} \
+  --from=builder-development \
+  /opt/${NAME_PRODUCT:?} \
+  /opt/${NAME_PRODUCT:?}
+COPY \
+  --from=builder-development \
+  /usr/local \
+  /usr/local
+COPY \
+  --from=builder-development \
+  /usr/lib/python3.11/site-packages \
+  /usr/lib/python3.11/site-packages
+COPY \
+  --chown=${NAME_PRODUCT:?}:${NAME_PRODUCT:?} \
+  --from=builder-development \
+  /home/${NAME_PRODUCT:?}/.local \
+  /home/${NAME_PRODUCT:?}/.local
+USER 0
+# Install development-related OS packages.
+# RUN ...
+USER ${NAME_PRODUCT:?}
+WORKDIR /opt/${NAME_PRODUCT:?}/
+ENV \
+  PYTHONDEVMODE=1
 ```
 
 ## Use PDM to manage a monorepo
