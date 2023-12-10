@@ -155,6 +155,17 @@ The following Containerfile/Dockerfile template shows:
 across ephemeral hosts could be adopted efficiently.
 - Copying the minimal amount of data.
 
+`pdm.toml`:
+
+```toml
+[install]
+cache = true
+
+[venv]
+in_project = true
+with_pip = true
+```
+
 `.containerignore`/`.dockerignore`:
 
 ```dockerignore
