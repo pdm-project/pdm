@@ -289,6 +289,13 @@ update_strategy_group.add_argument(
     const="all",
     help="Update all dependencies and sub-dependencies",
 )
+update_strategy_group.add_argument(
+    "--update-reuse-installed",
+    action="store_const",
+    dest="update_strategy",
+    const="reuse-installed",
+    help="Reuse installed packages if possible",
+)
 
 project_option = Option(
     "-p",

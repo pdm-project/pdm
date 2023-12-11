@@ -47,6 +47,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l unconstrained -d 'Ign
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-all -d 'Update all dependencies and sub-dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l update-reuse-installed -d 'Reuse installed packages if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
@@ -166,7 +167,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the p
 
 # init
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a init -d 'Initialize a pyproject.toml for PDM'
-complete -c pdm -A -n '__fish_seen_subcommand_from init' -l backend -d 'Specify the build backend'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l backend -d 'Specify the build backend, which implies --lib'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l cookiecutter -d 'Use Cookiecutter to generate project [32m[installed][0m'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l copier -d 'Use Copier to generate project [32m[installed][0m'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the global project, supply the project root with `-p` option'
@@ -243,6 +244,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some t
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d '[DEPRECATED] Store static file URLs in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy (cross_platform, static_urls, direct_minimal_versions, inherit_metadata). Add \'no_\' prefix to disable. Can be supplied multiple times or split by comma.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse-installed -d 'Reuse installed packages if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin
@@ -445,6 +447,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l unconstrained -d '
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-all -d 'Update all dependencies and sub-dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-eager -d 'Try to update the packages and their dependencies recursively'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse -d 'Reuse pinned versions already present in lock file if possible'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l update-reuse-installed -d 'Reuse installed packages if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 

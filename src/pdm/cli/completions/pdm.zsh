@@ -70,6 +70,7 @@ _pdm() {
         '--save-exact[Save exact version specifiers]'
         '--save-minimum[Save minimum version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
+        '--update-reuse-installed[Reuse installed packages if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--update-all[Update all dependencies and sub-dependencies]'
         '--no-editable[Install non-editable versions for all packages]'
@@ -190,7 +191,7 @@ _pdm() {
         {-n,--non-interactive}"[Don't ask questions but use default values]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-r,--overwrite}'[Overwrite existing files]'
-        '--backend[Specify the build backend]:backend:(pdm-backend setuptools hatchling flit)'
+        '--backend[Specify the build backend, which implies --lib]:backend:(pdm-backend setuptools hatchling flit)'
         '--lib[Create a library project]'
         '--python[Specify the Python version/path to use]:python:'
         '--copier[Use Copier to generate project]'
@@ -248,6 +249,7 @@ _pdm() {
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
+        '--update-reuse-installed[Reuse installed packages if possible]'
         "--static-urls[(DEPRECATED) Store static file URLs in the lockfile]"
         "--no-static-urls[(DEPRECATED) Do not store static file URLs in the lockfile]"
         "--no-default[Don\'t include dependencies from the default group]"
@@ -404,6 +406,7 @@ _pdm() {
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--update-all[Update all dependencies and sub-dependencies]'
+        '--update-reuse-installed[Reuse installed packages if possible]'
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-sync[Only update lock file but do not sync packages]"

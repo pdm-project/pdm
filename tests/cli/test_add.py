@@ -5,6 +5,7 @@ from unearth import Link
 
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
+from pdm.pytest import Distribution
 from pdm.utils import path_to_url
 from tests import FIXTURES
 
@@ -301,3 +302,22 @@ def test_add_group_to_lockfile_without_package(project, working_set, pdm):
     pdm(["add", "--group", "tz"], obj=project, strict=True)
     assert project.lockfile.groups == ["default", "tz"]
     assert "pytz" in working_set
+
+
+def test_add_update_reuse_installed(project, working_set, repository, pdm):
+    working_set["foo"] = Distribution("foo", "1.0.0")
+    repository.add_candidate("foo", "1.0.0")
+    repository.add_candidate("foo", "1.1.0")
+    pdm(["add", "--update-reuse-installed", "foo"], obj=project, strict=True)
+    locked_candidates = project.locked_repository.all_candidates
+    assert locked_candidates["foo"].version == "1.0.0"
+
+
+def test_add_update_reuse_installed_config(project, working_set, repository, pdm):
+    working_set["foo"] = Distribution("foo", "1.0.0")
+    repository.add_candidate("foo", "1.0.0")
+    repository.add_candidate("foo", "1.1.0")
+    project.project_config["strategy.update"] = "reuse-installed"
+    pdm(["add", "foo"], obj=project, strict=True)
+    locked_candidates = project.locked_repository.all_candidates
+    assert locked_candidates["foo"].version == "1.0.0"
