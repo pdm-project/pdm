@@ -596,7 +596,7 @@ def save_version_specifiers(
 
     for reqs in requirements.values():
         for name, r in reqs.items():
-            if r.is_named and not r.specifier:
+            if r.is_named and not r.specifier and name in resolved:
                 if save_strategy == "exact":
                     r.specifier = get_specifier(f"=={candidate_version(resolved[name])}")
                 elif save_strategy == "compatible":
