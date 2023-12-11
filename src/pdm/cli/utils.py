@@ -9,6 +9,7 @@ import sys
 from collections import ChainMap, OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
+from gettext import gettext as _
 from json import dumps
 from pathlib import Path
 from typing import (
@@ -151,6 +152,13 @@ class ArgumentParser(argparse.ArgumentParser):
             "-h", "--help", action="help", default=argparse.SUPPRESS, help="Show this help message and exit."
         )
         self._optionals.title = "options"
+
+    def parse_known_args(self, args: Any = None, namespace: Any = None) -> Any:
+        args, argv = super().parse_known_args(args, namespace)
+        if argv:
+            msg = _("unrecognized arguments: %s")
+            self.error(msg % " ".join(argv))
+        return args, argv
 
 
 class ErrorArgumentParser(ArgumentParser):
