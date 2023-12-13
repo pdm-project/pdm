@@ -32,9 +32,9 @@ pdm config theme.success '#51c7bd'
 The following configuration items can be retrieved and modified by [`pdm config`][pdm-config] command.
 
 | Config Item                       | Description                                                                          | Default Value                                                         | Available in Project | Env var                   |
-| --------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | -------------------- | ------------------------- |
+| --------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | -------------------- |---------------------------|
 | `build_isolation`                 | Isolate the build environment from the project environment                           | Yes                                                                   | Yes                  | `PDM_BUILD_ISOLATION`     |
-| `cache_dir`                       | The root directory of cached files                                                   | The default cache location on OS                                      | No                   |                           |
+| `cache_dir`                       | The root directory of cached files                                                   | The default cache location on OS                                      | No                   | `PDM_CACHE_DIR`           |
 | `check_update`                    | Check if there is any newer version available                                        | True                                                                  | No                   | `PDM_CHECK_UPDATE`        |
 | `global_project.fallback`         | Use the global project implicitly if no local project is found                       | `False`                                                               | No                   |                           |
 | `global_project.fallback_verbose` | If True show message when global project is used implicitly                          | `True`                                                                | No                   |                           |

@@ -99,6 +99,7 @@ class Config(MutableMapping[str, str]):
             "The root directory of cached files",
             platformdirs.user_cache_dir("pdm"),
             True,
+            env_var="PDM_CACHE_DIR",
         ),
         "check_update": ConfigItem(
             "Check if there is any newer version available",
