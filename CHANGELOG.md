@@ -1,3 +1,33 @@
+Release v2.11.0 (2023-12-14)
+----------------------------
+
+### Features & Improvements
+
+- Allow exporting current project as editable dependency with `pdm export`. [#1910](https://github.com/pdm-project/pdm/issues/1910)
+- Improve the lockfile compatibility checking by using 3-digit version numbers. This can distinguish forward-compatibility and backward-compatibility. [#2164](https://github.com/pdm-project/pdm/issues/2164)
+- Add `--skip-existing` to `pdm publish` to ignore the uploading error if the package already exists. [#2362](https://github.com/pdm-project/pdm/issues/2362)
+- Use `==major.minor.*` as default requires python for application projects. [#2382](https://github.com/pdm-project/pdm/issues/2382)
+- We now use the `package-type` field in the `tool.pdm` table to differentiate between library and application projects. [#2394](https://github.com/pdm-project/pdm/issues/2394)
+- Add support for {pdm} placeholder in script definitions to call the same PDM entrypoint [#2408](https://github.com/pdm-project/pdm/issues/2408)
+- When exporting requirements, record the environment markers from all parents for each requirement. This allows the exported requirements to work on different platforms and Python versions. [#2418](https://github.com/pdm-project/pdm/issues/2418)
+- `pdm lock` now supports `--update-reuse` option to keep the pinned versions in the lockfile if possible. [#2419](https://github.com/pdm-project/pdm/issues/2419)
+- Introduce a new lock strategy `inherit_metadata` to inherit and merge markers from parent requirements. This is enabled by default when creating a new lockfile. [#2421](https://github.com/pdm-project/pdm/issues/2421)
+- New cache methods: `symlink_individual` for creating a symlink for each individual package file and `hardlink` for creating hardlinks. [#2425](https://github.com/pdm-project/pdm/issues/2425)
+- Add "pdm sync" pre-commit hook [#2474](https://github.com/pdm-project/pdm/issues/2474)
+- New update strategy: `reuse-installed`. When this strategy is enabled, PDM will try to reuse the versions already installed in the environment, even if the package names are given in the command line following `add` or `update`. This strategy is supported by `add`, `update` and `lock` commands. [#2479](https://github.com/pdm-project/pdm/issues/2479)
+- Show subcommand's help info when passing unrecognized arguments. [#2480](https://github.com/pdm-project/pdm/issues/2480)
+- add `PDM_CACHE_DIR` environment variable to configure cache directory location. [#2485](https://github.com/pdm-project/pdm/issues/2485)
+
+### Bug Fixes
+
+- Use the same order of Python interpreters as interactive mode in `pdm init -n`. [#2436](https://github.com/pdm-project/pdm/issues/2436)
+- `pdm init` now implies `--lib` if `--backend` is passed. [#2437](https://github.com/pdm-project/pdm/issues/2437)
+- Fix a bug that link collection ignores package-index-binding. [#2442](https://github.com/pdm-project/pdm/issues/2442)
+- Fix the wrong installation candidates for different architectures on Windows. [#2464](https://github.com/pdm-project/pdm/issues/2464)
+- Fix installing PEP 561 stub-only packages with `install.cache_method = "symlink"`. [#2466](https://github.com/pdm-project/pdm/issues/2466)
+- Fix a `KeyError` raised by `pdm update --unconstrained` when the project itself is listed as a dependency. [#2483](https://github.com/pdm-project/pdm/issues/2483)
+
+
 Release v2.10.4 (2023-11-24)
 ----------------------------
 
