@@ -51,28 +51,29 @@ def resolve(
     local_name = (
         normalize_name(repository.environment.project.name) if repository.environment.project.is_library else None
     )
-    if inherit_metadata:
-        all_markers = merge_markers(result)
-        populate_groups(result)
-    else:
-        all_markers = {}
     for key, candidate in list(mapping.items()):
         if key is None:
             continue
-
-        if key in all_markers:
-            marker = all_markers[key]
-            if marker.is_empty():
-                del mapping[key]
-                continue
-            candidate.req = dataclasses.replace(candidate.req, marker=None if marker.is_any() else marker)
-
         # For source distribution whose name can only be determined after it is built,
         # the key in the resolution map should be updated.
         if key.startswith(":empty:"):
             new_key = provider.identify(candidate)
             mapping[new_key] = mapping.pop(key)
             key = new_key
+
+    if inherit_metadata:
+        all_markers = merge_markers(result)
+        populate_groups(result)
+    else:
+        all_markers = {}
+
+    for key, candidate in list(mapping.items()):
+        if key in all_markers:
+            marker = all_markers[key]
+            if marker.is_empty():
+                del mapping[key]
+                continue
+            candidate.req = dataclasses.replace(candidate.req, marker=None if marker.is_any() else marker)
 
         if not keep_self and strip_extras(key)[0] == local_name:
             del mapping[key]
