@@ -421,7 +421,7 @@ You can also pass `--resolve` to `pdm list`, which will show the packages resolv
 By default, name, version and location will be shown in the list output, you can view more fields or specify the order of fields by `--fields` option:
 
 ```bash
-pdm list --fields name,license,version
+pdm list --fields name,licenses,version
 ```
 
 For all supported fields, please refer to the [CLI reference](../reference/cli.md#list_1).
