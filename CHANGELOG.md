@@ -1,3 +1,12 @@
+Release v2.11.1 (2023-12-14)
+----------------------------
+
+### Bug Fixes
+
+- Update candidate names before resolving markers, to fix a KeyError when the requirement is not named. [#2488](https://github.com/pdm-project/pdm/issues/2488)
+- Fix a KeyError when resolving packages that have parents that are no longer needed. [#2489](https://github.com/pdm-project/pdm/issues/2489)
+
+
 Release v2.11.0 (2023-12-14)
 ----------------------------
 
