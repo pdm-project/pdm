@@ -52,11 +52,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-          architecture: ${{ matrix.arch }}
       - name: Set Python 3.8
         uses: actions/setup-python@v4
         if: matrix.python-version != '3.8'
