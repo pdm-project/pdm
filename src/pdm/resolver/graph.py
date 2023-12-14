@@ -22,6 +22,12 @@ class OrderedSet(AbstractSet[T]):
     def __hash__(self) -> int:
         return self._hash()
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self})"
+
+    def __str__(self) -> str:
+        return f"{{{', '.join(map(repr, self._data))}}}"
+
     def __contains__(self, obj: object) -> bool:
         return obj in self._data
 
@@ -97,7 +103,7 @@ def _build_marker(
     marker = None
 
     for r, parent in crit.information:
-        if parent and _identify_parent(parent) in keep_unresolved:
+        if parent and ((k := _identify_parent(parent)) in keep_unresolved or k not in resolved):
             continue
         this_marker = r.marker if r.marker is not None else get_marker("")
         # Use 'and' to connect markers inherited from parent.
