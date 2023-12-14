@@ -3,6 +3,7 @@ Release v2.11.0 (2023-12-14)
 
 ### Features & Improvements
 
+- Officially drop the support for Python 3.7.
 - Allow exporting current project as editable dependency with `pdm export`. [#1910](https://github.com/pdm-project/pdm/issues/1910)
 - Improve the lockfile compatibility checking by using 3-digit version numbers. This can distinguish forward-compatibility and backward-compatibility. [#2164](https://github.com/pdm-project/pdm/issues/2164)
 - Add `--skip-existing` to `pdm publish` to ignore the uploading error if the package already exists. [#2362](https://github.com/pdm-project/pdm/issues/2362)
