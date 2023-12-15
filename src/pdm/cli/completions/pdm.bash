@@ -49,7 +49,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (export)
-            opts="--dev --editable-self --expandvars --format --global --group --help --lockfile --no-default --output --production --project --pyproject --quiet --self --verbose --without-hashes"
+            opts="--dev --editable-self --expandvars --format --global --group --help --lockfile --no-default --no-markers --output --production --project --pyproject --quiet --self --verbose --without-hashes"
             ;;
 
             (fix)
