@@ -183,7 +183,7 @@ def test_export_to_requirements_txt(pdm, fixture_project):
     assert result.exit_code == 0
     assert "-e .  # this package\n" in result.output.strip()
 
-    result = pdm(["export", "--without-hashes"], obj=project)
+    result = pdm(["export", "--no-hashes"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == requirements_no_hashes.read_text().strip()
 
@@ -222,3 +222,13 @@ def test_show_update_hint(pdm, project, monkeypatch):
         project.core.version = prev_version
     assert "to upgrade." in r.stderr
     assert "Run `pdm config check_update false` to disable the check." in r.stderr
+
+
+@pytest.mark.usefixtures("repository")
+def test_export_with_platform_markers(pdm, project):
+    pdm(["add", "--no-sync", 'urllib3; sys_platform == "fake"'], obj=project, strict=True)
+    result = pdm(["export"], obj=project, strict=True)
+    assert 'urllib3==1.22; sys_platform == "fake"' in result.output.splitlines()
+
+    result = pdm(["export", "--no-markers"], obj=project, strict=True)
+    assert not any("urllib3" in line for line in result.output.splitlines())

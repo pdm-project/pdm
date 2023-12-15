@@ -43,7 +43,7 @@ _pdm() {
 
   _arguments -s -C -A '-*' \
     $arguments \
-    {-c,--config}'[Specify another config file path(env var: PDM_CONFIG_FILE)]' \
+    {-c,--config}'[Specify another config file path\[env var: PDM_CONFIG_FILE\]]' \
     {-V,--version}'[Show the version and exit]' \
     {-I,--ignore-python}'[Ignore the Python path saved in .pdm-python]' \
     '--pep582:Print the command line to be eval by the shell:shell:(zsh bash fish tcsh csh)' \
@@ -75,8 +75,8 @@ _pdm() {
         '--update-all[Update all dependencies and sub-dependencies]'
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
-        "--frozen-lockfile[Don't try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]]"
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
@@ -148,7 +148,8 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements setuppy)"
-        "--without-hashes[Don't include artifact hashes]"
+        "--no-hashes[Don't include artifact hashes]"
+        "--no-markers[Don't include platform markers]"
         "--expandvars[Expand environment variables in requirements]"
         "--self[Include the project itself]"
         "--editable-self[Include the project itself as an editable dependency]"
@@ -182,7 +183,7 @@ _pdm() {
         '--env[Show PEP 508 environment markers]'
         '--packages[Show the packages root]'
         '--json[Dump the information in JSON]'
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
       )
       ;;
     init)
@@ -207,7 +208,7 @@ _pdm() {
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        "--frozen-lockfile[Don't try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]]"
+        "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
@@ -216,7 +217,7 @@ _pdm() {
         "--dry-run[Show the difference only without modifying the lock file content]"
         "--check[Check if the lock file is up to date and fail otherwise]"
         "--plugins[Install the plugins specified in pyproject.toml]"
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
       )
       ;;
     list)
@@ -233,7 +234,7 @@ _pdm() {
         "--include[Dependency groups to include in the output. By default all are included]:include:"
         "--exclude[Dependency groups to exclude from the output]:exclude:"
         "--resolve[Resolve all requirements to output licenses (instead of just showing those currently installed)]"
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         '*:patterns:'
       )
       ;;
@@ -331,11 +332,11 @@ _pdm() {
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
-        "--frozen-lockfile[Don't try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]]"
+        "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         "*:packages:_pdm_packages"
       )
       ;;
@@ -346,7 +347,7 @@ _pdm() {
         '--json[Output all scripts infos in JSON]' \
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]' \
         {-s,--site-packages}'[Load site-packages from the selected interpreter]' \
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:' \
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:' \
         '(-)1:command:->command' \
         '*:arguments: _normal ' && return 0
       if [[ $state == command ]]; then
@@ -370,7 +371,7 @@ _pdm() {
         '--license[Show license]'
         '--platform[Show platform]'
         '--keywords[Show keywords]'
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         '1:package:'
       )
       ;;
@@ -391,7 +392,7 @@ _pdm() {
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-isolation[do not isolate the build in a clean environment]"
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
       )
       ;;
     update)
@@ -410,7 +411,7 @@ _pdm() {
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-sync[Only update lock file but do not sync packages]"
-        "--frozen-lockfile[Don't try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]]"
+        "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
@@ -422,7 +423,7 @@ _pdm() {
         "--outdated[Show the difference only without modifying the lockfile content]"
         {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
-        '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
+        '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         "*:packages:_pdm_packages"
       )
       ;;
