@@ -34,7 +34,7 @@ def test_remove_package(project, working_set, dev_option, pdm):
 
 def test_remove_package_no_lock(project, working_set, dev_option, pdm):
     pdm(["add", *dev_option, "requests", "pytz"], obj=project, strict=True)
-    pdm(["remove", *dev_option, "--no-lock", "pytz"], obj=project, strict=True)
+    pdm(["remove", *dev_option, "--frozen-lockfile", "pytz"], obj=project, strict=True)
     assert "pytz" not in working_set
     project.lockfile.reload()
     locked_candidates = project.locked_repository.all_candidates

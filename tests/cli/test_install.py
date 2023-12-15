@@ -170,7 +170,7 @@ def test_install_with_dry_run(project, pdm, repository):
 
 def test_install_no_lock(project, pdm, working_set):
     project.add_dependencies({"requests": parse_requirement("requests")}, "default")
-    result = pdm(["install", "--no-lock"], obj=project)
+    result = pdm(["install", "--frozen-lockfile"], obj=project)
     assert result.exit_code == 0
     assert not project.lockfile.exists()
     assert "urllib3" in working_set

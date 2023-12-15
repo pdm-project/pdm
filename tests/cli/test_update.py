@@ -64,7 +64,7 @@ def test_update_all_packages(project, repository, pdm, strategy):
 def test_update_no_lock(project, working_set, repository, pdm):
     pdm(["add", "pytz"], obj=project, strict=True)
     repository.add_candidate("pytz", "2019.6")
-    pdm(["update", "--no-lock"], obj=project, strict=True)
+    pdm(["update", "--frozen-lockfile"], obj=project, strict=True)
     assert working_set["pytz"].version == "2019.6"
     project.lockfile.reload()
     assert project.locked_repository.all_candidates["pytz"].version == "2019.3"
