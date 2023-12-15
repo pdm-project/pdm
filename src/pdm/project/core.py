@@ -99,7 +99,10 @@ class Project:
 
         self.root: Path = Path(root_path or "").absolute()
         self.is_global = is_global
-        self.enable_write_lockfile = os.getenv("PDM_NO_LOCK", "0").lower() not in ("1", "true")
+        self.enable_write_lockfile = os.getenv("PDM_FROZEN_LOCKFILE", os.getenv("PDM_NO_LOCK", "0")).lower() not in (
+            "1",
+            "true",
+        )
         self.init_global_project()
 
     def __repr__(self) -> str:

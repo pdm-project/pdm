@@ -12,7 +12,13 @@ if TYPE_CHECKING:
     from pdm.project import Project
 
     class ActionCallback(Protocol):
-        def __call__(self, project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+        def __call__(
+            self,
+            project: Project,
+            namespace: argparse.Namespace,
+            values: str | Sequence[Any] | None,
+            option_string: str | None = None,
+        ) -> None:
             ...
 
 
@@ -50,7 +56,7 @@ class CallbackAction(argparse.Action):
     ) -> None:
         if not hasattr(namespace, "callbacks"):
             namespace.callbacks = []
-        callback = partial(self.callback, values=values)
+        callback = partial(self.callback, values=values, option_string=option_string)
         namespace.callbacks.append(callback)
 
 
@@ -144,13 +150,30 @@ lockfile_option = Option(
 )
 
 
-@Option("--no-lock", nargs=0, help="Don't try to create or update the lockfile. [env var: PDM_NO_LOCK]")
-def no_lock_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+@Option(
+    "--frozen-lockfile",
+    "--no-lock",
+    nargs=0,
+    help="Don't try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]",
+)
+def frozen_lockfile_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
+    if option_string == "--no-lock":
+        project.core.ui.warn("--no-lock is deprecated, use --frozen-lockfile instead.")
     project.enable_write_lockfile = False
 
 
 @Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
-def pep582_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+def pep582_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
     from pdm.cli.actions import print_pep582_command
 
     print_pep582_command(project, cast(str, values))
@@ -181,7 +204,12 @@ install_group.add_argument("--fail-fast", "-x", action="store_true", help="Abort
     help="Disable isolation when building a source distribution that follows PEP 517, "
     "as in: build dependencies specified by PEP 518 must be already installed if this option is used.",
 )
-def no_isolation_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+def no_isolation_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
     os.environ["PDM_BUILD_ISOLATION"] = "no"
 
 
@@ -341,7 +369,12 @@ packages_group.add_argument("packages", nargs="*", help="Specify packages")
     nargs=0,
     help="Ignore the Python path saved in .pdm-python. [env var: PDM_IGNORE_SAVED_PYTHON]",
 )
-def ignore_python_option(project: Project, namespace: argparse.Namespace, values: str | Sequence[Any] | None) -> None:
+def ignore_python_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
     os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
 
 
