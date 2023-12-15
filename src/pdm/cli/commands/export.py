@@ -29,11 +29,15 @@ class Command(BaseCommand):
         )
         groups_group.add_to_parser(parser)
         parser.add_argument(
+            "--no-hashes",
             "--without-hashes",
             dest="hashes",
             action="store_false",
             default=True,
             help="Don't include artifact hashes",
+        )
+        parser.add_argument(
+            "--no-markers", action="store_false", default=True, dest="markers", help="Don't include platform markers"
         )
         parser.add_argument(
             "-o",
@@ -67,7 +71,7 @@ class Command(BaseCommand):
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
 
             candidates = resolve_candidates_from_lockfile(
-                project, requirements.values(), groups=set(selection), cross_platform=True
+                project, requirements.values(), groups=set(selection), cross_platform=options.markers
             )
             # Remove candidates with [extras] because the bare candidates are already
             # included
