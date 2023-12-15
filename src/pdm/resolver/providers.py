@@ -328,12 +328,11 @@ class EagerUpdateProvider(ReusePinProvider):
     specified packages to upgrade, and free their pins when it has a chance.
     """
 
-    def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
-        # If this is a tracking package, tell the resolver out of using the
-        # preferred pin, and into a "normal" candidate selection process.
-        if requirement.key in self.tracked_names and getattr(candidate, "_preferred", False):
-            return False
-        return super().is_satisfied_by(requirement, candidate)
+    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+        if identifier in self.tracked_names:
+            # If this is a tracked package, don't reuse its pinned version, so it can be upgraded.
+            return None
+        return super().get_reuse_candidate(identifier, requirement)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         # If this package is being tracked for upgrade, remove pins of its
