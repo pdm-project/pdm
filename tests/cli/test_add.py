@@ -26,7 +26,7 @@ def test_add_package(project, working_set, dev_option, pdm):
 
 
 def test_add_package_no_lock(project, working_set, dev_option, pdm):
-    pdm(["add", *dev_option, "--no-lock", "-v", "requests"], obj=project, strict=True)
+    pdm(["add", *dev_option, "--frozen-lockfile", "-v", "requests"], obj=project, strict=True)
     group = (
         project.pyproject.settings["dev-dependencies"]["dev"]
         if dev_option

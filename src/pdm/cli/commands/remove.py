@@ -6,7 +6,14 @@ from typing import TYPE_CHECKING, cast
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import dry_run_option, install_group, lockfile_option, no_lock_option, skip_option, venv_option
+from pdm.cli.options import (
+    dry_run_option,
+    frozen_lockfile_option,
+    install_group,
+    lockfile_option,
+    skip_option,
+    venv_option,
+)
 from pdm.exceptions import PdmUsageError, ProjectError
 
 if TYPE_CHECKING:
@@ -23,7 +30,7 @@ class Command(BaseCommand):
         install_group,
         dry_run_option,
         lockfile_option,
-        no_lock_option,
+        frozen_lockfile_option,
         skip_option,
         venv_option,
     )

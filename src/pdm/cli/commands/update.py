@@ -8,10 +8,10 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
+    frozen_lockfile_option,
     groups_group,
     install_group,
     lockfile_option,
-    no_lock_option,
     prerelease_option,
     save_strategy_group,
     skip_option,
@@ -36,7 +36,7 @@ class Command(BaseCommand):
         groups_group,
         install_group,
         lockfile_option,
-        no_lock_option,
+        frozen_lockfile_option,
         save_strategy_group,
         update_strategy_group,
         prerelease_option,

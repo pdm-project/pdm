@@ -211,7 +211,7 @@ function TabExpansion($line, $lastWord) {
                             "-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global",
                             "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation",
-                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock", "--update-reuse-installed"
+                            "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--frozen-lockfile", "--update-reuse-installed"
                         )),
                         $sectionOption,
                         $projectOption,
@@ -298,7 +298,7 @@ function TabExpansion($line, $lastWord) {
             "install" {
                 $completer.AddOpts(@(
                         [Option]::new((
-                            "-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--no-lock", "--prod",
+                            "-d", "--dev", "-g", "--global", "--dry-run", "--no-default", "--frozen-lockfile", "--prod",
                             "--production", "--no-editable", "--no-self", "--no-isolation", "--check", "-L",
                             "--lockfile", "--fail-fast", "-x", "--plugins"
                         )),
@@ -378,7 +378,7 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@(
                             "--global", "-g", "--dev", "-d", "--dry-run", "--no-sync", "--no-editable", "--no-self",
-                            "--no-isolation", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock"
+                            "--no-isolation", "-L", "--lockfile", "--fail-fast", "-x", "--frozen-lockfile"
                         )),
                         $projectOption,
                         $skipOption,
@@ -429,7 +429,7 @@ function TabExpansion($line, $lastWord) {
                             "-d", "--dev", "--save-compatible", "--prod", "--production", "--save-wildcard", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run",
                             "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation",
-                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--no-lock",
+                            "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--frozen-lockfile",
                             "--update-reuse-installed"
                         )),
                         $sectionOption,
