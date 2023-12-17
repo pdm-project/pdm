@@ -127,7 +127,23 @@ For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation
       }
       ```
 
-      Copy and paste this function to your `~/.bashrc` file and restart your shell. Now you can run `pdm shell` to activate the virtualenv.
+      Copy and paste this function to your `~/.bashrc` file and restart your shell. 
+      
+      For `fish` shell you can put the following into your `~/fish/config.fish` or in `~/.config/fish/config.fish`
+
+      ```fish
+        function pdm
+            set cmd $argv[1]
+
+            if test "$cmd" = "shell"
+                eval (pdm venv activate)
+            else
+                command pdm $argv
+            end
+        end
+      ```
+      
+      Now you can run `pdm shell` to activate the virtualenv.
       **The virtualenv can be deactivated with `deactivate` command as usual.**
 
 ## Prompt customization
