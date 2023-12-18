@@ -278,9 +278,9 @@ def test_add_editable_package_with_extras(project, working_set, pdm):
 
 
 def test_add_package_with_local_version(project, repository, working_set, pdm):
-    repository.add_candidate("foo", "1.0-alpha.0+local")
-    pdm(["add", "foo"], obj=project, strict=True)
-    assert working_set["foo"].version == "1.0-alpha.0+local"
+    repository.add_candidate("foo", "1.0a0+local")
+    pdm(["add", "-v", "foo"], obj=project, strict=True)
+    assert working_set["foo"].version == "1.0a0+local"
     dependencies, _ = project.use_pyproject_dependencies("default")
     assert dependencies[0] == "foo>=1.0a0"
 

@@ -157,13 +157,17 @@ class TestRepository(BaseRepository):
         super().__init__(sources, environment)
         self._pypi_data = self.load_fixtures(pypi_json)
 
-    def get_raw_dependencies(self, candidate: Candidate) -> list[str]:
+    def get_raw_dependencies(self, candidate: Candidate) -> tuple[str, list[str]]:
         try:
-            pypi_data = self._pypi_data[cast(str, candidate.req.key)][cast(str, candidate.version)]
+            pypi_data = self._pypi_data[cast(str, candidate.req.key)]
+            for version, data in sorted(pypi_data.items(), key=lambda item: len(item[0])):
+                base, *_ = version.partition("+")
+                if candidate.version in (version, base):
+                    return version, data.get("dependencies", [])
         except KeyError:
-            return candidate.prepare(self.environment).metadata.requires or []
-        else:
-            return pypi_data.get("dependencies", [])
+            pass
+        meta = candidate.prepare(self.environment).metadata
+        return meta.version, meta.requires or []
 
     def add_candidate(self, name: str, version: str, requires_python: str = "") -> None:
         pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(version, {})
@@ -460,8 +464,9 @@ def working_set(mocker: MockerFixture, repository: TestRepository) -> MockWorkin
     class MockInstallManager(InstallManager):
         def install(self, candidate: Candidate) -> Distribution:  # type: ignore[override]
             key = normalize_name(candidate.name or "")
-            dist = Distribution(key, cast(str, candidate.version), candidate.req.editable)
-            dist.dependencies = repository.get_raw_dependencies(candidate)
+            version, dependencies = repository.get_raw_dependencies(candidate)
+            dist = Distribution(key, version, candidate.req.editable)
+            dist.dependencies = dependencies
             rv.add_distribution(dist)
             return dist
 

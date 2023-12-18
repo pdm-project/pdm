@@ -30,6 +30,7 @@ from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
     cd,
+    comparable_version,
     convert_hashes,
     create_tracked_tempdir,
     filtered_sources,
@@ -258,9 +259,12 @@ class Candidate:
     @no_type_check
     def as_lockfile_entry(self, project_root: Path) -> dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""
+        version = str(self.version)
+        if not self.req.is_pinned:
+            version = str(comparable_version(version))
         result = {
             "name": normalize_name(self.name),
-            "version": str(self.version),
+            "version": version,
             "extras": sorted(self.req.extras or ()),
             "requires_python": str(self.requires_python),
             "editable": self.req.editable,

@@ -562,8 +562,9 @@ def fake_working_set(working_set):
 def fake_metadata(mocker, repository):
     def prepare_metadata(self):
         can = self.candidate
-        dist = Distribution(can.name, can.version, can.req.editable)
-        dist.dependencies = repository.get_raw_dependencies(can)
+        version, dependencies = repository.get_raw_dependencies(can)
+        dist = Distribution(can.name, version, can.req.editable)
+        dist.dependencies = dependencies
         return dist
 
     return mocker.patch(
