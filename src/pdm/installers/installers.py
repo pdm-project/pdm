@@ -98,7 +98,8 @@ def _create_links_recursively(
             # A package, create link for the parent dir and don't proceed
             # for child directories
             if os.path.exists(destination_root):
-                warnings.warn(f"Overwriting existing package: {destination_root}", PDMWarning, stacklevel=2)
+                if not os.path.islink(destination_root):
+                    warnings.warn(f"Overwriting existing package: {destination_root}", PDMWarning, stacklevel=2)
                 if os.path.isdir(destination_root) and not os.path.islink(destination_root):
                     shutil.rmtree(destination_root)
                 else:
