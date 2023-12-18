@@ -75,7 +75,7 @@ _pdm() {
         '--update-all[Update all dependencies and sub-dependencies]'
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
-        "--no-lock[Don't try to create or update the lockfile. [env var: PDM_NO_LOCK]]"
+        "--no-lock[Don't try to create or update the lockfile. \[env var: PDM_NO_LOCK\]]"
         '--venv[Run the command in the virtual environment with the given key. (env var: PDM_IN_VENV)]:venv:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
@@ -207,7 +207,7 @@ _pdm() {
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        "--no-lock[Don't try to create or update the lockfile. [env var: PDM_NO_LOCK]]"
+        "--no-lock[Don't try to create or update the lockfile. \[env var: PDM_NO_LOCK\]]"
         "--no-default[Don\'t include dependencies from the default group]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
@@ -254,7 +254,7 @@ _pdm() {
         "--no-static-urls[(DEPRECATED) Do not store static file URLs in the lockfile]"
         "--no-default[Don\'t include dependencies from the default group]"
         "--no-cross-platform[(DEPRECATED) Only lock packages for the current platform]"
-        {-S,--strategy}'Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.:strategy:'
+        {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:'
       )
       ;;
     self)
@@ -308,9 +308,9 @@ _pdm() {
       ;;
     publish)
       arguments+=(
-        {-r,--repository}'[The repository name or url to publish the package to }[env var: PDM_PUBLISH_REPO]]:repository:'
-        {-u,--username}'[The username to access the repository [env var: PDM_PUBLISH_USERNAME]]:username:'
-        {-P,--password}'[The password to access the repository [env var: PDM_PUBLISH_PASSWORD]]:password:'
+        {-r,--repository}'[The repository name or url to publish the package to }\[env var: PDM_PUBLISH_REPO\]]:repository:'
+        {-u,--username}'[The username to access the repository \[env var: PDM_PUBLISH_USERNAME\]]:username:'
+        {-P,--password}'[The password to access the repository \[env var: PDM_PUBLISH_PASSWORD\]]:password:'
         {-S,--sign}'[Upload the package with PGP signature]'
         {-i,--identity}'[GPG identity used to sign files.]:gpg identity:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
@@ -331,7 +331,7 @@ _pdm() {
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
-        "--no-lock[Don't try to create or update the lockfile. [env var: PDM_NO_LOCK]]"
+        "--no-lock[Don't try to create or update the lockfile. \[env var: PDM_NO_LOCK\]]"
         {-x,--fail-fast}'[Abort on first installation error]'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
@@ -410,7 +410,7 @@ _pdm() {
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         "--no-sync[Only update lock file but do not sync packages]"
-        "--no-lock[Don't try to create or update the lockfile. [env var: PDM_NO_LOCK]]"
+        "--no-lock[Don't try to create or update the lockfile. \[env var: PDM_NO_LOCK\]]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-u,--unconstrained}'[Ignore the version constraint of packages]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
