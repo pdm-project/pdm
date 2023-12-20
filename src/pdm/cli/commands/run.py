@@ -189,6 +189,10 @@ class TaskRunner:
         project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
         process_env.update(project_env.process_env)
+        if not project.is_library and project.package_dir:
+            pythonpath.insert(0, str(project.root / project.package_dir))
+        if pythonpath:
+            process_env["PYTHONPATH"] = os.pathsep.join(pythonpath)
         if env:
             process_env.update(env)
         if shell:

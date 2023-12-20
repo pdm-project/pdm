@@ -681,3 +681,9 @@ class Project:
     @property
     def is_library(self) -> bool:
         return bool(self.name) and self.pyproject.settings.get("package-type", "library") == "library"
+
+    @property
+    def package_dir(self) -> str | None:
+        """An optional directory containing the project sources"""
+        default = "src" if self.root.joinpath("src").exists() else None
+        return self.pyproject.settings.get("build", {}).get("package-dir", default)

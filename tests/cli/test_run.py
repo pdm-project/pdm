@@ -855,3 +855,33 @@ def test_empty_positional_args_display_help(project, pdm):
     assert "Usage:" in result.output
     assert "Commands:" in result.output
     assert "Options:" in result.output
+
+
+@pytest.mark.parametrize("pkg_type", ["library", "application", pytest.param(None, id="not-set")])
+@pytest.mark.parametrize("pkg_prefix", [pytest.param("", id="root"), "src", "other", pytest.param(None, id="implicit")])
+def test_pythonpath(project, pdm, pkg_type, pkg_prefix, capfd):
+    pkg_root = project.root / ("src" if pkg_prefix is None else pkg_prefix) / "pkg"
+    pkg_root.mkdir(parents=True, exist_ok=True)
+    (pkg_root / "__init__.py").write_text(
+        textwrap.dedent(
+            """
+            def main():
+                print("OK")
+            """
+        )
+    )
+    project.pyproject.settings["scripts"] = {
+        "test": "python -c 'from pkg import main; main()'",
+    }
+    if pkg_type is not None:
+        project.pyproject.settings["package-type"] = pkg_type
+    if pkg_prefix:
+        project.pyproject.settings["build"] = {"package-dir": pkg_prefix}
+    project.pyproject.write()
+    pdm("install", obj=project, strict=True)
+    capfd.readouterr()
+
+    result = pdm("run test", obj=project)
+    out, err = capfd.readouterr()
+    assert result.exit_code == 0, err
+    assert out.strip() == "OK"
