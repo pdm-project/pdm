@@ -6,7 +6,9 @@ import enum
 import logging
 import os
 import warnings
-from tempfile import mktemp
+from logging import StreamHandler
+from pathlib import Path
+from tempfile import mkstemp
 from typing import TYPE_CHECKING
 
 from rich.box import ROUNDED
@@ -14,9 +16,9 @@ from rich.console import Console
 from rich.progress import Progress, ProgressColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
 from rich.table import Table
-from rich.theme import Theme
 
 from pdm.exceptions import PDMWarning
+from pdm.themes import DEFAULT_THEME, Theme
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Sequence
@@ -29,14 +31,6 @@ logger.addHandler(logging.NullHandler())
 unearth_logger = logging.getLogger("unearth")
 unearth_logger.setLevel(logging.DEBUG)
 
-DEFAULT_THEME = {
-    "primary": "cyan",
-    "success": "green",
-    "warning": "yellow",
-    "error": "red",
-    "info": "blue",
-    "req": "bold green",
-}
 _console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
 _err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
 
@@ -156,8 +150,12 @@ class SilentSpinner(DummySpinner):
 class UI:
     """Terminal UI object"""
 
-    def __init__(self, verbosity: Verbosity = Verbosity.NORMAL) -> None:
+    def __init__(self, verbosity: Verbosity = Verbosity.NORMAL, logs_dir: Path | None = None) -> None:
         self.verbosity = verbosity
+        self._logs_dir = logs_dir
+
+    def set_logs_dir(self, logs_dir: Path | None) -> None:
+        self._logs_dir = logs_dir
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = Verbosity(verbosity)
@@ -221,26 +219,28 @@ class UI:
 
     @contextlib.contextmanager
     def logging(self, type_: str = "install") -> Iterator[logging.Logger]:
-        """A context manager that opens a file for logging when verbosity is NORMAL or
-        print to the stdout otherwise.
+        """A context manager that prints to stderr when verbosity is NORMAL, or writes to a log file when verbosity is
+        higher.
         """
-        file_name: str | None = None
+        handler: StreamHandler
+        path_logfile: str | None = None
         if self.verbosity >= Verbosity.DETAIL:
-            handler: logging.Handler = logging.StreamHandler()
+            handler = StreamHandler()
             handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
-            file_name = mktemp(".log", f"pdm-{type_}-")
-            handler = logging.FileHandler(file_name, encoding="utf-8")
+            filedescriptor, path_logfile = mkstemp(suffix=".log", prefix=f"pdm-{type_}-", dir=self._logs_dir, text=True)
+            logfile = os.fdopen(fd=filedescriptor, mode="w", encoding="utf-8")
+            handler = StreamHandler(stream=logfile)
             handler.setLevel(logging.DEBUG)
         handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
         logger.addHandler(handler)
         unearth_logger.addHandler(handler)
 
         def cleanup() -> None:
-            if not file_name:
+            if not path_logfile:
                 return
             with contextlib.suppress(OSError):
-                os.unlink(file_name)
+                os.unlink(path_logfile)
 
         try:
             yield logger
@@ -248,7 +248,7 @@ class UI:
             if self.verbosity < Verbosity.DETAIL:
                 logger.exception("Error occurs")
                 self.echo(
-                    f"See [warning]{file_name}[/] for detailed debug log.",
+                    f"See [warning]{path_logfile}[/] for detailed debug log.",
                     style="error",
                     err=True,
                 )

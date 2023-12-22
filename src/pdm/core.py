@@ -198,7 +198,7 @@ class Core:
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
             self.parser.error(f"Script unknown: {root_script}")
-
+        self.ui.set_logs_dir(logs_dir=project.config["logs_dir"])
         try:
             self.handle(project, options)
         except Exception:

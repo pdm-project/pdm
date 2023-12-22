@@ -8,12 +8,11 @@ from pathlib import Path
 from typing import Any, Callable, ClassVar, Iterator, Mapping, MutableMapping, cast
 
 import platformdirs
-import rich.theme
 import tomlkit
 
-from pdm import termui
 from pdm._types import RepositoryConfig
-from pdm.exceptions import NoConfigError, PdmUsageError
+from pdm.exceptions import NoConfigError, PdmUsageError, PDMWarning
+from pdm.themes import DEFAULT_THEME, Theme
 
 REPOSITORY = "repository"
 SOURCE = "pypi"
@@ -21,8 +20,6 @@ DEFAULT_REPOSITORIES = {
     "pypi": "https://upload.pypi.org/legacy/",
     "testpypi": "https://test.pypi.org/legacy/",
 }
-
-ui = termui.UI()
 
 
 def load_config(file_path: Path) -> dict[str, Any]:
@@ -53,6 +50,13 @@ def ensure_boolean(val: Any) -> bool:
         return val
 
     return bool(val) and val.lower() not in ("false", "no", "0")
+
+
+def ensure_path_dir(val: Any) -> Path:
+    path = Path(val)
+    if not path.is_dir() and not path.exists():
+        path.mkdir()
+    return path
 
 
 def split_by_comma(val: list[str] | str) -> list[str]:
@@ -159,6 +163,13 @@ class Config(MutableMapping[str, str]):
             "Specify how to create links to the caches(`symlink/symlink_individual/hardlink/pth`)",
             "symlink",
         ),
+        "logs_dir": ConfigItem(
+            "The directory for log files",
+            platformdirs.user_log_dir("pdm"),
+            True,
+            env_var="PDM_LOGS_DIR",
+            coerce=ensure_path_dir,
+        ),
         "python.providers": ConfigItem(
             "List of python provider names for findpython", default=[], coerce=split_by_comma
         ),
@@ -223,7 +234,7 @@ class Config(MutableMapping[str, str]):
     }
     _config_map.update(
         (f"theme.{k}", ConfigItem(f"Theme color for {k}", default=v, global_only=True))
-        for k, v in termui.DEFAULT_THEME.items()
+        for k, v in DEFAULT_THEME.items()
     )
 
     site: Config | None = None
@@ -256,10 +267,10 @@ class Config(MutableMapping[str, str]):
             self.get_defaults() if is_global else {},
         )
 
-    def load_theme(self) -> rich.theme.Theme:
+    def load_theme(self) -> Theme:
         if not self.is_global:  # pragma: no cover
             raise PdmUsageError("Theme can only be loaded from global config")
-        return rich.theme.Theme({k[6:]: v for k, v in self.items() if k.startswith("theme.")})
+        return Theme({k[6:]: v for k, v in self.items() if k.startswith("theme.")})
 
     @property
     def self_data(self) -> dict[str, Any]:
@@ -338,7 +349,7 @@ class Config(MutableMapping[str, str]):
 
         value = config.coerce(value)
         if key in self.env_map:
-            ui.warn(f"the config is shadowed by env var '{config.env_var}', the value set won't take effect.")
+            raise PDMWarning(f"The config is shadowed by env var '{config.env_var}', the value set won't take effect.")
         self._file_data[config_key] = value
         if config.replace:
             self._file_data.pop(config.replace, None)
@@ -376,7 +387,7 @@ class Config(MutableMapping[str, str]):
 
         env_var = config.env_var
         if env_var is not None and env_var in os.environ:
-            ui.warn(f"The config is shadowed by env var '{env_var}', set value won't take effect.")
+            raise PDMWarning(f"The config is shadowed by env var '{config.env_var}', the value set won't take effect.")
         self._save_config()
 
     def get_repository_config(self, name_or_url: str, prefix: str) -> RepositoryConfig | None:
