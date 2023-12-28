@@ -24,14 +24,14 @@ in a similar way to `npm` that doesn't need to create a virtualenv at all!
 
 ## Installation
 
-PDM requires Python 3.7+ to be installed. It works on multiple platforms including Windows, Linux and macOS.
+PDM requires Python 3.8+ to be installed. It works on multiple platforms including Windows, Linux and macOS.
 
 !!! note
     You can still have your project working on lower Python versions, read how to do it [here](usage/project.md#working-with-python-37).
 
 ### Recommended installation method
 
-PDM requires python version 3.7 or higher.
+PDM requires python version 3.8 or higher.
 
 Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
 
