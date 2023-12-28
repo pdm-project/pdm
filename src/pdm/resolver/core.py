@@ -55,11 +55,11 @@ def resolve(
         if key is None:
             continue
         # For source distribution whose name can only be determined after it is built,
-        # the key in the resolution map should be updated.
+        # the key in the resolution map and criteria should be updated.
         if key.startswith(":empty:"):
             new_key = provider.identify(candidate)
             mapping[new_key] = mapping.pop(key)
-            key = new_key
+            result.criteria[new_key] = result.criteria.pop(key)
 
     if inherit_metadata:
         all_markers = merge_markers(result)
