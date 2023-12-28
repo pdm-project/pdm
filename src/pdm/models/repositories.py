@@ -196,12 +196,11 @@ class BaseRepository:
                     if working_requires_python.is_impossible:  # pragma: no cover
                         continue
                     warnings.warn(
-                        f"Could not install the latest available version for {candidate.name} "
-                        f"(i.e., {candidate.name}@{candidate.version}) because it requires "
+                        f"Skipping {candidate.name}@{candidate.version} because it requires "
                         f"{python_specifier(candidate.requires_python)} but the project claims to work with "
-                        f"{python_specifier(project_requires_python)}. Instead, the latest version of "
+                        f"{python_specifier(project_requires_python)}. Instead, another version of "
                         f"{candidate.name} that supports {python_specifier(project_requires_python)} will "
-                        f"be installed.\nIf you want to install {candidate.name}@{candidate.version}, "
+                        f"be used.\nIf you want to install {candidate.name}@{candidate.version}, "
                         "narrow down the `requires-python` range to "
                         f'include this version. For example, "{working_requires_python}" should work.',
                         PackageWarning,
