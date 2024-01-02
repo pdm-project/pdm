@@ -1,3 +1,18 @@
+Release v2.11.2 (2024-01-02)
+----------------------------
+
+### Bug Fixes
+
+- Fix a KeyError raised when resolving a URL dependency without package name given. [#2488](https://github.com/pdm-project/pdm/issues/2488)
+- `pdm update --update-eager` can hit InconsistentCandidate error when dependency is included both through default dependencies and extra. [#2495](https://github.com/pdm-project/pdm/issues/2495)
+- `pdm install` should not warn when overwriting its own symlinks on `install`/`update`. [#2502](https://github.com/pdm-project/pdm/issues/2502)
+- Fix a bug that candidates without local version are rejected when the local version is pinned. [#2507](https://github.com/pdm-project/pdm/issues/2507)
+
+### Documentation
+
+- Add maturin as a compatible build backend in the docs. [#2510](https://github.com/pdm-project/pdm/issues/2510)
+
+
 Release v2.11.1 (2023-12-14)
 ----------------------------
 
