@@ -54,6 +54,17 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
 
     [:book: Read the docs](https://hatch.pypa.io/)
 
+=== "maturin"
+
+    `pyproject.toml` configuration:
+
+    ```toml
+    [build-system]
+    requires = ["maturin>=1.4,<2.0"]
+    build-backend = "maturin"
+    ```
+
+    [:book: Read the docs](https://www.maturin.rs/)
 
 Apart from the above mentioned backends, you can also use any other backend that supports PEP 621, however, [poetry-core](https://python-poetry.org/) is not supported because it does not support reading PEP 621 metadata.
 
