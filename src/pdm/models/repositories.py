@@ -198,7 +198,10 @@ class BaseRepository:
                     warnings.warn(
                         f"Skipping {candidate.name}@{candidate.version} because it requires "
                         f"{python_specifier(candidate.requires_python)} but the project claims to work with "
-                        f"{python_specifier(project_requires_python)}.\nNarrow down the `requires-python` range to "
+                        f"{python_specifier(project_requires_python)}. Instead, another version of "
+                        f"{candidate.name} that supports {python_specifier(project_requires_python)} will "
+                        f"be used.\nIf you want to install {candidate.name}@{candidate.version}, "
+                        "narrow down the `requires-python` range to "
                         f'include this version. For example, "{working_requires_python}" should work.',
                         PackageWarning,
                         stacklevel=4,
