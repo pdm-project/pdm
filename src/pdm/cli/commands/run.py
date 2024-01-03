@@ -18,7 +18,7 @@ from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option, venv_option
-from pdm.cli.utils import check_project_file, get_pep582_path
+from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.signals import pdm_signals
@@ -184,8 +184,6 @@ class TaskRunner:
                 process_env = {**process_env, **dotenv_env}
             else:
                 process_env = {**dotenv_env, **process_env}
-        pythonpath = process_env.get("PYTHONPATH", "").split(os.pathsep)
-        pythonpath = [get_pep582_path(project)] + [p for p in pythonpath if "pdm/pep582" not in p.replace("\\", "/")]
         project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
         process_env.update(project_env.process_env)
