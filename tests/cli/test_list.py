@@ -513,8 +513,16 @@ def fake_working_set(working_set):
         def read_text(self, *args, **kwargs):
             return self.license_text
 
-    # Foo package.
-    foo = Distribution("foo", "0.1.0", metadata={"License": "A License"})
+    # Foo package (adapted to contain newlines in License field)
+    # e.g. via license = { file="LICENSE" }
+    foo = Distribution(
+        "foo",
+        "0.1.0",
+        metadata={
+            "License": "A License\n\nextra\ntext",
+            "Classifier": "License :: A License",
+        },
+    )
     foo_l = _MockPackagePath("foo-0.1.0.dist-info", "LICENSE")
     foo_l.license_text = "license text for foo here"
     foo.files = [foo_l]
@@ -679,6 +687,9 @@ def test_list_json_fields_licences(project, pdm):
 
 @pytest.mark.usefixtures("fake_working_set")
 def test_list_markdown_fields_licences(project, pdm):
+    # Note that in "foo" the "License" metadata field ("License": "A License\n\nextra\ntext")
+    # is ignored, in favour of the classifier and the LICENSE file.
+    # This behaviour could be improved.
     result = pdm(["list", "--markdown", "--fields", "name,version,licenses"], obj=project)
     expected = (
         "# test-project licenses\n"
