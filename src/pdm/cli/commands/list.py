@@ -346,8 +346,6 @@ class Listable:
         # To identify this, check for newlines or very long strings.
         # 50 chars is picked because the longest OIS license (WTFPL) full name is 43 characters.
         is_full_text = self.licenses and "\n" in self.licenses  # or len(self.licenses or "") > 50
-        if self.name == "plumbum":
-            print("is_full_text", is_full_text, dist.metadata.__dict__)
 
         # If that is the case, look at the classifiers instead.
         if not self.licenses or is_full_text:
