@@ -345,7 +345,7 @@ class Listable:
         # e.g. license = { file="LICENSE" } in pyproject.toml
         # To identify this, check for newlines or very long strings.
         # 50 chars is picked because the longest OIS license (WTFPL) full name is 43 characters.
-        is_full_text = self.licenses and "\n" in self.licenses  # or len(self.licenses or "") > 50
+        is_full_text = self.licenses and "\n" in self.licenses or len(self.licenses or "") > 50
 
         # If that is the case, look at the classifiers instead.
         if not self.licenses or is_full_text:
