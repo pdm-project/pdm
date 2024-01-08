@@ -340,7 +340,15 @@ class Listable:
         # so generate a pipe separated list (to avoid complexity with CSV export).
         self.licenses: str | None = dist.metadata["License"]
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
-        if not self.licenses:
+
+        # Sometimes package metadata contains the full license text.
+        # e.g. license = { file="LICENSE" } in pyproject.toml
+        # To identify this, check for newlines or very long strings.
+        # 50 chars is picked because the longest OSI license (WTFPL) full name is 43 characters.
+        is_full_text = self.licenses and "\n" in self.licenses or len(self.licenses or "") > 50
+
+        # If that is the case, look at the classifiers instead.
+        if not self.licenses or is_full_text:
             classifier_licenses = [v for v in dist.metadata.get_all("Classifier", []) if v.startswith("License")]
             alternatives = [parts.split("::") for parts in classifier_licenses]
             alternatives = [part[-1].strip() for part in alternatives if part]
