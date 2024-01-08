@@ -175,6 +175,8 @@ class BaseProvider(AbstractProvider):
             elif identifier in self.overrides:
                 return iter(self.get_override_candidates(identifier))
             reqs = sorted(requirements[identifier], key=self.requirement_preference)
+            if not reqs:
+                return iter(())
             original_req = reqs[0]
             bare_name, extras = strip_extras(identifier)
             if extras and bare_name in requirements:
