@@ -22,7 +22,7 @@ from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.signals import pdm_signals
-from pdm.utils import is_path_relative_to
+from pdm.utils import expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Iterator, TypedDict
@@ -44,8 +44,8 @@ def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
     )
 
 
-RE_ARGS_PLACEHOLDER = re.compile(r"{args(?::(?P<default>[^}]*))?}")
-RE_PDM_PLACEHOLDER = re.compile(r"{pdm}")
+RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
+RE_PDM_PLACEHOLDER = re.compile(r"\{pdm\}")
 
 
 def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
@@ -63,11 +63,9 @@ def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
 def _interpolate_pdm(script: str) -> str:
     """Interpolate the `{pdm} placeholder in a string"""
     executable_path = Path(sys.executable)
+    pdm_executable = shlex.join([executable_path.as_posix(), "-m", "pdm"])
 
-    def replace(m: re.Match[str]) -> str:
-        return shlex.join([executable_path.as_posix(), "-m", "pdm"])
-
-    interpolated = RE_PDM_PLACEHOLDER.sub(replace, script)
+    interpolated = RE_PDM_PLACEHOLDER.sub(pdm_executable, script)
     return interpolated
 
 
@@ -141,7 +139,7 @@ class TaskRunner:
         return Task(kind, script_name, value, cast("TaskOptions", options))
 
     def expand_command(self, command: str) -> str:
-        expanded_command = os.path.expanduser(os.path.expandvars(command))
+        expanded_command = os.path.expanduser(command)
         if expanded_command.replace(os.sep, "/").startswith(("./", "../")):
             abspath = os.path.abspath(expanded_command)
             if not os.path.isfile(abspath):
@@ -191,16 +189,17 @@ class TaskRunner:
             process_env.update(env)
         if shell:
             assert isinstance(args, str)
-            expanded_args: str | Sequence[str] = os.path.expandvars(args)
+            # environment variables will be expanded by shell
+            process_cmd: str | Sequence[str] = args
         else:
             assert isinstance(args, Sequence)
-            command, *args = args
+            command, *args = (expand_env_vars(arg, env=process_env) for arg in args)
             if command.endswith(".py"):
                 args = [command, *args]
                 command = str(project.environment.interpreter.executable)
             expanded_command = self.expand_command(command)
             real_command = os.path.realpath(expanded_command)
-            expanded_args = [os.path.expandvars(arg) for arg in [expanded_command, *args]]
+            process_cmd = [expanded_command, *args]
             if (
                 project_env.is_local
                 and not site_packages
@@ -222,7 +221,7 @@ class TaskRunner:
 
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
         handle_int = signal.signal(signal.SIGINT, forward_signal)
-        process = subprocess.Popen(expanded_args, cwd=cwd, env=process_env, shell=shell, bufsize=0)
+        process = subprocess.Popen(process_cmd, cwd=cwd, env=process_env, shell=shell, bufsize=0)
         process.wait()
         signal.signal(signal.SIGTERM, handle_term)
         signal.signal(signal.SIGINT, handle_int)

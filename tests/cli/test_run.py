@@ -325,8 +325,8 @@ def test_run_shell_script_with_pdm_placeholder(project, pdm):
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {
-        "test_cmd": 'python -c "foo, bar = 0, 1;print($FOO)"',
-        "test_cmd_no_expand": "python -c 'print($FOO)'",
+        "test_cmd": 'python -c "foo, bar = 0, 1;print(${FOO})"',
+        "test_cmd_no_expand": "python -c 'print(${FOO})'",
         "test_script": "python test_script.py",
         "test_cmd_array": ["python", "test_script.py"],
         "test_shell": {"shell": "echo $FOO"},
@@ -335,6 +335,35 @@ def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     capfd.readouterr()
     with cd(project.root):
         monkeypatch.setenv("FOO", "bar")
+        pdm(["run", "test_cmd"], obj=project)
+        assert capfd.readouterr()[0].strip() == "1"
+
+        result = pdm(["run", "test_cmd_no_expand"], obj=project)
+        assert result.exit_code == 1
+
+        pdm(["run", "test_script"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar"
+
+        pdm(["run", "test_cmd_array"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar"
+
+        pdm(["run", "test_shell"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar"
+
+
+def test_run_expand_env_vars_from_config(project, pdm, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
+    project.pyproject.settings["scripts"] = {
+        "test_cmd": 'python -c "foo, bar = 0, 1;print(${FOO})"',
+        "test_cmd_no_expand": "python -c 'print(${FOO})'",
+        "test_script": "python test_script.py",
+        "test_cmd_array": ["python", "test_script.py"],
+        "test_shell": {"shell": "echo $FOO"},
+        "_": {"env": {"FOO": "bar"}},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    with cd(project.root):
         pdm(["run", "test_cmd"], obj=project)
         assert capfd.readouterr()[0].strip() == "1"
 
