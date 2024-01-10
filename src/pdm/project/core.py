@@ -670,17 +670,6 @@ class Project:
             finder.add_provider(VenvProvider(self), venv_pos)
         return finder
 
-    # compatibility, shouldn't be used directly
-    @property
-    def meta(self) -> dict[str, Any]:
-        deprecation_warning("project.meta is deprecated, use project.pyproject.metadata instead", stacklevel=2)
-        return self.pyproject.metadata
-
-    @property
-    def tool_settings(self) -> dict[str, Any]:
-        deprecation_warning("project.tool_settings is deprecated, use project.pyproject.settings instead", stacklevel=2)
-        return self.pyproject.settings
-
     @property
     def is_library(self) -> bool:
         return bool(self.name) and self.pyproject.settings.get("package-type", "library") == "library"

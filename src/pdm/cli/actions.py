@@ -8,7 +8,7 @@ import os
 import sys
 import textwrap
 import warnings
-from typing import Any, Collection, Iterable, cast
+from typing import Collection, Iterable, cast
 
 from resolvelib.reporters import BaseReporter
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
@@ -34,7 +34,6 @@ from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver import resolve
 from pdm.termui import logger
-from pdm.utils import deprecation_warning
 
 
 def do_lock(
@@ -382,59 +381,3 @@ def check_update(project: Project) -> None:  # pragma: no cover
         " to disable the check.",
     ]
     project.core.ui.info("".join(message))
-
-
-# Moved functions
-def do_add(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
-    from pdm.cli.commands.add import Command as AddCommand
-
-    deprecation_warning(
-        "`pdm.actions.do_add` has been moved to `pdm.cli.commands.add:Command.do_add` method, "
-        "This function will be removed in the future.",
-        stacklevel=2,
-    )
-    AddCommand().do_add(*args, **kwargs)
-
-
-def do_update(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
-    from pdm.cli.commands.update import Command as UpdateCommand
-
-    deprecation_warning(
-        "`pdm.actions.do_update` has been moved to `pdm.cli.commands.update:Command.do_update` method, "
-        "This function will be removed in the future.",
-        stacklevel=2,
-    )
-    UpdateCommand().do_update(*args, **kwargs)
-
-
-def do_use(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
-    from pdm.cli.commands.use import Command as UseCommand
-
-    deprecation_warning(
-        "`pdm.actions.do_use` has been moved to `pdm.cli.commands.use:Command.do_use` method, "
-        "This function will be removed in the future.",
-        stacklevel=2,
-    )
-    UseCommand().do_use(*args, **kwargs)
-
-
-def do_remove(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
-    from pdm.cli.commands.remove import Command as RemoveCommand
-
-    deprecation_warning(
-        "`pdm.actions.do_remove` has been moved to `pdm.cli.commands.remove:Command.do_remove` method, "
-        "This function will be removed in the future.",
-        stacklevel=2,
-    )
-    RemoveCommand().do_remove(*args, **kwargs)
-
-
-def do_import(*args: Any, **kwargs: Any) -> None:  # pragma: no cover
-    from pdm.cli.commands.import_cmd import Command as ImportCommand
-
-    deprecation_warning(
-        "`pdm.actions.do_import` has been moved to `pdm.cli.commands.import_:Command.do_import` method, "
-        "This function will be removed in the future.",
-        stacklevel=2,
-    )
-    ImportCommand().do_import(*args, **kwargs)

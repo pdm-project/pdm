@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Mapping
 from packaging.version import Version, _cmpkey
 
 from pdm.compat import importlib_metadata
-from pdm.exceptions import PdmException
+from pdm.exceptions import PDMDeprecationWarning, PdmException
 
 if TYPE_CHECKING:
     from re import Match
@@ -422,8 +422,8 @@ def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | No
 
     if raise_since is not None:
         if Version(__version__) >= Version(raise_since):
-            raise FutureWarning(message)
-    warnings.warn(message, FutureWarning, stacklevel=stacklevel + 1)
+            raise PDMDeprecationWarning(message)
+    warnings.warn(message, PDMDeprecationWarning, stacklevel=stacklevel + 1)
 
 
 def is_pip_compatible_with_python(python_version: Version | str) -> bool:
