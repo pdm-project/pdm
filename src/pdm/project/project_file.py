@@ -8,7 +8,6 @@ from tomlkit import TOMLDocument, items
 
 from pdm import termui
 from pdm.project.toml_file import TOMLBase
-from pdm.utils import deprecation_warning
 
 
 def _remove_empty_tables(doc: dict) -> None:
@@ -66,13 +65,6 @@ class PyProject(TOMLBase):
         in the pyproject.toml file.
         """
         settings = self.settings
-        if "overrides" in settings:
-            deprecation_warning(
-                "The 'tool.pdm.overrides' table has been renamed to "
-                "'tool.pdm.resolution.overrides', please update the "
-                "setting accordingly."
-            )
-            return settings["overrides"]
         return settings.get("resolution", {}).get("overrides", {})
 
     def content_hash(self, algo: str = "sha256") -> str:
