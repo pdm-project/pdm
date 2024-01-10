@@ -329,7 +329,7 @@ def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
         "test_cmd_no_expand": "python -c 'print(${FOO})'",
         "test_script": "python test_script.py",
         "test_cmd_array": ["python", "test_script.py"],
-        "test_shell": {"shell": "echo $FOO"},
+        "test_shell": {"shell": "echo %FOO%" if os.name == "nt" else "echo $FOO"},
     }
     project.pyproject.write()
     capfd.readouterr()
@@ -358,7 +358,7 @@ def test_run_expand_env_vars_from_config(project, pdm, capfd):
         "test_cmd_no_expand": "python -c 'print(${FOO})'",
         "test_script": "python test_script.py",
         "test_cmd_array": ["python", "test_script.py"],
-        "test_shell": {"shell": "echo $FOO"},
+        "test_shell": {"shell": "echo %FOO%" if os.name == "nt" else "echo $FOO"},
         "_": {"env": {"FOO": "bar"}},
     }
     project.pyproject.write()
