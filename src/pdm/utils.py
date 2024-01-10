@@ -18,7 +18,7 @@ import urllib.parse as parse
 import warnings
 from os import name as os_name
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Mapping
 
 from packaging.version import Version, _cmpkey
 
@@ -221,17 +221,19 @@ def path_to_url(path: str) -> str:
     return url
 
 
-def expand_env_vars(credential: str, quote: bool = False) -> str:
+def expand_env_vars(credential: str, quote: bool = False, env: Mapping[str, str] | None = None) -> str:
     """A safe implementation of env var substitution.
     It only supports the following forms:
 
         ${ENV_VAR}
 
-    Neither $ENV_VAR and %ENV_VAR is not supported.
+    Neither $ENV_VAR and %ENV_VAR is supported.
     """
+    if env is None:
+        env = os.environ
 
     def replace_func(match: Match) -> str:
-        rv = os.getenv(match.group(1), match.group(0))
+        rv = env.get(match.group(1), match.group(0))
         return parse.quote(rv) if quote else rv
 
     return re.sub(r"\$\{(.+?)\}", replace_func, credential)
