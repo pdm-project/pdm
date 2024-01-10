@@ -133,6 +133,11 @@ start.env = {FOO = "bar", FLASK_ENV = "development"}
 
 Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a composite dictionary.
 
+!!! note "About environment variable substitution"
+    Variables in script specifications can be substituted in all script types. In `cmd` scripts, only `${VAR}`
+    syntax is supported on all platforms, however in `shell` scripts, the syntax is platform-dependent. For example,
+    Windows cmd uses `%VAR%` while bash uses `$VAR`.
+
 !!! note
     Environment variables specified on a composite task level will override those defined by called tasks.
 
