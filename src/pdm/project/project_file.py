@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Mapping
+from typing import Any, Mapping
 
 from tomlkit import TOMLDocument, items
 
@@ -60,12 +60,11 @@ class PyProject(TOMLBase):
         return self._data.get("build-system", {})
 
     @property
-    def resolution_overrides(self) -> Mapping[str, str]:
+    def resolution(self) -> Mapping[str, Any]:
         """A compatible getter method for the resolution overrides
         in the pyproject.toml file.
         """
-        settings = self.settings
-        return settings.get("resolution", {}).get("overrides", {})
+        return self.settings.get("resolution", {})
 
     def content_hash(self, algo: str = "sha256") -> str:
         """Generate a hash of the sensible content of the pyproject.toml file.
@@ -77,7 +76,7 @@ class PyProject(TOMLBase):
             "dev-dependencies": self.settings.get("dev-dependencies", {}),
             "optional-dependencies": self.metadata.get("optional-dependencies", {}),
             "requires-python": self.metadata.get("requires-python", ""),
-            "overrides": self.resolution_overrides,
+            "overrides": self.resolution.get("overrides", {}),
         }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)

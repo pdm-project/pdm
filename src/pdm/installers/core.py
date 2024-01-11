@@ -15,6 +15,9 @@ def install_requirements(
     # Rewrite the python requires to only resolve for the current python version.
     environment.python_requires = PySpecSet(f"=={environment.interpreter.version}")
     provider = project.get_provider(ignore_compatibility=False)
+    # Clear the overrides and excludes
+    provider.overrides = {}
+    provider.excludes = set()
     reporter = project.get_reporter(reqs)
     resolver = project.core.resolver_class(provider, reporter)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])

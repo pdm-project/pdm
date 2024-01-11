@@ -32,7 +32,6 @@ from pdm.utils import (
     find_python_in_path,
     is_conda_base,
     is_conda_base_python,
-    normalize_name,
     path_to_url,
 )
 
@@ -431,7 +430,6 @@ class Project:
 
         repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         allow_prereleases = self.allow_prereleases
-        overrides = {normalize_name(k): v for k, v in self.pyproject.resolution_overrides.items()}
         locked_repository: LockedRepository | None = None
         if strategy != "all" or for_install:
             try:
@@ -442,13 +440,9 @@ class Project:
                 self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
         if locked_repository is None:
-            return BaseProvider(
-                repository, allow_prereleases, overrides, direct_minimal_versions=direct_minimal_versions
-            )
+            return BaseProvider(repository, allow_prereleases, direct_minimal_versions=direct_minimal_versions)
         if for_install:
-            return BaseProvider(
-                locked_repository, allow_prereleases, overrides, direct_minimal_versions=direct_minimal_versions
-            )
+            return BaseProvider(locked_repository, allow_prereleases, direct_minimal_versions=direct_minimal_versions)
         provider_class = get_provider(strategy)
         assert issubclass(provider_class, ReusePinProvider)
         tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
@@ -457,7 +451,6 @@ class Project:
             tracked_names,
             repository,
             allow_prereleases,
-            overrides,
             direct_minimal_versions=direct_minimal_versions,
         )
 

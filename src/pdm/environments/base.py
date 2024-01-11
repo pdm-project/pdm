@@ -13,12 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 from pdm.exceptions import BuildError, PdmUsageError
-from pdm.models.in_process import (
-    get_pep508_environment,
-    get_python_abis,
-    get_uname,
-    sysconfig_get_platform,
-)
+from pdm.models.in_process import get_pep508_environment, get_python_abis, get_uname, sysconfig_get_platform
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
 from pdm.utils import get_trusted_hosts, is_pip_compatible_with_python
