@@ -21,8 +21,8 @@ def _in_process_script(name: str) -> Generator[str, None, None]:
 
 
 @functools.lru_cache
-def get_python_abi_tag(executable: str) -> str:
-    with _in_process_script("get_abi_tag.py") as script:
+def get_python_abis(executable: str) -> list[str]:
+    with _in_process_script("get_abis.py") as script:
         return json.loads(subprocess.check_output(args=[executable, "-EsS", script]))
 
 
