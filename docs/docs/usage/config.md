@@ -324,6 +324,19 @@ In this example, PDM will resolve the above packages into the given versions no 
     By using `[tool.pdm.resolution.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be used if there is no valid resolution for your requirements and you know the specific version works.
     Most of the time, you can just add any transient constraints to the `dependencies` array.
 
+## Exclude specific packages and their dependencies from the lock file
+
+_New in version 2.12.0_
+
+Sometimes you don't even want to include certain packages in the locked file because you are sure they won't be used by any code. In this case, you can completely skip them and their dependencies during dependency resolution:
+
+```toml
+[tool.pdm.resolution]
+excludes = ["requests"]
+```
+
+With this config, `requests` will be locked in the lockfile, and its dependencies such as `urllib3` and `idna` will also not show up in the resolution result, if not depended on by other packages. The installer will not be able to pick them up either.
+
 ## Passing constant arguments to every pdm invocation
 
 _New in version 2.7.0_

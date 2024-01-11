@@ -11,14 +11,9 @@ from pdm.exceptions import InvalidPyVersion, RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
-from pdm.resolver.python import (
-    PythonCandidate,
-    PythonRequirement,
-    find_python_matches,
-    is_python_satisfied_by,
-)
+from pdm.resolver.python import PythonCandidate, PythonRequirement, find_python_matches, is_python_satisfied_by
 from pdm.termui import logger
-from pdm.utils import is_url, url_without_fragments
+from pdm.utils import deprecation_warning, is_url, normalize_name, url_without_fragments
 
 if TYPE_CHECKING:
     from typing import Any, Iterable, Iterator, Mapping, Sequence
@@ -54,10 +49,18 @@ class BaseProvider(AbstractProvider):
         overrides: dict[str, str] | None = None,
         direct_minimal_versions: bool = False,
     ) -> None:
+        if overrides is not None:
+            deprecation_warning(
+                "The `overrides` argument is deprecated and will be removed in the future.", stacklevel=2
+            )
+        project = repository.environment.project
         self.repository = repository
         self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
-        self.overrides = overrides or {}
+        self.overrides: Mapping[str, str] = {
+            normalize_name(k): v for k, v in project.pyproject.resolution.get("overrides", {}).items()
+        }
+        self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
         self._known_depth: dict[str, int] = {}
 
@@ -247,6 +250,8 @@ class BaseProvider(AbstractProvider):
                 & self.repository.environment.python_requires
             ).is_impossible:
                 continue
+            if dep.identify() in self.excludes:
+                continue
             dep.requires_python &= candidate.req.requires_python
             valid_deps.append(dep)
         self.fetched_dependencies[candidate.dep_key] = valid_deps[:]
@@ -364,7 +369,11 @@ class ReuseInstalledProvider(ReusePinProvider):
     """A provider that reuses installed packages if possible."""
 
     def __init__(
-        self, preferred_pins: dict[str, Candidate], tracked_names: Iterable[str], *args: Any, **kwargs: Any
+        self,
+        preferred_pins: dict[str, Candidate],
+        tracked_names: Iterable[str],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super().__init__(preferred_pins, tracked_names, *args, **kwargs)
         self.installed = self.repository.environment.get_working_set()

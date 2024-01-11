@@ -54,6 +54,17 @@ def test_resolve_named_requirement(resolve):
     assert result["idna"].version == "2.7"
 
 
+def test_resolve_exclude(resolve, project):
+    project.pyproject.settings.setdefault("resolution", {})["excludes"] = ["urllib3"]
+    result = resolve(["requests"])
+
+    assert result["requests"].version == "2.19.1"
+    assert result["chardet"].version == "3.0.4"
+    assert result["certifi"].version == "2018.11.17"
+    assert result["idna"].version == "2.7"
+    assert "urllib3" not in result
+
+
 def test_resolve_requires_python(resolve):
     with pytest.warns(PackageWarning) as records:
         result = resolve(["django"])
@@ -94,6 +105,19 @@ def test_resolve_allow_prereleases(resolve, repository):
 def test_resolve_with_extras(resolve):
     result = resolve(["requests[socks]"])
     assert result["pysocks"].version == "1.5.6"
+    assert result["urllib3"].version == "1.22"
+    assert result["chardet"].version == "3.0.4"
+    assert result["certifi"].version == "2018.11.17"
+    assert result["idna"].version == "2.7"
+    assert result["requests"].version == "2.19.1"
+
+
+def test_resolve_with_extras_and_excludes(resolve, project):
+    project.pyproject.settings.setdefault("resolution", {})["excludes"] = ["requests"]
+    result = resolve(["requests[socks]"])
+    assert result["pysocks"].version == "1.5.6"
+    assert "requests" not in result
+    assert "urllib3" not in result
 
 
 @pytest.mark.parametrize(

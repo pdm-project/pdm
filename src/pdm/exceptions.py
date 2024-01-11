@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -41,7 +42,7 @@ class CandidateInfoNotFound(PdmException):
         super().__init__(message)
 
 
-class PDMWarning(UserWarning):
+class PDMWarning(Warning):
     pass
 
 
@@ -49,8 +50,11 @@ class PackageWarning(PDMWarning):
     pass
 
 
-class PDMDeprecationWarning(PDMWarning):
+class PDMDeprecationWarning(PDMWarning, DeprecationWarning):
     pass
+
+
+warnings.simplefilter("default", category=PDMDeprecationWarning)
 
 
 class ExtrasWarning(PDMWarning):
