@@ -1,5 +1,6 @@
 [project]
-description = ""
+name = "pdm-chatbot"
+version = "0.0.0"
 authors = [
     {name = "Frost Ming", email = "me@frostming.com"},
 ]
@@ -13,7 +14,5 @@ requires-python = ">=3.10,<3.12"
 readme = "README.md"
 license = {text = "MIT"}
 
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
+[tool.pdm]
+package-type = "application"
