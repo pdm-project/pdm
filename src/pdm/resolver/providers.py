@@ -37,8 +37,6 @@ def get_provider(strategy: str) -> type[BaseProvider]:
 def provider_arguments(provider: type[BaseProvider]) -> set[str]:
     arguments: set[str] = set()
     for cls in provider.__mro__:
-        if cls is object:
-            break
         if "__init__" not in cls.__dict__:
             continue
         params = inspect.signature(cls).parameters
@@ -66,16 +64,16 @@ class BaseProvider(AbstractProvider):
         direct_minimal_versions: bool = False,
         locked_candidates: dict[str, Candidate] | None = None,
     ) -> None:
-        if overrides is not None:
+        if overrides is not None:  # pragma: no cover
             deprecation_warning(
                 "The `overrides` argument is deprecated and will be removed in the future.", stacklevel=2
             )
-        if allow_prereleases is not None:
+        if allow_prereleases is not None:  # pragma: no cover
             deprecation_warning(
                 "The `allow_prereleases` argument is deprecated and will be removed in the future.", stacklevel=2
             )
         project = repository.environment.project
-        if locked_candidates is None:
+        if locked_candidates is None:  # pragma: no cover
             try:
                 locked_repository = project.locked_repository
             except Exception:

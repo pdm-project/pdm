@@ -428,7 +428,7 @@ class Project:
         locked_repository: LockedRepository | None = None
         try:
             locked_repository = self.locked_repository
-        except Exception:
+        except Exception:  # pragma: no cover
             if for_install:
                 raise
             if strategy != "all":

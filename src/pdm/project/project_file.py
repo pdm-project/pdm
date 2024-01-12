@@ -69,7 +69,7 @@ class PyProject(TOMLBase):
 
     @property
     def allow_prereleases(self) -> bool | None:
-        if "allow_prereleases" in self.settings:
+        if "allow_prereleases" in self.settings:  # pragma: no cover
             warnings.warn(
                 "'tool.pdm.allow_prereleases' is deprecated, use 'tool.pdm.resolution.allow-prereleases' instead.",
                 FutureWarning,
