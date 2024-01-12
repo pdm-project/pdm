@@ -422,31 +422,42 @@ class Project:
         :returns: The provider object
         """
 
-        from pdm.resolver.providers import BaseProvider, ReusePinProvider, get_provider
+        from pdm.resolver.providers import BaseProvider, get_provider, provider_arguments
 
         repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         locked_repository: LockedRepository | None = None
-        if strategy != "all" or for_install:
-            try:
-                locked_repository = self.locked_repository
-            except Exception:
-                if for_install:
-                    raise
+        try:
+            locked_repository = self.locked_repository
+        except Exception:
+            if for_install:
+                raise
+            if strategy != "all":
                 self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
-        if locked_repository is None:
-            return BaseProvider(repository, direct_minimal_versions=direct_minimal_versions)
         if for_install:
-            return BaseProvider(locked_repository, direct_minimal_versions=direct_minimal_versions)
+            assert locked_repository is not None
+            return BaseProvider(
+                locked_repository, direct_minimal_versions=direct_minimal_versions, locked_candidates={}
+            )
         provider_class = get_provider(strategy)
-        assert issubclass(provider_class, ReusePinProvider)
-        tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
-        return provider_class(
-            locked_repository.all_candidates,
-            tracked_names,
-            repository,
-            direct_minimal_versions=direct_minimal_versions,
-        )
+        params: dict[str, Any] = {}
+        if strategy != "all":
+            params["tracked_names"] = [strip_extras(name)[0] for name in tracked_names or ()]
+        locked_candidates = {} if locked_repository is None else locked_repository.all_candidates
+        accepted_args = provider_arguments(provider_class)
+        if "locked_candidates" in accepted_args:
+            params["locked_candidates"] = locked_candidates
+        elif "preferred_pins" in accepted_args:  # pragma: no cover
+            deprecation_warning(
+                "`preferred_pins` has been moved to keyword-only argument `locked_candidates`", stacklevel=1
+            )
+            params["preferred_pins"] = locked_candidates
+        else:  # pragma: no cover
+            deprecation_warning(
+                "Missing `locked_candidates` argument from the provider class, it will be populated automatically",
+                stacklevel=1,
+            )
+        return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
     def get_reporter(
         self,

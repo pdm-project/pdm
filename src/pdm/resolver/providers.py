@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import inspect
 import os
 from typing import TYPE_CHECKING, Callable, cast
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
 from resolvelib import AbstractProvider, RequirementsConflicted
 from resolvelib.resolvers import Criterion
 
@@ -32,6 +34,20 @@ def get_provider(strategy: str) -> type[BaseProvider]:
     return _PROVIDER_REGISTORY[strategy]
 
 
+def provider_arguments(provider: type[BaseProvider]) -> set[str]:
+    arguments: set[str] = set()
+    for cls in provider.__mro__:
+        if cls is object:
+            break
+        if "__init__" not in cls.__dict__:
+            continue
+        params = inspect.signature(cls).parameters
+        arguments.update({k for k, v in params.items() if v.kind not in (v.VAR_POSITIONAL, v.VAR_KEYWORD)})
+        if not any(p.kind in (p.VAR_POSITIONAL, p.VAR_KEYWORD) for p in params.values()):
+            break
+    return arguments
+
+
 def register_provider(strategy: str) -> Callable[[type[BaseProvider]], type[BaseProvider]]:
     def wrapper(cls: type[BaseProvider]) -> type[BaseProvider]:
         _PROVIDER_REGISTORY[strategy] = cls
@@ -48,6 +64,7 @@ class BaseProvider(AbstractProvider):
         allow_prereleases: bool | None = None,
         overrides: dict[str, str] | None = None,
         direct_minimal_versions: bool = False,
+        locked_candidates: dict[str, Candidate] | None = None,
     ) -> None:
         if overrides is not None:
             deprecation_warning(
@@ -58,6 +75,13 @@ class BaseProvider(AbstractProvider):
                 "The `allow_prereleases` argument is deprecated and will be removed in the future.", stacklevel=2
             )
         project = repository.environment.project
+        if locked_candidates is None:
+            try:
+                locked_repository = project.locked_repository
+            except Exception:
+                locked_candidates = {}
+            else:
+                locked_candidates = locked_repository.all_candidates
         self.repository = repository
         self.allow_prereleases = project.pyproject.allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
@@ -66,6 +90,7 @@ class BaseProvider(AbstractProvider):
         }
         self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
+        self.locked_candidates = locked_candidates
         self._known_depth: dict[str, int] = {}
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
@@ -164,9 +189,21 @@ class BaseProvider(AbstractProvider):
                 can.prepare(self.repository.environment).metadata
             return [can]
         else:
+            prerelease = requirement.prerelease
+            if prerelease is None and (key := requirement.identify()) in self.locked_candidates:
+                # keep the prerelease if it is locked
+                candidate = self.locked_candidates[key]
+                if candidate.version is not None:
+                    try:
+                        parsed_version = Version(candidate.version)
+                    except InvalidVersion:
+                        pass
+                    else:
+                        if parsed_version.is_prerelease:
+                            prerelease = True
             return self.repository.find_candidates(
                 requirement,
-                requirement.prerelease if requirement.prerelease is not None else self.allow_prereleases,
+                self.allow_prereleases if prerelease is None else prerelease,
                 minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
             )
 
@@ -285,22 +322,15 @@ class ReusePinProvider(BaseProvider):
     where already-pinned candidates in lockfile should be preferred.
     """
 
-    def __init__(
-        self,
-        preferred_pins: dict[str, Candidate],
-        tracked_names: Iterable[str],
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, *args: Any, tracked_names: Iterable[str], **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.preferred_pins = preferred_pins
         self.tracked_names = set(tracked_names)
 
     def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
         bare_name = strip_extras(identifier)[0]
         if bare_name in self.tracked_names:
             return None
-        pin = self.preferred_pins.get(identifier)
+        pin = self.locked_candidates.get(identifier)
         if pin is None:
             return None
         if requirement is not None:
@@ -374,14 +404,8 @@ class EagerUpdateProvider(ReusePinProvider):
 class ReuseInstalledProvider(ReusePinProvider):
     """A provider that reuses installed packages if possible."""
 
-    def __init__(
-        self,
-        preferred_pins: dict[str, Candidate],
-        tracked_names: Iterable[str],
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(preferred_pins, tracked_names, *args, **kwargs)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
         self.installed = self.repository.environment.get_working_set()
 
     def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
