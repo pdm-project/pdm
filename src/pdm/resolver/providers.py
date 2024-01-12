@@ -194,7 +194,7 @@ class BaseProvider(AbstractProvider):
                 if candidate.version is not None:
                     try:
                         parsed_version = Version(candidate.version)
-                    except InvalidVersion:
+                    except InvalidVersion:  # pragma: no cover
                         pass
                     else:
                         if parsed_version.is_prerelease:
