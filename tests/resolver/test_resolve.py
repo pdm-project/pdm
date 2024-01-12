@@ -23,7 +23,7 @@ def resolve(project, repository):
     ):
         repository.environment.python_requires = PySpecSet(requires_python)
         if allow_prereleases is not None:
-            project.pyproject.settings["allow_prereleases"] = allow_prereleases
+            project.pyproject.settings.setdefault("resolution", {})["allow-prereleases"] = allow_prereleases
         requirements = []
         for line in lines:
             if line.startswith("-e "):

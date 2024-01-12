@@ -210,7 +210,7 @@ function TabExpansion($line, $lastWord) {
                         [Option]::new((
                             "-d", "--dev", "--save-compatible", "--save-wildcard", "--dry-run", "--save-exact",
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global",
-                            "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation",
+                            "--no-sync", "--no-editable", "--no-self", "-u", "--unconstrained", "--no-isolation", "--stable",
                             "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--frozen-lockfile", "--update-reuse-installed"
                         )),
                         $sectionOption,
@@ -430,7 +430,7 @@ function TabExpansion($line, $lastWord) {
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run",
                             "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation",
                             "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--frozen-lockfile",
-                            "--update-reuse-installed"
+                            "--update-reuse-installed", "--stable"
                         )),
                         $sectionOption,
                         $skipOption,

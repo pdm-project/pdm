@@ -51,10 +51,10 @@ def convert(project: Project, filename: PathLike, options: Namespace | None) -> 
     with open(filename, "rb") as fp:
         data = tomllib.load(fp)
     result = {}
-    settings = {}
+    settings: dict[str, Any] = {}
     backend = project.backend
-    if "pipenv" in data:
-        settings["allow_prereleases"] = data["pipenv"].get("allow_prereleases", False)
+    if "pipenv" in data and "allow_prereleases" in data["pipenv"]:
+        settings.setdefault("resolution", {})["allow-prereleases"] = data["pipenv"]["allow_prereleases"]
     if "requires" in data:
         python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
         result["requires-python"] = f">={python_version}"

@@ -474,8 +474,8 @@ certifi 2023.7.22
 Include the following setting in `pyproject.toml` to enable:
 
 ```toml
-[tool.pdm]
-allow_prereleases = true
+[tool.pdm.resolution]
+allow-prereleases = true
 ```
 
 ## Set acceptable format for locking or installing

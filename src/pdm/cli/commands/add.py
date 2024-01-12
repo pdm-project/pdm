@@ -97,7 +97,7 @@ class Command(BaseCommand):
         no_editable: bool = False,
         no_self: bool = False,
         dry_run: bool = False,
-        prerelease: bool = False,
+        prerelease: bool | None = None,
         fail_fast: bool = False,
         hooks: HookManager | None = None,
     ) -> None:

@@ -101,7 +101,7 @@ class Command(BaseCommand):
         sync: bool = True,
         no_editable: bool = False,
         no_self: bool = False,
-        prerelease: bool = False,
+        prerelease: bool | None = None,
         fail_fast: bool = False,
         hooks: HookManager | None = None,
     ) -> None:
@@ -124,8 +124,8 @@ class Command(BaseCommand):
         updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
         locked_groups = project.lockfile.groups
         if not packages:
-            if prerelease:
-                raise PdmUsageError("--prerelease must be used with packages given")
+            if prerelease is not None:
+                raise PdmUsageError("--prerelease/--stable must be used with packages given")
             selection.validate()
             for group in selection:
                 updated_deps[group] = all_dependencies[group]

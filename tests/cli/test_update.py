@@ -200,7 +200,7 @@ def test_update_with_package_and_groups_argument(project, pdm):
 def test_update_with_prerelease_without_package_argument(project, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     result = pdm(["update", "--prerelease"], obj=project)
-    assert "--prerelease must be used with packages given" in result.stderr
+    assert "--prerelease/--stable must be used with packages given" in result.stderr
 
 
 def test_update_existing_package_with_prerelease(project, working_set, pdm):
@@ -212,6 +212,12 @@ def test_update_existing_package_with_prerelease(project, working_set, pdm):
     pdm(["update", "urllib3", "--prerelease"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"][0] == "urllib3~=1.22"
     assert working_set["urllib3"].version == "1.23b0"
+
+    pdm(["update", "urllib3"], obj=project, strict=True)  # prereleases should be kept
+    assert working_set["urllib3"].version == "1.23b0"
+
+    pdm(["update", "urllib3", "--stable"], obj=project, strict=True)
+    assert working_set["urllib3"].version == "1.22"
 
     pdm(["update", "urllib3", "--prerelease", "--unconstrained"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"][0] == "urllib3<2,>=1.23b0"
