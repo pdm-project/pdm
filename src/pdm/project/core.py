@@ -346,10 +346,6 @@ class Project:
         return {group: self.get_dependencies(group) for group in self.iter_groups()}
 
     @property
-    def allow_prereleases(self) -> bool | None:
-        return self.pyproject.settings.get("allow_prereleases")
-
-    @property
     def default_source(self) -> RepositoryConfig:
         """Get the default source from the pypi setting"""
         return RepositoryConfig(
@@ -429,7 +425,6 @@ class Project:
         from pdm.resolver.providers import BaseProvider, ReusePinProvider, get_provider
 
         repository = self.get_repository(ignore_compatibility=ignore_compatibility)
-        allow_prereleases = self.allow_prereleases
         locked_repository: LockedRepository | None = None
         if strategy != "all" or for_install:
             try:
@@ -440,9 +435,9 @@ class Project:
                 self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
         if locked_repository is None:
-            return BaseProvider(repository, allow_prereleases, direct_minimal_versions=direct_minimal_versions)
+            return BaseProvider(repository, direct_minimal_versions=direct_minimal_versions)
         if for_install:
-            return BaseProvider(locked_repository, allow_prereleases, direct_minimal_versions=direct_minimal_versions)
+            return BaseProvider(locked_repository, direct_minimal_versions=direct_minimal_versions)
         provider_class = get_provider(strategy)
         assert issubclass(provider_class, ReusePinProvider)
         tracked_names = [strip_extras(name)[0] for name in tracked_names or ()]
@@ -450,7 +445,6 @@ class Project:
             locked_repository.all_candidates,
             tracked_names,
             repository,
-            allow_prereleases,
             direct_minimal_versions=direct_minimal_versions,
         )
 

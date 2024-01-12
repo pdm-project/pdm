@@ -81,7 +81,7 @@ class Requirement:
     extras: Sequence[str] | None = None
     specifier: SpecifierSet | None = None
     editable: bool = False
-    prerelease: bool = False
+    prerelease: bool | None = None
     groups: list[str] = dataclasses.field(default_factory=list)
 
     def __post_init__(self) -> None:

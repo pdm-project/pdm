@@ -378,12 +378,17 @@ def ignore_python_option(
     os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
 
 
-prerelease_option = Option(
+prerelease_option = ArgumentGroup("prerelease", is_mutually_exclusive=True)
+prerelease_option.add_argument(
     "--pre",
     "--prerelease",
     action="store_true",
     dest="prerelease",
+    default=None,
     help="Allow prereleases to be pinned",
+)
+prerelease_option.add_argument(
+    "--stable", action="store_false", dest="prerelease", help="Only allow stable versions to be pinned"
 )
 unconstrained_option = Option(
     "-u",

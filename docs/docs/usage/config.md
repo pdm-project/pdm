@@ -73,11 +73,11 @@ pdm config python.providers pyenv,asdf  # pyenv and asdf
 
 ## Allow prereleases in resolution result
 
-By default, `pdm`'s dependency resolver will ignore prereleases unless there are no stable versions for the given version range of a dependency. This behavior can be changed by setting `allow_prereleases` to `true` in `[tool.pdm]` table:
+By default, `pdm`'s dependency resolver will ignore prereleases unless there are no stable versions for the given version range of a dependency. This behavior can be changed by setting `allow-prereleases` to `true` in `[tool.pdm.resolution]` table:
 
 ```toml
-[tool.pdm]
-allow_prereleases = true
+[tool.pdm.resolution]
+allow-prereleases = true
 ```
 
 ## Configure the package indexes

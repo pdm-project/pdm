@@ -53,9 +53,13 @@ class BaseProvider(AbstractProvider):
             deprecation_warning(
                 "The `overrides` argument is deprecated and will be removed in the future.", stacklevel=2
             )
+        if allow_prereleases is not None:
+            deprecation_warning(
+                "The `allow_prereleases` argument is deprecated and will be removed in the future.", stacklevel=2
+            )
         project = repository.environment.project
         self.repository = repository
-        self.allow_prereleases = allow_prereleases  # Root allow_prereleases value
+        self.allow_prereleases = project.pyproject.allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
         self.overrides: Mapping[str, str] = {
             normalize_name(k): v for k, v in project.pyproject.resolution.get("overrides", {}).items()
@@ -75,7 +79,9 @@ class BaseProvider(AbstractProvider):
         is_named = requirement.is_named
         is_pinned = requirement.is_pinned
         is_prerelease = (
-            requirement.prerelease or requirement.specifier is not None and bool(requirement.specifier.prereleases)
+            bool(requirement.prerelease)
+            or requirement.specifier is not None
+            and bool(requirement.specifier.prereleases)
         )
         specifier_parts = len(requirement.specifier) if requirement.specifier else 0
         return (not editable, is_named, not is_pinned, not is_prerelease, -specifier_parts)
@@ -160,7 +166,7 @@ class BaseProvider(AbstractProvider):
         else:
             return self.repository.find_candidates(
                 requirement,
-                requirement.prerelease or self.allow_prereleases,
+                requirement.prerelease if requirement.prerelease is not None else self.allow_prereleases,
                 minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
             )
 

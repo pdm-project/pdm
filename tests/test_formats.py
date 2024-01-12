@@ -30,7 +30,7 @@ def test_convert_pipfile(project):
     assert pipfile.check_fingerprint(project, golden_file)
     result, settings = pipfile.convert(project, golden_file, None)
 
-    assert settings["allow_prereleases"]
+    assert settings["resolution"]["allow-prereleases"]
     assert result["requires-python"] == ">=3.6"
 
     assert not settings.get("dev-dependencies", {}).get("dev")
