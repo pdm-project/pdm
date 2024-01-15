@@ -142,14 +142,14 @@ You can either pass the options after the script or set the env var value.
 
         ```
         curl -LO https://github.com/pyprojectx/pyprojectx/releases/latest/download/wrappers.zip && unzip wrappers.zip && rm -f wrappers.zip
-        ./pw --init pdm
+        ./pw --add pdm
         ```
 
     === "Windows"
 
         ```powershell
         Invoke-WebRequest https://github.com/pyprojectx/pyprojectx/releases/latest/download/wrappers.zip -OutFile wrappers.zip; Expand-Archive -Path wrappers.zip -DestinationPath .; Remove-Item -Path wrappers.zip
-        .\pw --init pdm
+        .\pw --add pdm
         ```
 
     When installing pdm with this method, you need to run all `pdm` commands through the `pw` wrapper:
