@@ -17,14 +17,15 @@ if TYPE_CHECKING:
 
     ST = TypeVar("ST", Traversable, Path)
 
-BUILTIN_TEMPLATE = "pdm.cli.templates.default"
+TEMPLATE_PACKAGE = "pdm.cli.templates"
+BUILTIN_TEMPLATES = ["default", "minimal"]
 
 
 class ProjectTemplate:
     _path: Path
 
     def __init__(self, path_or_url: str | None) -> None:
-        self.template = path_or_url
+        self.template = path_or_url or "default"
 
     def __enter__(self) -> ProjectTemplate:
         self._path = Path(tempfile.mkdtemp(suffix="-template", prefix="pdm-"))
@@ -78,8 +79,8 @@ class ProjectTemplate:
         self._generate_pyproject(target_path / "pyproject.toml", metadata)
 
     def prepare_template(self) -> None:
-        if self.template is None:
-            self._prepare_package_template(BUILTIN_TEMPLATE)
+        if self.template in BUILTIN_TEMPLATES:
+            self._prepare_package_template(f"{TEMPLATE_PACKAGE}.{self.template}")
         elif "://" in self.template or self.template.startswith("git@"):
             self._prepare_git_template(self.template)
         elif os.path.exists(self.template):
