@@ -164,6 +164,7 @@ class BaseEnvironment(abc.ABC):
             verbosity=self.project.core.ui.verbosity,
             minimal_version=minimal_version,
         )
+        finder.sources.clear()
         for source in sources:
             assert source.url
             if source.type == "find_links":
