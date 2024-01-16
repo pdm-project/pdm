@@ -39,6 +39,8 @@ class Command(BaseCommand):
 
         if project.is_global:
             raise ProjectError("Not allowed to build based on the global project.")
+        if not project.is_library:  # pragma: no cover
+            raise ProjectError("The package-type must be `library` to be built.")
         if not wheel and not sdist:
             project.core.ui.echo("All artifacts are disabled, nothing to do.", err=True)
             return

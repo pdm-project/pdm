@@ -114,7 +114,7 @@ class Command(BaseCommand):
         is_library = options.lib or bool(options.backend)
         if not is_library and self.interactive:
             is_library = termui.confirm(
-                "Is the project an installable package?\n"
+                "Do you want to build this project for distribution(such as wheel)?\n"
                 "If yes, it will be installed by default when running `pdm install`."
             )
         build_backend: type[BuildBackend] | None = None
