@@ -68,7 +68,7 @@ class ProjectConfigFixer(BaseFixer):
         return self.project.root.joinpath(".pdm.toml").exists()
 
 
-class PackageTypeFixer(BaseFixer):
+class PackageTypeFixer(BaseFixer):  # pragma: no cover
     def get_message(self) -> str:
         package_type = self.project.pyproject.settings["package-type"]
         dist = str(package_type == "library").lower()
