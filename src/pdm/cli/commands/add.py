@@ -128,7 +128,7 @@ class Command(BaseCommand):
             if editables:
                 raise PdmUsageError("Cannot add editables to the default or optional dependency group")
         for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
-            if project.is_library and normalize_name(name := project.name) == r.key and not r.extras:
+            if project.is_distribution and normalize_name(name := project.name) == r.key and not r.extras:
                 project.core.ui.warn(f"Package [req]{name}[/] is the project itself.")
                 continue
             if r.is_file_or_url:

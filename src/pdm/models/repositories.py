@@ -124,7 +124,7 @@ class BaseRepository:
     def is_this_package(self, requirement: Requirement) -> bool:
         """Whether the requirement is the same as this package"""
         project = self.environment.project
-        return requirement.is_named and project.is_library and requirement.key == normalize_name(project.name)
+        return requirement.is_named and project.is_distribution and requirement.key == normalize_name(project.name)
 
     def make_this_candidate(self, requirement: Requirement) -> Candidate:
         """Make a candidate for this package.
@@ -275,7 +275,7 @@ class BaseRepository:
         """Adds the local package as a candidate only if the candidate
         name is the same as the local package."""
         project = self.environment.project
-        if not project.is_library or candidate.name != project.name:
+        if not project.is_distribution or candidate.name != project.name:
             raise CandidateInfoNotFound(candidate) from None
 
         reqs = project.pyproject.metadata.get("dependencies", [])

@@ -329,7 +329,7 @@ def add_package_to_reverse_tree(
 
 
 def package_is_project(package: Package, project: Project) -> bool:
-    return project.is_library and package.name == normalize_name(project.name)
+    return project.is_distribution and package.name == normalize_name(project.name)
 
 
 def _format_forward_dependency_graph(

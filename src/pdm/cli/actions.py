@@ -227,7 +227,7 @@ def do_sync(
         clean=clean,
         dry_run=dry_run,
         no_editable=no_editable,
-        install_self=not no_self and project.is_library,
+        install_self=not no_self and project.is_distribution,
         reinstall=reinstall,
         only_keep=only_keep,
         fail_fast=fail_fast,

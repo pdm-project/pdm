@@ -169,12 +169,12 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the p
 
 # init
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a init -d 'Initialize a pyproject.toml for PDM'
-complete -c pdm -A -n '__fish_seen_subcommand_from init' -l backend -d 'Specify the build backend, which implies --lib'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l backend -d 'Specify the build backend, which implies --dist'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l cookiecutter -d 'Use Cookiecutter to generate project [32m[installed][0m'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l copier -d 'Use Copier to generate project [32m[installed][0m'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l dist -d 'Create a package for distribution'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'Show this help message and exit.'
-complete -c pdm -A -n '__fish_seen_subcommand_from init' -l lib -d 'Create a library project'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don\'t ask questions but use default values'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l overwrite -d 'Overwrite existing files'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
