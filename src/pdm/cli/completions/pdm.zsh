@@ -193,7 +193,7 @@ _pdm() {
         {-n,--non-interactive}"[Don't ask questions but use default values]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         {-r,--overwrite}'[Overwrite existing files]'
-        '--backend[Specify the build backend, which implies --lib]:backend:(pdm-backend setuptools hatchling flit)'
+        '--backend[Specify the build backend, which implies --dist]:backend:(pdm-backend setuptools hatchling flit)'
         {--dist,--lib}'[Create a package for distribution]'
         '--python[Specify the Python version/path to use]:python:'
         '--copier[Use Copier to generate project]'
