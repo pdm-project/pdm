@@ -31,7 +31,7 @@ def test_init_command(project_no_init, pdm, mocker):
             "readme": "README.md",
             "version": "0.1.0",
         },
-        "tool": {"pdm": {"package-type": "application"}},
+        "tool": {"pdm": {"distribution": False}},
     }
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
@@ -62,7 +62,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
             "version": "0.1.0",
         },
         "build-system": {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61", "wheel"]},
-        "tool": {"pdm": {"package-type": "library"}},
+        "tool": {"pdm": {"distribution": True}},
     }
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
@@ -98,7 +98,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
             "readme": "README.md",
             "version": "0.1.0",
         },
-        "tool": {"pdm": {"package-type": "application"}},
+        "tool": {"pdm": {"distribution": False}},
     }
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:

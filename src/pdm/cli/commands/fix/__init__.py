@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.fix.fixers import BaseFixer, ProjectConfigFixer
+from pdm.cli.commands.fix.fixers import BaseFixer, PackageTypeFixer, ProjectConfigFixer
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.termui import Emoji
@@ -49,7 +49,7 @@ class Command(BaseCommand):
     @staticmethod
     def get_fixers(project: Project) -> list[BaseFixer]:
         """Return a list of fixers to check, the order matters"""
-        return [ProjectConfigFixer(project)]
+        return [ProjectConfigFixer(project), PackageTypeFixer(project)]
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.dry_run:

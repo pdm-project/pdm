@@ -201,7 +201,7 @@ def export(
             for item in sorted({row["hash"] for row in candidate.hashes}):  # type: ignore[attr-defined]
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
-    if (options.self or options.editable_self) and not project.is_library:
+    if (options.self or options.editable_self) and not project.is_distribution:
         raise PdmUsageError("Cannot export the project itself in a non-library project.")
     if options.self:
         lines.append(".  # this package\n")

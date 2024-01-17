@@ -66,3 +66,22 @@ class ProjectConfigFixer(BaseFixer):
 
     def check(self) -> bool:
         return self.project.root.joinpath(".pdm.toml").exists()
+
+
+class PackageTypeFixer(BaseFixer):
+    def get_message(self) -> str:
+        package_type = self.project.pyproject.settings["package-type"]
+        dist = str(package_type == "library").lower()
+        return (
+            rf'[success]package-type = "{package_type}"[/] has been renamed to '
+            rf"[info]distribution = {dist}[/] under \[tool.pdm\] table"
+        )
+
+    def check(self) -> bool:
+        return "package-type" in self.project.pyproject.settings
+
+    def fix(self) -> None:
+        package_type = self.project.pyproject.settings.pop("package-type")
+        dist = str(package_type == "library").lower()
+        self.project.pyproject.settings["distribution"] = dist
+        self.project.pyproject.write(False)

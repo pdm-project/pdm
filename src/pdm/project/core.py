@@ -669,5 +669,13 @@ class Project:
         return finder
 
     @property
-    def is_library(self) -> bool:
-        return bool(self.name) and self.pyproject.settings.get("package-type", "library") == "library"
+    def is_distribution(self) -> bool:
+        if not self.name:
+            return False
+        settings = self.pyproject.settings
+        if "package-type" in settings:
+            return settings["package-type"] == "library"
+        elif "distribution" in settings:
+            return settings["distribution"]
+        else:
+            return True

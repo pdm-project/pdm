@@ -49,7 +49,7 @@ def resolve(
     mapping.pop("python", None)
 
     local_name = (
-        normalize_name(repository.environment.project.name) if repository.environment.project.is_library else None
+        normalize_name(repository.environment.project.name) if repository.environment.project.is_distribution else None
     )
     for key, candidate in list(mapping.items()):
         if key is None:

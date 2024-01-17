@@ -111,15 +111,15 @@ class Command(BaseCommand):
 
         name = self.ask_project(project)
         version = self.ask("Project version", "0.1.0")
-        is_library = options.lib or bool(options.backend)
-        if not is_library and self.interactive:
-            is_library = termui.confirm(
+        is_dist = options.dist or bool(options.backend)
+        if not is_dist and self.interactive:
+            is_dist = termui.confirm(
                 "Do you want to build this project for distribution(such as wheel)?\n"
                 "If yes, it will be installed by default when running `pdm install`."
             )
         build_backend: type[BuildBackend] | None = None
         python = project.python
-        if is_library:
+        if is_dist:
             description = self.ask("Project description", "")
             if options.backend:
                 build_backend = get_backend(options.backend)
@@ -157,7 +157,7 @@ class Command(BaseCommand):
                 "license": make_inline_table({"text": license}),
                 "dependencies": make_array([], True),
             },
-            "tool": {"pdm": {"package-type": "library" if is_library else "application"}},
+            "tool": {"pdm": {"distribution": is_dist}},
         }
 
         if python_requires and python_requires != "*":
@@ -200,8 +200,10 @@ class Command(BaseCommand):
             help="Don't ask questions but use default values",
         )
         group.add_argument("--python", help="Specify the Python version/path to use")
-        group.add_argument("--lib", action="store_true", help="Create a library project")
-        group.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend, which implies --lib")
+        group.add_argument(
+            "--dist", "--lib", dest="dist", action="store_true", help="Create a package for distribution"
+        )
+        group.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend, which implies --dist")
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )
