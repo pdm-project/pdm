@@ -1,3 +1,32 @@
+Release v2.12.0 (2024-01-17)
+----------------------------
+
+### Features & Improvements
+
+- Allow excluding packages from the lockfile via `tool.pdm.resolution.excludes` setting, the dependencies will also be skipped. [#1316](https://github.com/pdm-project/pdm/issues/1316)
+- Rename `--no-lock` option to `--frozen-lockfile`. [#2496](https://github.com/pdm-project/pdm/issues/2496)
+- Add `--no-hashes` as the recommended option name in favor of `--without-hashes` for `pdm export` command. [#2497](https://github.com/pdm-project/pdm/issues/2497)
+- Add `--no-markers` to `export` command to exclude markers from the output. [#2497](https://github.com/pdm-project/pdm/issues/2497)
+- Allow initializing a project without extra project files, with a new builtin template "minimal". Run it with `pdm init minimal`. [#2543](https://github.com/pdm-project/pdm/issues/2543)
+- Change the warning category emitted by `deprecated_warning()` to `PDMDeprecationWarning`. [#2547](https://github.com/pdm-project/pdm/issues/2547)
+- Prereleases will be allowed if a prerelease version is pinned in the lockfile. This can be disabled by passing `--stable` option. [#2552](https://github.com/pdm-project/pdm/issues/2552)
+- Change `tracked_names` argument to keyword-only. Move `allow_prereleases` setting to `tool.pdm.resolution` table. [#2552](https://github.com/pdm-project/pdm/issues/2552)
+- Rename the `preferred_pins` argument of provider classes to `locked_candidates`, and deprecate the old name. [#2552](https://github.com/pdm-project/pdm/issues/2552)
+- Rename the `package-type` field under `tool.pdm` settings table to `distribution` to make it more clear. [#2564](https://github.com/pdm-project/pdm/issues/2564)
+
+### Bug Fixes
+
+- `tool.pdm.resolution` settings won't be honored when installing dependencies into the build environment. [#1316](https://github.com/pdm-project/pdm/issues/1316)
+- Fixed pdm list output containing full license text in some cases [#2538](https://github.com/pdm-project/pdm/issues/2538)
+- Fix the environment variable substitution for `cmd` scripts. [#2542](https://github.com/pdm-project/pdm/issues/2542)
+- Allow normal extension modules in wheel tags when the python is debug build. [#2548](https://github.com/pdm-project/pdm/issues/2548)
+- Don't use pypi.org when pypi.url is set. [#2560](https://github.com/pdm-project/pdm/issues/2560)
+
+### Removals and Deprecations
+
+- Remove deprecated methods from `Project`. Remove deprecated helper functions from `actions.py`. [#2547](https://github.com/pdm-project/pdm/issues/2547)
+
+
 Release v2.11.2 (2024-01-02)
 ----------------------------
 
