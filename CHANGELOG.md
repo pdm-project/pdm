@@ -1,3 +1,11 @@
+Release v2.12.1 (2024-01-17)
+----------------------------
+
+### Bug Fixes
+
+- Hotfix: missing `identifier` attribute for package type fixer. [#2564](https://github.com/pdm-project/pdm/issues/2564)
+
+
 Release v2.12.0 (2024-01-17)
 ----------------------------
 
