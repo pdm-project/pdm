@@ -69,6 +69,8 @@ class ProjectConfigFixer(BaseFixer):
 
 
 class PackageTypeFixer(BaseFixer):  # pragma: no cover
+    identifier = "package-type"
+
     def get_message(self) -> str:
         package_type = self.project.pyproject.settings["package-type"]
         dist = str(package_type == "library").lower()
