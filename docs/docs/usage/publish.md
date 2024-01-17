@@ -26,6 +26,8 @@ jobs:
     name: upload release to PyPI
     runs-on: ubuntu-latest
     permissions:
+      # This permission is needed for private repositories.
+      contents: read
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
