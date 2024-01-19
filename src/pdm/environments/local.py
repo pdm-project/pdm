@@ -106,8 +106,10 @@ class PythonLocalEnvironment(BaseEnvironment):
             pypackages.joinpath(subdir).mkdir(exist_ok=True, parents=True)
         return pypackages
 
-    def get_paths(self) -> dict[str, str]:
-        return pdm_scheme(self.packages_path.as_posix())
+    def get_paths(self, dist_name: str | None = None) -> dict[str, str]:
+        scheme = pdm_scheme(self.packages_path.as_posix())
+        scheme["headers"] = os.path.join(scheme["headers"], dist_name or "UNKNOWN")
+        return scheme
 
     def update_shebangs(self, new_path: str) -> None:
         """Update the shebang lines"""

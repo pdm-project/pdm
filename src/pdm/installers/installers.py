@@ -48,6 +48,12 @@ def _is_python_package(root: str | Path) -> bool:
     return False
 
 
+def _get_dist_name(wheel_path: str) -> str:
+    from packaging.utils import parse_wheel_filename
+
+    return parse_wheel_filename(os.path.basename(wheel_path))[0]
+
+
 _namespace_package_lines = frozenset(
     [
         # pkg_resources style
@@ -192,7 +198,7 @@ def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str
     if direct_url is not None:
         additional_metadata = {"direct_url.json": json.dumps(direct_url, indent=2).encode()}
     destination = InstallDestination(
-        scheme_dict=environment.get_paths(),
+        scheme_dict=environment.get_paths(_get_dist_name(wheel)),
         interpreter=str(environment.interpreter.executable),
         script_kind=_get_kind(environment),
     )
@@ -263,7 +269,7 @@ def install_wheel_with_cache(wheel: str, environment: BaseEnvironment, direct_ur
         additional_contents.append(((filename, "", str(len(stream.getvalue()))), stream, False))
 
     destination = InstallDestination(
-        scheme_dict=environment.get_paths(),
+        scheme_dict=environment.get_paths(_get_dist_name(wheel)),
         interpreter=interpreter,
         script_kind=script_kind,
         link_to=lib_path,
