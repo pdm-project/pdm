@@ -27,11 +27,11 @@ class PythonEnvironment(BaseEnvironment):
             replace_vars = None
             kind = "user" if not is_venv and self.project.global_config["global_project.user_site"] else "default"
         paths = get_sys_config_paths(str(self.interpreter.executable), replace_vars, kind=kind)
-        if not dist_name and not is_venv:
-            dist_name = "UNKNOWN"
-        if is_venv and self.prefix is None:
+        if is_venv:
             python_xy = f"python{self.interpreter.identifier}"
             paths["include"] = os.path.join(paths["data"], "include", "site", python_xy)
+        elif not dist_name:
+            dist_name = "UNKNOWN"
         if dist_name:
             paths["include"] = os.path.join(paths["include"], dist_name)
         paths["prefix"] = paths["data"]
