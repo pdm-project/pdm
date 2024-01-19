@@ -31,7 +31,10 @@ if TYPE_CHECKING:
 def get_paths_wrapper(get_paths):  # pragma: no cover
     @functools.wraps(get_paths)
     def wrapped(self: BaseEnvironment, dist_name: str | None = None) -> dict[str, str]:
-        return get_paths(self)
+        result = get_paths(self)
+        if dist_name and "headers" in result:
+            result["headers"] = os.path.join(result["headers"], dist_name)
+        return result
 
     return wrapped
 
