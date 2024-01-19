@@ -88,6 +88,7 @@ curl -sSL https://pdm-project.org/install-pdm.py | python3 -
 默认情况下，此脚本会将 PDM 安装在 Python 的用户目录下，具体位置取决于当前系统：
 
 - Unix 上是 `$HOME/.local/bin`
+- MacOS 上是 `$HOME/Library/Python/<version>/bin`
 - Windows 上是 `%APPDATA%\Python\Scripts`
 
 你还可以通过命令行的选项来改变安装脚本的行为：

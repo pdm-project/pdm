@@ -99,7 +99,8 @@ It can be downloaded from [install-pdm.py.sha256](https://pdm-project.org/instal
 
 The installer will install PDM into the user site and the location depends on the system:
 
-- `$HOME/.local/bin` for Unix
+- `$HOME/.local/bin` for Linux
+- `$HOME/Library/Python/<version>/bin` for MacOS
 - `%APPDATA%\Python\Scripts` on Windows
 
 You can pass additional options to the script to control how PDM is installed:
