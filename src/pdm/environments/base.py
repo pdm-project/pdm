@@ -55,8 +55,11 @@ class BaseEnvironment(abc.ABC):
         return self._interpreter
 
     @abc.abstractmethod
-    def get_paths(self) -> dict[str, str]:
-        """Get paths like ``sysconfig.get_paths()`` for installation."""
+    def get_paths(self, dist_name: str | None = None) -> dict[str, str]:
+        """Get paths like ``sysconfig.get_paths()`` for installation.
+
+        :param dist_name: The package name to be installed, if any.
+        """
         ...
 
     @property
@@ -252,7 +255,7 @@ class BareEnvironment(BaseEnvironment):
     def __init__(self, project: Project) -> None:
         super().__init__(project, python=sys.executable)
 
-    def get_paths(self) -> dict[str, str]:
+    def get_paths(self, dist_name: str | None = None) -> dict[str, str]:
         return {}
 
     def get_working_set(self) -> WorkingSet:

@@ -76,7 +76,7 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
         dist = str(package_type == "library").lower()
         return (
             rf'[success]package-type = "{package_type}"[/] has been renamed to '
-            rf"[info]distribution = {dist}[/] under \[tool.pdm\] table"
+            rf"[info]distribution = {dist}[/] under \[tool.pdm] table"
         )
 
     def check(self) -> bool:
