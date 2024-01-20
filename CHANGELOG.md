@@ -1,3 +1,13 @@
+Release v2.12.2 (2024-01-21)
+----------------------------
+
+### Bug Fixes
+
+- Fix the auto fixer for package-type. [#2564](https://github.com/pdm-project/pdm/issues/2564)
+- Fix the wrong installation destination for header files when installing build requirements. [#2573](https://github.com/pdm-project/pdm/issues/2573)
+- Install header files into package namespace under `include` directory. [#2574](https://github.com/pdm-project/pdm/issues/2574)
+
+
 Release v2.12.1 (2024-01-17)
 ----------------------------
 
