@@ -84,6 +84,6 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
 
     def fix(self) -> None:
         package_type = self.project.pyproject.settings.pop("package-type")
-        dist = str(package_type == "library").lower()
+        dist = bool(package_type == "library")
         self.project.pyproject.settings["distribution"] = dist
         self.project.pyproject.write(False)
