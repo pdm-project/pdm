@@ -83,7 +83,17 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
         return "package-type" in self.project.pyproject.settings
 
     def fix(self) -> None:
-        package_type = self.project.pyproject.settings.pop("package-type")
+        # Copy the project settings
+        settings = self.project.pyproject.settings.copy()
+        
+        # Pop the package type and convert it to a distribution type
+        package_type = settings.pop("package-type")
         dist = bool(package_type == "library")
-        self.project.pyproject.settings["distribution"] = dist
+        settings["distribution"] = dist
+        
+        # Update the project settings with the new distribution type
+        self.project.pyproject._data["tool"].pop("pdm")
+        self.project.pyproject.settings.update(settings)
+        
+        # Write the updated settings back to the project
         self.project.pyproject.write(False)
