@@ -305,3 +305,10 @@ def test_install_requirement_with_extras(project, pdm, working_set):
     pdm(["lock", "-Gsocks"], obj=project, strict=True)
     pdm(["sync", "-Gsocks"], obj=project, strict=True)
     assert "pysocks" in working_set
+
+
+def test_fix_package_type_and_update(fixture_project, pdm, working_set):
+    project = fixture_project("test-package-type-fixer")
+    pdm(["fix", "project-type"], obj=project, strict=True)
+    pdm(["update"], obj=project, strict=True)
+    assert "test-package-type-fixer" in working_set
