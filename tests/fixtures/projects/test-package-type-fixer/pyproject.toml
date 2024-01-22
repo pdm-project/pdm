@@ -19,5 +19,5 @@ package-type = "application"
 [tool.pdm.dev-dependencies]
 
 dev = [
-    "black>=23.12.1"
+    "requests==2.19.1"
 ]
