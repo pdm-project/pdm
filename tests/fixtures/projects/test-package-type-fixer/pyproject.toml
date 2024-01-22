@@ -1,0 +1,23 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+
+version = "0.0.1"
+dependencies = []
+name = "test-package-type-fixer"
+requires-python = ">=3.8"
+
+[tool.pdm.version]
+source = "file"
+path = "src/test_package_type_fixer/__init__.py"
+
+[tool.pdm]
+package-type = "application"
+
+[tool.pdm.dev-dependencies]
+
+dev = [
+    "requests==2.19.1"
+]
