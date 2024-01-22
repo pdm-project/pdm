@@ -88,7 +88,7 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
 
         # Pop the package type and convert it to a distribution type
         package_type = settings.pop("package-type")
-        dist = bool(package_type == "library")
+        dist = package_type == "library"
         settings["distribution"] = dist
 
         # Update the project settings with the new distribution type
