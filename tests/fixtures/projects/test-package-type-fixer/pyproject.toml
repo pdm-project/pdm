@@ -7,7 +7,7 @@ build-backend = "pdm.backend"
 version = "0.0.1"
 dependencies = []
 name = "test-package-type-fixer"
-
+requires-python = ">=3.8"
 
 [tool.pdm.version]
 source = "file"
