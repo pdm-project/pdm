@@ -105,6 +105,17 @@ all = {composite = ["lint", "test"]}
 
 Running `pdm run all` will run `lint` first and then `test` if `lint` succeeded.
 
+To override the default behavior and continue the execution of the remaining
+scripts after a failure, set the `keep_going` option to `true`:
+
+```toml
+[tool.pdm.scripts]
+lint = "flake8"
+test = "pytest"
+all = {composite = ["lint", "test"]}
+all.keep_going = true
+```
+
 You can also provide arguments to the called scripts:
 
 ```toml

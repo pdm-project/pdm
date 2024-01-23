@@ -614,6 +614,25 @@ def test_composite_stops_on_first_failure(project, pdm, capfd):
     assert "Second CALLED" not in out
 
 
+def test_composite_keep_going_on_failure(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
+        "fail": "python -c 'raise Exception'",
+        "second": "echo 'Second CALLED'",
+        "test": {
+            "composite": ["first", "fail", "second"],
+            "keep_going": True
+        },
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    result = pdm(["run", "test"], obj=project)
+    assert result.exit_code == 1
+    out, err = capfd.readouterr()
+    assert "First CALLED" in out
+    assert "Second CALLED" in out
+
+
 def test_composite_inherit_env(project, pdm, capfd, _echo):
     project.pyproject.settings["scripts"] = {
         "first": {
