@@ -619,10 +619,7 @@ def test_composite_keep_going_on_failure(project, pdm, capfd):
         "first": {"cmd": ["python", "-c", "print('First CALLED')"]},
         "fail": "python -c 'raise Exception'",
         "second": "echo 'Second CALLED'",
-        "test": {
-            "composite": ["first", "fail", "second"],
-            "keep_going": True
-        },
+        "test": {"composite": ["first", "fail", "second"], "keep_going": True},
     }
     project.pyproject.write()
     capfd.readouterr()
