@@ -234,6 +234,10 @@ class Project:
                     return python
 
             if not self.root.joinpath("__pypackages__").exists():
+                self.core.ui.warn(
+                    f"Project requires a python version of {self.python_requires}, "
+                    f"The virtualenv is being created for you as it cannot be matched to the right version."
+                )
                 note("python.use_venv is on, creating a virtualenv for this project...")
                 venv_path = self._create_virtualenv()
                 self.python = PythonInfo.from_path(get_venv_python(venv_path))
