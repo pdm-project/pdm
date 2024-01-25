@@ -218,6 +218,8 @@ class BaseProvider(AbstractProvider):
                 return (c for c in candidates if c not in incompat)
             elif identifier in self.overrides:
                 return iter(self.get_override_candidates(identifier))
+            elif (name := strip_extras(identifier)[0]) in self.overrides:
+                return iter(self.get_override_candidates(name))
             reqs = sorted(requirements[identifier], key=self.requirement_preference)
             if not reqs:
                 return iter(())
@@ -250,7 +252,7 @@ class BaseProvider(AbstractProvider):
     def is_satisfied_by(self, requirement: Requirement, candidate: Candidate) -> bool:
         if isinstance(requirement, PythonRequirement):
             return is_python_satisfied_by(requirement, candidate)
-        elif candidate.identify() in self.overrides:
+        elif (name := candidate.identify()) in self.overrides or strip_extras(name)[0] in self.overrides:
             return True
         if not requirement.is_named:
             if candidate.req.is_named:

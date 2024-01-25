@@ -195,10 +195,14 @@ def test_resolve_conflicting_dependencies_with_overrides(project, resolve, repos
     repository.add_dependencies("foo", "0.1.0", ["hoho>=2.0"])
     repository.add_candidate("bar", "0.1.0")
     repository.add_dependencies("bar", "0.1.0", ["hoho~=1.1"])
+    repository.add_candidate("baz", "0.1.0")
+    repository.add_dependencies("baz", "0.1.0", ["hoho[extra]~=1.1"])
     repository.add_candidate("hoho", "2.1")
     repository.add_candidate("hoho", "1.5")
     project.pyproject.settings["resolution"] = {"overrides": {"hoho": overrides}}
     result = resolve(["foo", "bar"])
+    assert result["hoho"].version == "2.1"
+    result = resolve(["foo", "baz"])
     assert result["hoho"].version == "2.1"
 
 
