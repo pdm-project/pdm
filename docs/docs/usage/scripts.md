@@ -116,6 +116,8 @@ all = {composite = ["lint", "test"]}
 all.keep_going = true
 ```
 
+If `keep_going` set to `true` return code of composite script is either '0' if all succeeded or the code of last failed individual script.
+
 You can also provide arguments to the called scripts:
 
 ```toml

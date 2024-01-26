@@ -283,7 +283,7 @@ class TaskRunner:
                 if code != 0:
                     if not keep_going:
                         return code
-                    composite_code += code
+                    composite_code = code
             return composite_code
         return self._run_process(
             args,
