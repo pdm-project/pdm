@@ -26,7 +26,7 @@ def get_specifier(version_str: SpecifierSet | str) -> SpecifierSet:
         return version_str
     if not version_str or version_str == "*":
         return SpecifierSet()
-    return SpecifierSet(version_str)
+    return SpecifierSet(fix_legacy_specifier(version_str))
 
 
 _legacy_specifier_re = re.compile(r"(==|!=|<=|>=|<|>)(\s*)([^,;\s)]*)")
