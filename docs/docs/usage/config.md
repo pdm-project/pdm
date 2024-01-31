@@ -335,7 +335,7 @@ Sometimes you don't even want to include certain packages in the locked file bec
 excludes = ["requests"]
 ```
 
-With this config, `requests` will be locked in the lockfile, and its dependencies such as `urllib3` and `idna` will also not show up in the resolution result, if not depended on by other packages. The installer will not be able to pick them up either.
+With this config, `requests` will not be locked in the lockfile, and its dependencies such as `urllib3` and `idna` will also not show up in the resolution result, if not depended on by other packages. The installer will not be able to pick them up either.
 
 ## Passing constant arguments to every pdm invocation
 
