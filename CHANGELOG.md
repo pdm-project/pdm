@@ -1,3 +1,18 @@
+Release v2.12.3 (2024-02-01)
+----------------------------
+
+### Bug Fixes
+
+- fix the package-type fixer won't update toml properly for "Nested Section Ordering Issue in TOML". [#2578](https://github.com/pdm-project/pdm/issues/2578)
+- Unable to force override a package if the package is required with extras. [#2586](https://github.com/pdm-project/pdm/issues/2586)
+- Failed to clone template repository if the URL contains the rev part. [#2597](https://github.com/pdm-project/pdm/issues/2597)
+- Handle legacy specifiers when converting from poetry project. [#2599](https://github.com/pdm-project/pdm/issues/2599)
+
+### Documentation
+
+- Fix typo in template docs [#2588](https://github.com/pdm-project/pdm/issues/2588)
+
+
 Release v2.12.2 (2024-01-21)
 ----------------------------
 
