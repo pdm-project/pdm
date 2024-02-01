@@ -154,6 +154,7 @@ class ProjectTemplate:
         left, amp, right = url.rpartition("@")
         if left != "git" and amp:
             extra_args = [f"--branch={right}"]
+            url = left
         else:
             extra_args = []
         git_command = ["git", "clone", "--recursive", "--depth=1", *extra_args, url, self._path.as_posix()]
