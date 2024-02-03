@@ -188,7 +188,7 @@ class Project:
             return
         python_file.write_text(value, "utf-8")
 
-    def resolve_interpreter(self) -> PythonInfo:
+    def resolve_interpreter(self, *, in_import: bool = False) -> PythonInfo:
         """Get the Python interpreter path."""
         from pdm.cli.commands.venv.utils import iter_venvs
         from pdm.models.venv import get_venv_python
@@ -200,6 +200,7 @@ class Project:
             if not self.is_global:
                 self.core.ui.info(message)
 
+        python = None
         config = self.config
         saved_path = self._saved_python
         if saved_path and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
@@ -230,27 +231,31 @@ class Project:
                 python = PythonInfo.from_path(venv.interpreter)
                 if match_version(python):
                     note(f"Virtualenv [success]{venv.root}[/] is reused.")
-                    self.python = python
+                    if not in_import:
+                        self.python = python
                     return python
 
-            if not self.root.joinpath("__pypackages__").exists():
-                self.core.ui.warn(
-                    f"Project requires a python version of {self.python_requires}, "
-                    f"The virtualenv is being created for you as it cannot be matched to the right version."
-                )
-                note("python.use_venv is on, creating a virtualenv for this project...")
+            if not in_import and not self.root.joinpath("__pypackages__").exists():
+                if python is not None:
+                    self.core.ui.warn(
+                        f"Project requires a python version of {self.python_requires or '*'}, "
+                        f"a new virtualenv is being created as none could be matched to the project's requirements."
+                    )
+                else:
+                    note("python.use_venv is on, creating a virtualenv for this project...")
                 venv_path = self._create_virtualenv()
                 self.python = PythonInfo.from_path(get_venv_python(venv_path))
                 return self.python
 
         for py_version in self.find_interpreters():
             if match_version(py_version):
-                if config.get("python.use_venv"):
+                if not in_import and config.get("python.use_venv"):
                     note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
-                self.python = py_version
+                if not in_import:
+                    self.python = py_version
                 return py_version
 
-        raise NoPythonVersion(f"No Python that satisfies {self.python_requires} is found on the system.")
+        raise NoPythonVersion(f"No Python that satisfies {self.python_requires or '*'} is found on the system.")
 
     def get_environment(self) -> BaseEnvironment:
         from pdm.environments import PythonEnvironment, PythonLocalEnvironment
