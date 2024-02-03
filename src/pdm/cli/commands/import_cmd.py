@@ -88,7 +88,8 @@ class Command(BaseCommand):
             pyproject["build-system"] = DEFAULT_BACKEND.build_system()
 
         if "requires-python" not in pyproject["project"]:
-            python_version = f"{project.python.major}.{project.python.minor}"
+            python = project.resolve_interpreter(in_import=True)
+            python_version = f"{python.major}.{python.minor}"
             pyproject["project"]["requires-python"] = f">={python_version}"
             project.core.ui.echo(
                 "The project's [primary]requires-python[/] has been set to [primary]>="

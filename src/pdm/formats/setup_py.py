@@ -17,7 +17,8 @@ def check_fingerprint(project: Project, filename: Path) -> bool:
 def convert(project: Project, filename: Path, options: Any | None) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     from pdm.models.in_process import parse_setup_py
 
-    parsed = parse_setup_py(str(project.environment.interpreter.executable), os.path.dirname(filename))
+    python = project.resolve_interpreter(in_import=True)
+    parsed = parse_setup_py(str(python.executable), os.path.dirname(filename))
     metadata: dict[str, Any] = {}
     settings: dict[str, Any] = {}
     for name in [
