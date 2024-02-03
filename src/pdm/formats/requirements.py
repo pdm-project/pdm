@@ -101,7 +101,7 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
         except ValueError:
             # the file should be a requirements.txt
             # if it's not a TOML document nor py script.
-            return Path(filename).suffix not in (".py",)
+            return Path(filename).suffix not in (".py", ".cfg")
         else:
             return False
 

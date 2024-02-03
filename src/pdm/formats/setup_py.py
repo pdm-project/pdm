@@ -56,7 +56,8 @@ def convert(project: Project, filename: Path, options: Any | None) -> tuple[Mapp
         metadata["gui-scripts"] = entry_points.pop("gui_scripts")
     if entry_points:
         metadata["entry-points"] = entry_points
-
+    # reset the environment as `requires-python` may change
+    project.environment = None  # type: ignore[assignment]
     return metadata, settings
 
 
