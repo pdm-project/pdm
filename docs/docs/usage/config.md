@@ -234,6 +234,7 @@ In addition, several different ways of linking to cache entries are supported:
 - `symlink`(default), create symlinks to the package directories or children if the parent is a namespace package.
 - `symlink_individual`, for each individual files in the package directory, create a symlink to it.
 - `hardlink`, create hard links to the package files of the cache entry.
+- `pth`, do not link the package directory but only add the path to the `sys.path` via a `.pth` file(**This may not be supported by IDEs**).
 
 You can switch between them by running `pdm config [-l] install.cache_method <method>`.
 
