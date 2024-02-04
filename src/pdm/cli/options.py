@@ -184,8 +184,9 @@ install_group = ArgumentGroup("Install options")
 install_group.add_argument(
     "--no-editable",
     action="store_true",
+    default=bool(os.getenv("PDM_NO_EDITABLE")),
     dest="no_editable",
-    help="Install non-editable versions for all packages",
+    help="Install non-editable versions for all packages. [env var: PDM_NO_EDITABLE]",
 )
 install_group.add_argument(
     "--no-self",
