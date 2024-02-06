@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import fnmatch
+import itertools
 import posixpath
 import re
 import sys
@@ -282,11 +283,7 @@ class BaseRepository:
         extra_dependencies = project.pyproject.settings.get("dev-dependencies", {}).copy()
         extra_dependencies.update(project.pyproject.metadata.get("optional-dependencies", {}))
         if candidate.req.extras is not None:
-            reqs = sum(
-                (extra_dependencies.get(g, []) for g in candidate.req.extras),
-                [],
-            )
-
+            reqs = list(itertools.chain.from_iterable(extra_dependencies.get(g, []) for g in candidate.req.extras))
         return (
             reqs,
             str(self.environment.python_requires),
