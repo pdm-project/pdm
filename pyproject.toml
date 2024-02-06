@@ -127,6 +127,11 @@ workflow = [
 
 [tool.ruff]
 line-length = 120
+exclude = ["tests/fixtures"]
+target-version = "py38"
+src = ["src"]
+
+[tool.ruff.lint]
 extend-select = [
   "I",    # isort
   "B",    # flake8-bugbear
@@ -136,15 +141,12 @@ extend-select = [
   "W",    # pycodestyle
   "YTT",  # flake8-2020
 ]
-extend-ignore = ["B018", "B019"]
-src = ["src"]
-exclude = ["tests/fixtures"]
-target-version = "py38"
+extend-ignore = ["B018", "B019", "RUF018"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 10
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["pdm"]
 
 [tool.towncrier]
