@@ -37,7 +37,8 @@ class Backend(abc.ABC):
             project_python = self.project._python
             if project_python:
                 return project_python
-        for py_version in self.project.find_interpreters(self.python):
+        # disable venv provider temporarily
+        for py_version in self.project.find_interpreters(self.python, search_venv=False):
             if self.python or py_version.valid and self.project.python_requires.contains(py_version.version, True):
                 return py_version
 
