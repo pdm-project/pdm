@@ -614,7 +614,9 @@ class Project:
 
         return HashCache(directory=self.cache("hashes"))
 
-    def find_interpreters(self, python_spec: str | None = None) -> Iterable[PythonInfo]:
+    def find_interpreters(
+        self, python_spec: str | None = None, search_venv: bool | None = None
+    ) -> Iterable[PythonInfo]:
         """Return an iterable of interpreter paths that matches the given specifier,
         which can be:
             1. a version specifier like 3.7
@@ -652,7 +654,9 @@ class Project:
                         yield PythonInfo.from_path(python)
                         return
             finder_arg = python_spec
-        finder = self._get_python_finder()
+        if search_venv is None:
+            search_venv = config["python.use_venv"]
+        finder = self._get_python_finder(search_venv)
         for entry in finder.find_all(finder_arg, allow_prereleases=True):
             yield PythonInfo(entry)
         if not python_spec:
@@ -660,14 +664,14 @@ class Project:
             this_python = getattr(sys, "_base_executable", sys.executable)
             yield PythonInfo.from_path(this_python)
 
-    def _get_python_finder(self) -> Finder:
+    def _get_python_finder(self, search_venv: bool = True) -> Finder:
         from findpython import Finder
 
         from pdm.cli.commands.venv.utils import VenvProvider
 
         providers: list[str] = self.config["python.providers"]
         finder = Finder(resolve_symlinks=True, selected_providers=providers or None)
-        if self.config["python.use_venv"] and (not providers or "venv" in providers):
+        if search_venv and (not providers or "venv" in providers):
             venv_pos = providers.index("venv") if providers else 0
             finder.add_provider(VenvProvider(self), venv_pos)
         return finder
