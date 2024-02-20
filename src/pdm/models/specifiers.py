@@ -83,6 +83,58 @@ def _normalize_op_specifier(op: str, version_str: str) -> tuple[str, Version]:
         version = version.complete()
     return op, version
 
+def remove_versions_and_update_lower(sorted_excludes, lower, upper):
+    for version in list(sorted_excludes):  # from to low to high
+        if version >= upper:
+            sorted_excludes[:] = []
+            break
+
+        if version.is_wildcard:
+            valid_length = len(version._version) - 1
+            valid_version = version[:valid_length]
+
+            if valid_version < lower[:valid_length]:
+                # Useless excludes
+                sorted_excludes.remove(version)
+            elif lower.startswith(valid_version):
+                # The lower bound is excluded, e.g: >=3.7.3,!=3.7.*
+                # bump the lower version in the last common bit: >=3.8.0
+                lower = version.bump(-2)
+                sorted_excludes.remove(version)
+            else:
+                break
+        else:
+            if version < lower:
+                sorted_excludes.remove(version)
+            elif version == lower:
+                lower = version.bump()
+                sorted_excludes.remove(version)
+            else:
+                break
+    return sorted_excludes, lower
+
+def remove_versions_and_update_upper(sorted_excludes, upper):
+    for version in reversed(sorted_excludes):  # from high to low
+        if version >= upper:
+            sorted_excludes.remove(version)
+            continue
+
+        if not version.is_wildcard:
+            break
+        valid_length = len(version._version) - 1
+        valid_version = version[:valid_length]
+
+        if upper.startswith(valid_version) or version.bump(-2) == upper:
+            # Case 1: The upper bound is excluded, e.g: <3.7.3,!=3.7.*
+            # set the upper to the zero version: <3.7.0
+            # Case 2: The upper bound is adjacent to the excluded one,
+            # e.g: <3.7.0,!=3.6.*
+            # Move the upper bound to below the excluded: <3.6.0
+            upper = valid_version.complete()
+            sorted_excludes.remove(version)
+        else:
+            break
+    return sorted_excludes, upper
 
 class PySpecSet(SpecifierSet):
     """A custom SpecifierSet that supports merging with logic operators (&, |)."""
@@ -150,53 +202,8 @@ class PySpecSet(SpecifierSet):
             # Nothing we can do here, it is a non-constraint.
             return lower, upper, sorted_excludes
 
-        for version in list(sorted_excludes):  # from to low to high
-            if version >= upper:
-                sorted_excludes[:] = []
-                break
-
-            if version.is_wildcard:
-                valid_length = len(version._version) - 1
-                valid_version = version[:valid_length]
-
-                if valid_version < lower[:valid_length]:
-                    # Useless excludes
-                    sorted_excludes.remove(version)
-                elif lower.startswith(valid_version):
-                    # The lower bound is excluded, e.g: >=3.7.3,!=3.7.*
-                    # bump the lower version in the last common bit: >=3.8.0
-                    lower = version.bump(-2)
-                    sorted_excludes.remove(version)
-                else:
-                    break
-            else:
-                if version < lower:
-                    sorted_excludes.remove(version)
-                elif version == lower:
-                    lower = version.bump()
-                    sorted_excludes.remove(version)
-                else:
-                    break
-        for version in reversed(sorted_excludes):  # from high to low
-            if version >= upper:
-                sorted_excludes.remove(version)
-                continue
-
-            if not version.is_wildcard:
-                break
-            valid_length = len(version._version) - 1
-            valid_version = version[:valid_length]
-
-            if upper.startswith(valid_version) or version.bump(-2) == upper:
-                # Case 1: The upper bound is excluded, e.g: <3.7.3,!=3.7.*
-                # set the upper to the zero version: <3.7.0
-                # Case 2: The upper bound is adjacent to the excluded one,
-                # e.g: <3.7.0,!=3.6.*
-                # Move the upper bound to below the excluded: <3.6.0
-                upper = valid_version.complete()
-                sorted_excludes.remove(version)
-            else:
-                break
+        sorted_excludes, lower = remove_versions_and_update_lower(sorted_excludes, lower, upper)
+        sorted_excludes, upper = remove_versions_and_update_upper(sorted_excludes, upper)
 
         return lower, upper, sorted_excludes
 
