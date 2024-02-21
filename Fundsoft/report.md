@@ -53,13 +53,13 @@ When it comes to refactoring we found that many of the functions could be re-wri
 
 Carried out refactoring (optional, P+):
 
-The implemented versions of the refactoring can be see on the feature/65/refactor. Url shortcuts are given below:
+The implemented versions of the refactoring can be see on the branch feature/65/refactor. Url shortcuts are given below:
 
-[Victor - Refactoring P+]()
+[Victor - Refactoring P+](https://github.com/pdm-project/pdm/commit/16b835b7d853d707b6126a9d4641e7470aae0334)
 
-[Ludvig - Refactoring P+]()
+[Ludvig - Refactoring P+](https://github.com/pdm-project/pdm/commit/1a60ede32dd73e84ed31e6c7f991106b723f797b)
 
-[Rasmus - Refactoring P+]()
+[Rasmus - Refactoring P+](https://github.com/pdm-project/pdm/commit/f2e3836356304d89f490a3ca2f4f87d488bb29fe)
 
 [Sebastian - Refactoring P+]()
 
