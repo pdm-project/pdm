@@ -60,6 +60,26 @@ class CallbackAction(argparse.Action):
         namespace.callbacks.append(callback)
 
 
+class ExtendMapAction(argparse._AppendAction):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ) -> None:
+        assert isinstance(values, str)
+        k, _, v = values.partition("=")
+        mapping = getattr(namespace, self.dest, None) or {}
+        if k in mapping:
+            if not isinstance(mapping[k], list):
+                mapping[k] = [mapping[k]]
+            mapping[k].append(v)
+        else:
+            mapping[k] = v
+        setattr(namespace, self.dest, mapping)
+
+
 class ArgumentGroup(Option):
     """A reusable argument group object which can call `add_argument()`
     to add more arguments. And itself will be registered to the parser later.
@@ -450,4 +470,13 @@ lock_strategy_group.add_argument(
     dest="strategy_change",
     help="[DEPRECATED] Do not store static file URLs in the lockfile",
     const="no_static_urls",
+)
+
+config_setting_option = Option(
+    "--config-setting",
+    "-C",
+    action=ExtendMapAction,
+    help="Pass options to the backend. options with a value must be "
+    'specified after "=": `--config-setting=--opt(=value)` '
+    "or `-C--opt(=value)`",
 )
