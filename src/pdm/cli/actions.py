@@ -106,8 +106,9 @@ def do_lock(
                     resolve_max_rounds,
                     inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
                 )
-                spin.update("Fetching hashes for resolved packages...")
-                fetch_hashes(provider.repository, mapping)
+                if project.enable_write_lockfile:
+                    spin.update("Fetching hashes for resolved packages...")
+                    fetch_hashes(provider.repository, mapping)
         except ResolutionTooDeep:
             ui.echo(f"{termui.Emoji.LOCK} Lock failed", err=True)
             ui.echo(
