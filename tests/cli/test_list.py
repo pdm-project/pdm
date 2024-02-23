@@ -34,7 +34,7 @@ def test_list_dependency_graph(project, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     result = pdm(["list", "--tree"], obj=project)
     expected = "-- urllib3 1.22 [ required: <1.24,>=1.21.1 ]" in result.outputs
-    assert expected
+    assert expected, result.outputs
 
 
 @mock.patch("rich.console.ConsoleOptions.ascii_only", lambda: True)

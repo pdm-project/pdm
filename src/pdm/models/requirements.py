@@ -54,6 +54,7 @@ _file_req_re = re.compile(
 )
 _egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
 T = TypeVar("T", bound="Requirement")
+ALLOW_ANY = SpecifierSet()
 
 
 def strip_extras(line: str) -> tuple[str, tuple[str, ...] | None]:
@@ -79,7 +80,7 @@ class Requirement:
     name: str | None = None
     marker: Marker | None = None
     extras: Sequence[str] | None = None
-    specifier: SpecifierSet | None = None
+    specifier: SpecifierSet = ALLOW_ANY
     editable: bool = False
     prerelease: bool | None = None
     groups: list[str] = dataclasses.field(default_factory=list)
@@ -97,9 +98,6 @@ class Requirement:
 
     @property
     def is_pinned(self) -> bool:
-        if not self.specifier:
-            return False
-
         if len(self.specifier) != 1:
             return False
 

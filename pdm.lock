@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:499eec45ab2d719e55dfe76faab2a2756e493d1a9baac105317f7453f32fd417"
+content_hash = "sha256:c7459730f133e28bd9bb7360d9ebfdabd4efc7e016d0bc078b6368ac63be338b"
 
 [[package]]
 name = "arpeggio"
@@ -562,7 +562,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.0.2"
+version = "0.2.0"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["all", "default", "test"]
@@ -570,8 +570,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.0.2-py3-none-any.whl", hash = "sha256:693869adfae132d99e39b0bf24aae16b96c9bca839bf8d02eaaa16719507a0d7"},
-    {file = "dep_logic-0.0.2.tar.gz", hash = "sha256:7fcbda5908c3caf800dc07638c3a3d376ec886fb12691ac39ac0106b41a47b28"},
+    {file = "dep_logic-0.2.0-py3-none-any.whl", hash = "sha256:af439c2acaf7522dd321a71f30e0c4fd59b7553eb99967af07d53320902cde39"},
+    {file = "dep_logic-0.2.0.tar.gz", hash = "sha256:cff502b515aff2d413d19d6afc70174fc67da19e821be4a9b68460ccee2514c9"},
 ]
 
 [[package]]

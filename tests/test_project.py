@@ -351,8 +351,8 @@ def test_quiet_mode(pdm, project, is_quiet, extra_args, recwarn):
     assert result.exit_code == 0
     assert len(recwarn) > 0
 
-    assert 'For example, ">=3.9,<3.13"' in str(recwarn[0].message)
-    assert 'For example, ">=3.9,<3.12"' in str(recwarn[1].message)
+    assert 'For example, "<3.13,>=3.9"' in str(recwarn[0].message)
+    assert 'For example, "<3.12,>=3.9"' in str(recwarn[1].message)
     assert ("to suppress these warnings" in result.stderr) is not is_quiet
     assert project.locked_repository.all_candidates["foo"].version == "1.0"
 
