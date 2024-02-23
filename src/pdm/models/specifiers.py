@@ -32,9 +32,7 @@ def _read_max_versions() -> dict[Version, int]:
 
 
 @lru_cache
-def get_specifier(version_str: str | SpecifierSet) -> SpecifierSet:
-    if isinstance(version_str, SpecifierSet):
-        return version_str
+def get_specifier(version_str: str) -> SpecifierSet:
     if not version_str or version_str == "*":
         return SpecifierSet()
     return SpecifierSet(fix_legacy_specifier(version_str))
@@ -86,6 +84,8 @@ class PySpecSet(SpecifierSet):
             self._logic = spec
             return
         try:
+            if spec == "*":  # pragma: no cover
+                spec = ""
             super().__init__(fix_legacy_specifier(spec))
             self._logic = from_specifierset(self)
         except ValueError:

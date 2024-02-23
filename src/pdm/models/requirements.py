@@ -101,9 +101,7 @@ class Requirement:
         if len(self.specifier) != 1:
             return False
 
-        sp = next(iter(self.specifier), None)
-        if sp is None:
-            return False
+        sp = next(iter(self.specifier))
         return sp.operator == "===" or sp.operator == "==" and "*" not in sp.version
 
     def as_pinned_version(self: T, other_version: str | None) -> T:
