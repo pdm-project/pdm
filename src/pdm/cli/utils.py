@@ -255,7 +255,7 @@ def build_dependency_graph(
 
 
 def specifier_from_requirement(requirement: Requirement) -> str:
-    return str(requirement.specifier or "Any")
+    return str(requirement.specifier) or "Any"
 
 
 def add_package_to_tree(
@@ -676,7 +676,7 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
             pyspec &= req.specifier
             info_lines.add(f"  {req.as_line()} (from {parent!r})")
         result.extend(sorted(info_lines))
-        if pyspec.is_impossible:
+        if pyspec.is_empty():
             result.append("Consider changing the version specifiers of the dependencies to be compatible")
         else:
             result.append(

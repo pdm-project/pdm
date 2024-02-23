@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 import os
-from typing import TYPE_CHECKING, Callable, cast
+from typing import TYPE_CHECKING, Callable
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
@@ -101,12 +101,8 @@ class BaseProvider(AbstractProvider):
         editable = requirement.editable
         is_named = requirement.is_named
         is_pinned = requirement.is_pinned
-        is_prerelease = (
-            bool(requirement.prerelease)
-            or requirement.specifier is not None
-            and bool(requirement.specifier.prereleases)
-        )
-        specifier_parts = len(requirement.specifier) if requirement.specifier else 0
+        is_prerelease = bool(requirement.prerelease) and bool(requirement.specifier.prereleases)
+        specifier_parts = len(requirement.specifier)
         return (not editable, is_named, not is_pinned, not is_prerelease, -specifier_parts)
 
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
@@ -143,9 +139,7 @@ class BaseProvider(AbstractProvider):
         self._known_depth[self.identify(candidate)] = dep_depth
         is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in deps)
         is_file_or_url = any(not requirement.is_named for requirement, _ in information[identifier])
-        operators = [
-            spec.operator for req, _ in information[identifier] if req.specifier is not None for spec in req.specifier
-        ]
+        operators = [spec.operator for req, _ in information[identifier] for spec in req.specifier]
         is_python = identifier == "python"
         is_pinned = any(op[:2] == "==" for op in operators)
         constraints = len(operators)
@@ -269,7 +263,7 @@ class BaseProvider(AbstractProvider):
         # Allow prereleases if: 1) it is not specified in the tool settings or
         # 2) the candidate doesn't come from PyPI index.
         allow_prereleases = self.allow_prereleases in (True, None) or not candidate.req.is_named
-        return cast(SpecifierSet, requirement.specifier).contains(version, allow_prereleases)
+        return requirement.specifier.contains(version, allow_prereleases)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         if isinstance(candidate, PythonCandidate):
@@ -291,7 +285,7 @@ class BaseProvider(AbstractProvider):
                 & requires_python
                 & candidate.req.requires_python
                 & self.repository.environment.python_requires
-            ).is_impossible:
+            ).is_empty():
                 continue
             if dep.identify() in self.excludes:
                 continue
@@ -307,7 +301,7 @@ class BaseProvider(AbstractProvider):
         new_requires_python = candidate.req.requires_python & self.repository.environment.python_requires
         if not (
             candidate.identify() in self.overrides
-            or new_requires_python.is_impossible
+            or new_requires_python.is_empty()
             or requires_python.is_superset(new_requires_python)
         ):
             valid_deps.append(PythonRequirement.from_pyspec_set(requires_python))

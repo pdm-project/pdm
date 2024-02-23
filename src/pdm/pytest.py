@@ -326,7 +326,7 @@ def build_env(build_env_wheels: Iterable[Path], tmp_path_factory: pytest.TempPat
     """
     d = tmp_path_factory.mktemp("pdm-test-env")
     p = Core().create_project(d)
-    env = PythonEnvironment(p, prefix=str(d))
+    env = PythonEnvironment(p, prefix=str(d), python=sys.executable)
     for wheel in build_env_wheels:
         install_wheel(str(wheel), env)
     return d

@@ -164,7 +164,7 @@ class BaseRepository:
         :param ignore_requires_python: whether to ignore the requires-python marker
         :param minimal_version: whether to prefer the minimal versions of the package
         """
-        # `allow_prereleases` is None means leave it to specifier to decide whether to
+        # `allow_prereleases` is None means to let the specifier decide whether to
         # include prereleases
         from unearth.utils import LazySequence
 
@@ -194,7 +194,7 @@ class BaseRepository:
                     if self._should_ignore_package_warning(requirement):
                         continue
                     working_requires_python = project_requires_python & PySpecSet(candidate.requires_python)
-                    if working_requires_python.is_impossible:  # pragma: no cover
+                    if working_requires_python.is_empty():  # pragma: no cover
                         continue
                     warnings.warn(
                         f"Skipping {candidate.name}@{candidate.version} because it requires "
@@ -305,7 +305,7 @@ class BaseRepository:
                     spec = PySpecSet(f">={version}")  # cp37-abi3 is compatible with >=3.7
                 else:
                     spec = PySpecSet(f"~={version}")  # cp37-cp37 is only compatible with 3.7.*
-                return not (spec & python_requires).is_impossible
+                return not (spec & python_requires).is_empty()
             else:
                 # we don't know about compatility for non-cpython implementations
                 # assume it is compatible

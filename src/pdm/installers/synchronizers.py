@@ -208,7 +208,6 @@ class BaseSynchronizer:
             assert can.link is not None
             return url != backend.expand_line(can.link.url_without_fragment)
         specifier = can.req.as_pinned_version(can.version).specifier
-        assert specifier is not None
         return not specifier.contains(dist.version, prereleases=True)
 
     def compare_with_working_set(self) -> tuple[list[str], list[str], list[str]]:
