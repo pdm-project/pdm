@@ -383,6 +383,8 @@ class FileRequirement(Requirement):
 
     def _check_installable(self) -> None:
         assert self.path
+        if not self.path.exists():
+            return
         if not (self.path.joinpath("setup.py").exists() or self.path.joinpath("pyproject.toml").exists()):
             raise RequirementError(f"The local path '{self.path}' is not installable.")
         result = Setup.from_directory(self.path.absolute())

@@ -81,7 +81,6 @@ def test_convert_req_dict_to_req_line(req, result):
     "line,expected",
     [
         ("requests; os_name=>'nt'", None),
-        ("./tests", r"The local path (.+)? is not installable"),
         ("django>=2<4", None),
     ],
 )
