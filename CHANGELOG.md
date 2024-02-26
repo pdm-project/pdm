@@ -1,3 +1,23 @@
+Release v2.12.4 (2024-02-26)
+----------------------------
+
+### Features & Improvements
+
+- Use env PDM_NO_EDITABLE as the default value for --no-editable option. [#2613](https://github.com/pdm-project/pdm/issues/2613)
+
+### Bug Fixes
+
+- Reset project.environment when importing from setup.py, to fix resolution error. [#2608](https://github.com/pdm-project/pdm/issues/2608)
+- Do not fetch package hashes when `--frozen-lockfile` is passed. [#2630](https://github.com/pdm-project/pdm/issues/2630)
+- Make sure non-venv interpreters are used by venv creator. [#2631](https://github.com/pdm-project/pdm/issues/2631)
+- Don't cause a hard failure if the local directory doesn't exist. [#2650](https://github.com/pdm-project/pdm/issues/2650)
+
+### Documentation
+
+- Fix the default value for negative CLI flags. [#2642](https://github.com/pdm-project/pdm/issues/2642)
+- Auto-gen configuration reference documentation. [#2645](https://github.com/pdm-project/pdm/issues/2645)
+
+
 Release v2.12.3 (2024-02-01)
 ----------------------------
 
