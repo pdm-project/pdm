@@ -53,7 +53,10 @@ def render_parser(
                 line += f" `{action.metavar}`"
             line += f": {clean_help(action.help)}"
             if action.default and action.default != argparse.SUPPRESS:
-                line += f" (default: `{action.default}`)"
+                default = action.default
+                if any(opt.startswith("--no-") for opt in action.option_strings) and default is True:
+                    default = not default
+                line += f" (default: `{default}`)"
             result.append(line)
         result.append("")
 
