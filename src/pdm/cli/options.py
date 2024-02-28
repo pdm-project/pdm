@@ -229,6 +229,14 @@ groups_group.add_argument(
     default=[],
 )
 groups_group.add_argument(
+    "--exclude",
+    dest="excluded_groups",
+    metavar="",
+    action=split_lists(","),
+    help="Exclude groups of optional-dependencies when using :all",
+    default=[],
+)
+groups_group.add_argument(
     "--no-default",
     dest="default",
     action="store_false",

@@ -509,6 +509,20 @@ def test_dependency_group_selection(project, args, golden):
     assert sorted(golden) == sorted(selection)
 
 
+@pytest.mark.parametrize(
+    "args,golden",
+    [
+        ({"groups": [":all"], "excluded_groups": ["web"]}, ["default", "auth", "test", "doc"]),
+        ({"groups": [":all"], "excluded_groups": ["web", "auth"]}, ["default", "test", "doc"]),
+        ({"groups": [":all"], "excluded_groups": ["default", "test"]}, ["default", "web", "auth", "test", "doc"]),
+    ],
+)
+def test_exclude_optional_groups_from_all(project, args, golden):
+    setup_dependencies(project)
+    selection = GroupSelection(project, **args)
+    assert sorted(golden) == sorted(selection)
+
+
 def test_prod_should_not_be_with_dev(project):
     setup_dependencies(project)
     selection = GroupSelection(project, default=True, dev=False, groups=["test"])
