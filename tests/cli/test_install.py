@@ -318,7 +318,7 @@ def test_install_all_with_excluded_groups(project, working_set, pdm):
     project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz")
     project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
-    pdm(["install", "-G", ":all", "--exclude", "tz,ssl"], obj=project, strict=True)
+    pdm(["install", "-G", ":all", "--without", "tz,ssl"], obj=project, strict=True)
     assert "urllib3" in working_set
     assert "pytz" not in working_set
     assert "pyopenssl" not in working_set
@@ -329,7 +329,7 @@ def test_sync_all_with_excluded_groups(project, working_set, pdm):
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz")
     project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
     pdm(["lock", "-G:all"], obj=project, strict=True)
-    pdm(["sync", "-G", ":all", "--exclude", "url,tz"], obj=project, strict=True)
+    pdm(["sync", "-G", ":all", "--without", "url,tz"], obj=project, strict=True)
     assert "urllib3" not in working_set
     assert "pytz" not in working_set
     assert "pyopenssl" in working_set

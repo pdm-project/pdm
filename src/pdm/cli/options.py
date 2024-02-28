@@ -220,6 +220,7 @@ groups_group = ArgumentGroup("Dependencies Selection")
 groups_group.add_argument(
     "-G",
     "--group",
+    "--with",
     dest="groups",
     metavar="GROUP",
     action=split_lists(","),
@@ -229,7 +230,7 @@ groups_group.add_argument(
     default=[],
 )
 groups_group.add_argument(
-    "--exclude",
+    "--without",
     dest="excluded_groups",
     metavar="",
     action=split_lists(","),
