@@ -21,12 +21,14 @@ class GroupSelection:
         dev: bool | None = None,
         groups: Sequence[str] = (),
         group: str | None = None,
+        excluded_groups: Sequence[str] = (),
     ):
         self.project = project
         self.groups = groups
         self.group = group
         self.default = default
         self.dev = dev
+        self.excluded_groups = excluded_groups
 
     @classmethod
     def from_options(cls, project: Project, options: argparse.Namespace) -> GroupSelection:
@@ -37,6 +39,7 @@ class GroupSelection:
             default=options.default,
             dev=options.dev,
             groups=options.groups,
+            excluded_groups=options.excluded_groups,
         )
 
     def one(self) -> str:
@@ -83,6 +86,7 @@ class GroupSelection:
             groups_set.update(dev_groups)
         if ":all" in groups:
             groups_set.discard(":all")
+            optional_groups -= set(self.excluded_groups)
             groups_set.update(optional_groups)
 
         invalid_groups = groups_set - set(project.iter_groups())
