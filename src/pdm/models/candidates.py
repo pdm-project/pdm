@@ -18,6 +18,7 @@ from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning
 from pdm.models.backends import get_backend, get_backend_by_spec
+from pdm.models.cached_package import CachedPackage
 from pdm.models.reporter import BaseReporter
 from pdm.models.requirements import (
     FileRequirement,
@@ -691,3 +692,7 @@ class PreparedCandidate:
             return wheel_cache.get_ephemeral_path_for_link(
                 self.candidate.link, self.environment.target_python
             ).as_posix()
+
+    def unpack(self) -> CachedPackage:
+        """Unpack the candidate into the cache directory and return the CachedPackage."""
+        raise NotImplementedError

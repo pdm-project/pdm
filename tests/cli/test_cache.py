@@ -1,7 +1,7 @@
 import pytest
 from unearth import Link
 
-from pdm.installers.packages import CachedPackage
+from pdm.models.cached_package import CachedPackage
 from tests import FIXTURES
 
 

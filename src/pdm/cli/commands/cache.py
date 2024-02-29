@@ -86,20 +86,6 @@ class ClearCommand(BaseCommand):
         )
 
     @staticmethod
-    def _clear_packages(root: Path) -> int:
-        from pdm.installers.packages import CachedPackage
-
-        cleared = 0
-        for subdir in root.iterdir():
-            if not subdir.is_dir():
-                continue
-            pkg = CachedPackage(subdir)
-            if not pkg.referrers:
-                pkg.cleanup()
-                cleared += 1
-        return cleared
-
-    @staticmethod
     def _clear_files(root: Path) -> int:
         files = list(find_files(root, "*"))
         for file in files:
@@ -122,7 +108,7 @@ class ClearCommand(BaseCommand):
             else:
                 for type_ in types:
                     if type_ == "packages":
-                        packages += self._clear_packages(project.cache(type_))
+                        packages += project.package_cache.cleanup()
                     else:
                         files += self._clear_files(project.cache(type_))
             message = []

@@ -15,6 +15,7 @@ from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import PdmException
+from pdm.models.cached_package import CachedPackage
 from pdm.models.candidates import Candidate
 from pdm.termui import logger
 from pdm.utils import atomic_open_for_write, create_tracked_tempdir
@@ -23,6 +24,8 @@ if TYPE_CHECKING:
     from packaging.tags import Tag
     from requests import Session
     from unearth import Link, TargetPython
+
+    from pdm.environments import BaseEnvironment
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
@@ -323,3 +326,50 @@ class SafeFileCache(SeparateBodyBaseCache):
 @lru_cache(maxsize=128)
 def get_wheel_cache(directory: Path | str) -> WheelCache:
     return WheelCache(directory)
+
+
+class PackageCache:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def cache_wheel(self, wheel: Path, environment: BaseEnvironment, checksum: str | None = None) -> CachedPackage:
+        """Create a CachedPackage instance from a wheel file"""
+        from installer.destinations import InstallDestination
+
+        from pdm.installers.installers import WheelFile, install
+
+        if checksum is None:
+            hasher = hashlib.sha256()
+            with wheel.open("rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hasher.update(chunk)
+            checksum = hasher.hexdigest()
+        parts = (checksum[:2], checksum[2:4], checksum[4:6], checksum[6:8], checksum[8:])
+        dest = self.root.joinpath(*parts, f"{wheel.stem}.cache")
+        pkg = CachedPackage(dest)
+        if dest.exists():
+            return pkg
+        dest.mkdir(parents=True, exist_ok=True)
+        logger.info("Installing wheel into cached location %s", dest)
+        destination = InstallDestination(
+            scheme_dict=pkg.scheme(),
+            interpreter=str(environment.interpreter.executable),
+            script_kind=environment.script_kind,
+        )
+        with WheelFile.open(wheel) as source:
+            install(source, destination=destination)
+        return pkg
+
+    def iter_packages(self) -> Iterable[tuple[str, CachedPackage]]:
+        for path in self.root.rglob("*.cache"):
+            hash_parts = path.relative_to(self.root).parent.parts
+            yield "".join(hash_parts), CachedPackage(path)
+
+    def cleanup(self) -> int:
+        """Remove unused cached packages"""
+        count = 0
+        for _, pkg in self.iter_packages():
+            if not pkg.referrers:
+                pkg.cleanup()
+                count += 1
+        return count

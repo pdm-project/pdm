@@ -12,7 +12,7 @@ class CachedPackage:
     """A package cached in the central package store.
     The directory name is similar to wheel's filename:
 
-        $PACKAGE_ROOT/<dist_name>-<version>-<impl>-<abi>-<plat>/
+        $PACKAGE_ROOT/<hash_part[:5]>/<dist_name>-<version>-<impl>-<abi>-<plat>/
 
     Under the directory there should be a text file named `referrers`.
     Each line of the file is a distribution path that refers to this package.
@@ -48,11 +48,8 @@ class CachedPackage:
         """Remove a referrer"""
         path = os.path.normcase(os.path.expanduser(os.path.abspath(path)))
         referrers = self.referrers - {path}
-        if not referrers:
-            self.cleanup()
-        else:
-            (self.path / "referrers").write_text("\n".join(referrers) + "\n", "utf8")
-            self._referrers = None
+        (self.path / "referrers").write_text("\n".join(referrers) + "\n", "utf8")
+        self._referrers = None
 
     def scheme(self) -> dict[str, str]:
         """The install scheme for the package"""

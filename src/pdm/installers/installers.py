@@ -5,22 +5,24 @@ import itertools
 import json
 import os
 import shutil
+import stat
 import warnings
-import zipfile
 from functools import cached_property, lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator
 
-from installer._core import _determine_scheme, _process_WHEEL_file, install
+from installer import install as _install
+from installer._core import _determine_scheme, _process_WHEEL_file
 from installer.destinations import SchemeDictionaryDestination
 from installer.exceptions import InvalidWheelSource
 from installer.records import RecordEntry
+from installer.sources import WheelContentElement, WheelSource
 from installer.sources import WheelFile as _WheelFile
-from installer.sources import _WheelFileValidationError
+from installer.utils import parse_entrypoints
 
 from pdm.exceptions import PDMWarning
-from pdm.installers.packages import CachedPackage
-from pdm.termui import logger
+from pdm.models.cached_package import CachedPackage
+from pdm.utils import is_path_relative_to
 
 if TYPE_CHECKING:
     from typing import Any, BinaryIO, Callable, Iterable, Protocol
@@ -130,11 +132,6 @@ def _create_links_recursively(
 
 
 class WheelFile(_WheelFile):
-    def __init__(self, f: zipfile.ZipFile) -> None:
-        super().__init__(f)
-        self.exclude: Callable[[WheelFile, WheelContentElement], bool] | None = None
-        self.additional_contents: Iterable[WheelContentElement] = []
-
     @cached_property
     def dist_info_dir(self) -> str:
         namelist = self._zipfile.namelist()
@@ -144,11 +141,71 @@ class WheelFile(_WheelFile):
             canonical_name = super().dist_info_dir
             raise InvalidWheelSource(f"The wheel doesn't contain metadata {canonical_name!r}") from None
 
+
+class PackageWheelSource(WheelSource):
+    def __init__(
+        self,
+        package: CachedPackage,
+        exclude: Callable[[WheelSource, WheelContentElement], bool] | None = None,
+        additional_contents: Iterable[WheelContentElement] = (),
+    ) -> None:
+        self.package = package
+        self.exclude = exclude
+        self.additional_contents = additional_contents
+
+        distribution, version = package.path.name.split("-")[:2]
+        super().__init__(distribution, version)
+
+    @cached_property
+    def dist_info_path(self) -> Path:
+        root_scheme = _process_WHEEL_file(self)
+        path_list = Path(self.package.scheme()[root_scheme]).iterdir()
+        try:
+            return next(path for path in path_list if path.name.endswith(".dist-info"))
+        except StopIteration:  # pragma: no cover
+            canonical_name = super().dist_info_dir
+            raise InvalidWheelSource(f"The wheel doesn't contain metadata {canonical_name!r}") from None
+
+    @cached_property
+    def dist_info_dir(self) -> str:
+        return self.dist_info_path.name
+
+    @property
+    def dist_info_filenames(self) -> list[str]:
+        return os.listdir(self.dist_info_path)
+
+    def read_dist_info(self, filename: str) -> str:
+        return self.dist_info_path.joinpath(filename).read_text("utf-8")
+
     def get_contents(self) -> Iterator[WheelContentElement]:
-        for element in super().get_contents():
-            if self.exclude and self.exclude(self, element):
+        # Convert the record file into a useful mapping
+        from installer.records import parse_record_file
+
+        record_lines = self.read_dist_info("RECORD").splitlines()
+        records = parse_record_file(record_lines)
+        root_scheme = _process_WHEEL_file(self)
+        package_scheme = self.package.scheme()
+        lib_root = Path(package_scheme[root_scheme])
+        package_scripts = Path(package_scheme["scripts"])
+        if "entry_points.txt" in self.dist_info_filenames:
+            all_scripts = {item[0] for item in parse_entrypoints(self.read_dist_info("entry_points.txt"))}
+        else:
+            all_scripts = set()
+
+        for item in records:
+            if item[0].endswith((".dist-info/RECORD", ".dist-info/top_level.txt")):
                 continue
-            yield element
+
+            record_file = (lib_root / item[0]).resolve()
+            if is_path_relative_to(record_file, package_scripts) and record_file.name in all_scripts:
+                # Skip the scripts, as they should be generated every time
+                continue
+            mode = record_file.stat().st_mode
+            is_executable = bool(mode and stat.S_ISREG(mode) and mode & 0o111)
+            with record_file.open("rb") as stream:
+                if self.exclude and self.exclude(self, (item, stream, is_executable)):
+                    continue
+                yield item, stream, is_executable
         yield from self.additional_contents
 
 
@@ -192,19 +249,6 @@ class InstallDestination(SchemeDictionaryDestination):
         return super().finalize_installation(scheme, record_file_path, records)
 
 
-def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
-    """Install a normal wheel file into the environment."""
-    additional_metadata = None
-    if direct_url is not None:
-        additional_metadata = {"direct_url.json": json.dumps(direct_url, indent=2).encode()}
-    destination = InstallDestination(
-        scheme_dict=environment.get_paths(_get_dist_name(wheel)),
-        interpreter=str(environment.interpreter.executable),
-        script_kind=_get_kind(environment),
-    )
-    return _install_wheel(wheel=wheel, destination=destination, additional_metadata=additional_metadata)
-
-
 def _get_link_method_and_individual(cache_method: str) -> tuple[LinkMethod | None, bool]:
     from pdm import utils
 
@@ -219,29 +263,25 @@ def _get_link_method_and_individual(cache_method: str) -> tuple[LinkMethod | Non
     return None, False
 
 
-def install_wheel_with_cache(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
+def install_package(
+    package: CachedPackage, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None
+) -> str:
     """Only create .pth files referring to the cached package.
     If the cache doesn't exist, create one.
     """
-    wheel_stem = Path(wheel).stem
-    cache_path = environment.project.cache("packages") / wheel_stem
-    package_cache = CachedPackage(cache_path)
     interpreter = str(environment.interpreter.executable)
-    script_kind = _get_kind(environment)
-    # the cache_method can be any of "symlink", "hardlink", "symlink_individual" and "pth"
+    script_kind = environment.script_kind
     cache_method: str = environment.project.config["install.cache_method"]
-    link_method, link_individual = _get_link_method_and_individual(cache_method)
-    if not cache_path.is_dir():
-        logger.info("Installing wheel into cached location %s", cache_path)
-        cache_path.mkdir(exist_ok=True)
-        destination = InstallDestination(
-            scheme_dict=package_cache.scheme(),
-            interpreter=interpreter,
-            script_kind=script_kind,
-        )
-        _install_wheel(wheel=wheel, destination=destination)
-
-    additional_metadata = {"REFER_TO": package_cache.path.as_posix().encode()}
+    dist_name = package.path.name.split("-")[0]
+    link_method: LinkMethod | None
+    if not environment.project.config["install.cache"] or dist_name == "editables":
+        link_method, link_individual = shutil.copy, True  # type: ignore[assignment]
+    else:
+        # the cache_method can be any of "symlink", "hardlink", "symlink_individual" and "pth"
+        link_method, link_individual = _get_link_method_and_individual(cache_method)
+    is_symlink = link_method is getattr(os, "symlink", None)
+    if is_symlink:
+        additional_metadata = {"REFER_TO": package.path.as_posix().encode()}
 
     if direct_url is not None:
         additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
@@ -254,77 +294,57 @@ def install_wheel_with_cache(wheel: str, environment: BaseEnvironment, direct_ur
             or path.split("/")[0].endswith(".dist-info")
             # We need to skip the *-nspkg.pth files generated by setuptools'
             # namespace_packages merchanism. See issue#623 for details
-            or link_method is None
+            or cache_method == "pth"
             and path.endswith(".pth")
             and not path.endswith("-nspkg.pth")
         )
 
     additional_contents: list[WheelContentElement] = []
-    lib_path = package_cache.scheme()["purelib"]
-    if link_method is None:
+    lib_path = package.scheme()["purelib"]
+
+    if cache_method == "pth":
         # HACK: Prefix with aaa_ to make it processed as early as possible
-        filename = "aaa_" + wheel_stem.split("-")[0] + ".pth"
+        filename = "aaa_" + dist_name + ".pth"
         # use site.addsitedir() rather than a plain path to properly process .pth files
         stream = io.BytesIO(f"import site;site.addsitedir({lib_path!r})\n".encode())
         additional_contents.append(((filename, "", str(len(stream.getvalue()))), stream, False))
 
     destination = InstallDestination(
-        scheme_dict=environment.get_paths(_get_dist_name(wheel)),
+        scheme_dict=environment.get_paths(dist_name),
         interpreter=interpreter,
         script_kind=script_kind,
         link_to=lib_path,
         link_method=link_method,
         link_individual=link_individual,
     )
-
-    dist_info_dir = _install_wheel(
-        wheel=wheel,
-        destination=destination,
-        excludes=skip_files,
-        additional_contents=additional_contents,
-        additional_metadata=additional_metadata,
-    )
-    package_cache.add_referrer(dist_info_dir)
+    source = PackageWheelSource(package, exclude=skip_files, additional_contents=additional_contents)
+    dist_info_dir = install(source, destination=destination, additional_metadata=additional_metadata)
+    if is_symlink:
+        package.add_referrer(dist_info_dir)
     return dist_info_dir
 
 
-def _install_wheel(
-    wheel: str,
-    destination: InstallDestination,
-    excludes: Callable[[WheelFile, WheelContentElement], bool] | None = None,
-    additional_contents: Iterable[WheelContentElement] | None = None,
-    additional_metadata: dict[str, bytes] | None = None,
+def install(
+    source: WheelSource, destination: InstallDestination, additional_metadata: dict[str, bytes] | None = None
 ) -> str:
     """A lower level installation method that is copied from installer
     but is controlled by extra parameters.
 
     Return the .dist-info path
     """
-    with WheelFile.open(wheel) as source:
-        try:
-            source.validate_record()
-        except _WheelFileValidationError as e:
-            formatted_issues = "\n".join(e.issues)
-            warning = (
-                f"Validation of the RECORD file of {wheel} failed."
-                " Please report to the maintainers of that package so they can fix"
-                f" their build process. Details:\n{formatted_issues}\n"
-            )
-            warnings.warn(warning, PDMWarning, stacklevel=2)
-        root_scheme = _process_WHEEL_file(source)
-        source.exclude = excludes
-        if additional_contents:
-            source.additional_contents = additional_contents
-        install(source, destination, additional_metadata=additional_metadata or {})
+    _install(source, destination, additional_metadata=additional_metadata or {})
+    root_scheme = _process_WHEEL_file(source)
     return os.path.join(destination.scheme_dict[root_scheme], source.dist_info_dir)
 
 
-def _get_kind(environment: BaseEnvironment) -> str:
-    if os.name != "nt":
-        return "posix"
-    is_32bit = environment.interpreter.is_32bit
-    # TODO: support win arm64
-    if is_32bit:
-        return "win-ia32"
-    else:
-        return "win-amd64"
+def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
+    """Install a wheel into the environment, return the .dist-info path"""
+    destination = InstallDestination(
+        scheme_dict=environment.get_paths(_get_dist_name(wheel)),
+        interpreter=str(environment.interpreter.executable),
+        script_kind=environment.script_kind,
+    )
+    additional_metadata = {}
+    if direct_url is not None:
+        additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
+    return install(WheelFile(wheel), destination, additional_metadata=additional_metadata)

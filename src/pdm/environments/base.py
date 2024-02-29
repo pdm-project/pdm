@@ -269,6 +269,17 @@ class BaseEnvironment(abc.ABC):
             command.append("-" + "v" * verbosity)
         return command
 
+    @property
+    def script_kind(self) -> str:
+        if os.name != "nt":
+            return "posix"
+        is_32bit = self.interpreter.is_32bit
+        # TODO: support win arm64
+        if is_32bit:
+            return "win-ia32"
+        else:
+            return "win-amd64"
+
 
 class BareEnvironment(BaseEnvironment):
     """Bare environment that does not depend on project files."""
