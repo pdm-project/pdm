@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:a906e54008521186065579199a768ce3533c71cfa11b2e15dc63970d1d546473"
+content_hash = "sha256:01c4ca39bcc44facf1c0a17f65421876ead3a2325d2ef0bce93876fb2c9e484d"
 
 [[package]]
 name = "arpeggio"
