@@ -5,6 +5,7 @@ import dataclasses
 import hashlib
 import json
 import os
+import stat
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO, Generic, Iterable, TypeVar, cast
@@ -15,14 +16,17 @@ from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from pdm._types import CandidateInfo
 from pdm.exceptions import PdmException
+from pdm.models.cached_package import CachedPackage
 from pdm.models.candidates import Candidate
 from pdm.termui import logger
-from pdm.utils import atomic_open_for_write, create_tracked_tempdir
+from pdm.utils import atomic_open_for_write, create_tracked_tempdir, get_file_hash
 
 if TYPE_CHECKING:
     from packaging.tags import Tag
     from requests import Session
     from unearth import Link, TargetPython
+
+    from pdm.environments import BaseEnvironment
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
@@ -323,3 +327,57 @@ class SafeFileCache(SeparateBodyBaseCache):
 @lru_cache(maxsize=128)
 def get_wheel_cache(directory: Path | str) -> WheelCache:
     return WheelCache(directory)
+
+
+class PackageCache:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def cache_wheel(self, wheel: Path, environment: BaseEnvironment, checksum: str | None = None) -> CachedPackage:
+        """Create a CachedPackage instance from a wheel file"""
+        import zipfile
+
+        from installer.utils import make_file_executable
+
+        if checksum is None:
+            checksum = get_file_hash(wheel)
+        parts = (checksum[:2], checksum[2:4], checksum[4:6], checksum[6:8], checksum[8:])
+        dest = self.root.joinpath(*parts, f"{wheel.name}.cache")
+        pkg = CachedPackage(dest)
+        if dest.exists():
+            return pkg
+        dest.mkdir(parents=True, exist_ok=True)
+        logger.info("Unpacking wheel into cached location %s", dest)
+        with zipfile.ZipFile(wheel) as zf:
+            for item in zf.infolist():
+                target_path = zf.extract(item, dest)
+                mode = item.external_attr >> 16
+                is_executable = bool(mode and stat.S_ISREG(mode) and mode & 0o111)
+                if is_executable:
+                    make_file_executable(target_path)
+        return pkg
+
+    def iter_packages(self) -> Iterable[tuple[str, CachedPackage]]:
+        for path in self.root.rglob("*.cache"):
+            hash_parts = path.relative_to(self.root).parent.parts
+            yield "".join(hash_parts), CachedPackage(path)
+
+    def cleanup(self) -> int:
+        """Remove unused cached packages"""
+        count = 0
+        for _, pkg in self.iter_packages():
+            if not any(os.path.exists(fn) for fn in pkg.referrers):
+                pkg.cleanup()
+                count += 1
+        return count
+
+    def match_link(self, link: Link) -> CachedPackage | None:
+        """Match a link to a cached package"""
+        if not link.is_wheel:
+            return None
+        given_hash = link_hashes.get("sha256", []) if (link_hashes := link.hash_option) else []
+        for checksum, p in self.iter_packages():
+            if p.path.stem == link.filename and (not given_hash or checksum in given_hash):
+                logger.debug("Using package from cache location: %s", p.path)
+                return p
+        return None

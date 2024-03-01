@@ -285,6 +285,7 @@ def test_venv_backend_create(project, mocker, with_pip):
 
 
 def test_conda_backend_create(project, mocker, with_pip):
+    assert project.python
     backend = backends.CondaBackend(project, "3.8")
     assert backend.ident == "3.8"
     mock_call = mocker.patch("subprocess.check_call")

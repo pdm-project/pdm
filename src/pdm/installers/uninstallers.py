@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Iterable, NewType, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import UninstallError
-from pdm.installers.packages import CachedPackage
+from pdm.models.cached_package import CachedPackage
 from pdm.utils import is_egg_link, is_path_relative_to
 
 if TYPE_CHECKING:

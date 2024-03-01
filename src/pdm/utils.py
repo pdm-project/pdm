@@ -511,3 +511,14 @@ def _source_preference(package: str | None, source: RepositoryConfig) -> bool | 
     if any(fnmatch.fnmatch(key, pat) for pat in source.exclude_packages):
         return False
     return None
+
+
+def get_file_hash(filename: str | Path, algorithm: str = "sha256") -> str:
+    """Calculate the hash of a file with the given algorithm"""
+    import hashlib
+
+    h = hashlib.new(algorithm)
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()

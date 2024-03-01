@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pdm import termui
 from pdm.compat import Distribution
 from pdm.exceptions import UninstallError
-from pdm.installers.installers import install_wheel, install_wheel_with_cache
+from pdm.installers.installers import install_package
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
 
 if TYPE_CHECKING:
@@ -25,13 +25,8 @@ class InstallManager:
 
     def install(self, candidate: Candidate) -> Distribution:
         """Install a candidate into the environment, return the distribution"""
-        if self.use_install_cache and candidate.req.is_named and candidate.name not in self.NO_CACHE_PACKAGES:
-            # Only cache wheels from PyPI
-            installer = install_wheel_with_cache
-        else:
-            installer = install_wheel
         prepared = candidate.prepare(self.environment)
-        dist_info = installer(str(prepared.build()), self.environment, prepared.direct_url())
+        dist_info = install_package(prepared.build(), self.environment, prepared.direct_url(), self.use_install_cache)
         return Distribution.at(dist_info)
 
     def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:

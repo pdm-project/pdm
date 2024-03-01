@@ -18,6 +18,7 @@ from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning
 from pdm.models.backends import get_backend, get_backend_by_spec
+from pdm.models.cached_package import CachedPackage
 from pdm.models.reporter import BaseReporter
 from pdm.models.requirements import (
     FileRequirement,
@@ -34,6 +35,7 @@ from pdm.utils import (
     convert_hashes,
     create_tracked_tempdir,
     filtered_sources,
+    get_file_hash,
     get_rev_from_url,
     normalize_name,
     path_to_url,
@@ -314,10 +316,9 @@ class PreparedCandidate:
 
     def __post_init__(self) -> None:
         self.req = self.candidate.req
-
-        self.wheel: Path | None = None
         self.link = self._replace_url_vars(self.candidate.link)
 
+        self._cached: CachedPackage | None = None
         self._source_dir: Path | None = None
         self._unpacked_dir: Path | None = None
         self._metadata_dir: str | None = None
@@ -398,16 +399,16 @@ class PreparedCandidate:
         else:
             return None
 
-    def build(self) -> Path:
+    def build(self) -> CachedPackage:
         """Call PEP 517 build hook to build the candidate into a wheel"""
         self.obtain(allow_all=False)
-        if self.wheel:
-            return self.wheel
+        if self._cached:
+            return self._cached
         if not self.req.editable:
-            cached = self._get_cached_wheel()
+            cached, checksum = self._get_build_cache()
             if cached:
-                self.wheel = cached
-                return self.wheel
+                self._cached = self.environment.project.package_cache.cache_wheel(cached, self.environment, checksum)
+                return self._cached
         assert self._source_dir, "Source directory isn't ready yet"
         builder_cls = EditableBuilder if self.req.editable else WheelBuilder
         builder = builder_cls(str(self._unpacked_dir), self.environment)
@@ -415,9 +416,12 @@ class PreparedCandidate:
         os.makedirs(build_dir, exist_ok=True)
         termui.logger.info("Running PEP 517 backend to build a wheel for %s", self.link)
         self.reporter.report_build_start(self.link.filename)  # type: ignore[union-attr]
-        self.wheel = Path(builder.build(build_dir, metadata_directory=self._metadata_dir))
+        wheel = Path(builder.build(build_dir, metadata_directory=self._metadata_dir))
+        checksum = get_file_hash(wheel)
+        with open(f"{wheel}.sha256", "w") as f:
+            f.write(checksum)
         self.reporter.report_build_end(self.link.filename)  # type: ignore[union-attr]
-        return self.wheel
+        return self.environment.project.package_cache.cache_wheel(wheel, self.environment, checksum)
 
     def obtain(self, allow_all: bool = False, unpack: bool = True) -> None:
         """Fetch the link of the candidate and unpack to local if necessary.
@@ -425,9 +429,8 @@ class PreparedCandidate:
         :param allow_all: If true, don't validate the wheel tag nor hashes
         :param unpack: Whether to download and unpack the link if it's not local
         """
-        if self.wheel:
-            if self._wheel_compatible(self.wheel.name, allow_all):
-                return
+        if self._cached and self._wheel_compatible(self._cached.path.stem, allow_all):
+            return
         elif self._source_dir and self._source_dir.exists():
             return
 
@@ -436,7 +439,7 @@ class PreparedCandidate:
             if not self.link or self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all):
                 if self.req.is_file_or_url:
                     raise CandidateNotFound(f"The URL requirement {self.req.as_line()} is a wheel but incompatible")
-                self.link = self.wheel = None  # reset the incompatible wheel
+                self.link = self._cached = None  # reset the incompatible wheel
                 self.link = _find_best_match_link(
                     finder,
                     self.req.as_pinned_version(self.candidate.version),
@@ -449,13 +452,20 @@ class PreparedCandidate:
                     )
                 if not self.candidate.link:
                     self.candidate.link = self.link
-            if allow_all and not self.req.editable:
-                cached = self._get_cached_wheel()
-                if cached:
-                    self.wheel = cached
-                    return
-            if unpack:
-                self._unpack(validate_hashes=not allow_all)
+        # Find if there is already a CachedPackage for the link
+        package = self.environment.project.package_cache.match_link(self.link)
+        if package is not None:
+            self._cached = package
+            return
+        # If not, find if there is any build cache for the candidate
+        if allow_all and not self.req.editable:
+            cached, checksum = self._get_build_cache()
+            if cached:
+                self._cached = self.environment.project.package_cache.cache_wheel(cached, self.environment, checksum)
+                return
+        # If not, download and unpack the link
+        if unpack:
+            self._unpack(validate_hashes=not allow_all)
 
     def _unpack(self, validate_hashes: bool = False) -> None:
         hash_options = None
@@ -477,18 +487,18 @@ class PreparedCandidate:
                     download_reporter=self.reporter.report_download,
                     unpack_reporter=self.reporter.report_unpack,
                 )
-                if self.link.is_wheel:
-                    self.wheel = result
-                else:
-                    self._source_dir = Path(build_dir)
-                    self._unpacked_dir = result
+        if self.link.is_wheel:
+            checksum = hashes["sha256"][0] if (hashes := self.link.hash_option) and "sha256" in hashes else None
+            self._cached = self.environment.project.package_cache.cache_wheel(result, self.environment, checksum)
+        else:
+            self._source_dir = Path(build_dir)
+            self._unpacked_dir = result
 
     def prepare_metadata(self, force_build: bool = False) -> im.Distribution:
         self.obtain(allow_all=True, unpack=False)
 
-        metadata_parent = create_tracked_tempdir(prefix="pdm-meta-")
-        if self.wheel:
-            return self._get_metadata_from_wheel(self.wheel, metadata_parent)
+        if self._cached:
+            return self._get_metadata_from_cached(self._cached)
 
         assert self.link is not None
         if self.link.dist_info_metadata:
@@ -498,8 +508,8 @@ class PreparedCandidate:
                 return dist
 
         self._unpack(validate_hashes=False)
-        if self.wheel:  # check again if the wheel is downloaded to local
-            return self._get_metadata_from_wheel(self.wheel, metadata_parent)
+        if self._cached:  # check again if the wheel is downloaded to local
+            return self._get_metadata_from_cached(self._cached)
 
         assert self._unpacked_dir, "Source directory isn't ready yet"
         pyproject_toml = self._unpacked_dir / "pyproject.toml"
@@ -509,6 +519,7 @@ class PreparedCandidate:
                 return dist
 
         # If all fail, try building the source to get the metadata
+        metadata_parent = create_tracked_tempdir(prefix="pdm-meta-")
         return self._get_metadata_from_build(self._unpacked_dir, metadata_parent)
 
     def _get_metadata_from_metadata_link(
@@ -523,10 +534,9 @@ class PreparedCandidate:
                     return None
             return MetadataDistribution(resp.text)
 
-    def _get_metadata_from_wheel(self, wheel: Path, metadata_parent: str) -> im.Distribution:
+    def _get_metadata_from_cached(self, cached: CachedPackage) -> im.Distribution:
         # Get metadata from METADATA inside the wheel
-        self._metadata_dir = _get_wheel_metadata_from_wheel(wheel, metadata_parent)
-        return im.PathDistribution(Path(self._metadata_dir))
+        return im.PathDistribution(cached.dist_info)
 
     def _get_metadata_from_project(self, pyproject_toml: Path) -> im.Distribution | None:
         # Try getting from PEP 621 metadata
@@ -638,13 +648,19 @@ class PreparedCandidate:
             return _egg_info_re.search(link.filename) is not None
         return False
 
-    def _get_cached_wheel(self) -> Path | None:
+    def _get_build_cache(self) -> tuple[Path | None, str | None]:
         wheel_cache = self.environment.project.make_wheel_cache()
         assert self.candidate.link
         cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.target_python)
         if cache_entry is not None:
             termui.logger.info("Using cached wheel: %s", cache_entry)
-        return cache_entry
+            if (hash_file := cache_entry.with_name(f"{cache_entry.name}.sha256")).exists():
+                cache_hash = hash_file.read_text().strip()
+            else:
+                cache_hash = get_file_hash(cache_entry)
+                hash_file.write_text(cache_hash)
+            return cache_entry, cache_hash
+        return cache_entry, None
 
     def _get_build_dir(self) -> str:
         original_link = self.candidate.link

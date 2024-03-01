@@ -17,6 +17,7 @@ from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import BuildBackend, get_backend_by_spec
+from pdm.models.caches import PackageCache
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -601,6 +602,10 @@ class Project:
         from pdm.models.caches import get_wheel_cache
 
         return get_wheel_cache(self.cache("wheels"))
+
+    @property
+    def package_cache(self) -> PackageCache:
+        return PackageCache(self.cache("packages"))
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
         from pdm.models.caches import CandidateInfoCache

@@ -129,29 +129,26 @@ def test_install_wheel_with_cache(project, pdm, supports_link):
     if supports_link("symlink"):
         assert os.path.islink(os.path.join(lib_path, "future_fstrings.py"))
         assert os.path.islink(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
-    elif supports_link("link"):
+    else:
         assert os.path.isfile(os.path.join(lib_path, "future_fstrings.py"))
         assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
-    else:
-        assert os.path.isfile(os.path.join(lib_path, "aaa_future_fstrings.pth"))
-        assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
 
-    cache_path = project.cache("packages") / "future_fstrings-1.2.0-py2.py3-none-any"
-    assert cache_path.is_dir()
+    cache_name = "future_fstrings-1.2.0-py2.py3-none-any.whl.cache"
+    assert any(p.path.name == cache_name for _, p in project.package_cache.iter_packages())
     pdm(["run", "python", "-m", "site"], object=project)
     r = pdm(["run", "python", "-c", "import future_fstrings"], obj=project)
     assert r.exit_code == 0
+    pdm(["cache", "clear", "packages"], obj=project, strict=True)
+    assert supports_link("symlink") is any(p.path.name == cache_name for _, p in project.package_cache.iter_packages())
 
     dist = project.environment.get_working_set()["future-fstrings"]
     installer.uninstall(dist)
-    if supports_link("symlink") or supports_link("link"):
-        assert not os.path.exists(os.path.join(lib_path, "future_fstrings.py"))
-        assert not os.path.exists(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
-    else:
-        assert not os.path.isfile(os.path.join(lib_path, "aaa_future_fstrings.pth"))
-        assert not os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
+    assert not os.path.exists(os.path.join(lib_path, "future_fstrings.py"))
+    assert not os.path.exists(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     assert not dist.read_text("direct_url.json")
-    assert not cache_path.exists()
+
+    pdm(["cache", "clear", "packages"], obj=project, strict=True)
+    assert not any(p.path.name == cache_name for _, p in project.package_cache.iter_packages())
 
 
 def test_url_requirement_is_not_cached(project):
@@ -204,40 +201,3 @@ def test_compress_file_list_for_rename():
     }
     abs_paths = {os.path.join(project_root, path) for path in paths}
     assert sorted(compress_for_rename(abs_paths)) == [os.path.join(project_root, "test-removal" + os.sep)]
-
-
-@pytest.mark.parametrize("preferred", ["symlink", "hardlink"])
-def test_install_cache_namespace_package(project, supports_link):
-    if not supports_link("symlink") and not supports_link("link"):
-        pytest.skip("This test requires symlink or hardlink support")
-
-    req = parse_requirement("pdm-backend")
-    candidate = Candidate(
-        req,
-        link=Link("http://fixtures.test/artifacts/pdm_backend-2.1.4-py3-none-any.whl"),
-    )
-    installer = InstallManager(project.environment, use_install_cache=True)
-    installer.install(candidate)
-    lib_path = project.environment.get_paths()["purelib"]
-    assert os.path.isdir(top_dir := os.path.join(lib_path, "pdm")) and not os.path.islink(top_dir)
-    assert os.path.isdir(child_dir := os.path.join(top_dir, "backend"))
-    if supports_link("symlink"):
-        assert os.path.islink(child_dir)
-    else:
-        assert os.path.isfile(os.path.join(child_dir, "__init__.py"))
-
-
-@pytest.mark.skipif(not utils.fs_supports_link_method("symlink"), reason="This test requires symlink support")
-def test_install_cache_symlink_individual(project):
-    project.project_config["install.cache_method"] = "symlink_individual"
-    req = parse_requirement("pdm-backend")
-    candidate = Candidate(
-        req,
-        link=Link("http://fixtures.test/artifacts/pdm_backend-2.1.4-py3-none-any.whl"),
-    )
-    installer = InstallManager(project.environment, use_install_cache=True)
-    installer.install(candidate)
-    lib_path = project.environment.get_paths()["purelib"]
-    for path in ("pdm", "pdm/backend"):
-        assert os.path.exists(child := os.path.join(lib_path, path)) and not os.path.islink(child)
-    assert os.path.islink(os.path.join(lib_path, "pdm/backend/__init__.py"))
