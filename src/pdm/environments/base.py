@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import weakref
 from contextlib import contextmanager
 from functools import cached_property, partial
 from pathlib import Path
@@ -42,6 +43,7 @@ def get_paths_wrapper(get_paths):  # pragma: no cover
 class BaseEnvironment(abc.ABC):
     """Environment dependent stuff related to the selected Python interpreter."""
 
+    project: Project
     is_local = False
 
     def __init_subclass__(cls) -> None:
@@ -58,8 +60,11 @@ class BaseEnvironment(abc.ABC):
         """
         from pdm.models.auth import PdmBasicAuth
 
+        if isinstance(project, weakref.ProxyTypes):
+            self.project = project
+        else:
+            self.project = weakref.proxy(project)
         self.python_requires = project.python_requires
-        self.project = project
         self.auth = PdmBasicAuth(project.core.ui, self.project.sources)
         if python is None:
             self._interpreter = project.python
