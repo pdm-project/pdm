@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 import shutil
+from functools import cached_property
 from pathlib import Path
 
 from pdm.termui import logger
-from pdm.utils import pdm_scheme
 
 
 class CachedPackage:
@@ -22,6 +22,16 @@ class CachedPackage:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(os.path.normcase(os.path.expanduser(path))).resolve()
         self._referrers: set[str] | None = None
+
+    @cached_property
+    def dist_info(self) -> Path:
+        """The dist-info directory of the wheel"""
+        from installer.exceptions import InvalidWheelSource
+
+        try:
+            return next(self.path.glob("*.dist-info"))
+        except StopIteration:
+            raise InvalidWheelSource(f"The wheel doesn't contain metadata {self.path!r}") from None
 
     @property
     def referrers(self) -> set[str]:
@@ -50,10 +60,6 @@ class CachedPackage:
         referrers = self.referrers - {path}
         (self.path / "referrers").write_text("\n".join(referrers) + "\n", "utf8")
         self._referrers = None
-
-    def scheme(self) -> dict[str, str]:
-        """The install scheme for the package"""
-        return pdm_scheme(str(self.path))
 
     def cleanup(self) -> None:
         logger.info("Clean up cached package %s since it is not used by any project.", self.path)

@@ -162,13 +162,12 @@ def test_hash_cache(project, url, hash):
 
 
 def test_clear_package_cache(project, pdm):
-    pkg = CachedPackage(project.cache("packages") / "test_package")
-    pkg.path.mkdir()
+    pkg = CachedPackage(project.cache("packages") / "test_package.whl.cache")
+    pkg.path.mkdir(parents=True)
     refer_pkg = project.root / "refer_pkg"
     refer_pkg.mkdir()
     pkg.add_referrer(str(refer_pkg))
     assert len(pkg.referrers) == 1
-    pkg._referrers = None
 
     refer_pkg.rmdir()
     pdm(["cache", "clear", "packages"], obj=project, strict=True)

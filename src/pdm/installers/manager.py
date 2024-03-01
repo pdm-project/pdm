@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pdm import termui
 from pdm.compat import Distribution
 from pdm.exceptions import UninstallError
-from pdm.installers.installers import install_package, install_wheel
+from pdm.installers.installers import install_package
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
 
 if TYPE_CHECKING:
@@ -26,10 +26,7 @@ class InstallManager:
     def install(self, candidate: Candidate) -> Distribution:
         """Install a candidate into the environment, return the distribution"""
         prepared = candidate.prepare(self.environment)
-        if not candidate.req.is_named:
-            dist_info = install_wheel(str(prepared.build()), self.environment, prepared.direct_url())
-        else:
-            dist_info = install_package(prepared.unpack(), self.environment, prepared.direct_url())
+        dist_info = install_package(prepared.build(), self.environment, prepared.direct_url(), self.use_install_cache)
         return Distribution.at(dist_info)
 
     def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:
