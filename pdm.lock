@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:c7459730f133e28bd9bb7360d9ebfdabd4efc7e016d0bc078b6368ac63be338b"
+content_hash = "sha256:01c4ca39bcc44facf1c0a17f65421876ead3a2325d2ef0bce93876fb2c9e484d"
 
 [[package]]
 name = "arpeggio"
@@ -959,7 +959,7 @@ files = [
 name = "mergedeep"
 version = "1.3.4"
 requires_python = ">=3.6"
-summary = "A deep merge function for 🐍."
+summary = "A deep merge function for ðŸ��."
 groups = ["doc"]
 files = [
     {file = "mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307"},
@@ -1680,7 +1680,7 @@ files = [
 name = "questionary"
 version = "1.10.0"
 requires_python = ">=3.6,<4.0"
-summary = "Python library to build pretty command line user prompts ⭐️"
+summary = "Python library to build pretty command line user prompts â­�ï¸�"
 groups = ["all"]
 dependencies = [
     "prompt-toolkit<4.0,>=2.0",
@@ -2008,8 +2008,8 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.12.1"
-requires_python = ">=3.7"
+version = "0.14.0"
+requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
 groups = ["all", "default", "test"]
 dependencies = [
@@ -2017,8 +2017,8 @@ dependencies = [
     "requests>=2.25",
 ]
 files = [
-    {file = "unearth-0.12.1-py3-none-any.whl", hash = "sha256:a5a5c51ca44965cbe3618116bd592bb0bbe3705af5fe14e5792660d904aad7c8"},
-    {file = "unearth-0.12.1.tar.gz", hash = "sha256:4caad941b60f51e50fdc109866234d407910aef77f1233aa1b6b5d168c7427ee"},
+    {file = "unearth-0.14.0-py3-none-any.whl", hash = "sha256:a2b937ca22198043f5360192bce38708f11ddc5d4cdea973ee38583219b97d5d"},
+    {file = "unearth-0.14.0.tar.gz", hash = "sha256:f3cddfb94ac0f865fbcf964231556ef7183010379c00b01205517a50c78a186d"},
 ]
 
 [[package]]
