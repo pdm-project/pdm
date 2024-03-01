@@ -113,7 +113,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (update)
-            opts="--config-setting --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
+            opts="--config-setting --allow-transitive --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
             ;;
 
             (use)

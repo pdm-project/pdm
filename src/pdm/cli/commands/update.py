@@ -66,6 +66,13 @@ class Command(BaseCommand):
             action="store_false",
             help="Only update lock file but do not sync packages",
         )
+        parser.add_argument(
+            "--allow-transitive",
+            dest="allow_transitives",
+            default=False,
+            action="store_true",
+            help="Allow updating of transitive dependencies",
+        )
         parser.add_argument("packages", nargs="*", help="If packages are given, only update them")
         parser.set_defaults(dev=None)
 
@@ -85,6 +92,7 @@ class Command(BaseCommand):
             prerelease=options.prerelease,
             fail_fast=options.fail_fast,
             hooks=HookManager(project, options.skip),
+            allow_transitives=options.allow_transitives,
         )
 
     @staticmethod
@@ -104,6 +112,7 @@ class Command(BaseCommand):
         prerelease: bool | None = None,
         fail_fast: bool = False,
         hooks: HookManager | None = None,
+        allow_transitives: bool = False,
     ) -> None:
         """Update specified packages or all packages"""
         from itertools import chain
@@ -135,17 +144,24 @@ class Command(BaseCommand):
                 raise ProjectError(f"Requested group not in lockfile: {group}")
             dependencies = all_dependencies[group]
             for name in packages:
-                matched_name = next(
-                    (k for k in dependencies if normalize_name(strip_extras(k)[0]) == normalize_name(name)),
+                normalized_name = normalize_name(name)
+                matched_req = next(
+                    (v for k, v in dependencies.items() if normalize_name(strip_extras(k)[0]) == normalized_name),
                     None,
                 )
-                if not matched_name:
+                if not matched_req and allow_transitives:
+                    candidates = project.locked_repository.all_candidates
+                    matched_req = next(
+                        (v.req for k, v in candidates.items() if normalize_name(strip_extras(k)[0]) == normalized_name),
+                        None,
+                    )
+                if not matched_req:
                     raise ProjectError(
                         f"[req]{name}[/] does not exist in [primary]{group}[/] "
                         f"{'dev-' if selection.dev else ''}dependencies."
                     )
-                dependencies[matched_name].prerelease = prerelease
-                updated_deps[group][matched_name] = dependencies[matched_name]
+                matched_req.prerelease = prerelease
+                updated_deps[group][normalized_name] = matched_req
             project.core.ui.echo(
                 "Updating packages: {}.".format(
                     ", ".join(f"[req]{v}[/]" for v in chain.from_iterable(updated_deps.values()))
@@ -183,7 +199,8 @@ class Command(BaseCommand):
         if not dry_run:
             if unconstrained:
                 for group, deps in updated_deps.items():
-                    project.add_dependencies(deps, group, selection.dev or False)
+                    direct_deps = {dep: req for dep, req in deps.items() if dep in all_dependencies[group]}
+                    project.add_dependencies(direct_deps, group, selection.dev or False)
             project.write_lockfile(project.lockfile._data, False)
         if sync or dry_run:
             do_sync(

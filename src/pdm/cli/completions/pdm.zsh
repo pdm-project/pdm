@@ -411,6 +411,7 @@ _pdm() {
         {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        '--allow-transitive[Allow specifying transitive dependencies]'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
