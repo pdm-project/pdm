@@ -116,7 +116,7 @@ These variables will be read from the environment variables when installing the 
 
 ### Add development only dependencies
 
-_New in 1.5.0_
++++ 1.5.0
 
 PDM also supports defining groups of dependencies that are useful for development,
 e.g. some for testing and others for linting. We usually don't want these dependencies appear in the distribution's metadata
@@ -351,7 +351,7 @@ This command makes the lockfile not cross-platform.
 
 ### Cross platform
 
-_New in version 2.6.0_
++++ 2.6.0
 
 By default, the generated lockfile is **cross-platform**, which means the current platform isn't taken into account when resolving the dependencies. The result lockfile will contain wheels and dependencies for all possible platforms and Python versions.
 However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels. To avoid this, you can tell PDM
@@ -363,7 +363,7 @@ pdm lock --strategy no_cross_platform
 
 ### Static URLs
 
-_New in version 2.8.0_
++++ 2.8.0
 
 By default, PDM only stores the filenames of the packages in the lockfile, which benefits the reusability across different package indexes.
 However, if you want to store the static URLs of the packages in the lockfile, you can pass the `--strategy static_urls` option to `pdm lock`:
@@ -376,7 +376,7 @@ The settings will be saved and remembered for the same lockfile. You can also pa
 
 ### Direct minimal versions
 
-_New in version 2.10.0_
++++ 2.10.0
 
 When it is enabled by passing `--strategy direct_minimal_versions`, dependencies specified in the `pyproject.toml` will be resolved to the minimal versions available, rather than the latest versions. This is useful when you want to test the compatibility of your project within a range of dependency versions.
 
@@ -388,7 +388,7 @@ For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will
 
 ### Inherit the metadata from parents
 
-_New in version 2.11.0_
++++ 2.11.0
 
 Previously, the `pdm lock` command would record package metadata as it is. When installing, PDM would start from the top requirements and traverse down to the leaf node of the dependency tree. It would then evaluate any marker it encounters against the current environment. If a marker is not satisfied, the package would be discarded. In other words, we need an additional "resolution" step in installation.
 

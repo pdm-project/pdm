@@ -14,7 +14,7 @@
 
 ## Signals
 
-_New in version 1.12.0_
++++ 1.12.0
 
 ::: pdm.signals
     options:

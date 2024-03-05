@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:01c4ca39bcc44facf1c0a17f65421876ead3a2325d2ef0bce93876fb2c9e484d"
+content_hash = "sha256:4a83de59b2dba724dc70f19f822ddcc9e230f4f450652a91e6593bad219522c1"
 
 [[package]]
 name = "arpeggio"
@@ -959,7 +959,7 @@ files = [
 name = "mergedeep"
 version = "1.3.4"
 requires_python = ">=3.6"
-summary = "A deep merge function for ðŸ��."
+summary = "A deep merge function for 🐍."
 groups = ["doc"]
 files = [
     {file = "mergedeep-1.3.4-py3-none-any.whl", hash = "sha256:70775750742b25c0d8f36c55aed03d24c3384d17c951b3175d898bd778ef0307"},
@@ -1068,6 +1068,17 @@ dependencies = [
 ]
 files = [
     {file = "mkdocs-redirects-1.2.1.tar.gz", hash = "sha256:9420066d70e2a6bb357adf86e67023dcdca1857f97f07c7fe450f8f1fb42f861"},
+]
+
+[[package]]
+name = "mkdocs-version-annotations"
+version = "1.0.0"
+requires_python = ">=3.7,<4.0"
+summary = "MkDocs plugin to add custom admonitions for documenting version differences"
+groups = ["doc"]
+files = [
+    {file = "mkdocs-version-annotations-1.0.0.tar.gz", hash = "sha256:6786024b37d27b330fda240b76ebec8e7ce48bd5a9d7a66e99804559d088dffa"},
+    {file = "mkdocs_version_annotations-1.0.0-py3-none-any.whl", hash = "sha256:385004eb4a7530dd87a227e08cd907ce7a8fe21fdf297720a4149c511bcf05f5"},
 ]
 
 [[package]]
@@ -1680,7 +1691,7 @@ files = [
 name = "questionary"
 version = "1.10.0"
 requires_python = ">=3.6,<4.0"
-summary = "Python library to build pretty command line user prompts â­�ï¸�"
+summary = "Python library to build pretty command line user prompts ⭐️"
 groups = ["all"]
 dependencies = [
     "prompt-toolkit<4.0,>=2.0",

@@ -1,7 +1,7 @@
 """
 Some reusable fixtures for `pytest`.
 
-_New in version 2.4.0_
++++ 2.4.0
 
 To enable them in your test, add `pdm.pytest` as a plugin.
 You can do so in your root `conftest.py`:
@@ -18,6 +18,7 @@ pytest_plugins = [
 ]
 ```
 """
+
 from __future__ import annotations
 
 import collections.abc

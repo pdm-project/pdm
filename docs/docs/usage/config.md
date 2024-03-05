@@ -304,7 +304,7 @@ export PATH=$PATH:path/to/keyring/bin
 
 ## Override the resolved package versions
 
-_New in version 1.12.0_
++++ 1.12.0
 
 Sometimes you can't get a dependency resolution due to incorrect version ranges set by upstream libraries that you can't fix.
 In this case you can use PDM's overrides feature to force a specific version of a package to be installed.
@@ -327,7 +327,7 @@ In this example, PDM will resolve the above packages into the given versions no 
 
 ## Exclude specific packages and their dependencies from the lock file
 
-_New in version 2.12.0_
++++ 2.12.0
 
 Sometimes you don't even want to include certain packages in the locked file because you are sure they won't be used by any code. In this case, you can completely skip them and their dependencies during dependency resolution:
 
@@ -340,7 +340,7 @@ With this config, `requests` will not be locked in the lockfile, and its depende
 
 ## Passing constant arguments to every pdm invocation
 
-_New in version 2.7.0_
++++ 2.7.0
 
 You can add extra options passed to individual pdm commands by `tool.pdm.options` configuration:
 
@@ -357,7 +357,7 @@ These options will be added right after the command name. For instance, based on
 
 ## Ignore package warnings
 
-_New in version 2.10.0_
++++ 2.10.0
 
 You may see some warnings when resolving dependencies like this:
 

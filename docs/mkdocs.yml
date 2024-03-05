@@ -33,6 +33,8 @@ plugins:
   - search
   - mike
   - markdown-exec
+  - "mkdocs-version-annotations":
+      version_added_admonition: "tip"
   - mkdocstrings:
       handlers:
         python:
