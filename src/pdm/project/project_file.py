@@ -39,7 +39,8 @@ class PyProject(TOMLBase):
 
     def write(self, show_message: bool = True) -> None:
         """Write the TOMLDocument to the file."""
-        _remove_empty_tables(self._data)
+        _remove_empty_tables(self._data.get("project", {}))
+        _remove_empty_tables(self._data.get("tool", {}).get("pdm", {}))
         super().write()
         if show_message:
             self.ui.echo("Changes are written to [success]pyproject.toml[/].", verbosity=termui.Verbosity.NORMAL)
