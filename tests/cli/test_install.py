@@ -345,3 +345,23 @@ def test_sync_all_with_excluded_groups(project, working_set, pdm, args):
     assert "urllib3" in working_set
     assert "pytz" not in working_set
     assert "pyopenssl" not in working_set
+
+
+def test_excluded_groups_ignored_if_prod_passed(project, working_set, pdm):
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz")
+    project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
+    pdm(["install", "--prod", "--without", "ssl"], obj=project, strict=True)
+    assert "urllib3" not in working_set
+    assert "pytz" not in working_set
+    assert "pyopenssl" not in working_set
+
+
+def test_excluded_groups_ignored_if_dev_passed(project, working_set, pdm):
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz")
+    project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
+    pdm(["install", "--dev", "--without", "ssl"], obj=project, strict=True)
+    assert "urllib3" not in working_set
+    assert "pytz" not in working_set
+    assert "pyopenssl" not in working_set

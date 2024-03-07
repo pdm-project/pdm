@@ -32,7 +32,7 @@ class GroupSelection:
 
     @classmethod
     def from_options(cls, project: Project, options: argparse.Namespace) -> GroupSelection:
-        if getattr(options, "excluded_groups", None) and not options.groups:
+        if getattr(options, "excluded_groups", None) and not options.groups and options.dev is None:
             options.groups = [":all"]
         if "group" in options:
             return cls(project, group=options.group, dev=options.dev)
