@@ -14,6 +14,9 @@ It will run `flask run -p 54321` in the environment that is aware of packages in
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.
 
+!!! NOTE
+  The `[tool.pdm.scripts]` directory must not be confused with `[project.scripts]`. The latter is used to install a command as part of your package, as explained [here](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#creating-executable-scripts).
+
 You can then run `pdm run <script_name>` to invoke the script in the context of your PDM project. For example:
 
 ```toml
