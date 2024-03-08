@@ -1,9 +1,9 @@
 import os
 
-import openai
 import streamlit as st
-from llama_index import ServiceContext, SimpleDirectoryReader, VectorStoreIndex
-from llama_index.llms import OpenAI
+from llama_index.core import Settings, SimpleDirectoryReader, VectorStoreIndex
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.openai import OpenAI
 
 st.set_page_config(
     page_title="Chat with the PDM docs, powered by LlamaIndex",
@@ -12,13 +12,21 @@ st.set_page_config(
     initial_sidebar_state="auto",
     menu_items=None,
 )
-openai.api_key = st.secrets.openai_key
 st.title("Chat with the PDM docs, powered by LlamaIndex 💬🦙")
 st.info(
     "PDM - A modern Python package and dependency manager. "
     "Check out the full documentation at [PDM docs](https://pdm-project.org).",
     icon="📃",
 )
+Settings.llm = OpenAI(
+    api_key=st.secrets.get("openai_key"),
+    api_base=st.secrets.get("openai_base"),
+    model="gpt-3.5-turbo",
+    temperature=0.5,
+    system_prompt="You are an expert on PDM and your job is to answer technical questions. "
+    "Assume that all questions are related to PDM. Keep your answers technical and based on facts - do not hallucinate features.",
+)
+Settings.embed_model = OpenAIEmbedding(api_base=st.secrets.get("openai_base"), api_key=st.secrets.get("openai_key"))
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs/docs")
 
@@ -36,15 +44,7 @@ def load_data():
     with st.spinner(text="Loading and indexing the PDM docs - hang tight! This should take 1-2 minutes."):
         reader = SimpleDirectoryReader(input_dir=DATA_PATH, recursive=True, required_exts=[".md"])
         docs = reader.load_data()
-        service_context = ServiceContext.from_defaults(
-            llm=OpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0.5,
-                system_prompt="You are an expert on PDM and your job is to answer technical questions. "
-                "Assume that all questions are related to PDM. Keep your answers technical and based on facts - do not hallucinate features.",
-            )
-        )
-        index = VectorStoreIndex.from_documents(docs, service_context=service_context)
+        index = VectorStoreIndex.from_documents(docs)
         return index
 
 

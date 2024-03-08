@@ -15,4 +15,4 @@ readme = "README.md"
 license = {text = "MIT"}
 
 [tool.pdm]
-package-type = "application"
+distribution = false
