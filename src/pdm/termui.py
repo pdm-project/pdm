@@ -38,6 +38,7 @@ DEFAULT_THEME = {
     "req": "bold green",
 }
 _console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
+_legacy_console = Console(highlight=False, theme=Theme(DEFAULT_THEME), legacy_windows=True)
 _err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
 
 
@@ -62,8 +63,8 @@ def style(text: str, *args: str, style: str | None = None, **kwargs: Any) -> str
     :param style: rich style to apply to whole string
     :return: string containing ansi codes
     """
-    with _console.capture() as capture:
-        _console.print(text, *args, end="", style=style, **kwargs)
+    with _legacy_console.capture() as capture:
+        _legacy_console.print(text, *args, end="", style=style, **kwargs)
     return capture.get()
 
 
