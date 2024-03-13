@@ -6,7 +6,14 @@ from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import groups_group, lock_strategy_group, lockfile_option, no_isolation_option, skip_option
+from pdm.cli.options import (
+    config_setting_option,
+    groups_group,
+    lock_strategy_group,
+    lockfile_option,
+    no_isolation_option,
+    skip_option,
+)
 from pdm.project import Project
 
 
@@ -17,6 +24,7 @@ class Command(BaseCommand):
         *BaseCommand.arguments,
         lockfile_option,
         no_isolation_option,
+        config_setting_option,
         skip_option,
         groups_group,
         lock_strategy_group,

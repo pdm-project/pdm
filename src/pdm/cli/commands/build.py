@@ -8,6 +8,7 @@ from typing import Mapping
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
+    config_setting_option,
     no_isolation_option,
     project_option,
     skip_option,
@@ -20,7 +21,7 @@ from pdm.project import Project
 class Command(BaseCommand):
     """Build artifacts for distribution"""
 
-    arguments = (verbose_option, project_option, no_isolation_option, skip_option)
+    arguments = (verbose_option, project_option, no_isolation_option, skip_option, config_setting_option)
 
     @staticmethod
     def do_build(
@@ -36,6 +37,7 @@ class Command(BaseCommand):
         from pdm.builders import SdistBuilder, WheelBuilder
 
         hooks = hooks or HookManager(project)
+        config_settings = project.core.config_settings
 
         if project.is_global:
             raise ProjectError("Not allowed to build based on the global project.")
@@ -55,12 +57,12 @@ class Command(BaseCommand):
         with project.core.ui.logging("build"):
             if sdist:
                 project.core.ui.echo("Building sdist...")
-                loc = SdistBuilder(project.root, project.environment).build(dest, config_settings)
+                loc = SdistBuilder(project.root, project.environment).build(dest)
                 project.core.ui.echo(f"Built sdist at {loc}")
                 artifacts.append(loc)
             if wheel:
                 project.core.ui.echo("Building wheel...")
-                loc = WheelBuilder(project.root, project.environment).build(dest, config_settings)
+                loc = WheelBuilder(project.root, project.environment).build(dest)
                 project.core.ui.echo(f"Built wheel at {loc}")
                 artifacts.append(loc)
         hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
@@ -88,33 +90,13 @@ class Command(BaseCommand):
             action="store_false",
             help="Do not clean the target directory",
         )
-        parser.add_argument(
-            "--config-setting",
-            "-C",
-            action="append",
-            help="Pass options to the backend. options with a value must be "
-            'specified after "=": `--config-setting=--opt(=value)` '
-            "or `-C--opt(=value)`",
-        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        config_settings = None
-        if options.config_setting:
-            config_settings = {}
-            for item in options.config_setting:
-                name, _, value = item.partition("=")
-                if name not in config_settings:
-                    config_settings[name] = value
-                else:
-                    if not isinstance(config_settings[name], list):
-                        config_settings[name] = [config_settings[name]]
-                    config_settings[name].append(value)
         self.do_build(
             project,
             sdist=options.sdist,
             wheel=options.wheel,
             dest=options.dest,
             clean=options.clean,
-            config_settings=config_settings,
             hooks=HookManager(project, options.skip),
         )

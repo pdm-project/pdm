@@ -83,6 +83,7 @@ _pdm() {
         "--stable[Only allow stable versions to be pinned]"
         {-e+,--editable+}'[Specify editable packages]:packages'
         {-x,--fail-fast}'[Abort on first installation error]'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
         '*:packages:_pdm_pip_packages'
@@ -95,7 +96,7 @@ _pdm() {
         {-d+,--dest+}'[Target directory to put artifacts]:directory:_files -/'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         '--no-clean[Do not clean the target directory]'
-        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=--opt(=value)" or "-C--opt(=value)"]'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
       )
       ;;
@@ -156,7 +157,8 @@ _pdm() {
         "--editable-self[Include the project itself as an editable dependency]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {-o+,--output+}"[Write output to the given file, or print to stdout if not given]:output file:_files"
-        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         "--no-default[Don't include dependencies from the default group]"
@@ -204,7 +206,8 @@ _pdm() {
     install)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-d,--dev}"[Select dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
@@ -214,6 +217,7 @@ _pdm() {
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
         {-x,--fail-fast}'[Abort on first installation error]'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lock file content]"
         "--check[Check if the lock file is up to date and fail otherwise]"
@@ -243,11 +247,13 @@ _pdm() {
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[Do not isolate the build in a clean environment]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--refresh[Don't update pinned versions, only refresh the lock file]"
         "--check[Check if the lock file is up to date and quit]"
-        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
@@ -335,6 +341,7 @@ _pdm() {
         "--no-self[Don't install the project itself]"
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         {-x,--fail-fast}'[Abort on first installation error]'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
@@ -379,7 +386,8 @@ _pdm() {
     sync)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-d,--dev}"[Select dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         {--prod,--production}"[Unselect dev dependencies]"
@@ -392,6 +400,7 @@ _pdm() {
         {-x,--fail-fast}'[Abort on first installation error]'
         '--no-editable[Install non-editable versions for all packages]'
         "--no-self[Don't install the project itself]"
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
       )
@@ -399,7 +408,8 @@ _pdm() {
     update)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-G+,--group+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
+        "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
@@ -424,6 +434,7 @@ _pdm() {
         "--dry-run[Show the difference only without modifying the lockfile content]"
         "--outdated[Show the difference only without modifying the lockfile content]"
         {-x,--fail-fast}'[Abort on first installation error]'
+        {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         "*:packages:_pdm_packages"
