@@ -212,8 +212,3 @@ addopts = "-r aR"
 testpaths = [
     "tests/",
 ]
-
-[tool.pyright]
-venvPath = "."
-venv = ".venv"
-pythonVersion = "3.8"

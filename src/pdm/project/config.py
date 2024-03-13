@@ -101,6 +101,12 @@ class Config(MutableMapping[str, str]):
             True,
             env_var="PDM_CACHE_DIR",
         ),
+        "log_dir": ConfigItem(
+            "The root directory of log files",
+            platformdirs.user_log_dir("pdm"),
+            True,
+            env_var="PDM_LOG_DIR",
+        ),
         "check_update": ConfigItem(
             "Check if there is any newer version available",
             True,

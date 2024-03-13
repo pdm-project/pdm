@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import atexit
 import contextlib
 import enum
 import logging
 import os
+import tempfile
 import warnings
-from tempfile import mktemp
 from typing import TYPE_CHECKING
 
 from rich.box import ROUNDED
@@ -158,14 +157,18 @@ class SilentSpinner(DummySpinner):
 class UI:
     """Terminal UI object"""
 
-    def __init__(self, verbosity: Verbosity = Verbosity.NORMAL) -> None:
+    def __init__(
+        self, verbosity: Verbosity = Verbosity.NORMAL, *, exit_stack: contextlib.ExitStack | None = None
+    ) -> None:
         self.verbosity = verbosity
+        self.exit_stack = exit_stack or contextlib.ExitStack()
+        self.log_dir: str | None = None
 
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = Verbosity(verbosity)
         if self.verbosity == Verbosity.QUIET:
-            warnings.simplefilter("ignore", PDMWarning, append=True)
-            warnings.simplefilter("ignore", FutureWarning, append=True)
+            self.exit_stack.enter_context(warnings.catch_warnings(action="ignore", category=PDMWarning, append=True))
+            self.exit_stack.enter_context(warnings.catch_warnings(action="ignore", category=FutureWarning, append=True))
 
     def set_theme(self, theme: Theme) -> None:
         """set theme for rich console
@@ -226,23 +229,24 @@ class UI:
         """A context manager that opens a file for logging when verbosity is NORMAL or
         print to the stdout otherwise.
         """
-        file_name: str | None = None
+        log_file: str | None = None
         if self.verbosity >= Verbosity.DETAIL:
             handler: logging.Handler = logging.StreamHandler()
             handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
-            file_name = mktemp(".log", f"pdm-{type_}-")
-            handler = logging.FileHandler(file_name, encoding="utf-8")
+            log_file = tempfile.mktemp(".log", f"pdm-{type_}-", self.log_dir)
+            handler = logging.FileHandler(log_file, encoding="utf-8")
             handler.setLevel(logging.DEBUG)
+
         handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
         logger.addHandler(handler)
         unearth_logger.addHandler(handler)
 
         def cleanup() -> None:
-            if not file_name:
+            if not log_file:
                 return
             with contextlib.suppress(OSError):
-                os.unlink(file_name)
+                os.unlink(log_file)
 
         try:
             yield logger
@@ -250,13 +254,13 @@ class UI:
             if self.verbosity < Verbosity.DETAIL:
                 logger.exception("Error occurs")
                 self.echo(
-                    f"See [warning]{file_name}[/] for detailed debug log.",
+                    f"See [warning]{log_file}[/] for detailed debug log.",
                     style="error",
                     err=True,
                 )
             raise
         else:
-            atexit.register(cleanup)
+            self.exit_stack.callback(cleanup)
         finally:
             logger.removeHandler(handler)
             unearth_logger.removeHandler(handler)
