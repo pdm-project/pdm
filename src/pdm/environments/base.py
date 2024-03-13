@@ -117,6 +117,7 @@ class BaseEnvironment(abc.ABC):
             cache_dir=self.project.cache("http"),
             trusted_hosts=trusted_hosts,
             ca_certificates=Path(ca_certs) if ca_certs is not None else None,
+            timeout=self.project.config["request_timeout"],
         )
         certfn = self.project.config.get("pypi.client_cert")
         if certfn:
