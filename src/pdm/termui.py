@@ -167,8 +167,9 @@ class UI:
     def set_verbosity(self, verbosity: int) -> None:
         self.verbosity = Verbosity(verbosity)
         if self.verbosity == Verbosity.QUIET:
-            self.exit_stack.enter_context(warnings.catch_warnings(action="ignore", category=PDMWarning, append=True))
-            self.exit_stack.enter_context(warnings.catch_warnings(action="ignore", category=FutureWarning, append=True))
+            self.exit_stack.enter_context(warnings.catch_warnings())
+            warnings.simplefilter("ignore", PDMWarning, append=True)
+            warnings.simplefilter("ignore", FutureWarning, append=True)
 
     def set_theme(self, theme: Theme) -> None:
         """set theme for rich console
