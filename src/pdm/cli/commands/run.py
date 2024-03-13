@@ -34,6 +34,7 @@ if TYPE_CHECKING:
         env: Mapping[str, str]
         env_file: EnvFileOptions | str | None
         help: str
+        keep_going: bool
         site_packages: bool
 
 
@@ -103,7 +104,7 @@ class TaskRunner:
     """The task runner for pdm project"""
 
     TYPES = ("cmd", "shell", "call", "composite")
-    OPTIONS = ("env", "env_file", "help", "site_packages")
+    OPTIONS = ("env", "env_file", "help", "keep_going", "site_packages")
 
     def __init__(self, project: Project, hooks: HookManager) -> None:
         self.project = project
@@ -270,7 +271,8 @@ class TaskRunner:
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
             should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
-            code = 0
+            composite_code = 0
+            keep_going = options.pop("keep_going", False) if options else False
             for script in value:
                 if should_interpolate:
                     script, _ = interpolate(script, args)
@@ -279,8 +281,10 @@ class TaskRunner:
                 subargs = split[1:] + ([] if should_interpolate else args)
                 code = self.run(cmd, subargs, options, chdir=True)
                 if code != 0:
-                    return code
-            return code
+                    if not keep_going:
+                        return code
+                    composite_code = code
+            return composite_code
         return self._run_process(
             args,
             chdir=True,
