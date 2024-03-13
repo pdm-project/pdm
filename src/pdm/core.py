@@ -58,6 +58,13 @@ class Core:
         self.version = __version__
         self.exit_stack = contextlib.ExitStack()
         self.ui = termui.UI(exit_stack=self.exit_stack)
+        # The config settings map shared by all packages
+        self.config_settings: dict[str, Any] | None = None
+
+        def reset_config_settings() -> None:
+            self.config_settings = None
+
+        self.exit_stack.callback(reset_config_settings)
         self.init_parser()
         self.load_plugins()
 
@@ -145,6 +152,7 @@ class Core:
         os.makedirs(self.ui.log_dir, exist_ok=True)
 
         command = cast("BaseCommand | None", getattr(options, "command", None))
+        self.config_settings = getattr(options, "config_setting", None)
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
 

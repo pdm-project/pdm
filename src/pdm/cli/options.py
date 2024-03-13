@@ -254,7 +254,7 @@ groups_group.add_argument(
     dest="excluded_groups",
     metavar="",
     action=split_lists(","),
-    help="Exclude groups of optional-dependencies when using :all",
+    help="Exclude groups of optional-dependencies or dev-dependencies",
     default=[],
 )
 groups_group.add_argument(
@@ -476,7 +476,8 @@ config_setting_option = Option(
     "--config-setting",
     "-C",
     action=ExtendMapAction,
-    help="Pass options to the backend. options with a value must be "
-    'specified after "=": `--config-setting=--opt(=value)` '
-    "or `-C--opt(=value)`",
+    help="Pass options to the builder. options with a value must be "
+    'specified after "=": `--config-setting=key(=value)` '
+    "or `-Ckey(=value)`",
 )
+install_group.options.append(config_setting_option)

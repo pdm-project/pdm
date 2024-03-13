@@ -37,6 +37,7 @@ class Command(BaseCommand):
         from pdm.builders import SdistBuilder, WheelBuilder
 
         hooks = hooks or HookManager(project)
+        config_settings = project.core.config_settings
 
         if project.is_global:
             raise ProjectError("Not allowed to build based on the global project.")
@@ -56,12 +57,12 @@ class Command(BaseCommand):
         with project.core.ui.logging("build"):
             if sdist:
                 project.core.ui.echo("Building sdist...")
-                loc = SdistBuilder(project.root, project.environment).build(dest, config_settings)
+                loc = SdistBuilder(project.root, project.environment).build(dest)
                 project.core.ui.echo(f"Built sdist at {loc}")
                 artifacts.append(loc)
             if wheel:
                 project.core.ui.echo("Building wheel...")
-                loc = WheelBuilder(project.root, project.environment).build(dest, config_settings)
+                loc = WheelBuilder(project.root, project.environment).build(dest)
                 project.core.ui.echo(f"Built wheel at {loc}")
                 artifacts.append(loc)
         hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
@@ -97,6 +98,5 @@ class Command(BaseCommand):
             wheel=options.wheel,
             dest=options.dest,
             clean=options.clean,
-            config_settings=options.config_setting,
             hooks=HookManager(project, options.skip),
         )

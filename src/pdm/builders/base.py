@@ -8,7 +8,7 @@ import textwrap
 import threading
 from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Iterable, cast
 
 from pyproject_hooks import BuildBackendHookCaller
 
@@ -182,6 +182,7 @@ class EnvBuilder:
         self.executable = self._env.interpreter.executable.as_posix()
         self.src_dir = src_dir
         self.isolated = environment.project.config["build_isolation"]
+        self.config_settings = environment.project.core.config_settings
         mode = "Isolated" if self.isolated else "Non-isolated"
         logger.info("Preparing environment(%s mode) for PEP 517 build...", mode)
         try:
@@ -301,19 +302,14 @@ class EnvBuilder:
             if key not in self._shared_envs:
                 self._shared_envs[key] = path
 
-    def prepare_metadata(self, out_dir: str, config_settings: Mapping[str, Any] | None = None) -> str:
+    def prepare_metadata(self, out_dir: str) -> str:
         """Prepare metadata and store in the out_dir.
         Some backends doesn't provide that API, in that case the metadata will be
         retrieved from the built result.
         """
         raise NotImplementedError("Should be implemented in subclass")
 
-    def build(
-        self,
-        out_dir: str,
-        config_settings: Mapping[str, Any] | None = None,
-        metadata_directory: str | None = None,
-    ) -> str:
+    def build(self, out_dir: str, metadata_directory: str | None = None) -> str:
         """Build and store the artifact in out_dir,
         return the absolute path of the built result.
         """

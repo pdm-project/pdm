@@ -1,5 +1,6 @@
 import tarfile
 import zipfile
+from unittest import mock
 
 import pytest
 
@@ -20,8 +21,15 @@ def get_wheel_names(path):
 
 def test_build_command(project, pdm, mocker):
     do_build = mocker.patch.object(Command, "do_build")
-    pdm(["build"], obj=project)
-    do_build.assert_called_once()
+    pdm(["build", "--no-sdist", "-Ca=1", "--config-setting", "b=2"], obj=project)
+    do_build.assert_called_with(
+        project,
+        sdist=False,
+        wheel=True,
+        dest=mock.ANY,
+        clean=True,
+        hooks=mock.ANY,
+    )
 
 
 def test_build_global_project_forbidden(pdm):
@@ -131,7 +139,8 @@ def test_build_src_package_by_include(fixture_project):
 
 def test_build_with_config_settings(fixture_project):
     project = fixture_project("demo-src-package")
-    Command.do_build(project, config_settings={"--plat-name": "win_amd64"})
+    project.core.config_settings = {"--plat-name": "win_amd64"}
+    Command.do_build(project)
 
     assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()
 
