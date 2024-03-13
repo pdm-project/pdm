@@ -572,10 +572,13 @@ class PreparedCandidate:
             # no variable expansion
             backend_cls = get_backend("setuptools")
         backend = backend_cls(pyproject_toml.parent)
+        if "name" not in metadata:
+            termui.logger.warning("Failed to parse pyproject.toml, name is required")
+            return None
         setup = Setup(
             name=metadata.get("name"),
             summary=metadata.get("description"),
-            version=metadata.get("version"),
+            version=metadata.get("version", "0.0.0"),
             install_requires=list(
                 map(
                     backend.expand_line,
