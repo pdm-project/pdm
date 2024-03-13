@@ -389,3 +389,16 @@ def test_filter_sources_with_config(project):
     expect_sources("foo-bar", ["source1", "source2"])
     expect_sources("bar-extra", ["source2"])
     expect_sources("baz-extra", ["source1", "pypi"])
+
+
+@pytest.mark.usefixtures("working_set")
+def test_preserve_log_file(project, pdm, tmp_path, mocker):
+    pdm(["add", "requests"], obj=project, strict=True)
+    all_logs = list(tmp_path.joinpath("logs").iterdir())
+    assert len(all_logs) == 0
+
+    with mocker.patch.object(project.core.synchronizer_class, "synchronize", side_effect=Exception):
+        result = pdm(["add", "pytz"], obj=project)
+        assert result.exit_code != 0
+        install_log = next(tmp_path.joinpath("logs").glob("pdm-install-*.log"))
+        assert install_log.exists()

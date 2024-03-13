@@ -33,7 +33,6 @@ from pdm.utils import (
     cd,
     comparable_version,
     convert_hashes,
-    create_tracked_tempdir,
     filtered_sources,
     get_file_hash,
     get_rev_from_url,
@@ -519,7 +518,7 @@ class PreparedCandidate:
                 return dist
 
         # If all fail, try building the source to get the metadata
-        metadata_parent = create_tracked_tempdir(prefix="pdm-meta-")
+        metadata_parent = self.environment.project.core.create_temp_dir(prefix="pdm-meta-")
         return self._get_metadata_from_build(self._unpacked_dir, metadata_parent)
 
     def _get_metadata_from_metadata_link(
@@ -691,7 +690,7 @@ class PreparedCandidate:
                 dirname, _ = os.path.splitext(original_link.filename)
             return str(src_dir / str(dirname))
         # Otherwise, for source dists, they will be unpacked into a *temp* directory.
-        return create_tracked_tempdir(prefix="pdm-build-")
+        return self.environment.project.core.create_temp_dir(prefix="pdm-build-")
 
     def _wheel_compatible(self, wheel_file: str, allow_all: bool = False) -> bool:
         if allow_all:

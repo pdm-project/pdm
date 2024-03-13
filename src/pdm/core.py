@@ -5,15 +5,18 @@ r"""
  / ____/ /_/ / /  / /
 /_/   /_____/_/  /_/
 """
+
 from __future__ import annotations
 
 import argparse
+import contextlib
 import importlib
 import itertools
 import os
 import pkgutil
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
 from resolvelib import Resolver
@@ -53,9 +56,13 @@ class Core:
 
     def __init__(self) -> None:
         self.version = __version__
-        self.ui = termui.UI()
+        self.exit_stack = contextlib.ExitStack()
+        self.ui = termui.UI(exit_stack=self.exit_stack)
         self.init_parser()
         self.load_plugins()
+
+    def create_temp_dir(self, *args: Any, **kwargs: Any) -> str:
+        return self.exit_stack.enter_context(TemporaryDirectory(*args, **kwargs))
 
     def init_parser(self) -> None:
         self.parser = ErrorArgumentParser(
@@ -134,6 +141,8 @@ class Core:
 
         self.ui.set_verbosity(options.verbose)
         self.ui.set_theme(project.global_config.load_theme())
+        self.ui.log_dir = os.path.expanduser(cast(str, project.config["log_dir"]))
+        os.makedirs(self.ui.log_dir, exist_ok=True)
 
         command = cast("BaseCommand | None", getattr(options, "command", None))
         hooks = HookManager(project, getattr(options, "skip", None))
@@ -175,49 +184,49 @@ class Core:
         **extra: Any,
     ) -> None:
         """The main entry function"""
-
-        if args is None:
-            args = []
-        args = self._get_cli_args(args, obj)
-        # Keep it for after project parsing to check if its a defined script
-        root_script = None
-        try:
-            options = self.parser.parse_args(args)
-        except PdmArgumentError as e:
-            # Failed to parse, try to give all to `run` command as shortcut
-            # and keep to root script (first non-dashed param) to check existence
-            # as soon as the project is parsed
-            root_script = next((arg for arg in args if not arg.startswith("-")), None)
-            if not root_script:
-                self.parser.error(str(e.__cause__))
+        with self.exit_stack:
+            if args is None:
+                args = []
+            args = self._get_cli_args(args, obj)
+            # Keep it for after project parsing to check if its a defined script
+            root_script = None
             try:
-                options = self.parser.parse_args(["run", *args])
+                options = self.parser.parse_args(args)
             except PdmArgumentError as e:
-                self.parser.error(str(e.__cause__))
+                # Failed to parse, try to give all to `run` command as shortcut
+                # and keep to root script (first non-dashed param) to check existence
+                # as soon as the project is parsed
+                root_script = next((arg for arg in args if not arg.startswith("-")), None)
+                if not root_script:
+                    self.parser.error(str(e.__cause__))
+                try:
+                    options = self.parser.parse_args(["run", *args])
+                except PdmArgumentError as e:
+                    self.parser.error(str(e.__cause__))
 
-        project = self.ensure_project(options, obj)
-        if root_script and root_script not in project.scripts:
-            self.parser.error(f"Script unknown: {root_script}")
+            project = self.ensure_project(options, obj)
+            if root_script and root_script not in project.scripts:
+                self.parser.error(f"Script unknown: {root_script}")
 
-        try:
-            self.handle(project, options)
-        except Exception:
-            etype, err, traceback = sys.exc_info()
-            should_show_tb = not isinstance(err, PdmUsageError)
-            if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
-                raise cast(Exception, err).with_traceback(traceback) from None
-            self.ui.echo(
-                rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
-                err=True,
-            )
-            if should_show_tb:
-                self.ui.warn("Add '-v' to see the detailed traceback", verbosity=termui.Verbosity.NORMAL)
-            sys.exit(1)
-        else:
-            if project.config["check_update"] and not is_in_zipapp():
-                from pdm.cli.actions import check_update
+            try:
+                self.handle(project, options)
+            except Exception:
+                etype, err, traceback = sys.exc_info()
+                should_show_tb = not isinstance(err, PdmUsageError)
+                if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
+                    raise cast(Exception, err).with_traceback(traceback) from None
+                self.ui.echo(
+                    rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
+                    err=True,
+                )
+                if should_show_tb:
+                    self.ui.warn("Add '-v' to see the detailed traceback", verbosity=termui.Verbosity.NORMAL)
+                sys.exit(1)
+            else:
+                if project.config["check_update"] and not is_in_zipapp():
+                    from pdm.cli.actions import check_update
 
-                check_update(project)
+                    check_update(project)
 
     def register_command(self, command: type[BaseCommand], name: str | None = None) -> None:
         """Register a subcommand to the subparsers,

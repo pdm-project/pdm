@@ -111,7 +111,6 @@ class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
 
 
 class HashCache:
-
     """Caches hashes of PyPI artifacts so we do not need to re-download them.
 
     Hashes are only cached when the URL appears to contain a hash in it and the
@@ -324,7 +323,7 @@ class SafeFileCache(SeparateBodyBaseCache):
             os.remove(path)
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=None)
 def get_wheel_cache(directory: Path | str) -> WheelCache:
     return WheelCache(directory)
 

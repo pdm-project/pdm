@@ -26,7 +26,6 @@ import json
 import os
 import shutil
 import sys
-import warnings
 from dataclasses import dataclass
 from io import BufferedReader, BytesIO, StringIO
 from pathlib import Path
@@ -372,7 +371,7 @@ def core() -> Iterator[Core]:
     # Turn off use_venv by default, for testing
     Config._config_map["python.use_venv"].default = False
     main = Core()
-    with warnings.catch_warnings():
+    with main.exit_stack:
         yield main
     # Restore the config items
     Config._config_map = old_config_map
@@ -404,6 +403,7 @@ def project_no_init(
     mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
+    p.global_config["log_dir"] = tmp_path.joinpath("logs").as_posix()
     python_path = find_python_in_path(sys.base_prefix)
     if python_path is None:
         raise ValueError("Unable to find a Python path")

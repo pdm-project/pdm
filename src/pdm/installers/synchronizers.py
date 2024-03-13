@@ -268,9 +268,7 @@ class BaseSynchronizer:
 
 
 class Synchronizer(BaseSynchronizer):
-    def create_executor(
-        self,
-    ) -> ThreadPoolExecutor | DummyExecutor:
+    def create_executor(self) -> ThreadPoolExecutor | DummyExecutor:
         if self.parallel:
             return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
         else:

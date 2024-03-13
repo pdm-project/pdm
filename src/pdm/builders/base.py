@@ -19,7 +19,6 @@ from pdm.models.in_process import get_sys_config_paths
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.working_set import WorkingSet
 from pdm.termui import logger
-from pdm.utils import create_tracked_tempdir
 
 if TYPE_CHECKING:
     from pdm.environments import BaseEnvironment
@@ -162,20 +161,18 @@ class EnvBuilder:
         _requires: list[str]
         _prefix: _Prefix
 
-    @classmethod
-    def get_shared_env(cls, key: int) -> str:
-        if key in cls._shared_envs:
-            logger.debug("Reusing shared build env: %s", cls._shared_envs[key])
-            return cls._shared_envs[key]
+    def get_shared_env(self, key: int) -> str:
+        if key in self._shared_envs:
+            logger.debug("Reusing shared build env: %s", self._shared_envs[key])
+            return self._shared_envs[key]
         # We don't save the cache here, instead it will be done after the installation
         # finished.
-        return create_tracked_tempdir("-shared", "pdm-build-env-")
+        return self._env.project.core.create_temp_dir("-shared", "pdm-build-env-")
 
-    @classmethod
-    def get_overlay_env(cls, key: str) -> str:
-        if key not in cls._overlay_envs:
-            cls._overlay_envs[key] = create_tracked_tempdir("-overlay", "pdm-build-env-")
-        return cls._overlay_envs[key]
+    def get_overlay_env(self, key: str) -> str:
+        if key not in self._overlay_envs:
+            self._overlay_envs[key] = self._env.project.core.create_temp_dir("-overlay", "pdm-build-env-")
+        return self._overlay_envs[key]
 
     def __init__(self, src_dir: str | Path, environment: BaseEnvironment) -> None:
         """If isolated is True(default), the builder will set up a *clean* environment.
