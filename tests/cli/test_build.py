@@ -21,6 +21,8 @@ def get_wheel_names(path):
 
 def test_build_command(project, pdm, mocker):
     do_build = mocker.patch.object(Command, "do_build")
+    # prevent the context_settings from being reset
+    project.core.exit_stack.pop_all()
     pdm(["build", "--no-sdist", "-Ca=1", "--config-setting", "b=2"], obj=project)
     do_build.assert_called_with(
         project,
@@ -30,6 +32,7 @@ def test_build_command(project, pdm, mocker):
         clean=True,
         hooks=mock.ANY,
     )
+    assert project.core.config_settings == {"a": "1", "b": "2"}
 
 
 def test_build_global_project_forbidden(pdm):

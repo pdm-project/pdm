@@ -60,11 +60,7 @@ class Core:
         self.ui = termui.UI(exit_stack=self.exit_stack)
         # The config settings map shared by all packages
         self.config_settings: dict[str, Any] | None = None
-
-        def reset_config_settings() -> None:
-            self.config_settings = None
-
-        self.exit_stack.callback(reset_config_settings)
+        self.exit_stack.callback(setattr, self, "config_settings", None)
         self.init_parser()
         self.load_plugins()
 
