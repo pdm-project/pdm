@@ -115,6 +115,9 @@ class Config(MutableMapping[str, str]):
             "PDM_BUILD_ISOLATION",
             ensure_boolean,
         ),
+        "request_timeout": ConfigItem(
+            "The timeout for network requests in seconds", 15, True, "PDM_REQUEST_TIMEOUT", coerce=int
+        ),
         "global_project.fallback": ConfigItem(
             "Use the global project implicitly if no local project is found",
             False,
