@@ -62,6 +62,8 @@ def style(text: str, *args: str, style: str | None = None, **kwargs: Any) -> str
     :param style: rich style to apply to whole string
     :return: string containing ansi codes
     """
+    if _console.legacy_windows or not _console.is_terminal:  # pragma: no cover
+        return text
     with _console.capture() as capture:
         _console.print(text, *args, end="", style=style, **kwargs)
     return capture.get()
