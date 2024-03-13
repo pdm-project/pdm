@@ -15,6 +15,7 @@ Example:
         project.core.ui.echo("Project install succeeded")
     ```
 """
+
 from blinker import NamedSignal, Namespace
 
 pdm_signals = Namespace()

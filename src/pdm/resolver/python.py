@@ -1,6 +1,7 @@
 """
 Special requirement and candidate classes to describe a requires-python constraint
 """
+
 from __future__ import annotations
 
 from typing import Iterable, Iterator, Mapping, cast

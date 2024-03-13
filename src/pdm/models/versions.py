@@ -139,12 +139,10 @@ class Version:
         return self.__gt__(other) or self.__eq__(other)
 
     @overload
-    def __getitem__(self, idx: int) -> VersionBit:
-        ...
+    def __getitem__(self, idx: int) -> VersionBit: ...
 
     @overload
-    def __getitem__(self, idx: slice) -> Version:
-        ...
+    def __getitem__(self, idx: slice) -> Version: ...
 
     def __getitem__(self, idx: int | slice) -> VersionBit | Version:
         if isinstance(idx, slice):

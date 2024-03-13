@@ -39,13 +39,11 @@ class OrderedSet(AbstractSet[T]):
 
 
 @overload
-def _identify_parent(parent: None) -> None:
-    ...
+def _identify_parent(parent: None) -> None: ...
 
 
 @overload
-def _identify_parent(parent: Candidate) -> str:
-    ...
+def _identify_parent(parent: Candidate) -> str: ...
 
 
 def _identify_parent(parent: Candidate | None) -> str | None:

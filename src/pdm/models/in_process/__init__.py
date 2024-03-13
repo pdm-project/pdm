@@ -1,6 +1,7 @@
 """
 A collection of functions that need to be called via a subprocess call.
 """
+
 from __future__ import annotations
 
 import contextlib

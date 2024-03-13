@@ -17,19 +17,16 @@ if TYPE_CHECKING:
     ExportItems = Union[Iterable[Candidate], Iterable[Requirement]]
 
     class _Format(Protocol):
-        def check_fingerprint(self, project: Project | None, filename: str | Path) -> bool:
-            ...
+        def check_fingerprint(self, project: Project | None, filename: str | Path) -> bool: ...
 
         def convert(
             self,
             project: Project | None,
             filename: str | Path,
             options: Namespace | None,
-        ) -> tuple[Mapping, Mapping]:
-            ...
+        ) -> tuple[Mapping, Mapping]: ...
 
-        def export(self, project: Project, candidates: ExportItems, options: Namespace | None) -> str:
-            ...
+        def export(self, project: Project, candidates: ExportItems, options: Namespace | None) -> str: ...
 
 
 FORMATS: Mapping[str, _Format] = {

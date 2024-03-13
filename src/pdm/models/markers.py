@@ -66,13 +66,11 @@ class Marker:
 
 
 @overload
-def get_marker(marker: None) -> None:
-    ...
+def get_marker(marker: None) -> None: ...
 
 
 @overload
-def get_marker(marker: PackageMarker | Marker | str) -> Marker:
-    ...
+def get_marker(marker: PackageMarker | Marker | str) -> Marker: ...
 
 
 def get_marker(marker: PackageMarker | Marker | str | None) -> Marker | None:

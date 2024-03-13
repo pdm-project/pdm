@@ -18,8 +18,7 @@ if TYPE_CHECKING:
             namespace: argparse.Namespace,
             values: str | Sequence[Any] | None,
             option_string: str | None = None,
-        ) -> None:
-            ...
+        ) -> None: ...
 
 
 class Option:
