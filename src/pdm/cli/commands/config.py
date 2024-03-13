@@ -157,17 +157,19 @@ class Command(BaseCommand):
             {**project.global_config.self_data, **project.project_config.self_data},
         )
 
-        self.ui.echo(
-            f"\nHome configuration ([success]{project.global_config.config_file}[/]):",
-            style="bold",
-        )
-        self._show_config(project.global_config.self_data, project.project_config.self_data)
+        if project.global_config.self_data:
+            self.ui.echo(
+                f"\nHome configuration ([success]{project.global_config.config_file}[/]):",
+                style="bold",
+            )
+            self._show_config(project.global_config.self_data, project.project_config.self_data)
 
-        self.ui.echo(
-            f"\nProject configuration ([success]{project.project_config.config_file}[/]):",
-            style="bold",
-        )
-        self._show_config(project.project_config.self_data, {})
+        if project.project_config.self_data:
+            self.ui.echo(
+                f"\nProject configuration ([success]{project.project_config.config_file}[/]):",
+                style="bold",
+            )
+            self._show_config(project.project_config.self_data, {})
 
     def _delete_config(self, project: Project, options: argparse.Namespace) -> None:
         config = project.project_config if options.local else project.global_config
