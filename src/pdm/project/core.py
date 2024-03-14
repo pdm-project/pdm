@@ -82,7 +82,7 @@ class Project:
         if global_config is None:
             global_config = platformdirs.user_config_path("pdm") / "config.toml"
         self.global_config = Config(Path(global_config), is_global=True)
-        global_project = Path(self.global_config["global_project.path"])
+        global_project = Path(self.global_config["global_project.path"]).expanduser()
 
         if root_path is None:
             root_path = find_project_root() if not is_global else global_project
@@ -587,7 +587,7 @@ class Project:
 
     @property
     def cache_dir(self) -> Path:
-        return Path(self.config.get("cache_dir", ""))
+        return Path(self.config.get("cache_dir", "")).expanduser()
 
     def cache(self, name: str) -> Path:
         path = self.cache_dir / name
