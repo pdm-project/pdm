@@ -90,7 +90,7 @@ class Backend(abc.ABC):
                         os.remove(entry.path)
 
     def get_location(self, name: str | None) -> Path:
-        venv_parent = Path(self.project.config["venv.location"])
+        venv_parent = Path(self.project.config["venv.location"]).expanduser()
         if not venv_parent.is_dir():
             venv_parent.mkdir(exist_ok=True, parents=True)
         return venv_parent / f"{get_venv_prefix(self.project)}{name or self.ident}"
