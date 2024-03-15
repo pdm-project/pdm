@@ -900,3 +900,15 @@ def test_empty_positional_args_display_help(project, pdm):
     assert "Usage:" in result.output
     assert "Commands:" in result.output
     assert "Options:" in result.output
+
+
+def test_run_script_changing_working_dir(project, pdm, capfd):
+    project.root.joinpath("subdir").mkdir()
+    project.root.joinpath("subdir", "file.text").write_text("Hello world\n")
+    project.pyproject.settings["scripts"] = {
+        "test_script": {"working_dir": "subdir", "cmd": "cat file.text"},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "test_script"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == "Hello world"
