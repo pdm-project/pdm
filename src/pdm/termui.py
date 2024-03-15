@@ -8,6 +8,7 @@ import tempfile
 import warnings
 from typing import TYPE_CHECKING
 
+import rich
 from rich.box import ROUNDED
 from rich.console import Console
 from rich.progress import Progress, ProgressColumn
@@ -36,21 +37,21 @@ DEFAULT_THEME = {
     "info": "blue",
     "req": "bold green",
 }
-_console = Console(highlight=False, theme=Theme(DEFAULT_THEME))
+rich.reconfigure(highlight=False, theme=Theme(DEFAULT_THEME))
 _err_console = Console(stderr=True, theme=Theme(DEFAULT_THEME))
 
 
 def is_interactive(console: Console | None = None) -> bool:
     """Check if the terminal is run under interactive mode"""
     if console is None:
-        console = _console
+        console = rich.get_console()
     return console.is_interactive
 
 
 def is_legacy_windows(console: Console | None = None) -> bool:
     """Legacy Windows renderer may have problem rendering emojis"""
     if console is None:
-        console = _console
+        console = rich.get_console()
     return console.legacy_windows
 
 
@@ -61,6 +62,7 @@ def style(text: str, *args: str, style: str | None = None, **kwargs: Any) -> str
     :param style: rich style to apply to whole string
     :return: string containing ansi codes
     """
+    _console = rich.get_console()
     if _console.legacy_windows or not _console.is_terminal:  # pragma: no cover
         return text
     with _console.capture() as capture:
@@ -176,7 +178,7 @@ class UI:
 
         :param theme: dict of theme
         """
-        _console.push_theme(theme)
+        rich.get_console().push_theme(theme)
         _err_console.push_theme(theme)
 
     def echo(
@@ -193,7 +195,7 @@ class UI:
         :param verbosity: verbosity level, defaults to QUIET.
         """
         if self.verbosity >= verbosity:
-            console = _err_console if err else _console
+            console = _err_console if err else rich.get_console()
             if not console.is_interactive:
                 kwargs.setdefault("crop", False)
                 kwargs.setdefault("overflow", "ignore")
@@ -223,7 +225,7 @@ class UI:
         for row in rows:
             table.add_row(*row)
 
-        _console.print(table)
+        rich.print(table)
 
     @contextlib.contextmanager
     def logging(self, type_: str = "install") -> Iterator[logging.Logger]:
@@ -276,12 +278,7 @@ class UI:
 
     def make_progress(self, *columns: str | ProgressColumn, **kwargs: Any) -> Progress:
         """create a progress instance for indented spinners"""
-        return Progress(
-            *columns,
-            console=_console,
-            disable=self.verbosity >= Verbosity.DETAIL,
-            **kwargs,
-        )
+        return Progress(*columns, disable=self.verbosity >= Verbosity.DETAIL, **kwargs)
 
     def info(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
         """Print a message to stdout."""

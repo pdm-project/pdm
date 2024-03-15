@@ -36,11 +36,12 @@ if TYPE_CHECKING:
         help: str
         keep_going: bool
         site_packages: bool
+        working_dir: str
 
 
 def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
     return dict(
-        env={k: v for opts in options if opts for k, v in opts.get("env", {}).items()},
+        env={k: v for opts in options if opts for k, v in opts.get("env", {}).items()} or None,
         **{k: v for opts in options if opts for k, v in opts.items() if k not in ("env", "help")},
     )
 
@@ -104,7 +105,7 @@ class TaskRunner:
     """The task runner for pdm project"""
 
     TYPES = ("cmd", "shell", "call", "composite")
-    OPTIONS = ("env", "env_file", "help", "keep_going", "site_packages")
+    OPTIONS = ("env", "env_file", "help", "keep_going", "working_dir", "site_packages")
 
     def __init__(self, project: Project, hooks: HookManager) -> None:
         self.project = project
@@ -159,6 +160,7 @@ class TaskRunner:
         site_packages: bool = False,
         env: Mapping[str, str] | None = None,
         env_file: EnvFileOptions | str | None = None,
+        working_dir: str | None = None,
     ) -> int:
         """Run command in a subprocess and return the exit code."""
         project = self.project
@@ -213,7 +215,7 @@ class TaskRunner:
                 # Don't load system site-packages
                 process_env["NO_SITE_PACKAGES"] = "1"
 
-        cwd = project.root if chdir else None
+        cwd = (project.root / working_dir) if working_dir else project.root if chdir else None
 
         def forward_signal(signum: int, frame: FrameType | None) -> None:
             if sys.platform == "win32" and signum == signal.SIGINT:
@@ -285,12 +287,7 @@ class TaskRunner:
                         return code
                     composite_code = code
             return composite_code
-        return self._run_process(
-            args,
-            chdir=True,
-            shell=shell,
-            **exec_opts(self.global_options, options, opts),
-        )
+        return self._run_process(args, chdir=True, shell=shell, **exec_opts(self.global_options, options, opts))
 
     def run(self, command: str, args: list[str], opts: TaskOptions | None = None, chdir: bool = False) -> int:
         if command in self.hooks.skip:
@@ -312,11 +309,7 @@ class TaskRunner:
             self.hooks.try_emit("post_script", script=command, args=args)
             return code
         else:
-            return self._run_process(
-                [command, *args],
-                chdir=chdir,
-                **exec_opts(self.global_options, opts),
-            )
+            return self._run_process([command, *args], chdir=chdir, **exec_opts(self.global_options, opts))
 
     def show_list(self) -> None:
         if not self.project.scripts:

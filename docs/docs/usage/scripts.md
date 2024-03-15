@@ -108,6 +108,8 @@ all = {composite = ["lint", "test"]}
 
 Running `pdm run all` will run `lint` first and then `test` if `lint` succeeded.
 
++++ 2.13.0
+
 To override the default behavior and continue the execution of the remaining
 scripts after a failure, set the `keep_going` option to `true`:
 
@@ -178,6 +180,20 @@ start.env_file.override = ".env"
 
 !!! note
     A dotenv file specified on a composite task level will override those defined by called tasks.
+
+### `working_dir`
+
++++ 2.13.0
+
+You can set the current working directory for the script:
+
+```toml
+[tool.pdm.scripts]
+start.cmd = "flask run -p 54321"
+start.working_dir = "subdir"
+```
+
+Relative paths are resolved against the project root.
 
 ### `site_packages`
 
