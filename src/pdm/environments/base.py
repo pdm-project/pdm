@@ -12,7 +12,8 @@ import weakref
 from contextlib import contextmanager
 from functools import cached_property, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, no_type_check
+from threading import local
+from typing import TYPE_CHECKING, Generator, cast, no_type_check
 
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_pep508_environment, get_python_abis, get_uname, sysconfig_get_platform
@@ -71,6 +72,8 @@ class BaseEnvironment(abc.ABC):
         else:
             self._interpreter = PythonInfo.from_path(python)
 
+        self._local_cache = local()
+
     @property
     def is_global(self) -> bool:
         """For backward compatibility, it is opposite to ``is_local``."""
@@ -109,10 +112,11 @@ class BaseEnvironment(abc.ABC):
             tp.supported_tags()
         return tp
 
-    def _build_session(self, trusted_hosts: list[str]) -> PDMSession:
+    def _build_session(self) -> PDMSession:
         from pdm.models.session import PDMSession
 
         ca_certs = self.project.config.get("pypi.ca_certs")
+        trusted_hosts = get_trusted_hosts(self.project.sources)
         session = PDMSession(
             cache_dir=self.project.cache("http"),
             trusted_hosts=trusted_hosts,
@@ -125,7 +129,17 @@ class BaseEnvironment(abc.ABC):
             session.cert = (Path(certfn), Path(keyfn) if keyfn else None)
 
         session.auth = self.auth
+        self.project.core.exit_stack.callback(session.close)
         return session
+
+    @property
+    def session(self) -> PDMSession:
+        """Build the session and cache it in the thread local storage."""
+        sess = getattr(self._local_cache, "session", None)
+        if sess is None:
+            sess = self._build_session()
+            self._local_cache.session = sess
+        return cast("PDMSession", sess)
 
     @contextmanager
     def _patch_target_python(self) -> Generator[None, None, None]:
@@ -178,11 +192,8 @@ class BaseEnvironment(abc.ABC):
                 f"{self.project.config['pypi.ignore_stored_index']}"
             )
 
-        trusted_hosts = get_trusted_hosts(sources)
-
-        session = self._build_session(trusted_hosts)
         finder = PDMPackageFinder(
-            session=session,
+            session=self.session,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
             no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
@@ -201,10 +212,7 @@ class BaseEnvironment(abc.ABC):
                 finder.add_find_links(source.url)
             else:
                 finder.add_index_url(source.url)
-        try:
-            yield finder
-        finally:
-            session.close()
+        yield finder
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""

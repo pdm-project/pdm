@@ -397,8 +397,8 @@ def test_preserve_log_file(project, pdm, tmp_path, mocker):
     all_logs = list(tmp_path.joinpath("logs").iterdir())
     assert len(all_logs) == 0
 
-    with mocker.patch.object(project.core.synchronizer_class, "synchronize", side_effect=Exception):
-        result = pdm(["add", "pytz"], obj=project)
-        assert result.exit_code != 0
-        install_log = next(tmp_path.joinpath("logs").glob("pdm-install-*.log"))
-        assert install_log.exists()
+    mocker.patch.object(project.core.synchronizer_class, "synchronize", side_effect=Exception)
+    result = pdm(["add", "pytz"], obj=project)
+    assert result.exit_code != 0
+    install_log = next(tmp_path.joinpath("logs").glob("pdm-install-*.log"))
+    assert install_log.exists()
