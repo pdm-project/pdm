@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import pathlib
-import weakref
 from typing import TYPE_CHECKING, Any, Iterable
 from urllib.parse import urlparse, urlunparse
 
@@ -29,7 +28,7 @@ class Repository:
         verify_ssl: bool | None = True,
     ) -> None:
         self.url = url
-        self.session = project.environment._build_session([])
+        self.session = project.environment.session
         if verify_ssl is False:
             self.session.verify = verify_ssl
         elif ca_certs is not None:
@@ -38,7 +37,6 @@ class Repository:
         self.ui = project.core.ui
         username, password = self._ensure_credentials(username, password)
         self.session.auth = (username, password)
-        weakref.finalize(self, self.session.close)
 
     def _ensure_credentials(self, username: str | None, password: str | None) -> tuple[str, str]:
         from pdm.models.auth import keyring
