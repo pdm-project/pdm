@@ -482,7 +482,7 @@ function TabExpansion($line, $lastWord) {
             default {
                 # No command
                 $command = $null
-                $completer.AddOpts(([Option]::new(("--pep582", "-I", "--ignore-python", "-c", "--config"))))
+                $completer.AddOpts(([Option]::new(("--pep582", "-I", "--ignore-python", "-c", "--config", "--no-cache"))))
                 $completer.AddParams($AllCommands, $false)
             }
         }

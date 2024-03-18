@@ -14,6 +14,7 @@ end
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l config -d 'Specify another config file path [env var: PDM_CONFIG_FILE] '
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l help -d 'Show this help message and exit.'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l ignore-python -d 'Ignore the Python path saved in .pdm-python. [env var: PDM_IGNORE_SAVED_PYTHON]'
+complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l no-cache -d 'Disable the cache for the current command. [env var: PDM_NO_CACHE]'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l pep582 -d 'Print the command line to be eval\'d by the shell'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l quiet -d 'Suppress output'
 complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
