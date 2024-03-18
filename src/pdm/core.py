@@ -23,7 +23,7 @@ from resolvelib import Resolver
 
 from pdm import termui
 from pdm.__version__ import __version__
-from pdm.cli.options import ignore_python_option, pep582_option, verbose_option
+from pdm.cli.options import ignore_python_option, no_cache_option, pep582_option, verbose_option
 from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
@@ -89,6 +89,7 @@ class Core:
             help="Specify another config file path [env var: PDM_CONFIG_FILE] ",
         )
         verbose_option.add_to_parser(self.parser)
+        no_cache_option.add_to_parser(self.parser)
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
 
@@ -149,6 +150,10 @@ class Core:
 
         command = cast("BaseCommand | None", getattr(options, "command", None))
         self.config_settings = getattr(options, "config_setting", None)
+
+        if options.no_cache:
+            project.cache_dir = Path(self.create_temp_dir(prefix="pdm-cache-"))
+
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
 

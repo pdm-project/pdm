@@ -24,7 +24,7 @@ _pdm_a919b69078acdf0a_complete()
 
     # completing for an option
     if [[ ${cur} == --* ]] ; then
-        opts="--config --help --ignore-python --pep582 --quiet --verbose --version"
+        opts="--config --help --ignore-python --no-cache --pep582 --quiet --verbose --version"
 
         case "$com" in
 

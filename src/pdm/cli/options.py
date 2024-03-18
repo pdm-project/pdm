@@ -152,6 +152,12 @@ verbose_option.add_argument(
 )
 verbose_option.add_argument("-q", "--quiet", action="store_const", const=-1, dest="verbose", help="Suppress output")
 
+no_cache_option = Option(
+    "--no-cache",
+    action="store_true",
+    default=os.getenv("PDM_NO_CACHE"),
+    help="Disable the cache for the current command. [env var: PDM_NO_CACHE]",
+)
 
 dry_run_option = Option(
     "--dry-run",

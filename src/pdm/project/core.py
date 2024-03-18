@@ -77,6 +77,7 @@ class Project:
         self._lockfile: Lockfile | None = None
         self._environment: BaseEnvironment | None = None
         self._python: PythonInfo | None = None
+        self._cache_dir: Path | None = None
         self.core = core
 
         if global_config is None:
@@ -587,7 +588,13 @@ class Project:
 
     @property
     def cache_dir(self) -> Path:
-        return Path(self.config.get("cache_dir", "")).expanduser()
+        if self._cache_dir is None:
+            self._cache_dir = Path(self.config.get("cache_dir", "")).expanduser()
+        return self._cache_dir
+
+    @cache_dir.setter
+    def cache_dir(self, value: Path) -> None:
+        self._cache_dir = value
 
     def cache(self, name: str) -> Path:
         path = self.cache_dir / name

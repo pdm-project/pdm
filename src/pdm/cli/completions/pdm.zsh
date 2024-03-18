@@ -46,6 +46,7 @@ _pdm() {
     {-c,--config}'[Specify another config file path\[env var: PDM_CONFIG_FILE\]]' \
     {-V,--version}'[Show the version and exit]' \
     {-I,--ignore-python}'[Ignore the Python path saved in .pdm-python]' \
+    '--no-cache:Disable the cache for the current command. [env var: PDM_NO_CACHE]' \
     '--pep582:Print the command line to be eval by the shell:shell:(zsh bash fish tcsh csh)' \
     '*:: :->_subcmds' \
     && return 0

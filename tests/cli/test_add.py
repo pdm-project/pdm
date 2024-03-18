@@ -321,3 +321,12 @@ def test_add_update_reuse_installed_config(project, working_set, repository, pdm
     pdm(["add", "foo"], obj=project, strict=True)
     locked_candidates = project.locked_repository.all_candidates
     assert locked_candidates["foo"].version == "1.0.0"
+
+
+def test_add_disable_cache(project, pdm, working_set):
+    cache_dir = project.cache_dir
+    pdm(["--no-cache", "add", "requests"], obj=project, strict=True)
+    assert "requests" in working_set
+
+    files = [file for file in cache_dir.rglob("*") if file.is_file()]
+    assert not files
