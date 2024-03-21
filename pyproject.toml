@@ -21,8 +21,7 @@ dependencies = [
     "rich>=12.3.0",
     "virtualenv>=20",
     "pyproject-hooks",
-    "requests-toolbelt",
-    "unearth>=0.14.0",
+    "unearth>=0.15.0",
     "dep-logic>=0.2.0,<1.0",
     "findpython>=0.4.0,<1.0.0a0",
     "tomlkit>=0.11.1,<1",
@@ -30,11 +29,12 @@ dependencies = [
     "python-dotenv>=0.15",
     "resolvelib>=1.0.1",
     "installer<0.8,>=0.7",
-    "cachecontrol[filecache]>=0.13.0",
     "truststore; python_version >= \"3.10\"",
     "tomli>=1.1.0; python_version < \"3.11\"",
     "importlib-resources>=5; python_version < \"3.9\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
+    "hishel>=0.0.24,<0.1.0",
+    "msgpack>=1.0",
 ]
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]

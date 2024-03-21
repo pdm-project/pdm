@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import unearth
 from packaging.version import Version
 from unearth.evaluator import Package
-from unearth.session import PyPISession
+
+if TYPE_CHECKING:
+    from pdm.models.session import PDMPyPIClient
 
 
 class ReverseVersion(Version):
@@ -27,7 +29,7 @@ class ReverseVersion(Version):
 class PDMPackageFinder(unearth.PackageFinder):
     def __init__(
         self,
-        session: PyPISession | None = None,
+        session: PDMPyPIClient | None = None,
         *,
         minimal_version: bool = False,
         **kwargs: Any,

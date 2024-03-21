@@ -14,7 +14,7 @@ from pdm.exceptions import PdmUsageError, PublishError
 from pdm.termui import logger
 
 if TYPE_CHECKING:
-    from requests import Response
+    from httpx import Response
 
     from pdm.project import Project
 
@@ -90,7 +90,7 @@ class Command(BaseCommand):
     @staticmethod
     def _skip_upload(response: Response) -> bool:
         status = response.status_code
-        reason = response.reason.lower()
+        reason = response.reason_phrase.lower()
         text = response.text.lower()
 
         # Borrowed from https://github.com/pypa/twine/blob/main/twine/commands/upload.py#L149
@@ -109,21 +109,21 @@ class Command(BaseCommand):
 
     @staticmethod
     def _check_response(response: Response) -> None:
-        import requests
+        import httpx
 
         message = ""
-        if response.status_code == 410 and "pypi.python.org" in response.url:
+        if response.status_code == 410 and "pypi.python.org" in str(response.url):
             message = (
                 "Uploading to these sites is deprecated. "
                 "Try using https://upload.pypi.org/legacy/ "
                 "(or https://test.pypi.org/legacy/) instead."
             )
-        elif response.status_code == 405 and "pypi.org" in response.url:
+        elif response.status_code == 405 and "pypi.org" in str(response.url):
             message = "It appears you're trying to upload to pypi.org but have an invalid URL."
         else:
             try:
                 response.raise_for_status()
-            except requests.HTTPError as err:
+            except httpx.HTTPStatusError as err:
                 message = str(err)
                 if response.text:
                     logger.debug(response.text)
@@ -149,7 +149,7 @@ class Command(BaseCommand):
             config.ca_certs = ca_certs
         if options.verify_ssl is False:
             config.verify_ssl = options.verify_ssl
-        return Repository(project, config.url, config.username, config.password, config.ca_certs, config.verify_ssl)
+        return Repository(project, config)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         hooks = HookManager(project, options.skip)
@@ -172,7 +172,7 @@ class Command(BaseCommand):
             )
             for package in packages:
                 resp = repository.upload(package)
-                logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason)
+                logger.debug("Response from %s:\n%s %s", resp.url, resp.status_code, resp.reason_phrase)
 
                 if options.skip_existing and self._skip_upload(resp):
                     project.core.ui.warn(f"Skipping {package.base_filename} because it appears to already exist")

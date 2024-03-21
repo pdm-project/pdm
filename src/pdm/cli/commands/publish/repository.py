@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import os
-import pathlib
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, cast
 from urllib.parse import urlparse, urlunparse
 
+import httpx
 from rich.progress import BarColumn, DownloadColumn, TimeRemainingColumn, TransferSpeedColumn
 
 from pdm import termui
@@ -12,30 +12,39 @@ from pdm.cli.commands.publish.package import PackageFile
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
+from pdm.utils import get_trusted_hosts
 
 if TYPE_CHECKING:
-    from requests import Response
+    from typing import Callable, Self
+
+    from httpx import Response
+    from httpx._multipart import MultipartStream
+
+    from pdm._types import RepositoryConfig
+
+
+class CallbackWrapperStream(httpx.SyncByteStream):
+    def __init__(self, stream: httpx.SyncByteStream, callback: Callable[[Self], Any]) -> None:
+        self._stream = stream
+        self._callback = callback
+        self.bytes_read = 0
+
+    def __iter__(self) -> Iterable[bytes]:
+        for chunk in self._stream:
+            self.bytes_read += len(chunk)
+            self._callback(self)
+            yield chunk
 
 
 class Repository:
-    def __init__(
-        self,
-        project: Project,
-        url: str,
-        username: str | None,
-        password: str | None,
-        ca_certs: str | None,
-        verify_ssl: bool | None = True,
-    ) -> None:
-        self.url = url
-        self.session = project.environment.session
-        if verify_ssl is False:
-            self.session.verify = verify_ssl
-        elif ca_certs is not None:
-            self.session.set_ca_certificates(pathlib.Path(ca_certs))
+    def __init__(self, project: Project, config: RepositoryConfig) -> None:
+        self.url = cast(str, config.url)
+        trusted_hosts = get_trusted_hosts([config])
+        self.session = project.environment._build_session(trusted_hosts, verify=config.ca_certs)
+
         self._credentials_to_save: tuple[str, str, str] | None = None
         self.ui = project.core.ui
-        username, password = self._ensure_credentials(username, password)
+        username, password = self._ensure_credentials(config.username, config.password)
         self.session.auth = (username, password)
 
     def _ensure_credentials(self, username: str | None, password: str | None) -> tuple[str, str]:
@@ -69,7 +78,7 @@ class Repository:
         if not ACTIONS_ID_TOKEN_REQUEST_TOKEN or not ACTIONS_ID_TOKEN_REQUEST_URL:
             return None
         self.ui.echo("Getting PyPI token via GitHub Actions OIDC...")
-        import requests
+        import httpx
 
         try:
             parsed_url = urlparse(self.url)
@@ -89,7 +98,7 @@ class Repository:
             resp = self.session.post(mint_token_url, json={"token": oidc_token})
             resp.raise_for_status()
             token = resp.json()["token"]
-        except requests.RequestException:
+        except httpx.HTTPError:
             self.ui.echo("Failed to get PyPI token via GitHub Actions OIDC", err=True)
             return None
         else:
@@ -137,16 +146,13 @@ class Repository:
         return {f"{base}project/{package.metadata['name']}/{package.metadata['version']}/" for package in packages}
 
     def upload(self, package: PackageFile) -> Response:
-        import requests_toolbelt
-
-        payload = package.metadata_dict
-        payload.update(
+        data_fields = package.metadata_dict
+        data_fields.update(
             {
                 ":action": "file_upload",
                 "protocol_version": "1",
             }
         )
-        field_parts = self._convert_to_list_of_tuples(payload)
         with self.ui.make_progress(
             " [progress.percentage]{task.percentage:>3.0f}%",
             BarColumn(),
@@ -162,20 +168,18 @@ class Repository:
             progress.console.print(f"Uploading [success]{package.base_filename}")
 
             with open(package.filename, "rb") as fp:
-                field_parts.append(("content", (package.base_filename, fp, "application/octet-stream")))
+                file_fields = [("content", (package.base_filename, fp, "application/octet-stream"))]
 
-                def on_upload(monitor: requests_toolbelt.MultipartEncoderMonitor) -> None:
+                def on_upload(monitor: CallbackWrapperStream) -> None:
                     progress.update(job, completed=monitor.bytes_read)
 
-                monitor = requests_toolbelt.MultipartEncoderMonitor.from_fields(field_parts, callback=on_upload)
-                job = progress.add_task("", total=monitor.len)
-                resp = self.session.post(
-                    self.url,
-                    data=monitor,
-                    headers={"Content-Type": monitor.content_type},
-                    allow_redirects=False,
-                )
-                if resp.status_code < 400 and self._credentials_to_save is not None:
+                request = self.session.build_request("POST", self.url, data=data_fields, files=file_fields)
+                stream = cast("MultipartStream", request.stream)
+                request.stream = CallbackWrapperStream(stream, on_upload)
+
+                job = progress.add_task("", total=stream.get_content_length())
+                resp = self.session.send(request, follow_redirects=False)
+                if not resp.is_error and self._credentials_to_save is not None:
                     self._save_credentials(*self._credentials_to_save)
                     self._credentials_to_save = None
                 return resp

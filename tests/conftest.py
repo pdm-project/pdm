@@ -26,7 +26,7 @@ pytest_plugins = [
 
 
 @pytest.fixture
-def index() -> dict[str, str]:
+def index() -> dict[str, bytes]:
     return {}
 
 

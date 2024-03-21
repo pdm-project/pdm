@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
+import httpx
 import pytest
-import requests
 from pytest_mock import MockerFixture
 
 from pdm.cli.commands.publish.package import PackageFile
@@ -41,16 +41,12 @@ def prepare_packages(tmp_path: Path):
 
 @pytest.fixture
 def mock_pypi(mocker: MockerFixture):
-    def post(url, *, data, **kwargs):
+    def send(request, **kwargs):
         # consume the data body to make the progress complete
-        data.read()
-        resp = requests.Response()
-        resp.status_code = 200
-        resp.reason = "OK"
-        resp.url = url
-        return resp
+        request.read()
+        return httpx.Response(status_code=200, request=request)
 
-    return mocker.patch("pdm.models.session.PDMSession.post", side_effect=post)
+    return mocker.patch("pdm.models.session.PDMPyPIClient.send", side_effect=send)
 
 
 @pytest.fixture
@@ -59,11 +55,7 @@ def uploaded(mocker: MockerFixture):
 
     def fake_upload(package):
         packages.append(package)
-        resp = requests.Response()
-        resp.status_code = 200
-        resp.reason = "OK"
-        resp.url = "https://upload.pypi.org/legacy/"
-        return resp
+        return httpx.Response(status_code=200, request=httpx.Request("POST", "https://upload.pypi.org/legacy/"))
 
     mocker.patch.object(Repository, "upload", side_effect=fake_upload)
     return packages

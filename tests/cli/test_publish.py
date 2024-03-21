@@ -3,6 +3,7 @@ from argparse import Namespace
 
 import pytest
 
+from pdm._types import RepositoryConfig
 from pdm.cli.commands.publish import Command as PublishCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
@@ -69,10 +70,13 @@ def test_repository_get_release_urls(project):
             "demo-0.0.1.zip",
         ]
     ]
-    repository = Repository(project, "https://upload.pypi.org/legacy/", "abc", "123", None)
+    config = RepositoryConfig(
+        config_prefix="repository", name="test", url="https://upload.pypi.org/legacy/", username="abc", password="123"
+    )
+    repository = Repository(project, config)
     assert repository.get_release_urls(package_files) == {"https://pypi.org/project/demo/0.0.1/"}
 
-    repository = Repository(project, "https://example.pypi.org/legacy/", "abc", "123", None)
+    repository.url = "https://example.pypi.org/legacy/"
     assert not repository.get_release_urls(package_files)
 
 
@@ -121,14 +125,24 @@ def test_publish_and_build_in_one_run(fixture_project, pdm, mock_pypi):
     assert "https://pypi.org/project/demo-module/0.1.0/" in result
 
 
-def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
-    repo = PublishCommand.get_repository(
+def test_publish_cli_args_and_env_var_precedence(project, monkeypatch, mocker):
+    repository = mocker.patch.object(Repository, "__init__", return_value=None)
+    PublishCommand.get_repository(
         project,
         Namespace(repository=None, username="foo", password="bar", ca_certs="custom.pem", verify_ssl=True),
     )
-    assert repo.url == "https://upload.pypi.org/legacy/"
-    assert repo.session.auth == ("foo", "bar")
-    assert repo.session.verify == "custom.pem"
+    repository.assert_called_with(
+        project,
+        RepositoryConfig(
+            config_prefix="repository",
+            name="pypi",
+            url="https://upload.pypi.org/legacy/",
+            username="foo",
+            password="bar",
+            ca_certs="custom.pem",
+            verify_ssl=None,
+        ),
+    )
 
     with monkeypatch.context() as m:
         m.setenv("PDM_PUBLISH_USERNAME", "bar")
@@ -136,24 +150,44 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch):
         m.setenv("PDM_PUBLISH_REPO", "testpypi")
         m.setenv("PDM_PUBLISH_CA_CERTS", "override.pem")
 
-        repo = PublishCommand.get_repository(
+        PublishCommand.get_repository(
             project,
             Namespace(repository=None, username=None, password=None, ca_certs=None, verify_ssl=True),
         )
-        assert repo.url == "https://test.pypi.org/legacy/"
-        assert repo.session.auth == ("bar", "secret")
-        assert repo.session.verify == "override.pem"
+        repository.assert_called_with(
+            project,
+            RepositoryConfig(
+                config_prefix="repository",
+                name="testpypi",
+                url="https://test.pypi.org/legacy/",
+                username="bar",
+                password="secret",
+                ca_certs="override.pem",
+                verify_ssl=None,
+            ),
+        )
 
-        repo = PublishCommand.get_repository(
+        PublishCommand.get_repository(
             project,
             Namespace(repository="pypi", username="foo", password=None, ca_certs="custom.pem", verify_ssl=True),
         )
-        assert repo.url == "https://upload.pypi.org/legacy/"
-        assert repo.session.auth == ("foo", "secret")
-        assert repo.session.verify == "custom.pem"
+        repository.assert_called_with(
+            project,
+            RepositoryConfig(
+                config_prefix="repository",
+                name="pypi",
+                url="https://upload.pypi.org/legacy/",
+                username="foo",
+                password="secret",
+                ca_certs="custom.pem",
+                verify_ssl=None,
+            ),
+        )
 
 
-def test_repository_get_credentials_from_keyring(project, keyring):
+def test_repository_get_credentials_from_keyring(project, keyring, mocker):
     keyring.save_auth_info("https://test.org/upload", "foo", "barbaz")
-    repository = Repository(project, "https://test.org/upload", None, None, None)
-    assert repository.session.auth == ("foo", "barbaz")
+    config = RepositoryConfig(config_prefix="repository", name="test", url="https://test.org/upload")
+    basic_auth = mocker.patch("httpx.BasicAuth.__init__", return_value=None)
+    Repository(project, config)
+    basic_auth.assert_called_with(username="foo", password="barbaz")
