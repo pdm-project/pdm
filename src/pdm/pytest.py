@@ -27,12 +27,11 @@ import os
 import shutil
 import sys
 from dataclasses import dataclass
-from io import BufferedReader, BytesIO, StringIO
+from io import StringIO
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    BinaryIO,
     Callable,
     Dict,
     Iterable,
@@ -42,10 +41,9 @@ from typing import (
     Union,
     cast,
 )
-from urllib.parse import urlparse
 
+import httpx
 import pytest
-import requests
 from packaging.version import parse as parse_version
 from pytest_mock import MockerFixture
 from unearth import Link
@@ -62,7 +60,7 @@ from pdm.models.requirements import (
     filter_requirements_with_extras,
     parse_requirement,
 )
-from pdm.models.session import PDMSession
+from pdm.models.session import PDMPyPIClient
 from pdm.project.config import Config
 from pdm.project.core import Project
 from pdm.utils import find_python_in_path, normalize_name, path_to_url
@@ -75,9 +73,9 @@ if TYPE_CHECKING:
     from pdm._types import CandidateInfo, FileHash, RepositoryConfig
 
 
-class LocalFileAdapter(requests.adapters.BaseAdapter):
+class LocalIndexTransport(httpx.BaseTransport):
     """
-    A local file adapter for request.
+    A local file transport for HTTPX.
 
     Allows to mock some HTTP requests with some local files
     """
@@ -85,14 +83,13 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
     def __init__(
         self,
         aliases: dict[str, Path],
-        overrides: dict | None = None,
+        overrides: IndexOverrides | None = None,
         strip_suffix: bool = False,
     ):
         super().__init__()
         self.aliases = sorted(aliases.items(), key=lambda item: len(item[0]), reverse=True)
         self.overrides = overrides if overrides is not None else {}
         self.strip_suffix = strip_suffix
-        self._opened_files: list[BytesIO | BufferedReader | BinaryIO] = []
 
     def get_file_path(self, path: str) -> Path | None:
         for prefix, base_path in self.aliases:
@@ -106,42 +103,26 @@ class LocalFileAdapter(requests.adapters.BaseAdapter):
                 )
         return None
 
-    def send(
-        self,
-        request: requests.PreparedRequest,
-        stream: bool = False,
-        timeout: float | tuple[float, float] | tuple[float, None] | None = None,
-        verify: bool | str = True,
-        cert: str | bytes | tuple[bytes | str, str | bytes] | None = None,
-        proxies: Mapping[str, str] | None = None,
-    ) -> requests.models.Response:
-        request_path = str(urlparse(request.url).path)
-        file_path = self.get_file_path(request_path)
-        response = requests.models.Response()
-        response.url = request.url or ""
-        response.request = request
-        if request_path in self.overrides:
-            response.status_code = 200
-            response.reason = "OK"
-            response.raw = BytesIO(self.overrides[request_path])
-            response.headers["Content-Type"] = "text/html"
-        elif file_path is None or not file_path.exists():
-            response.status_code = 404
-            response.reason = "Not Found"
-            response.raw = BytesIO(b"Not Found")
-        else:
-            response.status_code = 200
-            response.reason = "OK"
-            response.raw = file_path.open("rb")
-            if file_path.suffix == ".html":
-                response.headers["Content-Type"] = "text/html"
-        self._opened_files.append(response.raw)
-        return response
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        from httpx._content import IteratorByteStream
 
-    def close(self) -> None:
-        for fp in self._opened_files:
-            fp.close()
-        self._opened_files.clear()
+        request_path = request.url.path
+        file_path = self.get_file_path(request_path)
+        headers: dict[str, str] = {}
+        stream: httpx.SyncByteStream | None = None
+        content: bytes | None = None
+        if request_path in self.overrides:
+            status_code = 200
+            content = self.overrides[request_path]
+            headers["Content-Type"] = "text/html"
+        elif file_path is None or not file_path.exists():
+            status_code = 404
+        else:
+            status_code = 200
+            stream = IteratorByteStream(file_path.open("rb"))
+            if file_path.suffix == ".html":
+                headers["Content-Type"] = "text/html"
+        return httpx.Response(status_code, headers=headers, content=content, stream=stream)
 
 
 class _FakeLink:
@@ -294,7 +275,7 @@ class MockWorkingSet(collections.abc.MutableMapping):
 
 IndexMap = Dict[str, Path]
 """Path some root-relative http paths to some local paths"""
-IndexOverrides = Dict[str, str]
+IndexOverrides = Dict[str, bytes]
 """PyPI indexes overrides fixture format"""
 IndexesDefinition = Dict[str, Union[Tuple[IndexMap, IndexOverrides, bool], IndexMap]]
 """Mock PyPI indexes format"""
@@ -347,13 +328,14 @@ _build_session = BaseEnvironment._build_session
 
 
 @pytest.fixture
-def pdm_session(pypi_indexes: IndexesDefinition) -> Callable[[Any], PDMSession]:
-    def get_pypi_session(*args: Any, **kwargs: Any) -> PDMSession:
-        session = _build_session(*args, **kwargs)
+def build_test_session(pypi_indexes: IndexesDefinition) -> Callable[..., PDMPyPIClient]:
+    def get_pypi_session(*args: Any, **kwargs: Any) -> PDMPyPIClient:
+        mounts: dict[str, httpx.BaseTransport] = {}
         for root, specs in pypi_indexes.items():
             index, overrides, strip = specs if isinstance(specs, tuple) else (specs, None, False)
-            session.mount(root, LocalFileAdapter(index, overrides=overrides, strip_suffix=strip))
-        return session
+            mounts[root] = LocalIndexTransport(index, overrides=overrides, strip_suffix=strip)
+        kwargs["mounts"] = mounts
+        return _build_session(*args, **kwargs)
 
     return get_pypi_session
 
@@ -382,7 +364,7 @@ def project_no_init(
     tmp_path: Path,
     mocker: MockerFixture,
     core: Core,
-    pdm_session: type[PDMSession],
+    build_test_session: Callable[..., PDMPyPIClient],
     monkeypatch: pytest.MonkeyPatch,
     build_env: Path,
 ) -> Project:
@@ -399,7 +381,7 @@ def project_no_init(
     )
     p = core.create_project(tmp_path, global_config=test_home.joinpath("config.toml").as_posix())
     p.global_config["venv.location"] = str(tmp_path / "venvs")
-    mocker.patch.object(BaseEnvironment, "_build_session", pdm_session)
+    mocker.patch.object(BaseEnvironment, "_build_session", build_test_session)
     mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()

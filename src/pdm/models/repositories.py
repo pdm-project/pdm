@@ -345,28 +345,28 @@ class BaseRepository:
         if req.is_named and respect_source_order and comes_from:
             sources = [s for s in sources if comes_from.startswith(s.url)]
 
-        with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
-            if req.is_file_or_url:
-                this_link = cast("Link", candidate.prepare(self.environment).link)
-                links: list[Link] = [this_link]
-            else:  # the req must be a named requirement
+        if req.is_file_or_url:
+            this_link = cast("Link", candidate.prepare(self.environment).link)
+            links: list[Link] = [this_link]
+        else:  # the req must be a named requirement
+            with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
                 links = [package.link for package in finder.find_matches(req.as_line())]
-                if self.ignore_compatibility:
-                    links = [link for link in links if self._is_python_match(link)]
-            for link in links:
-                if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
-                    # The links found can still be a local directory or vcs, skippping it.
-                    continue
-                if not logged:
-                    termui.logger.info("Fetching hashes for %s", candidate)
-                    logged = True
-                result.append(
-                    {
-                        "url": link.url_without_fragment,
-                        "file": link.filename,
-                        "hash": self._hash_cache.get_hash(link, finder.session),
-                    }
-                )
+            if self.ignore_compatibility:
+                links = [link for link in links if self._is_python_match(link)]
+        for link in links:
+            if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
+                # The links found can still be a local directory or vcs, skippping it.
+                continue
+            if not logged:
+                termui.logger.info("Fetching hashes for %s", candidate)
+                logged = True
+            result.append(
+                {
+                    "url": link.url_without_fragment,
+                    "file": link.filename,
+                    "hash": self._hash_cache.get_hash(link, self.environment.session),
+                }
+            )
         return result
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -400,24 +400,23 @@ class PyPIRepository(BaseRepository):
             for proc_url in (raw_url.rstrip("/") for raw_url in (source.url for source in sources) if raw_url)
             if proc_url.endswith("/simple")
         ]
-        with self.environment.get_finder(sources) as finder:
-            session = finder.session
-            for prefix in url_prefixes:
-                json_url = f"{prefix}/pypi/{candidate.name}/{candidate.version}/json"
-                resp = session.get(json_url)
-                if not resp.ok:
-                    continue
+        session = self.environment.session
+        for prefix in url_prefixes:
+            json_url = f"{prefix}/pypi/{candidate.name}/{candidate.version}/json"
+            resp = session.get(json_url)
+            if resp.is_error:
+                continue
 
-                info = resp.json()["info"]
+            info = resp.json()["info"]
 
-                requires_python = info["requires_python"] or ""
-                summary = info["summary"] or ""
-                try:
-                    requirement_lines = info["requires_dist"] or []
-                except KeyError:
-                    requirement_lines = info["requires"] or []
-                requirements = filter_requirements_with_extras(requirement_lines, candidate.req.extras or ())
-                return requirements, requires_python, summary
+            requires_python = info["requires_python"] or ""
+            summary = info["summary"] or ""
+            try:
+                requirement_lines = info["requires_dist"] or []
+            except KeyError:
+                requirement_lines = info["requires"] or []
+            requirements = filter_requirements_with_extras(requirement_lines, candidate.req.extras or ())
+            return requirements, requires_python, summary
         raise CandidateInfoNotFound(candidate)
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
@@ -451,20 +450,19 @@ class PyPIRepository(BaseRepository):
         else:
             search_url = pypi_simple + "/search"
 
-        with self.environment.get_finder() as finder:
-            session = finder.session
-            resp = session.get(search_url, params={"q": query})
-            if resp.status_code == 404:
-                self.environment.project.core.ui.warn(
-                    f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
-                    f"to {self.DEFAULT_INDEX_URL!r} now.\n"
-                    "This may take longer depending on your network condition.",
-                )
-                resp = session.get(f"{self.DEFAULT_INDEX_URL}/search", params={"q": query})
-            parser = SearchResultParser()
-            resp.raise_for_status()
-            parser.feed(resp.text)
-            return parser.results
+        session = self.environment.session
+        resp = session.get(search_url, params={"q": query})
+        if resp.status_code == 404:
+            self.environment.project.core.ui.warn(
+                f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
+                f"to {self.DEFAULT_INDEX_URL!r} now.\n"
+                "This may take longer depending on your network condition.",
+            )
+            resp = session.get(f"{self.DEFAULT_INDEX_URL}/search", params={"q": query})
+        parser = SearchResultParser()
+        resp.raise_for_status()
+        parser.feed(resp.text)
+        return parser.results
 
 
 class LockedRepository(BaseRepository):

@@ -156,9 +156,8 @@ def test_cache_info(project, pdm):
     ],
 )
 def test_hash_cache(project, url, hash):
-    with project.environment.get_finder() as finder:
-        hash_cache = project.make_hash_cache()
-        assert hash_cache.get_hash(Link(url), finder.session) == hash
+    hash_cache = project.make_hash_cache()
+    assert hash_cache.get_hash(Link(url), project.environment.session) == hash
 
 
 def test_clear_package_cache(project, pdm):

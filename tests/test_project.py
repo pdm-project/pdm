@@ -292,10 +292,9 @@ def test_access_index_with_auth(project, httpserver: HTTPServer):
             "pypi.extra.password": "bar",
         }
     )
-    with project.environment.get_finder() as finder:
-        session = finder.session
-        resp = session.get(httpserver.url_for("/simple/my-package"))
-        assert resp.ok
+    session = project.environment.session
+    resp = session.get(httpserver.url_for("/simple/my-package"))
+    assert resp.is_success
 
 
 def test_configured_source_overwriting(project):

@@ -386,15 +386,16 @@ class PreparedCandidate:
                         "subdirectory": req.subdirectory,
                     }
                 )
-            with self.environment.get_finder() as finder:
-                hash_cache = self.environment.project.make_hash_cache()
-                return _filter_none(
-                    {
-                        "url": self.link.url_without_fragment,
-                        "archive_info": {"hash": hash_cache.get_hash(self.link, finder.session).replace(":", "=")},
-                        "subdirectory": req.subdirectory,
-                    }
-                )
+            hash_cache = self.environment.project.make_hash_cache()
+            return _filter_none(
+                {
+                    "url": self.link.url_without_fragment,
+                    "archive_info": {
+                        "hash": hash_cache.get_hash(self.link, self.environment.session).replace(":", "=")
+                    },
+                    "subdirectory": req.subdirectory,
+                }
+            )
         else:
             return None
 
@@ -524,14 +525,13 @@ class PreparedCandidate:
     def _get_metadata_from_metadata_link(
         self, link: Link, medata_hash: bool | dict[str, str] | None
     ) -> im.Distribution | None:
-        with self.environment.get_finder() as finder:
-            resp = finder.session.get(link.normalized, headers={"Cache-Control": "max-age=0"})
-            if isinstance(medata_hash, dict):
-                hash_name, hash_value = next(iter(medata_hash.items()))
-                if hashlib.new(hash_name, resp.content).hexdigest() != hash_value:
-                    termui.logger.warning("Metadata hash mismatch for %s, ignoring the metadata", link)
-                    return None
-            return MetadataDistribution(resp.text)
+        resp = self.environment.session.get(link.normalized)
+        if isinstance(medata_hash, dict):
+            hash_name, hash_value = next(iter(medata_hash.items()))
+            if hashlib.new(hash_name, resp.content).hexdigest() != hash_value:
+                termui.logger.warning("Metadata hash mismatch for %s, ignoring the metadata", link)
+                return None
+        return MetadataDistribution(resp.text)
 
     def _get_metadata_from_cached(self, cached: CachedPackage) -> im.Distribution:
         # Get metadata from METADATA inside the wheel

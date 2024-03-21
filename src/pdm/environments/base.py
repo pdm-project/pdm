@@ -12,8 +12,7 @@ import weakref
 from contextlib import contextmanager
 from functools import cached_property, partial
 from pathlib import Path
-from threading import local
-from typing import TYPE_CHECKING, Generator, cast, no_type_check
+from typing import TYPE_CHECKING, Generator, Mapping, no_type_check
 
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_pep508_environment, get_python_abis, get_uname, sysconfig_get_platform
@@ -23,9 +22,11 @@ from pdm.utils import deprecation_warning, get_trusted_hosts, is_pip_compatible_
 
 if TYPE_CHECKING:
     import unearth
+    from httpx import BaseTransport
+    from httpx._types import CertTypes, VerifyTypes
 
     from pdm._types import RepositoryConfig
-    from pdm.models.session import PDMSession
+    from pdm.models.session import PDMPyPIClient
     from pdm.project import Project
 
 
@@ -72,8 +73,6 @@ class BaseEnvironment(abc.ABC):
         else:
             self._interpreter = PythonInfo.from_path(python)
 
-        self._local_cache = local()
-
     @property
     def is_global(self) -> bool:
         """For backward compatibility, it is opposite to ``is_local``."""
@@ -112,34 +111,48 @@ class BaseEnvironment(abc.ABC):
             tp.supported_tags()
         return tp
 
-    def _build_session(self) -> PDMSession:
-        from pdm.models.session import PDMSession
+    def _build_session(
+        self,
+        trusted_hosts: list[str] | None = None,
+        verify: VerifyTypes | None = None,
+        cert: CertTypes | None = None,
+        mounts: Mapping[str, BaseTransport | None] | None = None,
+    ) -> PDMPyPIClient:
+        from pdm.models.session import PDMPyPIClient
 
-        ca_certs = self.project.config.get("pypi.ca_certs")
-        trusted_hosts = get_trusted_hosts(self.project.sources)
-        session = PDMSession(
-            cache_dir=self.project.cache("http"),
-            trusted_hosts=trusted_hosts,
-            ca_certificates=Path(ca_certs) if ca_certs is not None else None,
-            timeout=self.project.config["request_timeout"],
-        )
-        certfn = self.project.config.get("pypi.client_cert")
-        if certfn:
+        if trusted_hosts is None:
+            trusted_hosts = get_trusted_hosts(self.project.sources)
+
+        if verify is None:
+            verify = self.project.config.get("pypi.ca_certs")
+
+        if cert is None:
+            certfn = self.project.config.get("pypi.client_cert")
             keyfn = self.project.config.get("pypi.client_key")
-            session.cert = (Path(certfn), Path(keyfn) if keyfn else None)
+            if certfn:
+                cert = (certfn, keyfn)
 
-        session.auth = self.auth
+        session_args = {
+            "cache_dir": self.project.cache("http"),
+            "trusted_hosts": trusted_hosts,
+            "timeout": self.project.config["request_timeout"],
+            "auth": self.auth,
+        }
+        if verify is not None:
+            session_args["verify"] = verify
+        if cert is not None:
+            session_args["cert"] = cert
+        if mounts:
+            session_args["mounts"] = mounts
+
+        session = PDMPyPIClient(**session_args)
         self.project.core.exit_stack.callback(session.close)
         return session
 
-    @property
-    def session(self) -> PDMSession:
-        """Build the session and cache it in the thread local storage."""
-        sess = getattr(self._local_cache, "session", None)
-        if sess is None:
-            sess = self._build_session()
-            self._local_cache.session = sess
-        return cast("PDMSession", sess)
+    @cached_property
+    def session(self) -> PDMPyPIClient:
+        """Build the session and cache it."""
+        return self._build_session()
 
     @contextmanager
     def _patch_target_python(self) -> Generator[None, None, None]:

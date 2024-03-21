@@ -4,7 +4,7 @@ import json
 from html.parser import HTMLParser
 from pathlib import Path
 
-import requests
+import httpx
 
 PROJECT_DIR = Path(__file__).parent.parent
 
@@ -37,7 +37,7 @@ class PythonVersionParser(HTMLParser):
 
 
 def dump_python_version_module(dest_file) -> None:
-    resp = requests.get("https://python.org/downloads")
+    resp = httpx.get("https://python.org/downloads")
     resp_text = resp.text
     parser = PythonVersionParser()
     parser.feed(resp_text)
