@@ -32,7 +32,7 @@ def test_build_command(project, pdm, mocker):
         clean=True,
         hooks=mock.ANY,
     )
-    assert project.core.config_settings == {"a": "1", "b": "2"}
+    assert project.core.state.config_settings == {"a": "1", "b": "2"}
 
 
 def test_build_global_project_forbidden(pdm):
@@ -142,7 +142,7 @@ def test_build_src_package_by_include(fixture_project):
 
 def test_build_with_config_settings(fixture_project):
     project = fixture_project("demo-src-package")
-    project.core.config_settings = {"--plat-name": "win_amd64"}
+    project.core.state.config_settings = {"--plat-name": "win_amd64"}
     Command.do_build(project)
 
     assert (project.root / "dist/demo_package-0.1.0-py3-none-win_amd64.whl").exists()

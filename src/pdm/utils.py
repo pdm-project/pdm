@@ -17,6 +17,7 @@ import sysconfig
 import tempfile
 import urllib.parse as parse
 import warnings
+from datetime import datetime, timezone
 from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
@@ -523,3 +524,9 @@ def get_file_hash(filename: str | Path, algorithm: str = "sha256") -> str:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def convert_to_datetime(value: str) -> datetime:
+    if "T" in value:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)

@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "api-version": "1.0"
+  },
+  "name": "zipp",
+  "files": [
+    {
+      "filename": "zipp-3.6.0-py3-none-any.whl",
+      "url": "http://fixtures.test/artifacts/zipp-3.6.0-py3-none-any.whl",
+      "hashes": {
+        "sha256": "9fe5ea21568a0a70e50f273397638d39b03353731e6cbbb3fd8502a33fec40bc"
+      },
+      "upload-time": "2023-02-01T00:00:00.000000Z",
+      "requires-python": ">=3.7"
+    },
+    {
+      "filename": "zipp-3.7.0-py3-none-any.whl",
+      "url": "http://fixtures.test/artifacts/zipp-3.7.0-py3-none-any.whl",
+      "hashes": {
+        "sha256": "b47250dd24f92b7dd6a0a8fc5244da14608f3ca90a5efcd37a3b1642fac9a375"
+      },
+      "upload-time": "2024-02-01T00:00:00.000000Z",
+      "requires-python": ">=3.7"
+    }
+  ]
+}

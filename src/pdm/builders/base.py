@@ -182,7 +182,7 @@ class EnvBuilder:
         self.executable = self._env.interpreter.executable.as_posix()
         self.src_dir = src_dir
         self.isolated = environment.project.config["build_isolation"]
-        self.config_settings = environment.project.core.config_settings
+        self.config_settings = environment.project.core.state.config_settings
         mode = "Isolated" if self.isolated else "Non-isolated"
         logger.info("Preparing environment(%s mode) for PEP 517 build...", mode)
         try:

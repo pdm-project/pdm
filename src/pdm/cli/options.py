@@ -16,7 +16,7 @@ if TYPE_CHECKING:
             self,
             project: Project,
             namespace: argparse.Namespace,
-            values: str | Sequence[Any] | None,
+            values: Any,
             option_string: str | None = None,
         ) -> None: ...
 
@@ -50,7 +50,7 @@ class CallbackAction(argparse.Action):
         self,
         parser: argparse.ArgumentParser,
         namespace: argparse.Namespace,
-        values: str | Sequence[Any] | None,
+        values: Any,
         option_string: str | None = None,
     ) -> None:
         if not hasattr(namespace, "callbacks"):

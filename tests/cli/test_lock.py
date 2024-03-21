@@ -263,3 +263,14 @@ def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
     resolver.assert_not_called()
     for key in ("requests", "idna", "chardet", "urllib3"):
         assert key in working_set
+
+
+def test_lock_exclude_newer(project, pdm):
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.add_dependencies({"zipp": parse_requirement("zipp")})
+    pdm(["lock", "--exclude-newer", "2024-01-01"], obj=project, strict=True, cleanup=False)
+    assert project.locked_repository.all_candidates["zipp"].version == "3.6.0"
+
+    pdm(["lock"], obj=project, strict=True, cleanup=False)
+    assert project.locked_repository.all_candidates["zipp"].version == "3.7.0"
