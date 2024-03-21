@@ -212,3 +212,44 @@ addopts = "-r aR"
 testpaths = [
     "tests/",
 ]
+
+[tool.codespell]
+ignore-words-list = "ba,overriden,te"
+
+[tool.coverage.run]
+branch = true
+source = ["pdm/"]
+omit = [
+    "pdm/__main__.py",
+    "pdm/pep582/sitecustomize.py",
+    "pdm/models/in_process/*.py",
+    "pdm/models/setup.py",
+    "*/pdm-test-*-env/*",
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self.debug",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+ignore_errors = true
+
+[tool.mypy]
+follow_imports = "silent"
+ignore_missing_imports = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+disallow_untyped_decorators = true
+exclude = "pdm/(pep582/|models/in_process/.+\\.py)"
+namespace_packages = true
+mypy_path = "src"
+explicit_package_bases = true
