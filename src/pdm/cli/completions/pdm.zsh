@@ -263,6 +263,7 @@ _pdm() {
         "--no-static-urls[(DEPRECATED) Do not store static file URLs in the lockfile]"
         "--no-default[Don\'t include dependencies from the default group]"
         "--no-cross-platform[(DEPRECATED) Only lock packages for the current platform]"
+        "--exclude-newer[Exclude packages newer than the given UTC date in format YYYY-MM-DD\[THH:MM:SSZ\]]:exclude-newer:"
         {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:'
       )
       ;;

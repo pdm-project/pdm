@@ -10,14 +10,16 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import dataclasses as dc
 import importlib
 import itertools
 import os
 import pkgutil
 import sys
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Iterator, cast
 
 from resolvelib import Resolver
 
@@ -42,6 +44,16 @@ if TYPE_CHECKING:
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
 
 
+@dc.dataclass
+class State:
+    """State of the core object."""
+
+    config_settings: dict[str, Any] | None = None
+    """The config settings map shared by all packages"""
+    exclude_newer: datetime | None = None
+    """The exclude newer than datetime for the lockfile"""
+
+
 class Core:
     """A high level object that manages all classes and configurations"""
 
@@ -58,11 +70,33 @@ class Core:
         self.version = __version__
         self.exit_stack = contextlib.ExitStack()
         self.ui = termui.UI(exit_stack=self.exit_stack)
-        # The config settings map shared by all packages
-        self.config_settings: dict[str, Any] | None = None
+        self._states = [State()]
         self.exit_stack.callback(setattr, self, "config_settings", None)
         self.init_parser()
         self.load_plugins()
+
+    @property
+    def state(self) -> State:
+        """Get the current state object."""
+        return self._states[-1]
+
+    @contextlib.contextmanager
+    def push_state(self, __empty: bool = False, /, **kwargs: Any) -> Iterator[State]:  # pragma: no cover
+        """Push a new state object to the stack.
+
+        Args:
+            __empty (bool): Whether to make an empty state.
+            **kwargs: The new attributes to set to the state object.
+        """
+        if __empty:
+            new_state = State(**kwargs)
+        else:
+            new_state = dc.replace(self.state, **kwargs)
+        self._states.append(new_state)
+        try:
+            yield new_state
+        finally:
+            self._states.pop()
 
     def create_temp_dir(self, *args: Any, **kwargs: Any) -> str:
         return self.exit_stack.enter_context(TemporaryDirectory(*args, **kwargs))
@@ -149,7 +183,7 @@ class Core:
         os.makedirs(self.ui.log_dir, exist_ok=True)
 
         command = cast("BaseCommand | None", getattr(options, "command", None))
-        self.config_settings = getattr(options, "config_setting", None)
+        self.state.config_settings = getattr(options, "config_setting", None)
 
         if options.no_cache:
             project.cache_dir = Path(self.create_temp_dir(prefix="pdm-cache-"))
@@ -193,49 +227,48 @@ class Core:
         **extra: Any,
     ) -> None:
         """The main entry function"""
-        with self.exit_stack:
-            if args is None:
-                args = []
-            args = self._get_cli_args(args, obj)
-            # Keep it for after project parsing to check if its a defined script
-            root_script = None
+        if args is None:
+            args = []
+        args = self._get_cli_args(args, obj)
+        # Keep it for after project parsing to check if its a defined script
+        root_script = None
+        try:
+            options = self.parser.parse_args(args)
+        except PdmArgumentError as e:
+            # Failed to parse, try to give all to `run` command as shortcut
+            # and keep to root script (first non-dashed param) to check existence
+            # as soon as the project is parsed
+            root_script = next((arg for arg in args if not arg.startswith("-")), None)
+            if not root_script:
+                self.parser.error(str(e.__cause__))
             try:
-                options = self.parser.parse_args(args)
+                options = self.parser.parse_args(["run", *args])
             except PdmArgumentError as e:
-                # Failed to parse, try to give all to `run` command as shortcut
-                # and keep to root script (first non-dashed param) to check existence
-                # as soon as the project is parsed
-                root_script = next((arg for arg in args if not arg.startswith("-")), None)
-                if not root_script:
-                    self.parser.error(str(e.__cause__))
-                try:
-                    options = self.parser.parse_args(["run", *args])
-                except PdmArgumentError as e:
-                    self.parser.error(str(e.__cause__))
+                self.parser.error(str(e.__cause__))
 
-            project = self.ensure_project(options, obj)
-            if root_script and root_script not in project.scripts:
-                self.parser.error(f"Script unknown: {root_script}")
+        project = self.ensure_project(options, obj)
+        if root_script and root_script not in project.scripts:
+            self.parser.error(f"Script unknown: {root_script}")
 
-            try:
-                self.handle(project, options)
-            except Exception:
-                etype, err, traceback = sys.exc_info()
-                should_show_tb = not isinstance(err, PdmUsageError)
-                if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
-                    raise cast(Exception, err).with_traceback(traceback) from None
-                self.ui.echo(
-                    rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
-                    err=True,
-                )
-                if should_show_tb:
-                    self.ui.warn("Add '-v' to see the detailed traceback", verbosity=termui.Verbosity.NORMAL)
-                sys.exit(1)
-            else:
-                if project.config["check_update"] and not is_in_zipapp():
-                    from pdm.cli.actions import check_update
+        try:
+            self.handle(project, options)
+        except Exception:
+            etype, err, traceback = sys.exc_info()
+            should_show_tb = not isinstance(err, PdmUsageError)
+            if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
+                raise cast(Exception, err).with_traceback(traceback) from None
+            self.ui.echo(
+                rf"[error]\[{etype.__name__}][/]: {err}",  # type: ignore[union-attr]
+                err=True,
+            )
+            if should_show_tb:
+                self.ui.warn("Add '-v' to see the detailed traceback", verbosity=termui.Verbosity.NORMAL)
+            sys.exit(1)
+        else:
+            if project.config["check_update"] and not is_in_zipapp():
+                from pdm.cli.actions import check_update
 
-                    check_update(project)
+                check_update(project)
 
     def register_command(self, command: type[BaseCommand], name: str | None = None) -> None:
         """Register a subcommand to the subparsers,
@@ -303,4 +336,6 @@ class Core:
 
 def main(args: list[str] | None = None) -> None:
     """The CLI entry function"""
-    return Core().main(args or sys.argv[1:])
+    core = Core()
+    with core.exit_stack:
+        return core.main(args or sys.argv[1:])

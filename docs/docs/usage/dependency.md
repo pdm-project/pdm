@@ -394,6 +394,23 @@ Previously, the `pdm lock` command would record package metadata as it is. When 
 
 When the `inherit_metadata` strategy is enabled, PDM will inherit and merge environment markers from a package's ancestors. These markers are then encoded in the lockfile during locking, resulting in faster installations. This has been enabled by default from version `2.11.0`, to disable this strategy in the config, use `pdm config strategy.inherit_metadata false`.
 
+### Exclude packages newer than specific date
+
++++ 2.13.0
+
+You can exclude packages that are newer than a specified date by passing the `--exclude-newer` option to `pdm lock`. This is useful when you want to lock the dependencies to a specific date, for example, to ensure reproducibility of the build.
+
+The date may be specified as a RFC 3339 timestamp (e.g., `2006-12-02T02:07:43Z`) or UTC date in the same format (e.g., `2006-12-02`).
+
+```bash
+pdm lock --exclude-newer 2024-01-01
+```
+
+!!! note
+    The package index must support the `upload-time` field as specified in [PEP 700]. If the field is not present for a given distribution, the distribution will be treated as unavailable.
+
+[PEP 700]: https://peps.python.org/pep-0700/
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:

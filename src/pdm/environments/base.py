@@ -217,6 +217,7 @@ class BaseEnvironment(abc.ABC):
             ),
             verbosity=self.project.core.ui.verbosity,
             minimal_version=minimal_version,
+            exclude_newer_than=self.project.core.state.exclude_newer,
         )
         finder.sources.clear()
         for source in sources:

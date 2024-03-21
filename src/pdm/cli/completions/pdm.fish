@@ -236,6 +236,7 @@ complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a lo
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l check -d 'Check if the lock file is up to date and quit'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l dev -d 'Select dev dependencies'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l exclude-newer -d 'Exclude packages newer than the given UTC date in format `YYYY-MM-DD[THH:MM:SSZ]`'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l group -d 'Select group of optional-dependencies separated by comma or dev-dependencies (with `-d`). Can be supplied multiple times, use ":all" to include all groups under the same species.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l help -d 'Show this help message and exit.'

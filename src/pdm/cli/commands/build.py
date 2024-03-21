@@ -37,7 +37,7 @@ class Command(BaseCommand):
         from pdm.builders import SdistBuilder, WheelBuilder
 
         hooks = hooks or HookManager(project)
-        config_settings = project.core.config_settings
+        config_settings = project.core.state.config_settings
 
         if project.is_global:
             raise ProjectError("Not allowed to build based on the global project.")

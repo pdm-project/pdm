@@ -1,5 +1,6 @@
 import argparse
 import sys
+from typing import cast
 
 from pdm import termui
 from pdm.cli import actions
@@ -15,6 +16,7 @@ from pdm.cli.options import (
     skip_option,
 )
 from pdm.project import Project
+from pdm.utils import convert_to_datetime
 
 
 class Command(BaseCommand):
@@ -57,6 +59,11 @@ class Command(BaseCommand):
             const="reuse-installed",
             help="Reuse installed packages if possible",
         )
+        parser.add_argument(
+            "--exclude-newer",
+            help="Exclude packages newer than the given UTC date in format `YYYY-MM-DD[THH:MM:SSZ]`",
+            type=convert_to_datetime,
+        )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if options.check:
@@ -76,10 +83,16 @@ class Command(BaseCommand):
                 )
                 sys.exit(0)
         selection = GroupSelection.from_options(project, options)
+        strategy = options.update_strategy
+        if options.exclude_newer:
+            strategy = "all"
+            if strategy != options.update_strategy:
+                project.core.ui.info("--exclue-newer is set, forcing --update-all")
+        project.core.state.exclude_newer = options.exclude_newer
         actions.do_lock(
             project,
             refresh=options.refresh,
-            strategy=options.update_strategy,
+            strategy=cast(str, strategy),
             groups=selection.all(),
             strategy_change=options.strategy_change,
             hooks=HookManager(project, options.skip),

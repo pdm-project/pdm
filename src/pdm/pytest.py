@@ -122,6 +122,8 @@ class LocalIndexTransport(httpx.BaseTransport):
             stream = IteratorByteStream(file_path.open("rb"))
             if file_path.suffix == ".html":
                 headers["Content-Type"] = "text/html"
+            elif file_path.suffix == ".json":
+                headers["Content-Type"] = "application/vnd.pypi.simple.v1+json"
         return httpx.Response(status_code, headers=headers, content=content, stream=stream)
 
 
@@ -600,6 +602,7 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
         input: str | None = None,
         obj: Project | None = None,
         env: Mapping[str, str] | None = None,
+        cleanup: bool = True,
         **kwargs: Any,
     ) -> RunResult:
         __tracebackhide__ = True
@@ -624,6 +627,9 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
             except Exception as e:
                 exit_code = 1
                 exception = e
+            finally:
+                if cleanup:
+                    core.exit_stack.close()
 
         result = RunResult(exit_code, stdout.getvalue(), stderr.getvalue(), exception)
 

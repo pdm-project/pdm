@@ -39,6 +39,7 @@ def pypi_indexes(index) -> IndexesDefinition:
         "https://my.pypi.org/": (
             {
                 "/simple": FIXTURES / "index",
+                "/json": FIXTURES / "json",
             },
             index,
             True,
