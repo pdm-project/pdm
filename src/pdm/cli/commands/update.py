@@ -187,8 +187,7 @@ class Command(BaseCommand):
         if not dry_run:
             if unconstrained:
                 for group, deps in updated_deps.items():
-                    direct_deps = {dep: req for dep, req in deps.items() if dep in all_dependencies[group]}
-                    project.add_dependencies(direct_deps, group, selection.dev or False)
+                    project.add_dependencies(deps, group, selection.dev or False)
             project.write_lockfile(project.lockfile._data, False)
         if sync or dry_run:
             do_sync(
