@@ -248,7 +248,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l no-static-urls -d '[
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l production -d 'Unselect dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l quiet -d 'Suppress output'
-complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Don\'t update pinned versions, only refresh the lock file'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l refresh -d 'Refresh the content hash and file hashes in the lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l static-urls -d '[DEPRECATED] Store static file URLs in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l strategy -d 'Specify lock strategy (cross_platform, static_urls, direct_minimal_versions, inherit_metadata). Add \'no_\' prefix to disable. Can be supplied multiple times or split by comma.'

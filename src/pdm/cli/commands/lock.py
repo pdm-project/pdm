@@ -36,7 +36,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--refresh",
             action="store_true",
-            help="Don't update pinned versions, only refresh the lock file",
+            help="Refresh the content hash and file hashes in the lock file",
         )
 
         parser.add_argument(

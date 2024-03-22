@@ -251,7 +251,7 @@ _pdm() {
         {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[Do not isolate the build in a clean environment]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        "--refresh[Don't update pinned versions, only refresh the lock file]"
+        "--refresh[Refresh the content hash and file hashes in the lock file]"
         "--check[Check if the lock file is up to date and quit]"
         {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
