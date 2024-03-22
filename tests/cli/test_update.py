@@ -162,6 +162,60 @@ def test_update_specified_packages_eager_mode(project, repository, pdm):
 
 
 @pytest.mark.usefixtures("working_set")
+def test_update_transitive(project, repository, pdm):
+    pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
+    repository.add_candidate("chardet", "3.0.5")
+    repository.add_candidate("requests", "2.20.0")
+    repository.add_dependencies(
+        "requests",
+        "2.20.0",
+        [
+            "certifi>=2017.4.17",
+            "chardet<3.1.0,>=3.0.2",
+            "idna<2.8,>=2.5",
+            "urllib3<1.24,>=1.21.1",
+        ],
+    )
+    pdm(["update", "chardet"], obj=project, strict=True)
+    locked_candidates = project.locked_repository.all_candidates
+    assert not any("chardet" in dependency for dependency in project.pyproject.metadata["dependencies"])
+    assert locked_candidates["chardet"].version == "3.0.5"
+    assert locked_candidates["requests"].version == "2.19.1"
+
+
+@pytest.mark.usefixtures("working_set")
+def test_update_transitive_nonexistant_dependencies(project, repository, pdm):
+    pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
+    result = pdm(["update", "numpy"])
+    assert "ProjectError" in result.stderr
+    assert "numpy does not exist in" in result.stderr
+
+
+@pytest.mark.usefixtures("working_set")
+def test_update_transitive_non_transitive_dependencies(project, repository, pdm):
+    pdm(["add", "requests", "pytz", "--no-sync"], obj=project, strict=True)
+    repository.add_candidate("pytz", "2019.6")
+    repository.add_candidate("chardet", "3.0.5")
+    repository.add_candidate("requests", "2.20.0")
+    repository.add_dependencies(
+        "requests",
+        "2.20.0",
+        [
+            "certifi>=2017.4.17",
+            "chardet<3.1.0,>=3.0.2",
+            "idna<2.8,>=2.5",
+            "urllib3<1.24,>=1.21.1",
+        ],
+    )
+    pdm(["update", "requests", "chardet", "pytz"], obj=project, strict=True)
+    locked_candidates = project.locked_repository.all_candidates
+    assert not any("chardet" in dependency for dependency in project.pyproject.metadata["dependencies"])
+    assert locked_candidates["requests"].version == "2.20.0"
+    assert locked_candidates["chardet"].version == "3.0.5"
+    assert locked_candidates["pytz"].version == "2019.6"
+
+
+@pytest.mark.usefixtures("working_set")
 def test_update_specified_packages_eager_mode_config(project, repository, pdm):
     pdm(["add", "requests", "pytz", "--no-sync"], obj=project, strict=True)
     repository.add_candidate("pytz", "2019.6")

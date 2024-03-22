@@ -430,7 +430,7 @@ function TabExpansion($line, $lastWord) {
                             "--save-minimum", "--update-eager", "--update-reuse", "--update-all", "-g", "--global", "--dry-run",
                             "--outdated", "--top", "-u", "--unconstrained", "--no-editable", "--no-self", "--no-isolation",
                             "--no-sync", "--pre", "--prerelease", "-L", "--lockfile", "--fail-fast", "-x", "--frozen-lockfile",
-                            "-C", "--config-setting", "--update-reuse-installed", "--stable"
+                            "-C", "--config-setting", "--update-reuse-installed", "--stable",
                         )),
                         $sectionOption,
                         $skipOption,
