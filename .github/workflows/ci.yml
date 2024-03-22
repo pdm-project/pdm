@@ -121,7 +121,7 @@ jobs:
           pdm run pip install -U setuptools
           pdm info
       - name: Run Tests
-        run: pdm run pytest -n auto --cov=pdm --cov-config=setup.cfg --cov-report=xml tests
+        run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
