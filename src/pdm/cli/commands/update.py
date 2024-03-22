@@ -123,34 +123,38 @@ class Command(BaseCommand):
         all_dependencies = project.all_dependencies
         updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
         locked_groups = project.lockfile.groups
+        tracked_names: set[str] = set()
         if not packages:
             if prerelease is not None:
                 raise PdmUsageError("--prerelease/--stable must be used with packages given")
             selection.validate()
             for group in selection:
                 updated_deps[group] = all_dependencies[group]
+            tracked_names.update(chain.from_iterable(updated_deps.values()))
         else:
             group = selection.one()
             if locked_groups and group not in locked_groups:
                 raise ProjectError(f"Requested group not in lockfile: {group}")
             dependencies = all_dependencies[group]
             for name in packages:
-                matched_name = next(
-                    (k for k in dependencies if normalize_name(strip_extras(k)[0]) == normalize_name(name)),
+                normalized_name = normalize_name(name)
+                matched_req = next(
+                    (v for k, v in dependencies.items() if normalize_name(strip_extras(k)[0]) == normalized_name),
                     None,
                 )
-                if not matched_name:
-                    raise ProjectError(
-                        f"[req]{name}[/] does not exist in [primary]{group}[/] "
-                        f"{'dev-' if selection.dev else ''}dependencies."
-                    )
-                dependencies[matched_name].prerelease = prerelease
-                updated_deps[group][matched_name] = dependencies[matched_name]
-            project.core.ui.echo(
-                "Updating packages: {}.".format(
-                    ", ".join(f"[req]{v}[/]" for v in chain.from_iterable(updated_deps.values()))
-                )
-            )
+                if not matched_req:
+                    candidates = project.locked_repository.all_candidates
+                    if normalized_name not in candidates:
+                        raise ProjectError(
+                            f"[req]{name}[/] does not exist in [primary]{group}[/] "
+                            f"{'dev-' if selection.dev else ''}dependencies nor is a transitive dependency."
+                        )
+                    tracked_names.add(normalized_name)
+                else:
+                    matched_req.prerelease = prerelease
+                    updated_deps[group][normalized_name] = matched_req
+            tracked_names.update(chain.from_iterable(updated_deps.values()))
+            project.core.ui.echo("Updating packages: {}.".format(", ".join(f"[req]{v}[/]" for v in tracked_names)))
         if unconstrained:
             for deps in updated_deps.values():
                 for dep in deps.values():
@@ -167,9 +171,9 @@ class Command(BaseCommand):
         with hooks.skipping("pre_lock", "post_lock"):
             resolved = do_lock(
                 project,
-                strategy,
-                chain.from_iterable(updated_deps.values()),
-                reqs,
+                strategy=strategy,
+                tracked_names=tracked_names,
+                requirements=reqs,
                 dry_run=True,
                 hooks=hooks,
                 groups=locked_groups,
