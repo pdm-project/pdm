@@ -3,7 +3,7 @@
 
 function __fish_pdm_a919b69078acdf0a_complete_no_subcommand
     for i in (commandline -opc)
-        if contains -- $i add build cache completion config export fix import info init install list lock plugin publish remove run search self show sync update use venv
+        if contains -- $i add build cache completion config export fix import info init install list lock outdated plugin publish remove run search self show sync update use venv
             return 1
         end
     end
@@ -256,6 +256,15 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse -d 'Reu
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse-installed -d 'Reuse installed packages if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l without -d 'Exclude groups of optional-dependencies or dev-dependencies'
+
+# outdated
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a outdated -d 'Check for outdated packages and list the latest versions.'
+complete -c pdm -A -n '__fish_seen_subcommand_from outdated' -l global -d 'Use the global project, supply the project root with `-p` option'
+complete -c pdm -A -n '__fish_seen_subcommand_from outdated' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from outdated' -l json -d 'Output in JSON format'
+complete -c pdm -A -n '__fish_seen_subcommand_from outdated' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
+complete -c pdm -A -n '__fish_seen_subcommand_from outdated' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from outdated' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # plugin
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a plugin -d 'Manage the PDM program itself (previously known as plugin)'

@@ -30,6 +30,7 @@ _pdm() {
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
     'self:Manage the PDM program itself (previously known as plugin)'
+    'outdated:Check for outdated packages and list the latest versions'
     'publish:Build and publish the project to PyPI'
     'remove:Remove packages from pyproject.toml'
     'run:Run commands or scripts with local packages loaded'
@@ -267,6 +268,12 @@ _pdm() {
         {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:'
       )
       ;;
+    outdated)
+      arguments+=(
+        '--json[Output in JSON format]'
+        '*:patterns:'
+      )
+      ;;
     self)
       _arguments -C \
         $arguments \
@@ -300,6 +307,7 @@ _pdm() {
             list)
               arguments+=(
                 '--plugins[List plugins only]'
+                '*:patterns:'
               )
               ;;
             update)
