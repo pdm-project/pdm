@@ -28,6 +28,16 @@ class ListPackage:
     latest_version: str = ""
 
 
+@functools.lru_cache
+def _find_first_diff(a: str, b: str) -> int:
+    a_parts = a.split(".")
+    b_parts = b.split(".")
+    for i, (x, y) in enumerate(zip_longest(a_parts, b_parts)):
+        if x != y:
+            return (len(".".join(a_parts[:i])) + 1) if i > 0 else 0
+    return 0
+
+
 class Command(BaseCommand):
     """Check for outdated packages and list the latest versions."""
 
@@ -36,16 +46,6 @@ class Command(BaseCommand):
             "--json", action="store_const", const="json", dest="format", default="table", help="Output in JSON format"
         )
         parser.add_argument("patterns", nargs="*", help="The packages to check", type=normalize_pattern)
-
-    @functools.lru_cache
-    @staticmethod
-    def _find_first_diff(a: str, b: str) -> int:
-        a_parts = a.split(".")
-        b_parts = b.split(".")
-        for i, (x, y) in enumerate(zip_longest(a_parts, b_parts)):
-            if x != y:
-                return (len(".".join(a_parts[:i])) + 1) if i > 0 else 0
-        return 0
 
     @staticmethod
     def _match_pattern(name: str, patterns: list[str]) -> bool:
@@ -77,7 +77,7 @@ class Command(BaseCommand):
             parsed_base_version = parse_version(base_version)
         except InvalidVersion:
             return version
-        first_diff = Command._find_first_diff(version, base_version)
+        first_diff = _find_first_diff(version, base_version)
         head, tail = version[:first_diff], version[first_diff:]
         if parsed_version.major != parsed_base_version.major:
             return f"{head}[bold red]{tail}[/]"
