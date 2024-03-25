@@ -80,6 +80,10 @@ _pdm_a919b69078acdf0a_complete()
             opts="--check --config-setting --dev --exclude-newer --global --group --help --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --production --project --quiet --refresh --skip --static-urls --strategy --update-reuse --update-reuse-installed --verbose --without"
             ;;
 
+            (outdated)
+            opts="--global --help --json --project --quiet --verbose"
+            ;;
+
             (plugin)
             opts="--help --quiet --verbose"
             ;;
@@ -134,7 +138,7 @@ _pdm_a919b69078acdf0a_complete()
 
     # completing for a command
     if [[ $cur == $com ]]; then
-        coms="add build cache completion config export fix import info init install list lock plugin publish remove run search self show sync update use venv"
+        coms="add build cache completion config export fix import info init install list lock outdated plugin publish remove run search self show sync update use venv"
 
         COMPREPLY=($(compgen -W "${coms}" -- ${cur}))
         __ltrim_colon_completions "$cur"

@@ -792,3 +792,8 @@ def populate_requirement_names(req_mapping: dict[str, Requirement]) -> None:
         if key and key.startswith(":empty:"):
             req_mapping[req.identify()] = req
             del req_mapping[key]
+
+
+def normalize_pattern(pattern: str) -> str:
+    """Normalize a pattern to a valid name for a package."""
+    return re.sub(r"[^A-Za-z0-9*?]+", "-", pattern).lower()

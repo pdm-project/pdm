@@ -5,7 +5,7 @@ import os
 from typing import TYPE_CHECKING, Callable
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
-from packaging.version import InvalidVersion, Version
+from packaging.version import InvalidVersion
 from resolvelib import AbstractProvider, RequirementsConflicted
 from resolvelib.resolvers import Criterion
 
@@ -15,7 +15,7 @@ from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
 from pdm.resolver.python import PythonCandidate, PythonRequirement, find_python_matches, is_python_satisfied_by
 from pdm.termui import logger
-from pdm.utils import deprecation_warning, is_url, normalize_name, url_without_fragments
+from pdm.utils import deprecation_warning, is_url, normalize_name, parse_version, url_without_fragments
 
 if TYPE_CHECKING:
     from typing import Any, Iterable, Iterator, Mapping, Sequence
@@ -187,7 +187,7 @@ class BaseProvider(AbstractProvider):
                 candidate = self.locked_candidates[key]
                 if candidate.version is not None:
                     try:
-                        parsed_version = Version(candidate.version)
+                        parsed_version = parse_version(candidate.version)
                     except InvalidVersion:  # pragma: no cover
                         pass
                     else:

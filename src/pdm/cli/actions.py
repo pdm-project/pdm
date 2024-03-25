@@ -344,20 +344,19 @@ def get_latest_version(project: Project) -> str | None:
 
 def check_update(project: Project) -> None:  # pragma: no cover
     """Check if there is a new version of PDM available"""
-    from packaging.version import Version
-
     from pdm.cli.utils import is_homebrew_installation, is_pipx_installation, is_scoop_installation
+    from pdm.utils import parse_version
 
     if project.core.ui.verbosity < termui.Verbosity.NORMAL:
         return
 
     this_version = project.core.version
     latest_version = get_latest_version(project)
-    if latest_version is None or Version(this_version) >= Version(latest_version):
+    if latest_version is None or parse_version(this_version) >= parse_version(latest_version):
         return
     disable_command = "pdm config check_update false"
 
-    is_prerelease = Version(latest_version).is_prerelease
+    is_prerelease = parse_version(latest_version).is_prerelease
 
     if is_pipx_installation():
         install_command = f"pipx upgrade {'--pip-args=--pre ' if is_prerelease else ''}pdm"

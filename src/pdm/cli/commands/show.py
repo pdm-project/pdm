@@ -3,8 +3,6 @@ from __future__ import annotations
 import argparse
 from typing import TYPE_CHECKING
 
-from packaging.version import Version
-
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import venv_option
 from pdm.exceptions import PdmUsageError
@@ -12,7 +10,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.project_info import ProjectInfo
 from pdm.models.requirements import parse_requirement
 from pdm.project import Project
-from pdm.utils import normalize_name
+from pdm.utils import normalize_name, parse_version
 
 if TYPE_CHECKING:
     from unearth import Package
@@ -20,7 +18,7 @@ if TYPE_CHECKING:
 
 def filter_stable(package: Package) -> bool:
     assert package.version
-    return not Version(package.version).is_prerelease
+    return not parse_version(package.version).is_prerelease
 
 
 class Command(BaseCommand):

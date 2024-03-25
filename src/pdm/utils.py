@@ -41,7 +41,13 @@ try:
 except Exception:
     from packaging import __version__ as _packaging_version
 
-PACKAGING_22 = Version(_packaging_version) >= Version("22")
+
+@functools.lru_cache(maxsize=1024)
+def parse_version(version: str) -> Version:
+    return Version(version)
+
+
+PACKAGING_22 = parse_version(_packaging_version) >= parse_version("22")
 
 
 def create_tracked_tempdir(suffix: str | None = None, prefix: str | None = None, dir: str | None = None) -> str:
@@ -341,7 +347,7 @@ def normalize_name(name: str, lowercase: bool = True) -> str:
 
 def comparable_version(version: str) -> Version:
     """Normalize a version to make it valid in a specifier."""
-    parsed = Version(version)
+    parsed = parse_version(version)
     if parsed.local is not None:
         # strip the local part
         parsed._version = parsed._version._replace(local=None)
@@ -423,7 +429,7 @@ def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | No
     from pdm.__version__ import __version__
 
     if raise_since is not None:
-        if Version(__version__) >= Version(raise_since):
+        if parse_version(__version__) >= parse_version(raise_since):
             raise PDMDeprecationWarning(message)
     warnings.warn(message, PDMDeprecationWarning, stacklevel=stacklevel + 1)
 

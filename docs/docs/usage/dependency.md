@@ -253,6 +253,22 @@ pdm remove -G web h11
 pdm remove -dG test pytest-cov
 ```
 
+## List outdated packages and the latest versions
+
++++ 2.13.0
+
+To list outdated packages and the latest versions:
+
+```bash
+pdm outdated
+```
+
+You can pass glob patterns to filter the packages to show:
+
+```bash
+pdm outdated requests* flask*
+```
+
 ## Install the packages pinned in lock file
 
 There are a few similar commands to do this job with slight differences:

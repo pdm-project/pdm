@@ -4,7 +4,6 @@ import argparse
 import csv
 import io
 import json
-import re
 from collections import defaultdict
 from fnmatch import fnmatch
 from typing import Iterable, Mapping, Sequence
@@ -18,6 +17,7 @@ from pdm.cli.utils import (
     build_dependency_graph,
     check_project_file,
     get_dist_location,
+    normalize_pattern,
     show_dependency_graph,
 )
 from pdm.compat import importlib_metadata as im
@@ -27,10 +27,6 @@ from pdm.project import Project
 
 # Group label for subdependencies
 SUBDEP_GROUP_LABEL = ":sub"
-
-
-def normalize_pattern(pattern: str) -> str:
-    return re.sub(r"[^A-Za-z0-9*?]+", "-", pattern).lower()
 
 
 class Command(BaseCommand):
