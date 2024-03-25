@@ -6,7 +6,6 @@ import venv
 from pathlib import Path
 
 import pytest
-from packaging.version import parse
 from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
@@ -14,7 +13,7 @@ from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
-from pdm.utils import cd
+from pdm.utils import cd, parse_version
 
 
 def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
@@ -29,7 +28,7 @@ def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
     pyenv_python.touch()
     mocker.patch(
         "findpython.python.PythonVersion._get_version",
-        return_value=parse("3.8.0"),
+        return_value=parse_version("3.8.0"),
     )
     mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=sys.executable)
     assert Path(project.python.path) == pyenv_python
@@ -379,7 +378,7 @@ def test_filter_sources_with_config(project):
     ]
     repository = project.get_repository()
 
-    def expect_sources(requirement: str, expected: list[str]) -> bool:
+    def expect_sources(requirement: str, expected: list[str]) -> None:
         sources = repository.get_filtered_sources(parse_requirement(requirement))
         assert sorted([source.name for source in sources]) == sorted(expected)
 

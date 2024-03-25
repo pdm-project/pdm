@@ -6,8 +6,6 @@ import subprocess
 import sys
 from typing import Any
 
-from packaging.version import parse
-
 from pdm import termui
 from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
@@ -17,7 +15,7 @@ from pdm.compat import Distribution
 from pdm.environments import BareEnvironment
 from pdm.models.working_set import WorkingSet
 from pdm.project import Project
-from pdm.utils import is_in_zipapp, normalize_name
+from pdm.utils import is_in_zipapp, normalize_name, parse_version
 
 PDM_REPO = "https://github.com/pdm-project/pdm"
 
@@ -233,7 +231,7 @@ class UpdateCommand(BaseCommand):
         else:
             version = get_latest_pdm_version_from_pypi(project, options.pre)
             assert version is not None, "No version found"
-            if parse(__version__) >= parse(version):
+            if parse_version(__version__) >= parse_version(version):
                 project.core.ui.echo(f"Already up-to-date: [primary]{__version__}[/]")
                 return
             package = f"pdm=={version}"

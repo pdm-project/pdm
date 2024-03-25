@@ -44,7 +44,6 @@ from typing import (
 
 import httpx
 import pytest
-from packaging.version import parse as parse_version
 from pytest_mock import MockerFixture
 from unearth import Link
 
@@ -63,7 +62,7 @@ from pdm.models.requirements import (
 from pdm.models.session import PDMPyPIClient
 from pdm.project.config import Config
 from pdm.project.core import Project
-from pdm.utils import find_python_in_path, normalize_name, path_to_url
+from pdm.utils import find_python_in_path, normalize_name, parse_version, path_to_url
 
 if TYPE_CHECKING:
     from typing import Protocol
@@ -569,6 +568,7 @@ if TYPE_CHECKING:
             input: str | None = None,
             obj: Project | None = None,
             env: Mapping[str, str] | None = None,
+            cleanup: bool = True,
             **kwargs: Any,
         ) -> RunResult:
             """

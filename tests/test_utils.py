@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 import tomlkit
-from packaging.version import Version
 
 from pdm import utils
 from pdm.cli import utils as cli_utils
@@ -541,8 +540,8 @@ def test_deprecation_warning():
 
 
 def test_comparable_version():
-    assert utils.comparable_version("1.2.3") == Version("1.2.3")
-    assert utils.comparable_version("1.2.3a1+local1") == Version("1.2.3a1")
+    assert utils.comparable_version("1.2.3") == utils.parse_version("1.2.3")
+    assert utils.comparable_version("1.2.3a1+local1") == utils.parse_version("1.2.3a1")
 
 
 @pytest.mark.parametrize("name", ["foO", "f", "3d", "f3", "333", "foo.bar", "foo-bar", "foo_bar", "foo-_.bar"])

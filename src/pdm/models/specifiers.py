@@ -18,10 +18,10 @@ from dep_logic.specifiers import (
     from_specifierset,
 )
 from packaging.specifiers import SpecifierSet
-from packaging.version import Version as ParsedVersion
 
 from pdm.exceptions import InvalidPyVersion
 from pdm.models.versions import Version
+from pdm.utils import parse_version
 
 
 def _read_max_versions() -> dict[Version, int]:
@@ -257,6 +257,6 @@ def _fix_py4k(spec: VersionSpecifier) -> VersionSpecifier:
     if isinstance(spec, UnionSpecifier):
         *pre, last = spec.ranges
         return UnionSpecifier([*pre, _fix_py4k(last)])
-    if isinstance(spec, RangeSpecifier) and spec.max == ParsedVersion("4.0"):
+    if isinstance(spec, RangeSpecifier) and spec.max == parse_version("4.0"):
         return dataclasses.replace(spec, max=None, include_max=False)
     return spec
