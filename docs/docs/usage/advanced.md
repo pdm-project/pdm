@@ -152,34 +152,31 @@ It is possible to use PDM in a multi-stage Dockerfile to first install the proje
 and then copy this folder into the final stage, adding it to `PYTHONPATH`.
 
 ```dockerfile
+ARG PYTHON_BASE=3.10-slim
 # build stage
-FROM python:3.8 AS builder
+FROM python:$PYTHON_BASE AS builder
 
 # install PDM
-RUN pip install -U pip setuptools wheel
-RUN pip install pdm
-
+RUN pip install -U pdm
+# disable update check
+ENV PDM_CHECK_UPDATE=false
 # copy files
 COPY pyproject.toml pdm.lock README.md /project/
 COPY src/ /project/src
 
 # install dependencies and project into the local packages directory
 WORKDIR /project
-RUN mkdir __pypackages__ && pdm sync --prod --no-editable
-
+RUN pdm install --check --prod --no-editable
 
 # run stage
-FROM python:3.8
+FROM python:$PYTHON_BASE
 
 # retrieve packages from build stage
-ENV PYTHONPATH=/project/pkgs
-COPY --from=builder /project/__pypackages__/3.8/lib /project/pkgs
-
-# retrieve executables
-COPY --from=builder /project/__pypackages__/3.8/bin/* /bin/
-
+COPY --from=builder /project/.venv/ /project/.venv
+ENV PATH="/project/.venv/bin:$PATH"
 # set command/entrypoint, adapt to fit your needs
-CMD ["python", "-m", "project"]
+COPY src /project/src
+CMD ["python", "src/__main__.py"]
 ```
 
 ## Use PDM to manage a monorepo
