@@ -32,6 +32,8 @@ _pdm() {
     'self:Manage the PDM program itself (previously known as plugin)'
     'outdated:Check for outdated packages and list the latest versions'
     'publish:Build and publish the project to PyPI'
+    'python:Manage installed Python interpreters'
+    'py:Manage installed Python interpreters'
     'remove:Remove packages from pyproject.toml'
     'run:Run commands or scripts with local packages loaded'
     'search:Search for PyPI packages'
@@ -322,6 +324,40 @@ _pdm() {
           esac
           ;;
       esac
+      return $ret
+      ;;
+    python|py)
+      _arguments -C \
+        $arguments \
+        ': :->command' \
+        '*:: :->args' && ret=0
+      case $state in
+        command)
+          local -a actions=(
+            "remove:Remove a Python interpreter installed with PDM"
+            "list:List all Python interpreters installed with PDM"
+            "install:Install a Python interpreter with PDM"
+          )
+          _describe -t command 'pdm python actions' actions && ret=0
+          ;;
+        args)
+          case $words[1] in
+            remove)
+              arguments+=(
+                ':python:'
+              )
+              ;;
+            install)
+              arguments+=(
+                '--list[List all available Python versions]'
+                ':python:_files'
+              )
+              ;;
+            *)
+              ;;
+          esac
+          ;;
+        esac
       return $ret
       ;;
     publish)

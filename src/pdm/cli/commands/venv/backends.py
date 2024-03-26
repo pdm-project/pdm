@@ -37,10 +37,16 @@ class Backend(abc.ABC):
             project_python = self.project._python
             if project_python:
                 return project_python
-        # disable venv provider temporarily
-        for py_version in self.project.find_interpreters(self.python, search_venv=False):
-            if self.python or py_version.valid and self.project.python_requires.contains(py_version.version, True):
-                return py_version
+
+        def match_func(py_version: PythonInfo) -> bool:
+            return (
+                bool(self.python)
+                or py_version.valid
+                and self.project.python_requires.contains(py_version.version, True)
+            )
+
+        for py_version in self.project.iter_interpreters(self.python, search_venv=False, filter_func=match_func):
+            return py_version
 
         python = f" {self.python}" if self.python else ""
         raise VirtualenvCreateError(f"Can't resolve python interpreter{python}")

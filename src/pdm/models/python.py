@@ -52,6 +52,10 @@ class PythonInfo:
     def version(self) -> Version:
         return self._py_ver.version
 
+    @cached_property
+    def implementation(self) -> str:
+        return self._py_ver.implementation.lower()
+
     @property
     def major(self) -> int:
         return self.version.major

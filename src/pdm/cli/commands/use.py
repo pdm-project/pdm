@@ -14,7 +14,7 @@ from pdm.project import Project
 
 
 class Command(BaseCommand):
-    """Use the given python version or path as base interpreter"""
+    """Use the given python version or path as base interpreter. If not found, PDM will try to install one."""
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         skip_option.add_to_parser(parser)
@@ -69,32 +69,26 @@ class Command(BaseCommand):
                 project.core.ui.info("Using the last selection, add '-i' to ignore it.")
                 return cached_python
 
-        found_interpreters = list(dict.fromkeys(project.find_interpreters(python)))
-        matching_interpreters = list(filter(version_matcher, found_interpreters))
+        found_interpreters = list(dict.fromkeys(project.iter_interpreters(python, filter_func=version_matcher)))
         if not found_interpreters:
             raise NoPythonVersion(f"No Python interpreter matching [success]{python}[/] is found.")
-        if not matching_interpreters:
-            project.core.ui.echo("Interpreters found but not matching:", err=True)
-            for py in found_interpreters:
-                info = py.identifier if py.valid else "Invalid"
-                project.core.ui.echo(f"  - {py.path} ({info})", err=True)
-            raise NoPythonVersion(
-                f"No python is found meeting the requirement [success]python {project.python_requires!s}[/]"
-            )
-        if first or len(matching_interpreters) == 1:
-            return matching_interpreters[0]
+
+        if first or len(found_interpreters) == 1:
+            return found_interpreters[0]
 
         project.core.ui.echo("Please enter the Python interpreter to use")
-        for i, py_version in enumerate(matching_interpreters):
-            project.core.ui.echo(f"{i}. [success]{py_version.path!s}[/] ({py_version.identifier})")
+        for i, py_version in enumerate(found_interpreters):
+            project.core.ui.echo(
+                f"{i:>2}. [success]{py_version.implementation}@{py_version.identifier}[/] ({py_version.path!s})"
+            )
         selection = termui.ask(
             "Please select",
             default="0",
             prompt_type=int,
-            choices=[str(i) for i in range(len(matching_interpreters))],
+            choices=[str(i) for i in range(len(found_interpreters))],
             show_choices=False,
         )
-        return matching_interpreters[int(selection)]
+        return found_interpreters[int(selection)]
 
     def do_use(
         self,

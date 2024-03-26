@@ -290,4 +290,4 @@ class UI:
 
     def error(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
         """Print a message to stdout."""
-        self.echo(f"[error]WARNING:[/] {message}", err=True, verbosity=verbosity)
+        self.echo(f"[error]ERROR:[/] {message}", err=True, verbosity=verbosity)

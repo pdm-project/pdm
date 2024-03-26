@@ -192,7 +192,11 @@ function TabExpansion($line, $lastWord) {
 
     if ($lastBlock -match "^pdm ") {
         [string[]]$words = $lastBlock.Split()[1..$lastBlock.Length]
-        [string[]]$AllCommands = ("add", "build", "cache", "completion", "config", "export", "fix", "import", "info", "init", "install", "list", "lock", "outdated", "plugin", "publish", "remove", "run", "search", "show", "sync", "update", "use")
+        [string[]]$AllCommands = (
+            "add", "build", "cache", "completion", "config", "export", "fix", "import", "info", "init", "install",
+            "list", "lock", "outdated", "plugin", "publish", "remove", "run", "search", "show", "sync", "update",
+            "use", "python", "py"
+        )
         [string[]]$commands = $words.Where( { $_ -notlike "-*" })
         $command = $commands[0]
         $completer = [Completer]::new()
@@ -350,18 +354,22 @@ function TabExpansion($line, $lastWord) {
                         $completer.AddOpts(([Option]::new(("--pip-args"))))
                         $completer.AddParams(@(getPyPIPackages), $true)
                         $command = $subCommand
+                        break
                     }
                     "remove" {
                         $completer.AddOpts(([Option]::new(("--pip-args", "-y", "--yes"))))
                         $command = $subCommand
+                        break
                     }
                     "list" {
                         $completer.AddOpts(([Option]::new(("--plugins"))))
                         $command = $subCommand
+                        break
                     }
                     "update" {
                         $completer.AddOpts(([Option]::new(("--pip-args", "--head", "--pre"))))
                         $command = $subCommand
+                        break
                     }
                     Default {
                         $completer.AddParams(@("add", "remove", "list", "update"), $false)
@@ -379,6 +387,29 @@ function TabExpansion($line, $lastWord) {
                         $skipOption,
                         $projectOption
                     ))
+                break
+            }
+            "py" {}
+            "python" {
+                $subCommand = $commands[1]
+                switch ($subCommand) {
+                    "list" {
+                        $command = $subCommand
+                        break
+                    }
+                    "remove" {
+                        $command = $subCommand
+                        break
+                    }
+                    "install" {
+                        $completer.AddOpts(([Option]::new(("--list")))
+                        $command = $subCommand
+                        break
+                    }
+                    Default {
+                        break
+                    }
+                }
                 break
             }
             "remove" {

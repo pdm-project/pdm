@@ -381,6 +381,7 @@ def project_no_init(
         '[global_project]\npath = "{}"\n'.format(test_home.joinpath("global-project").as_posix())
     )
     p = core.create_project(tmp_path, global_config=test_home.joinpath("config.toml").as_posix())
+    p.global_config["python.install_root"] = str(tmp_path / "pythons")
     p.global_config["venv.location"] = str(tmp_path / "venvs")
     mocker.patch.object(BaseEnvironment, "_build_session", build_test_session)
     mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))

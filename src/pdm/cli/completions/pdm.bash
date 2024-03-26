@@ -92,6 +92,14 @@ _pdm_a919b69078acdf0a_complete()
             opts="--ca-certs --comment --help --identity --no-build --no-very-ssl --password --project --quiet --repository --sign --skip --skip-existing --username --verbose"
             ;;
 
+            (py)
+            opts="--help"
+            ;;
+
+            (python)
+            opts="--help"
+            ;;
+
             (remove)
             opts="--config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --quiet --skip --venv --verbose"
             ;;
@@ -138,7 +146,7 @@ _pdm_a919b69078acdf0a_complete()
 
     # completing for a command
     if [[ $cur == $com ]]; then
-        coms="add build cache completion config export fix import info init install list lock outdated plugin publish remove run search self show sync update use venv"
+        coms="add build cache completion config export fix import info init install list lock outdated plugin publish py python remove run search self show sync update use venv"
 
         COMPREPLY=($(compgen -W "${coms}" -- ${cur}))
         __ltrim_colon_completions "$cur"

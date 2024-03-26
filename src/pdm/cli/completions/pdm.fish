@@ -3,7 +3,7 @@
 
 function __fish_pdm_a919b69078acdf0a_complete_no_subcommand
     for i in (commandline -opc)
-        if contains -- $i add build cache completion config export fix import info init install list lock outdated plugin publish remove run search self show sync update use venv
+        if contains -- $i add build cache completion config export fix import info init install list lock outdated plugin publish py python remove run search self show sync update use venv
             return 1
         end
     end
@@ -321,6 +321,54 @@ complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l skip -d 'Skip som
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l skip-existing -d 'Skip uploading files that already exist. This may not work with some repository implementations.'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l username -d 'The username to access the repository [env var: PDM_PUBLISH_USERNAME]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
+
+# py
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a py -d 'Manage installed Python interpreters'
+complete -c pdm -A -n '__fish_seen_subcommand_from py' -l help -d 'Show this help message and exit.'
+# py subcommands
+set -l py_subcommands install list remove
+# py install
+complete -c pdm -f -n '__fish_seen_subcommand_from py; and not __fish_seen_subcommand_from $py_subcommands' -a install -d 'Install a Python interpreter with PDM'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from install' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from install' -l list -d 'List all available Python versions'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from install' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from install' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
+
+# py list
+complete -c pdm -f -n '__fish_seen_subcommand_from py; and not __fish_seen_subcommand_from $py_subcommands' -a list -d 'List all Python interpreters installed with PDM'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from list' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from list' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
+
+# py remove
+complete -c pdm -f -n '__fish_seen_subcommand_from py; and not __fish_seen_subcommand_from $py_subcommands' -a remove -d 'Remove a Python interpreter installed with PDM'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from py; and __fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
+
+# python
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a python -d 'Manage installed Python interpreters'
+complete -c pdm -A -n '__fish_seen_subcommand_from python' -l help -d 'Show this help message and exit.'
+# python subcommands
+set -l python_subcommands install list remove
+# python install
+complete -c pdm -f -n '__fish_seen_subcommand_from python; and not __fish_seen_subcommand_from $python_subcommands' -a install -d 'Install a Python interpreter with PDM'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from install' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from install' -l list -d 'List all available Python versions'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from install' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from install' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
+
+# python list
+complete -c pdm -f -n '__fish_seen_subcommand_from python; and not __fish_seen_subcommand_from $python_subcommands' -a list -d 'List all Python interpreters installed with PDM'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from list' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from list' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from list' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
+
+# python remove
+complete -c pdm -f -n '__fish_seen_subcommand_from python; and not __fish_seen_subcommand_from $python_subcommands' -a remove -d 'Remove a Python interpreter installed with PDM'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from remove' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from remove' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subcommand_from remove' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # remove
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a remove -d 'Remove packages from pyproject.toml'

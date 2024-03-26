@@ -246,11 +246,10 @@ class Project:
                 return self.python
 
         if self.root.joinpath("__pypackages__").exists() or not config["python.use_venv"]:
-            for py_version in self.find_interpreters():
-                if match_version(py_version):
-                    note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
-                    self.python = py_version
-                    return py_version
+            for py_version in self.iter_interpreters(filter_func=match_version):
+                note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
+                self.python = py_version
+                return py_version
 
         raise NoPythonVersion(f"No Python that satisfies {self.python_requires} is found on the system.")
 
@@ -626,6 +625,47 @@ class Project:
 
         return HashCache(directory=self.cache("hashes"))
 
+    def iter_interpreters(
+        self,
+        python_spec: str | None = None,
+        search_venv: bool | None = None,
+        filter_func: Callable[[PythonInfo], bool] | None = None,
+    ) -> Iterable[PythonInfo]:
+        """Iterate over all interpreters that matches the given specifier.
+        And optionally install the interpreter if not found.
+        """
+        from pbs_installer._versions import PYTHON_VERSIONS, PythonVersion
+
+        from pdm.cli.commands.python import InstallCommand
+
+        found = False
+        for interpreter in self.find_interpreters(python_spec, search_venv):
+            if filter_func is None or filter_func(interpreter):
+                found = True
+                yield interpreter
+        if found:
+            return
+
+        def get_version(version: PythonVersion) -> str:
+            return f"{version.major}.{version.minor}.{version.micro}"
+
+        if python_spec is None:
+            # Get the best match meeting the requires-python
+            best_match = next((v for v in PYTHON_VERSIONS if get_version(v) in self.python_requires), None)
+            if best_match is None:
+                return
+            python_spec = str(best_match)
+
+        try:
+            # otherwise if no interpreter is found, try to install it
+            installed = InstallCommand.install_python(self, python_spec)
+        except Exception as e:
+            self.core.ui.error(f"Failed to install Python {python_spec}: {e}")
+            return
+        else:
+            if filter_func is None or filter_func(installed):
+                yield installed
+
     def find_interpreters(
         self, python_spec: str | None = None, search_venv: bool | None = None
     ) -> Iterable[PythonInfo]:
@@ -682,7 +722,15 @@ class Project:
         from pdm.cli.commands.venv.utils import VenvProvider
 
         providers: list[str] = self.config["python.providers"]
-        finder = Finder(resolve_symlinks=True, selected_providers=providers or None)
+        old_rye_root = os.getenv("RYE_PY_ROOT")
+        os.environ["RYE_PY_ROOT"] = os.path.expanduser(self.config["python.install_root"])
+        try:
+            finder = Finder(resolve_symlinks=True, selected_providers=providers or None)
+        finally:
+            if old_rye_root:
+                os.environ["RYE_PY_ROOT"] = old_rye_root
+            else:
+                del os.environ["RYE_PY_ROOT"]
         if search_venv and (not providers or "venv" in providers):
             venv_pos = providers.index("venv") if providers else 0
             finder.add_provider(VenvProvider(self), venv_pos)
