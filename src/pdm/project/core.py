@@ -245,12 +245,12 @@ class Project:
                 self.python = PythonInfo.from_path(get_venv_python(venv_path))
                 return self.python
 
-        for py_version in self.find_interpreters():
-            if match_version(py_version):
-                if config.get("python.use_venv"):
+        if self.root.joinpath("__pypackages__").exists() or not config["python.use_venv"]:
+            for py_version in self.find_interpreters():
+                if match_version(py_version):
                     note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
-                self.python = py_version
-                return py_version
+                    self.python = py_version
+                    return py_version
 
         raise NoPythonVersion(f"No Python that satisfies {self.python_requires} is found on the system.")
 
@@ -272,11 +272,11 @@ class Project:
             else PythonLocalEnvironment(self)
         )
 
-    def _create_virtualenv(self) -> Path:
+    def _create_virtualenv(self, python: str | None = None) -> Path:
         from pdm.cli.commands.venv.backends import BACKENDS
 
         backend: str = self.config["venv.backend"]
-        venv_backend = BACKENDS[backend](self, None)
+        venv_backend = BACKENDS[backend](self, python)
         path = venv_backend.create(
             force=True,
             in_project=self.config["venv.in_project"],

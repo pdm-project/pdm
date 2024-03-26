@@ -11,12 +11,9 @@ from pdm.cli.options import skip_option
 from pdm.cli.templates import ProjectTemplate
 from pdm.exceptions import PdmUsageError
 from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
-from pdm.models.python import PythonInfo
 from pdm.models.specifiers import get_specifier
-from pdm.models.venv import get_venv_python
 from pdm.utils import (
     get_user_email_from_git,
-    is_conda_base_python,
     package_installed,
     sanitize_project_name,
     validate_project_name,
@@ -224,21 +221,6 @@ class Command(BaseCommand):
             hooks=hooks,
         )
 
-        if project.config["python.use_venv"] and (
-            python_info.get_venv() is None or is_conda_base_python(python_info.path)
-        ):
-            if not self.interactive or termui.confirm(
-                f"Would you like to create a virtualenv with [success]{python_info.executable}[/]?",
-                default=True,
-            ):
-                project._python = python_info
-                try:
-                    path = project._create_virtualenv()
-                    python_info = PythonInfo.from_path(get_venv_python(path))
-                except Exception as e:  # pragma: no cover
-                    project.core.ui.error(
-                        f"Error occurred when creating virtualenv: {e}\nPlease fix it and create later."
-                    )
         if python_info.get_venv() is None:
             project.core.ui.info(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"

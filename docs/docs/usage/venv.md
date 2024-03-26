@@ -18,6 +18,10 @@ You can choose the backend used by PDM to create a virtualenv. Currently it supp
 
 You can change it by `pdm config venv.backend [virtualenv|venv|conda]`.
 
++++ 2.13.0
+
+    Moreover, when `python.use_venv` config is set to `true`, PDM will always try to create a virtualenv when using `pdm use` to switch the Python interpreter.
+
 ## Create a virtualenv yourself
 
 You can create more than one virtualenvs with whatever Python version you want.
@@ -127,8 +131,8 @@ For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation
       }
       ```
 
-      Copy and paste this function to your `~/.bashrc` file and restart your shell. 
-      
+      Copy and paste this function to your `~/.bashrc` file and restart your shell.
+
       For `fish` shell you can put the following into your `~/fish/config.fish` or in `~/.config/fish/config.fish`
 
       ```fish
@@ -142,7 +146,7 @@ For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation
             end
         end
       ```
-      
+
       Now you can run `pdm shell` to activate the virtualenv.
       **The virtualenv can be deactivated with `deactivate` command as usual.**
 
