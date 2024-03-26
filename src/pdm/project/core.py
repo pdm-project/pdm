@@ -245,7 +245,7 @@ class Project:
                 self.python = PythonInfo.from_path(get_venv_python(venv_path))
                 return self.python
 
-        if self.root.joinpath("__pypackages__").exists() or not config["python.use_pyenv"]:
+        if self.root.joinpath("__pypackages__").exists() or not config["python.use_venv"]:
             for py_version in self.find_interpreters():
                 if match_version(py_version):
                     note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
