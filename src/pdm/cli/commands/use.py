@@ -9,6 +9,7 @@ from pdm.cli.options import skip_option
 from pdm.exceptions import NoPythonVersion
 from pdm.models.caches import JSONFileCache
 from pdm.models.python import PythonInfo
+from pdm.models.venv import get_venv_python
 from pdm.project import Project
 
 
@@ -109,7 +110,7 @@ class Command(BaseCommand):
         """Use the specified python version and save in project config.
         The python can be a version string or interpreter path.
         """
-        from pdm.environments.local import PythonLocalEnvironment
+        from pdm.environments import PythonLocalEnvironment
 
         selected_python = self.select_python(
             project,
@@ -122,7 +123,9 @@ class Command(BaseCommand):
         if python:
             use_cache: JSONFileCache[str, str] = JSONFileCache(project.cache_dir / "use_cache.json")
             use_cache.set(python, selected_python.path.as_posix())
-
+        if selected_python.get_venv() is None and project.config["python.use_venv"]:
+            venv_path = project._create_virtualenv(str(selected_python.path))
+            selected_python = PythonInfo.from_path(get_venv_python(venv_path))
         if not save:
             return selected_python
 
@@ -133,18 +136,15 @@ class Command(BaseCommand):
         )
         project.python = selected_python
         if project.environment.is_local:
+            assert isinstance(project.environment, PythonLocalEnvironment)
             project.core.ui.echo(
                 "Using __pypackages__ because non-venv Python is used.",
                 style="primary",
                 err=True,
             )
-        if (
-            old_python
-            and old_python.executable != selected_python.executable
-            and isinstance(project.environment, PythonLocalEnvironment)
-        ):
-            project.core.ui.echo("Updating executable scripts...", style="primary")
-            project.environment.update_shebangs(selected_python.executable.as_posix())
+            if old_python and old_python.executable != selected_python.executable:
+                project.core.ui.echo("Updating executable scripts...", style="primary")
+                project.environment.update_shebangs(selected_python.executable.as_posix())
 
         hooks = hooks or HookManager(project)
         hooks.try_emit("post_use", python=selected_python)
