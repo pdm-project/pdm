@@ -11,6 +11,7 @@ from pdm.models.caches import JSONFileCache
 from pdm.models.python import PythonInfo
 from pdm.models.venv import get_venv_python
 from pdm.project import Project
+from pdm.utils import is_conda_base_python
 
 
 class Command(BaseCommand):
@@ -123,7 +124,10 @@ class Command(BaseCommand):
         if python:
             use_cache: JSONFileCache[str, str] = JSONFileCache(project.cache_dir / "use_cache.json")
             use_cache.set(python, selected_python.path.as_posix())
-        if selected_python.get_venv() is None and project.config["python.use_venv"]:
+
+        if project.config["python.use_venv"] and (
+            selected_python.get_venv() is None or is_conda_base_python(selected_python.path)
+        ):
             venv_path = project._create_virtualenv(str(selected_python.path))
             selected_python = PythonInfo.from_path(get_venv_python(venv_path))
         if not save:
