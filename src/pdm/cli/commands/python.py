@@ -101,6 +101,7 @@ class InstallCommand(BaseCommand):
     @staticmethod
     def install_python(project: Project, request: str) -> PythonInfo:
         from pbs_installer import download, get_download_link, install_file
+        from pbs_installer._install import THIS_ARCH
 
         from pdm.termui import logger
 
@@ -109,8 +110,10 @@ class InstallCommand(BaseCommand):
 
         implementation, _, version = request.rpartition("@")
         implementation = implementation.lower() or "cpython"
+        version, _, arch = version.rpartition("-")
+        arch = "x86" if arch == "32" else (arch or THIS_ARCH)
 
-        ver, python_file = get_download_link(version, implementation=implementation)
+        ver, python_file = get_download_link(version, implementation=implementation, arch=arch)
         with ui.open_spinner(f"Downloading [success]{ver}[/]") as spinner:
             destination = root / str(ver)
             logger.debug("Installing %s to %s", ver, destination)

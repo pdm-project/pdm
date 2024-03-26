@@ -21,7 +21,7 @@ def mock_install(mocker):
 
     def get_version(self):
         if sys.platform == "win32":
-            return Version(self.executable.parent.name.split("-", 1)[1])
+            return Version(self.executable.parent.name.split("@", 1)[1])
         else:
             return Version(self.executable.parent.parent.name.split("@", 1)[1])
 
@@ -32,7 +32,7 @@ def mock_install(mocker):
     @property
     def implementation(self):
         if sys.platform == "win32":
-            return self.executable.parent.name.split("-", 1)[0]
+            return self.executable.parent.name.split("@", 1)[0]
         else:
             return self.executable.parent.parent.name.split("@", 1)[0]
 
