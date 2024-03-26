@@ -110,7 +110,7 @@ class InstallCommand(BaseCommand):
 
         implementation, _, version = request.rpartition("@")
         implementation = implementation.lower() or "cpython"
-        version, _, arch = version.rpartition("-")
+        version, _, arch = version.partition("-")
         arch = "x86" if arch == "32" else (arch or THIS_ARCH)
 
         ver, python_file = get_download_link(version, implementation=implementation, arch=arch)
