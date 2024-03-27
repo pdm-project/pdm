@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:f9ce79567511e77d63526ef41829cbbad8a3180678bcda40fd512ac0be20a989"
+content_hash = "sha256:b42e024df1972955fe7c3bfe077426396dd2b1d494af19124ef45c0780839ef0"
 
 [[package]]
 name = "anyio"
@@ -721,6 +721,22 @@ dependencies = [
     "httpcore==1.*",
     "idna",
     "sniffio",
+]
+files = [
+    {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
+    {file = "httpx-0.27.0.tar.gz", hash = "sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5"},
+]
+
+[[package]]
+name = "httpx"
+version = "0.27.0"
+extras = ["socks"]
+requires_python = ">=3.8"
+summary = "The next generation HTTP client."
+groups = ["all", "default", "test"]
+dependencies = [
+    "httpx==0.27.0",
+    "socksio==1.*",
 ]
 files = [
     {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
@@ -1967,6 +1983,17 @@ files = [
 ]
 
 [[package]]
+name = "socksio"
+version = "1.0.0"
+requires_python = ">=3.6"
+summary = "Sans-I/O implementation of SOCKS4, SOCKS4A, and SOCKS5."
+groups = ["all", "default", "test"]
+files = [
+    {file = "socksio-1.0.0-py3-none-any.whl", hash = "sha256:95dc1f15f9b34e8d7b16f06d74b8ccf48f609af32ab33c608d08761c5dcbb1f3"},
+    {file = "socksio-1.0.0.tar.gz", hash = "sha256:f88beb3da5b5c38b9890469de67d0cb0f9d494b78b106ca1845f96c10b91c4ac"},
+]
+
+[[package]]
 name = "text-unidecode"
 version = "1.3"
 summary = "The most basic Text::Unidecode port"
@@ -2081,7 +2108,7 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.15.0"
+version = "0.15.1"
 requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
 groups = ["all", "default", "test"]
@@ -2090,8 +2117,8 @@ dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "unearth-0.15.0-py3-none-any.whl", hash = "sha256:1ca3e5108196059d9a28f010918c849f4ab403ba2b07d8869fbe3deb3027e83c"},
-    {file = "unearth-0.15.0.tar.gz", hash = "sha256:95f4764dab61f6bb637427934fa543b3610a38908760c06014fb861dcca29458"},
+    {file = "unearth-0.15.1-py3-none-any.whl", hash = "sha256:e76dc2e3ce64fe0888fca4e0f60607e7be42cd033e1b8e6a6e49d8cf3c20c874"},
+    {file = "unearth-0.15.1.tar.gz", hash = "sha256:863deb3339c0d65a5be0d0ad2c67d46d5f574a798e74ef0552bf11d298a30abb"},
 ]
 
 [[package]]
