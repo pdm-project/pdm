@@ -55,6 +55,7 @@ nav:
       - Introduction: index.md
       - usage/project.md
       - usage/dependency.md
+      - usage/lockfile.md
       - usage/publish.md
       - usage/config.md
       - usage/scripts.md
@@ -91,8 +92,8 @@ markdown_extensions:
       permalink: "#"
   - attr_list
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
