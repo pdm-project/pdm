@@ -649,7 +649,7 @@ class Project:
         def get_version(version: PythonVersion) -> str:
             return f"{version.major}.{version.minor}.{version.micro}"
 
-        if python_spec is None:
+        if not python_spec:  # handle both empty string and None
             # Get the best match meeting the requires-python
             best_match = next((v for v in PYTHON_VERSIONS if get_version(v) in self.python_requires), None)
             if best_match is None:
@@ -727,7 +727,7 @@ class Project:
         try:
             finder = Finder(resolve_symlinks=True, selected_providers=providers or None)
         finally:
-            if old_rye_root:
+            if old_rye_root:  # pragma: no cover
                 os.environ["RYE_PY_ROOT"] = old_rye_root
             else:
                 del os.environ["RYE_PY_ROOT"]
