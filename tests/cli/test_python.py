@@ -41,6 +41,7 @@ def mock_install(mocker):
     mocker.patch("findpython.python.PythonVersion.implementation", implementation)
     mocker.patch("findpython.python.PythonVersion._get_version", get_version)
     mocker.patch("findpython.python.PythonVersion.interpreter", interpreter)
+    mocker.patch("findpython.python.PythonVersion.architecture", mocker.PropertyMock(return_value="64bit"))
     return installer
 
 
@@ -67,7 +68,7 @@ def test_use_auto_install_missing(project, pdm, mock_install, mocker):
     root = Path(project.config["python.install_root"])
     mocker.patch("pdm.project.Project.find_interpreters", return_value=[])
 
-    pdm(["use", "3.10.8", "-v"], obj=project, strict=True)
+    pdm(["use", "3.10.8"], obj=project, strict=True)
     mock_install.assert_called_once()
     assert (root / "cpython@3.10.8").exists()
 
