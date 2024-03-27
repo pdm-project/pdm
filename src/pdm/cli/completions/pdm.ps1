@@ -382,7 +382,7 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@(
                             "-r", "--repository", "-u", "--username", "-P", "--password", "-S", "--sign", "-i", "--identity", "-c", "--comment",
-                            "--no-build", "--ca-certs", "--no-verify-ssl", "--skip-existing"
+                            "--no-build", "--ca-certs", "--no-verify-ssl", "--skip-existing", "-d", "--dest"
                         )),
                         $skipOption,
                         $projectOption
