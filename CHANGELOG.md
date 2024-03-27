@@ -1,3 +1,48 @@
+Release v2.13.0 (2024-03-27)
+----------------------------
+
+### Features & Improvements
+
+- Add option to exclude group(s) when running ```pdm sync/install -G:all``` by adding flag ```--without group1,group2,...``` [#2258](https://github.com/pdm-project/pdm/issues/2258)
+- Default to log to user home and make logs directory configurable. [#2398](https://github.com/pdm-project/pdm/issues/2398)
+- Add an option `keep_going` to continue on errors for composite scripts and return the last failing exit code. [#2582](https://github.com/pdm-project/pdm/issues/2582)
+- Add an option `working_dir` for PDM's scripts to set the current working directory. [#2620](https://github.com/pdm-project/pdm/issues/2620)
+- Allow updating specific sub-dependencies (i.e., transitive dependencies) in the lock file. [#2628](https://github.com/pdm-project/pdm/issues/2628)
+- Add `--config-setting` option to `add/install/sync/update/remove/export` commands, the config settings dictionary will be shared by all packages. [#2636](https://github.com/pdm-project/pdm/issues/2636)
+- Cache the decompressed contents of wheels for faster access. [#2660](https://github.com/pdm-project/pdm/issues/2660)
+- Add configuration for timeout for network requests. [#2680](https://github.com/pdm-project/pdm/issues/2680)
+- Reuse the request sesison within the environment. [#2697](https://github.com/pdm-project/pdm/issues/2697)
+- Caches can be disabled by using the `--no-cache` option or setting the `PDM_NO_CACHE` environment variable. [#2702](https://github.com/pdm-project/pdm/issues/2702)
+- Switch to `httpx.Client` for HTTP requests, drop `requests` dependency. [#2709](https://github.com/pdm-project/pdm/issues/2709)
+- We have timemachine now! You can exclude packages published newer than a certain date via `pdm lock --exclude-newer=<date>`, allowing reproduction of resolutions regardless of new package releases. [#2712](https://github.com/pdm-project/pdm/issues/2712)
+- Add command `pdm outdated` to check the outdated packages and list the latest versions. [#2718](https://github.com/pdm-project/pdm/issues/2718)
+- When `python.use_venv` is on, always try to create a virtualenv when using `pdm use` to switch the Python interpreter. [#2720](https://github.com/pdm-project/pdm/issues/2720)
+- Support installing Pythons from [python-build-standalone](https://github.com/indygreg/python-build-standalone). Add command group `pdm python` to manage Python installations. And `pdm use` can automatically install the Python interpreter if it's not found. [#2721](https://github.com/pdm-project/pdm/issues/2721)
+- Supports custom distribution files path via `-d/--dest` option for `pdm publish`. [#2723](https://github.com/pdm-project/pdm/issues/2723)
+
+### Bug Fixes
+
+- Don't modify TOML tables that are not related to PDM. [#2666](https://github.com/pdm-project/pdm/issues/2666)
+- Made `--without` imply `--with :all`. [#2670](https://github.com/pdm-project/pdm/issues/2670)
+- Expand user path for `venv.location` and other path-like config values. [#2672](https://github.com/pdm-project/pdm/issues/2672)
+- Give a default version when it's missing in `pyproject.toml` when parsing candidate's metadata. [#2677](https://github.com/pdm-project/pdm/issues/2677)
+- Fix the issue that ANSI codes are shown in the output of `pdm --help` on Windows. [#2678](https://github.com/pdm-project/pdm/issues/2678)
+- Don't show empty configuration sections in `pdm config`. [#2683](https://github.com/pdm-project/pdm/issues/2683)
+
+### Documentation
+
+- Document the difference between `[tool.pdm.scripts]` and `[project.scripts]` [#2121](https://github.com/pdm-project/pdm/issues/2121)
+
+### Removals and Deprecations
+
+- Remove the support of `pth` cache method. And `symlink` cache method now behaves the same as `symlink_individual` cache method. [#2660](https://github.com/pdm-project/pdm/issues/2660)
+- Remove `pdm.models.environment` module deprecated before. Also remove the renamed members from `pdm.environments`. [#2710](https://github.com/pdm-project/pdm/issues/2710)
+
+### Miscellany
+
+- Delete `setup.cfg`, move tool configurations under it to `pyproject.toml` [#2703](https://github.com/pdm-project/pdm/issues/2703)
+
+
 Release v2.12.4 (2024-02-26)
 ----------------------------
 
