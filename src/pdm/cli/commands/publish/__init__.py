@@ -63,6 +63,12 @@ class Command(BaseCommand):
             help="Don't build the package before publishing",
         )
         parser.add_argument(
+            "-d",
+            "--dest",
+            help="The directory to upload the package from",
+            default="dist",
+        )
+        parser.add_argument(
             "--skip-existing",
             action="store_true",
             help="Skip uploading files that already exist. This may not work with some repository implementations.",
@@ -157,10 +163,11 @@ class Command(BaseCommand):
         hooks.try_emit("pre_publish")
 
         if options.build:
-            build.Command.do_build(project, hooks=hooks)
+            build.Command.do_build(project, dest=options.dest, hooks=hooks)
 
-        package_files = [str(p) for p in project.root.joinpath("dist").iterdir() if not p.name.endswith(".asc")]
-        signatures = {p.stem: str(p) for p in project.root.joinpath("dist").iterdir() if p.name.endswith(".asc")}
+        upload_dir = project.root.joinpath(options.dest)
+        package_files = [str(p) for p in upload_dir.iterdir() if not p.name.endswith(".asc")]
+        signatures = {p.stem: str(p) for p in upload_dir.iterdir() if p.name.endswith(".asc")}
 
         repository = self.get_repository(project, options)
         uploaded: list[PackageFile] = []

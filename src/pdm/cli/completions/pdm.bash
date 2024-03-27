@@ -89,7 +89,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (publish)
-            opts="--ca-certs --comment --help --identity --no-build --no-very-ssl --password --project --quiet --repository --sign --skip --skip-existing --username --verbose"
+            opts="--ca-certs --comment --dest --help --identity --no-build --no-very-ssl --password --project --quiet --repository --sign --skip --skip-existing --username --verbose"
             ;;
 
             (py)

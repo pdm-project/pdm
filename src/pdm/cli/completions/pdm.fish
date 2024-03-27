@@ -308,6 +308,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from plugin; and __fish_seen_subco
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a publish -d 'Build and publish the project to PyPI'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l ca-certs -d 'The path to a PEM-encoded Certificate Authority bundle to use for publish server validation [env var: PDM_PUBLISH_CA_CERTS]'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l comment -d 'The comment to include with the distribution file.'
+complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l dest -d 'The directory to upload the package from'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l identity -d 'GPG identity used to sign files.'
 complete -c pdm -A -n '__fish_seen_subcommand_from publish' -l no-build -d 'Don\'t build the package before publishing'
@@ -525,7 +526,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from update' -l verbose -d 'Use `-
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l without -d 'Exclude groups of optional-dependencies or dev-dependencies'
 
 # use
-complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a use -d 'Use the given python version or path as base interpreter'
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a use -d 'Use the given python version or path as base interpreter. If not found, PDM will try to install one.'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l first -d 'Select the first matched interpreter'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from use' -l help -d 'Show this help message and exit.'
