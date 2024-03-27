@@ -71,7 +71,8 @@ class Command(BaseCommand):
 
         found_interpreters = list(dict.fromkeys(project.iter_interpreters(python, filter_func=version_matcher)))
         if not found_interpreters:
-            raise NoPythonVersion(f"No Python interpreter matching [success]{python}[/] is found.")
+            req = python if ignore_requires_python else f'requires-python="{project.python_requires}"'
+            raise NoPythonVersion(f"No Python interpreter matching [success]{req}[/] is found.")
 
         if first or len(found_interpreters) == 1:
             return found_interpreters[0]
