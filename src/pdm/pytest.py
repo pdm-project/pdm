@@ -44,6 +44,7 @@ from typing import (
 
 import httpx
 import pytest
+from httpx._content import IteratorByteStream
 from pytest_mock import MockerFixture
 from unearth import Link
 
@@ -70,6 +71,11 @@ if TYPE_CHECKING:
     from _pytest.fixtures import SubRequest
 
     from pdm._types import CandidateInfo, FileHash, RepositoryConfig
+
+
+class FileByteStream(IteratorByteStream):
+    def close(self) -> None:
+        self._stream.close()  # type: ignore[attr-defined]
 
 
 class LocalIndexTransport(httpx.BaseTransport):
@@ -103,8 +109,6 @@ class LocalIndexTransport(httpx.BaseTransport):
         return None
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
-        from httpx._content import IteratorByteStream
-
         request_path = request.url.path
         file_path = self.get_file_path(request_path)
         headers: dict[str, str] = {}
@@ -118,7 +122,7 @@ class LocalIndexTransport(httpx.BaseTransport):
             status_code = 404
         else:
             status_code = 200
-            stream = IteratorByteStream(file_path.open("rb"))
+            stream = FileByteStream(file_path.open("rb"))
             if file_path.suffix == ".html":
                 headers["Content-Type"] = "text/html"
             elif file_path.suffix == ".json":
@@ -381,6 +385,7 @@ def project_no_init(
         '[global_project]\npath = "{}"\n'.format(test_home.joinpath("global-project").as_posix())
     )
     p = core.create_project(tmp_path, global_config=test_home.joinpath("config.toml").as_posix())
+    p.global_config["python.install_root"] = str(tmp_path / "pythons")
     p.global_config["venv.location"] = str(tmp_path / "venvs")
     mocker.patch.object(BaseEnvironment, "_build_session", build_test_session)
     mocker.patch("pdm.builders.base.EnvBuilder.get_shared_env", return_value=str(build_env))

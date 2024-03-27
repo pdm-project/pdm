@@ -175,6 +175,11 @@ class Config(MutableMapping[str, str]):
         "python.use_venv": ConfigItem(
             "Use virtual environments when available", True, env_var="PDM_USE_VENV", coerce=ensure_boolean
         ),
+        "python.install_root": ConfigItem(
+            "The root directory to install python interpreters",
+            global_only=True,
+            default=os.path.join(platformdirs.user_data_dir("pdm"), "python"),
+        ),
         "pypi.url": ConfigItem(
             "The URL of PyPI mirror, defaults to https://pypi.org/simple",
             DEFAULT_PYPI_INDEX,

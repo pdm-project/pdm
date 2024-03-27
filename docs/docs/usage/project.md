@@ -17,6 +17,44 @@ will be stored in `.pdm-python` and used by subsequent commands. You can also ch
 
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
+## Install Python interpreters with PDM
+
++++ 2.13.0
+
+PDM supports installing additional Python interpreters from [@indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone)
+with the `pdm python install` command. For example, to install CPython 3.9.8:
+
+```bash
+pdm python install 3.9.8
+```
+
+You can view all available Python versions with `pdm python install --list`.
+
+This will install the Python interpreter into the location specified by `python.install_root` configuration.
+
+List the currently installed Python interpreters:
+
+```bash
+pdm python list
+```
+
+Remove an installed Python interpreter:
+
+```bash
+pdm python remove 3.9.8
+```
+
+!!! TIP "Share installations with Rye"
+
+    PDM installs Python interpreters using the same source as [Rye](https://rye-up.com). If you are using Rye at the same time, you can point the `python.install_root` to the same directory as Rye to share the Python interpreters:
+
+    ```bash
+    pdm config python.install_root ~/.rye/py
+    ```
+
+    Afterwards you can manage the installations using either `rye toolchain` or `pdm python`.
+
+
 ## Virtualenv or not
 
 After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.

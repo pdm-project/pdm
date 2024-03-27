@@ -189,7 +189,7 @@ def frozen_lockfile_option(
 ) -> None:
     if option_string == "--no-lock":
         project.core.ui.warn("--no-lock is deprecated, use --frozen-lockfile instead.")
-    project.enable_write_lockfile = False
+    project.enable_write_lockfile = False  # type: ignore[has-type]
 
 
 @Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
