@@ -1293,29 +1293,29 @@ files = [
 
 [[package]]
 name = "pbs-installer"
-version = "2024.3.26"
+version = "2024.3.27"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["all", "default", "test"]
 files = [
-    {file = "pbs_installer-2024.3.26-py3-none-any.whl", hash = "sha256:2adfcb6d6104c9bb7a2e7db0e2f5387bc7ba94e7c9776500aa0824cae1160138"},
-    {file = "pbs_installer-2024.3.26.tar.gz", hash = "sha256:db6da68f4fb2d2a01b1579994fd087a404d17efcfd7d803e810496e425533051"},
+    {file = "pbs_installer-2024.3.27-py3-none-any.whl", hash = "sha256:6299ca01a91cc87033fa4176106a977da16e2484b4094ef4bacb576f822c0392"},
+    {file = "pbs_installer-2024.3.27.tar.gz", hash = "sha256:30a368d14710a5e38a57401006b4c1061f030ed06d42d69c8f5e8dd20ee25d58"},
 ]
 
 [[package]]
 name = "pbs-installer"
-version = "2024.3.26"
+version = "2024.3.27"
 extras = ["install"]
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["all", "default", "test"]
 dependencies = [
-    "pbs-installer==2024.3.26",
+    "pbs-installer==2024.3.27",
     "zstandard>=0.21.0",
 ]
 files = [
-    {file = "pbs_installer-2024.3.26-py3-none-any.whl", hash = "sha256:2adfcb6d6104c9bb7a2e7db0e2f5387bc7ba94e7c9776500aa0824cae1160138"},
-    {file = "pbs_installer-2024.3.26.tar.gz", hash = "sha256:db6da68f4fb2d2a01b1579994fd087a404d17efcfd7d803e810496e425533051"},
+    {file = "pbs_installer-2024.3.27-py3-none-any.whl", hash = "sha256:6299ca01a91cc87033fa4176106a977da16e2484b4094ef4bacb576f822c0392"},
+    {file = "pbs_installer-2024.3.27.tar.gz", hash = "sha256:30a368d14710a5e38a57401006b4c1061f030ed06d42d69c8f5e8dd20ee25d58"},
 ]
 
 [[package]]

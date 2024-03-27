@@ -67,7 +67,7 @@ def test_use_auto_install_missing(project, pdm, mock_install, mocker):
     root = Path(project.config["python.install_root"])
     mocker.patch("pdm.project.Project.find_interpreters", return_value=[])
 
-    pdm(["use", "3.10.8"], obj=project, strict=True)
+    pdm(["use", "3.10.8", "-v"], obj=project, strict=True)
     mock_install.assert_called_once()
     assert (root / "cpython@3.10.8").exists()
 
@@ -75,5 +75,5 @@ def test_use_auto_install_missing(project, pdm, mock_install, mocker):
 def test_use_no_auto_install(project, pdm, mocker):
     installer = mocker.patch("pbs_installer.install_file")
 
-    pdm(["use", "-f", "-v"], obj=project, strict=True)
+    pdm(["use", "-f"], obj=project, strict=True)
     installer.assert_not_called()

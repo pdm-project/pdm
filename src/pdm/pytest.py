@@ -44,6 +44,7 @@ from typing import (
 
 import httpx
 import pytest
+from httpx._content import IteratorByteStream
 from pytest_mock import MockerFixture
 from unearth import Link
 
@@ -70,6 +71,11 @@ if TYPE_CHECKING:
     from _pytest.fixtures import SubRequest
 
     from pdm._types import CandidateInfo, FileHash, RepositoryConfig
+
+
+class FileByteStream(IteratorByteStream):
+    def close(self) -> None:
+        self._stream.close()  # type: ignore[attr-defined]
 
 
 class LocalIndexTransport(httpx.BaseTransport):
@@ -103,8 +109,6 @@ class LocalIndexTransport(httpx.BaseTransport):
         return None
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
-        from httpx._content import IteratorByteStream
-
         request_path = request.url.path
         file_path = self.get_file_path(request_path)
         headers: dict[str, str] = {}
@@ -118,7 +122,7 @@ class LocalIndexTransport(httpx.BaseTransport):
             status_code = 404
         else:
             status_code = 200
-            stream = IteratorByteStream(file_path.open("rb"))
+            stream = FileByteStream(file_path.open("rb"))
             if file_path.suffix == ".html":
                 headers["Content-Type"] = "text/html"
             elif file_path.suffix == ".json":
