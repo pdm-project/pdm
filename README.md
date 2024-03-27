@@ -40,6 +40,7 @@ you can probably find some goodness in `pdm`.
 - [PEP 621] project metadata.
 - Flexible and powerful plug-in system.
 - Versatile user scripts.
+- Install Pythons using [indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone).
 - Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517

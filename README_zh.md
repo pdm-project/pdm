@@ -33,6 +33,7 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 - 灵活且强大的插件系统
 - [PEP 621] 元数据格式
 - 功能强大的用户脚本
+- 支持从 [indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone) 安装 Python。
 - 像 [pnpm] 一样的中心化安装缓存，节省磁盘空间
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
