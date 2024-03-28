@@ -245,7 +245,7 @@ class Project:
                 self.python = PythonInfo.from_path(get_venv_python(venv_path))
                 return self.python
 
-        if self.root.joinpath("__pypackages__").exists() or not config["python.use_venv"]:
+        if self.root.joinpath("__pypackages__").exists() or not config["python.use_venv"] or self.is_global:
             for py_version in self.iter_interpreters(filter_func=match_version):
                 note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
                 self.python = py_version
@@ -643,7 +643,7 @@ class Project:
             if filter_func is None or filter_func(interpreter):
                 found = True
                 yield interpreter
-        if found:
+        if found or self.is_global:
             return
 
         def get_version(version: PythonVersion) -> str:
