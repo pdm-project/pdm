@@ -98,7 +98,7 @@ coverage = {shell = """\
                               tests/
                     """}
 tox = "tox"
-doc = {shell = "cd docs && mkdocs serve", help = "Start the dev server for doc preview"}
+doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
 lint = "pre-commit run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
 
@@ -118,7 +118,6 @@ doc = [
     "mkdocs>=1.1",
     "mkdocs-material>=7.3",
     "mkdocstrings[python]>=0.18",
-    "mike>=1.1.2",
     "setuptools>=62.3.3",
     "markdown-exec>=0.7.0",
     "mkdocs-redirects>=1.2.0",
