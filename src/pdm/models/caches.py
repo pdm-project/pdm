@@ -24,7 +24,6 @@ if TYPE_CHECKING:
     from packaging.tags import Tag
     from unearth import Link, TargetPython
 
-    from pdm.environments import BaseEnvironment
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")
@@ -276,7 +275,7 @@ class PackageCache:
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def cache_wheel(self, wheel: Path, environment: BaseEnvironment, checksum: str | None = None) -> CachedPackage:
+    def cache_wheel(self, wheel: Path, checksum: str | None = None) -> CachedPackage:
         """Create a CachedPackage instance from a wheel file"""
         import zipfile
 
@@ -284,26 +283,37 @@ class PackageCache:
 
         if checksum is None:
             checksum = get_file_hash(wheel)
-        parts = (checksum[:2], checksum[2:4], checksum[4:6], checksum[6:8], checksum[8:])
+        parts = (checksum[:2],)  # shard by the first two chars of the checksum
         dest = self.root.joinpath(*parts, f"{wheel.name}.cache")
         pkg = CachedPackage(dest)
         if dest.exists():
             return pkg
         dest.mkdir(parents=True, exist_ok=True)
+        dest.joinpath(".checksum").write_text(checksum)
         logger.info("Unpacking wheel into cached location %s", dest)
         with zipfile.ZipFile(wheel) as zf:
-            for item in zf.infolist():
-                target_path = zf.extract(item, dest)
-                mode = item.external_attr >> 16
-                is_executable = bool(mode and stat.S_ISREG(mode) and mode & 0o111)
-                if is_executable:
-                    make_file_executable(target_path)
+            try:
+                for item in zf.infolist():
+                    target_path = zf.extract(item, dest)
+                    mode = item.external_attr >> 16
+                    is_executable = bool(mode and stat.S_ISREG(mode) and mode & 0o111)
+                    if is_executable:
+                        make_file_executable(target_path)
+            except Exception:  # pragma: no cover
+                pkg.cleanup()  # cleanup on any error
+                raise
         return pkg
 
     def iter_packages(self) -> Iterable[tuple[str, CachedPackage]]:
-        for path in self.root.rglob("*.cache"):
-            hash_parts = path.relative_to(self.root).parent.parts
-            yield "".join(hash_parts), CachedPackage(path)
+        for path in self.root.rglob("*.whl.cache"):
+            hash_parts = path.parent.relative_to(self.root).parts
+            p = CachedPackage(path)
+            if not path.joinpath(".checksum").exists():
+                checksum = "".join(hash_parts)
+                path.joinpath(".checksum").write_text(checksum)
+            else:
+                checksum = p.checksum
+            yield checksum, p
 
     def cleanup(self) -> int:
         """Remove unused cached packages"""

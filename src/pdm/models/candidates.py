@@ -407,7 +407,7 @@ class PreparedCandidate:
         if not self.req.editable:
             cached, checksum = self._get_build_cache()
             if cached:
-                self._cached = self.environment.project.package_cache.cache_wheel(cached, self.environment, checksum)
+                self._cached = self.environment.project.package_cache.cache_wheel(cached, checksum)
                 return self._cached
         assert self._source_dir, "Source directory isn't ready yet"
         builder_cls = EditableBuilder if self.req.editable else WheelBuilder
@@ -421,7 +421,7 @@ class PreparedCandidate:
         with open(f"{wheel}.sha256", "w") as f:
             f.write(checksum)
         self.reporter.report_build_end(self.link.filename)  # type: ignore[union-attr]
-        return self.environment.project.package_cache.cache_wheel(wheel, self.environment, checksum)
+        return self.environment.project.package_cache.cache_wheel(wheel, checksum)
 
     def obtain(self, allow_all: bool = False, unpack: bool = True) -> None:
         """Fetch the link of the candidate and unpack to local if necessary.
@@ -461,7 +461,7 @@ class PreparedCandidate:
         if allow_all and not self.req.editable:
             cached, checksum = self._get_build_cache()
             if cached:
-                self._cached = self.environment.project.package_cache.cache_wheel(cached, self.environment, checksum)
+                self._cached = self.environment.project.package_cache.cache_wheel(cached, checksum)
                 return
         # If not, download and unpack the link
         if unpack:
@@ -489,7 +489,7 @@ class PreparedCandidate:
                 )
         if self.link.is_wheel:
             checksum = hashes["sha256"][0] if (hashes := self.link.hash_option) and "sha256" in hashes else None
-            self._cached = self.environment.project.package_cache.cache_wheel(result, self.environment, checksum)
+            self._cached = self.environment.project.package_cache.cache_wheel(result, checksum)
         else:
             self._source_dir = Path(build_dir)
             self._unpacked_dir = result

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-import multiprocessing
 import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import cached_property
@@ -270,7 +269,7 @@ class BaseSynchronizer:
 class Synchronizer(BaseSynchronizer):
     def create_executor(self) -> ThreadPoolExecutor | DummyExecutor:
         if self.parallel:
-            return ThreadPoolExecutor(max_workers=min(multiprocessing.cpu_count(), 8))
+            return ThreadPoolExecutor()
         else:
             return DummyExecutor()
 
