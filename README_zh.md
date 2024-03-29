@@ -4,7 +4,7 @@
 
 一个现代的 Python 包管理器，支持 PEP 最新标准。[English version README](README.md)
 
-![PDM logo](https://raw.githubusercontents.com/pdm-project/pdm/main/docs/docs/assets/logo_big.png)
+![PDM logo](https://raw.githubusercontents.com/pdm-project/pdm/main/docs/assets/logo_big.png)
 
 [![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm-project.org)
 [![Twitter Follow](https://img.shields.io/twitter/follow/pdm_project?label=get%20updates&logo=twitter&style=for-the-badge)](https://twitter.com/pdm_project)
