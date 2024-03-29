@@ -35,3 +35,9 @@ a.pdm-expansions {
   transform: translateY(-3px);
   padding: 0.7rem;
 }
+
+/* for readthedocs badge */
+div.rst-versions.rst-badge {
+  left: 20px;
+  right: auto;
+}
