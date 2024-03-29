@@ -1,7 +1,7 @@
 site_name: PDM
 
 repo_url: https://github.com/pdm-project/pdm
-edit_uri: edit/main/docs/docs
+edit_uri: edit/main/docs
 
 theme:
   name: material
@@ -27,11 +27,10 @@ theme:
     - content.code.copy
     - navigation.tabs
     - navigation.tabs.sticky
-  custom_dir: overrides
+  custom_dir: docs/overrides
 
 plugins:
   - search
-  - mike
   - markdown-exec
   - "mkdocs-version-annotations":
       version_added_admonition: "tip"
@@ -124,4 +123,4 @@ extra_javascript:
   - assets/extra.js
 
 watch:
-  - ../src
+  - src
