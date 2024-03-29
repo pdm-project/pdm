@@ -1,3 +1,14 @@
+Release v2.13.1 (2024-03-29)
+----------------------------
+
+### Bug Fixes
+
+- Fix a bug that PDM couldn't find interpreters for global project. [#2726](https://github.com/pdm-project/pdm/issues/2726)
+- Make the cache package path shorter to solve the Windows path problem. [#2730](https://github.com/pdm-project/pdm/issues/2730)
+
+### Documentation
+
+- Extract "Lock file" doc from "Manage Dependencies" doc. [#2725](https://github.com/pdm-project/pdm/issues/2725)
 Release v2.13.0 (2024-03-27)
 ----------------------------
 
