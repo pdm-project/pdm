@@ -402,7 +402,7 @@ function TabExpansion($line, $lastWord) {
                         break
                     }
                     "install" {
-                        $completer.AddOpts(([Option]::new(("--list")))
+                        $completer.AddOpts(([Option]::new(("--list"))))
                         $command = $subCommand
                         break
                     }
