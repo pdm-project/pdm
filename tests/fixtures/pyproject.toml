@@ -3,7 +3,8 @@ name = "poetry"
 version = "1.0.0"
 description = "Python dependency management and packaging made easy."
 authors = [
-    "Sébastien Eustace <sebastien@eustace.io>"
+    "Sébastien Eustace <sebastien@eustace.io>",
+    "Example, Inc. <inc@example.com>"
 ]
 license = "MIT"
 

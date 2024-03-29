@@ -77,10 +77,16 @@ def test_convert_poetry(project):
     with cd(FIXTURES):
         result, settings = poetry.convert(project, golden_file, ns())
 
-    assert result["authors"][0] == {
-        "name": "Sébastien Eustace",
-        "email": "sebastien@eustace.io",
-    }
+    assert result["authors"] == [
+        {
+            "name": "Sébastien Eustace",
+            "email": "sebastien@eustace.io",
+        },
+        {
+            "name": "Example, Inc.",
+            "email": "inc@example.com",
+        },
+    ]
     assert result["name"] == "poetry"
     assert result["version"] == "1.0.0"
     assert result["license"] == {"text": "MIT"}
