@@ -1,3 +1,16 @@
+Release v2.13.2 (2024-03-30)
+----------------------------
+
+### Bug Fixes
+
+- Fix errors when parsing poetry format that contains special characters in author name.
+  Poetry-specific `parse_name_email` and `NAME_EMAIL_RE` moved from `pdm.formats.base` to `pdm.formats.poetry`. [#2665](https://github.com/pdm-project/pdm/issues/2665)
+- Fix a race condition in cached packages. When a cached package is being created it shouldn't be used for installation. [#2739](https://github.com/pdm-project/pdm/issues/2739)
+- Add back `PreparedCandidate.build()` for backward-compatibility. [#2747](https://github.com/pdm-project/pdm/issues/2747)
+
+### Documentation
+
+- Fixed a small non-code typo in docs and prodivded better wording. [#2740](https://github.com/pdm-project/pdm/issues/2740)
 Release v2.13.1 (2024-03-29)
 ----------------------------
 
