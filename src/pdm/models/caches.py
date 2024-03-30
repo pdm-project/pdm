@@ -289,25 +289,28 @@ class PackageCache:
         if dest.exists():
             return pkg
         dest.mkdir(parents=True, exist_ok=True)
-        dest.joinpath(".checksum").write_text(checksum)
-        logger.info("Unpacking wheel into cached location %s", dest)
-        with zipfile.ZipFile(wheel) as zf:
-            try:
-                for item in zf.infolist():
-                    target_path = zf.extract(item, dest)
-                    mode = item.external_attr >> 16
-                    is_executable = bool(mode and stat.S_ISREG(mode) and mode & 0o111)
-                    if is_executable:
-                        make_file_executable(target_path)
-            except Exception:  # pragma: no cover
-                pkg.cleanup()  # cleanup on any error
-                raise
+        with pkg.lock():
+            dest.joinpath(".checksum").write_text(checksum)
+            logger.info("Unpacking wheel into cached location %s", dest)
+            with zipfile.ZipFile(wheel) as zf:
+                try:
+                    for item in zf.infolist():
+                        target_path = zf.extract(item, dest)
+                        mode = item.external_attr >> 16
+                        is_executable = bool(mode and stat.S_ISREG(mode) and mode & 0o111)
+                        if is_executable:
+                            make_file_executable(target_path)
+                except Exception:  # pragma: no cover
+                    pkg.cleanup()  # cleanup on any error
+                    raise
         return pkg
 
     def iter_packages(self) -> Iterable[tuple[str, CachedPackage]]:
         for path in self.root.rglob("*.whl.cache"):
             hash_parts = path.parent.relative_to(self.root).parts
             p = CachedPackage(path)
+            with p.lock():  # ensure the package is not being created
+                pass
             if not path.joinpath(".checksum").exists():
                 checksum = "".join(hash_parts)
                 path.joinpath(".checksum").write_text(checksum)

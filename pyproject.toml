@@ -36,6 +36,7 @@ dependencies = [
     "msgpack>=1.0",
     "pbs-installer[install]",
     "httpx[socks]<1,>0.20",
+    "filelock>=3.13",
 ]
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]

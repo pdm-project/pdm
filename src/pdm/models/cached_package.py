@@ -4,6 +4,7 @@ import os
 import shutil
 from functools import cached_property
 from pathlib import Path
+from typing import Any, ContextManager
 
 from pdm.termui import logger
 
@@ -24,6 +25,11 @@ class CachedPackage:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(os.path.normcase(os.path.expanduser(path))).resolve()
         self._referrers: set[str] | None = None
+
+    def lock(self) -> ContextManager[Any]:
+        import filelock
+
+        return filelock.FileLock(self.path / ".lock")
 
     @cached_property
     def checksum(self) -> str:
