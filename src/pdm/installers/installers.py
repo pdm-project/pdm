@@ -66,6 +66,8 @@ class PackageWheelSource(WheelSource):
     def iter_files(self) -> Iterable[Path]:
         for root, _, files in os.walk(self.package.path):
             for file in files:
+                if Path(root) == self.package.path and file in (".checksum", ".lock"):
+                    continue
                 yield Path(root, file)
 
     def get_contents(self) -> Iterator[WheelContentElement]:
