@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from typing import Any, Callable, Mapping, TypeVar, cast
 
 import tomlkit
@@ -86,9 +85,6 @@ class MetaConverter(metaclass=_MetaConverterMeta):
         return self._data, self.settings
 
 
-NAME_EMAIL_RE = re.compile(r"(?P<name>[^,]+?)\s*(?:<(?P<email>.+)>)?\s*$")
-
-
 def make_inline_table(data: Mapping) -> dict:
     """Create an inline table from the given data."""
     table = cast(dict, tomlkit.inline_table())
@@ -106,16 +102,3 @@ def make_array(data: list, multiline: bool = False) -> list:
 
 def array_of_inline_tables(value: list[Mapping], multiline: bool = True) -> list[str]:
     return make_array([make_inline_table(item) for item in value], multiline)
-
-
-def parse_name_email(name_email: list[str]) -> list[str]:
-    return array_of_inline_tables(
-        [
-            {
-                k: v
-                for k, v in NAME_EMAIL_RE.match(item).groupdict().items()  # type: ignore[union-attr]
-                if v is not None
-            }
-            for item in name_email
-        ]
-    )

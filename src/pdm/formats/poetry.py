@@ -11,10 +11,10 @@ from pdm.compat import tomllib
 from pdm.formats.base import (
     MetaConverter,
     Unset,
+    array_of_inline_tables,
     convert_from,
     make_array,
     make_inline_table,
-    parse_name_email,
 )
 from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import Requirement
@@ -91,6 +91,27 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
                 req_dict.pop("tag", req_dict.pop("branch", None)),  # type: ignore[arg-type]
             )
         yield Requirement.from_req_dict(name, req_dict).as_line()
+
+
+# See https://github.com/python-poetry/poetry-core/pull/521#issuecomment-1327689551
+# for reasoning why email.utils.parseaddr is not used here.
+NAME_EMAIL_RE = re.compile(
+    r"^(?P<name>[- .,\w'’\"():&]+)(?: <(?P<email>.+?)>)?$",  # noqa: RUF001
+    re.UNICODE,
+)
+
+
+def parse_name_email(name_email: list[str]) -> list[str]:
+    return array_of_inline_tables(
+        [
+            {
+                k: v
+                for k, v in NAME_EMAIL_RE.match(item).groupdict().items()  # type: ignore[union-attr]
+                if v is not None
+            }
+            for item in name_email
+        ]
+    )
 
 
 class PoetryMetaConverter(MetaConverter):
