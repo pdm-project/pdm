@@ -285,7 +285,7 @@ class PackageCache:
             checksum = get_file_hash(wheel)
         parts = (checksum[:2],)  # shard by the first two chars of the checksum
         dest = self.root.joinpath(*parts, f"{wheel.name}.cache")
-        pkg = CachedPackage(dest)
+        pkg = CachedPackage(dest, original_wheel=wheel)
         if dest.exists():
             return pkg
         dest.mkdir(parents=True, exist_ok=True)

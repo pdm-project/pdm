@@ -22,8 +22,9 @@ class CachedPackage:
     *Only wheel installations will be cached*
     """
 
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, original_wheel: Path | None = None) -> None:
         self.path = Path(os.path.normcase(os.path.expanduser(path))).resolve()
+        self.original_wheel = original_wheel
         self._referrers: set[str] | None = None
 
     def lock(self) -> ContextManager[Any]:

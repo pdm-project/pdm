@@ -26,7 +26,9 @@ class InstallManager:
     def install(self, candidate: Candidate) -> Distribution:
         """Install a candidate into the environment, return the distribution"""
         prepared = candidate.prepare(self.environment)
-        dist_info = install_package(prepared.build(), self.environment, prepared.direct_url(), self.use_install_cache)
+        dist_info = install_package(
+            prepared.get_cached_package(), self.environment, prepared.direct_url(), self.use_install_cache
+        )
         return Distribution.at(dist_info)
 
     def get_paths_to_remove(self, dist: Distribution) -> BaseRemovePaths:
