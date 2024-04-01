@@ -80,7 +80,7 @@ curl -sSL https://pdm-project.org/install-pdm.py | python3 -
 **Windows 安装命令**
 
 ```powershell
-(Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | python -
+[System.Text.Encoding]::UTF8.GetString((Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py).Content) | python -
 ```
 
 为安全起见，你应该检查 `install-pdm.py` 文件的正确性。
