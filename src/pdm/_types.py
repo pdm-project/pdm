@@ -25,6 +25,8 @@ class _RepositoryConfig:
     verify_ssl: bool | None = None
     type: str | None = None
     ca_certs: str | None = None
+    client_cert: str | None = None
+    client_key: str | None = None
     include_packages: list[str] = dc.field(default_factory=list)
     exclude_packages: list[str] = dc.field(default_factory=list)
 

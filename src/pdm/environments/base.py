@@ -12,18 +12,17 @@ import weakref
 from contextlib import contextmanager
 from functools import cached_property, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, Mapping, no_type_check
+from typing import TYPE_CHECKING, Generator, no_type_check
 
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_pep508_environment, get_python_abis, get_uname, sysconfig_get_platform
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
-from pdm.utils import deprecation_warning, get_trusted_hosts, is_pip_compatible_with_python
+from pdm.utils import deprecation_warning, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
     import unearth
     from httpx import BaseTransport
-    from httpx._types import CertTypes, VerifyTypes
 
     from pdm._types import RepositoryConfig
     from pdm.models.session import PDMPyPIClient
@@ -112,40 +111,20 @@ class BaseEnvironment(abc.ABC):
         return tp
 
     def _build_session(
-        self,
-        trusted_hosts: list[str] | None = None,
-        verify: VerifyTypes | None = None,
-        cert: CertTypes | None = None,
-        mounts: Mapping[str, BaseTransport | None] | None = None,
+        self, sources: list[RepositoryConfig] | None = None, mounts: dict[str, BaseTransport | None] | None = None
     ) -> PDMPyPIClient:
         from pdm.models.session import PDMPyPIClient
 
-        if trusted_hosts is None:
-            trusted_hosts = get_trusted_hosts(self.project.sources)
+        if sources is None:
+            sources = self.project.sources
 
-        if verify is None:
-            verify = self.project.config.get("pypi.ca_certs")
-
-        if cert is None:
-            certfn = self.project.config.get("pypi.client_cert")
-            keyfn = self.project.config.get("pypi.client_key")
-            if certfn:
-                cert = (certfn, keyfn)
-
-        session_args = {
-            "cache_dir": self.project.cache("http"),
-            "trusted_hosts": trusted_hosts,
-            "timeout": self.project.config["request_timeout"],
-            "auth": self.auth,
-        }
-        if verify is not None:
-            session_args["verify"] = verify
-        if cert is not None:
-            session_args["cert"] = cert
-        if mounts:
-            session_args["mounts"] = mounts
-
-        session = PDMPyPIClient(**session_args)
+        session = PDMPyPIClient(
+            sources=sources,
+            cache_dir=self.project.cache("http"),
+            timeout=self.project.config["request_timeout"],
+            auth=self.auth,
+            mounts=mounts,
+        )
         self.project.core.exit_stack.callback(session.close)
         return session
 

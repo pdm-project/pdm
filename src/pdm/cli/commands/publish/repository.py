@@ -12,7 +12,6 @@ from pdm.cli.commands.publish.package import PackageFile
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
-from pdm.utils import get_trusted_hosts
 
 if TYPE_CHECKING:
     from typing import Callable, Self
@@ -39,8 +38,7 @@ class CallbackWrapperStream(httpx.SyncByteStream):
 class Repository:
     def __init__(self, project: Project, config: RepositoryConfig) -> None:
         self.url = cast(str, config.url)
-        trusted_hosts = get_trusted_hosts([config])
-        self.session = project.environment._build_session(trusted_hosts, verify=config.ca_certs)
+        self.session = project.environment._build_session([config])
 
         self._credentials_to_save: tuple[str, str, str] | None = None
         self.ui = project.core.ui
