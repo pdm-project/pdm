@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import hishel
+import httpx
 import msgpack
 from hishel._serializers import Metadata
 from httpcore import Request, Response
@@ -16,7 +18,7 @@ from pdm.termui import logger
 if TYPE_CHECKING:
     from ssl import SSLContext
 
-    from httpx import Response as HTTPXResponse
+    from pdm._types import RepositoryConfig
 
 
 def _create_truststore_ssl_context() -> SSLContext | None:
@@ -26,7 +28,6 @@ def _create_truststore_ssl_context() -> SSLContext | None:
     try:
         import ssl
     except ImportError:
-        logger.warning("Disabling truststore since ssl support is missing")
         return None
 
     try:
@@ -37,7 +38,15 @@ def _create_truststore_ssl_context() -> SSLContext | None:
     return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
+_ssl_context = _create_truststore_ssl_context()
 CACHES_TTL = 7 * 24 * 60 * 60  # 7 days
+
+
+@lru_cache(maxsize=None)
+def _get_transport(
+    verify: bool | SSLContext | str = True, cert: tuple[str, str | None] | None = None
+) -> httpx.BaseTransport:
+    return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True)
 
 
 class MsgPackSerializer(hishel.BaseSerializer):
@@ -115,22 +124,43 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
 
 class PDMPyPIClient(PyPIClient):
-    def __init__(self, *, cache_dir: Path, **kwargs: Any) -> None:
+    def __init__(self, *, sources: list[RepositoryConfig], cache_dir: Path, **kwargs: Any) -> None:
+        from unearth.fetchers.sync import LocalFSTransport
+
         storage = hishel.FileStorage(serializer=MsgPackSerializer(), base_path=cache_dir, ttl=CACHES_TTL)
         controller = hishel.Controller()
-        kwargs.setdefault("verify", _create_truststore_ssl_context() or True)
-        kwargs.setdefault("follow_redirects", True)
 
-        super().__init__(**kwargs)
+        mounts: dict[str, httpx.BaseTransport] = {"file://": LocalFSTransport()}
+        self._trusted_host_ports: set[tuple[str, int | None]] = set()
+        transport: httpx.BaseTransport | None = None
+        for s in sources:
+            if s.name == "pypi":
+                transport = self._transport_for(s)
+                continue
+            assert s.url is not None
+            url = httpx.URL(s.url)
+            mounts[f"{url.scheme}://{url.netloc.decode('ascii')}/"] = hishel.CacheTransport(
+                self._transport_for(s), storage, controller
+            )
+            self._trusted_host_ports.add((url.host, url.port))
+        mounts.update(kwargs.pop("mounts", None) or {})
+
+        httpx.Client.__init__(self, mounts=mounts, follow_redirects=True, transport=transport, **kwargs)
+
         self.headers["User-Agent"] = self._make_user_agent()
         self.event_hooks["response"].append(self.on_response)
-
         self._transport = hishel.CacheTransport(self._transport, storage, controller)  # type: ignore[has-type]
-        for name, transport in self._mounts.items():
-            if name.scheme == "file" or transport is None:
-                # don't cache file:// transport
-                continue
-            self._mounts[name] = hishel.CacheTransport(transport, storage, controller)
+
+    def _transport_for(self, source: RepositoryConfig) -> httpx.BaseTransport:
+        if source.ca_certs:
+            verify: str | bool | SSLContext = source.ca_certs
+        else:
+            verify = source.verify_ssl is not False and (_ssl_context or True)
+        if source.client_cert:
+            cert = (source.client_cert, source.client_key)
+        else:
+            cert = None
+        return _get_transport(verify=verify, cert=cert)
 
     def _make_user_agent(self) -> str:
         import platform
@@ -143,7 +173,7 @@ class PDMPyPIClient(PyPIClient):
             platform.release(),
         )
 
-    def on_response(self, response: HTTPXResponse) -> None:
+    def on_response(self, response: httpx.Response) -> None:
         from unearth.utils import ARCHIVE_EXTENSIONS
 
         if response.extensions.get("from_cache") and response.url.path.endswith(ARCHIVE_EXTENSIONS):

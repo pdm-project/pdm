@@ -360,6 +360,9 @@ class Project:
             verify_ssl=self.config["pypi.verify_ssl"],
             username=self.config.get("pypi.username"),
             password=self.config.get("pypi.password"),
+            ca_certs=self.config.get("pypi.ca_certs"),
+            client_cert=self.config.get("pypi.client_cert"),
+            client_key=self.config.get("pypi.client_key"),
         )
 
     @property
