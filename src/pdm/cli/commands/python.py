@@ -121,9 +121,9 @@ class InstallCommand(BaseCommand):
                 destination.mkdir(parents=True, exist_ok=True)
                 with tempfile.NamedTemporaryFile() as tf:
                     tf.close()
-                    original_filename = download(python_file, tf.name)
+                    original_filename = download(python_file, tf.name, project.environment.session)
                     spinner.update(f"Installing [success]{ver}[/]")
-                    install_file(tf.name, destination, original_filename, build_dir=False)
+                    install_file(tf.name, destination, original_filename)
 
         interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
         if not interpreter.exists():
