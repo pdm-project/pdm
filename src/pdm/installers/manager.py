@@ -19,15 +19,22 @@ class InstallManager:
     # The packages below are needed to load paths and thus should not be cached.
     NO_CACHE_PACKAGES = ("editables",)
 
-    def __init__(self, environment: BaseEnvironment, *, use_install_cache: bool = False) -> None:
+    def __init__(
+        self, environment: BaseEnvironment, *, use_install_cache: bool = False, rename_pth: bool = False
+    ) -> None:
         self.environment = environment
         self.use_install_cache = use_install_cache
+        self.rename_pth = rename_pth
 
     def install(self, candidate: Candidate) -> Distribution:
         """Install a candidate into the environment, return the distribution"""
         prepared = candidate.prepare(self.environment)
         dist_info = install_package(
-            prepared.get_cached_package(), self.environment, prepared.direct_url(), self.use_install_cache
+            prepared.get_cached_package(),
+            self.environment,
+            direct_url=prepared.direct_url(),
+            install_links=self.use_install_cache,
+            rename_pth=self.rename_pth,
         )
         return Distribution.at(dist_info)
 
