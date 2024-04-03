@@ -665,6 +665,26 @@ def test_composite_fail_on_first_missing_task(project, pdm, capfd, _echo):
     assert "Second CALLED" not in out
 
 
+def test_composite_fails_on_recursive_script(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "first": {"composite": ["first"]},
+        "second": {"composite": ["third"]},
+        "third": {"composite": ["second"]},
+        "forth": {"composite": ["python -V", "python -V"]},
+    }
+    project.pyproject.write()
+    result = pdm(["run", "first"], obj=project)
+    assert result.exit_code == 1
+    assert "Script first is recursive" in result.stderr
+
+    result = pdm(["run", "second"], obj=project)
+    assert result.exit_code == 1
+    assert "Script second is recursive" in result.stderr
+
+    result = pdm(["run", "forth"], obj=project)
+    assert result.exit_code == 0
+
+
 def test_composite_runs_all_hooks(project, pdm, capfd, _echo):
     project.pyproject.settings["scripts"] = {
         "test": {"composite": ["first", "second"]},

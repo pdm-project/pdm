@@ -230,7 +230,9 @@ class TaskRunner:
         signal.signal(signal.SIGINT, handle_int)
         return process.returncode
 
-    def run_task(self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None) -> int:
+    def run_task(
+        self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None
+    ) -> int:
         kind, _, value, options = task
         shell = False
         if kind == "cmd":
@@ -281,7 +283,7 @@ class TaskRunner:
                 split = shlex.split(script)
                 cmd = split[0]
                 subargs = split[1:] + ([] if should_interpolate else args)
-                code = self.run(cmd, subargs, options, chdir=True)
+                code = self.run(cmd, subargs, options, chdir=True, seen=seen)
                 if code != 0:
                     if not keep_going:
                         return code
@@ -289,18 +291,32 @@ class TaskRunner:
             return composite_code
         return self._run_process(args, chdir=True, shell=shell, **exec_opts(self.global_options, options, opts))
 
-    def run(self, command: str, args: list[str], opts: TaskOptions | None = None, chdir: bool = False) -> int:
+    def run(
+        self,
+        command: str,
+        args: list[str],
+        opts: TaskOptions | None = None,
+        chdir: bool = False,
+        seen: set[str] | None = None,
+    ) -> int:
         if command in self.hooks.skip:
             return 0
+        if seen is None:
+            seen = set()
         task = self.get_task(command)
         if task is not None:
+            if task.kind == "composite":
+                if command in seen:
+                    raise PdmUsageError(f"Script {command} is recursive.")
+                seen.add(command)
+
             self.hooks.try_emit("pre_script", script=command, args=args)
             pre_task = self.get_task(f"pre_{command}")
             if pre_task is not None and self.hooks.should_run(pre_task.name):
                 code = self.run_task(pre_task, opts=opts)
                 if code != 0:
                     return code
-            code = self.run_task(task, args, opts=opts)
+            code = self.run_task(task, args, opts=opts, seen=seen)
             if code != 0:
                 return code
             post_task = self.get_task(f"post_{command}")
