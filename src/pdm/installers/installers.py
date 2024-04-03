@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Iterator
 
 from installer import install as _install
 from installer._core import _process_WHEEL_file
-from installer.destinations import SchemeDictionaryDestination
+from installer.destinations import SchemeDictionaryDestination, WheelDestination
 from installer.exceptions import InvalidWheelSource
 from installer.records import RecordEntry
 from installer.sources import WheelContentElement, WheelSource
@@ -97,12 +97,14 @@ class InstallDestination(SchemeDictionaryDestination):
         self,
         *args: Any,
         link_method: LinkMethod = "copy",
+        rename_pth: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.link_method = link_method
+        self.rename_pth = rename_pth
 
-    def write_to_fs(self, scheme: Scheme, path: str | Path, stream: BinaryIO, is_executable: bool) -> RecordEntry:
+    def write_to_fs(self, scheme: Scheme, path: str, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         from installer.records import Hash
         from installer.utils import copyfileobj_with_hashing, make_file_executable
 
@@ -112,6 +114,10 @@ class InstallDestination(SchemeDictionaryDestination):
 
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
+        if self.rename_pth and target_path.endswith(".pth") and "/" not in path:
+            # Postpone the creation of pth files since it may cause race condition
+            # when multiple packages are installed at the same time.
+            target_path += ".pdmtmp"
         if self.link_method == "copy" or not hasattr(stream, "name"):
             with open(target_path, "wb") as f:
                 hash_, size = copyfileobj_with_hashing(stream, f, self.hash_algorithm)
@@ -147,6 +153,7 @@ def install_package(
     environment: BaseEnvironment,
     direct_url: dict[str, Any] | None = None,
     install_links: bool = True,
+    rename_pth: bool = False,
 ) -> str:
     """Only create .pth files referring to the cached package.
     If the cache doesn't exist, create one.
@@ -175,6 +182,7 @@ def install_package(
         interpreter=interpreter,
         script_kind=script_kind,
         link_method=link_method,
+        rename_pth=rename_pth,
     )
     source = PackageWheelSource(package)
     dist_info_dir = install(source, destination=destination, additional_metadata=additional_metadata)
@@ -184,7 +192,7 @@ def install_package(
 
 
 def install(
-    source: WheelSource, destination: InstallDestination, additional_metadata: dict[str, bytes] | None = None
+    source: WheelSource, destination: WheelDestination, additional_metadata: dict[str, bytes] | None = None
 ) -> str:
     """A lower level installation method that is copied from installer
     but is controlled by extra parameters.
@@ -198,7 +206,7 @@ def install(
 
 def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
     """Install a wheel into the environment, return the .dist-info path"""
-    destination = InstallDestination(
+    destination = SchemeDictionaryDestination(
         scheme_dict=environment.get_paths(_get_dist_name(wheel)),
         interpreter=str(environment.interpreter.executable),
         script_kind=environment.script_kind,

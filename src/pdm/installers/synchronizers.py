@@ -122,7 +122,7 @@ class BaseSynchronizer:
         self.no_editable = no_editable
         self.install_self = install_self
         if use_install_cache is None:
-            use_install_cache = environment.project.config["install.cache"]
+            use_install_cache = bool(environment.project.config["install.cache"])
         self.use_install_cache = use_install_cache
         self.reinstall = reinstall
         self.only_keep = only_keep
@@ -177,7 +177,7 @@ class BaseSynchronizer:
 
     def get_manager(self) -> InstallManager:
         return self.environment.project.core.install_manager_class(
-            self.environment, use_install_cache=self.use_install_cache
+            self.environment, use_install_cache=self.use_install_cache, rename_pth=True
         )
 
     @property
@@ -378,6 +378,19 @@ class Synchronizer(BaseSynchronizer):
         else:
             self.ui.echo("All packages are synced to date, nothing to do.")
 
+    def _fix_pth_files(self) -> None:
+        """Remove the .pdmtmp suffix from the installed packages"""
+        from pathlib import Path
+
+        lib_paths = self.environment.get_paths()
+        for scheme in ["purelib", "platlib"]:
+            for path in list(Path(lib_paths[scheme]).iterdir()):
+                if path.suffix == ".pdmtmp":
+                    target_path = path.with_suffix("")
+                    if target_path.exists():
+                        target_path.unlink()
+                    path.rename(target_path)
+
     def synchronize(self) -> None:
         to_add, to_update, to_remove = self.compare_with_working_set()
         to_do = {"remove": to_remove, "update": to_update, "add": to_add}
@@ -442,6 +455,9 @@ class Synchronizer(BaseSynchronizer):
                 parallel_jobs, state.failed_jobs = state.failed_jobs, []
                 state.errors.clear()
                 live.console.print("Retry failed jobs")
+
+            # Now we remove the .pdmtmp suffix from the installed packages
+            self._fix_pth_files()
 
             if state.errors:
                 if self.ui.verbosity < termui.Verbosity.DETAIL:
