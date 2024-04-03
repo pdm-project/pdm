@@ -1,3 +1,4 @@
+import platform
 import sys
 from pathlib import Path
 
@@ -20,10 +21,10 @@ def mock_install(mocker):
             Path(destination, "bin", "python3").touch()
 
     def get_version(self):
-        if sys.platform == "win32":
-            return Version(self.executable.parent.name.split("@", 1)[1])
-        else:
-            return Version(self.executable.parent.parent.name.split("@", 1)[1])
+        name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
+        if "@" not in name:
+            return Version(platform.python_version())
+        return Version(name.split("@", 1)[1])
 
     @property
     def interpreter(self):
@@ -31,10 +32,10 @@ def mock_install(mocker):
 
     @property
     def implementation(self):
-        if sys.platform == "win32":
-            return self.executable.parent.name.split("@", 1)[0]
-        else:
-            return self.executable.parent.parent.name.split("@", 1)[0]
+        name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
+        if "@" not in name:
+            return "cpython"
+        return name.split("@", 1)[0]
 
     mocker.patch("pbs_installer.download", return_value="python-3.10.8.tar.gz")
     installer = mocker.patch("pbs_installer.install_file", side_effect=install_file)
@@ -48,7 +49,7 @@ def mock_install(mocker):
 def test_install_python(project, pdm, mock_install):
     root = Path(project.config["python.install_root"])
 
-    pdm(["py", "install", "cpython@3.10.8"], obj=project, strict=True)
+    pdm(["py", "install", "cpython@3.10.8", "-v"], obj=project, strict=True)
     mock_install.assert_called_once()
     assert (root / "cpython@3.10.8").exists()
 
