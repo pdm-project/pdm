@@ -124,7 +124,7 @@ class Command(BaseCommand):
             selected_python.get_venv() is None or is_conda_base_python(selected_python.path)
         ):
             venv_path = project._create_virtualenv(str(selected_python.path))
-            selected_python = PythonInfo.from_path(get_venv_python(venv_path))
+            selected_python = PythonInfo.from_path(get_venv_python(venv_path) if venv_path else selected_python.path)
         if not save:
             return selected_python
 
