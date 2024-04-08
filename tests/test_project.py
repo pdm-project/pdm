@@ -4,6 +4,7 @@ import os
 import sys
 import venv
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from pytest_httpserver import HTTPServer
@@ -13,7 +14,11 @@ from pdm.exceptions import PdmException
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
-from pdm.utils import cd, parse_version
+from pdm.utils import cd, is_path_relative_to, parse_version
+
+if TYPE_CHECKING:
+    from pdm.project.core import Project
+    from pdm.pytest import PDMCallable
 
 
 def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
@@ -400,3 +405,36 @@ def test_preserve_log_file(project, pdm, tmp_path, mocker):
     assert result.exit_code != 0
     install_log = next(tmp_path.joinpath("logs").glob("pdm-install-*.log"))
     assert install_log.exists()
+
+
+@pytest.mark.parametrize("use_venv", [True, False])
+def test_find_interpreters_with_PDM_IGNORE_ACTIVE_VENV(
+    pdm: PDMCallable,
+    project: Project,
+    monkeypatch: pytest.MonkeyPatch,
+    use_venv: bool,
+):
+    project._saved_python = None
+    project._python = None
+    project.project_config["python.use_venv"] = use_venv
+    venv.create(venv_path := project.root / "venv", symlinks=True)
+    monkeypatch.setenv("VIRTUAL_ENV", str(venv_path))
+    monkeypatch.setenv("PDM_IGNORE_ACTIVE_VENV", "1")
+
+    venv_python = get_venv_python(venv_path)
+    pythons = list(project.find_interpreters())
+
+    assert pythons, "PDM should find interpreters with PDM_IGNORE_ACTIVE_VENV"
+    # Test requires that some interpreters are available outside the venv
+    assert any(venv_python != p.executable for p in project.find_interpreters())
+    # No need to assert, exception raised if not found
+    interpreter = project.resolve_interpreter()
+    assert interpreter.executable != venv_python
+
+    if use_venv:
+        project.project_config["venv.in_project"] = True
+        pdm("install", strict=True, obj=project)
+        assert project._saved_python
+        python = Path(project._saved_python)
+        assert is_path_relative_to(python, project.root)
+        assert not is_path_relative_to(python, venv_path)
