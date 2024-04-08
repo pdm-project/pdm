@@ -160,9 +160,8 @@ package = "pdm"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/pdm-project/pdm/issues/{issue})"
 directory = "news/"
-title_format = "Release v{version} ({project_date})"
-template = "news/towncrier_template.md"
-underlines = "-~^"
+title_format = "## Release v{version} ({project_date})"
+underlines = ["", "", ""]
 
   [[tool.towncrier.type]]
   directory = "break"
