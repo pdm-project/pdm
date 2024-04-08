@@ -8,6 +8,7 @@ Release v2.13.3 (2024-04-08)
 - Use the default HTTP client when downloading the pythons, to use the certificates settings. [#2759](https://github.com/pdm-project/pdm/issues/2759)
 - Fix a race condition where pth files take effect when multiple packages are installed in parallel. [#2762](https://github.com/pdm-project/pdm/issues/2762)
 - Refuse to run recursive composite scripts. [#2766](https://github.com/pdm-project/pdm/issues/2766)
+
 Release v2.13.2 (2024-03-30)
 ----------------------------
 
@@ -21,6 +22,7 @@ Release v2.13.2 (2024-03-30)
 ### Documentation
 
 - Fixed a small non-code typo in docs and prodivded better wording. [#2740](https://github.com/pdm-project/pdm/issues/2740)
+
 Release v2.13.1 (2024-03-29)
 ----------------------------
 
@@ -32,6 +34,7 @@ Release v2.13.1 (2024-03-29)
 ### Documentation
 
 - Extract "Lock file" doc from "Manage Dependencies" doc. [#2725](https://github.com/pdm-project/pdm/issues/2725)
+
 Release v2.13.0 (2024-03-27)
 ----------------------------
 
