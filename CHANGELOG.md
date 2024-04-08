@@ -1,3 +1,13 @@
+Release v2.13.3 (2024-04-08)
+----------------------------
+
+### Bug Fixes
+
+- Per-source configuration for ca-certs and client-cert. [#2754](https://github.com/pdm-project/pdm/issues/2754)
+- Remove all caches by removing individual cache types one by one. [#2757](https://github.com/pdm-project/pdm/issues/2757)
+- Use the default HTTP client when downloading the pythons, to use the certificates settings. [#2759](https://github.com/pdm-project/pdm/issues/2759)
+- Fix a race condition where pth files take effect when multiple packages are installed in parallel. [#2762](https://github.com/pdm-project/pdm/issues/2762)
+- Refuse to run recursive composite scripts. [#2766](https://github.com/pdm-project/pdm/issues/2766)
 Release v2.13.2 (2024-03-30)
 ----------------------------
 
