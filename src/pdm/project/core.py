@@ -22,7 +22,7 @@ from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
-from pdm.project.config import Config
+from pdm.project.config import Config, ensure_boolean
 from pdm.project.lockfile import Lockfile
 from pdm.project.project_file import PyProject
 from pdm.utils import (
@@ -33,6 +33,7 @@ from pdm.utils import (
     find_python_in_path,
     is_conda_base,
     is_conda_base_python,
+    is_path_relative_to,
     path_to_url,
 )
 
@@ -202,6 +203,11 @@ class Project:
             if not self.is_global:
                 self.core.ui.info(message)
 
+        def is_active_venv(python: PythonInfo) -> bool:
+            if not (venv := os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))):
+                return False
+            return is_path_relative_to(python.executable, venv)
+
         config = self.config
         saved_path = self._saved_python
         if saved_path and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
@@ -215,11 +221,12 @@ class Project:
                 )
             self._saved_python = None  # Clear the saved path if it doesn't match
 
-        if config.get("python.use_venv") and not self.is_global and not os.getenv("PDM_IGNORE_ACTIVE_VENV"):
+        if config.get("python.use_venv") and not self.is_global:
             # Resolve virtual environments from env-vars
+            ignore_active_venv = ensure_boolean(os.getenv("PDM_IGNORE_ACTIVE_VENV"))
             venv_in_env = os.getenv("VIRTUAL_ENV", os.getenv("CONDA_PREFIX"))
             # We don't auto reuse conda's base env since it may cause breakage when removing packages.
-            if venv_in_env and not is_conda_base():
+            if not ignore_active_venv and venv_in_env and not is_conda_base():
                 python = PythonInfo.from_path(get_venv_python(Path(venv_in_env)))
                 if match_version(python):
                     note(
@@ -230,7 +237,7 @@ class Project:
             # otherwise, get a venv associated with the project
             for _, venv in iter_venvs(self):
                 python = PythonInfo.from_path(venv.interpreter)
-                if match_version(python):
+                if match_version(python) and not (ignore_active_venv and is_active_venv(python)):
                     note(f"Virtualenv [success]{venv.root}[/] is reused.")
                     self.python = python
                     return python
