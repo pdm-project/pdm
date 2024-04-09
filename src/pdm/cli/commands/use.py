@@ -116,6 +116,10 @@ class Command(BaseCommand):
             venv=venv,
             ignore_requires_python=ignore_requires_python,
         )
+        # NOTE: PythonInfo is cached with path as key.
+        # This can lead to inconsistency when the same virtual environment is reused.
+        # So the original python identifier is preserved here for logging purpose.
+        selected_python_identifier = selected_python.identifier
         if python:
             use_cache: JSONFileCache[str, str] = JSONFileCache(project.cache_dir / "use_cache.json")
             use_cache.set(python, selected_python.path.as_posix())
@@ -131,7 +135,7 @@ class Command(BaseCommand):
         saved_python = project._saved_python
         old_python = PythonInfo.from_path(saved_python) if saved_python else None
         project.core.ui.echo(
-            f"Using Python interpreter: [success]{selected_python.path!s}[/] ({selected_python.identifier})"
+            f"Using Python interpreter: [success]{selected_python.path!s}[/] ({selected_python_identifier})"
         )
         project.python = selected_python
         if project.environment.is_local:
