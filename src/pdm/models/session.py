@@ -134,21 +134,24 @@ class PDMPyPIClient(PyPIClient):
 
         mounts: dict[str, httpx.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
-        transport: httpx.BaseTransport | None = None
         for s in sources:
             assert s.url is not None
             url = httpx.URL(s.url)
             if s.verify_ssl is False:
                 self._trusted_host_ports.add((url.host, url.port))
             if s.name == "pypi":
-                transport = self._transport_for(s)
+                kwargs["transport"] = self._transport_for(s)
                 continue
             mounts[f"{url.scheme}://{url.netloc.decode('ascii')}/"] = hishel.CacheTransport(
                 self._transport_for(s), storage, controller
             )
         mounts.update(kwargs.pop("mounts", None) or {})
+        kwargs.update(
+            proxies=self._get_proxy_map(None, allow_env_proxies=True),
+            follow_redirects=True,
+        )
 
-        httpx.Client.__init__(self, mounts=mounts, follow_redirects=True, transport=transport, **kwargs)
+        httpx.Client.__init__(self, mounts=mounts, **kwargs)
 
         self.headers["User-Agent"] = self._make_user_agent()
         self.event_hooks["response"].append(self.on_response)
