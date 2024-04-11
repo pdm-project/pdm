@@ -732,6 +732,12 @@ class Project:
         from pdm.cli.commands.venv.utils import VenvProvider
 
         providers: list[str] = self.config["python.providers"]
+        venv_pos = -1
+        if not providers:
+            venv_pos = 0
+        elif "venv" in providers:
+            venv_pos = providers.index("venv")
+            providers.remove("venv")
         old_rye_root = os.getenv("RYE_PY_ROOT")
         os.environ["RYE_PY_ROOT"] = os.path.expanduser(self.config["python.install_root"])
         try:
@@ -741,8 +747,7 @@ class Project:
                 os.environ["RYE_PY_ROOT"] = old_rye_root
             else:
                 del os.environ["RYE_PY_ROOT"]
-        if search_venv and (not providers or "venv" in providers):
-            venv_pos = providers.index("venv") if providers else 0
+        if search_venv and venv_pos >= 0:
             finder.add_provider(VenvProvider(self), venv_pos)
         return finder
 
