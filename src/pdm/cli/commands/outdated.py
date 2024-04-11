@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import normalize_pattern
 from pdm.models.requirements import strip_extras
+from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
@@ -95,7 +96,7 @@ class Command(BaseCommand):
         for name, distribution in installed.items():
             if not self._match_pattern(name, options.patterns):
                 continue
-            if name == project.name:
+            if name == normalize_name(project.name):
                 continue
             constrained_version = resolved.pop(name).version or "" if name in resolved else ""
             collected.append(ListPackage(name, distribution.version or "", constrained_version))
