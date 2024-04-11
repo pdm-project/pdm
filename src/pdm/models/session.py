@@ -134,15 +134,16 @@ class PDMPyPIClient(PyPIClient):
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
         transport: httpx.BaseTransport | None = None
         for s in sources:
+            assert s.url is not None
+            url = httpx.URL(s.url)
+            if s.verify_ssl is False:
+                self._trusted_host_ports.add((url.host, url.port))
             if s.name == "pypi":
                 transport = self._transport_for(s)
                 continue
-            assert s.url is not None
-            url = httpx.URL(s.url)
             mounts[f"{url.scheme}://{url.netloc.decode('ascii')}/"] = hishel.CacheTransport(
                 self._transport_for(s), storage, controller
             )
-            self._trusted_host_ports.add((url.host, url.port))
         mounts.update(kwargs.pop("mounts", None) or {})
 
         httpx.Client.__init__(self, mounts=mounts, follow_redirects=True, transport=transport, **kwargs)
