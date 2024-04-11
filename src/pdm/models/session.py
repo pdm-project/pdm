@@ -55,6 +55,8 @@ class MsgPackSerializer(hishel.BaseSerializer):
     DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
     def dumps(self, response: Response, request: Request, metadata: Metadata) -> bytes:
+        from hishel._utils import normalized_url
+
         response_dict = {
             "status": response.status,
             "headers": response.headers,
@@ -66,7 +68,7 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
         request_dict = {
             "method": request.method.decode("ascii"),
-            "url": str(request.url),
+            "url": normalized_url(request.url),
             "headers": request.headers,
             "extensions": {
                 key: value for key, value in request.extensions.items() if key in self.KNOWN_REQUEST_EXTENSIONS
