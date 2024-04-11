@@ -335,6 +335,10 @@ def test_invoke_pdm_adding_configured_args(project, pdm, mocker):
     parser.assert_called_with(["install", "--no-self", "--no-editable", "--check"])
     pdm(["lock", "--lockfile", "pdm.2.lock"], obj=project)
     parser.assert_called_with(["lock", "--no-cross-platform", "--lockfile", "pdm.2.lock"])
+    pdm(["-c", "/dev/null", "lock"], obj=project)
+    parser.assert_called_with(["-c", "/dev/null", "lock", "--no-cross-platform"])
+    pdm(["--verbose", "add", "requests"], obj=project)
+    parser.assert_called_with(["--verbose", "add", "--no-isolation", "requests"])
 
 
 @pytest.fixture()
