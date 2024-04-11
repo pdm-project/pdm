@@ -106,7 +106,6 @@ class Core:
             prog="pdm",
             description=__doc__,
         )
-        self.parser.is_root = True  # type: ignore[attr-defined]
         self.parser.add_argument(
             "-V",
             "--version",
@@ -208,12 +207,31 @@ class Core:
             sys.exit(0)
         command.handle(project, options)
 
+    @staticmethod
+    def get_command(args: list[str]) -> tuple[int, str]:
+        """Get the command name from the arguments"""
+        options_with_values = ("-c", "--config")
+        need_value = False
+        for i, arg in enumerate(args):
+            if arg.startswith("-"):
+                if not arg.startswith(options_with_values):
+                    continue
+                if (arg.startswith("-c") and arg != "-c") or arg.startswith("--config="):
+                    continue
+                need_value = True
+            elif need_value:
+                need_value = False
+                continue
+            else:
+                return i, arg
+        return -1, ""
+
     def _get_cli_args(self, args: list[str], obj: Project | None) -> list[str]:
         project = self.create_project(is_global=False) if obj is None else obj
         if project.is_global:
             return args
         config = project.pyproject.settings.get("options", {})
-        (pos, command) = next(((i, arg) for i, arg in enumerate(args) if not arg.startswith("-")), (-1, None))
+        (pos, command) = self.get_command(args)
         if command and command in config:
             # add args after the command
             args[pos + 1 : pos + 1] = list(config[command])
@@ -238,7 +256,7 @@ class Core:
             # Failed to parse, try to give all to `run` command as shortcut
             # and keep to root script (first non-dashed param) to check existence
             # as soon as the project is parsed
-            root_script = next((arg for arg in args if not arg.startswith("-")), None)
+            _, root_script = self.get_command(args)
             if not root_script:
                 self.parser.error(str(e.__cause__))
             try:
