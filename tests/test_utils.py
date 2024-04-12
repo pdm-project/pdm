@@ -513,7 +513,7 @@ def test_dependency_group_selection(project, args, golden):
     [
         ({"groups": [":all"], "excluded_groups": ["web"]}, ["default", "auth", "test", "doc"]),
         ({"groups": [":all"], "excluded_groups": ["web", "auth"]}, ["default", "test", "doc"]),
-        ({"groups": [":all"], "excluded_groups": ["default", "test"]}, ["default", "web", "auth", "test", "doc"]),
+        ({"groups": [":all"], "excluded_groups": ["default", "test"]}, ["default", "web", "auth", "doc"]),
     ],
 )
 def test_exclude_optional_groups_from_all(project, args, golden):

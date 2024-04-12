@@ -327,7 +327,7 @@ exclusion_cases = [
 @pytest.mark.parametrize("args", exclusion_cases)
 def test_install_all_with_excluded_groups(project, working_set, pdm, args):
     project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz")
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz", True)
     project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
     pdm(["install", *args], obj=project, strict=True)
     assert "urllib3" in working_set
@@ -338,7 +338,7 @@ def test_install_all_with_excluded_groups(project, working_set, pdm, args):
 @pytest.mark.parametrize("args", exclusion_cases)
 def test_sync_all_with_excluded_groups(project, working_set, pdm, args):
     project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz")
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz", True)
     project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
     pdm(["lock", "-G:all"], obj=project, strict=True)
     pdm(["sync", *args], obj=project, strict=True)

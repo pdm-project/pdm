@@ -88,8 +88,8 @@ class GroupSelection:
             groups_set.update(dev_groups)
         if ":all" in groups:
             groups_set.discard(":all")
-            optional_groups -= set(self.excluded_groups)
             groups_set.update(optional_groups)
+            groups_set -= set(self.excluded_groups)
 
         invalid_groups = groups_set - set(project.iter_groups())
         if invalid_groups:

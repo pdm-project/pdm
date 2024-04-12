@@ -274,3 +274,24 @@ def test_lock_exclude_newer(project, pdm):
 
     pdm(["lock"], obj=project, strict=True, cleanup=False)
     assert project.locked_repository.all_candidates["zipp"].version == "3.7.0"
+
+
+exclusion_cases = [
+    pytest.param(("-G", ":all", "--without", "tz,ssl"), id="-G :all --without tz,ssl"),
+    pytest.param(("-G", ":all", "--without", "tz", "--without", "ssl"), id="-G :all --without tz --without ssl"),
+    pytest.param(("--with", ":all", "--without", "tz,ssl"), id="--with all --without tz,ssl"),
+    pytest.param(("--with", ":all", "--without", "tz", "--without", "ssl"), id="--with all --without tz --without ssl"),
+    pytest.param(("--without", "tz", "--without", "ssl"), id="--without tz --without ssl"),
+    pytest.param(("--without", "tz,ssl"), id="--without tz,ssl"),
+]
+
+
+@pytest.mark.parametrize("args", exclusion_cases)
+def test_lock_all_with_excluded_groups(project, pdm, args):
+    project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
+    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz", True)
+    project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
+    pdm(["lock", *args], obj=project, strict=True)
+    assert "urllib3" in project.locked_repository.all_candidates
+    assert "pytz" not in project.locked_repository.all_candidates
+    assert "pyopenssl" not in project.locked_repository.all_candidates
