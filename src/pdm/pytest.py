@@ -314,7 +314,7 @@ def build_env(build_env_wheels: Iterable[Path], tmp_path_factory: pytest.TempPat
     p = Core().create_project(d)
     env = PythonEnvironment(p, prefix=str(d), python=sys.executable)
     for wheel in build_env_wheels:
-        install_wheel(str(wheel), env)
+        install_wheel(wheel, env)
     return d
 
 

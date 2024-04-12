@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pdm import termui
 from pdm.compat import Distribution
 from pdm.exceptions import UninstallError
-from pdm.installers.installers import install_package
+from pdm.installers.installers import install_wheel
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
 
 if TYPE_CHECKING:
@@ -29,8 +29,8 @@ class InstallManager:
     def install(self, candidate: Candidate) -> Distribution:
         """Install a candidate into the environment, return the distribution"""
         prepared = candidate.prepare(self.environment)
-        dist_info = install_package(
-            prepared.get_cached_package(),
+        dist_info = install_wheel(
+            prepared.build(),
             self.environment,
             direct_url=prepared.direct_url(),
             install_links=self.use_install_cache,
@@ -51,7 +51,7 @@ class InstallManager:
             remove_path.remove()
             remove_path.commit()
         except OSError as e:
-            termui.logger.info("Error occurred during uninstallation, roll back the changes now.")
+            termui.logger.warn("Error occurred during uninstallation, roll back the changes now.")
             remove_path.rollback()
             raise UninstallError(e) from e
 
@@ -67,5 +67,6 @@ class InstallManager:
             paths_to_remove.remove()
             paths_to_remove.commit()
         except OSError as e:
-            termui.logger.info("Error occurred during overwriting, roll back the changes now.")
+            termui.logger.warn("Error occurred during overwriting, roll back the changes now.")
+            paths_to_remove.rollback()
             raise UninstallError(e) from e

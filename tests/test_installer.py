@@ -134,12 +134,12 @@ def test_install_wheel_with_cache(project, pdm, supports_link):
         assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
 
     cache_name = "future_fstrings-1.2.0-py2.py3-none-any.whl.cache"
-    assert any(p.path.name == cache_name for _, p in project.package_cache.iter_packages())
+    assert any(p.path.name == cache_name for p in project.package_cache.iter_packages())
     pdm(["run", "python", "-m", "site"], object=project)
     r = pdm(["run", "python", "-c", "import future_fstrings"], obj=project)
     assert r.exit_code == 0
     pdm(["cache", "clear", "packages"], obj=project, strict=True)
-    assert supports_link("symlink") is any(p.path.name == cache_name for _, p in project.package_cache.iter_packages())
+    assert supports_link("symlink") is any(p.path.name == cache_name for p in project.package_cache.iter_packages())
 
     dist = project.environment.get_working_set()["future-fstrings"]
     installer.uninstall(dist)
@@ -148,7 +148,7 @@ def test_install_wheel_with_cache(project, pdm, supports_link):
     assert not dist.read_text("direct_url.json")
 
     pdm(["cache", "clear", "packages"], obj=project, strict=True)
-    assert not any(p.path.name == cache_name for _, p in project.package_cache.iter_packages())
+    assert not any(p.path.name == cache_name for p in project.package_cache.iter_packages())
 
 
 def test_url_requirement_is_not_cached(project):
