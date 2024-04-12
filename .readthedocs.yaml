@@ -10,9 +10,11 @@ build:
   tools:
     python: "3.12"
   jobs:
-    post_create_environment:
+    post_system_dependencies:
       # Install PDM
-      - python -m pip install --no-cache-dir pdm
+      - asdf plugin add pdm
+      - asdf install pdm latest
+      - pdm --version
     pre_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH pdm install -dG doc
 
