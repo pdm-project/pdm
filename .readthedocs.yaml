@@ -13,7 +13,7 @@ build:
     post_create_environment:
       # Install PDM
       - python -m pip install --no-cache-dir pdm
-    post_install:
+    pre_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH pdm install -dG doc
 
 mkdocs:
