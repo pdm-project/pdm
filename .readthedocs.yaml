@@ -9,10 +9,11 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.12"
+  apt_packages:
+    - python3-venv
   jobs:
     post_system_dependencies:
       # Install PDM
-      - apt install python3-venv
       - asdf plugin add pdm
       - asdf install pdm latest
       - pdm --version
