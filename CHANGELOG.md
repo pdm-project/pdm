@@ -1,5 +1,23 @@
-Release v2.13.3 (2024-04-08)
-----------------------------
+## Release v2.14.0 (2024-04-12)
+
+
+### Features & Improvements
+
+- Revert the package cache introduced in 2.13. Don't cache the decompressed contents of wheels unless being told so. ([#2803](https://github.com/pdm-project/pdm/issues/2803))
+
+### Bug Fixes
+
+- Fix inconsistent logging when `pdm use` a different python interpreter ([#2776](https://github.com/pdm-project/pdm/issues/2776))
+- Fix PDM unable to find Python interpreters when `PDM_IGNORE_ACTIVE_VENV` is set ([#2779](https://github.com/pdm-project/pdm/issues/2779))
+- Check verify_ssl when trusting each source. ([#2784](https://github.com/pdm-project/pdm/issues/2784))
+- Fix name check for project itself in `pdm outdated` ([#2785](https://github.com/pdm-project/pdm/issues/2785))
+- Fix a regression that proxy env vars are not respected. ([#2788](https://github.com/pdm-project/pdm/issues/2788))
+- Fix an issue that venv provider can't be found when providers are explicitly configured. ([#2792](https://github.com/pdm-project/pdm/issues/2792))
+- Fix a bug that `[tool.pdm.options]` are ignored if `-c/--config CONFIG` is given. ([#2793](https://github.com/pdm-project/pdm/issues/2793))
+- Make `--without` respect groups in `dev-dependencies` ([#2799](https://github.com/pdm-project/pdm/issues/2799))
+
+
+## Release v2.13.3 (2024-04-08)
 
 ### Bug Fixes
 
@@ -9,8 +27,7 @@ Release v2.13.3 (2024-04-08)
 - Fix a race condition where pth files take effect when multiple packages are installed in parallel. [#2762](https://github.com/pdm-project/pdm/issues/2762)
 - Refuse to run recursive composite scripts. [#2766](https://github.com/pdm-project/pdm/issues/2766)
 
-Release v2.13.2 (2024-03-30)
-----------------------------
+## Release v2.13.2 (2024-03-30)
 
 ### Bug Fixes
 
@@ -23,8 +40,7 @@ Release v2.13.2 (2024-03-30)
 
 - Fixed a small non-code typo in docs and prodivded better wording. [#2740](https://github.com/pdm-project/pdm/issues/2740)
 
-Release v2.13.1 (2024-03-29)
-----------------------------
+## Release v2.13.1 (2024-03-29)
 
 ### Bug Fixes
 
@@ -35,8 +51,7 @@ Release v2.13.1 (2024-03-29)
 
 - Extract "Lock file" doc from "Manage Dependencies" doc. [#2725](https://github.com/pdm-project/pdm/issues/2725)
 
-Release v2.13.0 (2024-03-27)
-----------------------------
+## Release v2.13.0 (2024-03-27)
 
 ### Features & Improvements
 

@@ -45,7 +45,7 @@ jobs:
       - name: Get Changelog
         id: get-changelog
         run: |
-          awk '/-{3,}/{flag=1;next}/Release/{if (flag==1)exit}flag' CHANGELOG.md > .changelog.md
+          awk '/## Release/{if (flag==1)exit;else;flag=1;next} flag' CHANGELOG.md > .changelog.md
 
       - name: Create Release
         uses: actions/create-release@main
