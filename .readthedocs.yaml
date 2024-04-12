@@ -16,6 +16,7 @@ build:
       # Install PDM
       - asdf plugin add pdm
       - asdf install pdm latest
+      - asdf global pdm latest
       - pdm --version
     pre_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH pdm install -dG doc
