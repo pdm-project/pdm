@@ -18,7 +18,7 @@ from pdm.exceptions import PdmException
 from pdm.models.cached_package import CachedPackage
 from pdm.models.candidates import Candidate
 from pdm.termui import logger
-from pdm.utils import atomic_open_for_write, create_tracked_tempdir, get_file_hash
+from pdm.utils import atomic_open_for_write, create_tracked_tempdir
 
 if TYPE_CHECKING:
     from packaging.tags import Tag
@@ -275,22 +275,18 @@ class PackageCache:
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def cache_wheel(self, wheel: Path, checksum: str | None = None) -> CachedPackage:
+    def cache_wheel(self, wheel: Path) -> CachedPackage:
         """Create a CachedPackage instance from a wheel file"""
         import zipfile
 
         from installer.utils import make_file_executable
 
-        if checksum is None:
-            checksum = get_file_hash(wheel)
-        parts = (checksum[:2],)  # shard by the first two chars of the checksum
-        dest = self.root.joinpath(*parts, f"{wheel.name}.cache")
+        dest = self.root.joinpath(f"{wheel.name}.cache")
         pkg = CachedPackage(dest, original_wheel=wheel)
         if dest.exists():
             return pkg
         dest.mkdir(parents=True, exist_ok=True)
         with pkg.lock():
-            dest.joinpath(".checksum").write_text(checksum)
             logger.info("Unpacking wheel into cached location %s", dest)
             with zipfile.ZipFile(wheel) as zf:
                 try:
@@ -305,35 +301,18 @@ class PackageCache:
                     raise
         return pkg
 
-    def iter_packages(self) -> Iterable[tuple[str, CachedPackage]]:
+    def iter_packages(self) -> Iterable[CachedPackage]:
         for path in self.root.rglob("*.whl.cache"):
-            hash_parts = path.parent.relative_to(self.root).parts
             p = CachedPackage(path)
             with p.lock():  # ensure the package is not being created
                 pass
-            if not path.joinpath(".checksum").exists():
-                checksum = "".join(hash_parts)
-                path.joinpath(".checksum").write_text(checksum)
-            else:
-                checksum = p.checksum
-            yield checksum, p
+            yield p
 
     def cleanup(self) -> int:
         """Remove unused cached packages"""
         count = 0
-        for _, pkg in self.iter_packages():
+        for pkg in self.iter_packages():
             if not any(os.path.exists(fn) for fn in pkg.referrers):
                 pkg.cleanup()
                 count += 1
         return count
-
-    def match_link(self, link: Link) -> CachedPackage | None:
-        """Match a link to a cached package"""
-        if not link.is_wheel:
-            return None
-        given_hash = link_hashes.get("sha256", []) if (link_hashes := link.hash_option) else []
-        for checksum, p in self.iter_packages():
-            if p.path.stem == link.filename and (not given_hash or checksum in given_hash):
-                logger.debug("Using package from cache location: %s", p.path)
-                return p
-        return None

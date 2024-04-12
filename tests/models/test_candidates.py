@@ -205,7 +205,7 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     prepared = Candidate(req).prepare(project.environment)
     prepared.metadata
     downloader.assert_not_called()
-    assert prepared._cached.path.name == built_path.name + ".cache"
+    assert prepared._cached.name == built_path.name
 
     prepared._cached = None
     builder = mocker.patch("pdm.builders.WheelBuilder.build")
@@ -218,14 +218,14 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
 def test_cache_vcs_immutable_revision(project):
     req = parse_requirement("git+https://github.com/test-root/demo.git@master#egg=demo")
     candidate = Candidate(req)
-    candidate.prepare(project.environment).get_cached_package()
-    assert not is_path_relative_to(candidate.prepared._get_build_cache()[0], project.cache_dir)
+    candidate.prepare(project.environment).build()
+    assert not is_path_relative_to(candidate.prepared._get_build_cache(), project.cache_dir)
     assert candidate.get_revision() == "1234567890abcdef"
 
     req = parse_requirement("git+https://github.com/test-root/demo.git@1234567890abcdef#egg=demo")
     candidate = Candidate(req)
-    candidate.prepare(project.environment).get_cached_package()
-    assert is_path_relative_to(candidate.prepared._get_build_cache()[0], project.cache_dir)
+    candidate.prepare(project.environment).build()
+    assert is_path_relative_to(candidate.prepared._get_build_cache(), project.cache_dir)
     assert candidate.get_revision() == "1234567890abcdef"
 
     # test the revision can be got correctly after cached
@@ -238,8 +238,8 @@ def test_cache_vcs_immutable_revision(project):
 def test_cache_egg_info_sdist(project):
     req = parse_requirement("demo @ http://fixtures.test/artifacts/demo-0.0.1.tar.gz")
     candidate = Candidate(req)
-    candidate.prepare(project.environment).get_cached_package()
-    assert is_path_relative_to(candidate.prepared._get_build_cache()[0], project.cache_dir)
+    candidate.prepare(project.environment).build()
+    assert is_path_relative_to(candidate.prepared._get_build_cache(), project.cache_dir)
 
 
 def test_invalidate_incompatible_wheel_link(project):
@@ -252,10 +252,10 @@ def test_invalidate_incompatible_wheel_link(project):
         link=Link("http://fixtures.test/artifacts/demo-0.0.1-cp36-cp36m-win_amd64.whl"),
     ).prepare(project.environment)
     prepared._obtain(True)
-    assert prepared._cached.path.stem == prepared.link.filename == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
+    assert prepared._cached.name == prepared.link.filename == "demo-0.0.1-cp36-cp36m-win_amd64.whl"
 
     prepared._obtain(False)
-    assert prepared._cached.path.stem == prepared.link.filename == "demo-0.0.1-py2.py3-none-any.whl"
+    assert prepared._cached.name == prepared.link.filename == "demo-0.0.1-py2.py3-none-any.whl"
 
 
 def test_legacy_pep345_tag_link(project):

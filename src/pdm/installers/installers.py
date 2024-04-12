@@ -148,11 +148,11 @@ def _get_link_method(cache_method: str) -> LinkMethod:
     return "copy"
 
 
-def install_package(
-    package: CachedPackage,
+def install_wheel(
+    wheel: Path,
     environment: BaseEnvironment,
     direct_url: dict[str, Any] | None = None,
-    install_links: bool = True,
+    install_links: bool = False,
     rename_pth: bool = False,
 ) -> str:
     """Only create .pth files referring to the cached package.
@@ -160,9 +160,9 @@ def install_package(
     """
     interpreter = str(environment.interpreter.executable)
     script_kind = environment.script_kind
-    # the cache_method can be any of "symlink", "hardlink" and "pth"
+    # the cache_method can be any of "symlink", "hardlink", "copy" and "pth"
     cache_method: str = environment.project.config["install.cache_method"]
-    dist_name = package.path.name.split("-")[0]
+    dist_name = wheel.name.split("-")[0]
     link_method: LinkMethod | None
     if not install_links or dist_name == "editables":
         link_method = "copy"
@@ -170,10 +170,6 @@ def install_package(
         link_method = _get_link_method(cache_method)
 
     additional_metadata: dict[str, bytes] = {}
-    if link_method == "symlink":
-        # Track usage when symlink is used
-        additional_metadata["REFER_TO"] = package.path.as_posix().encode()
-
     if direct_url is not None:
         additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
 
@@ -184,10 +180,18 @@ def install_package(
         link_method=link_method,
         rename_pth=rename_pth,
     )
-    source = PackageWheelSource(package)
-    dist_info_dir = install(source, destination=destination, additional_metadata=additional_metadata)
-    if link_method == "symlink":
-        package.add_referrer(dist_info_dir)
+    if install_links:
+        package = environment.project.package_cache.cache_wheel(wheel)
+        source = PackageWheelSource(package)
+        if link_method == "symlink":
+            # Track usage when symlink is used
+            additional_metadata["REFER_TO"] = package.path.as_posix().encode()
+        dist_info_dir = install(source, destination=destination, additional_metadata=additional_metadata)
+        if link_method == "symlink":
+            package.add_referrer(dist_info_dir)
+    else:
+        with WheelFile.open(wheel) as source:
+            dist_info_dir = install(source, destination=destination, additional_metadata=additional_metadata)
     return dist_info_dir
 
 
@@ -202,17 +206,3 @@ def install(
     _install(source, destination, additional_metadata=additional_metadata or {})
     root_scheme = _process_WHEEL_file(source)
     return os.path.join(destination.scheme_dict[root_scheme], source.dist_info_dir)
-
-
-def install_wheel(wheel: str, environment: BaseEnvironment, direct_url: dict[str, Any] | None = None) -> str:
-    """Install a wheel into the environment, return the .dist-info path"""
-    destination = SchemeDictionaryDestination(
-        scheme_dict=environment.get_paths(_get_dist_name(wheel)),
-        interpreter=str(environment.interpreter.executable),
-        script_kind=environment.script_kind,
-    )
-    additional_metadata = {}
-    if direct_url is not None:
-        additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
-    with WheelFile.open(wheel) as source:
-        return install(source, destination, additional_metadata=additional_metadata)
