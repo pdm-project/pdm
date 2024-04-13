@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
+from pdm.environments import BareEnvironment
 from pdm.exceptions import InstallationError
 from pdm.models.python import PythonInfo
 
@@ -117,17 +118,19 @@ class InstallCommand(BaseCommand):
         with ui.open_spinner(f"Downloading [success]{ver}[/]") as spinner:
             destination = root / str(ver)
             logger.debug("Installing %s to %s", ver, destination)
+            env = BareEnvironment(project)
             if not destination.exists():
                 destination.mkdir(parents=True, exist_ok=True)
                 with tempfile.NamedTemporaryFile() as tf:
                     tf.close()
-                    original_filename = download(python_file, tf.name, project.environment.session)
+                    original_filename = download(python_file, tf.name, env.session)
                     spinner.update(f"Installing [success]{ver}[/]")
                     install_file(tf.name, destination, original_filename)
 
         interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
         if not interpreter.exists():
-            raise InstallationError("Installation failed")
+            shutil.rmtree(destination, ignore_errors=True)
+            raise InstallationError("Installation failed, please try again.")
 
         python_info = PythonInfo.from_path(interpreter)
         ui.echo(f"[success]Successfully installed[/] {python_info.implementation}@{python_info.version}")
