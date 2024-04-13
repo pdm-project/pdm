@@ -33,7 +33,7 @@ class InstallManager:
             prepared.build(),
             self.environment,
             direct_url=prepared.direct_url(),
-            install_links=self.use_install_cache,
+            install_links=self.use_install_cache and not candidate.req.editable,
             rename_pth=self.rename_pth,
         )
         return Distribution.at(dist_info)
