@@ -117,9 +117,11 @@ class InstallCommand(BaseCommand):
         ver, python_file = get_download_link(version, implementation=implementation, arch=arch)
         with ui.open_spinner(f"Downloading [success]{ver}[/]") as spinner:
             destination = root / str(ver)
+            interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
             logger.debug("Installing %s to %s", ver, destination)
             env = BareEnvironment(project)
-            if not destination.exists():
+            if not destination.exists() or not interpreter.exists():
+                shutil.rmtree(destination, ignore_errors=True)
                 destination.mkdir(parents=True, exist_ok=True)
                 with tempfile.NamedTemporaryFile() as tf:
                     tf.close()
@@ -127,9 +129,7 @@ class InstallCommand(BaseCommand):
                     spinner.update(f"Installing [success]{ver}[/]")
                     install_file(tf.name, destination, original_filename)
 
-        interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
         if not interpreter.exists():
-            shutil.rmtree(destination, ignore_errors=True)
             raise InstallationError("Installation failed, please try again.")
 
         python_info = PythonInfo.from_path(interpreter)
