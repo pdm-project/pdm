@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block announce %}
+<span class="twemoji" style="vertical-align: middle;">
+  {% include ".icons/octicons/heart-fill-24.svg" %}
+</span>
+<a class="pdm-expansions" style="display: none;">Python Dependency Manager</a>
+{% endblock %}
+
+{% block footer %}
+  {{ super() }}
+  <div class="bot-container">
+    <a class="twemoji bot-button" href="javascript:void(0)" title="Ask bot about PDM">
+      {% include ".icons/fontawesome/solid/robot.svg" %}
+    </a>
+    <iframe
+      src="{{ config.extra.chatbot.url }}"
+    ></iframe>
+  </div>
+  <script>
+    const botButton = document.querySelector('.bot-button');
+    const iFrame = document.querySelector('.bot-container > iframe');
+    const hideBot = () => {
+      iFrame.style.height = null;
+      document.removeEventListener('click', hideBot);
+    }
+    botButton.addEventListener('click', (e) => {
+      const curHeight = window.getComputedStyle(iFrame).height;
+      if (curHeight === '0px') {
+        iFrame.style.height = '600px';
+        document.addEventListener('click', hideBot);
+      } else {
+        hideBot();
+      }
+      e.stopPropagation();
+    });
+    iFrame.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  </script>
+{% endblock %}
