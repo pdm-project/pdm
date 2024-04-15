@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Callable
 
 import pytest
@@ -165,6 +166,35 @@ def test_url_requirement_is_not_cached(project):
     assert os.path.isfile(os.path.join(lib_path, "aaaaa_future_fstrings.pth"))
     dist = project.environment.get_working_set()["future-fstrings"]
     assert dist.read_text("direct_url.json")
+
+
+def test_editable_is_not_cached(project, tmp_path_factory):
+    editable_path: Path = tmp_path_factory.mktemp("editable-project")
+
+    editable_setup = editable_path / "setup.py"
+    editable_setup.write_text("""
+from setuptools import setup
+
+setup(name='editable-project',
+      version='0.1.0',
+      description='',
+      py_modules=['module'],
+)
+""")
+    editable_module = editable_path / "module.py"
+    editable_module.write_text("")
+
+    req = parse_requirement(f"file://{editable_path}#egg=editable-project", True)
+    candidate = Candidate(req)
+    installer = InstallManager(project.environment, use_install_cache=True)
+    installer.install(candidate)
+
+    cache_path = project.cache("packages") / "editable_project-0.1.0-0.editable-py3-none-any.whl.cache"
+    assert not cache_path.is_dir()
+    lib_path = Path(project.environment.get_paths()["purelib"])
+    for pth in lib_path.glob("*editable_project*.pth"):
+        assert pth.is_file()
+        assert not pth.is_symlink()
 
 
 @pytest.mark.parametrize("use_install_cache", [False, True])
