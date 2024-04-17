@@ -237,6 +237,8 @@ class UI:
             handler: logging.Handler = logging.StreamHandler()
             handler.setLevel(LOG_LEVELS[self.verbosity])
         else:
+            if self.log_dir and not os.path.exists(self.log_dir):
+                os.makedirs(self.log_dir, exist_ok=True)
             log_file = tempfile.mktemp(".log", f"pdm-{type_}-", self.log_dir)
             handler = logging.FileHandler(log_file, encoding="utf-8")
             handler.setLevel(logging.DEBUG)
