@@ -179,7 +179,6 @@ class Core:
         self.ui.set_verbosity(options.verbose)
         self.ui.set_theme(project.global_config.load_theme())
         self.ui.log_dir = os.path.expanduser(cast(str, project.config["log_dir"]))
-        os.makedirs(self.ui.log_dir, exist_ok=True)
 
         command = cast("BaseCommand | None", getattr(options, "command", None))
         self.state.config_settings = getattr(options, "config_setting", None)
