@@ -670,7 +670,8 @@ def test_composite_fails_on_recursive_script(project, pdm):
         "first": {"composite": ["first"]},
         "second": {"composite": ["third"]},
         "third": {"composite": ["second"]},
-        "forth": {"composite": ["python -V", "python -V"]},
+        "fourth": {"composite": ["python -V", "python -V"]},
+        "fifth": {"composite": ["fourth", "fourth"]},
     }
     project.pyproject.write()
     result = pdm(["run", "first"], obj=project)
@@ -681,7 +682,10 @@ def test_composite_fails_on_recursive_script(project, pdm):
     assert result.exit_code == 1
     assert "Script second is recursive" in result.stderr
 
-    result = pdm(["run", "forth"], obj=project)
+    result = pdm(["run", "fourth"], obj=project)
+    assert result.exit_code == 0
+
+    result = pdm(["run", "fifth"], obj=project)
     assert result.exit_code == 0
 
 
