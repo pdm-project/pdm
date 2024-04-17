@@ -174,7 +174,7 @@ pdm lock --exclude-newer 2024-01-01
 
 ## Set acceptable format for locking or installing
 
-If you want to control the format(binary/sdist) of the packages, you can set the env vars `PDM_NO_BINARY` and `PDM_ONLY_BINARY`.
+If you want to control the format(binary/sdist) of the packages, you can set the env vars `PDM_NO_BINARY`, `PDM_ONLY_BINARY` and `PDM_PREFER_BINARY`.
 
 Each env var is a comma-separated list of package name. You can set it to `:all:` to apply to all packages. For example:
 
@@ -188,6 +188,26 @@ PDM_NO_BINARY=:all: pdm install
 # Prefer binary distributions and even if sdist with higher version is available
 PDM_PREFER_BINARY=flask pdm install
 ```
+
+You can also defined those values in your project `pyproject.toml` with the 
+`no-binary`, `only-binary` and `prefer-binary` keys of the `tool.pdm.resolution` section.
+They accept the same format as the environment variables and also support lists.
+
+
+```toml
+[tool.pdm.resolution]
+# No binary for werkzeug and flask will be locked nor used for installation
+no-binary = "werkzeug,flask"
+# equivalent to 
+no-binary = ["werkzeug", "flask"]
+# Only binaries will be locked in the lock file
+only-binary = ":all:"
+# Prefer binary distributions and even if sdist with higher version is available
+prefer-binary = "flask"
+```
+
+!!! note
+    Each environment variable takes precedence over its `pyproject.toml` alternative.
 
 ## Allow prerelease versions to be installed
 

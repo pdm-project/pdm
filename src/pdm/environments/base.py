@@ -188,9 +188,9 @@ class BaseEnvironment(abc.ABC):
             session=self.session,
             target_python=self.target_python,
             ignore_compatibility=ignore_compatibility,
-            no_binary=os.getenv("PDM_NO_BINARY", "").split(","),
-            only_binary=os.getenv("PDM_ONLY_BINARY", "").split(","),
-            prefer_binary=os.getenv("PDM_PREFER_BINARY", "").split(","),
+            no_binary=self._setting_list("PDM_NO_BINARY", "resolution.no-binary"),
+            only_binary=self._setting_list("PDM_ONLY_BINARY", "resolution.only-binary"),
+            prefer_binary=self._setting_list("PDM_PREFER_BINARY", "resolution.prefer-binary"),
             respect_source_order=self.project.pyproject.settings.get("resolution", {}).get(
                 "respect-source-order", False
             ),
@@ -206,6 +206,18 @@ class BaseEnvironment(abc.ABC):
             else:
                 finder.add_index_url(source.url)
         yield finder
+
+    def _setting_list(self, var: str, key: str) -> list[str]:
+        """
+        Get a list value, either comma separated or structured.
+
+        Returns `None` if both the environment variable and the key does not exists.
+        """
+        if value := self.project.env_or_setting(var, key):
+            if isinstance(value, str):
+                value = [stripped for v in value.split(",") if (stripped := v.strip())]
+            return [stripped for v in value if (stripped := v.strip())]
+        return []
 
     def get_working_set(self) -> WorkingSet:
         """Get the working set based on local packages directory."""

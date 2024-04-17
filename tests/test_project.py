@@ -442,3 +442,64 @@ def test_find_interpreters_with_PDM_IGNORE_ACTIVE_VENV(
         python = Path(project._saved_python)
         assert is_path_relative_to(python, project.root)
         assert not is_path_relative_to(python, venv_path)
+
+
+@pytest.mark.parametrize(
+    "var,key,settings,expected",
+    [
+        ("PDM_VAR", "var", {}, "from-env"),
+        ("pdm_var", "var", {}, "from-env"),
+        ("PDM_NOPE", "var", {"var": "from-settings"}, "from-settings"),
+        ("PDM_VAR", "var", {"var": "from-settings"}, "from-env"),
+        ("PDM_NOPE", "nested.var", {"nested": {"var": "from-settings"}}, "from-settings"),
+        ("PDM_NOPE", "noop", {}, None),
+    ],
+)
+def test_env_or_setting(
+    project: Project,
+    monkeypatch: pytest.MonkeyPatch,
+    var: str,
+    key: str,
+    settings: dict,
+    expected: str | None,
+):
+    monkeypatch.setenv("PDM_VAR", "from-env")
+    project.pyproject.settings.update(settings)
+
+    assert project.env_or_setting(var, key) == expected
+
+
+@pytest.mark.parametrize(
+    "var,setting,expected",
+    [
+        (None, None, []),
+        ("", None, []),
+        (" ", None, []),
+        (None, "", []),
+        (None, " ", []),
+        (None, [], []),
+        ("var", None, ["var"]),
+        ("val1,val2", None, ["val1", "val2"]),
+        ("val1, val2", None, ["val1", "val2"]),
+        ("val1, , , val2", None, ["val1", "val2"]),
+        (None, "val1,val2", ["val1", "val2"]),
+        (None, ["val1", "val2"], ["val1", "val2"]),
+        (None, [" val1", "val2 "], ["val1", "val2"]),
+        (None, [" val1", "", "val2 ", " "], ["val1", "val2"]),
+        (None, ["val1,val2", "val3,val4"], ["val1,val2", "val3,val4"]),
+        ("val1,val2", ["val3", "val4"], ["val1", "val2"]),
+    ],
+)
+def test_env_setting_list(
+    project: Project,
+    monkeypatch: pytest.MonkeyPatch,
+    var: str | None,
+    setting: str | list[str] | None,
+    expected: list[str],
+):
+    if var is not None:
+        monkeypatch.setenv("PDM_VAR", var)
+    if setting is not None:
+        project.pyproject.settings["var"] = setting
+
+    assert project.environment._setting_list("PDM_VAR", "var") == expected

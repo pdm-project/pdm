@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import operator
 import os
 import re
 import shutil
 import sys
-from functools import cached_property
+from functools import cached_property, reduce
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
 
@@ -762,3 +763,22 @@ class Project:
             return settings["distribution"]
         else:
             return True
+
+    def get_setting(self, key: str) -> Any:
+        """
+        Get a setting from its dotted key (without the `tool.pdm` prefix).
+
+        Returns `None` if the key does not exists.
+        """
+        try:
+            return reduce(operator.getitem, key.split("."), self.pyproject.settings)
+        except tomlkit.exceptions.NonExistentKey:
+            return None
+
+    def env_or_setting(self, var: str, key: str) -> Any:
+        """
+        Get a value from environment variable and fallback on a given setting.
+
+        Returns `None` if both the environment variable and the key does not exists.
+        """
+        return os.getenv(var.upper()) or self.get_setting(key)
