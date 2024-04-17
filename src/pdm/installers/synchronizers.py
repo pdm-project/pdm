@@ -172,12 +172,12 @@ class BaseSynchronizer:
     @property
     def manager(self) -> InstallManager:
         if not self._manager:
-            self._manager = self.get_manager()
+            self._manager = self.get_manager(rename_pth=True)
         return self._manager
 
-    def get_manager(self) -> InstallManager:
+    def get_manager(self, rename_pth: bool = False) -> InstallManager:
         return self.environment.project.core.install_manager_class(
-            self.environment, use_install_cache=self.use_install_cache, rename_pth=True
+            self.environment, use_install_cache=self.use_install_cache, rename_pth=rename_pth
         )
 
     @property
@@ -247,7 +247,7 @@ class BaseSynchronizer:
     def synchronize(self) -> None:
         """Synchronize the working set with pinned candidates."""
         to_add, to_update, to_remove = self.compare_with_working_set()
-        manager = self.manager
+        manager = self.get_manager()
         for key in to_add:
             can = self.candidates[key]
             termui.logger.info("Installing %s@%s...", key, can.version)
