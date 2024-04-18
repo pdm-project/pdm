@@ -1,110 +1,106 @@
-# New Project
+# 新建项目
 
-To start with, create a new project with [`pdm init`](../reference/cli.md#init):
+首先，使用以下命令 [`pdm init`](../reference/cli.md#init) 创建一个新项目：
 
 ```bash
 mkdir my-project && cd my-project
 pdm init
 ```
 
-You will need to answer a few questions, to help PDM to create a `pyproject.toml` file for you.
-For more usages of `pdm init`, please read [Create your project from a template](./template.md).
+您需要回答几个问题，以帮助 PDM 为您创建 `pyproject.toml` 文件。
+有关 `pdm init` 更多用法，请阅读 [从模板创建项目](./template.md)。
 
-## Choose a Python interpreter
+## 选择 Python 解释器
 
-At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. The interpreter path
-will be stored in `.pdm-python` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#use).
+首先，您需要从已安装在您的计算机上的 Python 版本列表中选择一个 Python 解释器。
+解释器路径将被存储在 `.pdm-python` 文件中，并在后续命令中使用。您还可以稍后使用 [`pdm use`](../reference/cli.md#use)命令更改它。
 
-Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
+或者，您可以通过 `PDM_PYTHON`环境变量指定 Python 解释器路径。设置后，保存的 `.pdm-python` 路径将被忽略。
 
-## Install Python interpreters with PDM
+## 使用 PDM 安装 Python 解释器
 
 +++ 2.13.0
 
-PDM supports installing additional Python interpreters from [@indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone)
-with the `pdm python install` command. For example, to install CPython 3.9.8:
+PDM 支持使用命令 `pdm python install` 从 [@indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone) 安装其他 Python 解释器。
+例如，要安装 CPython 3.9.8：
 
 ```bash
 pdm python install 3.9.8
 ```
 
-You can view all available Python versions with `pdm python install --list`.
+您可以使用 `pdm python install --list` 查看所有可用的 Python 版本。
 
-This will install the Python interpreter into the location specified by `python.install_root` configuration.
+这会将 Python 解释器安装到 `python.install_root` 配置指定的位置。
 
-List the currently installed Python interpreters:
+列出当前安装的 Python 解释器：
 
 ```bash
 pdm python list
 ```
 
-Remove an installed Python interpreter:
+删除已安装的 Python 解释器：
 
 ```bash
 pdm python remove 3.9.8
 ```
 
-!!! TIP "Share installations with Rye"
+!!! TIP "与 Rye 共享安装"
 
-    PDM installs Python interpreters using the same source as [Rye](https://rye-up.com). If you are using Rye at the same time, you can point the `python.install_root` to the same directory as Rye to share the Python interpreters:
+    PDM 使用与 [Rye](https://rye-up.com) 相同的源来安装 Python 解释器。如果您同时使用 Rye，则可以将 `python.install_root` 指向与 Rye 相同的目录以共享 Python 解释器：
 
     ```bash
     pdm config python.install_root ~/.rye/py
     ```
 
-    Afterwards you can manage the installations using either `rye toolchain` or `pdm python`.
+    之后，您可以使用 `rye toolchain` 或 `pdm python`来管理安装。
 
+## 是否使用虚拟环境
 
-## Virtualenv or not
+选择 Python 解释器后，PDM 将询问您是否要为项目创建虚拟环境。如果选择“是”，PDM 将在项目根目录中创建一个虚拟环境，并将其用作项目的 Python 解释器。
 
-After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.
-If you choose yes, PDM will create a virtual environment in the project root directory, and use it as the Python interpreter
-for the project.
+如果所选的 Python 解释器位于虚拟环境中，PDM 会将其用作项目环境，并在其中安装依赖项。否则，  `__pypackages__` 将在项目根目录中创建，并将依赖项安装到其中。
 
-If the selected Python interpreter is in a virtual environment, PDM will use it as the project environment and install dependencies
-into it. Otherwise, `__pypackages__` will be created in the project root and dependencies will be installed into it.
-
-For the difference between these two approaches, please refer to the corresponding sections in the docs:
+有关这两种方法的区别，请参阅文档中的相应部分：
 
 - [Virtualenv](./venv.md)
 - [`__pypackages__`(PEP 582)](./pep582.md)
 
-## Library or Application
+## 库或应用程序
 
-A library and an application differ in many ways. In short, a library is a package that is intended to be installed and used by other projects. In most cases it also needs to be uploaded to PyPI. An application, on the other hand, is one that is directly facing end users and may need to be deployed into some production environments.
+库和应用程序在许多方面有所不同。简而言之，库是旨在由其他项目安装和使用的包。在大多数情况下，它还需要上传到 PyPI。另一方面，应用程序是直接面向最终用户的应用程序，可能需要部署到某些生产环境中。
 
-In PDM, if you choose to create a library, PDM will add a `name`, `version` field to the `pyproject.toml` file, as well as a `[build-system]` table for the [build backend](../reference/build.md), which is only useful if your project needs to be built and distributed. So you need to manually add these fields to `pyproject.toml` if you want to change the project from an application to a library. Also, a library project will be installed into the environment when you run `pdm install` or `pdm sync`, unless `--no-self` is specified.
+在PDM中，如果选择创建一个库，PDM 会向 `pyproject.toml` 文件添加 `name`、`version` 字段，以及一个 [build backend](../reference/build.md) 表格用于构建后端，这只有在您的项目需要构建和分发时才有用。因此，如果您想将项目从应用程序更改为库，您需要手动添加这些字段到 `pyproject.toml` 中。此外，当您运行 `pdm install` 或 `pdm sync` 时，库项目将被安装到环境中，除非指定了`--no-self`。
 
-## Set `requires-python` value
+## 设定 `requires-python` 值
 
-You need to set an appropriate `requires-python` value for your project. This is an important property that affects how dependencies are resolved. Basically, each package's `requires-python` must *cover* the project's `requires-python` range. For example, consider the following setup:
+您需要为项目设置适当的 `requires-python` 值。这是一个重要属性，会影响依赖关系的解析方式。基本上，每个包 `requires-python` 都必须**涵盖**项目的 `requires-python`  范围。
+例如，请考虑以下设置：
 
-- Project: `requires-python = ">=3.9"`
-- Package `foo`: `requires-python = ">=3.7,<3.11"`
+- 项目: `requires-python = ">=3.9"`
+- 包 `foo`: `requires-python = ">=3.7,<3.11"`
 
-Resolving the dependencies will cause a `ResolutionImpossible`:
+解析依赖关系将导致 `Resolution Impossible` 错误:
 
 ```
 Unable to find a resolution because the following dependencies don't work
 on all Python versions defined by the project's `requires-python`
 ```
 
-Because the dependency's `requires-python` is `>=3.7,<3.11`, it *doesn't* cover the project's `requires-python` range of `>=3.9`. In other words, the project promises to work on Python 3.9, 3.10, 3.11 (and so on), but the dependency doesn't support Python 3.11 (or any higher). Since PDM creates a cross-platform lockfile that should work on all Python versions within the `requires-python` range, it can't find a valid resolution.
-To fix this, you need add a maximum version to `requires-python`, like `>=3.9,<3.11`.
+因为依赖项 `requires-python` 是 `>=3.7,<3.11`，所以它不覆盖项目的 `requires-python` 范围 `>=3.9`。换句话说，该项目承诺在 Python 3.9、3.10、3.11（等）上运行，但依赖项不支持 Python 3.11（或更高版本）。由于 PDM 创建了一个跨平台锁定文件，该文件应适用于 `requires-python` 该范围内的所有 Python 版本，因此它找不到有效的解决方案。要解决此问题，您需要将最大版本添加到 `requires-python` 中，例如 `>=3.9,<3.11`。
 
-The value of `requires-python` is a [version specifier as defined in PEP 440](https://peps.python.org/pep-0440/#version-specifiers). Here are some examples:
+`requires-python` 的值是根据 [PEP 440](https://peps.python.org/pep-0440/#version-specifiers)定义的版本指定符。以下是一些示例：
 
-| `requires-python`       | Meaning                                  |
+| `requires-python`       | 含义                                  |
 | ----------------------- | ---------------------------------------- |
-| `>=3.7`                 | Python 3.7 and above                     |
-| `>=3.7,<3.11`           | Python 3.7, 3.8, 3.9 and 3.10            |
-| `>=3.6,!=3.8.*,!=3.9.*` | Python 3.6 and above, except 3.8 and 3.9 |
+| `>=3.7`                 | Python 3.7 及更高版本                     |
+| `>=3.7,<3.11`           | Python 3.7, 3.8, 3.9 和 3.10            |
+| `>=3.6,!=3.8.*,!=3.9.*` | Python 3.6 及更高版本，3.8 和 3.9 除外 |
 
-## Working with older Python versions
+## 使用较旧的 Python 版本
 
-Although PDM run on Python 3.8 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-backend` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
+尽管 PDM 在 Python 3.8 及更高版本上运行，但您仍然可以为 **工作项目** 使用较低的 Python 版本。但请记住，如果你的项目是一个需要构建、发布或安装的库，你要确保正在使用的 PEP 517 构建后端支持你需要的最低 Python 版本。例如，默认后端 `pdm-backend` 仅适用于 Python 3.7+，因此如果您在使用 Python 3.6 的项目上运行 [`pdm build`](../reference/cli.md#build)，则会收到错误。大多数现代构建后端都放弃了对 Python 3.6 及更低版本的支持，因此强烈建议将 Python 版本升级到 3.7+。以下是一些常用构建后端支持的 Python 范围，我们只列出那些支持 PEP 621 的后端，否则 PDM 无法使用它们。
 
-| Backend               | Supported Python | Support PEP 621 |
+| Backend               | 支持的 Python | 支持 PEP 621 |
 | --------------------- | ---------------- | --------------- |
 | `pdm-backend`         | `>=3.7`          | Yes             |
 | `setuptools>=60`      | `>=3.7`          | Experimental    |
@@ -112,41 +108,38 @@ Although PDM run on Python 3.8 and above, you can still have lower Python versio
 | `flit-core>=3.4`      | `>=3.6`          | Yes             |
 | `flit-core>=3.2,<3.4` | `>=3.4`          | Yes             |
 
-Note that if your project is an application (i.e. without the `name` metadata),
-the above limitation of backends does not apply. Therefore, if you don't need a build backend you can use any Python version `>=2.7`.
+请注意，如果您的项目是应用程序（即没有 `name` 元数据），则上述后端限制不适用。因此，如果您不需要构建后端，则可以使用任何 Python 版本 `>=2.7`。
 
-## Import the project from other package managers
+## 从其他包管理器导入项目
 
-If you are already using other package manager tools like Pipenv or Poetry, it is easy to migrate to PDM.
-PDM provides `import` command so that you don't have to initialize the project manually, it now supports:
+如果您已经在使用其他包管理器工具，如 Pipenv 或 Poetry，则很容易迁移到 PDM。
+PDM 提供了 `import` 命令，因此您不必手动初始化项目，它现在支持：
 
-1. Pipenv's `Pipfile`
-2. Poetry's section in `pyproject.toml`
-3. Flit's section in `pyproject.toml`
-4. `requirements.txt` format used by pip
-5. setuptools `setup.py`(It requires `setuptools` to be installed in the project environment. You can do this by configuring `venv.with_pip` to `true` for venv and `pdm add setuptools` for `__pypackages__`)
+1. Pipenv `Pipfile`
+2. Poetry 的 `pyproject.toml` 部分
+3. Flit 的 `pyproject.toml` 部分
+4. pip 使用的格式 `requirements.txt`
+5. setuptools `setup.py`（它要求在项目环境中安装 `setuptools`。您可以通过为venv配置 `venv.with_pip` 为 `true`，并为 `__pypackages__` 添加 `pdm add setuptools` 来实现此目的）
 
-Also, when you are executing [`pdm init`](../reference/cli.md#init) or [`pdm install`](../reference/cli.md#install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
+此外，当您执行 [`pdm init`](../reference/cli.md#init)  或 [`pdm install`](../reference/cli.md#install) 时，如果您的 PDM 项目尚未初始化，PDM 可以自动检测可能要导入的文件。
 
 !!! info
-    Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
+    转换一个 `setup.py` 将使用项目解释器执行文件。确保 `setuptools`与解释器一起安装，并且 是可信的 `setup.py`。
 
-## Working with version control
+## 使用版本控制
 
-You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lock` and `pdm.toml` file. **Do not** commit the `.pdm-python` file.
+您 **必须** 提交 `pyproject.toml` 文件。您**应该**提交 `pdm.lock` 和 `pdm.toml` 文件。**不要** commit 提交 `.pdm-python` 文件。
 
-The `pyproject.toml` file must be committed as it contains the project's build metadata and dependencies needed for PDM.
-It is also commonly used by other python tools for configuration. Read more about the `pyproject.toml` file at
-[Pip documentation](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/).
+必须提交该 `pyproject.toml` 文件，因为它包含项目的构建元数据和 PDM 所需的依赖项。
+它也通常被其他 python 工具用于配置。在 [Pip 文档](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/) 中阅读有关该 `pyproject.toml` 文件的更多信息。
 
-You should be committing the `pdm.lock` file, by doing so you ensure that all installers are using the same versions of dependencies.
-To learn how to update dependencies see [update existing dependencies](./dependency.md#update-existing-dependencies).
+您应该提交文件 `pdm.lock` ，这样可以确保所有安装程序都使用相同版本的依赖项。若要了解如何更新依赖项，请参阅 [更新现有依赖项](./dependency.md#update-existing-dependencies)。
 
-`pdm.toml` contains some project-wide configuration and it may be useful to commit it for sharing.
+`pdm.toml` 包含一些项目范围的配置，提交它以供共享可能很有用。
 
-`.pdm-python` stores the **Python path** used by the **current** project and doesn't need to be shared.
+`.pdm-python`  存储当前项目使用的 **Python 路径**，**不需要** 共享。
 
-## Show the current Python environment
+## 显示当前 Python 环境
 
 ```bash
 $ pdm info
@@ -159,7 +152,7 @@ Project Root:
 Project Packages:
   /Users/fming/wkspace/github/test-pdm/__pypackages__/3.9
 
-# Show environment info
+# 查看虚拟环境信息
 $ pdm info --env
 {
   "implementation_name": "cpython",
@@ -176,10 +169,9 @@ $ pdm info --env
 }
 ```
 
-[This command](../reference/cli.md#info) is useful for checking which mode is being used by the project:
+[pdm info](../reference/cli.md#info)这个命令可用于检查项目正在使用的模式：
 
-- If *Project Packages* is `None`, [virtualenv mode](./venv.md) is enabled.
-- Otherwise, [PEP 582 mode](./pep582.md) is enabled.
+- 如果 *Project Packages* 是 `None`, 则启用 [virtualenv mode](./venv.md) 模式。
+- 否则，将启用 [PEP 582 mode](./pep582.md) 模式。
 
-Now, you have set up a new PDM project and get a `pyproject.toml` file. Refer to [metadata section](../reference/pep621.md)
-about how to write `pyproject.toml` properly.
+现在，您已经设置了一个新的 PDM 项目并获取了一个 `pyproject.toml` 文件。请参阅[元数据](../reference/pep621.md)部分，了解如何正确编写 `pyproject.toml`。

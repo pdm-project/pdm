@@ -1,32 +1,29 @@
-# Lifecycle and Hooks
+# 生命周期与钩子
 
-As any Python deliverable, your project will go through the different phases
-of a Python project lifecycle and PDM provides commands to perform the expected tasks for those phases.
+与任何 Python 交付件一样，您的项目将经历 Python 项目生命周期的不同阶段，并且 PDM 提供了执行这些阶段所需任务的命令。
 
-It also provides hooks attached to these steps allowing for:
+它还提供了附加到这些步骤的钩子，允许：
 
-- plugins to listen to the [signals][pdm.signals] of the same name.
-- developers to define custom scripts with the same name.
+- 插件监听相同名称的 [信号][pdm.signals]。
+- 开发者定义具有相同名称的自定义脚本。
 
-Besides, `pre_invoke` signal is emitted before ANY command is invoked, allowing plugins to modify the project or options beforehand.
+此外，`pre_invoke` 信号在调用任何命令之前发出，允许插件在此之前修改项目或选项。
 
-The built-in commands are currently split into 3 groups:
+内置命令当前分为 3 组：
 
-- the [initialization phase](#initialization)
-- the [dependencies management](#dependencies-management).
-- the [publication phase](#publication).
+- [初始化阶段](#initialization)
+- [依赖管理](#dependencies-management)
+- [发布阶段](#publication)
 
-You will most probably need to perform some recurrent tasks between the installation and publication phases (housekeeping, linting, testing, ...)
-this is why PDM lets you define your own tasks/phases using [user scripts](#user-scripts).
+您可能需要在安装和发布阶段之间执行一些重复性任务（清理，代码检查，测试等），这就是为什么PDM 让您使用 [用户脚本](#user-scripts) 定义自己的任务/阶段的原因。
 
-To provides full flexibility, PDM allows to [skip some hooks and tasks](#skipping) on demand.
+为了提供完全的灵活性，PDM 允许 [跳过某些钩子和任务](#skipping)。
 
 ## Initialization
 
-The initialization phase should occur only once in a project lifetime by running the [`pdm init`](../reference/cli.md#init)
-command to initialize an existing project (prompt to fill the `pyproject.toml` file).
+初始化阶段应该在项目生命周期中仅发生一次，通过运行 [`pdm init`](../reference/cli.md#init) 命令来初始化现有项目（提示填写 `pyproject.toml` 文件）。
 
-They trigger the following hooks:
+它们触发以下钩子：
 
 - [`post_init`][pdm.signals.post_init]
 
@@ -41,23 +38,23 @@ flowchart LR
 
 ## Dependencies management
 
-The dependencies management is required for the developer to be able to work and perform the following:
+依赖管理对于开发者能够工作并执行以下操作是必需的：
 
-- `lock`: compute a lock file from the `pyproject.toml` requirements.
-- `sync`: synchronize (add/remove/update) PEP582 packages from the lock file and install the current project as editable.
-- `add`: add a dependency
-- `remove`: remove a dependency
+- `lock`：从 `pyproject.toml` 的依赖计算一个锁定文件。
+- `sync`：同步（添加/删除/更新）PEP582 包，从锁定文件中安装当前项目为可编辑状态。
+- `add`：添加一个依赖
+- `remove`：移除一个依赖
 
-All those steps are directly available with the following commands:
+所有这些步骤都直接可用，具体命令如下：
 
-- [`pdm lock`](../reference/cli.md#lock): execute the `lock` task
-- [`pdm sync`](../reference/cli.md#sync): execute the `sync` task
-- [`pdm install`](../reference/cli.md#install): execute the `sync` task, preceded from `lock` if required
-- [`pdm add`](../reference/cli.md#add): add a dependency requirement, re-lock and then sync
-- [`pdm remove`](../reference/cli.md#remove): remove a dependency requirement, re-lock and then sync
-- [`pdm update`](../reference/cli.md#update): re-lock dependencies from their latest versions and then sync
+- [`pdm lock`](../reference/cli.md#lock): 执行 `lock` 任务
+- [`pdm sync`](../reference/cli.md#sync): 执行 `sync` 任务
+- [`pdm install`](../reference/cli.md#install): 执行 `sync` 任务，如果需要，则在此之前执行 `lock` 任务
+- [`pdm add`](../reference/cli.md#add): 添加一个依赖要求，重新锁定，然后同步
+- [`pdm remove`](../reference/cli.md#remove): 删除一个依赖要求，重新锁定，然后同步
+- [`pdm update`](../reference/cli.md#update): 从它们的最新版本重新锁定依赖项，然后同步
 
-They trigger the following hooks:
+它们触发以下钩子：
 
 - [`pre_install`][pdm.signals.pre_install]
 - [`post_install`][pdm.signals.post_install]
@@ -87,11 +84,10 @@ flowchart LR
   end
 ```
 
-### Switching Python version
+### 切换 Python 版本
 
-This is a special case in dependency management:
-you can switch the current Python version using [`pdm use`](../reference/cli.md#use)
-and it will emit the [`post_use`][pdm.signals.post_use] signal with the new Python interpreter.
+这是依赖管理中的一个特殊情况：
+您可以使用 [`pdm use`](../reference/cli.md#use) 切换当前的 Python 版本，并且它将发出具有新 Python 解释器的 [`post_use`][pdm.signals.post_use] 信号。
 
 ```mermaid
 flowchart LR
@@ -102,25 +98,24 @@ flowchart LR
   end
 ```
 
-## Publication
+## 发布
 
-As soon as you are ready to publish your package/library, you will require the publication tasks:
+一旦您准备好发布您的包/库，您将需要执行发布任务：
 
-- `build`: build/compile assets requiring it and package everything into a Python package (sdist, wheel)
-- `upload`: upload/publish the package to a remote PyPI index
+- `build`: 构建/编译需要的资产，并将所有内容打包到 Python 包中（sdist，wheel）
+- `upload`: 将包上传/发布到远程 PyPI 索引
 
-All those steps are available with the following commands:
+所有这些步骤都可用以下命令：
 
 - [`pdm build`](../reference/cli.md#build)
 - [`pdm publish`](../reference/cli.md#publish)
 
-They trigger the following hooks:
+它们触发以下钩子：
 
 - [`pre_publish`][pdm.signals.pre_publish]
 - [`post_publish`][pdm.signals.post_publish]
 - [`pre_build`][pdm.signals.pre_build]
 - [`post_build`][pdm.signals.post_build]
-
 
 ```mermaid
 flowchart LR
@@ -145,17 +140,17 @@ flowchart LR
   end
 ```
 
-Execution will stop at first failure, hooks included.
+执行将在第一个失败时停止，包括钩子。
 
-## User scripts
+## 用户脚本
 
-[User scripts are detailed in their own section](scripts.md) but you should know that:
+[用户脚本在其自己的部分中详细说明](scripts.md) 但您应该知道：
 
-- each user script can define a `pre_*` and `post_*` script, including composite scripts.
-- each `run` execution will trigger the [`pre_run`][pdm.signals.pre_run] and [`post_run`][pdm.signals.post_run] hooks
-- each script execution will trigger the [`pre_script`][pdm.signals.pre_script] and [`post_script`][pdm.signals.post_script] hooks
+- 每个用户脚本可以定义一个 `pre_*` 和 `post_*` 脚本，包括复合脚本。
+- 每次 `run` 执行将触发 [`pre_run`][pdm.signals.pre_run] 和 [`post_run`][pdm.signals.post_run] 钩子
+- 每次脚本执行将触发 [`pre_script`][pdm.signals.pre_script] 和 [`post_script`][pdm.signals.post_script] 钩子
 
-Given the following `scripts` definition:
+给定以下 scripts 定义：
 
 ```toml
 [tool.pdm.scripts]
@@ -169,7 +164,7 @@ post_composite = ""
 composite = {composite = ["test"]}
 ```
 
-a `pdm run test` will have the following lifecycle:
+`pdm run test` 将具有以下生命周期：
 
 ```mermaid
 flowchart LR
@@ -192,7 +187,7 @@ flowchart LR
   end
 ```
 
-while `pdm run composite` will have the following:
+而 `pdm run composite` 将具有以下生命周期：
 
 ```mermaid
 flowchart LR
@@ -225,18 +220,17 @@ flowchart LR
   end
 ```
 
-## Skipping
+## 跳过
 
-It is possible to control which task and hook runs for any built-in command as well as custom user scripts
-using the `--skip` option.
+可以使用 `--skip` 选项控制任何内置命令以及自定义用户脚本运行哪些任务和钩子。
 
-It accepts a comma-separated list of hooks/task names to skip
-as well as the predefined `:all`, `:pre` and `:post` shortcuts
-respectively skipping all hooks, all `pre_*` hooks and all `post_*` hooks.
-You can also provide the skip list in `PDM_SKIP_HOOKS` environment variable
-but it will be overridden as soon as the `--skip` parameter is provided.
+它接受以逗号分隔的钩子/任务名称列表以跳过
+以及预定义的 `:all`，`:pre` 和 `:post` 快捷方式
+分别跳过所有钩子，所有 `pre_*` 钩子和所有 `post_*` 钩子。
+您还可以在 `PDM_SKIP_HOOKS` 环境变量中提供跳过列表，
+但一旦提供 `--skip` 参数，它将被覆盖。
 
-Given the previous script block, running `pdm run --skip=:pre,post_test composite` will result in the following reduced lifecycle:
+给定上一个脚本块，运行 `pdm run --skip=:pre,post_test composite` 将导致以下简化的生命周期：
 
 ```mermaid
 flowchart LR

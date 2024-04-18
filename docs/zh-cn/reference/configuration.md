@@ -1,12 +1,12 @@
-# Configurations
+# 配置
 
 [pdm-config]: ../reference/cli.md#config
 
-## Color Theme
+## 颜色主题
 
-The default theme used by PDM is as follows:
+PDM 使用的默认主题如下：
 
-| Key       | Default Style                                                |
+| Key       | 默认样式                                                |
 | --------- | ------------------------------------------------------------ |
 | `primary` | <span style="color:cyan">cyan</span>                         |
 | `success` | <span style="color:green">green</span>                       |
@@ -15,24 +15,24 @@ The default theme used by PDM is as follows:
 | `info`    | <span style="color:blue">blue</span>                         |
 | `req`     | <span style="color:green;font-weight:bold">bold green</span> |
 
-You can change the theme colors with [`pdm config`][pdm-config] command. For example, to change the `primary` color to `magenta`:
+您可以使用 [pdm config][pdm-config] 命令更改主题颜色。例如，要将 `primary` 颜色更改为 `magenta`：
 
 ```bash
 pdm config theme.primary magenta
 ```
 
-Or use a hex color code:
+或者使用十六进制颜色代码：
 
 ```bash
 pdm config theme.success '#51c7bd'
 ```
 
-## Available Configurations
+## 可用配置
 
-The following configuration items can be retrieved and modified by [`pdm config`][pdm-config] command.
+可以通过 [`pdm config`][pdm-config] 命令检索和修改以下配置项。
 
 !!! note "Environment Variable Overrides"
-    If the corresponding env var is set, the value will take precedence over what is saved in the config file.
+    如果设置了相应的 env var，则该值将优先于配置文件中保存的值。
 
 
 ```python exec="on"

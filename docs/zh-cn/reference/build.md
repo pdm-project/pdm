@@ -1,10 +1,10 @@
 # Build Configuration
 
-`pdm` uses the [PEP 517](https://www.python.org/dev/peps/pep-0517/) to build the package. It acts as a build frontend that calls the build backend to build the package.
+`pdm` 使用 [PEP 517](https://www.python.org/dev/peps/pep-0517/) 来构建软件包。它充当构建前端，调用构建后端来从任意源树构建源分发和轮子。
 
-A build backend is what drives the build system to build source distributions and wheels from arbitrary source trees.
+构建后端是驱动构建系统从任意源树构建源分发和轮子的组件。
 
-If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the build backend to use. Unlike other package managers, PDM does not force you to use a specific build backend. You can choose the one you like. Here is a list of build backends and corresponding configurations initially supported by PDM:
+如果运行 [`pdm init`](../reference/cli.md#init)，PDM 将让您选择要使用的构建后端。与其他包管理器不同，PDM 不会强迫您使用特定的构建后端。您可以选择您喜欢的构建后端。以下是 PDM 最初支持的构建后端及相应的配置列表：
 
 === "pdm-backend"
 
@@ -16,7 +16,7 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
     build-backend = "pdm.backend"
     ```
 
-    [:book: Read the docs](https://backend.pdm-project.org/)
+    [:book: 阅读文档](https://backend.pdm-project.org/)
 
 === "setuptools"
 
@@ -28,7 +28,7 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
     build-backend = "setuptools.build_meta"
     ```
 
-    [:book: Read the docs](https://setuptools.pypa.io/)
+    [:book: 阅读文档](https://setuptools.pypa.io/)
 
 === "flit"
 
@@ -40,7 +40,7 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
     build-backend = "flit_core.buildapi"
     ```
 
-    [:book: Read the docs](https://flit.pypa.io/)
+    [:book: 阅读文档](https://flit.pypa.io/)
 
 === "hatchling"
 
@@ -52,7 +52,7 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
     build-backend = "hatchling.build"
     ```
 
-    [:book: Read the docs](https://hatch.pypa.io/)
+    [:book: 阅读文档](https://hatch.pypa.io/)
 
 === "maturin"
 
@@ -64,9 +64,9 @@ If you run [`pdm init`](../reference/cli.md#init), PDM will let you choose the b
     build-backend = "maturin"
     ```
 
-    [:book: Read the docs](https://www.maturin.rs/)
+    [:book: 阅读文档](https://www.maturin.rs/)
 
-Apart from the above mentioned backends, you can also use any other backend that supports PEP 621, however, [poetry-core](https://python-poetry.org/) is not supported because it does not support reading PEP 621 metadata.
+除了上述提到的后端之外，您还可以使用任何支持 PEP 621 的其他后端，但是 [poetry-core](https://python-poetry.org/) 不受支持，因为它不支持读取 PEP 621 元数据。
 
 !!! info
-    If you are using a custom build backend that is not in the above list, PDM will handle the relative paths as PDM-style(`${PROJECT_ROOT}` variable).
+    如果您使用的是不在上述列表中的自定义构建后端，PDM 将处理相对路径为 PDM 样式 (`${PROJECT_ROOT}` 变量)。

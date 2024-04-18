@@ -1,11 +1,11 @@
-# Advanced Usage
+# 高级用法
 
-## Automatic Testing
+## 自动化测试
 
-### Use Tox as the runner
+### 使用 Tox 作为运行器
 
-[Tox](https://tox.readthedocs.io/en/latest/) is a great tool for testing against multiple Python versions or dependency sets.
-You can configure a `tox.ini` like the following to integrate your testing with PDM:
+[Tox](https://tox.readthedocs.io/en/latest/) 是一个很好的工具，可以针对多个 Python 版本或依赖关系集进行测试。
+您可以配置一个像下面这样的 `tox.ini` 来与 PDM 集成测试：
 
 ```ini
 [tox]
@@ -26,27 +26,23 @@ commands =
     flake8 src/
 ```
 
-To use the virtualenv created by Tox, you should make sure you have set `pdm config python.use_venv true`. PDM then will install
-dependencies from [`pdm lock`](../reference/cli.md#lock) into the virtualenv. In the dedicated venv you can directly run tools by `pytest tests/` instead
-of `pdm run pytest tests/`.
+要使用 Tox 创建的虚拟环境，您应该确保已设置 `pdm config python.use_venv true`。然后，PDM 将安装 [`pdm lock`](../reference/cli.md#lock) 中的依赖项到虚拟环境中。在专用虚拟环境中，您可以直接通过 `pytest tests/` 而不是 `pdm run pytest tests/` 运行工具。
 
-You should also make sure you don't run `pdm add/pdm remove/pdm update/pdm lock` in the test commands, otherwise the [`pdm lock`](../reference/cli.md#lock)
-file will be modified unexpectedly. Additional dependencies can be supplied with the `deps` config. Besides, `isolated_build` and `passenv`
-config should be set as the above example to make PDM work properly.
+您还应该确保在测试命令中不运行 `pdm add/pdm remove/pdm update/pdm lock`，否则 [`pdm lock`](../reference/cli.md#lock) 文件将意外修改。可以通过 `deps` 配置提供额外的依赖项。此外，`isolated_build` 和 `passenv` 配置应设置为上面的示例，以确保 PDM 正常工作。
 
-To get rid of these constraints, there is a Tox plugin [tox-pdm](https://github.com/pdm-project/tox-pdm) which can ease the usage. You can install it by
+为了摆脱这些限制，有一个 Tox 插件 [tox-pdm](https://github.com/pdm-project/tox-pdm) 可以简化使用。您可以通过以下方式安装它：
 
 ```bash
 pip install tox-pdm
 ```
 
-Or,
+或者，
 
 ```bash
 pdm add --dev tox-pdm
 ```
 
-And you can make the `tox.ini` much tidier as following, :
+然后，您可以像下面这样使 tox.ini 更整洁：
 
 ```ini
 [tox]
@@ -63,13 +59,13 @@ commands =
     flake8 src/
 ```
 
-See the [project's README](https://github.com/pdm-project/tox-pdm) for a detailed guidance.
+请查看 [项目的 README](https://github.com/pdm-project/tox-pdm) 以获取详细指导。
 
-### Use Nox as the runner
+### 使用 Nox 作为运行器
 
-[Nox](https://nox.thea.codes/) is another great tool for automated testing. Unlike tox, Nox uses a standard Python file for configuration.
+[Nox](https://nox.thea.codes/) 是另一个很棒的自动化测试工具。与 tox 不同，Nox 使用标准的 Python 文件进行配置。
 
-It is much easier to use PDM in Nox, here is an example of `noxfile.py`:
+在 Nox 中使用 PDM 要简单得多，这是一个 `noxfile.py` 的示例：
 
 ```python hl_lines="4"
 import os
@@ -88,27 +84,27 @@ def lint(session):
     session.run('flake8', '--import-order-style', 'google')
 ```
 
-Note that `PDM_IGNORE_SAVED_PYTHON` should be set so that PDM can pick up the Python in the virtualenv correctly. Also make sure `pdm` is available in the `PATH`.
-Before running nox, you should also ensure configuration item `python.use_venv` is true to enable venv reusing.
+请注意，必须设置 `PDM_IGNORE_SAVED_PYTHON`，以便 PDM 正确地识别虚拟环境中的 Python。还要确保 `pdm` 在 `PATH` 中可用。
+在运行 nox 之前，还应确保配置项 `python.use_venv` 为 `true` 以启用虚拟环境复用。
 
-### About PEP 582 `__pypackages__` directory
+### 关于 PEP 582 `__pypackages__` 目录
 
-By default, if you run tools by [`pdm run`](../reference/cli.md#run), `__pypackages__` will be seen by the program and all subprocesses created by it. This means virtual environments created by those tools are also aware of the packages inside `__pypackages__`, which result in unexpected behavior in some cases.
-For `nox`, you can avoid this by adding a line in `noxfile.py`:
+默认情况下，如果使用 [`pdm run`](../reference/cli.md#run) 运行工具，`__pypackages__` 将被程序和其创建的所有子进程看到。这意味着由这些工具创建的虚拟环境也知道 `__pypackages__` 中的软件包，这在某些情况下会导致意外行为。
+对于 `nox`，您可以通过在 `noxfile.py` 中添加一行来避免这种情况：
 
 ```python
 os.environ.pop("PYTHONPATH", None)
 ```
 
-For `tox`, `PYTHONPATH` will not be passed to the test sessions so this isn't going to be a problem. Moreover, it is recommended to make `nox` and `tox` live in their own pipx environments so you don't need to install for every project. In this case, PEP 582 packages will not be a problem either.
+对于 `tox`，`PYTHONPATH` 不会传递到测试会话，因此这不会成为问题。此外，建议将 `nox` 和 `tox` 放在它们自己的 pipx 环境中，这样您就不需要为每个项目安装它们。在这种情况下，PEP 582 软件包也不会成为问题。
 
-## Use PDM in Continuous Integration
+## 在持续集成中使用 PDM
 
-Only one thing to keep in mind -- PDM can't be installed on Python < 3.7, so if your project is to be tested on those Python versions,
-you have to make sure PDM is installed on the correct Python version, which can be different from the target Python version the particular job/task is run on.
+只需记住一件事 PDM **不能安装在** Python < 3.7 上，因此，如果您的项目需要在这些 Python 版本上进行测试，
+您必须确保 PDM 安装在正确的 Python 版本上，这可能与特定任务/作业要运行的目标 Python 版本不同。
 
-Fortunately, if you are using GitHub Action, there is [pdm-project/setup-pdm](https://github.com/marketplace/actions/setup-pdm) to make this process easier.
-Here is an example workflow of GitHub Actions, while you can adapt it for other CI platforms.
+幸运的是，如果您使用 GitHub Action，有一个 [pdm-project/setup-pdm](https://github.com/marketplace/actions/setup-pdm) 来简化这个过程。
+这是 GitHub Actions 的一个示例工作流，您可以根据其他 CI 平台进行调整。
 
 ```yaml
 Testing:
@@ -133,55 +129,54 @@ Testing:
         pdm run -v pytest tests
 ```
 
-!!! important "TIPS"
-    For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/virtual-environments/issues/2803) on Ubuntu virtual environment.
-    If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
-    It is already handled by the `pdm-project/setup-pdm` action.
+!!! important "提示"
+    对于 GitHub Action 用户，Ubuntu 虚拟环境存在一个  [已知的兼容性问题](https://github.com/actions/virtual-environments/issues/2803) 如果在该机器上 PDM 并行安装失败，您应该将 `parallel_install` 设置为 `false`，或设置环境变量 `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`。
+    这已经由 `pdm-project/setup-pdm` 操作处理。
 
 !!! note
-    If your CI scripts run without a proper user set, you might get permission errors when PDM tries to create its cache directory.
-    To work around this, you can set the HOME environment variable yourself, to a writable directory, for example:
+    如果您的 CI 脚本在没有正确用户设置的情况下运行，当 PDM 尝试创建其缓存目录时，您可能会遇到权限错误。
+    为了解决这个问题，您可以自己设置 HOME 环境变量，指向一个可写的目录，例如：
 
     ```bash
     export HOME=/tmp/home
     ```
 
-## Use PDM in a multi-stage Dockerfile
+## 在多阶段 Dockerfile 中使用 PDM
 
-It is possible to use PDM in a multi-stage Dockerfile to first install the project and dependencies into `__pypackages__`
-and then copy this folder into the final stage, adding it to `PYTHONPATH`.
+可以在多阶段 Dockerfile 中使用 PDM，先将项目和依赖项安装到 `__pypackages__` 中，
+然后将此文件夹复制到最终阶段，并将其添加到 `PYTHONPATH` 中。
 
 ```dockerfile
 ARG PYTHON_BASE=3.10-slim
-# build stage
+# 构建阶段
 FROM python:$PYTHON_BASE AS builder
 
-# install PDM
+# 安装 PDM
 RUN pip install -U pdm
-# disable update check
+# 禁用更新检查
 ENV PDM_CHECK_UPDATE=false
-# copy files
+# 复制文件
 COPY pyproject.toml pdm.lock README.md /project/
 COPY src/ /project/src
 
-# install dependencies and project into the local packages directory
+# 安装依赖项和项目到本地包目录
 WORKDIR /project
 RUN pdm install --check --prod --no-editable
 
-# run stage
+# 运行阶段
 FROM python:$PYTHON_BASE
 
-# retrieve packages from build stage
+# 从构建阶段获取包
 COPY --from=builder /project/.venv/ /project/.venv
 ENV PATH="/project/.venv/bin:$PATH"
-# set command/entrypoint, adapt to fit your needs
+# 设置命令/入口点，根据需要进行调整
 COPY src /project/src
 CMD ["python", "src/__main__.py"]
 ```
 
-## Use PDM to manage a monorepo
+## 使用 PDM 管理多仓库
 
-With PDM, you can have multiple sub-packages within a single project, each with its own `pyproject.toml` file. And you can create only one `pdm.lock` file to lock all dependencies. The sub-packages can have each other as their dependencies. To achieve this, follow these steps:
+使用 PDM，您可以在单个项目中拥有多个子包，每个子包都有自己的 pyproject.toml 文件。您可以创建一个 pdm.lock 文件来锁定所有依赖项。子包可以相互作为它们的依赖项。要实现这一点，请按照以下步骤操作：
 
 `project/pyproject.toml`:
 
@@ -208,47 +203,47 @@ dependencies = ["foo-core"]
 dependencies = ["foo-core"]
 ```
 
-Now, run `pdm install` in the project root, and you will get a `pdm.lock` with all dependencies locked. All sub-packages will be installed in editable mode.
+现在，在项目根目录中运行 `pdm install`，您将获得一个带有所有依赖项锁定的 `pdm.lock`。所有子包将以可编辑模式安装。
 
-Look at the [🚀 Example repository](https://github.com/pdm-project/pdm-example-monorepo) for more details.
+查看 [🚀 示例存储库](https://github.com/pdm-project/pdm-example-monorepo) 获取更多详细信息。
 
-## Hooks for `pre-commit`
+## `pre-commit` 钩子
 
-[`pre-commit`](https://pre-commit.com/) is a powerful framework for managing git hooks in a centralized fashion. PDM already uses `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) for its internal QA checks. PDM exposes also several hooks that can be run locally or in CI pipelines.
+[`pre-commit`](https://pre-commit.com/) 是一个管理 git 钩子的强大框架。PDM 已经使用 `pre-commit` [hooks](https://github.com/pdm-project/pdm/blob/main/.pre-commit-config.yaml) 进行了内部质量检查。PDM 还公开了几个钩子，可以在本地或 CI 管道中运行。
 
-### Export `requirements.txt`
+### 导出 `requirements.txt`
 
-This hook wraps the command `pdm export` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that you are going to check in the codebase a `requirements.txt`, which reflects the actual content of [`pdm lock`](../reference/cli.md#lock).
+此钩子包装了 `pdm export` 命令以及任何有效参数。它可以作为一个钩子（例如，用于 CI）来确保您将检查代码库中的一个 `requirements.txt`，其中包含了 [`pdm lock`](../reference/cli.md#lock) 的实际内容。
 
 ```yaml
-# export python requirements
+# 导出 Python 依赖
 - repo: https://github.com/pdm-project/pdm
-  rev: 2.x.y # a PDM release exposing the hook
+  rev: 2.x.y # 公开了该钩子的 PDM 版本
   hooks:
     - id: pdm-export
-      # command arguments, e.g.:
+      # 命令参数，例如：
       args: ['-o', 'requirements.txt', '--without-hashes']
       files: ^pdm.lock$
 ```
 
-### Check `pdm.lock` is up to date with pyproject.toml
+### 检查 `pdm.lock` 是否与 pyproject.toml 保持同步
 
-This hook wraps the command `pdm lock --check` along with any valid argument. It can be used as a hook (e.g., for CI) to ensure that whenever `pyproject.toml` has a dependency added/changed/removed, that `pdm.lock` is also up to date.
+此钩子包装了 `pdm lock --check` 命令以及任何有效参数。它可以作为一个钩子（例如，用于 CI）来确保每当 `pyproject.toml` 添加/更改/删除一个依赖项时，pdm.lock 也保持同步。
 
 ```yaml
 - repo: https://github.com/pdm-project/pdm
-  rev: 2.x.y # a PDM release exposing the hook
+  rev: 2.x.y # 公开了该钩子的 PDM 版本
   hooks:
     - id: pdm-lock-check
 ```
 
-### Sync current working set with `pdm.lock`
+### 将当前工作集与 `pdm.lock` 同步
 
-This hook wraps the command `pdm sync` along with any valid argument. It can be used as a hook to ensure that your current working set is synced with `pdm.lock` whenever you checkout or merge a branch. Add *keyring* to `additional_dependencies` if you want to use your systems credential store.
+此钩子包装了 `pdm sync` 命令以及任何有效参数。它可以作为一个钩子来确保您的当前工作集与 `pdm.lock` 同步，无论何时您检出或合并一个分支。如果您想使用系统凭据存储，则将 keyring 添加到 `additional_dependencies`。
 
 ```yaml
 - repo: https://github.com/pdm-project/pdm
-  rev: 2.x.y # a PDM release exposing the hook
+  rev: 2.x.y # 公开了该钩子的 PDM 版本
   hooks:
     - id: pdm-sync
       additional_dependencies:

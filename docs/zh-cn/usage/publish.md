@@ -1,24 +1,23 @@
-# Build and Publish
+# 构建和发布
 
-If you are developing a library, after adding dependencies to your project, and finishing the coding, it's time to build and publish your package. It is as simple as one command:
+如果您正在开发库，则在向项目添加依赖项并完成编码后，就可以构建和发布包了。它就像一个命令一样简单：
 
 ```bash
 pdm publish
 ```
 
-This will automatically build a wheel and a source distribution(sdist), and upload them to the PyPI index.
+这将自动构建一个轮子和一个源分发（sdist），并将它们上传到 PyPI 索引。
 
-To specify another repository other than PyPI, use the `--repository` option, the parameter can be either the upload URL or the name of the repository stored in the config file.
+要指定 PyPI 以外的其他存储库，请使用选项 `--repository` ，参数可以是上传 URL，也可以是存储在配置文件中的存储库的名称。
 
 ```bash
 pdm publish --repository testpypi
 pdm publish --repository https://test.pypi.org/legacy/
 ```
 
-## Publish with trusted publishers
+## 使用受信任的发布者发布
 
-You can configure trusted publishers for PyPI so that you don't need to expose the PyPI tokens in the release workflow. To do this, follow
-[the guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to add a publisher and write the GitHub Actions workflow as below:
+可以为 PyPI 配置受信任的发布者，这样就不需要在发布工作流中公开 PyPI 令牌。为此，请按照[指南](https://docs.pypi.org/trusted-publishers/adding-a-publisher/)添加发布者并编写 GitHub Actions 工作流，如下所示：
 
 ```yaml
 jobs:
@@ -26,9 +25,9 @@ jobs:
     name: upload release to PyPI
     runs-on: ubuntu-latest
     permissions:
-      # This permission is needed for private repositories.
+      # 这个权限是为了私有仓库。
       contents: read
-      # IMPORTANT: this permission is mandatory for trusted publishing
+      # 重要提示：这个权限对于可信发布是必需的。
       id-token: write
     steps:
       - uses: actions/checkout@v3
@@ -39,17 +38,17 @@ jobs:
         run: pdm publish
 ```
 
-## Build and publish separately
+## 单独生成和发布
 
-You can also build the package and upload it in two steps, to allow you to inspect the built artifacts before uploading.
+您还可以通过两个步骤构建包并上传它，以便您在上传之前检查构建的项目。
 
 ```bash
 pdm build
 ```
 
-There are many options to control the build process, depending on the backend used. Refer to the [build configuration](../reference/build.md) section for more details.
+有许多选项可以控制生成过程，具体取决于使用的后端。有关更多详细信息，请参阅[构建配置](../reference/build.md)部分。
 
-The artifacts will be created at `dist/` and able to upload to PyPI.
+工件将在 PyPI 处创建 `dist/` 并能够上传到 PyPI。
 
 ```bash
 pdm publish --no-build
