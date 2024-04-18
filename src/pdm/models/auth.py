@@ -35,6 +35,9 @@ class PdmBasicAuth(MultiDomainBasicAuth):
             parsed = urllib.parse.urlparse(url_no_auth)
             if source.username:
                 auth = (source.username, source.password)
+            if auth is None or auth[1] is None:
+                username = auth[0] if auth else None
+                auth = keyring.get_auth_info(parsed.netloc, username) or keyring.get_auth_info(url_no_auth, username)
             if parsed == target:
                 return auth, index
             if parsed.netloc == target.netloc:
