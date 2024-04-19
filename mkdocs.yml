@@ -35,6 +35,7 @@ plugins:
   - "mkdocs-version-annotations":
       version_added_admonition: "tip"
   - mkdocstrings:
+      enable_inventory: true
       handlers:
         python:
           options:
