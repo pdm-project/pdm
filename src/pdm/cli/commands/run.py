@@ -308,6 +308,7 @@ class TaskRunner:
             if task.kind == "composite":
                 if command in seen:
                     raise PdmUsageError(f"Script {command} is recursive.")
+                seen = seen.copy()
                 seen.add(command)
 
             self.hooks.try_emit("pre_script", script=command, args=args)
