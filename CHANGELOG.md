@@ -1,3 +1,21 @@
+## Release v2.15.0 (2024-04-19)
+
+
+### Features & Improvements
+
+- Packages format preferences can now be defined in the project `pyproject.toml`
+  using the `no-binary`, `only-binary` and `prefer-binary` keys of the `tool.pdm.resolution` section. ([#2656](https://github.com/pdm-project/pdm/issues/2656))
+
+### Bug Fixes
+
+- Don't create project and virtualenv when running `pdm python install`. ([#2809](https://github.com/pdm-project/pdm/issues/2809))
+- Clean up the python installation directory if a previous download was unsuccessful. ([#2810](https://github.com/pdm-project/pdm/issues/2810))
+- Don't cache editable installations. ([#2816](https://github.com/pdm-project/pdm/issues/2816))
+- Fix a bug that installing in-project plugins with editable local paths doesn't work. ([#2820](https://github.com/pdm-project/pdm/issues/2820))
+- Don't create log directory until it's needed, to fix a PermissionError in docker environment. ([#2825](https://github.com/pdm-project/pdm/issues/2825))
+- Fix recursive script detection on multiple invocations. ([#2829](https://github.com/pdm-project/pdm/issues/2829))
+
+
 ## Release v2.14.0 (2024-04-12)
 
 
