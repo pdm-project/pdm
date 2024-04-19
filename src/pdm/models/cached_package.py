@@ -4,7 +4,7 @@ import os
 import shutil
 from functools import cached_property
 from pathlib import Path
-from typing import Any, ContextManager
+from typing import Any, ClassVar, ContextManager
 
 from pdm.termui import logger
 
@@ -21,6 +21,9 @@ class CachedPackage:
     Each line of the file is a distribution path that refers to this package.
     *Only wheel installations will be cached*
     """
+
+    cache_files: ClassVar[tuple[str, ...]] = (".lock", ".checksum", ".referrers")
+    """List of files storing cache metadata and not being part of the package"""
 
     def __init__(self, path: str | Path, original_wheel: Path | None = None) -> None:
         self.path = Path(os.path.normcase(os.path.expanduser(path))).resolve()
