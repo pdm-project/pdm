@@ -28,7 +28,7 @@ Settings.llm = OpenAI(
 )
 Settings.embed_model = OpenAIEmbedding(api_base=st.secrets.get("openai_base"), api_key=st.secrets.get("openai_key"))
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs/docs")
+DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs/")
 
 if "messages" not in st.session_state.keys():  # Initialize the chat messages history
     st.session_state.messages = [
