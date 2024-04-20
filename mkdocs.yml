@@ -118,6 +118,13 @@ extra:
       link: https://discord.gg/Phn8smztpv
   chatbot:
     url: https://2prxfnwkygf4vexczrbpcq.streamlit.app/?embed=true
+  alternate:
+    - name: '🇬🇧 English'
+      link: /en/
+      lang: en
+    - name: '🇨🇳 简体中文'
+      link: /zh-cn/
+      lang: zh
 extra_css:
   - assets/extra.css
 extra_javascript:
