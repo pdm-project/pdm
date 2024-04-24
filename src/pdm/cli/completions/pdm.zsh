@@ -1,5 +1,6 @@
 #compdef pdm
 
+export PDM_CHECK_UPDATE=0
 PDM_PYTHON="%{python_executable}"
 PDM_PIP_INDEXES=($(command ${PDM_PYTHON} -m pdm config pypi.url))
 
