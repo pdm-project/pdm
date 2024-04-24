@@ -1,10 +1,12 @@
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
 from pdm.cli import actions
 from pdm.models.requirements import parse_requirement
+from pdm.project.core import Project
 from pdm.utils import cd
 from tests import FIXTURES
 
@@ -19,6 +21,32 @@ def test_build_distributions(tmp_path, core):
     assert wheel.name.startswith("pdm-")
     tarball = next(tmp_path.glob("*.tar.gz"))
     assert tarball.exists()
+
+
+@dataclass
+class CheckUpdate:
+    value: bool
+
+    def __bool__(self):
+        return self.value
+
+    def has_checked(self, output: str) -> bool:
+        return (
+            "Run `pdm config check_update false` to disable the check." in output
+            and "PDM 0.0.0" in output
+            and "to upgrade." in output
+        )
+
+    def __str__(self) -> str:
+        return f"check-update={self.value}"
+
+
+@pytest.fixture(params=[True, False])
+def check_update(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, project: Project) -> CheckUpdate:
+    check_update = CheckUpdate(request.param)
+    monkeypatch.setenv("PDM_CHECK_UPDATE", "1" if check_update else "0")
+    project.core.version = "0.0.0"
+    return check_update
 
 
 def test_project_no_init_error(project_no_init, pdm):
@@ -38,23 +66,28 @@ def test_pep582_option(pdm):
     assert result.exit_code == 0
 
 
-def test_info_command(project, pdm):
+def test_info_command(project, pdm, check_update):
     result = pdm(["info"], obj=project)
     assert "Project Root:" in result.output
     assert project.root.as_posix() in result.output
+    assert check_update.has_checked(result.outputs) is bool(check_update)
 
     result = pdm(["info", "--python"], obj=project)
     assert result.output.strip() == str(project.python.executable)
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["info", "--where"], obj=project)
     assert result.output.strip() == str(project.root)
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["info", "--env"], obj=project)
     assert result.exit_code == 0
+    assert not check_update.has_checked(result.outputs)
 
 
-def test_info_command_json(project, pdm):
+def test_info_command_json(project, pdm, check_update):
     result = pdm(["info", "--json"], obj=project, strict=True)
+    assert not check_update.has_checked(result.outputs)
 
     data = json.loads(result.outputs)
 
@@ -156,16 +189,18 @@ def test_show_package_on_pypi(pdm):
     assert "sphinx-data-viewer" in result.output.splitlines()[0]
 
 
-def test_show_self_package(project, pdm):
+def test_show_self_package(project, pdm, check_update):
     result = pdm(["show"], obj=project)
     assert result.exit_code == 0, result.stderr
+    assert check_update.has_checked(result.outputs) is bool(check_update)
 
     result = pdm(["show", "--name", "--version"], obj=project)
     assert result.exit_code == 0
     assert "test-project\n0.0.0\n" == result.output
+    assert not check_update.has_checked(result.outputs)
 
 
-def test_export_to_requirements_txt(pdm, fixture_project):
+def test_export_to_requirements_txt(pdm, fixture_project, check_update):
     project = fixture_project("demo-package")
     requirements_txt = project.root / "requirements.txt"
     requirements_no_hashes = project.root / "requirements_simple.txt"
@@ -174,26 +209,32 @@ def test_export_to_requirements_txt(pdm, fixture_project):
     result = pdm(["export"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == requirements_txt.read_text().strip()
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["export", "--self"], obj=project)
     assert result.exit_code == 0
     assert ".  # this package\n" in result.output.strip()
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["export", "--editable-self"], obj=project)
     assert result.exit_code == 0
     assert "-e .  # this package\n" in result.output.strip()
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["export", "--no-hashes"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == requirements_no_hashes.read_text().strip()
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["export", "--pyproject"], obj=project)
     assert result.exit_code == 0
     assert result.output.strip() == requirements_pyproject.read_text().strip()
+    assert not check_update.has_checked(result.outputs)
 
     result = pdm(["export", "-o", str(project.root / "requirements_output.txt")], obj=project)
     assert result.exit_code == 0
     assert (project.root / "requirements_output.txt").read_text() == requirements_txt.read_text()
+    assert not check_update.has_checked(result.outputs)
 
 
 def test_export_doesnt_include_dep_with_extras(pdm, fixture_project):
@@ -205,23 +246,17 @@ def test_export_doesnt_include_dep_with_extras(pdm, fixture_project):
     assert result.output.strip() == requirements_txt.read_text().strip()
 
 
-def test_completion_command(pdm):
+def test_completion_command(pdm, check_update):
     result = pdm(["completion", "bash"])
     assert result.exit_code == 0
     assert "(completion)" in result.output
+    assert not check_update.has_checked(result.outputs)
 
 
 @pytest.mark.network
-def test_show_update_hint(pdm, project, monkeypatch):
-    monkeypatch.delenv("PDM_CHECK_UPDATE", raising=False)
-    prev_version = project.core.version
-    try:
-        project.core.version = "0.0.0"
-        r = pdm(["config"], obj=project)
-    finally:
-        project.core.version = prev_version
-    assert "to upgrade." in r.stderr
-    assert "Run `pdm config check_update false` to disable the check." in r.stderr
+def test_show_update_hint(pdm, project, check_update):
+    r = pdm(["config"], obj=project)
+    assert check_update.has_checked(r.stderr) is bool(check_update)
 
 
 @pytest.mark.usefixtures("repository")

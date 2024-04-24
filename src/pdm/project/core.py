@@ -81,6 +81,7 @@ class Project:
         self._python: PythonInfo | None = None
         self._cache_dir: Path | None = None
         self.core = core
+        self.can_check_update = True
 
         if global_config is None:
             global_config = platformdirs.user_config_path("pdm") / "config.toml"

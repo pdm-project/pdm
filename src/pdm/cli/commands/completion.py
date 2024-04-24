@@ -33,3 +33,6 @@ class Command(BaseCommand):
         completion = resources_read_text("pdm.cli.completions", f"pdm.{suffix}")
         # Can't use rich print or otherwise the rich markups will be interpreted
         print(completion.replace("%{python_executable}", sys.executable))
+
+        # Disable check update to avoid broken completions
+        project.can_check_update = False

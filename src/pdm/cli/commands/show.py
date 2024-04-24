@@ -57,6 +57,7 @@ class Command(BaseCommand):
         project_info = ProjectInfo.from_distribution(metadata)
 
         if any(getattr(options, key, None) for key in self.metadata_keys):
+            project.can_check_update = False
             for key in self.metadata_keys:
                 if getattr(options, key, None):
                     project.core.ui.echo(getattr(project_info, key))

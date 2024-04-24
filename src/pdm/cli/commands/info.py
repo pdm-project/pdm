@@ -31,6 +31,7 @@ class Command(BaseCommand):
         check_project_file(project)
         interpreter = project.environment.interpreter
         packages_path = ""
+        project.can_check_update = False
         if project.environment.is_local:
             packages_path = project.environment.packages_path  # type: ignore[attr-defined]
         if options.python:
@@ -75,3 +76,4 @@ class Command(BaseCommand):
                 ],
             ):
                 project.core.ui.echo(f"{name}\n  {value}")
+            project.can_check_update = True

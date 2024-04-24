@@ -282,7 +282,7 @@ class Core:
                 self.ui.warn("Add '-v' to see the detailed traceback", verbosity=termui.Verbosity.NORMAL)
             sys.exit(1)
         else:
-            if project.config["check_update"] and not is_in_zipapp():
+            if project.config["check_update"] and project.can_check_update and not is_in_zipapp():
                 from pdm.cli.actions import check_update
 
                 check_update(project)

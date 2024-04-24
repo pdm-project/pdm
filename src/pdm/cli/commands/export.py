@@ -83,3 +83,4 @@ class Command(BaseCommand):
         else:
             # Use a regular print to avoid any formatting / wrapping.
             print(content)
+        project.can_check_update = False
