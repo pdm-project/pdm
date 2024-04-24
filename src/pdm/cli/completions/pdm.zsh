@@ -1,8 +1,7 @@
 #compdef pdm
 
-export PDM_CHECK_UPDATE=0
 PDM_PYTHON="%{python_executable}"
-PDM_PIP_INDEXES=($(command ${PDM_PYTHON} -m pdm config pypi.url))
+PDM_PYPI_URL=$(PDM_CHECK_UPDATE=0 "${PDM_PYTHON}" -m pdm config pypi.url)
 
 _pdm() {
   emulate -L zsh -o extended_glob
@@ -143,7 +142,7 @@ _pdm() {
          '2:value:_files' && return 0
       if [[ $state == keys ]]; then
         local l mbegin mend match keys=()
-        for l in ${(f)"$(command ${PDM_PYTHON} -m pdm config)"}; do
+        for l in ${(f)"$(PDM_CHECK_UPDATE=0 command ${PDM_PYTHON} -m pdm config)"}; do
           if [[ $l == (#b)" "#(*)" = "(*) ]]; then
             keys+=("$match[1]:$match[2]")
           fi
@@ -596,7 +595,7 @@ EOF
 }
 
 _pdm_scripts() {
-  local scripts=() package_dir=$($PDM_PYTHON -m pdm info --packages)
+  local scripts=() package_dir=$(PDM_CHECK_UPDATE=0 $PDM_PYTHON -m pdm info --packages)
   if [[ -f pyproject.toml ]]; then
     local l in_scripts=0
     while IFS= read -r l; do
@@ -634,9 +633,7 @@ _pdm_pip_packages_update() {
   typeset -g _pdm_packages
   if _cache_invalid pdm_packages || ! _retrieve_cache pdm_packages; then
     local index
-    for index in $PDM_PIP_INDEXES; do
-      _pdm_packages+=($(command curl -sL $index | command sed -nE '/<a href/ s/.*>(.+)<.*/\1/p'))
-    done
+    _pdm_packages+=($(command curl -sL $PDM_PYPI_URL | command sed -nE '/<a href/ s/.*>(.+)<.*/\1/p'))
     _store_cache pdm_packages _pdm_packages
   fi
 }
