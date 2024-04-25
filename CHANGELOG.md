@@ -1,3 +1,16 @@
+## Release v2.15.1 (2024-04-25)
+
+
+### Bug Fixes
+
+- Disable check update in `zsh` completion script. ([#2838](https://github.com/pdm-project/pdm/issues/2838))
+- Fixes cached packages metadata files (`.referrers`) collisions on `sync` when using a `venv` with `symlink` cache method. ([#2839](https://github.com/pdm-project/pdm/issues/2839))
+
+### Documentation
+
+- Build docs with object inventory to support cross references from Sphinx documentation projects. ([#2841](https://github.com/pdm-project/pdm/issues/2841))
+
+
 ## Release v2.15.0 (2024-04-19)
 
 
