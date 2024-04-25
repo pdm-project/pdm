@@ -37,7 +37,9 @@ a.pdm-expansions {
 }
 
 /* for readthedocs badge */
-div.rst-versions.rst-badge {
-  left: 20px;
-  right: auto;
+#readthedocs-embed-flyout {
+  position: sticky;
+  bottom: 0px;
+  width: auto;
+  max-width: 200px;
 }
