@@ -1,7 +1,7 @@
 import argparse
+import platform
 import shlex
 from pathlib import Path
-import platform
 
 import shellingham
 
