@@ -640,7 +640,15 @@ def test_composite_inherit_env(project, pdm, capfd, _echo):
             "cmd": "python echo.py Second VAR",
             "env": {"VAR": "42"},
         },
-        "test": {"composite": ["first", "second"], "env": {"VAR": "overriden"}},
+        "nested": {
+            "composite": ["third"],
+            "env": {"VAR": "42"},
+        },
+        "third": {
+            "cmd": "python echo.py Third VAR",
+            "env": {"VAR": "42"},
+        },
+        "test": {"composite": ["first", "second", "nested"], "env": {"VAR": "overriden"}},
     }
     project.pyproject.write()
     capfd.readouterr()
@@ -648,6 +656,7 @@ def test_composite_inherit_env(project, pdm, capfd, _echo):
     out, _ = capfd.readouterr()
     assert "First CALLED with VAR=overriden" in out
     assert "Second CALLED with VAR=overriden" in out
+    assert "Third CALLED with VAR=overriden" in out
 
 
 def test_composite_fail_on_first_missing_task(project, pdm, capfd, _echo):
