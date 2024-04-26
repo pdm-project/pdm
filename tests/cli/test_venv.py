@@ -189,6 +189,23 @@ def test_venv_activate_no_shell(pdm, mocker, project):
         assert result.output.startswith("source")
 
 
+@pytest.mark.usefixtures("venv_backends")
+def test_venv_activate_windows(pdm, mocker, project):
+    project.project_config["venv.in_project"] = False
+    result = pdm(["venv", "create"], obj=project)
+    assert result.exit_code == 0, result.stderr
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
+    key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
+
+    mocker.patch("shellingham.detect_shell", return_value=("pwsh", None))
+    mocker.patch("platform.system", return_value="Windows")
+    result = pdm(["venv", "activate", key], obj=project)
+    assert result.exit_code == 0, result.stderr
+
+    assert result.output.strip("'\"\n").endswith("Activate.ps1")
+    assert not result.output.startswith(". ")
+
+
 @pytest.mark.usefixtures("fake_create")
 @pytest.mark.parametrize("keep_pypackages", [True, False])
 def test_venv_auto_create(pdm, mocker, project, keep_pypackages):
