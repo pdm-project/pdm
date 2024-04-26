@@ -277,6 +277,8 @@ class TaskRunner:
             should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
             composite_code = 0
             keep_going = options.pop("keep_going", False) if options else False
+            if opts:
+                cast(dict, options).update(**exec_opts(options, opts))
             for script in value:
                 if should_interpolate:
                     script, _ = interpolate(script, args)
