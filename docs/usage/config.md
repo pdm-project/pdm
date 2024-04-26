@@ -300,6 +300,18 @@ Alternatively, if you have installed a copy of keyring globally, make sure the C
 export PATH=$PATH:path/to/keyring/bin
 ```
 
+### Password management with keyring for Azure Artifacts
+
+When trying to authenticate towards azure artifacts, this can be achieved by either using AD groups to authenticate: `pdm self add keyring artifacts-keyring` ensuring that artifacts-keyring will be used for authentication.
+
+And then adding the artifacts url to `pyproject.toml`
+
+```
+[[tool.pdm.source]]
+name = "NameOfFeed"
+url = "https://pkgs.dev.azure.com/[org name]/_packaging/[feed name]/pypi/simple/"
+```
+
 ## Override the resolved package versions
 
 +++ 1.12.0

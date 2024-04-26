@@ -1,6 +1,7 @@
 import argparse
 import shlex
 from pathlib import Path
+import platform
 
 import shellingham
 
@@ -55,6 +56,8 @@ class ActivateCommand(BaseCommand):
             command, filename = "source", "activate"
         activate_script = venv.interpreter.with_name(filename)
         if activate_script.exists():
+            if platform.system() == "Windows":
+                return f"{shlex.quote(str(activate_script))}"
             return f"{command} {shlex.quote(str(activate_script))}"
         # Conda backed virtualenvs don't have activate scripts
         return f"conda activate {shlex.quote(str(venv.root))}"
