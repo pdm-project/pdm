@@ -39,11 +39,15 @@ if TYPE_CHECKING:
         working_dir: str
 
 
-def exec_opts(*options: TaskOptions | None) -> dict[str, Any]:
+def merge_options(*options: TaskOptions | None) -> dict[str, Any]:
+    """Merge multiple options dicts. For the same key, the last one wins."""
     return dict(
         env={k: v for opts in options if opts for k, v in opts.get("env", {}).items()} or None,
         **{k: v for opts in options if opts for k, v in opts.items() if k not in ("env", "help")},
     )
+
+
+exec_opts = merge_options  # Alias for merge_options
 
 
 RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
@@ -117,6 +121,7 @@ class TaskRunner:
         self.hooks = hooks
 
     def get_task(self, script_name: str) -> Task | None:
+        """Get the task with the given name. Return None if not found."""
         if script_name not in self.project.scripts:
             return None
         script = cast("str | Sequence[str] | Mapping[str,Any]", self.project.scripts[script_name])
@@ -233,6 +238,14 @@ class TaskRunner:
     def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None
     ) -> int:
+        """Run the named task with the given arguments.
+
+        Args:
+            task: The task to run
+            args: The extra arguments passed to the task
+            opts: The options passed from parent if any
+            seen: The set of seen tasks to prevent recursive calls
+        """
         kind, _, value, options = task
         shell = False
         if kind == "cmd":
@@ -278,7 +291,7 @@ class TaskRunner:
             composite_code = 0
             keep_going = options.pop("keep_going", False) if options else False
             if opts:
-                cast(dict, options).update(**exec_opts(options, opts))
+                cast(dict, options).update(**merge_options(options, opts))
             for script in value:
                 if should_interpolate:
                     script, _ = interpolate(script, args)
@@ -291,7 +304,7 @@ class TaskRunner:
                         return code
                     composite_code = code
             return composite_code
-        return self._run_process(args, chdir=True, shell=shell, **exec_opts(self.global_options, options, opts))
+        return self._run_process(args, chdir=True, shell=shell, **merge_options(self.global_options, options, opts))
 
     def run(
         self,
@@ -301,6 +314,7 @@ class TaskRunner:
         chdir: bool = False,
         seen: set[str] | None = None,
     ) -> int:
+        """Run a command or script with the given arguments."""
         if command in self.hooks.skip:
             return 0
         if seen is None:
@@ -310,8 +324,7 @@ class TaskRunner:
             if task.kind == "composite":
                 if command in seen:
                     raise PdmUsageError(f"Script {command} is recursive.")
-                seen = seen.copy()
-                seen.add(command)
+                seen = {command, *seen}
 
             self.hooks.try_emit("pre_script", script=command, args=args)
             pre_task = self.get_task(f"pre_{command}")
@@ -328,7 +341,7 @@ class TaskRunner:
             self.hooks.try_emit("post_script", script=command, args=args)
             return code
         else:
-            return self._run_process([command, *args], chdir=chdir, **exec_opts(self.global_options, opts))
+            return self._run_process([command, *args], chdir=chdir, **merge_options(self.global_options, opts))
 
     def show_list(self) -> None:
         if not self.project.scripts:
