@@ -287,6 +287,7 @@ exclusion_cases = [
 
 
 @pytest.mark.parametrize("args", exclusion_cases)
+@pytest.mark.usefixtures("repository")
 def test_lock_all_with_excluded_groups(project, pdm, args):
     project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz", True)

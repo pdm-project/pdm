@@ -39,11 +39,14 @@ if TYPE_CHECKING:
         working_dir: str
 
 
-def merge_options(*options: TaskOptions | None) -> dict[str, Any]:
+def merge_options(*options: TaskOptions | None) -> TaskOptions:
     """Merge multiple options dicts. For the same key, the last one wins."""
-    return dict(
-        env={k: v for opts in options if opts for k, v in opts.get("env", {}).items()} or None,
-        **{k: v for opts in options if opts for k, v in opts.items() if k not in ("env", "help")},
+    return cast(
+        "TaskOptions",
+        {
+            "env": {k: v for opts in options if opts for k, v in opts.get("env", {}).items()},
+            **{k: v for opts in options if opts for k, v in opts.items() if k not in ("env", "help", "keep_going")},
+        },
     )
 
 
@@ -290,21 +293,19 @@ class TaskRunner:
             should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
             composite_code = 0
             keep_going = options.pop("keep_going", False) if options else False
-            if opts:
-                cast(dict, options).update(**merge_options(options, opts))
             for script in value:
                 if should_interpolate:
                     script, _ = interpolate(script, args)
                 split = shlex.split(script)
                 cmd = split[0]
                 subargs = split[1:] + ([] if should_interpolate else args)
-                code = self.run(cmd, subargs, options, chdir=True, seen=seen)
+                code = self.run(cmd, subargs, merge_options(options, opts), chdir=True, seen=seen)
                 if code != 0:
                     if not keep_going:
                         return code
                     composite_code = code
             return composite_code
-        return self._run_process(args, chdir=True, shell=shell, **merge_options(self.global_options, options, opts))
+        return self._run_process(args, chdir=True, shell=shell, **merge_options(self.global_options, options, opts))  # type: ignore[misc]
 
     def run(
         self,
@@ -341,7 +342,7 @@ class TaskRunner:
             self.hooks.try_emit("post_script", script=command, args=args)
             return code
         else:
-            return self._run_process([command, *args], chdir=chdir, **merge_options(self.global_options, opts))
+            return self._run_process([command, *args], chdir=chdir, **merge_options(self.global_options, opts))  # type: ignore[misc]
 
     def show_list(self) -> None:
         if not self.project.scripts:
