@@ -256,6 +256,7 @@ def test_add_cached_vcs_requirement(project, mocker, pdm):
 @pytest.mark.usefixtures("repository")
 def test_add_with_dry_run(project, pdm):
     result = pdm(["add", "--dry-run", "requests"], obj=project, strict=True)
+    project.pyproject.reload()
     assert not project.get_dependencies()
     assert "requests 2.19.1" in result.stdout
     assert "urllib3 1.22" in result.stdout
