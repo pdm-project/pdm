@@ -331,3 +331,14 @@ def test_add_disable_cache(project, pdm, working_set):
 
     files = [file for file in cache_dir.rglob("*") if file.is_file()]
     assert not files
+
+
+@pytest.mark.usefixtures("working_set")
+def test_add_dependency_with_direct_minimal_versions(project, pdm, repository):
+    pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
+    repository.add_candidate("pytz", "2019.6")
+    pdm(["add", "django"], obj=project, strict=True)
+    all_candidates = project.locked_repository.all_candidates
+    assert "django>=1.11.8" in project.pyproject.metadata["dependencies"]
+    assert all_candidates["django"].version == "1.11.8"
+    assert all_candidates["pytz"].version == "2019.6"
