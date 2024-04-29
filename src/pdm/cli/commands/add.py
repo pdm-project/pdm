@@ -155,6 +155,8 @@ class Command(BaseCommand):
         reqs = [
             r for g, deps in all_dependencies.items() if lock_groups is None or g in lock_groups for r in deps.values()
         ]
+        # pre-write the dependencies to the pyproject.toml to make them recognized by the resolver
+        project.add_dependencies(requirements, group, selection.dev or False, write=False)
         with hooks.skipping("post_lock"):
             resolved = do_lock(
                 project,

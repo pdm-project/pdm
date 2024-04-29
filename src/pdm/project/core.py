@@ -570,6 +570,7 @@ class Project:
         to_group: str = "default",
         dev: bool = False,
         show_message: bool = True,
+        write: bool = True,
     ) -> None:
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
         for _, dep in requirements.items():
@@ -583,7 +584,8 @@ class Project:
             else:
                 deps[matched_index] = req
         setter(cast(Array, deps).multiline(True))
-        self.pyproject.write(show_message)
+        if write:
+            self.pyproject.write(show_message)
 
     def init_global_project(self) -> None:
         if not self.is_global or not self.pyproject.empty():
