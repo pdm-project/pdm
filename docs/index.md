@@ -47,6 +47,9 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
     (Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | py -
     ```
 
+!!! note
+    On Windows, if you do not have the optional ``py`` launcher installed (including if you installed Python through the Microsoft store), replace ``py`` with ``python``.
+
 For security reasons, you should verify the checksum of `install-pdm.py`.
 It can be downloaded from [install-pdm.py.sha256](https://pdm-project.org/install-pdm.py.sha256).
 
