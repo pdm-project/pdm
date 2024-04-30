@@ -17,7 +17,7 @@ from tomlkit.items import Array
 from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
-from pdm.models.backends import BuildBackend, get_backend_by_spec
+from pdm.models.backends import DEFAULT_BACKEND, BuildBackend, get_backend_by_spec
 from pdm.models.caches import PackageCache
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
@@ -398,7 +398,7 @@ class Project:
         for source in result.values():
             if not source.url:
                 continue
-            source.url = expand_env_vars_in_auth(source.url)
+            source.url = DEFAULT_BACKEND(self.root).expand_line(expand_env_vars_in_auth(source.url))
             sources.append(source)
         return sources
 
