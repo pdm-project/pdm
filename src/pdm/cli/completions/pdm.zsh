@@ -238,7 +238,7 @@ _pdm() {
         '--json[Output dependencies in JSON document format]'
         '--csv[Output dependencies in CSV document format]'
         '--markdown[Output dependencies and legal notices in markdown document format - best effort basis]'
-        '{--tree,--graph}[Display a tree of dependencies]'
+        {--tree,--graph}'[Display a tree of dependencies]'
         "--freeze[Show the installed dependencies as pip's requirements.txt format]"
         "--include[Dependency groups to include in the output. By default all are included]:include:"
         "--exclude[Dependency groups to exclude from the output]:exclude:"
