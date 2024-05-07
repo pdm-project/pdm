@@ -22,7 +22,7 @@ from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.signals import pdm_signals
-from pdm.utils import expand_env_vars, is_path_relative_to
+from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Iterator, TypedDict
@@ -394,7 +394,6 @@ def _fix_env_file(data: dict[str, Any]) -> dict[str, Any]:
 class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
-    runner_cls: type[TaskRunner] = TaskRunner
     arguments = (*BaseCommand.arguments, skip_option, venv_option)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -426,7 +425,10 @@ class Command(BaseCommand):
         )
 
     def get_runner(self, project: Project, hooks: HookManager, options: argparse.Namespace) -> TaskRunner:
-        return self.runner_cls(project, hooks)
+        if (runner := getattr(self, "runner_cls", None)) is not None:  # pragma: no cover
+            deprecation_warning("runner_cls attribute is deprecated, use get_runner method instead.")
+            return cast("type[TaskRunner]", runner)(project, hooks)
+        return TaskRunner(project, hooks)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
