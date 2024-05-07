@@ -425,10 +425,13 @@ class Command(BaseCommand):
             help="Arguments that will be passed to the command",
         )
 
+    def get_runner(self, project: Project, hooks: HookManager, options: argparse.Namespace) -> TaskRunner:
+        return self.runner_cls(project, hooks)
+
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
         hooks = HookManager(project, options.skip)
-        runner = self.runner_cls(project, hooks=hooks)
+        runner = self.get_runner(project, hooks, options)
         if options.list:
             return runner.show_list()
         if options.json:
