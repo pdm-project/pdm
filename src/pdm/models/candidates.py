@@ -40,6 +40,8 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
+    from importlib.metadata import _SimplePath
+
     from unearth import Link, Package, PackageFinder
 
     from pdm._types import FileHash
@@ -119,7 +121,7 @@ class MetadataDistribution(im.Distribution):
     def __init__(self, text: str) -> None:
         self.text = text
 
-    def locate_file(self, path: str | os.PathLike[str]) -> os.PathLike[str]:
+    def locate_file(self, path: str | os.PathLike[str]) -> _SimplePath:
         return Path()
 
     def read_text(self, filename: str) -> str | None:

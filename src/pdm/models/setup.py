@@ -5,9 +5,12 @@ import os
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import Any, Iterable, no_type_check
+from typing import TYPE_CHECKING, Any, Iterable, no_type_check
 
 from pdm.compat import Distribution
+
+if TYPE_CHECKING:
+    from importlib.metadata import _SimplePath
 
 
 @dataclass
@@ -396,7 +399,7 @@ class SetupDistribution(Distribution):
     def read_text(self, filename: str) -> str | None:
         return None
 
-    def locate_file(self, path: str | os.PathLike[str]) -> os.PathLike[str]:
+    def locate_file(self, path: str | os.PathLike[str]) -> _SimplePath:
         return Path()
 
     @property
