@@ -539,12 +539,14 @@ def format_lockfile(
         deps: list[str] = []
         for r in fetched_dependencies[v.dep_key]:
             # Try to convert to relative paths to make it portable
-            if isinstance(r, FileRequirement) and r.path and r.path.is_absolute():
+            if isinstance(r, FileRequirement) and r.path:
                 try:
-                    r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(project.root))
-                    r.url = backend.relative_path_to_url(r.path.as_posix())
+                    if r.path.is_absolute():
+                        r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(project.root))
                 except ValueError:
                     pass
+                else:
+                    r.url = backend.relative_path_to_url(r.path.as_posix())
             deps.append(r.as_line())
         if len(deps) > 0:
             base.add("dependencies", make_array(sorted(deps), True))

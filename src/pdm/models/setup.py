@@ -416,7 +416,7 @@ class SetupDistribution(Distribution):
         from pdm.models.markers import get_marker
         from pdm.models.requirements import parse_requirement
 
-        result = self._data.install_requires
+        result = self._data.install_requires[:]
         for extra, reqs in self._data.extras_require.items():
             extra_marker = f"extra == '{extra}'"
             for req in reqs:
