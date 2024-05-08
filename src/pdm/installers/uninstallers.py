@@ -178,7 +178,7 @@ class BaseRemovePaths(abc.ABC):
             for file in dist.files:
                 location = dist.locate_file(file)
                 instance.add_path(str(location))
-                bare_name, ext = os.path.splitext(location)
+                bare_name, ext = os.path.splitext(cast(Path, location))
                 if ext == ".py":
                     # .pyc files are added by add_path()
                     instance.add_path(bare_name + ".pyo")
