@@ -7,7 +7,6 @@ import json
 import os
 import sys
 import textwrap
-import warnings
 from typing import Collection, Iterable, cast
 
 from resolvelib.reporters import BaseReporter
@@ -319,20 +318,20 @@ def get_latest_pdm_version_from_pypi(project: Project, prereleases: bool = False
     return cast(str, candidate.version) if candidate else None
 
 
-def get_latest_version(project: Project) -> str | None:
+def get_latest_version(project: Project, expire_after: int = 7 * 24 * 3600) -> str | None:  # pragma: no cover
     """Get the latest version of PDM from PyPI, cache for 7 days"""
     cache_key = hashlib.sha224(sys.executable.encode()).hexdigest()
     cache_file = project.cache("self-check") / cache_key
     state = {}
     with contextlib.suppress(OSError):
         state = json.loads(cache_file.read_text())
-    current_time = datetime.datetime.utcnow().timestamp()
-    if state.get("last-check") and current_time - state["last-check"] < 60 * 60 * 24 * 7:
+    current_time = datetime.datetime.now(datetime.timezone.utc).timestamp()
+    if (last_check := state.get("last-check")) and current_time - last_check < expire_after:
         return cast(str, state["latest-version"])
     try:
         latest_version = get_latest_pdm_version_from_pypi(project)
     except Exception as e:
-        warnings.warn(f"Failed to get latest version: {e}", RuntimeWarning, stacklevel=1)
+        project.core.ui.warn(f"Failed to get latest version: {e}", verbosity=termui.Verbosity.NORMAL)
         latest_version = None
     if latest_version is None:
         return None
