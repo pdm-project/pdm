@@ -237,7 +237,7 @@ which is given by `--update-<strategy>` option:
 ### Update packages to the versions that break the version specifiers
 
 One can give `-u/--unconstrained` to tell PDM to ignore the version specifiers in the `pyproject.toml`.
-This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](../reference/cli.md#update) also supports the
+This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](../reference/cli.md#update_2) also supports the
 `--pre/--prerelease` option.
 
 ## Remove existing dependencies
