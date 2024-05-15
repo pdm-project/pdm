@@ -146,7 +146,7 @@ Besides, you can also define some fixed environment variables in your `pyproject
 ```toml
 [tool.pdm.scripts]
 start.cmd = "flask run -p 54321"
-start.env = {FOO = "bar", FLASK_ENV = "development"}
+start.env = {FOO = "bar", FLASK_DEBUG = "1"}
 ```
 
 Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a composite dictionary.
