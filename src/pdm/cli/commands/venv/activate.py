@@ -44,7 +44,7 @@ class ActivateCommand(BaseCommand):
         try:
             shell, _ = shellingham.detect_shell()
         except shellingham.ShellDetectionFailure:
-            shell = None
+            shell = ""
         if shell == "fish":
             command, filename = "source", "activate.fish"
         elif shell == "csh":
@@ -55,6 +55,12 @@ class ActivateCommand(BaseCommand):
             command, filename = "source", "activate"
         activate_script = venv.interpreter.with_name(filename)
         if activate_script.exists():
-            return f"{command} {shlex.quote(str(activate_script))}"
+            return f"{command} {self.quote(str(activate_script), shell)}"
         # Conda backed virtualenvs don't have activate scripts
         return f"conda activate {shlex.quote(str(venv.root))}"
+
+    @staticmethod
+    def quote(command: str, shell: str) -> str:
+        if shell in ["powershell", "pwsh"]:
+            return "'{}'".format(command.replace("'", "''"))
+        return shlex.quote(command)
