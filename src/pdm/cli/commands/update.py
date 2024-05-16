@@ -154,7 +154,7 @@ class Command(BaseCommand):
                     )
                     if look_in_other_group is not None:
                         raise ProjectError(
-                            f"[req]{name}[/] does not exist in [primary]{group}[/]  but exists in [primary]{look_in_other_group}[/]."
+                            f"[req]{name}[/] does not exist in [primary]{group}[/], but exists in [primary]{look_in_other_group}[/]."
                             " Please specify the correct group with `-G/--group`."
                         )
                     tracked_names.add(normalized_name)
