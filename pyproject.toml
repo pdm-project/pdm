@@ -34,7 +34,7 @@ dependencies = [
     "importlib-metadata>=3.6; python_version < \"3.10\"",
     "hishel>=0.0.24,<0.1.0",
     "msgpack>=1.0",
-    "pbs-installer[install]",
+    "pbs-installer",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
 ]
@@ -82,7 +82,7 @@ write_to = "pdm/models/VERSION"
 excludes = ["./**/.git"]
 package-dir = "src"
 includes = ["src/pdm"]
-source-includes = ["tests", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
+source-includes = ["tests", "typings", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
 

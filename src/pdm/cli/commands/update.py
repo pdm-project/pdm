@@ -149,6 +149,14 @@ class Command(BaseCommand):
                             f"[req]{name}[/] does not exist in [primary]{group}[/] "
                             f"{'dev-' if selection.dev else ''}dependencies nor is a transitive dependency."
                         )
+                    look_in_other_group = next(
+                        (g for g, deps in all_dependencies.items() if normalized_name in deps and g != group), None
+                    )
+                    if look_in_other_group is not None:
+                        raise ProjectError(
+                            f"[req]{name}[/] does not exist in [primary]{group}[/], but exists in [primary]{look_in_other_group}[/]."
+                            " Please specify the correct group with `-G/--group`."
+                        )
                     tracked_names.add(normalized_name)
                 else:
                     matched_req.prerelease = prerelease

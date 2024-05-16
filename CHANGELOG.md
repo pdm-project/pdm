@@ -1,3 +1,19 @@
+## Release v2.15.2 (2024-05-08)
+
+
+### Features & Improvements
+
+- Use `get_runner()` method to build the task runner in `run` command. `runner_cls` attribute is deprecated. ([#2872](https://github.com/pdm-project/pdm/issues/2872))
+
+### Bug Fixes
+
+- Expand `${PROJECT_ROOT}` in source URLs. ([#2846](https://github.com/pdm-project/pdm/issues/2846))
+- Fix env and other options being inherited in nested composite scripts. ([#2849](https://github.com/pdm-project/pdm/issues/2849))
+- Keep the `${PROJECT_ROOT}` variable in dependencies after running `pdm lock --update-reuse`. ([#2852](https://github.com/pdm-project/pdm/issues/2852))
+- Make `direct_minimal_versions` work on newly added dependencies. ([#2853](https://github.com/pdm-project/pdm/issues/2853))
+- Fix a syntax error in the zsh completion script. ([#2868](https://github.com/pdm-project/pdm/issues/2868))
+
+
 ## Release v2.15.1 (2024-04-25)
 
 

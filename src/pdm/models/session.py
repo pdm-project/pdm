@@ -44,9 +44,11 @@ CACHES_TTL = 7 * 24 * 60 * 60  # 7 days
 
 @lru_cache(maxsize=None)
 def _get_transport(
-    verify: bool | SSLContext | str = True, cert: tuple[str, str | None] | None = None
+    verify: bool | SSLContext | str = True,
+    cert: tuple[str, str | None] | None = None,
+    proxy: httpx.Proxy | None = None,
 ) -> httpx.BaseTransport:
-    return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True)
+    return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy)
 
 
 class MsgPackSerializer(hishel.BaseSerializer):
@@ -127,6 +129,7 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
 class PDMPyPIClient(PyPIClient):
     def __init__(self, *, sources: list[RepositoryConfig], cache_dir: Path, **kwargs: Any) -> None:
+        from httpx._utils import URLPattern
         from unearth.fetchers.sync import LocalFSTransport
 
         storage = hishel.FileStorage(serializer=MsgPackSerializer(), base_path=cache_dir, ttl=CACHES_TTL)
@@ -134,6 +137,9 @@ class PDMPyPIClient(PyPIClient):
 
         mounts: dict[str, httpx.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
+        self._proxy_map = {
+            URLPattern(key): proxy for key, proxy in sorted(self._get_proxy_map(None, allow_env_proxies=True).items())
+        }
         for s in sources:
             assert s.url is not None
             url = httpx.URL(s.url)
@@ -146,10 +152,7 @@ class PDMPyPIClient(PyPIClient):
                 self._transport_for(s), storage, controller
             )
         mounts.update(kwargs.pop("mounts", None) or {})
-        kwargs.update(
-            proxies=self._get_proxy_map(None, allow_env_proxies=True),
-            follow_redirects=True,
-        )
+        kwargs.update(follow_redirects=True)
 
         httpx.Client.__init__(self, mounts=mounts, **kwargs)
 
@@ -166,7 +169,9 @@ class PDMPyPIClient(PyPIClient):
             cert = (source.client_cert, source.client_key)
         else:
             cert = None
-        return _get_transport(verify=verify, cert=cert)
+        source_url = httpx.URL(cast(str, source.url))
+        proxy = next((proxy for pattern, proxy in self._proxy_map.items() if pattern.matches(source_url)), None)
+        return _get_transport(verify=verify, cert=cert, proxy=proxy)
 
     def _make_user_agent(self) -> str:
         import platform

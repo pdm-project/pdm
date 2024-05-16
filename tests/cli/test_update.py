@@ -184,11 +184,19 @@ def test_update_transitive(project, repository, pdm):
 
 
 @pytest.mark.usefixtures("working_set")
-def test_update_transitive_nonexistant_dependencies(project, repository, pdm):
+def test_update_transitive_nonexistant_dependencies(project, pdm):
     pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
-    result = pdm(["update", "numpy"])
+    result = pdm(["update", "numpy"], obj=project)
     assert "ProjectError" in result.stderr
     assert "numpy does not exist in" in result.stderr
+
+
+@pytest.mark.usefixtures("working_set")
+def test_update_package_wrong_group(project, pdm):
+    pdm(["add", "-d", "requests"], obj=project, strict=True)
+    result = pdm(["update", "requests"], obj=project)
+    assert "ProjectError" in result.stderr
+    assert "requests does not exist in default, but exists in dev" in result.stderr
 
 
 @pytest.mark.usefixtures("working_set")
