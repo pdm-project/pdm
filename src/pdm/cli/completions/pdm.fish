@@ -119,7 +119,7 @@ complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a ex
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l editable-self -d 'Include the project itself as an editable dependency'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l expandvars -d 'Expand environment variables in requirements'
-complete -c pdm -A -n '__fish_seen_subcommand_from export' -l format -d 'Specify the export file format'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l format -d 'Only requirements.txt is supported for now.'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l group -d 'Select group of optional-dependencies separated by comma or dev-dependencies (with `-d`). Can be supplied multiple times, use ":all" to include all groups under the same species.'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l help -d 'Show this help message and exit.'
