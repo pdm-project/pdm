@@ -23,9 +23,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "-f",
             "--format",
-            choices=FORMATS.keys(),
+            choices=["requirements"],
             default="requirements",
-            help="Specify the export file format",
+            help="Only requirements.txt is supported for now.",
         )
         groups_group.add_to_parser(parser)
         parser.add_argument(

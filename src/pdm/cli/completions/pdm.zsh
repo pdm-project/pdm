@@ -153,7 +153,7 @@ _pdm() {
     export)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
-        {-f+,--format+}"[Specify the export file format]:format:(pipfile poetry flit requirements setuppy)"
+        {-f+,--format+}"[Only requirements.txt is supported for now.]:format:(requirements)"
         "--no-hashes[Don't include artifact hashes]"
         "--no-markers[Don't include platform markers]"
         "--expandvars[Expand environment variables in requirements]"
