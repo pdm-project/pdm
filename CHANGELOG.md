@@ -1,3 +1,15 @@
+## Release v2.15.3 (2024-05-20)
+
+
+### Bug Fixes
+
+- Fixed pdm venv activate, to also work for windows. And added documentation on how to authenticate to Azure Artifacts ([#2851](https://github.com/pdm-project/pdm/issues/2851))
+- Don't show unsupported formats in `pdm export`. ([#2877](https://github.com/pdm-project/pdm/issues/2877))
+- Proxy (`HTTP_PROXY` env vars) settings are ignored for custom indexes. ([#2880](https://github.com/pdm-project/pdm/issues/2880))
+- Fix the quoting of venv activate command for powershell. ([#2881](https://github.com/pdm-project/pdm/issues/2881))
+- Raise an error if the package given by `pdm update` does not exist in the select dependency group but in other groups. ([#2885](https://github.com/pdm-project/pdm/issues/2885))
+
+
 ## Release v2.15.2 (2024-05-08)
 
 
