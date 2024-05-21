@@ -74,7 +74,7 @@ pytz==2024.1
 PyYAML==6.0.1
 referencing==0.32.1
 regex==2024.4.16
-requests==2.31.0
+requests==2.32.0
 rich==13.7.0
 rpds-py==0.16.2
 setuptools==69.1.1
