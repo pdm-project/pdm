@@ -117,7 +117,7 @@ scripts after a failure, set the `keep_going` option to `true`:
 [tool.pdm.scripts]
 lint = "flake8"
 test = "pytest"
-all = {composite = ["lint", "test"]}
+all.composite = ["lint", "test"]
 all.keep_going = true
 ```
 
