@@ -179,7 +179,7 @@ If you want to control the format(binary/sdist) of the packages, you can set the
 
 Each env var is a comma-separated list of package name. You can set it to `:all:` to apply to all packages. For example:
 
-```
+```toml
 # No binary for werkzeug will be locked nor used for installation
 PDM_NO_BINARY=werkzeug pdm add flask
 # Only binaries will be locked in the lock file
