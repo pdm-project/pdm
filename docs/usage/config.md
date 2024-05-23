@@ -135,7 +135,8 @@ You can set `pypi.ignore_stored_index` to `true` to disable all indexes from the
     ```
 
 ??? note "Indexes in `pyproject.toml` or config"
-    When you want to share the indexes with other people who are going to use the project, you should add them in `pyproject.toml`. For example, some packages only exist in a private index and can't be installed if someone doesn't configure the index.
+    When you want to share the indexes with other people who are going to use the project, you should add them in `pyproject.toml`.
+    For example, some packages only exist in a private index and can't be installed if someone doesn't configure the index.
     Otherwise, store them in the local config which won't be seen by others.
 
 ### Respect the order of the sources
@@ -189,7 +190,7 @@ Besides, it is possible to use the system trust store, instead of the bundled ce
 To use `truststore`, you need Python 3.10 or newer and install `truststore` into the same environment as PDM:
 
 ```bash
-$ pdm self add truststore
+$pdm self add truststore
 ```
 
 ### Index configuration merging
@@ -241,7 +242,7 @@ You can switch between them by running `pdm config [-l] install.cache_method <me
 
 ## Configure the repositories for upload
 
-When using the [`pdm publish`](../reference/cli.md#publish) command, it reads the repository secrets from the *global* config file(`<CONFIG_ROOT>/config.toml`). The content of the config is as follows:
+When using the [`pdm publish`](../reference/cli.md#publish) command, it reads the repository secrets from the **global** config file(`<CONFIG_ROOT>/config.toml`). The content of the config is as follows:
 
 ```toml
 [repository.pypi]
@@ -306,7 +307,7 @@ When trying to authenticate towards azure artifacts, this can be achieved by eit
 
 And then adding the artifacts url to `pyproject.toml`
 
-```
+```toml
 [[tool.pdm.source]]
 name = "NameOfFeed"
 url = "https://pkgs.dev.azure.com/[org name]/_packaging/[feed name]/pypi/simple/"
@@ -364,14 +365,13 @@ lock = ["--no-cross-platform"]
 These options will be added right after the command name. For instance, based on the configuration above,
 `pdm add requests` is equivalent to `pdm add --no-isolation --no-self requests`.
 
-
 ## Ignore package warnings
 
 +++ 2.10.0
 
 You may see some warnings when resolving dependencies like this:
 
-```
+```bash
 PackageWarning: Skipping scipy@1.10.0 because it requires Python
 <3.12,>=3.8 but the project claims to work with Python>=3.9.
 Narrow down the `requires-python` range to include this version. For example, ">=3.9,<3.12" should work.

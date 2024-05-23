@@ -115,8 +115,9 @@ This command makes the lockfile not cross-platform.
 +++ 2.6.0
 
 By default, the generated lockfile is **cross-platform**, which means the current platform isn't taken into account when resolving the dependencies. The result lockfile will contain wheels and dependencies for all possible platforms and Python versions.
-However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels. To avoid this, you can tell PDM
-to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform. This can be done by passing the `--strategy no_cross_platform` option to `pdm lock`:
+However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels.
+To avoid this, you can tell PDM to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform.
+This can be done by passing the `--strategy no_cross_platform` option to `pdm lock`:
 
 ```bash
 pdm lock --strategy no_cross_platform
@@ -189,10 +190,8 @@ PDM_NO_BINARY=:all: pdm install
 PDM_PREFER_BINARY=flask pdm install
 ```
 
-You can also defined those values in your project `pyproject.toml` with the 
-`no-binary`, `only-binary` and `prefer-binary` keys of the `tool.pdm.resolution` section.
+You can also defined those values in your project `pyproject.toml` with the `no-binary`, `only-binary` and `prefer-binary` keys of the `tool.pdm.resolution` section.
 They accept the same format as the environment variables and also support lists.
-
 
 ```toml
 [tool.pdm.resolution]
@@ -227,8 +226,8 @@ pdm django==3.1.4 "asgiref<3"
 ...
 🔒 Lock failed
 Unable to find a resolution for asgiref because of the following conflicts:
-  asgiref<3 (from project)
-  asgiref<4,>=3.2.10 (from <Candidate django 3.1.4 from https://pypi.org/simple/django/>)
+    asgiref<3 (from project)
+    asgiref<4,>=3.2.10 (from <Candidate django 3.1.4 from https://pypi.org/simple/django/>)
 To fix this, you could loosen the dependency version constraints in pyproject.toml. If that is not possible, you could also override the resolved version in `[tool.pdm.resolution.overrides]` table.
 ```
 

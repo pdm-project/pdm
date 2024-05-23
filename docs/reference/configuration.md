@@ -34,7 +34,6 @@ The following configuration items can be retrieved and modified by [`pdm config`
 !!! note "Environment Variable Overrides"
     If the corresponding env var is set, the value will take precedence over what is saved in the config file.
 
-
 ```python exec="on"
 from pdm.project.config import Config
 
@@ -55,4 +54,3 @@ print("""\
 | `repository.<name>.verify_ssl`    | Verify SSL certificate when uploading to repository                                  | `True`                                                                | Yes                  |                           |
 """)
 ```
-

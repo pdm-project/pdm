@@ -28,11 +28,11 @@ You can create more than one virtualenvs with whatever Python version you want.
 
 ```bash
 # Create a virtualenv based on 3.8 interpreter
-$ pdm venv create 3.8
+pdm venv create 3.8
 # Assign a different name other than the version string
-$ pdm venv create --name for-test 3.8
+pdm venv create --name for-test 3.8
 # Use venv as the backend to create, support 3 backends: virtualenv(default), venv, conda
-$ pdm venv create --with venv 3.9
+pdm venv create --with venv 3.9
 ```
 
 ## The location of virtualenvs
@@ -70,8 +70,8 @@ Virtualenvs created with this project:
 ## Show the path or python interpreter of a virtualenv
 
 ```bash
-$ pdm venv --path for-test
-$ pdm venv --python for-test
+pdm venv --path for-test
+pdm venv --python for-test
 ```
 
 ## Remove a virtualenv
@@ -156,7 +156,6 @@ By default when you activate a virtualenv, the prompt will show: `{project_name}
 
 For example if your project is named `test-project`:
 
-
 ```bash
 $ eval $(pdm venv activate for-test)
 (test-project-3.10) $  # {project_name} == test-project and {python_version} == 3.10
@@ -165,8 +164,8 @@ $ eval $(pdm venv activate for-test)
 The format can be customized before virtualenv creation with the [`venv.prompt`](../reference/configuration.md) configuration or `PDM_VENV_PROMPT` environment variable (before a `pdm init` or `pdm venv create`).
 Available variables are:
 
- - `project_name`: name of your project
- - `python_version`: version of Python (used by the virtualenv)
+- `project_name`: name of your project
+- `python_version`: version of Python (used by the virtualenv)
 
 ```bash
 $ PDM_VENV_PROMPT='{project_name}-py{python_version}' pdm venv create --name test-prompt
@@ -178,11 +177,11 @@ $ eval $(pdm venv activate test-prompt)
 
 ```bash
 # Run a script
-$ pdm run --venv test test
+pdm run --venv test test
 # Install packages
-$ pdm sync --venv test
+pdm sync --venv test
 # List the packages installed
-$ pdm list --venv test
+pdm list --venv test
 ```
 
 There are other commands supporting `--venv` flag or `PDM_IN_VENV` environment variable, see the [CLI reference](../reference/cli.md). You should create the virtualenv with `pdm venv create --name <name>` before using this feature.
@@ -212,16 +211,16 @@ To install `pip` once (if for example you want to install arbitrary dependencies
 
 ```bash
 # Install pip in the virtual environment
-$ pdm run python -m ensurepip
+pdm run python -m ensurepip
 # Install arbitrary dependencies
 # These dependencies are not checked for conflicts against lockfile dependencies!
-$ pdm run python -m pip install coverage
+pdm run python -m pip install coverage
 ```
 
 Or you can create the virtual environment with `--with-pip`:
 
 ```bash
-$ pdm venv create --with-pip 3.9
+pdm venv create --with-pip 3.9
 ```
 
 See the [ensurepip docs](https://docs.python.org/3/library/ensurepip.html) for more details on `ensurepip`.

@@ -16,7 +16,7 @@ PDM, as described, is a modern Python package and dependency manager supporting 
 - Flexible and powerful plug-in system.
 - Versatile user scripts.
 - Install Pythons using [indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone).
-- Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
+- Opt-in centralized installation cache like [pnpm].
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
 [pep 621]: https://www.python.org/dev/peps/pep-0621
@@ -70,17 +70,17 @@ The installer will install PDM into the user site and the location depends on th
 
 You can pass additional options to the script to control how PDM is installed:
 
-```
+```bash
 usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -v VERSION, --version VERSION | envvar: PDM_VERSION
+-h, --help            show this help message and exit
+-v VERSION, --version VERSION | envvar: PDM_VERSION
                         Specify the version to be installed, or HEAD to install from the main branch
-  --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
-  --remove | envvar: PDM_REMOVE            Remove the PDM installation
-  -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
-  -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
+--prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
+--remove | envvar: PDM_REMOVE            Remove the PDM installation
+-p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
+-d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
 ```
 
 You can either pass the options after the script or set the env var value.
@@ -126,6 +126,7 @@ You can either pass the options after the script or set the env var value.
     ```bash
     pip install --user pdm
     ```
+
 === "asdf"
 
     Assuming you have [asdf](https://asdf-vm.com/) installed.
@@ -165,7 +166,6 @@ You can either pass the options after the script or set the env var value.
         ./pw pdm install
         ```
 
-
 ### Update the PDM version
 
 ```bash
@@ -175,7 +175,6 @@ pdm self update
 ## Packaging Status
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
-
 
 ## Shell Completion
 
