@@ -190,7 +190,7 @@ Besides, it is possible to use the system trust store, instead of the bundled ce
 To use `truststore`, you need Python 3.10 or newer and install `truststore` into the same environment as PDM:
 
 ```bash
-$pdm self add truststore
+pdm self add truststore
 ```
 
 ### Index configuration merging
