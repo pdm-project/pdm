@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "parent"
+version = "0.1.0"
+authors = ["PDM <admin@pdm-project.org>"]
+description = "Parent project"
+license = "Apache-2.0"
+packages = [{include = "parent"}]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+
+[tool.poetry.group.dev.dependencies]
+child = {path = "./packages/child", develop = true}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

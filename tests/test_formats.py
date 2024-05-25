@@ -234,3 +234,14 @@ def test_convert_setup_py_project(project):
         "scripts": {"mycli": "mymodule:main"},
     }
     assert settings == {"package-dir": "src"}
+
+
+def test_convert_poetry_project_with_circular_dependency(project):
+    parent_file = FIXTURES / "projects/poetry-with-circular-dep/pyproject.toml"
+    child_file = FIXTURES / "projects/poetry-with-circular-dep/packages/child/pyproject.toml"
+
+    _, settings = poetry.convert(project, parent_file, ns())
+    assert settings["dev-dependencies"]["dev"] == ["child @ file:///${PROJECT_ROOT}/packages/child"]
+
+    _, settings = poetry.convert(project, child_file, ns())
+    assert settings["dev-dependencies"]["dev"] == ["parent @ file:///${PROJECT_ROOT}/../.."]

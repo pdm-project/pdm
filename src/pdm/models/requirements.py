@@ -169,7 +169,7 @@ class Requirement:
         return NamedRequirement.create(name=dist.metadata["Name"], version=f"=={dist.version}")
 
     @classmethod
-    def from_req_dict(cls, name: str, req_dict: RequirementDict) -> Requirement:
+    def from_req_dict(cls, name: str, req_dict: RequirementDict, check_installable: bool = True) -> Requirement:
         if isinstance(req_dict, str):  # Version specifier only.
             return NamedRequirement(name=name, specifier=get_specifier(req_dict))
         for vcs in VCS_SCHEMA:
@@ -178,7 +178,7 @@ class Requirement:
                 url = f"{vcs}+{repo}"
                 return VcsRequirement.create(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
-            return FileRequirement.create(name=name, **req_dict)
+            return FileRequirement.create(name=name, **req_dict, check_installable=check_installable)
         return NamedRequirement.create(name=name, **req_dict)
 
     @property
@@ -241,11 +241,12 @@ class FileRequirement(Requirement):
     url: str = ""
     path: Path | None = None
     subdirectory: str | None = None
+    check_installable: bool = dataclasses.field(kw_only=True, default=True)
 
     def __post_init__(self) -> None:
         super().__post_init__()
         self._parse_url()
-        if self.is_local_dir:
+        if self.is_local_dir and self.check_installable:
             self._check_installable()
 
     def _hash_key(self) -> tuple:
