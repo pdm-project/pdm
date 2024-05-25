@@ -241,7 +241,7 @@ class FileRequirement(Requirement):
     url: str = ""
     path: Path | None = None
     subdirectory: str | None = None
-    check_installable: bool = dataclasses.field(kw_only=True, default=True)
+    check_installable: bool = True
 
     def __post_init__(self) -> None:
         super().__post_init__()
