@@ -17,7 +17,7 @@ from pdm.formats.base import (
     make_inline_table,
 )
 from pdm.models.markers import Marker, get_marker
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import FileRequirement, Requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import cd
 
@@ -67,11 +67,21 @@ def _convert_python(python: str) -> PySpecSet:
 
 
 def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -> Iterable[str]:
+    from pdm.models.backends import DEFAULT_BACKEND
+
+    backend = DEFAULT_BACKEND(Path.cwd())
+
+    def fix_req_path(req: Requirement) -> Requirement:
+        if isinstance(req, FileRequirement):
+            req.relocate(backend)
+        return req
+
     if isinstance(req_dict, list):
         for req in req_dict:
             yield from _convert_req(name, req)
     elif isinstance(req_dict, str):
-        yield Requirement.from_req_dict(name, _convert_specifier(req_dict)).as_line()
+        pdm_req = fix_req_path(Requirement.from_req_dict(name, _convert_specifier(req_dict), check_installable=False))
+        yield pdm_req.as_line()
     else:
         assert isinstance(req_dict, dict)
         req_dict = dict(req_dict)
@@ -90,7 +100,8 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
                 "rev",
                 req_dict.pop("tag", req_dict.pop("branch", None)),  # type: ignore[arg-type]
             )
-        yield Requirement.from_req_dict(name, req_dict).as_line()
+        pdm_req = fix_req_path(Requirement.from_req_dict(name, req_dict, check_installable=False))
+        yield pdm_req.as_line()
 
 
 # See https://github.com/python-poetry/poetry-core/pull/521#issuecomment-1327689551
