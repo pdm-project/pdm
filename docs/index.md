@@ -74,13 +74,13 @@ You can pass additional options to the script to control how PDM is installed:
 usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
 
 optional arguments:
--h, --help            show this help message and exit
--v VERSION, --version VERSION | envvar: PDM_VERSION
+  -h, --help            show this help message and exit
+  -v VERSION, --version VERSION | envvar: PDM_VERSION
                         Specify the version to be installed, or HEAD to install from the main branch
---prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
---remove | envvar: PDM_REMOVE            Remove the PDM installation
--p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
--d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
+  --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
+  --remove | envvar: PDM_REMOVE            Remove the PDM installation
+  -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
+  -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
 ```
 
 You can either pass the options after the script or set the env var value.
