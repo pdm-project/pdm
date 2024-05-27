@@ -39,11 +39,9 @@ Flask server started at http://0.0.0.0:54321
 ```
 
 !!! note "Yarn-like script shortcuts"
-    There is a builtin shortcut making all scripts available as root commands
-    as long as the script does not conflict with any builtin or plugin-contributed command.
+    There is a builtin shortcut making all scripts available as root commands as long as the script does not conflict with any builtin or plugin-contributed command.
     Said otherwise, if you have a `start` script, you can run both `pdm run start` and `pdm start`.
-    But if you have an `install` script, only `pdm run install` will run it,
-    `pdm install` will still run the builtin `install` command.
+    But if you have an `install` script, only `pdm run install` will run it, `pdm install` will still run the builtin `install` command.
 
 PDM supports 4 types of scripts:
 
@@ -56,16 +54,16 @@ Plain text scripts are regarded as normal command, or you can explicitly specify
 start = {cmd = "flask run -p 54321"}
 ```
 
-In some cases, such as when wanting to add comments between parameters, it might be more convenient
+In some cases, such as when wanting to add comments between parameters, it might be more convenient.
 to specify the command as an array instead of a string:
 
 ```toml
 [tool.pdm.scripts]
 start = {cmd = [
-	"flask",
-	"run",
-	# Important comment here about always using port 54321
-	"-p", "54321"
+    "flask",
+    "run",
+    # Important comment here about always using port 54321
+    "-p", "54321"
 ]}
 ```
 
@@ -110,8 +108,8 @@ Running `pdm run all` will run `lint` first and then `test` if `lint` succeeded.
 
 +++ 2.13.0
 
-To override the default behavior and continue the execution of the remaining
-scripts after a failure, set the `keep_going` option to `true`:
+To override the default behavior and continue the execution of the remaining scripts after a failure,
+set the `keep_going` option to `true`:
 
 ```toml
 [tool.pdm.scripts]
@@ -134,7 +132,6 @@ all = {composite = ["lint mypackage/", "test -v tests/"]}
 
 !!! note
     Argument passed on the command line are given to each called task.
-
 
 ## Script Options
 
@@ -291,7 +288,9 @@ executing the script. This will expand to `{sys.executable} -m pdm`.
 [tool.pdm.scripts]
 whoami = { shell = "echo `{pdm} -V` was called as '{pdm} -V'" }
 ```
+
 will produce the following output:
+
 ```shell
 $ pdm whoami
 PDM, version 0.1.dev2501+g73651b7.d20231115 was called as /usr/bin/python3 -m pdm -V
@@ -302,8 +301,6 @@ PDM, version 2.8.0 was called as <snip>/venvs/pdm2-8/bin/python -m pdm -V
 
 !!! note
     While the above example uses PDM 2.8, this functionality was introduced in the 2.10 series and only backported for the showcase.
-
-
 
 ## Show the List of Scripts
 

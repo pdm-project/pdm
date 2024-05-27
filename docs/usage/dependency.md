@@ -145,6 +145,7 @@ lint = [
 test = ["pytest", "pytest-cov"]
 doc = ["mkdocs"]
 ```
+
 For backward-compatibility, if only `-d` or `--dev` is specified, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
 
 !!! NOTE
@@ -168,9 +169,9 @@ pdm add -e git+https://github.com/pallets/click.git@main#egg=click --dev
 
 ### Save version specifiers
 
-If the package is given without a version specifier like `pdm add requests`. PDM provides three different behaviors of what version
-specifier is saved for the dependency, which is given by `--save-<strategy>`(Assume `2.21.0` is the latest version that can be found
-for the dependency):
+If the package is given without a version specifier like `pdm add requests`.
+PDM provides three different behaviors of what version specifier is saved for the dependency,
+which is given by `--save-<strategy>`(Assume `2.21.0` is the latest version that can be found for the dependency):
 
 - `minimum`: Save the minimum version specifier: `>=2.21.0` (default).
 - `compatible`: Save the compatible version specifier: `>=2.21.0,<3.0.0`.
@@ -237,8 +238,8 @@ which is given by `--update-<strategy>` option:
 ### Update packages to the versions that break the version specifiers
 
 One can give `-u/--unconstrained` to tell PDM to ignore the version specifiers in the `pyproject.toml`.
-This works similarly to the `yarn upgrade -L/--latest` command. Besides, [`pdm update`](../reference/cli.md#update_2) also supports the
-`--pre/--prerelease` option.
+This works similarly to the `yarn upgrade -L/--latest` command. Besides,
+[`pdm update`](../reference/cli.md#update_2) also supports the `--pre/--prerelease` option.
 
 ## Remove existing dependencies
 
@@ -268,7 +269,6 @@ You can pass glob patterns to filter the packages to show:
 ```bash
 pdm outdated requests* flask*
 ```
-
 
 ## Select a subset of dependency groups to install
 
@@ -342,7 +342,7 @@ Also, you can specify the output format other than the default table output. The
 
 Or show a dependency tree by:
 
-```
+```bash
 $ pdm list --tree
 tempenv 0.0.0
 └── click 7.0 [ required: <7.0.0,>=6.7 ]
@@ -393,11 +393,13 @@ However, unlike `stack`, by default, PDM won't use global project automatically 
 Users should pass `-g/--global` explicitly to activate it, since it is not very pleasing if packages go to a wrong place.
 But PDM also leave the decision to users, just set the config `global_project.fallback` to `true`.
 
-By default, when `pdm` uses global project implicitly the following message is printed: `Project is not found, fallback to the global project`. To disable this message set the config `global_project.fallback_verbose` to `false`.
+By default, when `pdm` uses global project implicitly the following message is printed: `Project is not found, fallback to the global project`.
+To disable this message set the config `global_project.fallback_verbose` to `false`.
 
-If you want global project to track another project file other than `<CONFIG_ROOT>/global-project`, you can provide the
-project path via `-p/--project <path>` option. Especially if you pass `--global --project .`, PDM will install the dependencies
-of the current project into the global Python.
+If you want global project to track another project file other than `<CONFIG_ROOT>/global-project`,
+you can provide the project path via `-p/--project <path>` option.
+Especially if you pass `--global --project .`,
+PDM will install the dependencies of the current project into the global Python.
 
 !!! warning
     Be careful with `remove` and `sync --clean/--pure` commands when global project is used, because it may remove packages installed in your system Python.

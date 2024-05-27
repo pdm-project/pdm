@@ -54,15 +54,13 @@ pdm python remove 3.9.8
 
     Afterwards you can manage the installations using either `rye toolchain` or `pdm python`.
 
-
 ## Virtualenv or not
 
 After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.
-If you choose yes, PDM will create a virtual environment in the project root directory, and use it as the Python interpreter
-for the project.
+If you choose **yes**, PDM will create a virtual environment in the project root directory, and use it as the Python interpreter for the project.
 
-If the selected Python interpreter is in a virtual environment, PDM will use it as the project environment and install dependencies
-into it. Otherwise, `__pypackages__` will be created in the project root and dependencies will be installed into it.
+If the selected Python interpreter is in a virtual environment, PDM will use it as the project environment and install dependencies into it.
+Otherwise, `__pypackages__` will be created in the project root and dependencies will be installed into it.
 
 For the difference between these two approaches, please refer to the corresponding sections in the docs:
 
@@ -84,7 +82,7 @@ You need to set an appropriate `requires-python` value for your project. This is
 
 Resolving the dependencies will cause a `ResolutionImpossible`:
 
-```
+```bash
 Unable to find a resolution because the following dependencies don't work
 on all Python versions defined by the project's `requires-python`
 ```
@@ -178,7 +176,7 @@ $ pdm info --env
 
 [This command](../reference/cli.md#info) is useful for checking which mode is being used by the project:
 
-- If *Project Packages* is `None`, [virtualenv mode](./venv.md) is enabled.
+- If **Project Packages** is `None`, [virtualenv mode](./venv.md) is enabled.
 - Otherwise, [PEP 582 mode](./pep582.md) is enabled.
 
 Now, you have set up a new PDM project and get a `pyproject.toml` file. Refer to [metadata section](../reference/pep621.md)

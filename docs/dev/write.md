@@ -10,10 +10,9 @@ It is shipped with a full-featured plug-in system, with which you can:
 
 ## What should a plugin do
 
-The core PDM project focuses on dependency management and package publishing. Other
-functionalities you wish to integrate with PDM are preferred to lie in their own plugins
-and released as standalone PyPI projects. In case the plugin is considered a good supplement
-of the core project it may have a chance to be absorbed into PDM.
+The core PDM project focuses on dependency management and package publishing.
+Other functionalities you wish to integrate with PDM are preferred to lie in their own plugins and released as standalone PyPI projects.
+In case the plugin is considered a good supplement of the core project it may have a chance to be absorbed into PDM.
 
 ## Write your own plugin
 
@@ -44,16 +43,14 @@ class HelloCommand(BaseCommand):
 
 First, let's create a new `HelloCommand` class inheriting from `pdm.cli.commands.base.BaseCommand`. It has two major functions:
 
-- `add_arguments()` to manipulate the argument parser passed as the only argument,
-  where you can add additional command line arguments to it
-- `handle()` to do something when the subcommand is matched, you can do nothing by writing a single `pass` statement.
-  It accepts two arguments: an `pdm.project.Project` object as the first one and the parsed `argparse.Namespace` object as the second.
+- `add_arguments()` to manipulate the argument parser passed as the only argument, where you can add additional command line arguments to it
+- `handle()` to do something when the subcommand is matched, you can do nothing by writing a single `pass` statement. It accepts two arguments: an `pdm.project.Project` object as the first one and the parsed `argparse.Namespace` object as the second.
 
 The document string will serve as the command help text, which will be shown in `pdm --help`.
 
 Besides, PDM's subcommand has two default options: `-v/--verbose` to change the verbosity level and `-g/--global` to enable global project.
-If you don't want these default options, override the `arguments` class attribute to a list of `pdm.cli.options.Option` objects, or
-assign it to an empty list to have no default options:
+If you don't want these default options, override the `arguments` class attribute to a list of `pdm.cli.options.Option` objects,
+or assign it to an empty list to have no default options:
 
 ```python hl_lines="3"
 class HelloCommand(BaseCommand):
@@ -167,7 +164,6 @@ pytest_plugins = [
 You can see some usage examples into PDM own [tests](https://github.com/pdm-project/pdm/tree/main/tests), especially the [conftest.py file](https://github.com/pdm-project/pdm/blob/main/tests/conftest.py) for configuration.
 
 See the [pytest fixtures documentation](fixtures.md) for more details.
-
 
 ## Publish your plugin
 

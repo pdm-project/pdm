@@ -121,7 +121,6 @@ They trigger the following hooks:
 - [`pre_build`][pdm.signals.pre_build]
 - [`post_build`][pdm.signals.post_build]
 
-
 ```mermaid
 flowchart LR
   subgraph pdm-publish [pdm publish]
@@ -227,8 +226,7 @@ flowchart LR
 
 ## Skipping
 
-It is possible to control which task and hook runs for any built-in command as well as custom user scripts
-using the `--skip` option.
+It is possible to control which task and hook runs for any built-in command as well as custom user scripts using the `--skip` option.
 
 It accepts a comma-separated list of hooks/task names to skip
 as well as the predefined `:all`, `:pre` and `:post` shortcuts
