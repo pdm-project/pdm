@@ -2092,7 +2092,7 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.15.1"
+version = "0.15.3"
 requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
 groups = ["all", "default", "test"]
@@ -2101,8 +2101,8 @@ dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "unearth-0.15.1-py3-none-any.whl", hash = "sha256:e76dc2e3ce64fe0888fca4e0f60607e7be42cd033e1b8e6a6e49d8cf3c20c874"},
-    {file = "unearth-0.15.1.tar.gz", hash = "sha256:863deb3339c0d65a5be0d0ad2c67d46d5f574a798e74ef0552bf11d298a30abb"},
+    {file = "unearth-0.15.3-py3-none-any.whl", hash = "sha256:1b164a12fc28ac1d99e86a1ce0b8dde42087166260d3240ef4b2614d9c3573b1"},
+    {file = "unearth-0.15.3.tar.gz", hash = "sha256:6324e51751d578362a961cd8a2c626a950b394516c71d85348d06ff59f3fbe14"},
 ]
 
 [[package]]
