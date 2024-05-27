@@ -3,7 +3,7 @@ import pytest
 
 from pdm.utils import cd
 
-PYTHON_VERSIONS = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+PYTHON_VERSIONS = ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 PYPROJECT = {
     "project": {"name": "test-project", "version": "0.1.0", "requires-python": ">=3.7"},
     "build-system": {"requires": ["pdm-backend"], "build-backend": "pdm.backend"},
@@ -30,12 +30,12 @@ def test_basic_integration(python_version, core, tmp_path, pdm):
     project.pyproject.set_data(PYPROJECT)
     project.root.joinpath("foo.py").write_text("import django\n")
     project._environment = None
-    pdm(["use", "-f", python_version], obj=project, strict=True)
-    pdm(["add", "django", "-v"], obj=project, strict=True)
+    pdm(["use", "-f", python_version], obj=project, strict=True, cleanup=False)
+    pdm(["add", "django", "-v"], obj=project, strict=True, cleanup=False)
     with cd(project.root):
-        pdm(["run", "python", "foo.py"], obj=project, strict=True)
-        pdm(["build", "-v"], obj=project, strict=True)
-    pdm(["remove", "-v", "django"], obj=project, strict=True)
+        pdm(["run", "python", "foo.py"], obj=project, strict=True, cleanup=False)
+        pdm(["build", "-v"], obj=project, strict=True, cleanup=False)
+    pdm(["remove", "-v", "django"], obj=project, strict=True, cleanup=False)
     result = pdm(["list"], obj=project, strict=True)
     assert not any(line.strip().lower().startswith("django") for line in result.output.splitlines())
 
