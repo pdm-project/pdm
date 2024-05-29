@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import tarfile
+import tempfile
 from typing import Mapping
 
 from pdm.cli.commands.base import BaseCommand
@@ -56,15 +58,28 @@ class Command(BaseCommand):
         artifacts: list[str] = []
         with project.core.ui.logging("build"):
             if sdist:
-                project.core.ui.echo("Building sdist...")
-                loc = SdistBuilder(project.root, project.environment).build(dest)
-                project.core.ui.echo(f"Built sdist at {loc}")
-                artifacts.append(loc)
+                project.core.ui.echo("[info]Building sdist...")
+                sdist_file = SdistBuilder(project.root, project.environment).build(dest)
+                project.core.ui.echo(f"[info]Built sdist at {sdist_file}")
+                artifacts.append(sdist_file)
             if wheel:
-                project.core.ui.echo("Building wheel...")
-                loc = WheelBuilder(project.root, project.environment).build(dest)
-                project.core.ui.echo(f"Built wheel at {loc}")
-                artifacts.append(loc)
+                if sdist:
+                    project.core.ui.echo("[info]Building wheel from sdist...")
+                    sdist_out = tempfile.mkdtemp(prefix="pdm-build-via-sdist-")
+                    try:
+                        with tarfile.open(sdist_file, "r:gz") as tf:
+                            tf.extractall(sdist_out)
+                            sdist_name = os.path.basename(sdist_file)[: -len(".tar.gz")]
+                            whl = WheelBuilder(os.path.join(sdist_out, sdist_name), project.environment).build(dest)
+                            project.core.ui.echo(f"[info]Built wheel at {whl}")
+                            artifacts.append(whl)
+                    finally:
+                        shutil.rmtree(sdist_out, ignore_errors=True)
+                else:
+                    project.core.ui.echo("[info]Building wheel...")
+                    whl = WheelBuilder(project.root, project.environment).build(dest)
+                    project.core.ui.echo(f"[info]Built wheel at {whl}")
+                    artifacts.append(whl)
         hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:

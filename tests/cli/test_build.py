@@ -54,12 +54,15 @@ def test_build_single_module(fixture_project):
     ]:
         assert f"demo_module-0.1.0/{name}" in tar_names
 
-    zip_names = get_wheel_names(project.root / "dist/demo_module-0.1.0-py3-none-any.whl")
-    for name in ["foo_module.py", "bar_module.py"]:
-        assert name in zip_names
+    for i in range(2):
+        if i == 1:
+            Command.do_build(project, sdist=False)
+        zip_names = get_wheel_names(project.root / "dist/demo_module-0.1.0-py3-none-any.whl")
+        for name in ["foo_module.py", "bar_module.py"]:
+            assert name in zip_names
 
-    for name in ("pyproject.toml", "LICENSE"):
-        assert name not in zip_names
+        for name in ("pyproject.toml", "LICENSE"):
+            assert name not in zip_names
 
 
 def test_build_single_module_with_readme(fixture_project):
