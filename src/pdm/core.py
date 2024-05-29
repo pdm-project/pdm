@@ -52,6 +52,7 @@ class State:
     """The config settings map shared by all packages"""
     exclude_newer: datetime | None = None
     """The exclude newer than datetime for the lockfile"""
+    enable_cache: bool = True
 
 
 class Core:
@@ -184,7 +185,7 @@ class Core:
         self.state.config_settings = getattr(options, "config_setting", None)
 
         if options.no_cache:
-            project.cache_dir = Path(self.create_temp_dir(prefix="pdm-cache-"))
+            self.state.enable_cache = False
 
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)

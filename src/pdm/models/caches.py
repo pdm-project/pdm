@@ -67,17 +67,6 @@ class JSONFileCache(Generic[KT, VT]):
         self._cache[key] = value
         self._write_cache()
 
-    def delete(self, obj: KT) -> None:
-        try:
-            del self._cache[self._get_key(obj)]
-        except KeyError:
-            pass
-        self._write_cache()
-
-    def clear(self) -> None:
-        self._cache.clear()
-        self._write_cache()
-
 
 class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
     """A cache manager that stores the
@@ -182,6 +171,22 @@ class HashCache:
             path.parent.mkdir(parents=True, exist_ok=True)
             with atomic_open_for_write(path, encoding="utf-8") as fp:
                 fp.write(hash)
+
+
+class EmptyCandidateInfoCache(CandidateInfoCache):
+    def get(self, obj: Candidate) -> CandidateInfo:
+        raise KeyError
+
+    def set(self, obj: Candidate, value: CandidateInfo) -> None:
+        pass
+
+
+class EmptyHashCache(HashCache):
+    def get(self, url: str) -> str | None:
+        return None
+
+    def set(self, url: str, hash: str) -> None:
+        pass
 
 
 class WheelCache:

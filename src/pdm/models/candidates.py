@@ -628,6 +628,9 @@ class PreparedCandidate:
         """Determine whether to cache the dependencies and built wheel."""
         from unearth import vcs_support
 
+        if not self.environment.project.core.state.enable_cache:
+            return False
+
         link, source_dir = self.candidate.link, self._source_dir
         if self.req.editable:
             return False
@@ -646,6 +649,8 @@ class PreparedCandidate:
         return False
 
     def _get_build_cache(self) -> Path | None:
+        if not self.environment.project.core.state.enable_cache:
+            return None
         wheel_cache = self.environment.project.make_wheel_cache()
         assert self.candidate.link
         cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.target_python)
