@@ -120,7 +120,7 @@ class BaseEnvironment(abc.ABC):
 
         session = PDMPyPIClient(
             sources=sources,
-            cache_dir=self.project.cache("http"),
+            cache_dir=self.project.cache("http") if self.project.core.state.enable_cache else None,
             timeout=self.project.config["request_timeout"],
             auth=self.auth,
             mounts=mounts,

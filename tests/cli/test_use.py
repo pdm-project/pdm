@@ -57,8 +57,8 @@ echo hello
 
 
 def test_use_remember_last_selection(project, mocker):
+    (project.cache_dir / "use_cache.json").unlink(missing_ok=True)
     cache = JSONFileCache(project.cache_dir / "use_cache.json")
-    cache.clear()
     do_use = UseCommand().do_use
     do_use(project, first=True)
     cache._read_cache()

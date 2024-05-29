@@ -112,6 +112,10 @@ class Project:
         return f"<Project '{self.root.as_posix()}'>"
 
     @cached_property
+    def cache_dir(self) -> Path:
+        return Path(self.config.get("cache_dir", "")).expanduser()
+
+    @cached_property
     def pyproject(self) -> PyProject:
         return PyProject(self.root / self.PYPROJECT_FILENAME, ui=self.core.ui)
 
@@ -598,16 +602,6 @@ class Project:
     def backend(self) -> BuildBackend:
         return get_backend_by_spec(self.pyproject.build_system)(self.root)
 
-    @property
-    def cache_dir(self) -> Path:
-        if self._cache_dir is None:
-            self._cache_dir = Path(self.config.get("cache_dir", "")).expanduser()
-        return self._cache_dir
-
-    @cache_dir.setter
-    def cache_dir(self, value: Path) -> None:
-        self._cache_dir = value
-
     def cache(self, name: str) -> Path:
         path = self.cache_dir / name
         try:
@@ -627,16 +621,20 @@ class Project:
         return PackageCache(self.cache("packages"))
 
     def make_candidate_info_cache(self) -> CandidateInfoCache:
-        from pdm.models.caches import CandidateInfoCache
+        from pdm.models.caches import CandidateInfoCache, EmptyCandidateInfoCache
 
         python_hash = hashlib.sha1(str(self.environment.python_requires).encode()).hexdigest()
         file_name = f"package_meta_{python_hash}.json"
-        return CandidateInfoCache(self.cache("metadata") / file_name)
+        return (
+            CandidateInfoCache(self.cache("metadata") / file_name)
+            if self.core.state.enable_cache
+            else EmptyCandidateInfoCache(self.cache("metadata") / file_name)
+        )
 
     def make_hash_cache(self) -> HashCache:
-        from pdm.models.caches import HashCache
+        from pdm.models.caches import EmptyHashCache, HashCache
 
-        return HashCache(directory=self.cache("hashes"))
+        return HashCache(self.cache("hashes")) if self.core.state.enable_cache else EmptyHashCache(self.cache("hashes"))
 
     def iter_interpreters(
         self,
