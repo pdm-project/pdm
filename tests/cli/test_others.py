@@ -176,10 +176,16 @@ def test_export_to_requirements_txt(pdm, fixture_project):
     assert result.output.strip() == requirements_txt.read_text().strip()
 
     result = pdm(["export", "--self"], obj=project)
+    assert result.exit_code == 1
+
+    result = pdm(["export", "--editable-self"], obj=project)
+    assert result.exit_code == 1
+
+    result = pdm(["export", "--no-hashes", "--self"], obj=project)
     assert result.exit_code == 0
     assert ".  # this package\n" in result.output.strip()
 
-    result = pdm(["export", "--editable-self"], obj=project)
+    result = pdm(["export", "--no-hashes", "--editable-self"], obj=project)
     assert result.exit_code == 0
     assert "-e .  # this package\n" in result.output.strip()
 
@@ -227,8 +233,19 @@ def test_show_update_hint(pdm, project, monkeypatch):
 @pytest.mark.usefixtures("repository")
 def test_export_with_platform_markers(pdm, project):
     pdm(["add", "--no-sync", 'urllib3; sys_platform == "fake"'], obj=project, strict=True)
-    result = pdm(["export"], obj=project, strict=True)
+    result = pdm(["export", "--no-hashes"], obj=project, strict=True)
     assert 'urllib3==1.22; sys_platform == "fake"' in result.output.splitlines()
 
-    result = pdm(["export", "--no-markers"], obj=project, strict=True)
+    result = pdm(["export", "--no-markers", "--no-hashes"], obj=project, strict=True)
     assert not any("urllib3" in line for line in result.output.splitlines())
+
+
+@pytest.mark.usefixtures("repository", "vcs")
+def test_export_with_vcs_deps(pdm, project):
+    pdm(["add", "--no-sync", "git+https://github.com/test-root/demo.git"], obj=project, strict=True)
+    result = pdm(["export"], obj=project)
+    assert result.exit_code != 0
+
+    result = pdm(["export", "--no-hashes"], obj=project)
+    assert result.exit_code == 0
+    assert "demo @ git+https://github.com/test-root/demo.git@1234567890abcdef" in result.output.splitlines()

@@ -189,6 +189,8 @@ def export(
     for candidate in sorted(candidates, key=lambda x: x.identify()):  # type: ignore[attr-defined]
         if isinstance(candidate, Candidate):
             req = candidate.req.as_pinned_version(candidate.version)
+            if options.hashes and not candidate.hashes:
+                raise PdmUsageError(f"Hash is not available for '{req}', please export with `--no-hashes` option.")
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
@@ -203,6 +205,8 @@ def export(
         lines.append("\n")
     if (options.self or options.editable_self) and not project.is_distribution:
         raise PdmUsageError("Cannot export the project itself in a non-library project.")
+    if options.hashes and (options.self or options.editable_self):
+        raise PdmUsageError("Hash is not available for `--self/--editable-self`. Please export with `--no-hashes`.")
     if options.self:
         lines.append(".  # this package\n")
     elif options.editable_self:

@@ -175,12 +175,12 @@ def test_import_requirements_with_group(project):
 
 
 def test_export_requirements_with_self(project):
-    result = requirements.export(project, [], ns(self=True))
+    result = requirements.export(project, [], ns(self=True, hashes=False))
     assert result.strip().splitlines()[-1] == ".  # this package"
 
 
 def test_export_requirements_with_editable_self(project):
-    result = requirements.export(project, [], ns(editable_self=True))
+    result = requirements.export(project, [], ns(editable_self=True, hashes=False))
     assert result.strip().splitlines()[-1] == "-e .  # this package"
 
 
