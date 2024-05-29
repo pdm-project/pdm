@@ -238,3 +238,14 @@ def test_export_with_platform_markers(pdm, project):
 
     result = pdm(["export", "--no-markers", "--no-hashes"], obj=project, strict=True)
     assert not any("urllib3" in line for line in result.output.splitlines())
+
+
+@pytest.mark.usefixtures("repository", "vcs")
+def test_export_with_vcs_deps(pdm, project):
+    pdm(["add", "--no-sync", "git+https://github.com/test-root/demo.git"], obj=project, strict=True)
+    result = pdm(["export"], obj=project)
+    assert result.exit_code != 0
+
+    result = pdm(["export", "--no-hashes"], obj=project)
+    assert result.exit_code == 0
+    assert "demo @ git+https://github.com/test-root/demo.git@1234567890abcdef" in result.output.splitlines()
