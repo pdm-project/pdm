@@ -450,9 +450,9 @@ class PreparedCandidate:
                 if not self.candidate.link:
                     self.candidate.link = self.link
         # find if there is any build cache for the candidate
-        if allow_all and not self.req.editable:
+        if not self.req.editable:
             cached = self._get_build_cache()
-            if cached:
+            if cached and self._wheel_compatible(cached.name, allow_all):
                 self._cached = cached
                 return
         # If not, download and unpack the link
