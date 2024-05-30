@@ -1,3 +1,16 @@
+## Release v2.15.4 (2024-05-30)
+
+
+### Bug Fixes
+
+- Build wheel from sdist if available, to make sure sdist is built properly. This behavior is consistent with [pypa/build](https://pypi.org/project/build). ([#2843](https://github.com/pdm-project/pdm/issues/2843))
+- Fix the issue of self-referencing extra dependencies failing to be resolved for local packages. ([#2898](https://github.com/pdm-project/pdm/issues/2898))
+- Fix an issue of max recursion depth error when parsing a poetry project with circular dependencies on local packages. ([#2900](https://github.com/pdm-project/pdm/issues/2900))
+- Fix a bug that VCS dependencies and `--self` don't work in the exported requirements.txt with hashes. ([#2908](https://github.com/pdm-project/pdm/issues/2908))
+- Fix a cache miss when there exist built wheels for a given link. ([#2912](https://github.com/pdm-project/pdm/issues/2912))
+- Don't try to store caches when `--no-cache` is given. ([#2913](https://github.com/pdm-project/pdm/issues/2913))
+
+
 ## Release v2.15.3 (2024-05-20)
 
 
