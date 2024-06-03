@@ -1,8 +1,7 @@
+import _imp
 import json
 import sys
 import sysconfig
-
-import _imp
 
 # Copied from packaging/tags.py
 
