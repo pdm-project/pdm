@@ -10,8 +10,7 @@ import signal
 import subprocess
 import sys
 from pathlib import Path
-from types import FrameType
-from typing import TYPE_CHECKING, Mapping, NamedTuple, Sequence, cast
+from typing import TYPE_CHECKING, cast
 
 from rich import print_json
 
@@ -20,14 +19,16 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option, venv_option
 from pdm.cli.utils import check_project_file
-from pdm.environments import BaseEnvironment
 from pdm.exceptions import PdmUsageError
-from pdm.project import Project
 from pdm.signals import pdm_signals
 from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterator, TypedDict
+    from types import FrameType
+    from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, TypedDict
+
+    from pdm.environments import BaseEnvironment
+    from pdm.project import Project
 
     class EnvFileOptions(TypedDict, total=True):
         override: str
