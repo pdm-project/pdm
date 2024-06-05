@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import itertools
 import os
 import re
@@ -19,6 +20,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option, venv_option
 from pdm.cli.utils import check_project_file
+from pdm.environments import BaseEnvironment
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 from pdm.signals import pdm_signals
@@ -86,6 +88,29 @@ def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
     return script, args_interpolated
 
 
+_METADATA_REGEX = r"(?m)^# /// (?P<type>[a-zA-Z0-9-]+)$\s(?P<content>(^#(| .*)$\s)+)^# ///$"
+
+
+def read_script_metadata(script: str, section: str) -> dict[str, Any] | None:
+    # Adapted from https://packaging.python.org/en/latest/specifications/inline-script-metadata/
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:
+        import tomli as tomllib
+
+    matches = [m for m in re.finditer(_METADATA_REGEX, script) if m.group("type") == section]
+    if len(matches) > 1:
+        raise ValueError(f"Multiple {section} blocks found")
+    elif len(matches) == 1:
+        content = "".join(
+            line[2:] if line.startswith("# ") else line[1:]
+            for line in matches[0].group("content").splitlines(keepends=True)
+        )
+        return tomllib.loads(content)
+    else:
+        return None
+
+
 class Task(NamedTuple):
     kind: str
     name: str
@@ -121,7 +146,38 @@ class TaskRunner:
             self.project.scripts.get("_", {}) if self.project.scripts else {},
         )
         self.global_options = global_options.copy()
+        self.reuse_env = False
         self.hooks = hooks
+
+    def _get_script_env(self, script_file: str) -> BaseEnvironment:
+        from pdm.cli.commands.venv.backends import BACKENDS
+        from pdm.environments import PythonEnvironment
+        from pdm.installers.core import install_requirements
+        from pdm.models.venv import get_venv_python
+
+        with open(script_file, encoding="utf8") as f:
+            metadata = read_script_metadata(f.read(), "script")
+        if not metadata:
+            return self.project.environment
+        tool_config = metadata.pop("tool", {})
+        script_project = self.project.core.create_project()
+        script_project.pyproject.set_data({"project": metadata, "tool": tool_config})
+        venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8")).hexdigest()
+        venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)
+        venv = venv_backend.get_location(None, venv_name)
+        if venv.exists() and self.reuse_env:
+            self.project.core.ui.info(f"Reusing existing script environment: {venv}", verbosity=termui.Verbosity.DETAIL)
+        else:
+            self.project.core.ui.info(
+                f"Creating script environment for script: {venv}", verbosity=termui.Verbosity.DETAIL
+            )
+            venv = venv_backend.create(venv_name=venv_name, force=True)
+        env = PythonEnvironment(script_project, python=get_venv_python(venv).as_posix())
+        script_project._python = env.interpreter
+        env.project = script_project  # keep strong reference to the project
+        if reqs := script_project.get_dependencies():
+            install_requirements(list(reqs.values()), env, clean=True)
+        return env
 
     def get_task(self, script_name: str) -> Task | None:
         """Get the task with the given name. Return None if not found."""
@@ -148,14 +204,14 @@ class TaskRunner:
             raise PdmUsageError(f"Unknown options for task {script_name}: {', '.join(unknown_options)}")
         return Task(kind, script_name, value, cast("TaskOptions", options))
 
-    def expand_command(self, command: str) -> str:
+    def expand_command(self, env: BaseEnvironment, command: str) -> str:
         expanded_command = os.path.expanduser(command)
         if expanded_command.replace(os.sep, "/").startswith(("./", "../")):
             abspath = os.path.abspath(expanded_command)
             if not os.path.isfile(abspath):
                 raise PdmUsageError(f"Command [success]'{command}'[/] is not a valid executable.")
             return abspath
-        result = self.project.environment.which(command)
+        result = env.which(command)
         if not result:
             raise PdmUsageError(f"Command [success]'{command}'[/] is not found in your PATH.")
         return result
@@ -193,7 +249,11 @@ class TaskRunner:
                 process_env = {**process_env, **dotenv_env}
             else:
                 process_env = {**dotenv_env, **process_env}
-        project_env = project.environment
+        if not shell and args[0].endswith(".py"):
+            project_env = self._get_script_env(os.path.expanduser(args[0]))
+        else:
+            check_project_file(project)
+            project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
         process_env.update(project_env.process_env)
         if env:
@@ -207,8 +267,8 @@ class TaskRunner:
             command, *args = (expand_env_vars(arg, env=process_env) for arg in args)
             if command.endswith(".py"):
                 args = [command, *args]
-                command = str(project.environment.interpreter.executable)
-            expanded_command = self.expand_command(command)
+                command = str(project_env.interpreter.executable)
+            expanded_command = self.expand_command(project_env, command)
             real_command = os.path.realpath(expanded_command)
             process_cmd = [expanded_command, *args]
             if (
@@ -417,6 +477,9 @@ class Command(BaseCommand):
             action="store_true",
             help="Load site-packages from the selected interpreter",
         )
+        exec.add_argument(
+            "--reuse-env", action="store_true", help="Reuse the script environment for self-contained scripts"
+        )
         exec.add_argument("script", nargs="?", help="The command to run")
         exec.add_argument(
             "args",
@@ -425,21 +488,23 @@ class Command(BaseCommand):
         )
 
     def get_runner(self, project: Project, hooks: HookManager, options: argparse.Namespace) -> TaskRunner:
-        if (runner := getattr(self, "runner_cls", None)) is not None:  # pragma: no cover
+        if (runner_cls := getattr(self, "runner_cls", None)) is not None:  # pragma: no cover
             deprecation_warning("runner_cls attribute is deprecated, use get_runner method instead.")
-            return cast("type[TaskRunner]", runner)(project, hooks)
-        return TaskRunner(project, hooks)
+            runner = cast("type[TaskRunner]", runner_cls)(project, hooks)
+        else:
+            runner = TaskRunner(project, hooks)
+        runner.reuse_env = options.reuse_env
+        if options.site_packages:
+            runner.global_options["site_packages"] = True
+        return runner
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        check_project_file(project)
         hooks = HookManager(project, options.skip)
         runner = self.get_runner(project, hooks, options)
         if options.list:
             return runner.show_list()
         if options.json:
             return print_json(data=runner.as_json())
-        if options.site_packages:
-            runner.global_options.update({"site_packages": options.site_packages})
         if not options.script:
             project.core.ui.warn("No command is given, default to the Python REPL.")
             options.script = "python"

@@ -84,10 +84,12 @@ class Backend(abc.ABC):
         if not force:
             raise VirtualenvCreateError(f"The location {location} is not empty, add --force to overwrite it.")
         if location.is_file():
-            self.project.core.ui.echo(f"Removing existing file {location}", err=True)
+            self.project.core.ui.info(f"Removing existing file {location}", verbosity=termui.Verbosity.DETAIL)
             location.unlink()
         else:
-            self.project.core.ui.echo(f"Cleaning existing target directory {location}", err=True)
+            self.project.core.ui.info(
+                f"Cleaning existing target directory {location}", verbosity=termui.Verbosity.DETAIL
+            )
             with os.scandir(location) as entries:
                 for entry in entries:
                     if entry.is_dir() and not entry.is_symlink():
@@ -95,15 +97,20 @@ class Backend(abc.ABC):
                     else:
                         os.remove(entry.path)
 
-    def get_location(self, name: str | None) -> Path:
+    def get_location(self, name: str | None, venv_name: str | None) -> Path:
+        if name and venv_name:
+            raise PdmUsageError("Cannot specify both name and venv_name")
         venv_parent = Path(self.project.config["venv.location"]).expanduser()
         if not venv_parent.is_dir():
             venv_parent.mkdir(exist_ok=True, parents=True)
-        return venv_parent / f"{get_venv_prefix(self.project)}{name or self.ident}"
+        if not venv_name:
+            venv_name = f"{get_venv_prefix(self.project)}{name or self.ident}"
+        return venv_parent / venv_name
 
     def create(
         self,
         name: str | None = None,
+        venv_name: str | None = None,
         args: tuple[str, ...] = (),
         force: bool = False,
         in_project: bool = False,
@@ -113,7 +120,7 @@ class Backend(abc.ABC):
         if in_project:
             location = self.project.root / ".venv"
         else:
-            location = self.get_location(name)
+            location = self.get_location(name, venv_name)
         args = (*self.pip_args(with_pip), *args)
         if prompt is not None:
             prompt = prompt.format(
