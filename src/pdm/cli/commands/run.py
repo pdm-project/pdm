@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import itertools
 import os
 import re
@@ -10,7 +9,7 @@ import signal
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from rich import print_json
 
@@ -25,7 +24,7 @@ from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
     from types import FrameType
-    from typing import Any, Callable, Iterator, Mapping, NamedTuple, Sequence, TypedDict
+    from typing import Any, Callable, Iterator, Mapping, Sequence, TypedDict
 
     from pdm.environments import BaseEnvironment
     from pdm.project import Project
@@ -151,6 +150,8 @@ class TaskRunner:
         self.hooks = hooks
 
     def _get_script_env(self, script_file: str) -> BaseEnvironment:
+        import hashlib
+
         from pdm.cli.commands.venv.backends import BACKENDS
         from pdm.environments import PythonEnvironment
         from pdm.installers.core import install_requirements
