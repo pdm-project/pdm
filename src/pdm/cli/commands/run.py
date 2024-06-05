@@ -9,7 +9,7 @@ import signal
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple, cast
+from typing import TYPE_CHECKING, Mapping, NamedTuple, Sequence, cast
 
 from rich import print_json
 
@@ -24,7 +24,7 @@ from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
     from types import FrameType
-    from typing import Any, Callable, Iterator, Mapping, Sequence, TypedDict
+    from typing import Any, Callable, Iterator, TypedDict
 
     from pdm.environments import BaseEnvironment
     from pdm.project import Project
