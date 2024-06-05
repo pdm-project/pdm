@@ -40,6 +40,7 @@ def _create_truststore_ssl_context() -> SSLContext | None:
 
 _ssl_context = _create_truststore_ssl_context()
 CACHES_TTL = 7 * 24 * 60 * 60  # 7 days
+MAX_RETRIES = 4
 
 
 @lru_cache(maxsize=None)
@@ -48,7 +49,7 @@ def _get_transport(
     cert: tuple[str, str | None] | None = None,
     proxy: httpx.Proxy | None = None,
 ) -> httpx.BaseTransport:
-    return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy)
+    return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy, retries=MAX_RETRIES)
 
 
 class MsgPackSerializer(hishel.BaseSerializer):
