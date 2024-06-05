@@ -10,7 +10,7 @@ import pytest
 from pdm import termui
 from pdm.cli import actions
 from pdm.cli.utils import get_pep582_path
-from pdm.utils import cd
+from pdm.utils import cd, path_to_url
 
 
 @pytest.fixture
@@ -945,3 +945,40 @@ def test_run_script_changing_working_dir(project, pdm, capfd):
     capfd.readouterr()
     pdm(["run", "test_script"], obj=project, strict=True)
     assert capfd.readouterr()[0].strip() == "Hello world"
+
+
+def test_run_script_with_inline_metadata(project, pdm, local_finder, local_finder_artifacts):
+    with cd(project.root):
+        project.root.joinpath("test_script.py").write_text(
+            textwrap.dedent("""\
+            from first import first
+
+            assert first([0, False, 1, 2]) == 1
+            """)
+        )
+        result = pdm(["run", "test_script.py"], obj=project)
+        assert result.exit_code != 0
+
+    local_artifacts_url = path_to_url(str(local_finder_artifacts))
+
+    project.root.joinpath("test_script.py").write_text(
+        textwrap.dedent(f"""\
+        # /// script
+        # requires-python = ">=3.8"
+        # dependencies = [
+        #   "first",
+        # ]
+        #
+        # [[tool.pdm.source]]
+        # name = "pypi"
+        # url = "{local_artifacts_url}"
+        # type = "find_links"
+        # ///
+        from first import first
+
+        assert first([0, False, 1, 2]) == 1
+        """)
+    )
+    with cd(project.root):
+        result = pdm(["run", "test_script.py"], obj=project)
+        assert result.exit_code == 0

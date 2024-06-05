@@ -97,7 +97,7 @@ class Backend(abc.ABC):
                     else:
                         os.remove(entry.path)
 
-    def get_location(self, name: str | None, venv_name: str | None) -> Path:
+    def get_location(self, name: str | None = None, venv_name: str | None = None) -> Path:
         if name and venv_name:
             raise PdmUsageError("Cannot specify both name and venv_name")
         venv_parent = Path(self.project.config["venv.location"]).expanduser()
@@ -110,12 +110,12 @@ class Backend(abc.ABC):
     def create(
         self,
         name: str | None = None,
-        venv_name: str | None = None,
         args: tuple[str, ...] = (),
         force: bool = False,
         in_project: bool = False,
         prompt: str | None = None,
         with_pip: bool = False,
+        venv_name: str | None = None,
     ) -> Path:
         if in_project:
             location = self.project.root / ".venv"
