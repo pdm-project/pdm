@@ -95,7 +95,7 @@ jobs:
 
       - name: Setup MS Build for Windows
         if: runner.os == 'Windows'
-        uses: microsoft/setup-msbuild@v2
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install current PDM via pip
         if: matrix.install-via == 'pip'
