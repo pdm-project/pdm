@@ -170,13 +170,11 @@ class TaskRunner:
         if venv.exists() and self.reuse_env:
             self.project.core.ui.info(f"Reusing existing script environment: {venv}", verbosity=termui.Verbosity.DETAIL)
         else:
-            self.project.core.ui.info(
-                f"Creating script environment for script: {venv}", verbosity=termui.Verbosity.DETAIL
-            )
+            self.project.core.ui.info(f"Creating environment for script: {venv}", verbosity=termui.Verbosity.DETAIL)
             venv = venv_backend.create(venv_name=venv_name, force=True)
         env = PythonEnvironment(script_project, python=get_venv_python(venv).as_posix())
         script_project._python = env.interpreter
-        env.project = script_project  # keep strong reference to the project
+        env.project = script_project  # keep a strong reference to the project
         if reqs := script_project.get_dependencies():
             install_requirements(list(reqs.values()), env, clean=True)
         return env
