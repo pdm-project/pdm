@@ -10,6 +10,68 @@ pdm run flask run -p 54321
 
 It will run `flask run -p 54321` in the environment that is aware of packages in your project environment.
 
+## Single-file Scripts
+
++++ 2.16.0
+
+PDM can run single-file scripts with [inline script metadata](https://peps.python.org/pep-0723/).
+
+The following is an example of a script with embedded metadata:
+
+```python
+# test_script.py
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "requests<3",
+#   "rich",
+# ]
+# ///
+
+import requests
+from rich.pretty import pprint
+
+resp = requests.get("https://peps.python.org/api/peps.json")
+data = resp.json()
+pprint([(k, v["title"]) for k, v in data.items()][:10])
+```
+
+When you run it with `pdm run test_script.py`, PDM will create a temporary environment with the specified dependencies installed and run the script:
+
+```python
+[
+│   ('1', 'PEP Purpose and Guidelines'),
+│   ('2', 'Procedure for Adding New Modules'),
+│   ('3', 'Guidelines for Handling Bug Reports'),
+│   ('4', 'Deprecation of Standard Modules'),
+│   ('5', 'Guidelines for Language Evolution'),
+│   ('6', 'Bug Fix Releases'),
+│   ('7', 'Style Guide for C Code'),
+│   ('8', 'Style Guide for Python Code'),
+│   ('9', 'Sample Plaintext PEP Template'),
+│   ('10', 'Voting Guidelines')
+]
+```
+Add `--reuse-env` option if you want to reuse the environment created last time.
+You can also add `[tool.pdm]` section to the script metadata to configure PDM. For example:
+
+```python
+# test_script.py
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "requests<3",
+#   "rich",
+# ]
+#
+# [[tool.pdm.source]]  # Use a custom index
+# url = "https://mypypi.org/simple"
+# name = "pypi"
+# ///
+```
+
+Read the [specification](https://packaging.python.org/en/latest/specifications/inline-script-metadata/#inline-script-metadata) for more details.
+
 ## User Scripts
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.

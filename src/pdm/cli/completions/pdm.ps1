@@ -430,7 +430,7 @@ function TabExpansion($line, $lastWord) {
             "run" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "-l", "--list", "-s", "--site-packages", "--json")),
+                        [Option]::new(@("--global", "-g", "-l", "--list", "-s", "--site-packages", "--json", "--reuse-env")),
                         $skipOption,
                         $venvOption,
                         $projectOption

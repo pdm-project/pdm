@@ -400,6 +400,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l json -d 'Output all s
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l list -d 'Show all available scripts defined in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from run' -l reuse-env -d 'Reuse the script environment for self-contained scripts'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l site-packages -d 'Load site-packages from the selected interpreter'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l venv -d 'Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]'
