@@ -92,6 +92,11 @@ jobs:
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
           restore-keys: |
             venv-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Setup MS Build for Windows
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
       - name: Install current PDM via pip
         if: matrix.install-via == 'pip'
         run: python -m pip install -U .
