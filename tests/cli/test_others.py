@@ -202,13 +202,16 @@ def test_export_to_requirements_txt(pdm, fixture_project):
     assert (project.root / "requirements_output.txt").read_text() == requirements_txt.read_text()
 
 
-def test_export_doesnt_include_dep_with_extras(pdm, fixture_project):
+@pytest.mark.parametrize("extra_opt", [[], ["--no-extras"]])
+def test_export_doesnt_include_dep_with_extras(pdm, fixture_project, extra_opt):
     project = fixture_project("demo-package-has-dep-with-extras")
-    requirements_txt = project.root / "requirements.txt"
 
-    result = pdm(["export", "--without-hashes"], obj=project)
+    result = pdm(["export", "--without-hashes", *extra_opt], obj=project)
     assert result.exit_code == 0
-    assert result.output.strip() == requirements_txt.read_text().strip()
+    if extra_opt:
+        assert "requests==2.26.0" in result.output.splitlines()
+    else:
+        assert "requests[security]==2.26.0" in result.output.splitlines()
 
 
 def test_completion_command(pdm):
