@@ -101,6 +101,14 @@ pdm add "git+https://github.com/pypa/pip.git@22.0#egg=pip"
 pdm add "git+https://github.com/owner/repo.git@master#egg=pkg&subdirectory=subpackage"
 ```
 
+To use ssh scheme for git, just replace `https://` to `ssh://git@`
+
+Example:
+
+```bash
+pdm add "wheel @ git+ssh://git@github.com/pypa/wheel.git@main"
+```
+
 ### Hide credentials in the URL
 
 You can hide the credentials in the URL by using the `${ENV_VAR}` variable syntax:
