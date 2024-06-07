@@ -156,6 +156,7 @@ _pdm() {
         {-f+,--format+}"[Only requirements.txt is supported for now.]:format:(requirements)"
         "--no-hashes[Don't include artifact hashes]"
         "--no-markers[Don't include platform markers]"
+        "--no-extras[Strip extras from the requirements]"
         "--expandvars[Expand environment variables in requirements]"
         "--self[Include the project itself]"
         "--editable-self[Include the project itself as an editable dependency]"

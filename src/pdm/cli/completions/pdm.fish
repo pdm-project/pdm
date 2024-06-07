@@ -125,6 +125,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from export' -l group -d 'Select g
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l lockfile -d 'Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l no-default -d 'Don\'t include dependencies from the default group'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l no-extras -d 'Strip extras from the requirements'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l no-markers -d 'Don\'t include platform markers'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l output -d 'Write output to the given file, or print to stdout if not given'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l production -d 'Unselect dev dependencies'

@@ -11,7 +11,7 @@ from pdm.cli.options import groups_group, lockfile_option
 from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement
+from pdm.models.requirements import Requirement, strip_extras
 from pdm.project import Project
 
 
@@ -38,6 +38,9 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--no-markers", action="store_false", default=True, dest="markers", help="Don't include platform markers"
+        )
+        parser.add_argument(
+            "--no-extras", action="store_false", default=True, dest="extras", help="Strip extras from the requirements"
         )
         parser.add_argument(
             "-o",
@@ -73,9 +76,18 @@ class Command(BaseCommand):
             candidates = resolve_candidates_from_lockfile(
                 project, requirements.values(), groups=set(selection), cross_platform=options.markers
             )
-            # Remove candidates with [extras] because the bare candidates are already
-            # included
-            packages = (candidate for candidate in candidates.values() if not candidate.req.extras)
+
+            filtered_candidates: dict[str, Candidate] = {}
+            for k, candidate in candidates.items():
+                if options.extras:
+                    if candidate.req.extras:
+                        k = strip_extras(k)[0]
+                    elif k in filtered_candidates:
+                        continue
+                elif candidate.req.extras:
+                    continue
+                filtered_candidates[k] = candidate
+            packages = filtered_candidates.values()
 
         content = FORMATS[options.format].export(project, packages, options)
         if options.output:
