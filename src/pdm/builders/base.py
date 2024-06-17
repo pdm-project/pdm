@@ -247,13 +247,9 @@ class EnvBuilder:
         return env
 
     def subprocess_runner(
-        self,
-        cmd: list[str],
-        cwd: str | Path | None = None,
-        extra_environ: dict[str, str] | None = None,
-        isolated: bool = True,
+        self, cmd: list[str], cwd: str | Path | None = None, extra_environ: dict[str, str] | None = None
     ) -> None:
-        env = self._env_vars.copy() if isolated else {}
+        env = self._env_vars.copy()
         if extra_environ:
             env.update(extra_environ)
         return log_subprocessor(cmd, cwd, extra_environ=env)

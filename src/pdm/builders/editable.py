@@ -18,10 +18,12 @@ class EditableBuilder(EnvBuilder):
     }
 
     def prepare_metadata(self, out_dir: str) -> str:
-        self.install(self._requires, shared=True)
+        if self.isolated:
+            self.install(self._requires, shared=True)
         try:
-            requires = self._hook.get_requires_for_build_editable(self.config_settings)
-            self.install(requires)
+            if self.isolated:
+                requires = self._hook.get_requires_for_build_editable(self.config_settings)
+                self.install(requires)
             filename = self._hook.prepare_metadata_for_build_editable(out_dir, self.config_settings)
         except HookMissing:
             self.init_build_system(self.FALLBACK_BACKEND)
@@ -29,10 +31,12 @@ class EditableBuilder(EnvBuilder):
         return os.path.join(out_dir, filename)
 
     def build(self, out_dir: str, metadata_directory: str | None = None) -> str:
-        self.install(self._requires, shared=True)
+        if self.isolated:
+            self.install(self._requires, shared=True)
         try:
-            requires = self._hook.get_requires_for_build_editable(self.config_settings)
-            self.install(requires)
+            if self.isolated:
+                requires = self._hook.get_requires_for_build_editable(self.config_settings)
+                self.install(requires)
             filename = self._hook.build_editable(out_dir, self.config_settings, metadata_directory)
         except HookMissing:
             logger.warning("The build backend doesn't support PEP 660, falling back to setuptools-pep660")
