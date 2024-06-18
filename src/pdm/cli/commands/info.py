@@ -62,9 +62,9 @@ class Command(BaseCommand):
                     f"[primary]{key}[/]:"
                     for key in [
                         "PDM version",
-                        "Python Interpreter",
-                        "Project Root",
-                        "Local Packages",
+                        f"{'Global ' if project.is_global else ''}Python Interpreter",
+                        f"{'Global ' if project.is_global else ''}Project Root",
+                        f"{'Global ' if project.is_global else ''}Local Packages",
                     ]
                 ],
                 [

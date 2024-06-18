@@ -162,7 +162,9 @@ class Command(BaseCommand):
                     matched_req.prerelease = prerelease
                     updated_deps[group][normalized_name] = matched_req
             tracked_names.update(chain.from_iterable(updated_deps.values()))
-            project.core.ui.echo("Updating packages: {}.".format(", ".join(f"[req]{v}[/]" for v in tracked_names)))
+            project.core.ui.echo(
+                f"Updating {'[bold]global[/] ' if project.is_global else ''}packages: {', '.join(f'[req]{v}[/]' for v in tracked_names)}."
+            )
         if unconstrained:
             for deps in updated_deps.values():
                 for dep in deps.values():
