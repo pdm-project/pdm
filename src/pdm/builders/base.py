@@ -181,7 +181,7 @@ class EnvBuilder:
         self._env = environment
         self.executable = self._env.interpreter.executable.as_posix()
         self.src_dir = src_dir
-        self.isolated = environment.project.config["build_isolation"]
+        self.isolated = environment.project.core.state.build_isolation
         self.config_settings = environment.project.core.state.config_settings
         mode = "Isolated" if self.isolated else "Non-isolated"
         logger.info("Preparing environment(%s mode) for PEP 517 build...", mode)
@@ -247,13 +247,9 @@ class EnvBuilder:
         return env
 
     def subprocess_runner(
-        self,
-        cmd: list[str],
-        cwd: str | Path | None = None,
-        extra_environ: dict[str, str] | None = None,
-        isolated: bool = True,
+        self, cmd: list[str], cwd: str | Path | None = None, extra_environ: dict[str, str] | None = None
     ) -> None:
-        env = self._env_vars.copy() if isolated else {}
+        env = self._env_vars.copy()
         if extra_environ:
             env.update(extra_environ)
         return log_subprocessor(cmd, cwd, extra_environ=env)
