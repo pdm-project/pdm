@@ -52,7 +52,10 @@ class State:
     """The config settings map shared by all packages"""
     exclude_newer: datetime | None = None
     """The exclude newer than datetime for the lockfile"""
+    build_isolation: bool = True
+    """Whether to make an isolated environment and install requirements for build"""
     enable_cache: bool = True
+    """Whether to enable the cache"""
 
 
 class Core:
@@ -151,6 +154,7 @@ class Core:
                 is_global=global_project,
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
+        self.state.build_isolation = project.config["build_isolation"]
         return project
 
     def create_project(
