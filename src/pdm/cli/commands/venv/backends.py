@@ -124,7 +124,7 @@ class Backend(abc.ABC):
         args = (*self.pip_args(with_pip), *args)
         if prompt is not None:
             prompt = prompt.format(
-                project_name=self.project.root.name.lower() or "virtualenv",
+                project_name=self.project.name.lower() or "virtualenv",
                 python_version=self.ident,
             )
         self._ensure_clean(location, force)
