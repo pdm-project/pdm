@@ -140,7 +140,7 @@ class Command(BaseCommand):
             requirements[key] = r
         if requirements:
             project.core.ui.echo(
-                f"Adding packages to [primary]{group}[/] "
+                f"Adding {'[bold]global[/] ' if project.is_global else ''}packages to [primary]{group}[/] "
                 f"{'dev-' if selection.dev else ''}dependencies: "
                 + ", ".join(f"[req]{r.as_line()}[/]" for r in requirements.values())
             )
