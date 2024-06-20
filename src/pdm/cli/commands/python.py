@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
+from pdm.cli.utils import eval_min_required_cpython_version
 from pdm.environments import BareEnvironment
-from pdm.exceptions import InstallationError
+from pdm.exceptions import InstallationError, PdmArgumentError
 from pdm.models.python import PythonInfo
 
 if TYPE_CHECKING:
@@ -87,7 +88,8 @@ class InstallCommand(BaseCommand):
     arguments = (verbose_option,)
 
     def add_arguments(self, parser: ArgumentParser) -> None:
-        parser.add_argument("version", help="The Python version to install. E.g. cpython@3.10.3", nargs="?")
+        parser.add_argument("version", help="The Python version to install (e.g. cpython@3.10.3). If left empty, "
+                                            "minimum cPython version from pyproject.toml will be installed.", nargs="?")
         parser.add_argument("--list", "-l", action="store_true", help="List all available Python versions")
 
     def handle(self, project: Project, options: Namespace) -> None:
@@ -97,7 +99,16 @@ class InstallCommand(BaseCommand):
             for version in PYTHON_VERSIONS:
                 project.core.ui.echo(str(version))
             return
-        self.install_python(project, options.version)
+        version = options.version
+        if version is None and project and project.pyproject:
+            pyproject = project.pyproject._data
+            if "project" in pyproject.keys() and "requires-python" in pyproject["project"]:
+                version = eval_min_required_cpython_version(pyproject["project"]["requires-python"])
+
+        if version is None:
+            raise PdmArgumentError("Please specify a Python version to be installed. E.g. cpython@3.10.3")
+
+        self.install_python(project, version)
 
     @staticmethod
     def install_python(project: Project, request: str) -> PythonInfo:

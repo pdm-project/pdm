@@ -21,6 +21,7 @@ from typing import (
     MutableMapping,
     cast,
     no_type_check,
+    Optional,
 )
 
 import tomlkit
@@ -799,3 +800,22 @@ def populate_requirement_names(req_mapping: dict[str, Requirement]) -> None:
 def normalize_pattern(pattern: str) -> str:
     """Normalize a pattern to a valid name for a package."""
     return re.sub(r"[^A-Za-z0-9*?]+", "-", pattern).lower()
+
+
+def eval_min_required_cpython_version(requires_python: str) -> Optional[str]:
+    """Returns minimum required cPython version available for installing from a given PEP440 version string."""
+    from pbs_installer._versions import PYTHON_VERSIONS
+    from pbs_installer._install import THIS_ARCH
+    from pbs_installer._install import THIS_PLATFORM
+
+    version_list = set()
+    spec_set = SpecifierSet(requires_python)
+    arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
+    for version, urls in PYTHON_VERSIONS.items():
+        if (version.implementation.lower() == "cpython") and (urls.get((THIS_PLATFORM, arch)) is not None):
+            version_list.add(f"{version.major}.{version.minor}.{version.micro}")
+    filtered_version_list = list(spec_set.filter(version_list))
+    if filtered_version_list:
+        sorted_filtered_list = sorted(filtered_version_list, key=Version)
+        return sorted_filtered_list[0]
+    return None
