@@ -32,7 +32,7 @@ class Compatibility(enum.IntEnum):
 
 
 class Lockfile(TOMLBase):
-    spec_version = parse_version("4.4.1")
+    spec_version = parse_version("4.4.2")
 
     @cached_property
     def default_strategies(self) -> set[str]:

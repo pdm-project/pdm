@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import warnings
 from typing import Any, Mapping
 
 from tomlkit import TOMLDocument, items
@@ -70,13 +69,6 @@ class PyProject(TOMLBase):
 
     @property
     def allow_prereleases(self) -> bool | None:
-        if "allow_prereleases" in self.settings:  # pragma: no cover
-            warnings.warn(
-                "'tool.pdm.allow_prereleases' is deprecated, use 'tool.pdm.resolution.allow-prereleases' instead.",
-                FutureWarning,
-                stacklevel=3,
-            )
-            return self.settings["allow_prereleases"]
         return self.resolution.get("allow-prereleases")
 
     def content_hash(self, algo: str = "sha256") -> str:
@@ -89,7 +81,7 @@ class PyProject(TOMLBase):
             "dev-dependencies": self.settings.get("dev-dependencies", {}),
             "optional-dependencies": self.metadata.get("optional-dependencies", {}),
             "requires-python": self.metadata.get("requires-python", ""),
-            "overrides": self.resolution.get("overrides", {}),
+            "resolution": self.resolution,
         }
         pyproject_content = json.dumps(dump_data, sort_keys=True)
         hasher = hashlib.new(algo)
