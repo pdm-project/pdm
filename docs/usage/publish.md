@@ -8,6 +8,8 @@ pdm publish
 
 This will automatically build a wheel and a source distribution(sdist), and upload them to the PyPI index.
 
+PyPI requires API tokens to publish packages, you can use `__token__` as the username and API token as the password.
+
 To specify another repository other than PyPI, use the `--repository` option, the parameter can be either the upload URL or the name of the repository stored in the config file.
 
 ```bash
