@@ -798,14 +798,12 @@ class Project:
         """Returns the best matching (aka highest) cPython version that fits requires-python, this platform and arch"""
         matches = self._get_matching_python_versions()
         if matches:
-            # fist entry is expected to be the highest matching Python version
-            return matches[0]
+            return max(matches, key=lambda v: (v.major, v.minor, v.micro))
         return None
 
     def get_min_matching_cpython_version(self) -> PythonVersion | None:
         """Returns the minimum cPython version that fits requires-python, this platform and arch"""
         matches = self._get_matching_python_versions()
         if matches:
-            # last entry is expected to be the lowest matching Python version
-            return matches[-1]
+            return min(matches, key=lambda v: (v.major, v.minor, v.micro))
         return None
