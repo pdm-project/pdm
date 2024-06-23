@@ -30,7 +30,7 @@ _pdm() {
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
     'self:Manage the PDM program itself (previously known as plugin)'
-    'outdated:Check for outdated packages and list the latest versions'
+    'outdated:Check for outdated packages and list the latest versions on indexes'
     'publish:Build and publish the project to PyPI'
     'python:Manage installed Python interpreters'
     'py:Manage installed Python interpreters'
