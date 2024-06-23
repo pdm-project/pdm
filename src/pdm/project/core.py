@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
 import tomlkit
 from tomlkit.items import Array
 
+from pbs_installer import PythonVersion
+
 from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
@@ -645,8 +647,6 @@ class Project:
         """Iterate over all interpreters that matches the given specifier.
         And optionally install the interpreter if not found.
         """
-        from pbs_installer._versions import PYTHON_VERSIONS, PythonVersion
-
         from pdm.cli.commands.python import InstallCommand
 
         found = False
@@ -657,12 +657,9 @@ class Project:
         if found or self.is_global:
             return
 
-        def get_version(version: PythonVersion) -> str:
-            return f"{version.major}.{version.minor}.{version.micro}"
-
         if not python_spec:  # handle both empty string and None
             # Get the best match meeting the requires-python
-            best_match = next((v for v in PYTHON_VERSIONS if get_version(v) in self.python_requires), None)
+            best_match = self.get_best_matching_cpython_version()
             if best_match is None:
                 return
             python_spec = str(best_match)
@@ -782,3 +779,33 @@ class Project:
         Returns `None` if both the environment variable and the key does not exists.
         """
         return os.getenv(var.upper()) or self.get_setting(key)
+
+    def _get_matching_python_versions(self) -> list[PythonVersion]:
+        """Get matches meeting the requires-python and current platform/arch combination for cPython"""
+        from pbs_installer._versions import PYTHON_VERSIONS
+        from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
+
+        def get_version(version: PythonVersion) -> str:
+            return f"{version.major}.{version.minor}.{version.micro}"
+
+        arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
+        matches = [v for v, u in PYTHON_VERSIONS.items() if
+                   get_version(v) in self.python_requires and v.implementation.lower() == "cpython" and u.get(
+                       (THIS_PLATFORM, arch))]
+        return matches
+
+    def get_best_matching_cpython_version(self) -> PythonVersion | None:
+        """Returns the best matching (aka highest) cPython version that fits requires-python, this platform and arch"""
+        matches = self._get_matching_python_versions()
+        if matches:
+            # fist entry is expected to be the highest matching Python version
+            return matches[0]
+        return None
+
+    def get_min_matching_cpython_version(self) -> PythonVersion | None:
+        """Returns the minimum cPython version that fits requires-python, this platform and arch"""
+        matches = self._get_matching_python_versions()
+        if matches:
+            # last entry is expected to be the lowest matching Python version
+            return matches[-1]
+        return None

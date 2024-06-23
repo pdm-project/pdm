@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.cli.utils import eval_min_required_cpython_version
 from pdm.environments import BareEnvironment
 from pdm.exceptions import InstallationError, PdmArgumentError
 from pdm.models.python import PythonInfo
@@ -89,8 +88,11 @@ class InstallCommand(BaseCommand):
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("version", help="The Python version to install (e.g. cpython@3.10.3). If left empty, "
-                                            "minimum cPython version from pyproject.toml will be installed.", nargs="?")
+                                            "highest cPython version that matches this platform/arch is installed. "
+                                            "If pyproject.toml with requires-python is available, this is considered as well.", nargs="?")
         parser.add_argument("--list", "-l", action="store_true", help="List all available Python versions")
+        parser.add_argument("--min", action="store_true", help="Use minimum instead of highest version "
+                                                               "for installation if 'version' is left empty")
 
     def handle(self, project: Project, options: Namespace) -> None:
         from pbs_installer._versions import PYTHON_VERSIONS
@@ -100,10 +102,10 @@ class InstallCommand(BaseCommand):
                 project.core.ui.echo(str(version))
             return
         version = options.version
-        if version is None and project and project.pyproject:
-            pyproject = project.pyproject._data
-            if "project" in pyproject.keys() and "requires-python" in pyproject["project"]:
-                version = eval_min_required_cpython_version(pyproject["project"]["requires-python"])
+        if version is None:
+            match = project.get_min_matching_cpython_version() if options.min else project.get_best_matching_cpython_version()
+            if match is not None:
+                version = str(match)
 
         if version is None:
             raise PdmArgumentError("Please specify a Python version to be installed. E.g. cpython@3.10.3")
