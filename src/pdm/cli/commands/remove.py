@@ -95,7 +95,7 @@ class Command(BaseCommand):
 
         deps, setter = project.use_pyproject_dependencies(group, selection.dev or False)
         project.core.ui.echo(
-            f"Removing packages from [primary]{group}[/] "
+            f"Removing {'[bold]global[/] ' if project.is_global else ''}packages from [primary]{group}[/] "
             f"{'dev-' if selection.dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
         )
         with cd(project.root):

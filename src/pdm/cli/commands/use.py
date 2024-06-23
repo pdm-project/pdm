@@ -105,7 +105,9 @@ class Command(BaseCommand):
         if first or len(found_interpreters) == 1:
             return found_interpreters[0]
 
-        project.core.ui.echo("Please enter the Python interpreter to use")
+        project.core.ui.echo(
+            f"Please enter the {'[bold]Global[/] ' if project.is_global else ''}Python interpreter to use"
+        )
         for i, py_version in enumerate(found_interpreters):
             project.core.ui.echo(
                 f"{i:>2}. [success]{py_version.implementation}@{py_version.identifier}[/] ({py_version.path!s})"
@@ -166,7 +168,7 @@ class Command(BaseCommand):
         saved_python = project._saved_python
         old_python = PythonInfo.from_path(saved_python) if saved_python else None
         project.core.ui.echo(
-            f"Using Python interpreter: [success]{selected_python.path!s}[/] ({selected_python_identifier})"
+            f"Using {'[bold]Global[/] ' if project.is_global else ''}Python interpreter: [success]{selected_python.path!s}[/] ({selected_python_identifier})"
         )
         project.python = selected_python
         if project.environment.is_local:
