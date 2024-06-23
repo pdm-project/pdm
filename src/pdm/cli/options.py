@@ -430,7 +430,7 @@ unconstrained_option = Option(
     "--unconstrained",
     action="store_true",
     default=False,
-    help="Ignore the version constraint of packages",
+    help="Ignore the version constraints in pyproject.toml and overwrite with new ones from the resolution result",
 )
 
 

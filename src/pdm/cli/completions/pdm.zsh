@@ -30,7 +30,7 @@ _pdm() {
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
     'self:Manage the PDM program itself (previously known as plugin)'
-    'outdated:Check for outdated packages and list the latest versions'
+    'outdated:Check for outdated packages and list the latest versions on indexes'
     'publish:Build and publish the project to PyPI'
     'python:Manage installed Python interpreters'
     'py:Manage installed Python interpreters'
@@ -82,7 +82,7 @@ _pdm() {
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        {-u,--unconstrained}'[Ignore the version constraint of packages]'
+        {-u,--unconstrained}'[Ignore the version constraints in pyproject.toml and overwrite with new ones from the resolution result]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         "--stable[Only allow stable versions to be pinned]"
         {-e+,--editable+}'[Specify editable packages]:packages'
@@ -473,7 +473,7 @@ _pdm() {
         "--no-sync[Only update lock file but do not sync packages]"
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        {-u,--unconstrained}'[Ignore the version constraint of packages]'
+        {-u,--unconstrained}'[Ignore the version constraints in pyproject.toml and overwrite with new ones from the resolution result]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         "--stable[Only allow stable versions to be pinned]"
         {-d,--dev}'[Select dev dependencies]'
