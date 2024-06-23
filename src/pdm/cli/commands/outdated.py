@@ -40,7 +40,7 @@ def _find_first_diff(a: str, b: str) -> int:
 
 
 class Command(BaseCommand):
-    """Check for outdated packages and list the latest versions."""
+    """Check for outdated packages and list the latest versions on indexes."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
