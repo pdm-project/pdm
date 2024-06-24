@@ -59,7 +59,7 @@ pdm python remove 3.9.8
 
 ### Installation strategy based on `requires-python`
 
-+++ 2.15.5
++++ 2.16.0
 
 If Python `version` is not given, PDM will try to install the best match for the current platform/arch combination
 based on `requires-python` from `pyproject.toml` (if pyproject.toml or requires-python attribute is not available,
