@@ -17,7 +17,10 @@ will be stored in `.pdm-python` and used by subsequent commands. You can also ch
 
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
-## Install Python interpreters with PDM
+!!! warning "Using an existing environment"
+    If you choose to use an existing environment, such as reusing an environment created by `conda`, please note that PDM will *remove* dependencies not listed in `pyproject.toml` or `pdm.lock` when running `pdm sync --clean` or `pdm remove`. This may lead to destructive consequences. Therefore, try not to share environment among multiple projects.
+
+### Install Python interpreters with PDM
 
 +++ 2.13.0
 
@@ -54,7 +57,7 @@ pdm python remove 3.9.8
 
     Afterwards you can manage the installations using either `rye toolchain` or `pdm python`.
 
-## Virtualenv or not
+### Virtualenv or not
 
 After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.
 If you choose **yes**, PDM will create a virtual environment in the project root directory, and use it as the Python interpreter for the project.
@@ -73,7 +76,9 @@ A library and an application differ in many ways. In short, a library is a packa
 
 In PDM, if you choose to create a library, PDM will add a `name`, `version` field to the `pyproject.toml` file, as well as a `[build-system]` table for the [build backend](../reference/build.md), which is only useful if your project needs to be built and distributed. So you need to manually add these fields to `pyproject.toml` if you want to change the project from an application to a library. Also, a library project will be installed into the environment when you run `pdm install` or `pdm sync`, unless `--no-self` is specified.
 
-## Set `requires-python` value
+In `pyproject.toml`, there is a field `distribution` under the `[tool.pdm]` table. If it is set to true, PDM will treat the project as a library.
+
+## Specify `requires-python`
 
 You need to set an appropriate `requires-python` value for your project. This is an important property that affects how dependencies are resolved. Basically, each package's `requires-python` must *cover* the project's `requires-python` range. For example, consider the following setup:
 
