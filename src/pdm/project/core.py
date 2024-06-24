@@ -797,16 +797,17 @@ class Project:
         ]
         return matches
 
-    def get_best_matching_cpython_version(self) -> PythonVersion | None:
-        """Returns the best matching (aka highest) cPython version that fits requires-python, this platform and arch"""
-        matches = self._get_matching_python_versions()
-        if matches:
-            return max(matches, key=lambda v: (v.major, v.minor, v.micro))
-        return None
+    def get_best_matching_cpython_version(self, use_minimum: bool | None = False) -> PythonVersion | None:
+        """
+        Returns the best matching cPython version that fits requires-python, this platform and arch.
+        If no best match could be found, return None.
 
-    def get_min_matching_cpython_version(self) -> PythonVersion | None:
-        """Returns the minimum cPython version that fits requires-python, this platform and arch"""
+        Default for best match is "highest" possible interpreter version. If "minimum" shall be used,
+        set `use_minimum` to True.
+        """
         matches = self._get_matching_python_versions()
         if matches:
+            if use_minimum is None or not use_minimum:
+                return max(matches, key=lambda v: (v.major, v.minor, v.micro))
             return min(matches, key=lambda v: (v.major, v.minor, v.micro))
         return None

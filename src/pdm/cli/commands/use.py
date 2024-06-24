@@ -85,11 +85,7 @@ class Command(BaseCommand):
                 return cached_python
 
         if not python and not first and (auto_install_min or auto_install_max):
-            match = (
-                project.get_min_matching_cpython_version()
-                if auto_install_min
-                else project.get_best_matching_cpython_version()
-            )
+            match = project.get_best_matching_cpython_version(auto_install_min)
             if match is None:
                 req = f'requires-python="{project.python_requires}"'
                 raise NoPythonVersion(

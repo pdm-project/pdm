@@ -531,4 +531,4 @@ def test_project_best_match_min(project, mocker):
         "pdm.project.core.Project._get_matching_python_versions",
         return_value=get_python_versions(),
     )
-    assert project.get_min_matching_cpython_version() == expected
+    assert project.get_best_matching_cpython_version(use_minimum=True) == expected

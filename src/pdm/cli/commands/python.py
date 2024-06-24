@@ -110,11 +110,7 @@ class InstallCommand(BaseCommand):
             return
         version = options.version
         if version is None:
-            match = (
-                project.get_min_matching_cpython_version()
-                if options.min
-                else project.get_best_matching_cpython_version()
-            )
+            match = project.get_best_matching_cpython_version(options.min)
             if match is not None:
                 version = str(match)
 
