@@ -29,12 +29,12 @@ class Command(BaseCommand):
         unattended_use_group.add_argument(
             "--auto-install-min",
             action="store_true",
-            help="If 'python' argument not given, auto install minimal best match - otherwise has no effect",
+            help="If `python` argument not given, auto install minimal best match - otherwise has no effect",
         )
         unattended_use_group.add_argument(
             "--auto-install-max",
             action="store_true",
-            help="If 'python' argument not given, auto install maximum best match - otherwise has no effect",
+            help="If `python` argument not given, auto install maximum best match - otherwise has no effect",
         )
         parser.add_argument(
             "-i",
@@ -57,8 +57,8 @@ class Command(BaseCommand):
         auto_install_min: bool,
         auto_install_max: bool,
     ) -> PythonInfo:
-        from pdm.cli.commands.venv.utils import get_venv_with_name
         from pdm.cli.commands.python import InstallCommand
+        from pdm.cli.commands.venv.utils import get_venv_with_name
 
         def version_matcher(py_version: PythonInfo) -> bool:
             return py_version.valid and (
@@ -85,10 +85,16 @@ class Command(BaseCommand):
                 return cached_python
 
         if not python and not first and (auto_install_min or auto_install_max):
-            match = project.get_min_matching_cpython_version() if auto_install_min else project.get_best_matching_cpython_version()
+            match = (
+                project.get_min_matching_cpython_version()
+                if auto_install_min
+                else project.get_best_matching_cpython_version()
+            )
             if match is None:
                 req = f'requires-python="{project.python_requires}"'
-                raise NoPythonVersion(f"No Python interpreter matching [success]{req}[/] is found based on 'auto-install' strategy.")
+                raise NoPythonVersion(
+                    f"No Python interpreter matching [success]{req}[/] is found based on 'auto-install' strategy."
+                )
             try:
                 installed_interpreter_to_use = InstallCommand.install_python(project, str(match))
             except Exception as e:

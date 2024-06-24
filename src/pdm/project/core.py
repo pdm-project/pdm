@@ -12,9 +12,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
 
 import tomlkit
-from tomlkit.items import Array
-
 from pbs_installer import PythonVersion
+from tomlkit.items import Array
 
 from pdm import termui
 from pdm._types import RepositoryConfig
@@ -782,16 +781,20 @@ class Project:
 
     def _get_matching_python_versions(self) -> list[PythonVersion]:
         """Get matches meeting the requires-python and current platform/arch combination for cPython"""
-        from pbs_installer._versions import PYTHON_VERSIONS
         from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
+        from pbs_installer._versions import PYTHON_VERSIONS
 
         def get_version(version: PythonVersion) -> str:
             return f"{version.major}.{version.minor}.{version.micro}"
 
         arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
-        matches = [v for v, u in PYTHON_VERSIONS.items() if
-                   get_version(v) in self.python_requires and v.implementation.lower() == "cpython" and u.get(
-                       (THIS_PLATFORM, arch))]
+        matches = [
+            v
+            for v, u in PYTHON_VERSIONS.items()
+            if get_version(v) in self.python_requires
+            and v.implementation.lower() == "cpython"
+            and u.get((THIS_PLATFORM, arch))
+        ]
         return matches
 
     def get_best_matching_cpython_version(self) -> PythonVersion | None:

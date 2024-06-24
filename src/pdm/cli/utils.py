@@ -21,7 +21,6 @@ from typing import (
     MutableMapping,
     cast,
     no_type_check,
-    Optional,
 )
 
 import tomlkit
@@ -802,11 +801,10 @@ def normalize_pattern(pattern: str) -> str:
     return re.sub(r"[^A-Za-z0-9*?]+", "-", pattern).lower()
 
 
-def eval_min_required_cpython_version(requires_python: str) -> Optional[str]:
+def eval_min_required_cpython_version(requires_python: str) -> str | None:
     """Returns minimum required cPython version available for installing from a given PEP440 version string."""
+    from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
     from pbs_installer._versions import PYTHON_VERSIONS
-    from pbs_installer._install import THIS_ARCH
-    from pbs_installer._install import THIS_PLATFORM
 
     version_list = set()
     spec_set = SpecifierSet(requires_python)

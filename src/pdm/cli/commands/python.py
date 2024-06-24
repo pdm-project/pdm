@@ -87,12 +87,19 @@ class InstallCommand(BaseCommand):
     arguments = (verbose_option,)
 
     def add_arguments(self, parser: ArgumentParser) -> None:
-        parser.add_argument("version", help="The Python version to install (e.g. cpython@3.10.3). If left empty, "
-                                            "highest cPython version that matches this platform/arch is installed. "
-                                            "If pyproject.toml with requires-python is available, this is considered as well.", nargs="?")
+        parser.add_argument(
+            "version",
+            help="The Python version to install (e.g. cpython@3.10.3). If left empty, "
+            "highest cPython version that matches this platform/arch is installed. "
+            "If pyproject.toml with requires-python is available, this is considered as well.",
+            nargs="?",
+        )
         parser.add_argument("--list", "-l", action="store_true", help="List all available Python versions")
-        parser.add_argument("--min", action="store_true", help="Use minimum instead of highest version "
-                                                               "for installation if 'version' is left empty")
+        parser.add_argument(
+            "--min",
+            action="store_true",
+            help="Use minimum instead of highest version " "for installation if `version` is left empty",
+        )
 
     def handle(self, project: Project, options: Namespace) -> None:
         from pbs_installer._versions import PYTHON_VERSIONS
@@ -103,7 +110,11 @@ class InstallCommand(BaseCommand):
             return
         version = options.version
         if version is None:
-            match = project.get_min_matching_cpython_version() if options.min else project.get_best_matching_cpython_version()
+            match = (
+                project.get_min_matching_cpython_version()
+                if options.min
+                else project.get_best_matching_cpython_version()
+            )
             if match is not None:
                 version = str(match)
 
