@@ -4,8 +4,8 @@
 [metadata]
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
-lock_version = "4.4.1"
-content_hash = "sha256:504925f05a11f5619baf2a3af94ea55754854005e32ee84ae8ac07ddcde28ef1"
+lock_version = "4.4.2"
+content_hash = "sha256:edc13388ff5de58d9f0f3b6650d471ac4609dc8e18c9af5be0dab535e85649f5"
 
 [[package]]
 name = "anyio"
@@ -1313,13 +1313,13 @@ files = [
 
 [[package]]
 name = "pbs-installer"
-version = "2024.3.27"
+version = "2024.4.24"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["all", "default", "test"]
 files = [
-    {file = "pbs_installer-2024.3.27-py3-none-any.whl", hash = "sha256:6299ca01a91cc87033fa4176106a977da16e2484b4094ef4bacb576f822c0392"},
-    {file = "pbs_installer-2024.3.27.tar.gz", hash = "sha256:30a368d14710a5e38a57401006b4c1061f030ed06d42d69c8f5e8dd20ee25d58"},
+    {file = "pbs_installer-2024.4.24-py3-none-any.whl", hash = "sha256:f8291f0231003d279d0de8fde88fa87b7c6d7fabc2671235113cf67513ff74f5"},
+    {file = "pbs_installer-2024.4.24.tar.gz", hash = "sha256:19224733068b0ffa39b53afbb61544bee8ecb9503e7222ba034f07b9913e2c1c"},
 ]
 
 [[package]]

@@ -102,11 +102,13 @@ class InstallCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
         from pbs_installer._versions import PYTHON_VERSIONS
 
         if options.list:
-            for version in PYTHON_VERSIONS:
-                project.core.ui.echo(str(version))
+            for version, candidates in PYTHON_VERSIONS.items():
+                if (THIS_PLATFORM, THIS_ARCH, True) in candidates:
+                    project.core.ui.echo(str(version))
             return
         version = options.version
         if version is None:
