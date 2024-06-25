@@ -19,11 +19,22 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         skip_option.add_to_parser(parser)
-        parser.add_argument(
+        unattended_use_group = parser.add_mutually_exclusive_group()
+        unattended_use_group.add_argument(
             "-f",
             "--first",
             action="store_true",
-            help="Select the first matched interpreter",
+            help="Select the first matched interpreter - no auto install",
+        )
+        unattended_use_group.add_argument(
+            "--auto-install-min",
+            action="store_true",
+            help="If `python` argument not given, auto install minimal best match - otherwise has no effect",
+        )
+        unattended_use_group.add_argument(
+            "--auto-install-max",
+            action="store_true",
+            help="If `python` argument not given, auto install maximum best match - otherwise has no effect",
         )
         parser.add_argument(
             "-i",
@@ -43,7 +54,10 @@ class Command(BaseCommand):
         ignore_requires_python: bool,
         venv: str | None,
         first: bool,
+        auto_install_min: bool,
+        auto_install_max: bool,
     ) -> PythonInfo:
+        from pdm.cli.commands.python import InstallCommand
         from pdm.cli.commands.venv.utils import get_venv_with_name
 
         def version_matcher(py_version: PythonInfo) -> bool:
@@ -69,6 +83,21 @@ class Command(BaseCommand):
             elif version_matcher(cached_python):
                 project.core.ui.info("Using the last selection, add '-i' to ignore it.")
                 return cached_python
+
+        if not python and not first and (auto_install_min or auto_install_max):
+            match = project.get_best_matching_cpython_version(auto_install_min)
+            if match is None:
+                req = f'requires-python="{project.python_requires}"'
+                raise NoPythonVersion(
+                    f"No Python interpreter matching [success]{req}[/] is found based on 'auto-install' strategy."
+                )
+            try:
+                installed_interpreter_to_use = InstallCommand.install_python(project, str(match))
+            except Exception as e:
+                project.core.ui.error(f"Failed to install Python {python}: {e}")
+                project.core.ui.info("Please select a Python interpreter manually")
+            else:
+                return installed_interpreter_to_use
 
         found_interpreters = list(dict.fromkeys(project.iter_interpreters(python, filter_func=version_matcher)))
         if not found_interpreters:
@@ -103,6 +132,8 @@ class Command(BaseCommand):
         ignore_requires_python: bool = False,
         save: bool = True,
         venv: str | None = None,
+        auto_install_min: bool = False,
+        auto_install_max: bool = False,
         hooks: HookManager | None = None,
     ) -> PythonInfo:
         """Use the specified python version and save in project config.
@@ -117,6 +148,8 @@ class Command(BaseCommand):
             first=first,
             venv=venv,
             ignore_requires_python=ignore_requires_python,
+            auto_install_min=auto_install_min,
+            auto_install_max=auto_install_max,
         )
         # NOTE: PythonInfo is cached with path as key.
         # This can lead to inconsistency when the same virtual environment is reused.
@@ -162,5 +195,7 @@ class Command(BaseCommand):
             first=options.first,
             ignore_remembered=options.ignore_remembered,
             venv=options.venv,
+            auto_install_min=options.auto_install_min,
+            auto_install_max=options.auto_install_max,
             hooks=HookManager(project, options.skip),
         )

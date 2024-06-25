@@ -57,6 +57,25 @@ pdm python remove 3.9.8
 
     Afterwards you can manage the installations using either `rye toolchain` or `pdm python`.
 
+### Installation strategy based on `requires-python`
+
++++ 2.16.0
+
+If Python `version` is not given, PDM will try to install the best match for the current platform/arch combination
+based on `requires-python` from `pyproject.toml` (if pyproject.toml or requires-python attribute is not available,
+all install-able Python interpreters are considered).
+
+Default strategy is `maximum`, i.e. the highest cPython interpreter version will be installed.
+
+If `minimum` is preferred, use the option `--min` and leave `version` empty.
+
+```bash
+pdm python install --min
+```
+
+The same principles apply to [`pdm use`](../reference/cli.md#use) (incl. an automatic installation feature)
+which make it a good unattended set up command for CI/CD or 'fresh start with existing pyproject.toml' use-cases.
+
 ### Virtualenv or not
 
 After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.

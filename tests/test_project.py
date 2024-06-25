@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from pbs_installer import PythonVersion
 from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
@@ -19,6 +20,16 @@ from pdm.utils import cd, is_path_relative_to, parse_version
 if TYPE_CHECKING:
     from pdm.project.core import Project
     from pdm.pytest import PDMCallable
+
+PYTHON_VERSIONS = ["3.8.7", "3.10.12", "3.10.11", "3.8.0", "3.10.13", "3.9.12"]
+
+
+def get_python_versions() -> list[PythonVersion]:
+    python_versions = []
+    for v in PYTHON_VERSIONS:
+        major, minor, micro = v.split(".")
+        python_versions.append(PythonVersion("cpython", int(major), int(minor), int(micro)))
+    return python_versions
 
 
 def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
@@ -503,3 +514,21 @@ def test_env_setting_list(
         project.pyproject.settings["var"] = setting
 
     assert project.environment._setting_list("PDM_VAR", "var") == expected
+
+
+def test_project_best_match_max(project, mocker):
+    expected = PythonVersion("cpython", 3, 10, 13)
+    mocker.patch(
+        "pdm.project.core.Project._get_matching_python_versions",
+        return_value=get_python_versions(),
+    )
+    assert project.get_best_matching_cpython_version() == expected
+
+
+def test_project_best_match_min(project, mocker):
+    expected = PythonVersion("cpython", 3, 8, 0)
+    mocker.patch(
+        "pdm.project.core.Project._get_matching_python_versions",
+        return_value=get_python_versions(),
+    )
+    assert project.get_best_matching_cpython_version(use_minimum=True) == expected
