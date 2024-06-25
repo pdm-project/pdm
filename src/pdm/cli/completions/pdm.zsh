@@ -351,6 +351,7 @@ _pdm() {
             install)
               arguments+=(
                 '--list[List all available Python versions]'
+                '--min[Use minimum instead of highest version for installation if `version` is left empty]'
                 ':python:_files'
               )
               ;;
@@ -491,7 +492,9 @@ _pdm() {
       ;;
     use)
       arguments+=(
-        {-f,--first}'[Select the first matched interpreter]'
+        {-f,--first}'[Select the first matched interpreter -- no auto install]'
+        '--auto-install-min[If `python` argument not given, auto install minimum best match - otherwise has no effect]'
+        '--auto-install-max[If `python` argument not given, auto install maximum best match - otherwise has no effect]'
         {-i,--ignore-remembered}'[Ignore the remembered selection]'
         '--venv[Use the interpreter in the virtual environment with the given name]:venv:'
         '*:python:_files'

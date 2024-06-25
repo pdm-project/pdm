@@ -402,7 +402,7 @@ function TabExpansion($line, $lastWord) {
                         break
                     }
                     "install" {
-                        $completer.AddOpts(([Option]::new(("--list"))))
+                        $completer.AddOpts(([Option]::new(("--list", "--min"))))
                         $command = $subCommand
                         break
                     }
@@ -482,7 +482,7 @@ function TabExpansion($line, $lastWord) {
             "use" {
                 $completer.AddOpts(
                     @(
-                        [Option]::new(@("--global", "-g", "-f", "--first", "-i", "--ignore-remembered", "--skip")),
+                        [Option]::new(@("--global", "-g", "-f", "--first", "-i", "--ignore-remembered", "--skip", "--auto-install-min", "--auto-install-max")),
                         $venvOption,
                         $projectOption
                     ))

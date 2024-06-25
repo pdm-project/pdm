@@ -129,7 +129,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (use)
-            opts="--first --global --help --ignore-remembered --project --quiet --skip --venv --verbose"
+            opts="--auto-install-max --auto-install-min --first --global --help --ignore-remembered --project --quiet --skip --venv --verbose"
             ;;
 
             (venv)
