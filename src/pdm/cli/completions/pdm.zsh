@@ -205,6 +205,8 @@ _pdm() {
         '--python[Specify the Python version/path to use]:python:'
         '--copier[Use Copier to generate project]'
         '--cookiecutter[Use Cookiecutter to generate project]'
+        '--license[Specify the license (SPDX name)]:license:'
+        "--project-version[Specify the project's version]:project_version:"
         '1:template:'
       )
       ;;
