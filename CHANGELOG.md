@@ -1,3 +1,13 @@
+## Release v2.16.1 (2024-06-26)
+
+
+### Bug Fixes
+
+- Fix new interface from pbs_installer regarding `build_dir` and best match auto-install strategy for `pdm use`
+  (same as for `pdm python install --list`) ([#2943](https://github.com/pdm-project/pdm/issues/2943))
+- Fix crash when pdm is used with `importlib-metadata` version 8.0. ([#2974](https://github.com/pdm-project/pdm/issues/2974))
+
+
 ## Release v2.16.0 (2024-06-25)
 
 
