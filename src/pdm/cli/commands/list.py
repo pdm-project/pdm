@@ -309,6 +309,19 @@ def parse_comma_separated_string(
     return items
 
 
+def _get_metadata_key(dist: im.Distribution, key: str) -> str | None:
+    """Get a key from metadata, or return None if it is not found or 'UNKNOWN'."""
+    # Starting with importlib-metadata 8.0, KeyError is thrown for missing keys.
+    try:
+        value = dist.metadata[key]
+    except KeyError:
+        return None
+    else:
+        if not value or value == "UNKNOWN":
+            return None
+        return value
+
+
 class Listable:
     """Wrapper makes sorting and exporting information about a Distribution
     easier.  It also retrieves license information from dist-info metadata.
@@ -322,20 +335,17 @@ class Listable:
     def __init__(self, dist: im.Distribution, groups: set[str]):
         self.dist = dist
 
-        self.name: str | None = dist.metadata["Name"]
+        self.name = _get_metadata_key(dist, "Name")
         self.groups = "|".join(groups)
 
-        self.version: str | None = dist.metadata["Version"]
-        self.version = None if self.version == "UNKNOWN" else self.version
+        self.version = _get_metadata_key(dist, "Version")
 
-        self.homepage: str | None = dist.metadata["Home-Page"]
-        self.homepage = None if self.homepage == "UNKNOWN" else self.homepage
+        self.homepage = _get_metadata_key(dist, "Home-Page")
 
         # If the License metadata field is empty or UNKNOWN then try to
         # find the license in the Trove classifiers.  There may be more than one
         # so generate a pipe separated list (to avoid complexity with CSV export).
-        self.licenses: str | None = dist.metadata["License"]
-        self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
+        self.licenses = _get_metadata_key(dist, "License")
 
         # Sometimes package metadata contains the full license text.
         # e.g. license = { file="LICENSE" } in pyproject.toml
