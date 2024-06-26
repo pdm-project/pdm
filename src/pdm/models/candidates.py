@@ -611,16 +611,11 @@ class PreparedCandidate:
         if self._metadata is None:
             result = self.prepare_metadata()
             if not self.candidate.name:
-                self.req.name = self.candidate.name = cast(str, result.metadata["Name"])
+                self.req.name = self.candidate.name = cast(str, result.metadata.get("Name"))
             if not self.candidate.version:
                 self.candidate.version = result.version
             if not self.candidate.requires_python:
-                # Starting in importlib_metadata 8.0, KeyError is thrown if the key is missing
-                try:
-                    requires_python = result.metadata["Requires-Python"] or ""
-                except KeyError:
-                    requires_python = ""
-                self.candidate.requires_python = requires_python
+                self.candidate.requires_python = result.metadata.get("Requires-Python", "")
             self._metadata = result
         return self._metadata
 

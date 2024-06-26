@@ -269,7 +269,7 @@ class BaseRepository:
         prepared = candidate.prepare(self.environment)
         deps = prepared.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
-        summary = prepared.metadata.metadata["Summary"]
+        summary = prepared.metadata.metadata.get("Summary", "")
         return deps, requires_python, summary
 
     def _get_dependency_from_local_package(self, candidate: Candidate) -> CandidateInfo:

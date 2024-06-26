@@ -45,7 +45,7 @@ class InstallManager:
     def uninstall(self, dist: Distribution) -> None:
         """Perform the uninstallation for a given distribution"""
         remove_path = self.get_paths_to_remove(dist)
-        dist_name = dist.metadata["Name"]
+        dist_name = dist.metadata.get("Name")
         termui.logger.info("Removing distribution %s", dist_name)
         try:
             remove_path.remove()
@@ -58,7 +58,7 @@ class InstallManager:
     def overwrite(self, dist: Distribution, candidate: Candidate) -> None:
         """An in-place update to overwrite the distribution with a new candidate"""
         paths_to_remove = self.get_paths_to_remove(dist)
-        termui.logger.info("Overwriting distribution %s", dist.metadata["Name"])
+        termui.logger.info("Overwriting distribution %s", dist.metadata.get("Name"))
         installed = self.install(candidate)
         installed_paths = self.get_paths_to_remove(installed)
         # Remove the paths that are in the new distribution

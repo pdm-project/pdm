@@ -152,7 +152,7 @@ class Requirement:
         if direct_url_json is not None:
             direct_url = json.loads(direct_url_json)
             data = {
-                "name": dist.metadata["Name"],
+                "name": dist.metadata.get("Name"),
                 "url": direct_url.get("url"),
                 "editable": direct_url.get("dir_info", {}).get("editable"),
                 "subdirectory": direct_url.get("subdirectory"),
