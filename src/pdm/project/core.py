@@ -793,7 +793,7 @@ class Project:
             for v, u in PYTHON_VERSIONS.items()
             if get_version(v) in self.python_requires
             and v.implementation.lower() == "cpython"
-            and u.get((THIS_PLATFORM, arch))
+            and u.get((THIS_PLATFORM, arch, True))
         ]
         return matches
 

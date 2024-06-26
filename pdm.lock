@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.2"
-content_hash = "sha256:edc13388ff5de58d9f0f3b6650d471ac4609dc8e18c9af5be0dab535e85649f5"
+content_hash = "sha256:70dd3dfa99bfaeec6ac6d28335a66a1810812cd215ce47eaf0faae87d8293358"
 
 [[package]]
 name = "anyio"
