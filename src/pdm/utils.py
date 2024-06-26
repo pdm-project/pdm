@@ -441,7 +441,7 @@ def is_pip_compatible_with_python(python_version: Version | str) -> bool:
     from pdm.models.specifiers import get_specifier
 
     pip = importlib_metadata.distribution("pip")
-    requires_python = get_specifier(pip.metadata["Requires-Python"])
+    requires_python = get_specifier(pip.metadata.get("Requires-Python"))
     return requires_python.contains(python_version, True)
 
 

@@ -32,7 +32,7 @@ def _read_max_versions() -> dict[Version, int]:
 
 
 @lru_cache
-def get_specifier(version_str: str) -> SpecifierSet:
+def get_specifier(version_str: str | None) -> SpecifierSet:
     if not version_str or version_str == "*":
         return SpecifierSet()
     return SpecifierSet(fix_legacy_specifier(version_str))
