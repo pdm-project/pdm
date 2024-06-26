@@ -98,8 +98,8 @@ class ListCommand(BaseCommand):
         for dist in distributions:
             rows.append(
                 (
-                    f"[success]{dist.metadata.get("Name")}[/]",
-                    f"[warning]{dist.metadata.get("Version")}[/]",
+                    f"[success]{dist.metadata.get('Name')}[/]",
+                    f"[warning]{dist.metadata.get('Version')}[/]",
                     dist.metadata.get("Summary", ""),
                 ),
             )
