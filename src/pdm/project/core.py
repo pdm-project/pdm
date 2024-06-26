@@ -33,6 +33,7 @@ from pdm.utils import (
     expand_env_vars_in_auth,
     find_project_root,
     find_python_in_path,
+    get_all_installable_python_versions,
     is_conda_base,
     is_conda_base_python,
     is_path_relative_to,
@@ -779,35 +780,25 @@ class Project:
         """
         return os.getenv(var.upper()) or self.get_setting(key)
 
-    def _get_matching_python_versions(self) -> list[PythonVersion]:
-        """Get matches meeting the requires-python and current platform/arch combination for cPython"""
-        from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
-        from pbs_installer._versions import PYTHON_VERSIONS
-
-        def get_version(version: PythonVersion) -> str:
-            return f"{version.major}.{version.minor}.{version.micro}"
-
-        arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
-        matches = [
-            v
-            for v, u in PYTHON_VERSIONS.items()
-            if get_version(v) in self.python_requires
-            and v.implementation.lower() == "cpython"
-            and u.get((THIS_PLATFORM, arch, True))
-        ]
-        return matches
-
     def get_best_matching_cpython_version(self, use_minimum: bool | None = False) -> PythonVersion | None:
         """
         Returns the best matching cPython version that fits requires-python, this platform and arch.
         If no best match could be found, return None.
 
-        Default for best match is "highest" possible interpreter version. If "minimum" shall be used,
+        Default for best match strategy is "highest" possible interpreter version. If "minimum" shall be used,
         set `use_minimum` to True.
         """
-        matches = self._get_matching_python_versions()
-        if matches:
-            if use_minimum is None or not use_minimum:
-                return max(matches, key=lambda v: (v.major, v.minor, v.micro))
-            return min(matches, key=lambda v: (v.major, v.minor, v.micro))
+
+        def get_version(version: PythonVersion) -> str:
+            return f"{version.major}.{version.minor}.{version.micro}"
+
+        all_matches = get_all_installable_python_versions(build_dir=False)
+        filtered_matches = [
+            v for v in all_matches if get_version(v) in self.python_requires and v.implementation.lower() == "cpython"
+        ]
+        if filtered_matches:
+            if use_minimum:
+                return min(filtered_matches, key=lambda v: (v.major, v.minor, v.micro))
+            return max(filtered_matches, key=lambda v: (v.major, v.minor, v.micro))
+
         return None

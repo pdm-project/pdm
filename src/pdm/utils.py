@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
 
 from packaging.version import Version, _cmpkey
+from pbs_installer import PythonVersion
 
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PDMDeprecationWarning, PdmException
@@ -537,3 +538,20 @@ def convert_to_datetime(value: str) -> datetime:
     if "T" in value:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
+
+def get_all_installable_python_versions(build_dir: bool = False) -> list[PythonVersion]:
+    """Returns all installable standalone Python interpreter versions from @indygreg
+
+    Installable means:
+        Fitting current platform and arch
+
+    Parameters:
+        build_dir: Whether to include the `build/` directory from indygreg builds (aka 'Full Archive')
+    """
+    from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
+    from pbs_installer._versions import PYTHON_VERSIONS
+
+    arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
+    matches = [v for v, u in PYTHON_VERSIONS.items() if u.get((THIS_PLATFORM, arch, not build_dir))]
+    return matches
