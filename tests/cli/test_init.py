@@ -134,3 +134,77 @@ def test_init_with_backend_default_library(project_no_init, pdm):
 def test_init_with_backend_default_library_non_interactive(project_no_init, pdm):
     pdm(["init", "-n", "--backend", "flit-core"], obj=project_no_init)
     assert project_no_init.backend.__class__.__name__ == "FlitBackend"
+
+
+def test_init_with_license_non_interactive(project_no_init, pdm, mocker):
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+    expected_license = "Proprietary"
+    result = pdm(["init", "-n", "--license", expected_license], obj=project_no_init)
+    assert result.exit_code == 0
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
+    do_use.assert_called_once_with(
+        project_no_init,
+        ANY,
+        first=True,
+        ignore_remembered=True,
+        ignore_requires_python=True,
+        save=False,
+        hooks=ANY,
+    )
+    data = {
+        "project": {
+            "authors": [{"email": "me@example.org", "name": "Testing"}],
+            "dependencies": [],
+            "description": "Default template for PDM package",
+            "license": {"text": f"{expected_license}"},
+            "name": project_no_init.root.name,
+            "requires-python": f"=={python_version}.*",
+            "readme": "README.md",
+            "version": "0.1.0",
+        },
+        "tool": {"pdm": {"distribution": False}},
+    }
+
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        assert tomllib.load(fp) == data
+
+
+def test_init_with_project_version_non_interactive(project_no_init, pdm, mocker):
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+    expected_project_version = "2.0.42"
+    result = pdm(["init", "-n", "--project-version", expected_project_version], obj=project_no_init)
+    assert result.exit_code == 0
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
+    do_use.assert_called_once_with(
+        project_no_init,
+        ANY,
+        first=True,
+        ignore_remembered=True,
+        ignore_requires_python=True,
+        save=False,
+        hooks=ANY,
+    )
+    data = {
+        "project": {
+            "authors": [{"email": "me@example.org", "name": "Testing"}],
+            "dependencies": [],
+            "description": "Default template for PDM package",
+            "license": {"text": "MIT"},
+            "name": project_no_init.root.name,
+            "requires-python": f"=={python_version}.*",
+            "readme": "README.md",
+            "version": f"{expected_project_version}",
+        },
+        "tool": {"pdm": {"distribution": False}},
+    }
+
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        assert tomllib.load(fp) == data

@@ -291,7 +291,7 @@ function TabExpansion($line, $lastWord) {
                     @(
                         [Option]::new(@(
                             "-g", "--global", "--non-interactive", "-n", "--python", "--dist", "--lib", "--copier",
-                            "--cookiecutter", "--overwrite"
+                            "--cookiecutter", "--overwrite", "--license", "--project-version"
                         )),
                         $projectOption,
                         $skipOption,
