@@ -519,7 +519,7 @@ def test_env_setting_list(
 def test_project_best_match_max(project, mocker):
     expected = PythonVersion("cpython", 3, 10, 13)
     mocker.patch(
-        "pdm.project.core.Project._get_matching_python_versions",
+        "pdm.project.core.get_all_installable_python_versions",
         return_value=get_python_versions(),
     )
     assert project.get_best_matching_cpython_version() == expected
@@ -528,7 +528,7 @@ def test_project_best_match_max(project, mocker):
 def test_project_best_match_min(project, mocker):
     expected = PythonVersion("cpython", 3, 8, 0)
     mocker.patch(
-        "pdm.project.core.Project._get_matching_python_versions",
+        "pdm.project.core.get_all_installable_python_versions",
         return_value=get_python_versions(),
     )
     assert project.get_best_matching_cpython_version(use_minimum=True) == expected

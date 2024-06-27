@@ -11,6 +11,7 @@ from pdm.cli.options import verbose_option
 from pdm.environments import BareEnvironment
 from pdm.exceptions import InstallationError, PdmArgumentError
 from pdm.models.python import PythonInfo
+from pdm.utils import get_all_installable_python_versions
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace, _SubParsersAction
@@ -102,13 +103,9 @@ class InstallCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: Namespace) -> None:
-        from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
-        from pbs_installer._versions import PYTHON_VERSIONS
-
         if options.list:
-            for version, candidates in PYTHON_VERSIONS.items():
-                if (THIS_PLATFORM, THIS_ARCH, True) in candidates:
-                    project.core.ui.echo(str(version))
+            for version in get_all_installable_python_versions(build_dir=False):
+                project.core.ui.echo(str(version))
             return
         version = options.version
         if version is None:
@@ -136,7 +133,7 @@ class InstallCommand(BaseCommand):
         version, _, arch = version.partition("-")
         arch = "x86" if arch == "32" else (arch or THIS_ARCH)
 
-        ver, python_file = get_download_link(version, implementation=implementation, arch=arch)
+        ver, python_file = get_download_link(version, implementation=implementation, arch=arch, build_dir=False)
         with ui.open_spinner(f"Downloading [success]{ver}[/]") as spinner:
             destination = root / str(ver)
             interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
