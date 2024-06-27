@@ -81,10 +81,10 @@ def do_lock(
         ignore_compatibility=FLAG_CROSS_PLATFORM in lock_strategy,
         direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
     )
+    if groups is None:
+        groups = list(project.iter_groups())
     if not requirements:
-        requirements = [
-            r for g, deps in project.all_dependencies.items() if groups is None or g in groups for r in deps.values()
-        ]
+        requirements = [r for group in groups for r in project.get_dependencies(group).values()]
     if FLAG_CROSS_PLATFORM not in lock_strategy:
         this_env = project.environment.marker_environment
         requirements = [req for req in requirements if not req.marker or req.marker.evaluate(this_env)]
@@ -123,6 +123,8 @@ def do_lock(
             ui.error(format_resolution_impossible(err))
             raise ResolutionImpossible("Unable to find a resolution") from None
         else:
+            groups = list(set(groups) | provider.repository.collected_groups)
+            provider.repository.collected_groups.clear()
             data = format_lockfile(project, mapping, dependencies, groups=groups, strategy=lock_strategy)
             if project.enable_write_lockfile:
                 ui.echo(f"{termui.Emoji.LOCK} Lock successful")

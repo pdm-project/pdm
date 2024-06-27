@@ -34,7 +34,6 @@ from pdm.models.requirements import (
     FileRequirement,
     Requirement,
     filter_requirements_with_extras,
-    parse_requirement,
     strip_extras,
 )
 from pdm.models.specifiers import PySpecSet, get_specifier
@@ -206,10 +205,7 @@ def build_dependency_graph(
         extras = extras or ()
         reqs: dict[str, Requirement] = {}
         if dist:
-            requirements = (
-                parse_requirement(r)
-                for r in filter_requirements_with_extras(dist.requires or [], extras, include_default=True)
-            )
+            requirements = filter_requirements_with_extras(dist.requires or [], extras, include_default=True)
             for req in requirements:
                 if not req.marker or req.marker.evaluate(marker_env):
                     reqs[req.identify()] = req
@@ -526,6 +522,9 @@ def format_lockfile(
     """
     from pdm.formats.base import make_array, make_inline_table
 
+    def _group_sort_key(group: str) -> tuple[bool, str]:
+        return group != "default", group
+
     packages = tomlkit.aot()
     backend = project.backend
     for _k, v in sorted(mapping.items()):
@@ -533,7 +532,7 @@ def format_lockfile(
         base.update(v.as_lockfile_entry(project.root))
         base.add("summary", v.summary or "")
         if FLAG_INHERIT_METADATA in strategy:
-            base.add("groups", v.req.groups)
+            base.add("groups", sorted(v.req.groups, key=_group_sort_key))
             if v.req.marker is not None:
                 base.add("marker", str(v.req.marker))
         deps: list[str] = []
@@ -569,7 +568,7 @@ def format_lockfile(
         groups = list(project.iter_groups())
     metadata.update(
         {
-            "groups": sorted(groups, key=lambda k: k != "default"),
+            "groups": sorted(groups, key=_group_sort_key),
             "strategy": sorted(strategy),
         }
     )

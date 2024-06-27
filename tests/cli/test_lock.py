@@ -139,8 +139,14 @@ def test_lock_self_referencing_groups(project, pdm, to_dev):
         dev=True,
     )
     pdm(["lock", "-G", "dev"], obj=project, strict=True)
-    assert project.lockfile.groups == ["default", "dev"]
-    assert "requests" in project.locked_repository.all_candidates
+    assert project.lockfile.groups == ["default", "dev", "http"]
+    packages = project.lockfile["package"]
+    pytz = next(p for p in packages if p["name"] == "pytz")
+    assert pytz["groups"] == ["dev"]
+    requests = next(p for p in packages if p["name"] == "requests")
+    assert requests["groups"] == ["dev", "http"]
+    idna = next(p for p in packages if p["name"] == "idna")
+    assert idna["groups"] == ["dev", "http"]
 
 
 @pytest.mark.usefixtures("local_finder")

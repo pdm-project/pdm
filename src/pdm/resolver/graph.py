@@ -128,9 +128,8 @@ def populate_groups(result: Result[Requirement, Candidate, str]) -> None:
         res = resolved[key] = set()
         crit = result.criteria[key]
         for req, parent in crit.information:
-            if parent is None:
-                res.update(req.groups)
-            else:
+            res.update(req.groups)
+            if parent is not None:
                 pkey = _identify_parent(parent)
                 res.update(get_candidate_groups(pkey))
         return res

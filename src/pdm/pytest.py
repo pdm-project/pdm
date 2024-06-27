@@ -54,7 +54,7 @@ from pdm.exceptions import CandidateInfoNotFound
 from pdm.installers.installers import install_wheel
 from pdm.models.backends import DEFAULT_BACKEND
 from pdm.models.candidates import Candidate
-from pdm.models.repositories import BaseRepository
+from pdm.models.repositories import BaseRepository, CandidateMetadata
 from pdm.models.requirements import (
     Requirement,
     filter_requirements_with_extras,
@@ -70,7 +70,7 @@ if TYPE_CHECKING:
 
     from _pytest.fixtures import SubRequest
 
-    from pdm._types import CandidateInfo, FileHash, RepositoryConfig
+    from pdm._types import FileHash, RepositoryConfig
 
 
 class FileByteStream(IteratorByteStream):
@@ -163,19 +163,19 @@ class TestRepository(BaseRepository):
         pypi_data = self._pypi_data[normalize_name(name)][version]
         pypi_data.setdefault("dependencies", []).extend(requirements)
 
-    def _get_dependencies_from_fixture(self, candidate: Candidate) -> tuple[list[str], str, str]:
+    def _get_dependencies_from_fixture(self, candidate: Candidate) -> CandidateMetadata:
         try:
             pypi_data = self._pypi_data[cast(str, candidate.req.key)][cast(str, candidate.version)]
         except KeyError:
             raise CandidateInfoNotFound(candidate) from None
         deps = pypi_data.get("dependencies", [])
         deps = filter_requirements_with_extras(deps, candidate.req.extras or ())
-        return deps, pypi_data.get("requires_python", ""), ""
+        return CandidateMetadata(deps, pypi_data.get("requires_python", ""), "")
 
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         return (
             self._get_dependencies_from_cache,
-            self._get_dependency_from_local_package,
+            self._get_dependencies_from_local_package,
             self._get_dependencies_from_fixture,
             self._get_dependencies_from_metadata,
         )
