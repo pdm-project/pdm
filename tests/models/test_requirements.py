@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 import pytest
@@ -69,6 +71,14 @@ REQUIREMENTS = [
 ]
 
 
+def filter_requirements_to_lines(
+    requirements: list[str], extras: tuple[str, ...], include_default: bool = False
+) -> list[str]:
+    return [
+        req.as_line() for req in filter_requirements_with_extras(requirements, extras, include_default=include_default)
+    ]
+
+
 @pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.parametrize("req, result", REQUIREMENTS)
 def test_convert_req_dict_to_req_line(req, result):
@@ -104,18 +114,18 @@ def test_filter_requirements_with_extras():
         "ping; os_name == 'nt' and extra == 'a'",
         "blah",
     ]
-    assert filter_requirements_with_extras(requirements, ()) == ["blah"]
-    assert filter_requirements_with_extras(requirements, ("a",)) == ["foo", "baz", 'ping; os_name == "nt"']
-    assert filter_requirements_with_extras(requirements, ("b",)) == ["bar", "baz"]
-    assert filter_requirements_with_extras(requirements, ("a", "b")) == [
+    assert filter_requirements_to_lines(requirements, ()) == ["blah"]
+    assert filter_requirements_to_lines(requirements, ("a",)) == ["foo", "baz", 'ping; os_name == "nt"']
+    assert filter_requirements_to_lines(requirements, ("b",)) == ["bar", "baz"]
+    assert filter_requirements_to_lines(requirements, ("a", "b")) == [
         "foo",
         "bar",
         "baz",
         "qux",
         'ping; os_name == "nt"',
     ]
-    assert filter_requirements_with_extras(requirements, ("c",)) == []
-    assert filter_requirements_with_extras(requirements, ("a", "b"), include_default=True) == [
+    assert filter_requirements_to_lines(requirements, ("c",)) == []
+    assert filter_requirements_to_lines(requirements, ("a", "b"), include_default=True) == [
         "foo",
         "bar",
         "baz",

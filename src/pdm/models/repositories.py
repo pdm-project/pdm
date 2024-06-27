@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 import fnmatch
-import itertools
 import posixpath
 import re
 import sys
 import warnings
 from functools import wraps
-from typing import TYPE_CHECKING, Collection, Generator, TypeVar, cast
+from typing import TYPE_CHECKING, Collection, Generator, NamedTuple, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning, PdmException
@@ -42,13 +41,20 @@ if TYPE_CHECKING:
 T = TypeVar("T", bound="BaseRepository")
 
 
-def cache_result(func: Callable[[T, Candidate], CandidateInfo]) -> Callable[[T, Candidate], CandidateInfo]:
+class CandidateMetadata(NamedTuple):
+    dependencies: list[Requirement]
+    requires_python: str
+    summary: str
+
+
+def cache_result(func: Callable[[T, Candidate], CandidateMetadata]) -> Callable[[T, Candidate], CandidateMetadata]:
     @wraps(func)
-    def wrapper(self: T, candidate: Candidate) -> CandidateInfo:
+    def wrapper(self: T, candidate: Candidate) -> CandidateMetadata:
         result = func(self, candidate)
         prepared = candidate.prepared
+        info = ([r.as_line() for r in result.dependencies], result.requires_python, result.summary)
         if prepared and prepared.should_cache():
-            self._candidate_info_cache.set(candidate, result)
+            self._candidate_info_cache.set(candidate, info)
         return result
 
     return wrapper
@@ -75,6 +81,7 @@ class BaseRepository:
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
         self.has_warnings = False
+        self.collected_groups: set[str] = set()
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -83,7 +90,7 @@ class BaseRepository:
     def get_dependencies(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
         """Get (dependencies, python_specifier, summary) of the candidate."""
         requires_python, summary = "", ""
-        requirements: list[str] = []
+        requirements: list[Requirement] = []
         last_ext_info = None
         for getter in self.dependency_generators():
             try:
@@ -95,7 +102,6 @@ class BaseRepository:
         else:
             if last_ext_info is not None:
                 raise last_ext_info[1].with_traceback(last_ext_info[2])  # type: ignore[union-attr]
-        reqs: list[Requirement] = []
         if candidate.req.extras:
             # XXX: If the requirement has extras, add the original candidate
             # (without extras) as its dependency. This ensures the same package with
@@ -105,19 +111,14 @@ class BaseRepository:
                 extras=None,
                 marker=None,
             )
-            reqs.append(self_req)
-        for line in requirements:
-            if line.startswith("-e "):
-                reqs.append(parse_requirement(line[3:], True))
-            else:
-                reqs.append(parse_requirement(line))
+            requirements.insert(0, self_req)
         # Store the metadata on the candidate for caching
         candidate.requires_python = requires_python
         candidate.summary = summary
         if not self.ignore_compatibility:
             pep508_env = self.environment.marker_environment
-            reqs = [req for req in reqs if not req.marker or req.marker.evaluate(pep508_env)]
-        return reqs, PySpecSet(requires_python), summary
+            requirements = [req for req in requirements if not req.marker or req.marker.evaluate(pep508_env)]
+        return requirements, PySpecSet(requires_python), summary
 
     def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:
         raise NotImplementedError
@@ -257,34 +258,43 @@ class BaseRepository:
 
         return applicable_cans
 
-    def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateInfo:
+    def _get_dependencies_from_cache(self, candidate: Candidate) -> CandidateMetadata:
         try:
-            result = self._candidate_info_cache.get(candidate)
+            info = self._candidate_info_cache.get(candidate)
         except KeyError:
             raise CandidateInfoNotFound(candidate) from None
-        return result
+
+        deps: list[Requirement] = []
+        for line in info[0]:
+            if line.startswith("-e "):
+                deps.append(parse_requirement(line[3:], True))
+            else:
+                deps.append(parse_requirement(line))
+        return CandidateMetadata(deps, info[1], info[2])
 
     @cache_result
-    def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateInfo:
+    def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateMetadata:
         prepared = candidate.prepare(self.environment)
         deps = prepared.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
         summary = prepared.metadata.metadata.get("Summary", "")
-        return deps, requires_python, summary
+        return CandidateMetadata(deps, requires_python, summary)
 
-    def _get_dependency_from_local_package(self, candidate: Candidate) -> CandidateInfo:
+    def _get_dependencies_from_local_package(self, candidate: Candidate) -> CandidateMetadata:
         """Adds the local package as a candidate only if the candidate
         name is the same as the local package."""
         project = self.environment.project
         if not project.is_distribution or candidate.name != project.name:
             raise CandidateInfoNotFound(candidate) from None
 
-        reqs = project.pyproject.metadata.get("dependencies", [])
-        extra_dependencies = project.pyproject.settings.get("dev-dependencies", {}).copy()
-        extra_dependencies.update(project.pyproject.metadata.get("optional-dependencies", {}))
+        reqs: list[Requirement] = []
         if candidate.req.extras is not None:
-            reqs = list(itertools.chain.from_iterable(extra_dependencies.get(g, []) for g in candidate.req.extras))
-        return (
+            all_groups = set(project.iter_groups())
+            for extra in candidate.req.extras:
+                if extra in all_groups:
+                    reqs.extend(project.get_dependencies(extra).values())
+                    self.collected_groups.add(extra)
+        return CandidateMetadata(
             reqs,
             str(self.environment.python_requires),
             project.pyproject.metadata.get("description", "UNKNOWN"),
@@ -369,7 +379,7 @@ class BaseRepository:
             )
         return result
 
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         """Return an iterable of getter functions to get dependencies, which will be
         called one by one.
         """
@@ -390,7 +400,7 @@ class PyPIRepository(BaseRepository):
     DEFAULT_INDEX_URL = "https://pypi.org"
 
     @cache_result
-    def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateInfo:
+    def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateMetadata:
         if not candidate.name or not candidate.version:
             # Only look for json api for named requirements.
             raise CandidateInfoNotFound(candidate)
@@ -416,12 +426,12 @@ class PyPIRepository(BaseRepository):
             except KeyError:
                 requirement_lines = info["requires"] or []
             requirements = filter_requirements_with_extras(requirement_lines, candidate.req.extras or ())
-            return requirements, requires_python, summary
+            return CandidateMetadata(requirements, requires_python, summary)
         raise CandidateInfoNotFound(candidate)
 
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         yield self._get_dependencies_from_cache
-        yield self._get_dependency_from_local_package
+        yield self._get_dependencies_from_local_package
         if self.environment.project.config["pypi.json_api"]:
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata
@@ -528,19 +538,27 @@ class LockedRepository(BaseRepository):
             candidate.req.editable,
         )
 
-    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateInfo:
+    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateMetadata:
         err = (
             f"Missing package {candidate.identify()} from the lockfile, "
             "the lockfile may be broken. Run `pdm lock --update-reuse` to fix it."
         )
         try:
-            return self.candidate_info[self._identify_candidate(candidate)]
+            info = self.candidate_info[self._identify_candidate(candidate)]
         except KeyError as e:  # pragma: no cover
             raise CandidateNotFound(err) from e
 
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateInfo]]:
+        deps: list[Requirement] = []
+        for line in info[0]:
+            if line.startswith("-e "):
+                deps.append(parse_requirement(line[3:], True))
+            else:
+                deps.append(parse_requirement(line))
+        return CandidateMetadata(deps, info[1], info[2])
+
+    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         return (
-            self._get_dependency_from_local_package,
+            self._get_dependencies_from_local_package,
             self._get_dependencies_from_lockfile,
         )
 

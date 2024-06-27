@@ -619,7 +619,7 @@ class PreparedCandidate:
             self._metadata = result
         return self._metadata
 
-    def get_dependencies_from_metadata(self) -> list[str]:
+    def get_dependencies_from_metadata(self) -> list[Requirement]:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
         return filter_requirements_with_extras(self.metadata.requires or [], extras)
