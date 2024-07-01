@@ -195,6 +195,16 @@ all = {composite = ["lint mypackage/", "test -v tests/"]}
 !!! note
     Argument passed on the command line are given to each called task.
 
+You can also use the `composite` script to combine multiple commands:
+
+```toml
+[tool.pdm.scripts]
+mytask.composite = [
+    "echo 'Hello'",
+    "echo 'World'"
+]
+```
+
 ## Script Options
 
 ### `env`
