@@ -245,6 +245,7 @@ class UpdateCommand(BaseCommand):
             )
             sys.exit(1)
         else:
-            project.core.ui.echo(f"[success]Installing version [primary]{version}[/] succeeds.[/]")
+            project.core.ui.echo(f"[success]Successfully installed version [primary]{version}[/][/]")
+            project.core.ui.echo(f"See what's new in this version: [link]{PDM_REPO}/releases/tag/{version}[/]")
             # Update the version value to avoid check update print wrong message
             project.core.version = read_version()
