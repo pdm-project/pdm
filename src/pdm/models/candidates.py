@@ -11,8 +11,6 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
-from packaging.utils import parse_wheel_filename
-
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
@@ -653,7 +651,7 @@ class PreparedCandidate:
             return None
         wheel_cache = self.environment.project.make_wheel_cache()
         assert self.candidate.link
-        cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.target_python)
+        cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.spec)
         if cache_entry is not None:
             termui.logger.info("Using cached wheel: %s", cache_entry)
         return cache_entry
@@ -689,17 +687,13 @@ class PreparedCandidate:
     def _wheel_compatible(self, wheel_file: str, allow_all: bool = False) -> bool:
         if allow_all:
             return True
-        supported_tags = self.environment.target_python.supported_tags()
-        file_tags = parse_wheel_filename(wheel_file)[-1]
-        return not file_tags.isdisjoint(supported_tags)
+        return self.environment.spec.wheel_compatibility(wheel_file) is not None
 
     def _get_wheel_dir(self) -> str:
         assert self.candidate.link
         wheel_cache = self.environment.project.make_wheel_cache()
         if self.should_cache():
             termui.logger.info("Saving wheel to cache: %s", self.candidate.link)
-            return wheel_cache.get_path_for_link(self.candidate.link, self.environment.target_python).as_posix()
+            return wheel_cache.get_path_for_link(self.candidate.link, self.environment.spec).as_posix()
         else:
-            return wheel_cache.get_ephemeral_path_for_link(
-                self.candidate.link, self.environment.target_python
-            ).as_posix()
+            return wheel_cache.get_ephemeral_path_for_link(self.candidate.link, self.environment.spec).as_posix()

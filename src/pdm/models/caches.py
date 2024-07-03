@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import dataclasses
 import hashlib
 import json
 import os
@@ -17,12 +16,12 @@ from pdm._types import CandidateInfo
 from pdm.exceptions import PdmException
 from pdm.models.cached_package import CachedPackage
 from pdm.models.candidates import Candidate
+from pdm.models.markers import EnvSpec
 from pdm.termui import logger
 from pdm.utils import atomic_open_for_write, create_tracked_tempdir
 
 if TYPE_CHECKING:
-    from packaging.tags import Tag
-    from unearth import Link, TargetPython
+    from unearth import Link
 
 
 KT = TypeVar("KT")
@@ -208,46 +207,43 @@ class WheelCache:
             if candidate.name.endswith(".whl"):
                 yield candidate
 
-    def _get_path_parts(self, link: Link, target_python: TargetPython) -> tuple[str, ...]:
+    def _get_path_parts(self, link: Link, env_spec: EnvSpec) -> tuple[str, ...]:
         hash_key = {
             "url": link.url_without_fragment,
-            # target python participates in the hash key to handle the some cases
+            # target env participates in the hash key to handle the some cases
             # where the sdist produces different wheels on different Pythons, and
             # the differences are not encoded in compatibility tags.
-            "target_python": dataclasses.astuple(target_python),
+            "env_spec": env_spec.as_dict(),
         }
         if link.subdirectory:
             hash_key["subdirectory"] = link.subdirectory
-        if link.hash:
+        if link.hash and link.hash_name:
             hash_key[link.hash_name] = link.hash
         hashed = hashlib.sha224(
             json.dumps(hash_key, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
         ).hexdigest()
         return (hashed[:2], hashed[2:4], hashed[4:6], hashed[6:])
 
-    def get_path_for_link(self, link: Link, target_python: TargetPython) -> Path:
-        parts = self._get_path_parts(link, target_python)
+    def get_path_for_link(self, link: Link, env_spec: EnvSpec) -> Path:
+        parts = self._get_path_parts(link, env_spec)
         return self.directory.joinpath(*parts)
 
-    def get_ephemeral_path_for_link(self, link: Link, target_python: TargetPython) -> Path:
-        parts = self._get_path_parts(link, target_python)
+    def get_ephemeral_path_for_link(self, link: Link, env_spec: EnvSpec) -> Path:
+        parts = self._get_path_parts(link, env_spec)
         return self.ephemeral_directory.joinpath(*parts)
 
-    def get(self, link: Link, project_name: str | None, target_python: TargetPython) -> Path | None:
+    def get(self, link: Link, project_name: str | None, env_spec: EnvSpec) -> Path | None:
         if not project_name:
             return None
         canonical_name = canonicalize_name(project_name)
-        tags_priorities = {tag: i for i, tag in enumerate(target_python.supported_tags())}
 
-        candidate = self._get_from_path(self.get_path_for_link(link, target_python), canonical_name, tags_priorities)
+        candidate = self._get_from_path(self.get_path_for_link(link, env_spec), canonical_name, env_spec)
         if candidate is not None:
             return candidate
-        return self._get_from_path(
-            self.get_ephemeral_path_for_link(link, target_python), canonical_name, tags_priorities
-        )
+        return self._get_from_path(self.get_ephemeral_path_for_link(link, env_spec), canonical_name, env_spec)
 
-    def _get_from_path(self, path: Path, canonical_name: str, tags_priorities: dict[Tag, int]) -> Path | None:
-        candidates: list[tuple[int, Path]] = []
+    def _get_from_path(self, path: Path, canonical_name: str, env_spec: EnvSpec) -> Path | None:
+        max_compatible_candidate = ((-1, -1, -1, -1), None)
         for candidate in self._get_candidates(path):
             try:
                 name, *_, tags = parse_wheel_filename(candidate.name)
@@ -262,13 +258,12 @@ class WheelCache:
                     canonical_name,
                 )
                 continue
-            if tags.isdisjoint(tags_priorities):
+            compat = env_spec.wheel_compatibility(candidate.name)
+            if compat is None:
                 continue
-            support_min = min(tags_priorities[tag] for tag in tags if tag in tags_priorities)
-            candidates.append((support_min, candidate))
-        if not candidates:
-            return None
-        return min(candidates, key=lambda x: x[0])[1]
+            if compat > max_compatible_candidate[0]:
+                max_compatible_candidate = (compat, candidate)
+        return max_compatible_candidate[1]
 
 
 @lru_cache(maxsize=None)

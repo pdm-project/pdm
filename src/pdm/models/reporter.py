@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -17,7 +18,7 @@ class BaseReporter:
     def report_build_end(self, filename: str) -> None:
         pass
 
-    def report_unpack(self, filename: str, completed: int, total: int | None) -> None:
+    def report_unpack(self, filename: Path, completed: int, total: int | None) -> None:
         pass
 
 
@@ -29,7 +30,7 @@ class RichProgressReporter(BaseReporter):
     def report_download(self, link: Any, completed: int, total: int | None) -> None:
         self.progress.update(self.task_id, completed=completed, total=total, text="Downloading...")
 
-    def report_unpack(self, filename: str, completed: int, total: int | None) -> None:
+    def report_unpack(self, filename: Path, completed: int, total: int | None) -> None:
         self.progress.update(self.task_id, completed=completed, total=total, text="Unpacking...")
 
     def report_build_start(self, filename: str) -> None:

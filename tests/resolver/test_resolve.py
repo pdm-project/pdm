@@ -3,6 +3,7 @@ from resolvelib.resolvers import ResolutionImpossible, Resolver
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.exceptions import PackageWarning
+from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve as _resolve
@@ -298,16 +299,14 @@ def test_resolve_candidates_to_install(project):
             ]
         }
     )
-    project.environment.marker_environment["sys_platform"] = "linux"
     reqs = [parse_requirement("pytest")]
-    result = resolve_candidates_from_lockfile(project, reqs)
+    result = resolve_candidates_from_lockfile(project, reqs, env_spec=EnvSpec.from_spec("==3.11", "linux", "cpython"))
     assert result["pytest"].version == "4.6.0"
     assert result["py"].version == "3.6.0"
     assert "configparser" not in result
     assert "backports" not in result
 
-    project.environment.marker_environment["sys_platform"] = "win32"
-    result = resolve_candidates_from_lockfile(project, reqs)
+    result = resolve_candidates_from_lockfile(project, reqs, env_spec=EnvSpec.from_spec("==3.11", "windows", "cpython"))
     assert result["pytest"].version == "4.6.0"
     assert result["py"].version == "3.6.0"
     assert result["configparser"].version == "1.2.0"

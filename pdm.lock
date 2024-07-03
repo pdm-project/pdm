@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.2"
-content_hash = "sha256:70dd3dfa99bfaeec6ac6d28335a66a1810812cd215ce47eaf0faae87d8293358"
+content_hash = "sha256:1f0b43aecc302d0f31ce887517310969a6ad31b68bbec27b9ec663563ec2f6d9"
 
 [[package]]
 name = "anyio"
@@ -552,7 +552,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.2.0"
+version = "0.3.3"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["all", "default", "test"]
@@ -560,8 +560,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.2.0-py3-none-any.whl", hash = "sha256:af439c2acaf7522dd321a71f30e0c4fd59b7553eb99967af07d53320902cde39"},
-    {file = "dep_logic-0.2.0.tar.gz", hash = "sha256:cff502b515aff2d413d19d6afc70174fc67da19e821be4a9b68460ccee2514c9"},
+    {file = "dep_logic-0.3.3-py3-none-any.whl", hash = "sha256:04e1969c7073a93ea132ccad5113db627391aa00c66cfae720faff8b91afaac6"},
+    {file = "dep_logic-0.3.3.tar.gz", hash = "sha256:1ae4686cc839428683037c8f1584135033859e1623e38517318164543e772a8a"},
 ]
 
 [[package]]
@@ -2092,7 +2092,7 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.15.3"
+version = "0.16.0"
 requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
 groups = ["all", "default", "test"]
@@ -2101,8 +2101,8 @@ dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "unearth-0.15.3-py3-none-any.whl", hash = "sha256:1b164a12fc28ac1d99e86a1ce0b8dde42087166260d3240ef4b2614d9c3573b1"},
-    {file = "unearth-0.15.3.tar.gz", hash = "sha256:6324e51751d578362a961cd8a2c626a950b394516c71d85348d06ff59f3fbe14"},
+    {file = "unearth-0.16.0-py3-none-any.whl", hash = "sha256:7657cac4cfbc361b7243522a3f47182a4efd16a441fe39544f9c8f3a9c9ee550"},
+    {file = "unearth-0.16.0.tar.gz", hash = "sha256:7dba91f1209ab7e9f8a67f07a15bde49ae2da1b8a46fdad8b0222ba18b910212"},
 ]
 
 [[package]]

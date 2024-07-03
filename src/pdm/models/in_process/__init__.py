@@ -9,22 +9,18 @@ import functools
 import json
 import os
 import subprocess
+import sysconfig
 import tempfile
 from typing import Any, Generator
 
 from pdm.compat import resources_path
+from pdm.models.markers import EnvSpec
 
 
 @contextlib.contextmanager
 def _in_process_script(name: str) -> Generator[str, None, None]:
     with resources_path(__name__, name) as script:
         yield str(script)
-
-
-@functools.lru_cache
-def get_python_abis(executable: str) -> list[str]:
-    with _in_process_script("get_abis.py") as script:
-        return json.loads(subprocess.check_output(args=[executable, "-EsS", script]))
 
 
 def get_sys_config_paths(executable: str, vars: dict[str, str] | None = None, kind: str = "default") -> dict[str, str]:
@@ -37,13 +33,6 @@ def get_sys_config_paths(executable: str, vars: dict[str, str] | None = None, ki
     with _in_process_script("sysconfig_get_paths.py") as script:
         cmd = [executable, "-Es", script, kind]
         return json.loads(subprocess.check_output(cmd, env=env))
-
-
-def get_pep508_environment(executable: str) -> dict[str, str]:
-    """Get PEP 508 environment markers dict."""
-    with _in_process_script("pep508.py") as script:
-        args = [executable, "-EsS", script]
-        return json.loads(subprocess.check_output(args))
 
 
 def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
@@ -68,3 +57,14 @@ def sysconfig_get_platform(executable: str) -> str:
     """Get platform from sysconfig"""
     script = "import sysconfig; print(sysconfig.get_platform())"
     return subprocess.check_output([executable, "-EsSc", script]).decode().strip()
+
+
+@functools.lru_cache
+def get_env_spec(executable: str) -> EnvSpec:
+    """Get the environment spec of the python interpreter"""
+    with _in_process_script("env_spec.py") as script:
+        return EnvSpec.from_spec(
+            **json.loads(
+                subprocess.check_output([executable, "-s", script], env={"PYTHONPATH": sysconfig.get_path("purelib")})
+            )
+        )

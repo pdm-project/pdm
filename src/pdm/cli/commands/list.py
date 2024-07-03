@@ -170,7 +170,7 @@ class Command(BaseCommand):
         selected_keys = {r.identify() for r in requirements}
         dep_graph = build_dependency_graph(
             packages,
-            project.environment.marker_environment,
+            project.environment.spec,
             None if not (include or exclude) else selected_keys,
             include_sub=SUBDEP_GROUP_LABEL in selected_groups,
         )

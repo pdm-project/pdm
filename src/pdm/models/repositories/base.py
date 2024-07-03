@@ -2,41 +2,28 @@ from __future__ import annotations
 
 import dataclasses
 import fnmatch
-import posixpath
 import re
 import sys
 import warnings
 from functools import wraps
-from typing import TYPE_CHECKING, Collection, Generator, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Generator, NamedTuple, TypeVar, cast
 
 from pdm import termui
-from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound, PackageWarning, PdmException
+from pdm.exceptions import CandidateInfoNotFound, PackageWarning
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import (
-    Requirement,
-    filter_requirements_with_extras,
-    parse_requirement,
-)
-from pdm.models.search import SearchResultParser
+from pdm.models.markers import EnvSpec
+from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import (
-    cd,
-    filtered_sources,
-    normalize_name,
-    path_to_url,
-    url_to_path,
-    url_without_fragments,
-)
+from pdm.utils import filtered_sources, normalize_name
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterable, Mapping
+    from typing import Callable, Iterable
 
     from unearth import Link
 
-    from pdm._types import CandidateInfo, FileHash, RepositoryConfig, SearchResult
+    from pdm._types import FileHash, RepositoryConfig, SearchResult
     from pdm.environments import BaseEnvironment
 
-    CandidateKey = tuple[str, str | None, str | None, bool]
 
 T = TypeVar("T", bound="BaseRepository")
 
@@ -68,20 +55,27 @@ class BaseRepository:
         sources: list[RepositoryConfig],
         environment: BaseEnvironment,
         ignore_compatibility: bool = True,
+        env_spec: EnvSpec | None = None,
     ) -> None:
         """
         :param sources: a list of sources to download packages from.
         :param environment: the bound environment instance.
-        :param ignore_compatibility: if True, don't evaluate candidate against
+        :param ignore_compatibility: (DEPRECATED)if True, don't evaluate candidate against
             the current environment.
+        :param env_spec: the environment specifier to filter the candidates.
         """
         self.sources = sources
         self.environment = environment
-        self.ignore_compatibility = ignore_compatibility
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
         self.has_warnings = False
         self.collected_groups: set[str] = set()
+        if env_spec is None:
+            if ignore_compatibility:
+                env_spec = EnvSpec.allow_all()
+            else:
+                env_spec = environment.spec
+        self.env_spec = env_spec
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -115,9 +109,7 @@ class BaseRepository:
         # Store the metadata on the candidate for caching
         candidate.requires_python = requires_python
         candidate.summary = summary
-        if not self.ignore_compatibility:
-            pep508_env = self.environment.marker_environment
-            requirements = [req for req in requirements if not req.marker or req.marker.evaluate(pep508_env)]
+        requirements = [req for req in requirements if not req.marker or req.marker.matches(self.env_spec)]
         return requirements, PySpecSet(requires_python), summary
 
     def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:
@@ -141,7 +133,7 @@ class BaseRepository:
         return candidate
 
     def _should_ignore_package_warning(self, requirement: Requirement) -> bool:
-        ignore_settings = self.environment.project.pyproject.settings.get("ignore_package_warnings", [])
+        ignore_settings: list[str] = self.environment.project.pyproject.settings.get("ignore_package_warnings", [])
         package_name = requirement.key
         assert package_name is not None
         for pat in ignore_settings:
@@ -353,15 +345,15 @@ class BaseRepository:
         )
         sources = self.get_filtered_sources(candidate.req)
         if req.is_named and respect_source_order and comes_from:
-            sources = [s for s in sources if comes_from.startswith(s.url)]
+            sources = [s for s in sources if comes_from.startswith(cast(str, s.url))]
 
         if req.is_file_or_url:
             this_link = cast("Link", candidate.prepare(self.environment).link)
             links: list[Link] = [this_link]
         else:  # the req must be a named requirement
-            with self.environment.get_finder(sources, self.ignore_compatibility) as finder:
+            with self.environment.get_finder(sources, env_spec=self.env_spec) as finder:
                 links = [package.link for package in finder.find_matches(req.as_line())]
-            if self.ignore_compatibility:
+            if self.env_spec.is_allow_all():
                 links = [link for link in links if self._is_python_match(link)]
         for link in links:
             if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
@@ -392,230 +384,3 @@ class BaseRepository:
         :returns: search result, a dictionary of name: package metadata
         """
         raise NotImplementedError
-
-
-class PyPIRepository(BaseRepository):
-    """Get package and metadata from PyPI source."""
-
-    DEFAULT_INDEX_URL = "https://pypi.org"
-
-    @cache_result
-    def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateMetadata:
-        if not candidate.name or not candidate.version:
-            # Only look for json api for named requirements.
-            raise CandidateInfoNotFound(candidate)
-        sources = self.get_filtered_sources(candidate.req)
-        url_prefixes = [
-            proc_url[:-7]  # Strip "/simple".
-            for proc_url in (raw_url.rstrip("/") for raw_url in (source.url for source in sources) if raw_url)
-            if proc_url.endswith("/simple")
-        ]
-        session = self.environment.session
-        for prefix in url_prefixes:
-            json_url = f"{prefix}/pypi/{candidate.name}/{candidate.version}/json"
-            resp = session.get(json_url)
-            if resp.is_error:
-                continue
-
-            info = resp.json()["info"]
-
-            requires_python = info["requires_python"] or ""
-            summary = info["summary"] or ""
-            try:
-                requirement_lines = info["requires_dist"] or []
-            except KeyError:
-                requirement_lines = info["requires"] or []
-            requirements = filter_requirements_with_extras(requirement_lines, candidate.req.extras or ())
-            return CandidateMetadata(requirements, requires_python, summary)
-        raise CandidateInfoNotFound(candidate)
-
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
-        yield self._get_dependencies_from_cache
-        yield self._get_dependencies_from_local_package
-        if self.environment.project.config["pypi.json_api"]:
-            yield self._get_dependencies_from_json
-        yield self._get_dependencies_from_metadata
-
-    def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:
-        from unearth.utils import LazySequence
-
-        sources = self.get_filtered_sources(requirement)
-        with self.environment.get_finder(sources, self.ignore_compatibility, minimal_version=minimal_version) as finder:
-            cans = LazySequence(
-                Candidate.from_installation_candidate(c, requirement)
-                for c in finder.find_all_packages(requirement.project_name, allow_yanked=requirement.is_pinned)
-            )
-        if not cans:
-            raise CandidateNotFound(
-                f"Unable to find candidates for {requirement.project_name}. There may "
-                "exist some issues with the package name or network condition."
-            )
-        return cans
-
-    def search(self, query: str) -> SearchResult:
-        pypi_simple = self.sources[0].url.rstrip("/")  # type: ignore[union-attr]
-
-        if pypi_simple.endswith("/simple"):
-            search_url = pypi_simple[:-6] + "search"
-        else:
-            search_url = pypi_simple + "/search"
-
-        session = self.environment.session
-        resp = session.get(search_url, params={"q": query})
-        if resp.status_code == 404:
-            self.environment.project.core.ui.warn(
-                f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
-                f"to {self.DEFAULT_INDEX_URL!r} now.\n"
-                "This may take longer depending on your network condition.",
-            )
-            resp = session.get(f"{self.DEFAULT_INDEX_URL}/search", params={"q": query})
-        parser = SearchResultParser()
-        resp.raise_for_status()
-        parser.feed(resp.text)
-        return parser.results
-
-
-class LockedRepository(BaseRepository):
-    def __init__(
-        self,
-        lockfile: Mapping[str, Any],
-        sources: list[RepositoryConfig],
-        environment: BaseEnvironment,
-    ) -> None:
-        super().__init__(sources, environment, ignore_compatibility=False)
-        self.packages: dict[CandidateKey, Candidate] = {}
-        self.candidate_info: dict[CandidateKey, CandidateInfo] = {}
-        self._read_lockfile(lockfile)
-
-    @property
-    def all_candidates(self) -> dict[str, Candidate]:
-        return {can.req.identify(): can for can in self.packages.values()}
-
-    def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
-        from pdm.project.lockfile import FLAG_STATIC_URLS
-
-        root = self.environment.project.root
-        static_urls = FLAG_STATIC_URLS in self.environment.project.lockfile.strategy
-        with cd(root):
-            for package in lockfile.get("package", []):
-                version = package.get("version")
-                if version:
-                    package["version"] = f"=={version}"
-                package_name = package.pop("name")
-                req_dict = {
-                    k: v for k, v in package.items() if k not in ("dependencies", "requires_python", "summary", "files")
-                }
-                req = Requirement.from_req_dict(package_name, req_dict)
-                if req.is_file_or_url and req.path and not req.url:  # type: ignore[attr-defined]
-                    req.url = path_to_url(posixpath.join(root, req.path))  # type: ignore[attr-defined]
-                can = Candidate(req, name=package_name, version=version)
-                can.hashes = package.get("files", [])
-                if not static_urls and any("url" in f for f in can.hashes):
-                    raise PdmException(
-                        "Static URLs are not allowed in lockfile unless enabled by `pdm lock --static-urls`."
-                    )
-                can_id = self._identify_candidate(can)
-                self.packages[can_id] = can
-                candidate_info: CandidateInfo = (
-                    package.get("dependencies", []),
-                    package.get("requires_python", ""),
-                    package.get("summary", ""),
-                )
-                self.candidate_info[can_id] = candidate_info
-
-    def _identify_candidate(self, candidate: Candidate) -> CandidateKey:
-        url: str | None = None
-        if candidate.link is not None:
-            url = candidate.link.url_without_fragment
-            url = self.environment.project.backend.expand_line(cast(str, url))
-            if url.startswith("file://"):
-                path = posixpath.normpath(url_to_path(url))
-                url = path_to_url(path)
-        return (
-            candidate.identify(),
-            candidate.version if not url else None,
-            url,
-            candidate.req.editable,
-        )
-
-    def _get_dependencies_from_lockfile(self, candidate: Candidate) -> CandidateMetadata:
-        err = (
-            f"Missing package {candidate.identify()} from the lockfile, "
-            "the lockfile may be broken. Run `pdm lock --update-reuse` to fix it."
-        )
-        try:
-            info = self.candidate_info[self._identify_candidate(candidate)]
-        except KeyError as e:  # pragma: no cover
-            raise CandidateNotFound(err) from e
-
-        deps: list[Requirement] = []
-        for line in info[0]:
-            if line.startswith("-e "):
-                deps.append(parse_requirement(line[3:], True))
-            else:
-                deps.append(parse_requirement(line))
-        return CandidateMetadata(deps, info[1], info[2])
-
-    def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
-        return (
-            self._get_dependencies_from_local_package,
-            self._get_dependencies_from_lockfile,
-        )
-
-    def _matching_keys(self, requirement: Requirement) -> Iterable[CandidateKey]:
-        from pdm.models.requirements import FileRequirement
-
-        for key in self.candidate_info:
-            can_req = self.packages[key].req
-            if requirement.name:
-                if key[0] != requirement.identify():
-                    continue
-            else:
-                assert isinstance(requirement, FileRequirement)
-                if not isinstance(can_req, FileRequirement):
-                    continue
-                if requirement.path and can_req.path:
-                    if requirement.path != can_req.path:
-                        continue
-                elif key[2] is not None and key[2] != url_without_fragments(requirement.url):
-                    continue
-
-            yield key
-
-    def find_candidates(
-        self,
-        requirement: Requirement,
-        allow_prereleases: bool | None = None,
-        ignore_requires_python: bool = False,
-        minimal_version: bool = False,
-    ) -> Iterable[Candidate]:
-        if self.is_this_package(requirement):
-            candidate = self.make_this_candidate(requirement)
-            if candidate is not None:
-                yield candidate
-                return
-        for key in self._matching_keys(requirement):
-            info = self.candidate_info[key]
-            if not PySpecSet(info[1]).contains(str(self.environment.interpreter.version), True):
-                continue
-            can = self.packages[key]
-            can.requires_python = info[1]
-            if not requirement.name:
-                # make sure can.identify() won't return a randomly-generated name
-                requirement.name = can.name
-            yield can.copy_with(requirement)
-
-    def get_hashes(self, candidate: Candidate) -> list[FileHash]:
-        return candidate.hashes
-
-    def evaluate_candidates(self, groups: Collection[str]) -> Iterable[Candidate]:
-        for can in self.packages.values():
-            if not any(g in can.req.groups for g in groups):
-                continue
-            if (
-                not self.ignore_compatibility
-                and can.req.marker is not None
-                and not can.req.marker.evaluate(self.environment.marker_environment)
-            ):
-                continue
-            yield can

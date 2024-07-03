@@ -216,7 +216,7 @@ class BaseSynchronizer:
         to_update: set[str] = set()
         to_remove: set[str] = set()
         to_add: set[str] = set()
-        locked_repository = self.environment.project.locked_repository
+        locked_repository = self.environment.project.get_locked_repository()
         all_candidate_keys = list(locked_repository.all_candidates)
 
         for key, dist in working_set.items():

@@ -20,6 +20,7 @@ from pdm._types import RepositoryConfig
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import DEFAULT_BACKEND, BuildBackend, get_backend_by_spec
 from pdm.models.caches import PackageCache
+from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement, strip_extras
@@ -34,6 +35,7 @@ from pdm.utils import (
     find_project_root,
     find_python_in_path,
     get_all_installable_python_versions,
+    get_class_init_params,
     is_conda_base,
     is_conda_base_python,
     is_path_relative_to,
@@ -409,22 +411,38 @@ class Project:
         return sources
 
     def get_repository(
-        self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True
+        self,
+        cls: type[BaseRepository] | None = None,
+        ignore_compatibility: bool = True,
+        env_spec: EnvSpec | None = None,
     ) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = self.core.repository_class
         sources = self.sources or []
-        return cls(sources, self.environment, ignore_compatibility=ignore_compatibility)
+        params = get_class_init_params(cls)
+        if "env_spec" in params:
+            return cls(sources, self.environment, ignore_compatibility=ignore_compatibility, env_spec=env_spec)
+        else:
+            deprecation_warning(
+                "`ignore_compatibility` argument is deprecated, pass in `env_spec` instead.\n"
+                "Lock targets are not supported by this repository and will be ignored",
+                stacklevel=2,
+            )
+            return cls(sources, self.environment, ignore_compatibility=ignore_compatibility)
 
-    @property
-    def locked_repository(self) -> LockedRepository:
+    def get_locked_repository(self, env_spec: EnvSpec | None = None) -> LockedRepository:
         try:
             lockfile = self.lockfile._data.unwrap()
         except ProjectError:
             lockfile = {}
 
-        return LockedRepository(lockfile, self.sources, self.environment)
+        return LockedRepository(lockfile, self.sources, self.environment, env_spec=env_spec)
+
+    @property
+    def locked_repository(self) -> LockedRepository:
+        deprecation_warning("Project.locked_repository is deprecated, use Project.get_locked_repository() instead", 2)
+        return self.get_locked_repository()
 
     def get_provider(
         self,
@@ -433,6 +451,7 @@ class Project:
         for_install: bool = False,
         ignore_compatibility: bool = True,
         direct_minimal_versions: bool = False,
+        env_spec: EnvSpec | None = None,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
@@ -444,12 +463,20 @@ class Project:
         :returns: The provider object
         """
 
-        from pdm.resolver.providers import BaseProvider, get_provider, provider_arguments
+        import inspect
 
-        repository = self.get_repository(ignore_compatibility=ignore_compatibility)
+        from pdm.resolver.providers import BaseProvider, get_provider
+
+        repo_params = inspect.signature(self.get_repository).parameters
+        if "env_spec" in repo_params:
+            repository = self.get_repository(ignore_compatibility=ignore_compatibility, env_spec=env_spec)
+        else:
+            repository = self.get_repository(ignore_compatibility=ignore_compatibility)
         locked_repository: LockedRepository | None = None
+        if env_spec is None:
+            env_spec = EnvSpec.allow_all() if ignore_compatibility else self.environment.spec
         try:
-            locked_repository = self.locked_repository
+            locked_repository = self.get_locked_repository(env_spec)
         except Exception:  # pragma: no cover
             if for_install:
                 raise
@@ -466,19 +493,7 @@ class Project:
         if strategy != "all":
             params["tracked_names"] = [strip_extras(name)[0] for name in tracked_names or ()]
         locked_candidates = {} if locked_repository is None else locked_repository.all_candidates
-        accepted_args = provider_arguments(provider_class)
-        if "locked_candidates" in accepted_args:
-            params["locked_candidates"] = locked_candidates
-        elif "preferred_pins" in accepted_args:  # pragma: no cover
-            deprecation_warning(
-                "`preferred_pins` has been moved to keyword-only argument `locked_candidates`", stacklevel=1
-            )
-            params["preferred_pins"] = locked_candidates
-        else:  # pragma: no cover
-            deprecation_warning(
-                "Missing `locked_candidates` argument from the provider class, it will be populated automatically",
-                stacklevel=1,
-            )
+        params["locked_candidates"] = locked_candidates
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
     def get_reporter(

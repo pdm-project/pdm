@@ -3,8 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import unearth
+from dep_logic.specifiers import InvalidSpecifier, parse_version_specifier
 from packaging.version import Version
-from unearth.evaluator import Package
+from unearth.evaluator import Evaluator, FormatControl, LinkMismatchError, Package
+
+from pdm.models.markers import EnvSpec
 
 if TYPE_CHECKING:
     from pdm.models.session import PDMPyPIClient
@@ -26,22 +29,81 @@ class ReverseVersion(Version):
         return super().__le__(other)
 
 
+class PDMEvaluator(Evaluator):
+    def __init__(self, *args, env_spec: EnvSpec, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.env_spec = env_spec
+
+    def check_requires_python(self, link: unearth.Link) -> None:
+        if not self.ignore_compatibility and link.requires_python:
+            try:
+                requires_python = parse_version_specifier(link.requires_python)
+            except InvalidSpecifier as e:
+                raise LinkMismatchError(f"Invalid requires-python: {link.requires_python}") from e
+            if (requires_python & self.env_spec.requires_python).is_empty():
+                raise LinkMismatchError(
+                    f"The package requires-python {link.requires_python} is not compatible with the target {self.env_spec.requires_python}."
+                )
+
+    def check_wheel_tags(self, filename: str):
+        if self.ignore_compatibility:
+            return
+        if self.env_spec.wheel_compatibility(filename) is None:
+            raise LinkMismatchError(
+                f"The wheel file {filename} is not compatible with the target environment {self.env_spec.platform}."
+            )
+
+
 class PDMPackageFinder(unearth.PackageFinder):
     def __init__(
         self,
         session: PDMPyPIClient | None = None,
         *,
+        env_spec: EnvSpec,
         minimal_version: bool = False,
         **kwargs: Any,
     ) -> None:
-        self.minimal_version = minimal_version
         super().__init__(session, **kwargs)
+        self.minimal_version = minimal_version
+        self.env_spec = env_spec
+
+    def build_evaluator(self, package_name: str, allow_yanked: bool = False) -> Evaluator:
+        format_control = FormatControl(no_binary=self.no_binary, only_binary=self.only_binary)
+        return PDMEvaluator(
+            package_name=package_name,
+            target_python=self.target_python,
+            ignore_compatibility=self.env_spec.is_allow_all(),
+            allow_yanked=allow_yanked,
+            format_control=format_control,
+            exclude_newer_than=self.exclude_newer_than,
+            env_spec=self.env_spec,
+        )
 
     def _sort_key(self, package: Package) -> tuple:
-        key = super()._sort_key(package)
+        from packaging.utils import BuildTag, canonicalize_name
+
         if self.minimal_version:
-            key_list = list(key)
-            # The third item is the version, reverse it
-            key_list[2] = ReverseVersion(package.version) if package.version else ReverseVersion("0")
-            key = tuple(key_list)
-        return key
+            version_cls = ReverseVersion
+        else:
+            version_cls = Version
+
+        link = package.link
+        compatibility = (0, 0, 0, 0)  # default value for sdists
+        build_tag: BuildTag = ()
+        prefer_binary = False
+        if link.is_wheel:
+            compat = self.env_spec.wheel_compatibility(link.filename)
+            if compat is None:
+                compatibility = (-1, -1, -1, -1)
+            else:
+                compatibility = compat
+            if canonicalize_name(package.name) in self.prefer_binary or ":all:" in self.prefer_binary:
+                prefer_binary = True
+
+        return (
+            -int(link.is_yanked),
+            int(prefer_binary),
+            version_cls(package.version) if package.version is not None else version_cls("0"),
+            compatibility,
+            build_tag,
+        )

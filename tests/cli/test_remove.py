@@ -21,13 +21,13 @@ def test_remove_editable_packages_while_keeping_normal(project, pdm):
     pdm(["remove", "-d", "demo"], obj=project, strict=True)
     assert not dev_group
     assert len(default_group) == 1
-    assert not project.locked_repository.all_candidates["demo"].req.editable
+    assert not project.get_locked_repository().all_candidates["demo"].req.editable
 
 
 def test_remove_package(project, working_set, dev_option, pdm):
     pdm(["add", *dev_option, "requests", "pytz"], obj=project, strict=True)
     pdm(["remove", *dev_option, "pytz"], obj=project, strict=True)
-    locked_candidates = project.locked_repository.all_candidates
+    locked_candidates = project.get_locked_repository().all_candidates
     assert "pytz" not in locked_candidates
     assert "pytz" not in working_set
 
@@ -37,7 +37,7 @@ def test_remove_package_no_lock(project, working_set, dev_option, pdm):
     pdm(["remove", *dev_option, "--frozen-lockfile", "pytz"], obj=project, strict=True)
     assert "pytz" not in working_set
     project.lockfile.reload()
-    locked_candidates = project.locked_repository.all_candidates
+    locked_candidates = project.get_locked_repository().all_candidates
     assert "pytz" in locked_candidates
 
 
@@ -45,7 +45,7 @@ def test_remove_package_with_dry_run(project, working_set, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     result = pdm(["remove", "requests", "--dry-run"], obj=project, strict=True)
     project._lockfile = None
-    locked_candidates = project.locked_repository.all_candidates
+    locked_candidates = project.get_locked_repository().all_candidates
     assert "urllib3" in locked_candidates
     assert "urllib3" in working_set
     assert "- urllib3 1.22" in result.output
@@ -54,7 +54,7 @@ def test_remove_package_with_dry_run(project, working_set, pdm):
 def test_remove_package_no_sync(project, working_set, pdm):
     pdm(["add", "requests", "pytz"], obj=project, strict=True)
     pdm(["remove", "pytz", "--no-sync"], obj=project, strict=True)
-    locked_candidates = project.locked_repository.all_candidates
+    locked_candidates = project.get_locked_repository().all_candidates
     assert "pytz" not in locked_candidates
     assert "pytz" in working_set
 

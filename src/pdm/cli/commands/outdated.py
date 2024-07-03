@@ -89,7 +89,7 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: Namespace) -> None:
         environment = project.environment
         installed = environment.get_working_set()
-        resolved = {strip_extras(k)[0]: v for k, v in project.locked_repository.all_candidates.items()}
+        resolved = {strip_extras(k)[0]: v for k, v in project.get_locked_repository().all_candidates.items()}
 
         collected: list[ListPackage] = []
 
@@ -104,7 +104,7 @@ class Command(BaseCommand):
         for name, candidate in resolved.items():
             if not self._match_pattern(name, options.patterns):
                 continue
-            if candidate.req.marker and not candidate.req.marker.evaluate(environment.marker_environment):
+            if candidate.req.marker and not candidate.req.marker.matches(environment.spec):
                 continue
             collected.append(ListPackage(name, "", candidate.version or ""))
 

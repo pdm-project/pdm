@@ -27,6 +27,7 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
+from pdm.models.markers import EnvSpec
 from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.project import Project
@@ -53,17 +54,18 @@ def do_lock(
         project.lockfile.default_strategies.remove(FLAG_INHERIT_METADATA)
     lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if refresh:
-        locked_repo = project.locked_repository
+        locked_repo = project.get_locked_repository()
         repo = project.get_repository()
         mapping: dict[str, Candidate] = {}
         dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
         with project.core.ui.open_spinner("Re-calculating hashes..."):
-            for key, candidate in locked_repo.packages.items():
-                reqs, python_requires, summary = locked_repo.candidate_info[key]
-                candidate.summary = summary
-                candidate.requires_python = python_requires
+            for _, entry in locked_repo.packages.items():
+                candidate = entry.candidate
+                candidate.summary = entry.summary
+                candidate.requires_python = entry.requires_python
                 mapping[candidate.identify()] = candidate
-                dependencies[candidate.dep_key] = list(map(parse_requirement, reqs))
+                # FIXME: lock targets
+                dependencies[candidate.dep_key] = list(map(parse_requirement, entry.dependencies))
             with project.core.ui.logging("lock"):
                 for c in mapping.values():
                     c.hashes.clear()
@@ -86,8 +88,8 @@ def do_lock(
     if not requirements:
         requirements = [r for group in groups for r in project.get_dependencies(group).values()]
     if FLAG_CROSS_PLATFORM not in lock_strategy:
-        this_env = project.environment.marker_environment
-        requirements = [req for req in requirements if not req.marker or req.marker.evaluate(this_env)]
+        this_env = project.environment.spec
+        requirements = [req for req in requirements if not req.marker or req.marker.matches(this_env)]
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     ui = project.core.ui
     with ui.logging("lock"):
@@ -137,20 +139,19 @@ def do_lock(
 def resolve_candidates_from_lockfile(
     project: Project,
     requirements: Iterable[Requirement],
-    cross_platform: bool = False,
     groups: Collection[str] | None = None,
+    env_spec: EnvSpec | None = None,
 ) -> dict[str, Candidate]:
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
-    reqs = [
-        req for req in requirements if not req.marker or req.marker.evaluate(project.environment.marker_environment)
-    ]
+    if env_spec is None:
+        # Resolve for the current environment by default
+        env_spec = project.environment.spec
+    reqs = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
     with ui.logging("install-resolve"):
         with ui.open_spinner("Resolving packages from lockfile...") as spinner:
             reporter = BaseReporter()
-            provider = project.get_provider(for_install=True)
-            if cross_platform:
-                provider.repository.ignore_compatibility = True
+            provider = project.get_provider(for_install=True, env_spec=env_spec)
             if FLAG_INHERIT_METADATA in project.lockfile.strategy and groups is not None:
                 return {
                     c.identify(): c for c in cast(LockedRepository, provider.repository).evaluate_candidates(groups)
@@ -162,7 +163,7 @@ def resolve_candidates_from_lockfile(
                     reqs,
                     project.environment.python_requires,
                     resolve_max_rounds,
-                    inherit_metadata=cross_platform,
+                    inherit_metadata=True,
                 )
             except ResolutionImpossible as e:
                 logger.exception("Broken lockfile")

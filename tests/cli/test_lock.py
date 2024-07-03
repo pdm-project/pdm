@@ -23,7 +23,7 @@ def test_lock_dependencies(project):
     project.add_dependencies({"requests": parse_requirement("requests")})
     actions.do_lock(project)
     assert project.lockfile.exists
-    locked = project.locked_repository.all_candidates
+    locked = project.get_locked_repository().all_candidates
     for package in ("requests", "idna", "chardet", "certifi"):
         assert package in locked
 
@@ -101,7 +101,7 @@ def test_innovations_with_specified_lockfile(pdm, project, working_set):
     pdm(["lock", "--lockfile", lockfile], strict=True, obj=project)
     assert project.lockfile._path == project.root / "mylock.lock"
     assert project.is_lockfile_hash_match()
-    locked = project.locked_repository.all_candidates
+    locked = project.get_locked_repository().all_candidates
     assert "requests" in locked
     pdm(["sync", "--lockfile", lockfile], strict=True, obj=project)
     assert "requests" in working_set
@@ -115,7 +115,7 @@ def test_skip_editable_dependencies_in_metadata(project, capsys):
     actions.do_lock(project)
     _, err = capsys.readouterr()
     assert "WARNING: Skipping editable dependency" in err
-    assert not project.locked_repository.all_candidates
+    assert not project.get_locked_repository().all_candidates
 
 
 @pytest.mark.usefixtures("repository")
@@ -124,8 +124,8 @@ def test_lock_selected_groups(project, pdm):
     project.add_dependencies({"pytz": parse_requirement("pytz")})
     pdm(["lock", "-G", "http", "--no-default"], obj=project, strict=True)
     assert project.lockfile.groups == ["http"]
-    assert "requests" in project.locked_repository.all_candidates
-    assert "pytz" not in project.locked_repository.all_candidates
+    assert "requests" in project.get_locked_repository().all_candidates
+    assert "pytz" not in project.get_locked_repository().all_candidates
 
 
 @pytest.mark.usefixtures("repository")
@@ -206,7 +206,7 @@ def test_lock_direct_minimal_versions(project, repository, pdm):
     repository.add_candidate("pytz", "2019.6")
     pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
     assert project.lockfile.strategy == {"direct_minimal_versions", "cross_platform", "inherit_metadata"}
-    locked_repository = project.locked_repository
+    locked_repository = project.get_locked_repository()
     assert locked_repository.all_candidates["django"].version == "1.11.8"
     assert locked_repository.all_candidates["pytz"].version == "2019.6"
 
@@ -216,7 +216,7 @@ def test_lock_direct_minimal_versions(project, repository, pdm):
 def test_lock_direct_minimal_versions_real(project, pdm, args):
     project.add_dependencies({"zipp": parse_requirement("zipp")})
     pdm(["lock", *args], obj=project, strict=True)
-    locked_candidate = project.locked_repository.all_candidates["zipp"]
+    locked_candidate = project.get_locked_repository().all_candidates["zipp"]
     if args:
         assert locked_candidate.version == "3.6.0"
     else:
@@ -276,10 +276,10 @@ def test_lock_exclude_newer(project, pdm):
     project.project_config["pypi.url"] = "https://my.pypi.org/json"
     project.add_dependencies({"zipp": parse_requirement("zipp")})
     pdm(["lock", "--exclude-newer", "2024-01-01"], obj=project, strict=True, cleanup=False)
-    assert project.locked_repository.all_candidates["zipp"].version == "3.6.0"
+    assert project.get_locked_repository().all_candidates["zipp"].version == "3.6.0"
 
     pdm(["lock"], obj=project, strict=True, cleanup=False)
-    assert project.locked_repository.all_candidates["zipp"].version == "3.7.0"
+    assert project.get_locked_repository().all_candidates["zipp"].version == "3.7.0"
 
 
 exclusion_cases = [
@@ -299,6 +299,6 @@ def test_lock_all_with_excluded_groups(project, pdm, args):
     project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz", True)
     project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
     pdm(["lock", *args], obj=project, strict=True)
-    assert "urllib3" in project.locked_repository.all_candidates
-    assert "pytz" not in project.locked_repository.all_candidates
-    assert "pyopenssl" not in project.locked_repository.all_candidates
+    assert "urllib3" in project.get_locked_repository().all_candidates
+    assert "pytz" not in project.get_locked_repository().all_candidates
+    assert "pyopenssl" not in project.get_locked_repository().all_candidates

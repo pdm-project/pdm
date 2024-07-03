@@ -4,15 +4,16 @@ import argparse
 from pathlib import Path
 from typing import Iterable
 
-from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.options import groups_group, lockfile_option
 from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
 from pdm.models.candidates import Candidate
-from pdm.models.requirements import Requirement, strip_extras
+from pdm.models.requirements import Requirement
 from pdm.project import Project
+from pdm.project.lockfile import FLAG_INHERIT_METADATA
+from pdm.termui import Verbosity
 
 
 class Command(BaseCommand):
@@ -37,7 +38,11 @@ class Command(BaseCommand):
             help="Don't include artifact hashes",
         )
         parser.add_argument(
-            "--no-markers", action="store_false", default=True, dest="markers", help="Don't include platform markers"
+            "--no-markers",
+            action="store_false",
+            default=True,
+            dest="markers",
+            help="(DEPRECATED)Don't include platform markers",
         )
         parser.add_argument(
             "--no-extras", action="store_false", default=True, dest="extras", help="Strip extras from the requirements"
@@ -65,6 +70,8 @@ class Command(BaseCommand):
         selection = GroupSelection.from_options(project, options)
         requirements: dict[str, Requirement] = {}
         packages: Iterable[Requirement] | Iterable[Candidate]
+        if options.markers is False:
+            project.core.ui.info("The --no-markers option is deprecated and has no effect.", verbosity=Verbosity.NORMAL)
         for group in selection:
             requirements.update(project.get_dependencies(group))
         if options.pyproject:
@@ -72,22 +79,26 @@ class Command(BaseCommand):
         else:
             if not project.lockfile.exists():
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
-
-            candidates = resolve_candidates_from_lockfile(
-                project, requirements.values(), groups=set(selection), cross_platform=options.markers
-            )
-
-            filtered_candidates: dict[str, Candidate] = {}
-            for k, candidate in candidates.items():
+            if FLAG_INHERIT_METADATA not in project.lockfile.strategy:
+                raise PdmUsageError(
+                    "Can't export a lock file without environment markers, please re-generate the lock file with `inherit_metadata` strategy."
+                )
+            candidates = [entry.candidate for entry in project.get_locked_repository().packages.values()]
+            groups = set(selection)
+            packages = []
+            seen_extras: set[str] = set()
+            for candidate in candidates:
+                if groups.isdisjoint(candidate.req.groups):
+                    continue
                 if options.extras:
+                    key = candidate.req.key or ""
                     if candidate.req.extras:
-                        k = strip_extras(k)[0]
-                    elif k in filtered_candidates:
+                        seen_extras.add(key)
+                    elif key in seen_extras:
                         continue
                 elif candidate.req.extras:
                     continue
-                filtered_candidates[k] = candidate
-            packages = filtered_candidates.values()
+                packages.append(candidate)
 
         content = FORMATS[options.format].export(project, packages, options)
         if options.output:

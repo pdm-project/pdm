@@ -239,9 +239,6 @@ def test_export_with_platform_markers(pdm, project):
     result = pdm(["export", "--no-hashes"], obj=project, strict=True)
     assert 'urllib3==1.22; sys_platform == "fake"' in result.output.splitlines()
 
-    result = pdm(["export", "--no-markers", "--no-hashes"], obj=project, strict=True)
-    assert not any("urllib3" in line for line in result.output.splitlines())
-
 
 @pytest.mark.usefixtures("repository", "vcs")
 def test_export_with_vcs_deps(pdm, project):

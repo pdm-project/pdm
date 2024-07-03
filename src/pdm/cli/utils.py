@@ -30,6 +30,7 @@ from rich.tree import Tree
 
 from pdm import termui
 from pdm.exceptions import PdmArgumentError, ProjectError
+from pdm.models.markers import EnvSpec
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -191,7 +192,7 @@ class Package:
 
 def build_dependency_graph(
     working_set: Mapping[str, im.Distribution],
-    marker_env: dict[str, str] | None = None,
+    env_spec: EnvSpec | None = None,
     selected: set[str] | None = None,
     include_sub: bool = True,
 ) -> DirectedGraph:
@@ -207,7 +208,7 @@ def build_dependency_graph(
         if dist:
             requirements = filter_requirements_with_extras(dist.requires or [], extras, include_default=True)
             for req in requirements:
-                if not req.marker or req.marker.evaluate(marker_env):
+                if not req.marker or req.marker.matches(env_spec):
                     reqs[req.identify()] = req
             version: str | None = dist.version
         else:

@@ -219,7 +219,7 @@ class Requirement:
         if getattr(req, "url", None):
             link = Link(cast(str, req.url))
             klass = VcsRequirement if link.is_vcs else FileRequirement
-            return klass(url=req.url, **kwargs)
+            return klass(url=cast(str, req.url), **kwargs)
         else:
             return NamedRequirement(**kwargs)  # type: ignore[arg-type]
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import operator
 from dataclasses import dataclass
-from functools import reduce
-from typing import Any, overload
+from functools import lru_cache, reduce
+from typing import TYPE_CHECKING, Any, overload
 
 from dep_logic.markers import (
     BaseMarker,
@@ -14,10 +14,14 @@ from dep_logic.markers import (
     from_pkg_marker,
     parse_marker,
 )
+from dep_logic.tags import EnvSpec as _EnvSpec
 from packaging.markers import Marker as PackageMarker
 
 from pdm.exceptions import RequirementError
 from pdm.models.specifiers import PySpecSet
+
+if TYPE_CHECKING:
+    from pdm._types import Target
 
 
 @dataclass(frozen=True, unsafe_hash=True, repr=False)
@@ -49,6 +53,15 @@ class Marker:
     def evaluate(self, environment: dict[str, Any] | None = None) -> bool:
         return self.inner.evaluate(environment)
 
+    def matches(self, spec: EnvSpec) -> bool:
+        if spec.is_allow_all():
+            return True
+        non_python_marker, python_spec = self.split_pyspec()
+        return not (PySpecSet(spec.requires_python) & python_spec).is_empty() and non_python_marker.evaluate(
+            spec.markers()
+        )
+
+    @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:
         """Split `python_version` and `python_full_version` from marker string"""
         python_marker = self.inner.only("python_version", "python_full_version")
@@ -122,3 +135,41 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         return reduce(operator.or_, (_build_pyspec_from_marker(m) for m in marker.markers))
     else:  # pragma: no cover
         raise TypeError(f"Unsupported marker type: {type(marker)}")
+
+
+class EnvSpec(_EnvSpec):
+    def matches_target(self, target: Target) -> bool:
+        """Return whether the given environment spec matches the target triple."""
+        from dep_logic.tags import Platform
+
+        from pdm.models.specifiers import PySpecSet
+
+        if (self.requires_python & PySpecSet(target["python"])).is_empty():
+            return False
+
+        return (
+            self.platform == Platform.parse(target["platform"]) and self.implementation.name == target["implementation"]
+        )
+
+    def is_allow_all(self) -> bool:
+        return isinstance(self, AllowAllEnvSpec)
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def allow_all(cls) -> EnvSpec:
+        """Return an env spec that allows all packages."""
+        return AllowAllEnvSpec.from_spec("", "linux", "cpython")
+
+    def with_python(self, python: PySpecSet) -> EnvSpec:
+        """Return a copy of the env spec with the given python range."""
+        return type(self)(python._logic, self.platform, self.implementation)
+
+    def markers_with_defaults(self) -> dict[str, str]:
+        from packaging.markers import default_environment
+
+        return {**default_environment(), **self.markers()}
+
+
+class AllowAllEnvSpec(EnvSpec):
+    def matches_target(self, target: Target) -> bool:
+        return True

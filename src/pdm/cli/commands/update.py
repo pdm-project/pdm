@@ -143,7 +143,8 @@ class Command(BaseCommand):
                     None,
                 )
                 if not matched_req:
-                    candidates = project.locked_repository.all_candidates
+                    # FIXME: multi target lock
+                    candidates = project.get_locked_repository().all_candidates
                     if normalized_name not in candidates:
                         raise ProjectError(
                             f"[req]{name}[/] does not exist in [primary]{group}[/] "

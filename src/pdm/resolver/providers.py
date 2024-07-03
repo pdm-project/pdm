@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import os
 from typing import TYPE_CHECKING, Callable
 
@@ -18,13 +17,15 @@ from pdm.termui import logger
 from pdm.utils import deprecation_warning, is_url, normalize_name, parse_version, url_without_fragments
 
 if TYPE_CHECKING:
-    from typing import Any, Iterable, Iterator, Mapping, Sequence
+    from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeVar
 
     from resolvelib.resolvers import RequirementInformation
 
     from pdm._types import Comparable
     from pdm.models.repositories import BaseRepository
     from pdm.models.requirements import Requirement
+
+    ProviderT = TypeVar("ProviderT", bound="type[BaseProvider]")
 
 
 _PROVIDER_REGISTORY: dict[str, type[BaseProvider]] = {}
@@ -34,20 +35,8 @@ def get_provider(strategy: str) -> type[BaseProvider]:
     return _PROVIDER_REGISTORY[strategy]
 
 
-def provider_arguments(provider: type[BaseProvider]) -> set[str]:
-    arguments: set[str] = set()
-    for cls in provider.__mro__:
-        if "__init__" not in cls.__dict__:
-            continue
-        params = inspect.signature(cls).parameters
-        arguments.update({k for k, v in params.items() if v.kind not in (v.VAR_POSITIONAL, v.VAR_KEYWORD)})
-        if not any(p.kind in (p.VAR_POSITIONAL, p.VAR_KEYWORD) for p in params.values()):
-            break
-    return arguments
-
-
-def register_provider(strategy: str) -> Callable[[type[BaseProvider]], type[BaseProvider]]:
-    def wrapper(cls: type[BaseProvider]) -> type[BaseProvider]:
+def register_provider(strategy: str) -> Callable[[ProviderT], ProviderT]:
+    def wrapper(cls: ProviderT) -> ProviderT:
         _PROVIDER_REGISTORY[strategy] = cls
         return cls
 
@@ -62,7 +51,8 @@ class BaseProvider(AbstractProvider):
         allow_prereleases: bool | None = None,
         overrides: dict[str, str] | None = None,
         direct_minimal_versions: bool = False,
-        locked_candidates: dict[str, Candidate] | None = None,
+        *,
+        locked_candidates: dict[str, Candidate],
     ) -> None:
         if overrides is not None:  # pragma: no cover
             deprecation_warning(
@@ -73,13 +63,6 @@ class BaseProvider(AbstractProvider):
                 "The `allow_prereleases` argument is deprecated and will be removed in the future.", stacklevel=2
             )
         project = repository.environment.project
-        if locked_candidates is None:  # pragma: no cover
-            try:
-                locked_repository = project.locked_repository
-            except Exception:
-                locked_candidates = {}
-            else:
-                locked_candidates = locked_repository.all_candidates
         self.repository = repository
         self.allow_prereleases = project.pyproject.allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
@@ -322,11 +305,9 @@ class ReusePinProvider(BaseProvider):
 
     def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
         bare_name = strip_extras(identifier)[0]
-        if bare_name in self.tracked_names:
+        if bare_name in self.tracked_names or identifier not in self.locked_candidates:
             return None
-        pin = self.locked_candidates.get(identifier)
-        if pin is None:
-            return None
+        pin = self.locked_candidates[identifier]
         if requirement is not None:
             pin.req = requirement
         return pin
@@ -406,5 +387,6 @@ class ReuseInstalledProvider(ReusePinProvider):
         key = strip_extras(identifier)[0]
         if key not in self.installed or requirement is None:
             return super().get_reuse_candidate(identifier, requirement)
-        dist = self.installed[key]
-        return Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])
+        else:
+            dist = self.installed[key]
+            return Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])
