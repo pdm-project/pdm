@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 import importlib.resources
 import sys
+from collections.abc import Iterator
 from pathlib import Path
-from typing import BinaryIO, ContextManager
+from typing import TYPE_CHECKING, BinaryIO, ContextManager, Sequence
+
+if TYPE_CHECKING:
+    from pdm.models.requirements import Requirement
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -45,4 +51,45 @@ else:
 Distribution = importlib_metadata.Distribution
 
 
-__all__ = ["tomllib", "importlib_metadata", "Distribution", "importlib_resources"]
+class CompatibleSequence(Sequence["Requirement"]):  # pragma: no cover
+    """A compatibility class for Sequence that also exposes `items()`, `keys()` and `values()` methods"""
+
+    def __init__(self, data: Sequence[Requirement]) -> None:
+        self._data = data
+
+    def __getitem__(self, index: int) -> Requirement:  # type: ignore[override]
+        return self._data[index]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[Requirement]:
+        return iter(self._data)
+
+    def keys(self) -> Sequence[str]:
+        from pdm.utils import deprecation_warning
+
+        deprecation_warning(
+            ".keys() is deprecated on the requirements collection, it's not a mapping anymore.", stacklevel=2
+        )
+        return [r.identify() for r in self._data]
+
+    def values(self) -> Sequence[Requirement]:
+        from pdm.utils import deprecation_warning
+
+        deprecation_warning(
+            ".values() is deprecated on the requirements collection, it's not a mapping anymore.", stacklevel=2
+        )
+        return self._data
+
+    def items(self) -> Iterator[tuple[str, Requirement]]:
+        from pdm.utils import deprecation_warning
+
+        deprecation_warning(
+            ".items() is deprecated on the requirements collection, it's not a mapping anymore.", stacklevel=2
+        )
+        for r in self._data:
+            yield r.identify(), r
+
+
+__all__ = ["tomllib", "importlib_metadata", "Distribution", "importlib_resources", "CompatibleSequence"]

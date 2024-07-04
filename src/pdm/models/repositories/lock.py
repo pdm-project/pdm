@@ -39,7 +39,7 @@ class LockedRepository(BaseRepository):
         environment: BaseEnvironment,
         env_spec: EnvSpec | None = None,
     ) -> None:
-        super().__init__(sources, environment, ignore_compatibility=False, env_spec=env_spec)
+        super().__init__(sources, environment, env_spec=env_spec or environment.spec)
         self.packages: dict[CandidateKey, PackageEntry] = {}
         self.targets: list[EnvSpec] = []
         self._read_lockfile(lockfile)

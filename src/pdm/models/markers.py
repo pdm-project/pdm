@@ -4,7 +4,7 @@ import operator
 from dataclasses import dataclass
 from enum import IntEnum
 from functools import lru_cache, reduce
-from typing import TYPE_CHECKING, Any, overload
+from typing import Any, overload
 
 from dep_logic.markers import (
     BaseMarker,
@@ -20,9 +20,6 @@ from packaging.markers import Marker as PackageMarker
 
 from pdm.exceptions import RequirementError
 from pdm.models.specifiers import PySpecSet
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass(frozen=True, unsafe_hash=True, repr=False)

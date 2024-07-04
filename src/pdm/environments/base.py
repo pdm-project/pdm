@@ -13,12 +13,13 @@ from functools import cached_property, partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
+from pdm._types import NotSet, NotSetType
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_env_spec, get_uname, sysconfig_get_platform
 from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
-from pdm.utils import is_pip_compatible_with_python
+from pdm.utils import deprecation_warning, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
     import unearth
@@ -132,14 +133,17 @@ class BaseEnvironment(abc.ABC):
     def get_finder(
         self,
         sources: list[RepositoryConfig] | None = None,
+        ignore_compatibility: bool | NotSetType = NotSet,
         minimal_version: bool = False,
         env_spec: EnvSpec | None = None,
     ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
-        :param ignore_compatibility: whether to ignore the python version
+        :param ignore_compatibility: (DEPRECATED)whether to ignore the python version
             and wheel tags.
+        :param minimal_version: whether to find the minimal version of the package.
+        :param env_spec: the environment spec to filter the packages.
         """
         from pdm.models.finder import PDMPackageFinder
 
@@ -151,9 +155,18 @@ class BaseEnvironment(abc.ABC):
                 "The 'pypi.ignore_stored_index' config value is "
                 f"{self.project.config['pypi.ignore_stored_index']}"
             )
+        if ignore_compatibility is not NotSet:  # pragma: no cover
+            deprecation_warning(
+                "`ignore_compatibility` argument is deprecated, pass in `env_spec` instead.\n",
+                stacklevel=2,
+            )
+            ignore_compatibility = False
 
         if env_spec is None:
-            env_spec = self.spec
+            if ignore_compatibility:  # pragma: no cover
+                env_spec = EnvSpec.allow_all()
+            else:
+                env_spec = self.spec
 
         finder = PDMPackageFinder(
             session=self.session,

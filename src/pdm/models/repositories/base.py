@@ -9,6 +9,7 @@ from functools import wraps
 from typing import TYPE_CHECKING, Generator, NamedTuple, TypeVar, cast
 
 from pdm import termui
+from pdm._types import NotSet, NotSetType
 from pdm.exceptions import CandidateInfoNotFound, PackageWarning
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
@@ -54,7 +55,7 @@ class BaseRepository:
         self,
         sources: list[RepositoryConfig],
         environment: BaseEnvironment,
-        ignore_compatibility: bool = True,
+        ignore_compatibility: bool | NotSetType = NotSet,
         env_spec: EnvSpec | None = None,
     ) -> None:
         """
@@ -70,7 +71,15 @@ class BaseRepository:
         self._hash_cache = environment.project.make_hash_cache()
         self.has_warnings = False
         self.collected_groups: set[str] = set()
-        if env_spec is None:
+        if ignore_compatibility is not NotSet:  # pragma: no cover
+            warnings.warn(
+                "The ignore_compatibility argument is deprecated and will be removed in the future. "
+                "Pass in env_set instead. This repository doesn't support lock targets.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            ignore_compatibility = True
+        if env_spec is None:  # pragma: no cover
             if ignore_compatibility:
                 env_spec = EnvSpec.allow_all()
             else:

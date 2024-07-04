@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Iterable
+
 from pdm.environments import BaseEnvironment
 from pdm.installers.synchronizers import BaseSynchronizer
 from pdm.models.requirements import Requirement
@@ -7,7 +9,7 @@ from pdm.resolver.core import resolve
 
 
 def install_requirements(
-    reqs: list[Requirement], environment: BaseEnvironment, clean: bool = False, use_install_cache: bool = False
+    reqs: Iterable[Requirement], environment: BaseEnvironment, clean: bool = False, use_install_cache: bool = False
 ) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""
     project = environment.project

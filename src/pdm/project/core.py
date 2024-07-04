@@ -9,14 +9,15 @@ import shutil
 import sys
 from functools import cached_property, reduce
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence, cast
 
 import tomlkit
 from pbs_installer import PythonVersion
 from tomlkit.items import Array
 
 from pdm import termui
-from pdm._types import RepositoryConfig
+from pdm._types import NotSet, NotSetType, RepositoryConfig
+from pdm.compat import CompatibleSequence
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import DEFAULT_BACKEND, BuildBackend, get_backend_by_spec
 from pdm.models.caches import PackageCache
@@ -315,7 +316,7 @@ class Project:
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
 
-    def get_dependencies(self, group: str | None = None) -> list[Requirement]:
+    def get_dependencies(self, group: str | None = None) -> Sequence[Requirement]:
         metadata = self.pyproject.metadata
         group = group or "default"
         optional_dependencies = metadata.get("optional-dependencies", {})
@@ -352,7 +353,7 @@ class Project:
                 req.groups = [group]
                 # make editable packages behind normal ones to override correctly.
                 result.append(req)
-        return result
+        return CompatibleSequence(result)
 
     def iter_groups(self) -> Iterable[str]:
         groups = {"default"}
@@ -363,7 +364,7 @@ class Project:
         return groups
 
     @property
-    def all_dependencies(self) -> dict[str, list[Requirement]]:
+    def all_dependencies(self) -> dict[str, Sequence[Requirement]]:
         return {group: self.get_dependencies(group) for group in self.iter_groups()}
 
     @property
@@ -413,7 +414,7 @@ class Project:
     def get_repository(
         self,
         cls: type[BaseRepository] | None = None,
-        ignore_compatibility: bool = True,
+        ignore_compatibility: bool | NotSetType = NotSet,
         env_spec: EnvSpec | None = None,
     ) -> BaseRepository:
         """Get the repository object"""
@@ -422,13 +423,8 @@ class Project:
         sources = self.sources or []
         params = get_class_init_params(cls)
         if "env_spec" in params:
-            return cls(sources, self.environment, ignore_compatibility=ignore_compatibility, env_spec=env_spec)
+            return cls(sources, self.environment, env_spec=env_spec)
         else:
-            deprecation_warning(
-                "`ignore_compatibility` argument is deprecated, pass in `env_spec` instead.\n"
-                "Lock targets are not supported by this repository and will be ignored",
-                stacklevel=2,
-            )
             return cls(sources, self.environment, ignore_compatibility=ignore_compatibility)
 
     def get_locked_repository(self, env_spec: EnvSpec | None = None) -> LockedRepository:
@@ -449,7 +445,7 @@ class Project:
         strategy: str = "all",
         tracked_names: Iterable[str] | None = None,
         for_install: bool = False,
-        ignore_compatibility: bool = True,
+        ignore_compatibility: bool | NotSetType = NotSet,
         direct_minimal_versions: bool = False,
         env_spec: EnvSpec | None = None,
         locked_repository: LockedRepository | None = None,
@@ -468,13 +464,13 @@ class Project:
 
         from pdm.resolver.providers import BaseProvider, get_provider
 
+        if env_spec is None:
+            env_spec = EnvSpec.allow_all() if ignore_compatibility in (True, NotSet) else self.environment.spec
         repo_params = inspect.signature(self.get_repository).parameters
         if "env_spec" in repo_params:
-            repository = self.get_repository(ignore_compatibility=ignore_compatibility, env_spec=env_spec)
+            repository = self.get_repository(env_spec=env_spec)
         else:  # pragma: no cover
             repository = self.get_repository(ignore_compatibility=ignore_compatibility)
-        if env_spec is None:
-            env_spec = EnvSpec.allow_all() if ignore_compatibility else self.environment.spec
         if locked_repository is None:
             try:
                 locked_repository = self.get_locked_repository(env_spec)
@@ -597,6 +593,11 @@ class Project:
         write: bool = True,
     ) -> list[Requirement]:
         """Add requirements to the given group, and return the requirements of that group."""
+        if isinstance(requirements, Mapping):  # pragma: no cover
+            deprecation_warning(
+                "Passing a requirements map to add_dependencies is deprecated, " "please pass an iterable", stacklevel=2
+            )
+            requirements = requirements.values()
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
         parsed_deps = [parse_line(dep) for dep in deps]
         updated_indices: set[int] = set()

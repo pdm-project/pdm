@@ -128,7 +128,7 @@ class Command(BaseCommand):
                 raise PdmUsageError("--prerelease/--stable must be used with packages given")
             selection.validate()
             for group in selection:
-                updated_deps[group] = all_dependencies[group]
+                updated_deps[group] = list(all_dependencies[group])
             tracked_names.update(r.identify() for deps in updated_deps.values() for r in deps)
         else:
             group = selection.one()
