@@ -24,4 +24,5 @@
   stages:
     - post-checkout
     - post-merge
+    - post-rewrite
   always_run: true
