@@ -119,8 +119,3 @@ if TYPE_CHECKING:
         url: str
         hash: str
         file: str
-
-    class Target(TypedDict):
-        python: str
-        platform: str
-        implementation: str

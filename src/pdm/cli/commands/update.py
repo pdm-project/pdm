@@ -109,8 +109,7 @@ class Command(BaseCommand):
         from itertools import chain
 
         from pdm.cli.actions import do_lock, do_sync
-        from pdm.cli.utils import check_project_file, populate_requirement_names, save_version_specifiers
-        from pdm.models.requirements import strip_extras
+        from pdm.cli.utils import check_project_file, save_version_specifiers
         from pdm.models.specifiers import get_specifier
         from pdm.utils import normalize_name
 
@@ -121,7 +120,7 @@ class Command(BaseCommand):
                 "packages argument can't be used together with multiple -G or " "--no-default or --top."
             )
         all_dependencies = project.all_dependencies
-        updated_deps: dict[str, dict[str, Requirement]] = defaultdict(dict)
+        updated_deps: dict[str, list[Requirement]] = defaultdict(list)
         locked_groups = project.lockfile.groups
         tracked_names: set[str] = set()
         if not packages:
@@ -130,7 +129,7 @@ class Command(BaseCommand):
             selection.validate()
             for group in selection:
                 updated_deps[group] = all_dependencies[group]
-            tracked_names.update(chain.from_iterable(updated_deps.values()))
+            tracked_names.update(r.identify() for deps in updated_deps.values() for r in deps)
         else:
             group = selection.one()
             if locked_groups and group not in locked_groups:
@@ -138,11 +137,8 @@ class Command(BaseCommand):
             dependencies = all_dependencies[group]
             for name in packages:
                 normalized_name = normalize_name(name)
-                matched_req = next(
-                    (v for k, v in dependencies.items() if normalize_name(strip_extras(k)[0]) == normalized_name),
-                    None,
-                )
-                if not matched_req:
+                matched_reqs = [d for d in dependencies if (d.key or "") == normalized_name]
+                if not matched_reqs:
                     candidates = project.get_locked_repository().all_candidates
                     if normalized_name not in candidates:
                         raise ProjectError(
@@ -150,7 +146,12 @@ class Command(BaseCommand):
                             f"{'dev-' if selection.dev else ''}dependencies nor is a transitive dependency."
                         )
                     look_in_other_group = next(
-                        (g for g, deps in all_dependencies.items() if normalized_name in deps and g != group), None
+                        (
+                            g
+                            for g, deps in all_dependencies.items()
+                            if any(normalized_name == d.key for d in deps) and g != group
+                        ),
+                        None,
                     )
                     if look_in_other_group is not None:
                         raise ProjectError(
@@ -159,22 +160,18 @@ class Command(BaseCommand):
                         )
                     tracked_names.add(normalized_name)
                 else:
-                    matched_req.prerelease = prerelease
-                    updated_deps[group][normalized_name] = matched_req
-            tracked_names.update(chain.from_iterable(updated_deps.values()))
+                    for req in matched_reqs:
+                        req.prerelease = prerelease
+                    updated_deps[group].extend(matched_reqs)
+            tracked_names.update(r.identify() for deps in updated_deps.values() for r in deps)
             project.core.ui.echo(
                 f"Updating {'[bold]global[/] ' if project.is_global else ''}packages: {', '.join(f'[req]{v}[/]' for v in tracked_names)}."
             )
         if unconstrained:
             for deps in updated_deps.values():
-                for dep in deps.values():
+                for dep in deps:
                     dep.specifier = get_specifier("")
-        reqs = [
-            r
-            for g, deps in all_dependencies.items()
-            for r in deps.values()
-            if locked_groups is None or g in locked_groups
-        ]
+        reqs = [r for g, deps in all_dependencies.items() for r in deps if locked_groups is None or g in locked_groups]
         # Since dry run is always true in the locking,
         # we need to emit the hook manually with the real dry_run value
         hooks.try_emit("pre_lock", requirements=reqs, dry_run=dry_run)
@@ -189,11 +186,9 @@ class Command(BaseCommand):
                 groups=locked_groups,
             )
         hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
-        for deps in updated_deps.values():
-            populate_requirement_names(deps)
         if unconstrained:
             # Need to update version constraints
-            save_version_specifiers(updated_deps, resolved, save)
+            save_version_specifiers(chain.from_iterable(updated_deps.values()), resolved, save)
         if not dry_run:
             if unconstrained:
                 for group, deps in updated_deps.items():
@@ -205,8 +200,8 @@ class Command(BaseCommand):
                 selection=selection,
                 clean=False,
                 dry_run=dry_run,
-                requirements=[r for deps in updated_deps.values() for r in deps.values()],
-                tracked_names=list(chain.from_iterable(updated_deps.values())) if top else None,
+                requirements=[r for deps in updated_deps.values() for r in deps],
+                tracked_names=[r.identify() for deps in updated_deps.values() for r in deps] if top else None,
                 no_editable=no_editable,
                 no_self=no_self or "default" not in selection,
                 fail_fast=fail_fast,

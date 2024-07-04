@@ -184,10 +184,10 @@ def test_select_dependencies(project):
         "test": ["pytest"],
         "doc": ["mkdocs"],
     }
-    assert sorted(project.get_dependencies()) == ["requests"]
+    assert sorted([r.key for r in project.get_dependencies()]) == ["requests"]
 
-    assert sorted(project.get_dependencies("security")) == ["cryptography"]
-    assert sorted(project.get_dependencies("test")) == ["pytest"]
+    assert sorted([r.key for r in project.get_dependencies("security")]) == ["cryptography"]
+    assert sorted([r.key for r in project.get_dependencies("test")]) == ["pytest"]
 
     assert sorted(project.iter_groups()) == [
         "default",
@@ -358,7 +358,7 @@ def prepare_repository(repository, project):
     repository.add_candidate("foo", "2.0", ">=3.7,<3.12")
     repository.add_candidate("foo", "1.0", ">=3.7")
     project.environment.python_requires = PySpecSet(">=3.9")
-    project.add_dependencies({"foo": parse_requirement("foo")})
+    project.add_dependencies(["foo"])
 
 
 @pytest.mark.usefixtures("prepare_repository")

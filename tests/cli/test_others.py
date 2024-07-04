@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from pdm.cli import actions
-from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
 from tests import FIXTURES
 
@@ -119,12 +118,12 @@ def test_import_other_format_file(project, pdm, filename):
 
 
 def test_import_requirement_no_overwrite(project, pdm, tmp_path):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     tmp_path.joinpath("reqs.txt").write_text("flask\nflask-login\n")
     result = pdm(["import", "-dGweb", str(tmp_path.joinpath("reqs.txt"))], obj=project)
     assert result.exit_code == 0, result.stderr
-    assert list(project.get_dependencies()) == ["requests"]
-    assert list(project.get_dependencies("web")) == ["flask", "flask-login"]
+    assert [r.key for r in project.get_dependencies()] == ["requests"]
+    assert [r.key for r in project.get_dependencies("web")] == ["flask", "flask-login"]
 
 
 @pytest.mark.network

@@ -16,6 +16,7 @@ def install_requirements(
     # Clear the overrides and excludes
     provider.overrides = {}
     provider.excludes = set()
+    reqs = [req for req in reqs if not req.marker or req.marker.matches(provider.repository.env_spec)]
     reporter = project.get_reporter(reqs)
     resolver = project.core.resolver_class(provider, reporter)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])

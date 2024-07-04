@@ -24,16 +24,20 @@ def resolve(project, repository):
         direct_minimal_versions=False,
         inherit_metadata=False,
         platform=None,
+        cross_platform=False,
     ):
         from dep_logic.tags import Platform
 
-        env_spec = project.environment.spec.with_python(project.environment.python_requires)
-        replace_dict = {}
-        if requires_python:
-            replace_dict["requires_python"] = PySpecSet(requires_python)._logic
-        if platform:
-            replace_dict["platform"] = Platform.parse(platform)
-        env_spec = dataclasses.replace(env_spec, **replace_dict)
+        if cross_platform:
+            env_spec = EnvSpec.allow_all()
+        else:
+            env_spec = project.environment.spec.with_python(project.environment.python_requires)
+            replace_dict = {}
+            if requires_python:
+                replace_dict["requires_python"] = PySpecSet(requires_python)._logic
+            if platform:
+                replace_dict["platform"] = Platform.parse(platform)
+            env_spec = dataclasses.replace(env_spec, **replace_dict)
         if allow_prereleases is not None:
             project.pyproject.settings.setdefault("resolution", {})["allow-prereleases"] = allow_prereleases
         requirements = []
@@ -378,13 +382,12 @@ def test_resolve_skip_candidate_with_invalid_metadata(resolve, repository):
 
 def test_resolve_direct_minimal_versions(resolve, repository, project):
     repository.add_candidate("pytz", "2019.6")
-    project.add_dependencies({"django": parse_requirement("django")})
+    project.add_dependencies(["django"])
     result = resolve(["django"], ">=3.6", direct_minimal_versions=True)
     assert result["django"].version == "1.11.8"
     assert result["pytz"].version == "2019.6"
 
 
-@pytest.mark.xfail(reason="Update to work with lock targets")
 def test_resolve_record_markers(resolve, repository, project):
     repository.add_candidate("A", "1.0")
     repository.add_candidate("B", "1.0")
@@ -401,7 +404,7 @@ def test_resolve_record_markers(resolve, repository, project):
     repository.add_dependencies("E", "1.0", ["F; platform_machine=='x86_64'"])
     repository.add_dependencies("F", "1.0", ["B"])
 
-    result = resolve(["A"], ">=3.6", inherit_metadata=True)
+    result = resolve(["A"], ">=3.6", inherit_metadata=True, cross_platform=True)
     assert result["a"].version == "1.0"
     assert "d" not in result
     assert (

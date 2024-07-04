@@ -29,7 +29,7 @@ def test_lock_command(project, pdm, mocker):
 
 @pytest.mark.usefixtures("repository")
 def test_lock_dependencies(project):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     actions.do_lock(project)
     assert project.lockfile.exists
     locked = project.get_locked_repository().candidates
@@ -39,13 +39,13 @@ def test_lock_dependencies(project):
 
 @pytest.mark.parametrize("args", [("-S", "static_urls"), ("--static-urls",)])
 def test_lock_refresh(pdm, project, repository, args, core, mocker):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
     package = next(p for p in project.lockfile["package"] if p["name"] == "requests")
     assert not package.get("files")
-    project.add_dependencies({"requests": parse_requirement("requests>=2.0")})
+    project.add_dependencies(["requests>=2.0"])
     url_hashes = {
         "http://example.com/requests-2.19.1-py3-none-any.whl": "sha256:abcdef123456",
         "http://example2.com/requests-2.19.1-py3-none-AMD64.whl": "sha256:abcdef123456",
@@ -76,7 +76,7 @@ def test_lock_refresh(pdm, project, repository, args, core, mocker):
 
 
 def test_lock_refresh_keep_consistent(pdm, project, repository):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
@@ -87,7 +87,7 @@ def test_lock_refresh_keep_consistent(pdm, project, repository):
 
 
 def test_lock_check_no_change_success(pdm, project, repository):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
@@ -97,19 +97,19 @@ def test_lock_check_no_change_success(pdm, project, repository):
 
 
 def test_lock_check_change_fails(pdm, project, repository):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     result = pdm(["lock"], obj=project)
     assert result.exit_code == 0
     assert project.is_lockfile_hash_match()
 
-    project.add_dependencies({"pyyaml": parse_requirement("pyyaml")})
+    project.add_dependencies(["pyyaml"])
     result = pdm(["lock", "--check"], obj=project)
     assert result.exit_code == 1
 
 
 @pytest.mark.usefixtures("repository")
 def test_innovations_with_specified_lockfile(pdm, project, working_set):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     lockfile = str(project.root / "mylock.lock")
     pdm(["lock", "--lockfile", lockfile], strict=True, obj=project)
     assert project.lockfile._path == project.root / "mylock.lock"
@@ -133,8 +133,8 @@ def test_skip_editable_dependencies_in_metadata(project, capsys):
 
 @pytest.mark.usefixtures("repository")
 def test_lock_selected_groups(project, pdm):
-    project.add_dependencies({"requests": parse_requirement("requests")}, to_group="http")
-    project.add_dependencies({"pytz": parse_requirement("pytz")})
+    project.add_dependencies(["requests"], to_group="http")
+    project.add_dependencies(["pytz"])
     pdm(["lock", "-G", "http", "--no-default"], obj=project, strict=True)
     assert project.lockfile.groups == ["http"]
     assert "requests" in project.get_locked_repository().candidates
@@ -145,7 +145,7 @@ def test_lock_selected_groups(project, pdm):
 @pytest.mark.parametrize("to_dev", [False, True])
 def test_lock_self_referencing_groups(project, pdm, to_dev):
     name = project.name
-    project.add_dependencies({"requests": parse_requirement("requests")}, to_group="http", dev=to_dev)
+    project.add_dependencies(["requests"], to_group="http", dev=to_dev)
     project.add_dependencies(
         {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
         to_group="dev",
@@ -163,11 +163,10 @@ def test_lock_self_referencing_groups(project, pdm, to_dev):
 
 
 @pytest.mark.usefixtures("local_finder")
-@pytest.mark.xfail(reason="Need update for lock targets")
 def test_lock_multiple_platform_wheels(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.7")
-    project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")})
-    pdm(["lock"], obj=project, strict=True)
+    project.add_dependencies(["pdm-hello"])
+    pdm(["lock", "-S", "cross_platform"], obj=project, strict=True)
     package = next(p for p in project.lockfile["package"] if p["name"] == "pdm-hello")
     file_hashes = package["files"]
     assert len(file_hashes) == 2
@@ -177,7 +176,7 @@ def test_lock_multiple_platform_wheels(project, pdm):
 @pytest.mark.parametrize("args", [("--no-cross-platform",), ("-S", "no_cross_platform")])
 def test_lock_current_platform_wheels(project, pdm, args):
     project.environment.python_requires = PySpecSet(">=3.7")
-    project.add_dependencies({"pdm-hello": parse_requirement("pdm-hello")})
+    project.add_dependencies(["pdm-hello"])
     pdm(["lock", *args], obj=project, strict=True)
     assert FLAG_CROSS_PLATFORM not in project.lockfile.strategy
     package = next(p for p in project.lockfile["package"] if p["name"] == "pdm-hello")
@@ -214,7 +213,7 @@ def test_apply_lock_strategy_changes_invalid(project, strategy):
 
 
 def test_lock_direct_minimal_versions(project, repository, pdm):
-    project.add_dependencies({"django": parse_requirement("django")})
+    project.add_dependencies(["django"])
     repository.add_candidate("pytz", "2019.6")
     pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
     assert project.lockfile.strategy == {"direct_minimal_versions", "inherit_metadata"}
@@ -226,7 +225,7 @@ def test_lock_direct_minimal_versions(project, repository, pdm):
 @pytest.mark.usefixtures("local_finder")
 @pytest.mark.parametrize("args", [(), ("-S", "direct_minimal_versions")])
 def test_lock_direct_minimal_versions_real(project, pdm, args):
-    project.add_dependencies({"zipp": parse_requirement("zipp")})
+    project.add_dependencies(["zipp"])
     pdm(["lock", *args], obj=project, strict=True)
     locked_candidate = project.get_locked_repository().candidates["zipp"]
     if args:
@@ -256,7 +255,7 @@ def test_lockfile_compatibility(project, monkeypatch, lock_version, expected, pd
 
 
 def test_lock_default_inherit_metadata(project, pdm, mocker, working_set):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     pdm(["lock"], obj=project, strict=True)
     assert "inherit_metadata" in project.lockfile.strategy
     packages = project.lockfile["package"]
@@ -270,7 +269,7 @@ def test_lock_default_inherit_metadata(project, pdm, mocker, working_set):
 
 
 def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     pdm(["lock", "-S", "inherit_metadata"], obj=project, strict=True)
     assert "inherit_metadata" in project.lockfile.strategy
     packages = project.lockfile["package"]
@@ -286,7 +285,7 @@ def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
 def test_lock_exclude_newer(project, pdm):
     project.pyproject.metadata["requires-python"] = ">=3.9"
     project.project_config["pypi.url"] = "https://my.pypi.org/json"
-    project.add_dependencies({"zipp": parse_requirement("zipp")})
+    project.add_dependencies(["zipp"])
     pdm(["lock", "--exclude-newer", "2024-01-01"], obj=project, strict=True, cleanup=False)
     assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
 
@@ -307,10 +306,60 @@ exclusion_cases = [
 @pytest.mark.parametrize("args", exclusion_cases)
 @pytest.mark.usefixtures("repository")
 def test_lock_all_with_excluded_groups(project, pdm, args):
-    project.add_dependencies({"urllib3": parse_requirement("urllib3")}, "url")
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, "tz", True)
-    project.add_dependencies({"pyopenssl": parse_requirement("pyopenssl")}, "ssl")
+    project.add_dependencies(["urllib3"], "url")
+    project.add_dependencies(["pytz"], "tz", True)
+    project.add_dependencies(["pyopenssl"], "ssl")
     pdm(["lock", *args], obj=project, strict=True)
     assert "urllib3" in project.get_locked_repository().candidates
     assert "pytz" not in project.get_locked_repository().candidates
     assert "pyopenssl" not in project.get_locked_repository().candidates
+
+
+@pytest.mark.parametrize(
+    "args", [("--append",), ("-S", "cross_platform", "--platform=linux"), ("-S", "cross_platform", "--append")]
+)
+def test_forbidden_lock_target_options(project, pdm, args):
+    result = pdm(["lock", *args], obj=project)
+    assert result.exit_code != 0
+    assert "PdmUsageError" in result.stderr
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_lock_for_multiple_targets(project, pdm, repository, nested):
+    deps = [
+        'django<2; sys_platform == "win32"',
+        'django>=2; sys_platform != "win32"',
+    ]
+    if nested:
+        repository.add_candidate("foo", "0.1.0")
+        repository.add_dependencies("foo", "0.1.0", deps)
+        project.add_dependencies(["foo"])
+    else:
+        project.add_dependencies(deps)
+
+    pdm(["lock", "--platform", "windows"], obj=project, strict=True)
+    locked = project.get_locked_repository()
+    candidates = locked.all_candidates
+    assert len(candidates["django"]) == 1
+    assert candidates["django"][0].version == "1.11.8"
+    assert len(locked.targets) == 1
+    pytz = candidates["pytz"][0]
+    assert str(pytz.req.marker) == 'sys_platform == "win32"'
+
+    pdm(["lock", "--platform", "linux", "--append"], obj=project, strict=True)
+    locked = project.get_locked_repository()
+    candidates = locked.all_candidates
+    assert len(locked.targets) == 2
+    assert sorted(c.version for c in candidates["django"]) == ["1.11.8", "2.2.9"]
+    pytz = candidates["pytz"][0]
+    assert not pytz.req.marker or pytz.req.marker.is_any()
+
+    # not append but overwrite
+    pdm(["lock", "--platform", "windows"], obj=project, strict=True)
+    locked = project.get_locked_repository()
+    candidates = locked.all_candidates
+    assert len(candidates["django"]) == 1
+    assert candidates["django"][0].version == "1.11.8"
+    assert len(locked.targets) == 1
+    pytz = candidates["pytz"][0]
+    assert str(pytz.req.marker) == 'sys_platform == "win32"'

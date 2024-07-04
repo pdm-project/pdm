@@ -12,7 +12,7 @@ from pdm import termui
 from pdm.exceptions import CandidateInfoNotFound, PackageWarning
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
-from pdm.models.requirements import Requirement, parse_requirement
+from pdm.models.requirements import Requirement, parse_line
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import filtered_sources, normalize_name
 
@@ -257,10 +257,7 @@ class BaseRepository:
 
         deps: list[Requirement] = []
         for line in info[0]:
-            if line.startswith("-e "):
-                deps.append(parse_requirement(line[3:], True))
-            else:
-                deps.append(parse_requirement(line))
+            deps.append(parse_line(line))
         return CandidateMetadata(deps, info[1], info[2])
 
     @cache_result
@@ -283,7 +280,7 @@ class BaseRepository:
             all_groups = set(project.iter_groups())
             for extra in candidate.req.extras:
                 if extra in all_groups:
-                    reqs.extend(project.get_dependencies(extra).values())
+                    reqs.extend(project.get_dependencies(extra))
                     self.collected_groups.add(extra)
         return CandidateMetadata(
             reqs,

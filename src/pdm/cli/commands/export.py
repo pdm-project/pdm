@@ -67,14 +67,12 @@ class Command(BaseCommand):
         if options.pyproject:
             options.hashes = False
         selection = GroupSelection.from_options(project, options)
-        requirements: dict[str, Requirement] = {}
         if options.markers is False:
+            # FIXME: is this possible?
             project.core.ui.deprecated("The --no-markers option is deprecated and has no effect.")
-        for group in selection:
-            requirements.update(project.get_dependencies(group))
         packages: Iterable[Requirement] | Iterable[Candidate]
         if options.pyproject:
-            packages = list(requirements.values())
+            packages = [r for group in selection for r in project.get_dependencies(group)]
         else:
             if not project.lockfile.exists():
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")

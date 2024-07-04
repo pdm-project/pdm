@@ -23,7 +23,7 @@ from pdm.models.caches import PackageCache
 from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
-from pdm.models.requirements import Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import Requirement, parse_line, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config, ensure_boolean
 from pdm.project.lockfile import Lockfile
@@ -315,7 +315,7 @@ class Project:
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
 
-    def get_dependencies(self, group: str | None = None) -> dict[str, Requirement]:
+    def get_dependencies(self, group: str | None = None) -> list[Requirement]:
         metadata = self.pyproject.metadata
         group = group or "default"
         optional_dependencies = metadata.get("optional-dependencies", {})
@@ -335,7 +335,7 @@ class Project:
                 deps = dev_dependencies[group]
             else:
                 raise PdmUsageError(f"Non-exist group {group}")
-        result = {}
+        result = []
         with cd(self.root):
             for line in deps:
                 if line.startswith("-e "):
@@ -351,7 +351,7 @@ class Project:
                     req = parse_requirement(line)
                 req.groups = [group]
                 # make editable packages behind normal ones to override correctly.
-                result[req.identify()] = req
+                result.append(req)
         return result
 
     def iter_groups(self) -> Iterable[str]:
@@ -363,7 +363,7 @@ class Project:
         return groups
 
     @property
-    def all_dependencies(self) -> dict[str, dict[str, Requirement]]:
+    def all_dependencies(self) -> dict[str, list[Requirement]]:
         return {group: self.get_dependencies(group) for group in self.iter_groups()}
 
     @property
@@ -590,26 +590,39 @@ class Project:
 
     def add_dependencies(
         self,
-        requirements: dict[str, Requirement],
+        requirements: Iterable[str | Requirement],
         to_group: str = "default",
         dev: bool = False,
         show_message: bool = True,
         write: bool = True,
-    ) -> None:
+    ) -> list[Requirement]:
+        """Add requirements to the given group, and return the requirements of that group."""
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
-        for _, dep in requirements.items():
+        parsed_deps = [parse_line(dep) for dep in deps]
+        updated_indices: set[int] = set()
+
+        for req in requirements:
+            if isinstance(req, str):
+                req = parse_line(req)
             matched_index = next(
-                (i for i, r in enumerate(deps) if dep.matches(r)),
+                (i for i, r in enumerate(deps) if req.matches(r) and i not in updated_indices),
                 None,
             )
-            req = dep.as_line()
+            dep = req.as_line()
             if matched_index is None:
-                deps.append(req)
+                updated_indices.add(len(deps))
+                deps.append(dep)
+                parsed_deps.append(req)
             else:
-                deps[matched_index] = req
+                deps[matched_index] = dep
+                parsed_deps[matched_index] = req
+                updated_indices.add(matched_index)
         setter(cast(Array, deps).multiline(True))
         if write:
             self.pyproject.write(show_message)
+        for r in parsed_deps:
+            r.groups = [to_group]
+        return parsed_deps
 
     def init_global_project(self) -> None:
         if not self.is_global or not self.pyproject.empty():

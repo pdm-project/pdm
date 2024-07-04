@@ -22,7 +22,7 @@ from pdm.exceptions import RequirementError
 from pdm.models.specifiers import PySpecSet
 
 if TYPE_CHECKING:
-    from pdm._types import Target
+    pass
 
 
 @dataclass(frozen=True, unsafe_hash=True, repr=False)
@@ -199,5 +199,4 @@ class EnvSpec(_EnvSpec):
 
 
 class AllowAllEnvSpec(EnvSpec):
-    def matches_target(self, target: Target) -> bool:
-        return True
+    pass

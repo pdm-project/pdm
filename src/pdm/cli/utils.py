@@ -6,7 +6,7 @@ import json
 import os
 import re
 import sys
-from collections import ChainMap, OrderedDict
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
 from gettext import gettext as _
@@ -343,7 +343,12 @@ def _format_forward_dependency_graph(
             to_check.extend(graph.iter_children(package))
         return None
 
-    all_dependencies = ChainMap(*project.all_dependencies.values())
+    all_dependencies = {
+        r.identify(): r
+        for deps in project.all_dependencies.values()
+        for r in deps
+        if not r.marker or r.marker.matches(project.environment.spec)
+    }
     top_level_dependencies = {find_package_to_add(node) for node in graph.iter_children(None) if node}
     for package in sorted((node for node in top_level_dependencies if node), key=lambda p: p.name):
         required: set[str] = set()
@@ -394,11 +399,17 @@ def build_forward_dependency_json_subtree(
     visited: frozenset[str] = frozenset(),
 ) -> dict:
     required: set[str] = set()
+    all_dependencies = {
+        r.identify(): r
+        for deps in project.all_dependencies.values()
+        for r in deps
+        if not r.marker or r.marker.matches(project.environment.spec)
+    }
     for parent in graph.iter_parents(root):
         if parent:
             r = specifier_from_requirement(parent.requirements[root.name])
         elif not package_is_project(root, project):
-            requirements = required_by.requirements if required_by else ChainMap(*project.all_dependencies.values())
+            requirements = required_by.requirements if required_by else all_dependencies
             if root.name in requirements:
                 r = specifier_from_requirement(requirements[root.name])
             else:
@@ -509,7 +520,7 @@ def show_dependency_graph(
 
 
 def save_version_specifiers(
-    requirements: dict[str, dict[str, Requirement]],
+    requirements: Iterable[Requirement],
     resolved: dict[str, list[Candidate]],
     save_strategy: str,
 ) -> None:
@@ -527,21 +538,21 @@ def save_version_specifiers(
         assert c.version is not None
         return comparable_version(c.version)
 
-    for reqs in requirements.values():
-        for name, r in reqs.items():
-            if r.is_named and not r.specifier and name in resolved:
-                version = candidate_version(resolved[name])
-                if version is None:
-                    continue
-                if save_strategy == "exact":
-                    r.specifier = get_specifier(f"=={version}")
-                elif save_strategy == "compatible":
-                    if version.is_prerelease or version.is_devrelease:
-                        r.specifier = get_specifier(f">={version},<{version.major + 1}")
-                    else:
-                        r.specifier = get_specifier(f"~={version.major}.{version.minor}")
-                elif save_strategy == "minimum":
-                    r.specifier = get_specifier(f">={version}")
+    for r in requirements:
+        name = r.identify()
+        if r.is_named and not r.specifier and name in resolved:
+            version = candidate_version(resolved[name])
+            if version is None:
+                continue
+            if save_strategy == "exact":
+                r.specifier = get_specifier(f"=={version}")
+            elif save_strategy == "compatible":
+                if version.is_prerelease or version.is_devrelease:
+                    r.specifier = get_specifier(f">={version},<{version.major + 1}")
+                else:
+                    r.specifier = get_specifier(f"~={version.major}.{version.minor}")
+            elif save_strategy == "minimum":
+                r.specifier = get_specifier(f">={version}")
 
 
 def check_project_file(project: Project) -> None:
@@ -719,14 +730,6 @@ def use_venv(project: Project, name: str) -> None:
     venv = get_venv_with_name(project, cast(str, name))
     project.core.ui.info(f"In virtual environment: [success]{venv.root}[/]", verbosity=termui.Verbosity.DETAIL)
     project.environment = PythonEnvironment(project, python=str(venv.interpreter))
-
-
-def populate_requirement_names(req_mapping: dict[str, Requirement]) -> None:
-    # Update the requirement key if the name changed.
-    for key, req in list(req_mapping.items()):
-        if key and key.startswith(":empty:"):
-            req_mapping[req.identify()] = req
-            del req_mapping[key]
 
 
 def normalize_pattern(pattern: str) -> str:

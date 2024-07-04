@@ -7,7 +7,6 @@ import pytest
 
 from pdm.cli import actions
 from pdm.cli.options import from_splitted_env
-from pdm.models.requirements import parse_requirement
 from pdm.signals import pdm_signals
 
 pytestmark = pytest.mark.usefixtures("repository", "working_set", "local_finder")
@@ -248,7 +247,7 @@ def hooked_project(project, capfd, specs, request):
 
 @pytest.fixture
 def lock(project, capfd):
-    project.add_dependencies({"requests": parse_requirement("requests")})
+    project.add_dependencies(["requests"])
     actions.do_lock(project)
     capfd.readouterr()
 

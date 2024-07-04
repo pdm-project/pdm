@@ -4,7 +4,6 @@ import pytest
 from unearth import Link
 
 from pdm.models.markers import EnvSpec
-from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.pytest import Distribution
 from pdm.utils import path_to_url
@@ -101,7 +100,7 @@ def test_non_editable_override_editable(project, pdm):
     url = "git+https://github.com/test-root/demo.git#egg=demo"
     pdm(["add", "--dev", "-e", url], obj=project, strict=True)
     pdm(["add", "--dev", url], obj=project, strict=True)
-    assert not project.get_dependencies("dev")["demo"].editable
+    assert not project.get_dependencies("dev")[0].editable
 
 
 @pytest.mark.usefixtures("working_set")
@@ -292,8 +291,8 @@ def test_add_group_to_lockfile(project, working_set, pdm):
 
 
 def test_add_group_to_lockfile_without_package(project, working_set, pdm):
-    project.add_dependencies({"requests": parse_requirement("requests")})
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="tz")
+    project.add_dependencies(["requests"])
+    project.add_dependencies(["pytz"], to_group="tz")
     pdm(["install"], obj=project, strict=True)
     assert "pytz" not in working_set
     assert project.lockfile.groups == ["default"]

@@ -11,7 +11,7 @@ from pdm.exceptions import CandidateNotFound, PdmException
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.models.repositories.base import BaseRepository, CandidateMetadata
-from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
+from pdm.models.requirements import FileRequirement, Requirement, parse_line
 from pdm.utils import cd, path_to_url, url_to_path, url_without_fragments
 
 if TYPE_CHECKING:
@@ -131,10 +131,7 @@ class LockedRepository(BaseRepository):
 
         deps: list[Requirement] = []
         for line in entry.dependencies:
-            if line.startswith("-e "):
-                deps.append(parse_requirement(line[3:], True))
-            else:
-                deps.append(parse_requirement(line))
+            deps.append(parse_line(line))
         return CandidateMetadata(deps, candidate.requires_python, entry.summary)
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:

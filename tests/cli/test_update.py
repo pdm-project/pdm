@@ -1,7 +1,5 @@
 import pytest
 
-from pdm.models.requirements import parse_requirement
-
 
 @pytest.mark.usefixtures("working_set")
 def test_update_packages_with_top(project, pdm):
@@ -313,7 +311,7 @@ def test_update_groups_in_lockfile(project, working_set, pdm, repository):
 
 def test_update_group_not_in_lockfile(project, working_set, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
-    project.add_dependencies({"pytz": parse_requirement("pytz")}, to_group="extra")
+    project.add_dependencies(["pytz"], to_group="extra")
     result = pdm(["update", "--group", "extra"], obj=project)
     assert result.exit_code != 0
     assert "Requested groups not in lockfile: extra" in result.stderr

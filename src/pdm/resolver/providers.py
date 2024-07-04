@@ -152,11 +152,11 @@ class BaseProvider(AbstractProvider):
         return self._find_candidates(parse_requirement(req))
 
     def _is_direct_requirement(self, requirement: Requirement) -> bool:
-        from collections import ChainMap
+        from itertools import chain
 
         project = self.repository.environment.project
-        all_dependencies = ChainMap(*project.all_dependencies.values())
-        return requirement.identify() in all_dependencies
+        all_dependencies = chain.from_iterable(project.all_dependencies.values())
+        return any(r.is_named and requirement.identify() == r.identify() for r in all_dependencies)
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named and not isinstance(self.repository, LockedRepository):

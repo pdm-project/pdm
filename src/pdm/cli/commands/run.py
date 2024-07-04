@@ -176,7 +176,7 @@ class TaskRunner:
         script_project._python = env.interpreter
         env.project = script_project  # keep a strong reference to the project
         if reqs := script_project.get_dependencies():
-            install_requirements(list(reqs.values()), env, clean=True)
+            install_requirements(reqs, env, clean=True)
         return env
 
     def get_task(self, script_name: str) -> Task | None:
