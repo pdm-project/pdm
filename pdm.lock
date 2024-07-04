@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.2"
-content_hash = "sha256:1f0b43aecc302d0f31ce887517310969a6ad31b68bbec27b9ec663563ec2f6d9"
+content_hash = "sha256:91f877001e90e771f01ce3e1b73980cab17d85d0539233810b341dee7c79a3ad"
 
 [[package]]
 name = "anyio"
@@ -552,7 +552,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.3.3"
+version = "0.3.5"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["all", "default", "test"]
@@ -560,8 +560,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.3.3-py3-none-any.whl", hash = "sha256:04e1969c7073a93ea132ccad5113db627391aa00c66cfae720faff8b91afaac6"},
-    {file = "dep_logic-0.3.3.tar.gz", hash = "sha256:1ae4686cc839428683037c8f1584135033859e1623e38517318164543e772a8a"},
+    {file = "dep_logic-0.3.5-py3-none-any.whl", hash = "sha256:18c2bb012ba702bdf4749bd1cd338f9db786688673b6b0f1e04d52eb7aed28bd"},
+    {file = "dep_logic-0.3.5.tar.gz", hash = "sha256:17cedfea6d68ba91c870c028f2fb65c39d801db3d9a861cd58760e0f8bbdedba"},
 ]
 
 [[package]]

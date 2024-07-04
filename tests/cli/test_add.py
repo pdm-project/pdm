@@ -20,7 +20,7 @@ def test_add_package(project, working_set, dev_option, pdm):
     )
 
     assert group[0] == "requests>=2.19.1"
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
@@ -50,7 +50,7 @@ def test_add_package_to_custom_group(project, working_set, pdm):
     pdm(["add", "requests", "--group", "test"], obj=project, strict=True)
 
     assert "requests" in project.pyproject.metadata["optional-dependencies"]["test"][0]
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
@@ -61,7 +61,7 @@ def test_add_package_to_custom_dev_group(project, working_set, pdm):
 
     dependencies = project.pyproject.settings["dev-dependencies"]["test"]
     assert "requests" in dependencies[0]
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["idna"].version == "2.7"
     for package in ("requests", "idna", "chardet", "urllib3", "certifi"):
         assert package in working_set
@@ -76,7 +76,7 @@ def test_add_editable_package(project, working_set, pdm):
 
     group = project.pyproject.settings["dev-dependencies"]["dev"]
     assert group == ["-e git+https://github.com/test-root/demo.git#egg=demo"]
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["demo"].prepare(project.environment).revision == "1234567890abcdef"
     assert working_set["demo"].link_file
     assert locked_candidates["idna"].version == "2.7"
@@ -144,7 +144,7 @@ def test_add_package_save_minimum(project, pdm):
 def test_add_package_update_reuse(project, repository, pdm):
     pdm(["add", "--no-sync", "--save-wildcard", "requests", "pytz"], obj=project, strict=True)
 
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -163,7 +163,7 @@ def test_add_package_update_reuse(project, repository, pdm):
         ],
     )
     pdm(["add", "--no-sync", "--save-wildcard", "requests"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -172,7 +172,7 @@ def test_add_package_update_reuse(project, repository, pdm):
 def test_add_package_update_eager(project, repository, pdm):
     pdm(["add", "--no-sync", "--save-wildcard", "requests", "pytz"], obj=project, strict=True)
 
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -191,7 +191,7 @@ def test_add_package_update_eager(project, repository, pdm):
         ],
     )
     pdm(["add", "--no-sync", "--save-wildcard", "--update-eager", "requests"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -221,12 +221,12 @@ def test_add_packages_without_self(project, working_set, pdm):
 def test_add_package_unconstrained_rewrite_specifier(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     pdm(["add", "--no-self", "django"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["django"].version == "2.2.9"
     assert project.pyproject.metadata["dependencies"][0] == "django>=2.2.9"
 
     pdm(["add", "--no-self", "--unconstrained", "django-toolbar"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["django"].version == "1.11.8"
     assert project.pyproject.metadata["dependencies"][0] == "django>=1.11.8"
 
@@ -307,7 +307,7 @@ def test_add_update_reuse_installed(project, working_set, repository, pdm):
     repository.add_candidate("foo", "1.0.0")
     repository.add_candidate("foo", "1.1.0")
     pdm(["add", "--update-reuse-installed", "foo"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["foo"].version == "1.0.0"
 
 
@@ -317,7 +317,7 @@ def test_add_update_reuse_installed_config(project, working_set, repository, pdm
     repository.add_candidate("foo", "1.1.0")
     project.project_config["strategy.update"] = "reuse-installed"
     pdm(["add", "foo"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["foo"].version == "1.0.0"
 
 
@@ -335,7 +335,7 @@ def test_add_dependency_with_direct_minimal_versions(project, pdm, repository):
     pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
     repository.add_candidate("pytz", "2019.6")
     pdm(["add", "django"], obj=project, strict=True)
-    all_candidates = project.get_locked_repository().all_candidates
+    all_candidates = project.get_locked_repository().candidates
     assert "django>=1.11.8" in project.pyproject.metadata["dependencies"]
     assert all_candidates["django"].version == "1.11.8"
     assert all_candidates["pytz"].version == "2019.6"

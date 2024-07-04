@@ -65,6 +65,6 @@ def get_env_spec(executable: str) -> EnvSpec:
     with _in_process_script("env_spec.py") as script:
         return EnvSpec.from_spec(
             **json.loads(
-                subprocess.check_output([executable, "-s", script], env={"PYTHONPATH": sysconfig.get_path("purelib")})
+                subprocess.check_output([executable, "-Es", script], env={"PDM_LIBS": sysconfig.get_path("purelib")})
             )
         )

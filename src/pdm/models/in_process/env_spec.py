@@ -1,4 +1,10 @@
 import json
+import os
+import site
+
+pdm_libs = os.getenv("PDM_LIBS")
+if pdm_libs:
+    site.addsitedir(pdm_libs)
 
 
 def get_current_env_spec():

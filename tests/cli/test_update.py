@@ -25,11 +25,11 @@ def test_update_ignore_constraints(project, repository, pdm):
 
     pdm(["update", "pytz"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"] == ["pytz~=2019.3"]
-    assert project.get_locked_repository().all_candidates["pytz"].version == "2019.3"
+    assert project.get_locked_repository().candidates["pytz"].version == "2019.3"
 
     pdm(["update", "pytz", "--unconstrained"], obj=project, strict=True)
     assert project.pyproject.metadata["dependencies"] == ["pytz~=2020.2"]
-    assert project.get_locked_repository().all_candidates["pytz"].version == "2020.2"
+    assert project.get_locked_repository().candidates["pytz"].version == "2020.2"
 
 
 @pytest.mark.usefixtures("working_set")
@@ -50,7 +50,7 @@ def test_update_all_packages(project, repository, pdm, strategy):
         ],
     )
     result = pdm(["update", f"--update-{strategy}"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == ("3.0.5" if strategy == "all" else "3.0.4")
     assert locked_candidates["pytz"].version == "2019.6"
@@ -67,7 +67,7 @@ def test_update_no_lock(project, working_set, repository, pdm):
     pdm(["update", "--frozen-lockfile"], obj=project, strict=True)
     assert working_set["pytz"].version == "2019.6"
     project.lockfile.reload()
-    assert project.get_locked_repository().all_candidates["pytz"].version == "2019.3"
+    assert project.get_locked_repository().candidates["pytz"].version == "2019.3"
 
 
 @pytest.mark.usefixtures("working_set")
@@ -88,7 +88,7 @@ def test_update_dry_run(project, repository, pdm):
     )
     result = pdm(["update", "--dry-run"], obj=project, strict=True)
     project.lockfile.reload()
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.19.1"
     assert locked_candidates["chardet"].version == "3.0.4"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -133,7 +133,7 @@ def test_update_specified_packages(project, repository, pdm):
         ],
     )
     pdm(["update", "requests"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.4"
 
@@ -155,7 +155,7 @@ def test_update_specified_packages_eager_mode(project, repository, pdm):
         ],
     )
     pdm(["update", "requests", "--update-eager"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -177,7 +177,7 @@ def test_update_transitive(project, repository, pdm):
         ],
     )
     pdm(["update", "chardet"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert not any("chardet" in dependency for dependency in project.pyproject.metadata["dependencies"])
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["requests"].version == "2.19.1"
@@ -216,7 +216,7 @@ def test_update_transitive_non_transitive_dependencies(project, repository, pdm)
         ],
     )
     pdm(["update", "requests", "chardet", "pytz"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert not any("chardet" in dependency for dependency in project.pyproject.metadata["dependencies"])
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
@@ -241,7 +241,7 @@ def test_update_specified_packages_eager_mode_config(project, repository, pdm):
     )
     pdm(["config", "strategy.update", "eager"], obj=project, strict=True)
     pdm(["update", "requests"], obj=project, strict=True)
-    locked_candidates = project.get_locked_repository().all_candidates
+    locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["requests"].version == "2.20.0"
     assert locked_candidates["chardet"].version == "3.0.5"
     assert locked_candidates["pytz"].version == "2019.3"
@@ -297,7 +297,7 @@ def test_update_package_with_extras(project, repository, working_set, pdm):
     repository.add_dependencies("foo", "0.2", foo_deps)
     pdm(["update"], obj=project, strict=True)
     assert working_set["foo"].version == "0.2"
-    assert project.get_locked_repository().all_candidates["foo"].version == "0.2"
+    assert project.get_locked_repository().candidates["foo"].version == "0.2"
 
 
 def test_update_groups_in_lockfile(project, working_set, pdm, repository):
@@ -307,7 +307,7 @@ def test_update_groups_in_lockfile(project, working_set, pdm, repository):
     assert project.lockfile.groups == ["default", "extra"]
     repository.add_candidate("foo", "0.2")
     pdm(["update"], obj=project, strict=True)
-    assert project.get_locked_repository().all_candidates["foo"].version == "0.2"
+    assert project.get_locked_repository().candidates["foo"].version == "0.2"
     assert working_set["foo"].version == "0.2"
 
 

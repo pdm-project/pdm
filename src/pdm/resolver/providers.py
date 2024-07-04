@@ -11,7 +11,8 @@ from resolvelib.resolvers import Criterion
 from pdm.exceptions import InvalidPyVersion, RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import LockedRepository
-from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
+from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
+from pdm.models.specifiers import PySpecSet
 from pdm.resolver.python import PythonCandidate, PythonRequirement, find_python_matches, is_python_satisfied_by
 from pdm.termui import logger
 from pdm.utils import deprecation_warning, is_url, normalize_name, parse_version, url_without_fragments
@@ -52,7 +53,7 @@ class BaseProvider(AbstractProvider):
         overrides: dict[str, str] | None = None,
         direct_minimal_versions: bool = False,
         *,
-        locked_candidates: dict[str, Candidate],
+        locked_candidates: dict[str, list[Candidate]],
     ) -> None:
         if overrides is not None:  # pragma: no cover
             deprecation_warning(
@@ -167,15 +168,17 @@ class BaseProvider(AbstractProvider):
             prerelease = requirement.prerelease
             if prerelease is None and (key := requirement.identify()) in self.locked_candidates:
                 # keep the prerelease if it is locked
-                candidate = self.locked_candidates[key]
-                if candidate.version is not None:
-                    try:
-                        parsed_version = parse_version(candidate.version)
-                    except InvalidVersion:  # pragma: no cover
-                        pass
-                    else:
-                        if parsed_version.is_prerelease:
-                            prerelease = True
+                candidates = self.locked_candidates[key]
+                for candidate in candidates:
+                    if candidate.version is not None:
+                        try:
+                            parsed_version = parse_version(candidate.version)
+                        except InvalidVersion:  # pragma: no cover
+                            pass
+                        else:
+                            if parsed_version.is_prerelease:
+                                prerelease = True
+                                break
             return self.repository.find_candidates(
                 requirement,
                 self.allow_prereleases if prerelease is None else prerelease,
@@ -259,6 +262,7 @@ class BaseProvider(AbstractProvider):
             logger.error("Invalid metadata in %s: %s", candidate, e)
             raise RequirementsConflicted(Criterion([], [], [])) from None
 
+        self.fetched_dependencies[candidate.dep_key] = deps[:]
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
         valid_deps: list[Requirement] = []
@@ -267,14 +271,15 @@ class BaseProvider(AbstractProvider):
                 dep.requires_python
                 & requires_python
                 & candidate.req.requires_python
-                & self.repository.environment.python_requires
+                & PySpecSet(self.repository.env_spec.requires_python)
             ).is_empty():
+                continue
+            if dep.marker and not dep.marker.matches(self.repository.env_spec):
                 continue
             if dep.identify() in self.excludes:
                 continue
             dep.requires_python &= candidate.req.requires_python
             valid_deps.append(dep)
-        self.fetched_dependencies[candidate.dep_key] = valid_deps[:]
         # A candidate contributes to the Python requirements only when:
         # It isn't an optional dependency, or the requires-python doesn't cover
         # the req's requires-python.
@@ -303,14 +308,17 @@ class ReusePinProvider(BaseProvider):
         super().__init__(*args, **kwargs)
         self.tracked_names = set(tracked_names)
 
-    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+    def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         bare_name = strip_extras(identifier)[0]
         if bare_name in self.tracked_names or identifier not in self.locked_candidates:
-            return None
-        pin = self.locked_candidates[identifier]
-        if requirement is not None:
-            pin.req = requirement
-        return pin
+            return []
+        return self.locked_candidates[identifier]
+
+    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+        deprecation_warning(
+            "The get_reuse_candidate method is deprecated, use iter_reuse_candidates instead.", stacklevel=2
+        )
+        return next(iter(self.iter_reuse_candidates(identifier, requirement)), None)
 
     def find_matches(
         self,
@@ -322,8 +330,7 @@ class ReusePinProvider(BaseProvider):
 
         def matches_gen() -> Iterator[Candidate]:
             requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
-            pin = self.get_reuse_candidate(identifier, requested_req)
-            if pin is not None:
+            for pin in self.iter_reuse_candidates(identifier, requested_req):
                 incompat = list(incompatibilities[identifier])
                 pin._preferred = True  # type: ignore[attr-defined]
                 if pin not in incompat and all(self.is_satisfied_by(r, pin) for r in requirements[identifier]):
@@ -383,10 +390,10 @@ class ReuseInstalledProvider(ReusePinProvider):
         super().__init__(*args, **kwargs)
         self.installed = self.repository.environment.get_working_set()
 
-    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+    def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         key = strip_extras(identifier)[0]
         if key not in self.installed or requirement is None:
-            return super().get_reuse_candidate(identifier, requirement)
+            return super().iter_reuse_candidates(identifier, requirement)
         else:
             dist = self.installed[key]
-            return Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])
+            return [Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])]

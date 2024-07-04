@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import functools
 import os
 import re
 import shutil
@@ -12,14 +11,14 @@ import weakref
 from contextlib import contextmanager
 from functools import cached_property, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, no_type_check
+from typing import TYPE_CHECKING, Generator
 
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_env_spec, get_uname, sysconfig_get_platform
 from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
-from pdm.utils import deprecation_warning, is_pip_compatible_with_python
+from pdm.utils import is_pip_compatible_with_python
 
 if TYPE_CHECKING:
     import unearth
@@ -30,31 +29,11 @@ if TYPE_CHECKING:
     from pdm.project import Project
 
 
-@no_type_check
-def get_paths_wrapper(get_paths):  # pragma: no cover
-    @functools.wraps(get_paths)
-    def wrapped(self: BaseEnvironment, dist_name: str | None = None) -> dict[str, str]:
-        result = get_paths(self)
-        if dist_name and "headers" in result:
-            result["headers"] = os.path.join(result["headers"], dist_name)
-        return result
-
-    return wrapped
-
-
 class BaseEnvironment(abc.ABC):
     """Environment dependent stuff related to the selected Python interpreter."""
 
     project: Project
     is_local = False
-
-    def __init_subclass__(cls) -> None:
-        import inspect
-
-        get_paths_params = inspect.signature(cls.get_paths).parameters
-        if "dist_name" not in get_paths_params:  # pragma: no cover
-            deprecation_warning("get_paths() should accept a `dist_name` argument", stacklevel=3)
-            cls.get_paths = get_paths_wrapper(cls.get_paths)  # type: ignore[method-assign]
 
     def __init__(self, project: Project, *, python: str | None = None) -> None:
         """

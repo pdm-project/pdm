@@ -89,7 +89,7 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: Namespace) -> None:
         environment = project.environment
         installed = environment.get_working_set()
-        resolved = {strip_extras(k)[0]: v for k, v in project.get_locked_repository().all_candidates.items()}
+        resolved = {strip_extras(k)[0]: v for k, v in project.get_locked_repository().candidates.items()}
 
         collected: list[ListPackage] = []
 

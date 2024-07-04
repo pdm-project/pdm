@@ -109,7 +109,6 @@ class BaseRepository:
         # Store the metadata on the candidate for caching
         candidate.requires_python = requires_python
         candidate.summary = summary
-        requirements = [req for req in requirements if not req.marker or req.marker.matches(self.env_spec)]
         return requirements, PySpecSet(requires_python), summary
 
     def _find_candidates(self, requirement: Requirement, minimal_version: bool) -> Iterable[Candidate]:

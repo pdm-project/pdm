@@ -452,6 +452,7 @@ class Project:
         ignore_compatibility: bool = True,
         direct_minimal_versions: bool = False,
         env_spec: EnvSpec | None = None,
+        locked_repository: LockedRepository | None = None,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
@@ -470,18 +471,18 @@ class Project:
         repo_params = inspect.signature(self.get_repository).parameters
         if "env_spec" in repo_params:
             repository = self.get_repository(ignore_compatibility=ignore_compatibility, env_spec=env_spec)
-        else:
+        else:  # pragma: no cover
             repository = self.get_repository(ignore_compatibility=ignore_compatibility)
-        locked_repository: LockedRepository | None = None
         if env_spec is None:
             env_spec = EnvSpec.allow_all() if ignore_compatibility else self.environment.spec
-        try:
-            locked_repository = self.get_locked_repository(env_spec)
-        except Exception:  # pragma: no cover
-            if for_install:
-                raise
-            if strategy != "all":
-                self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
+        if locked_repository is None:
+            try:
+                locked_repository = self.get_locked_repository(env_spec)
+            except Exception:  # pragma: no cover
+                if for_install:
+                    raise
+                if strategy != "all":
+                    self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
         if for_install:
             assert locked_repository is not None
@@ -492,7 +493,9 @@ class Project:
         params: dict[str, Any] = {}
         if strategy != "all":
             params["tracked_names"] = [strip_extras(name)[0] for name in tracked_names or ()]
-        locked_candidates = {} if locked_repository is None else locked_repository.all_candidates
+        locked_candidates: dict[str, list[Candidate]] = (
+            {} if locked_repository is None else locked_repository.all_candidates
+        )
         params["locked_candidates"] = locked_candidates
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
@@ -817,3 +820,7 @@ class Project:
             return max(filtered_matches, key=lambda v: (v.major, v.minor, v.micro))
 
         return None
+
+    @property
+    def lock_targets(self) -> list[EnvSpec]:
+        return [self.environment.spec.with_python(self.python_requires)]

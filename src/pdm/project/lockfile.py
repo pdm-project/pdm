@@ -32,11 +32,11 @@ class Compatibility(enum.IntEnum):
 
 
 class Lockfile(TOMLBase):
-    spec_version = parse_version("4.4.2")
+    spec_version = parse_version("4.5.0")
 
     @cached_property
     def default_strategies(self) -> set[str]:
-        return {FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA}
+        return {FLAG_INHERIT_METADATA}
 
     @property
     def hash(self) -> str:

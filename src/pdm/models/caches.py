@@ -89,8 +89,7 @@ class CandidateInfoCache(JSONFileCache[Candidate, CandidateInfo]):
             raise KeyError("The package is missing a name or version")
         extras = "[{}]".format(",".join(sorted(obj.req.extras))) if obj.req.extras else ""
         version = obj.version
-        if not obj.req.is_named:
-            assert obj.link is not None
+        if obj.link is not None:
             version = cls.get_url_part(obj.link)
         return f"{obj.name}{extras}-{version}"
 

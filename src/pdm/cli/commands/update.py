@@ -143,7 +143,6 @@ class Command(BaseCommand):
                     None,
                 )
                 if not matched_req:
-                    # FIXME: multi target lock
                     candidates = project.get_locked_repository().all_candidates
                     if normalized_name not in candidates:
                         raise ProjectError(

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import inspect
 from argparse import _SubParsersAction
 from typing import Any, Sequence, TypeVar
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.project import Project
-from pdm.utils import deprecation_warning
 
 C = TypeVar("C", bound="BaseCommand")
 
@@ -23,19 +21,9 @@ class BaseCommand:
     # Rewrite this if you don't want the default ones
     arguments: Sequence[Option] = (verbose_option, global_option, project_option)
 
-    def __init__(self, parser: argparse.ArgumentParser | None = None) -> None:
-        """For compatibility, the parser is optional and won't be used."""
-
     @classmethod
     def init_parser(cls: type[C], parser: argparse.ArgumentParser) -> C:
-        args = inspect.signature(cls).parameters
-        if "parser" in args and args["parser"].default is inspect._empty:
-            deprecation_warning(
-                f"The `parser` argument of `{cls.__name__}.__init__()` is deprecated. It won't be used."
-            )
-            cmd = cls(parser)  # type: ignore[call-arg]
-        else:
-            cmd = cls()
+        cmd = cls()
         for arg in cmd.arguments:
             arg.add_to_parser(parser)
         cmd.add_arguments(parser)

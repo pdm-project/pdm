@@ -23,7 +23,6 @@ from typing import (
     no_type_check,
 )
 
-import tomlkit
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
 from rich.tree import Tree
@@ -32,13 +31,11 @@ from pdm import termui
 from pdm.exceptions import PdmArgumentError, ProjectError
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import (
-    FileRequirement,
     Requirement,
     filter_requirements_with_extras,
     strip_extras,
 )
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.utils import (
     comparable_version,
     is_path_relative_to,
@@ -511,78 +508,9 @@ def show_dependency_graph(
     echo(tree)
 
 
-def format_lockfile(
-    project: Project,
-    mapping: dict[str, Candidate],
-    fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
-    groups: list[str] | None,
-    strategy: set[str],
-) -> dict:
-    """Format lock file from a dict of resolved candidates, a mapping of dependencies
-    and a collection of package summaries.
-    """
-    from pdm.formats.base import make_array, make_inline_table
-
-    def _group_sort_key(group: str) -> tuple[bool, str]:
-        return group != "default", group
-
-    packages = tomlkit.aot()
-    backend = project.backend
-    for _k, v in sorted(mapping.items()):
-        base = tomlkit.table()
-        base.update(v.as_lockfile_entry(project.root))
-        base.add("summary", v.summary or "")
-        if FLAG_INHERIT_METADATA in strategy:
-            base.add("groups", sorted(v.req.groups, key=_group_sort_key))
-            if v.req.marker is not None:
-                base.add("marker", str(v.req.marker))
-        deps: list[str] = []
-        for r in fetched_dependencies[v.dep_key]:
-            # Try to convert to relative paths to make it portable
-            if isinstance(r, FileRequirement) and r.path:
-                try:
-                    if r.path.is_absolute():
-                        r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(project.root))
-                except ValueError:
-                    pass
-                else:
-                    r.url = backend.relative_path_to_url(r.path.as_posix())
-            deps.append(r.as_line())
-        if len(deps) > 0:
-            base.add("dependencies", make_array(sorted(deps), True))
-        if v.hashes:
-            collected = {}
-            for item in v.hashes:
-                if FLAG_STATIC_URLS in strategy:
-                    row = {"url": item["url"], "hash": item["hash"]}
-                else:
-                    row = {"file": item["file"], "hash": item["hash"]}
-                inline = make_inline_table(row)
-                # deduplicate and sort
-                collected[tuple(row.values())] = inline
-            if collected:
-                base.add("files", make_array([collected[k] for k in sorted(collected)], True))
-        packages.append(base)
-    doc = tomlkit.document()
-    metadata = tomlkit.table()
-    if groups is None:
-        groups = list(project.iter_groups())
-    metadata.update(
-        {
-            "groups": sorted(groups, key=_group_sort_key),
-            "strategy": sorted(strategy),
-        }
-    )
-    metadata.pop(FLAG_STATIC_URLS, None)
-    metadata.pop(FLAG_CROSS_PLATFORM, None)
-    doc.add("metadata", metadata)
-    doc.add("package", packages)
-    return cast(dict, doc)
-
-
 def save_version_specifiers(
     requirements: dict[str, dict[str, Requirement]],
-    resolved: dict[str, Candidate],
+    resolved: dict[str, list[Candidate]],
     save_strategy: str,
 ) -> None:
     """Rewrite the version specifiers according to the resolved result and save strategy
@@ -592,23 +520,28 @@ def save_version_specifiers(
     :param save_strategy: compatible/wildcard/exact
     """
 
-    def candidate_version(c: Candidate) -> Version:
+    def candidate_version(candidates: list[Candidate]) -> Version | None:
+        if len(candidates) > 1:
+            return None
+        c = candidates[0]
         assert c.version is not None
         return comparable_version(c.version)
 
     for reqs in requirements.values():
         for name, r in reqs.items():
             if r.is_named and not r.specifier and name in resolved:
+                version = candidate_version(resolved[name])
+                if version is None:
+                    continue
                 if save_strategy == "exact":
-                    r.specifier = get_specifier(f"=={candidate_version(resolved[name])}")
+                    r.specifier = get_specifier(f"=={version}")
                 elif save_strategy == "compatible":
-                    version = candidate_version(resolved[name])
                     if version.is_prerelease or version.is_devrelease:
                         r.specifier = get_specifier(f">={version},<{version.major + 1}")
                     else:
                         r.specifier = get_specifier(f"~={version.major}.{version.minor}")
                 elif save_strategy == "minimum":
-                    r.specifier = get_specifier(f">={candidate_version(resolved[name])}")
+                    r.specifier = get_specifier(f">={version}")
 
 
 def check_project_file(project: Project) -> None:
@@ -728,14 +661,14 @@ def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any],
             target[key] = value
 
 
-def fetch_hashes(repository: BaseRepository, mapping: Mapping[str, Candidate]) -> None:
+def fetch_hashes(repository: BaseRepository, candidates: Iterable[Candidate]) -> None:
     """Fetch hashes for candidates in parallel"""
 
     def do_fetch(candidate: Candidate) -> None:
         candidate.hashes = repository.get_hashes(candidate)
 
     with ThreadPoolExecutor() as executor:
-        executor.map(do_fetch, mapping.values())
+        executor.map(do_fetch, candidates)
 
 
 def is_pipx_installation() -> bool:

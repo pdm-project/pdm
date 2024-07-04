@@ -282,9 +282,13 @@ class UI:
         """create a progress instance for indented spinners"""
         return Progress(*columns, disable=self.verbosity >= Verbosity.DETAIL, **kwargs)
 
-    def info(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
+    def info(self, message: str, verbosity: Verbosity = Verbosity.NORMAL) -> None:
         """Print a message to stdout."""
         self.echo(f"[info]INFO:[/] [dim]{message}[/]", err=True, verbosity=verbosity)
+
+    def deprecated(self, message: str, verbosity: Verbosity = Verbosity.NORMAL) -> None:
+        """Print a message to stdout."""
+        self.echo(f"[warning]DEPRECATED:[/] [dim]{message}[/]", err=True, verbosity=verbosity)
 
     def warn(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
         """Print a message to stdout."""

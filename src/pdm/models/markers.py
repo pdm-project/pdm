@@ -57,9 +57,7 @@ class Marker:
         if spec.is_allow_all():
             return True
         non_python_marker, python_spec = self.split_pyspec()
-        return not (PySpecSet(spec.requires_python) & python_spec).is_empty() and non_python_marker.evaluate(
-            spec.markers()
-        )
+        return not (spec.py_spec & python_spec).is_empty() and non_python_marker.evaluate(spec.markers())
 
     @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:
@@ -138,18 +136,17 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
 
 
 class EnvSpec(_EnvSpec):
-    def matches_target(self, target: Target) -> bool:
-        """Return whether the given environment spec matches the target triple."""
-        from dep_logic.tags import Platform
+    @property
+    def py_spec(self) -> PySpecSet:
+        return PySpecSet(self.requires_python)
 
-        from pdm.models.specifiers import PySpecSet
-
-        if (self.requires_python & PySpecSet(target["python"])).is_empty():
-            return False
-
-        return (
-            self.platform == Platform.parse(target["platform"]) and self.implementation.name == target["implementation"]
-        )
+    def as_dict(self) -> dict[str, str | bool]:
+        result: dict[str, str | bool] = {"requires_python": str(self.requires_python), "platform": str(self.platform)}
+        if self.implementation.name != "cpython":
+            result["implementation"] = self.implementation.name
+        if self.implementation.gil_disabled:
+            result["gil_disabled"] = True
+        return result
 
     def is_allow_all(self) -> bool:
         return isinstance(self, AllowAllEnvSpec)

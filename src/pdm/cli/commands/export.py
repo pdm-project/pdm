@@ -13,7 +13,6 @@ from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_INHERIT_METADATA
-from pdm.termui import Verbosity
 
 
 class Command(BaseCommand):
@@ -71,7 +70,7 @@ class Command(BaseCommand):
         requirements: dict[str, Requirement] = {}
         packages: Iterable[Requirement] | Iterable[Candidate]
         if options.markers is False:
-            project.core.ui.info("The --no-markers option is deprecated and has no effect.", verbosity=Verbosity.NORMAL)
+            project.core.ui.deprecated("The --no-markers option is deprecated and has no effect.")
         for group in selection:
             requirements.update(project.get_dependencies(group))
         if options.pyproject:
