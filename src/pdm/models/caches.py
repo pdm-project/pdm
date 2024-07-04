@@ -242,10 +242,10 @@ class WheelCache:
         return self._get_from_path(self.get_ephemeral_path_for_link(link, env_spec), canonical_name, env_spec)
 
     def _get_from_path(self, path: Path, canonical_name: str, env_spec: EnvSpec) -> Path | None:
-        max_compatible_candidate = ((-1, -1, -1, -1), None)
+        max_compatible_candidate: tuple[tuple[int, ...], Path | None] = ((-1, -1, -1, -1), None)
         for candidate in self._get_candidates(path):
             try:
-                name, *_, tags = parse_wheel_filename(candidate.name)
+                name, *_ = parse_wheel_filename(candidate.name)
             except ValueError:
                 logger.debug("Ignoring invalid cached wheel %s", candidate.name)
                 continue

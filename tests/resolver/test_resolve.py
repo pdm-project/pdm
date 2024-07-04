@@ -273,6 +273,7 @@ def test_resolve_circular_dependencies(resolve, repository):
 def test_resolve_candidates_to_install(project):
     project.lockfile.set_data(
         {
+            "metadata": {"strategy": ["cross_platform"]},
             "package": [
                 {
                     "name": "pytest",
@@ -296,7 +297,7 @@ def test_resolve_candidates_to_install(project):
                     "version": "2.2.0",
                     "summary": "backports module",
                 },
-            ]
+            ],
         }
     )
     reqs = [parse_requirement("pytest")]

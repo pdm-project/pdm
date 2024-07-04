@@ -290,7 +290,7 @@ class UI:
         """Print a message to stdout."""
         self.echo(f"[warning]DEPRECATED:[/] [dim]{message}[/]", err=True, verbosity=verbosity)
 
-    def warn(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
+    def warn(self, message: str, verbosity: Verbosity = Verbosity.NORMAL) -> None:
         """Print a message to stdout."""
         self.echo(f"[warning]WARNING:[/] {message}", err=True, verbosity=verbosity)
 

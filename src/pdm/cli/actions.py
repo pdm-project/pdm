@@ -28,7 +28,7 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvSpec
+from pdm.models.markers import EnvCompatibility, EnvSpec
 from pdm.models.repositories import LockedRepository
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
@@ -121,6 +121,7 @@ def do_lock(
     for i, target in enumerate(targets):
         targets[i] = dataclasses.replace(target, requires_python=target.requires_python & global_requires_python)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
+    hooks.try_emit("pre_lock", requirements=requirements, dry_run=dry_run)
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
@@ -146,9 +147,9 @@ def do_lock(
                     mapping = _lock_for_env(
                         project, target, provider, reporter, requirements, lock_strategy, resolve_max_rounds
                     )
-                    locked_repo.merge_result(target, mapping, provider.fetched_dependencies)
+                    locked_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
                     if result_repo is not locked_repo:
-                        result_repo.merge_result(target, mapping, provider.fetched_dependencies)
+                        result_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
         except ResolutionTooDeep:
             ui.echo(f"{termui.Emoji.LOCK} Lock failed.", err=True)
             ui.echo(
@@ -213,12 +214,34 @@ def resolve_candidates_from_lockfile(
         # Resolve for the current environment by default
         env_spec = project.environment.spec
     reqs = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
-    with ui.logging("install-resolve"):
-        with ui.open_spinner("Resolving packages from lockfile...") as spinner:
-            reporter = BaseReporter()
-            provider = project.get_provider(for_install=True, env_spec=env_spec)
+    with ui.open_spinner("Resolving packages from lockfile...") as spinner:
+        reporter = BaseReporter()
+        provider = project.get_provider(for_install=True, env_spec=env_spec)
+        locked_repo = cast("LockedRepository", provider.repository)
+        lock_targets = locked_repo.targets or project.lock_targets
+        if FLAG_CROSS_PLATFORM not in project.lockfile.strategy and env_spec not in lock_targets:
+            compatibilities = [target.compare(env_spec) for target in lock_targets]
+            if not any(compat == EnvCompatibility.LE for compat in compatibilities):
+                loose_compatible_target = next(
+                    (
+                        target
+                        for (target, compat) in zip(lock_targets, compatibilities)
+                        if compat == EnvCompatibility.GT
+                    ),
+                    None,
+                )
+                if loose_compatible_target is not None:
+                    ui.warn(f"Found lock target {loose_compatible_target}, installing for env {env_spec}")
+                else:
+                    errors = [f"None of the lock targets matches the current env {env_spec}:"] + [
+                        f" - {target}" for target in lock_targets
+                    ]
+                    ui.error("\n".join(errors))
+                    raise PdmException("No compatible lock target found")
+
+        with ui.logging("install-resolve"):
             if FLAG_INHERIT_METADATA in project.lockfile.strategy and groups is not None:
-                return cast("LockedRepository", provider.repository).evaluate_candidates(groups)
+                return locked_repo.evaluate_candidates(groups)
             resolver: Resolver = project.core.resolver_class(provider, reporter)
             try:
                 mapping, *_ = resolve(

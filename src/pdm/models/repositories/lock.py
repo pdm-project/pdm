@@ -197,13 +197,14 @@ class LockedRepository(BaseRepository):
     def merge_result(
         self,
         env_spec: EnvSpec,
-        result: dict[str, Candidate],
+        result: Iterable[Candidate],
         fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
     ) -> None:
         project = self.environment.project
         backend = project.backend
-        self.targets.append(env_spec)
-        for key, candidate in result.items():
+        if env_spec not in self.targets:
+            self.targets.append(env_spec)
+        for candidate in result:
             key = self._identify_candidate(candidate)
             existing = self.packages.get(key)
             if existing is None:

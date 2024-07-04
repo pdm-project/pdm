@@ -130,10 +130,6 @@ class LocalIndexTransport(httpx.BaseTransport):
         return httpx.Response(status_code, headers=headers, content=content, stream=stream)
 
 
-class _FakeLink:
-    is_wheel = False
-
-
 class TestRepository(BaseRepository):
     """
     A mock repository to ease testing dependencies
@@ -195,7 +191,7 @@ class TestRepository(BaseRepository):
                 version=version,
             )
             c.requires_python = candidate.get("requires_python", "")
-            c.link = cast(Link, _FakeLink())
+            c.link = Link(f"https://mypypi.org/packages/{c.name}-{c.version}.tar.gz")
             yield c
 
     @staticmethod

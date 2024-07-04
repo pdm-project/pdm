@@ -3,8 +3,9 @@ import sys
 from pathlib import Path
 
 import pytest
-from packaging.version import Version
 from pbs_installer import PythonVersion
+
+from pdm.utils import parse_version
 
 
 @pytest.fixture
@@ -24,8 +25,8 @@ def mock_install(mocker):
     def get_version(self):
         name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
         if "@" not in name:
-            return Version(platform.python_version())
-        return Version(name.split("@", 1)[1])
+            return parse_version(platform.python_version())
+        return parse_version(name.split("@", 1)[1])
 
     @property
     def interpreter(self):

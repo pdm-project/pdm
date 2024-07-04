@@ -189,7 +189,7 @@ class Package:
 
 def build_dependency_graph(
     working_set: Mapping[str, im.Distribution],
-    env_spec: EnvSpec | None = None,
+    env_spec: EnvSpec,
     selected: set[str] | None = None,
     include_sub: bool = True,
 ) -> DirectedGraph:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import unearth
 from dep_logic.specifiers import InvalidSpecifier, parse_version_specifier
@@ -8,6 +8,7 @@ from packaging.version import Version
 from unearth.evaluator import Evaluator, FormatControl, LinkMismatchError, Package
 
 from pdm.models.markers import EnvSpec
+from pdm.utils import parse_version
 
 if TYPE_CHECKING:
     from pdm.models.session import PDMPyPIClient
@@ -30,7 +31,7 @@ class ReverseVersion(Version):
 
 
 class PDMEvaluator(Evaluator):
-    def __init__(self, *args, env_spec: EnvSpec, **kwargs) -> None:
+    def __init__(self, *args: Any, env_spec: EnvSpec, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.env_spec = env_spec
 
@@ -45,7 +46,7 @@ class PDMEvaluator(Evaluator):
                     f"The package requires-python {link.requires_python} is not compatible with the target {self.env_spec.requires_python}."
                 )
 
-    def check_wheel_tags(self, filename: str):
+    def check_wheel_tags(self, filename: str) -> None:
         if self.ignore_compatibility:
             return
         if self.env_spec.wheel_compatibility(filename) is None:
@@ -83,9 +84,9 @@ class PDMPackageFinder(unearth.PackageFinder):
         from packaging.utils import BuildTag, canonicalize_name
 
         if self.minimal_version:
-            version_cls = ReverseVersion
+            version_cls: Callable[[str], Version] = ReverseVersion
         else:
-            version_cls = Version
+            version_cls = parse_version
 
         link = package.link
         compatibility = (0, 0, 0, 0)  # default value for sdists

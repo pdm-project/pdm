@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import operator
 from dataclasses import dataclass
+from enum import IntEnum
 from functools import lru_cache, reduce
 from typing import TYPE_CHECKING, Any, overload
 
@@ -135,10 +136,19 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         raise TypeError(f"Unsupported marker type: {type(marker)}")
 
 
+class EnvCompatibility(IntEnum):
+    NONE = 0
+    LE = 1
+    GT = 2
+
+
 class EnvSpec(_EnvSpec):
     @property
     def py_spec(self) -> PySpecSet:
         return PySpecSet(self.requires_python)
+
+    def __str__(self) -> str:
+        return f"({self.requires_python}, {self.platform}, {self.implementation.name})"
 
     def as_dict(self) -> dict[str, str | bool]:
         result: dict[str, str | bool] = {"requires_python": str(self.requires_python), "platform": str(self.platform)}
@@ -150,6 +160,27 @@ class EnvSpec(_EnvSpec):
 
     def is_allow_all(self) -> bool:
         return isinstance(self, AllowAllEnvSpec)
+
+    def compare(self, target: EnvSpec) -> EnvCompatibility:
+        if self.is_allow_all():
+            return EnvCompatibility.LE
+        if self == target:
+            return EnvCompatibility.LE
+        if (self.requires_python & target.requires_python).is_empty():
+            return EnvCompatibility.NONE
+        if self.implementation != target.implementation:
+            return EnvCompatibility.NONE
+        if self.platform.arch != target.platform.arch:
+            return EnvCompatibility.NONE
+        if type(self.platform.os) is not type(target.platform.os):
+            return EnvCompatibility.NONE
+
+        if hasattr(self.platform.os, "major") and hasattr(self.platform.os, "minor"):
+            if (self.platform.os.major, self.platform.os.minor) <= (target.platform.os.major, target.platform.os.minor):
+                return EnvCompatibility.LE
+            else:
+                return EnvCompatibility.GT
+        return EnvCompatibility.LE
 
     @classmethod
     @lru_cache(maxsize=1)
@@ -164,7 +195,7 @@ class EnvSpec(_EnvSpec):
     def markers_with_defaults(self) -> dict[str, str]:
         from packaging.markers import default_environment
 
-        return {**default_environment(), **self.markers()}
+        return {**default_environment(), **self.markers()}  # type: ignore[dict-item]
 
 
 class AllowAllEnvSpec(EnvSpec):
