@@ -206,7 +206,7 @@ def test_venv_auto_create(pdm, mocker, project, keep_pypackages):
     else:
         shutil.rmtree(project.root / "__pypackages__", ignore_errors=True)
     project.project_config["python.use_venv"] = True
-    pdm(["install"], obj=project)
+    pdm(["install", "--no-self"], obj=project)
     if keep_pypackages:
         creator.assert_not_called()
     else:

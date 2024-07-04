@@ -308,7 +308,7 @@ class Project:
         return self._environment
 
     @environment.setter
-    def environment(self, value: BaseEnvironment) -> None:
+    def environment(self, value: BaseEnvironment | None) -> None:
         self._environment = value
 
     @property

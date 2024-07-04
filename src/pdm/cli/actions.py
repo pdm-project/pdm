@@ -78,12 +78,6 @@ def do_lock(
         project.write_lockfile(lockfile)
         return locked_repo.all_candidates
 
-    provider = project.get_provider(
-        strategy,
-        tracked_names,
-        ignore_compatibility=FLAG_CROSS_PLATFORM in lock_strategy,
-        direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
-    )
     if groups is None:
         groups = list(project.iter_groups())
     if not requirements:
@@ -193,7 +187,6 @@ def _lock_for_env(
     mapping, *_ = resolve(
         resolver,
         requirements,
-        env_spec.py_spec,
         max_rounds,
         inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
     )
@@ -247,7 +240,6 @@ def resolve_candidates_from_lockfile(
                 mapping, *_ = resolve(
                     resolver,
                     reqs,
-                    project.environment.python_requires,
                     resolve_max_rounds,
                     inherit_metadata=True,
                 )

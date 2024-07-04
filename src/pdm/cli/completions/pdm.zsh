@@ -270,7 +270,11 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         "--no-cross-platform[(DEPRECATED) Only lock packages for the current platform]"
         "--exclude-newer[Exclude packages newer than the given UTC date in format YYYY-MM-DD\[THH:MM:SSZ\]]:exclude-newer:"
-        {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:'
+        {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:_pdm_lock_strategy'
+        "--append[Append the result to the current lock file]"
+        "--python[The Python range to lock for. E.g. >=3.9, ==3.12.*]:python:"
+        "--implementation[The Python implementation to lock for. E.g. cpython, pypy]:implementation:"
+        "--platform[The platform to lock for. E.g. linux, windows, macos, alpine, windows_amd64]:platform:_pdm_lock_platform"
       )
       ;;
     outdated)
@@ -630,6 +634,35 @@ _pdm_packages() {
   fi
   local packages=(${=$(_get_packages_with_python)})
   compadd -X packages -a packages
+}
+
+_pdm_lock_strategy() {
+  local -a strategy=(
+    'cross_platform:(DEPRECATED)Lock packages for all platforms'
+    'inherit_metadata:Calculate and store the markers for the packages'
+    'static_urls:Store static file URLs in the lockfile'
+    'direct_minimal_versions:Store the minimal versions of the dependencies'
+    'no_cross_platform:Only lock packages for the current platform'
+    'no_static_urls:Do not store static file URLs in the lockfile'
+    'no_inherit_metadata:Do not calculate and store the markers for the packages'
+    'no_direct_minimal_versions:Do not store the minimal versions of the dependencies'
+  )
+  _describe -t strategy "lock strategy" strategy
+}
+
+_pdm_lock_platform() {
+  local -a platforms=(
+    "linux"
+    "windows"
+    "macos"
+    "alpine"
+    "windows_amd64"
+    "windows_x86"
+    "windows_arm64"
+    "macos_arm64"
+    "macos_x86_64"
+  )
+  _describe -t platform "platform" platforms
 }
 
 _pdm_caching_policy() {

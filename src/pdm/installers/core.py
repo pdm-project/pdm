@@ -3,7 +3,6 @@ from __future__ import annotations
 from pdm.environments import BaseEnvironment
 from pdm.installers.synchronizers import BaseSynchronizer
 from pdm.models.requirements import Requirement
-from pdm.models.specifiers import PySpecSet
 from pdm.resolver.core import resolve
 
 
@@ -13,8 +12,7 @@ def install_requirements(
     """Resolve and install the given requirements into the environment."""
     project = environment.project
     # Rewrite the python requires to only resolve for the current python version.
-    environment.python_requires = PySpecSet(f"=={environment.interpreter.version}")
-    provider = project.get_provider(ignore_compatibility=False)
+    provider = project.get_provider(env_spec=environment.spec)
     # Clear the overrides and excludes
     provider.overrides = {}
     provider.excludes = set()
@@ -25,6 +23,6 @@ def install_requirements(
     for req in reqs:
         if req.is_file_or_url:
             req.relocate(backend)  # type: ignore[attr-defined]
-    resolved, _ = resolve(resolver, reqs, environment.python_requires, max_rounds=resolve_max_rounds, keep_self=True)
+    resolved, _ = resolve(resolver, reqs, max_rounds=resolve_max_rounds, keep_self=True)
     syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0, use_install_cache=use_install_cache)
     syncer.synchronize()

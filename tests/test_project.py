@@ -357,7 +357,7 @@ def prepare_repository(repository, project):
     repository.add_candidate("foo", "3.0", ">=3.8,<3.13")
     repository.add_candidate("foo", "2.0", ">=3.7,<3.12")
     repository.add_candidate("foo", "1.0", ">=3.7")
-    repository.environment.python_requires = PySpecSet(">=3.9")
+    project.environment.python_requires = PySpecSet(">=3.9")
     project.add_dependencies({"foo": parse_requirement("foo")})
 
 

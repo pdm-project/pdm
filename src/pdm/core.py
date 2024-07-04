@@ -30,7 +30,7 @@ from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
-from pdm.models.repositories import PyPIRepository
+from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import is_in_zipapp
@@ -65,7 +65,7 @@ class Core:
     subparsers: argparse._SubParsersAction
 
     project_class = Project
-    repository_class = PyPIRepository
+    repository_class: type[BaseRepository] = PyPIRepository
     resolver_class = Resolver
     synchronizer_class = Synchronizer
     install_manager_class = InstallManager

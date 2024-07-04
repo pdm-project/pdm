@@ -237,7 +237,7 @@ def test_show_update_hint(pdm, project, monkeypatch):
 def test_export_with_platform_markers(pdm, project):
     pdm(["add", "--no-sync", 'urllib3; sys_platform == "fake"'], obj=project, strict=True)
     result = pdm(["export", "--no-hashes"], obj=project, strict=True)
-    assert 'urllib3==1.22; sys_platform == "fake"' in result.output.splitlines()
+    assert 'urllib3==1.22; sys_platform == "fake"' not in result.output.splitlines()
 
 
 @pytest.mark.usefixtures("repository", "vcs")

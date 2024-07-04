@@ -162,7 +162,7 @@ class BaseRepository:
 
         if self.is_this_package(requirement):
             return [self.make_this_candidate(requirement)]
-        requires_python = requirement.requires_python & self.environment.python_requires
+        requires_python = requirement.requires_python & self.env_spec.py_spec
         cans = LazySequence(self._find_candidates(requirement, minimal_version=minimal_version))
         applicable_cans = LazySequence(
             c
@@ -171,7 +171,7 @@ class BaseRepository:
         )
 
         def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate, None, None]:
-            project_requires_python = self.environment.python_requires
+            env_requires_python = self.env_spec.py_spec
             if ignore_requires_python:
                 yield from candidates
                 return
@@ -185,14 +185,14 @@ class BaseRepository:
                 if not requires_python.is_subset(candidate.requires_python):
                     if self._should_ignore_package_warning(requirement):
                         continue
-                    working_requires_python = project_requires_python & PySpecSet(candidate.requires_python)
+                    working_requires_python = env_requires_python & PySpecSet(candidate.requires_python)
                     if working_requires_python.is_empty():  # pragma: no cover
                         continue
                     warnings.warn(
                         f"Skipping {candidate.name}@{candidate.version} because it requires "
-                        f"{python_specifier(candidate.requires_python)} but the project claims to work with "
-                        f"{python_specifier(project_requires_python)}. Instead, another version of "
-                        f"{candidate.name} that supports {python_specifier(project_requires_python)} will "
+                        f"{python_specifier(candidate.requires_python)} but the lock targets to work with "
+                        f"{python_specifier(env_requires_python)}. Instead, another version of "
+                        f"{candidate.name} that supports {python_specifier(env_requires_python)} will "
                         f"be used.\nIf you want to install {candidate.name}@{candidate.version}, "
                         "narrow down the `requires-python` range to "
                         f'include this version. For example, "{working_requires_python}" should work.',
