@@ -1,4 +1,3 @@
-import sys
 from unittest.mock import ANY
 
 import pytest
@@ -166,22 +165,22 @@ def test_lock_self_referencing_groups(project, pdm, to_dev):
 def test_lock_multiple_platform_wheels(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.7")
     project.add_dependencies(["pdm-hello"])
-    pdm(["lock", "-S", "cross_platform"], obj=project, strict=True)
+    pdm(["lock"], obj=project, strict=True)
     package = next(p for p in project.lockfile["package"] if p["name"] == "pdm-hello")
     file_hashes = package["files"]
     assert len(file_hashes) == 2
 
 
 @pytest.mark.usefixtures("local_finder")
-@pytest.mark.parametrize("args", [("--no-cross-platform",), ("-S", "no_cross_platform")])
-def test_lock_current_platform_wheels(project, pdm, args):
+@pytest.mark.parametrize("platform", ["linux", "macos", "windows"])
+def test_lock_specific_platform_wheels(project, pdm, platform):
     project.environment.python_requires = PySpecSet(">=3.7")
     project.add_dependencies(["pdm-hello"])
-    pdm(["lock", *args], obj=project, strict=True)
+    pdm(["lock", "--platform", platform], obj=project, strict=True)
     assert FLAG_CROSS_PLATFORM not in project.lockfile.strategy
     package = next(p for p in project.lockfile["package"] if p["name"] == "pdm-hello")
     file_hashes = package["files"]
-    wheels_num = 2 if sys.platform == "win32" and not project.python.is_32bit else 1
+    wheels_num = 2 if platform == "windows" else 1
     assert len(file_hashes) == wheels_num
 
 
@@ -315,9 +314,7 @@ def test_lock_all_with_excluded_groups(project, pdm, args):
     assert "pyopenssl" not in project.get_locked_repository().candidates
 
 
-@pytest.mark.parametrize(
-    "args", [("--append",), ("-S", "cross_platform", "--platform=linux"), ("-S", "cross_platform", "--append")]
-)
+@pytest.mark.parametrize("args", [("--append",)])
 def test_forbidden_lock_target_options(project, pdm, args):
     result = pdm(["lock", *args], obj=project)
     assert result.exit_code != 0

@@ -7,6 +7,7 @@ from unearth import Link
 
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
+from pdm.models.specifiers import PySpecSet
 from pdm.utils import is_path_relative_to, path_to_url
 from tests import FIXTURES
 
@@ -250,6 +251,8 @@ def test_cache_egg_info_sdist(project):
 
 def test_invalidate_incompatible_wheel_link(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
+    project.environment.python_requires = PySpecSet(">=3.6")
+    project.environment.__dict__["spec"] = project.environment.spec.replace(platform="linux")
     req = parse_requirement("demo")
     prepared = Candidate(
         req,

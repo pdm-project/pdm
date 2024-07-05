@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import operator
-from dataclasses import dataclass
-from enum import IntEnum
+from dataclasses import dataclass, replace
 from functools import lru_cache, reduce
-from typing import Any, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 
 from dep_logic.markers import (
     BaseMarker,
@@ -20,6 +19,23 @@ from packaging.markers import Marker as PackageMarker
 
 from pdm.exceptions import RequirementError
 from pdm.models.specifiers import PySpecSet
+
+if TYPE_CHECKING:
+    from typing import Self
+
+
+PLATFORM_MARKERS = frozenset(
+    {"sys_platform", "platform_release", "platform_system", "platform_version", "os_name", "platform_machine"}
+)
+IMPLEMENTATION_MARKERS = frozenset({"implementation_name", "implementation_version", "platform_python_implementation"})
+PYTHON_MARKERS = frozenset({"python_version", "python_full_version"})
+
+
+def _exclude_multi(marker: Marker, *names: str) -> Marker:
+    inner = marker.inner
+    for name in names:
+        inner = inner.exclude(name)
+    return type(marker)(inner)
 
 
 @dataclass(frozen=True, unsafe_hash=True, repr=False)
@@ -52,18 +68,20 @@ class Marker:
         return self.inner.evaluate(environment)
 
     def matches(self, spec: EnvSpec) -> bool:
-        if spec.is_allow_all():
-            return True
         non_python_marker, python_spec = self.split_pyspec()
+        if spec.platform is None:
+            non_python_marker = _exclude_multi(non_python_marker, *PLATFORM_MARKERS)
+        if spec.implementation is None:
+            non_python_marker = _exclude_multi(non_python_marker, *IMPLEMENTATION_MARKERS)
         return not (spec.py_spec & python_spec).is_empty() and non_python_marker.evaluate(spec.markers())
 
     @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:
         """Split `python_version` and `python_full_version` from marker string"""
-        python_marker = self.inner.only("python_version", "python_full_version")
+        python_marker = self.inner.only(*PYTHON_MARKERS)
         if python_marker.is_any():
             return self, PySpecSet()
-        new_marker = type(self)(self.inner.exclude("python_version").exclude("python_full_version"))
+        new_marker = _exclude_multi(self, *PYTHON_MARKERS)
         return new_marker, _build_pyspec_from_marker(python_marker)
 
     def split_extras(self) -> tuple[Marker, Marker]:
@@ -133,67 +151,26 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         raise TypeError(f"Unsupported marker type: {type(marker)}")
 
 
-class EnvCompatibility(IntEnum):
-    NONE = 0
-    LE = 1
-    GT = 2
-
-
 class EnvSpec(_EnvSpec):
     @property
     def py_spec(self) -> PySpecSet:
         return PySpecSet(self.requires_python)
 
-    def __str__(self) -> str:
-        return f"({self.requires_python}, {self.platform}, {self.implementation.name})"
+    def replace(self, **kwargs: Any) -> Self:
+        from dep_logic.tags import Implementation, Platform
 
-    def as_dict(self) -> dict[str, str | bool]:
-        result: dict[str, str | bool] = {"requires_python": str(self.requires_python), "platform": str(self.platform)}
-        if self.implementation.name != "cpython":
-            result["implementation"] = self.implementation.name
-        if self.implementation.gil_disabled:
-            result["gil_disabled"] = True
-        return result
-
-    def is_allow_all(self) -> bool:
-        return isinstance(self, AllowAllEnvSpec)
-
-    def compare(self, target: EnvSpec) -> EnvCompatibility:
-        if self.is_allow_all():
-            return EnvCompatibility.LE
-        if self == target:
-            return EnvCompatibility.LE
-        if (self.requires_python & target.requires_python).is_empty():
-            return EnvCompatibility.NONE
-        if self.implementation != target.implementation:
-            return EnvCompatibility.NONE
-        if self.platform.arch != target.platform.arch:
-            return EnvCompatibility.NONE
-        if type(self.platform.os) is not type(target.platform.os):
-            return EnvCompatibility.NONE
-
-        if hasattr(self.platform.os, "major") and hasattr(self.platform.os, "minor"):
-            if (self.platform.os.major, self.platform.os.minor) <= (target.platform.os.major, target.platform.os.minor):
-                return EnvCompatibility.LE
-            else:
-                return EnvCompatibility.GT
-        return EnvCompatibility.LE
-
-    @classmethod
-    @lru_cache(maxsize=1)
-    def allow_all(cls) -> EnvSpec:
-        """Return an env spec that allows all packages."""
-        return AllowAllEnvSpec.from_spec("", "linux", "cpython")
-
-    def with_python(self, python: PySpecSet) -> EnvSpec:
-        """Return a copy of the env spec with the given python range."""
-        return type(self)(python._logic, self.platform, self.implementation)
+        if "requires_python" in kwargs:
+            kwargs["requires_python"] = cast(PySpecSet, kwargs["requires_python"])._logic
+        if "platform" in kwargs:
+            kwargs["platform"] = Platform.parse(kwargs["platform"])
+        if "implementation" in kwargs:
+            kwargs["implementation"] = Implementation.parse(kwargs["implementation"])
+        return replace(self, **kwargs)
 
     def markers_with_defaults(self) -> dict[str, str]:
         from packaging.markers import default_environment
 
         return {**default_environment(), **self.markers()}  # type: ignore[dict-item]
 
-
-class AllowAllEnvSpec(EnvSpec):
-    pass
+    def is_allow_all(self) -> bool:
+        return self.platform is None and self.implementation is None

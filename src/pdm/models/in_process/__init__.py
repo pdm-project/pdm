@@ -9,7 +9,6 @@ import functools
 import json
 import os
 import subprocess
-import sysconfig
 import tempfile
 from typing import Any, Generator
 
@@ -63,8 +62,4 @@ def sysconfig_get_platform(executable: str) -> str:
 def get_env_spec(executable: str) -> EnvSpec:
     """Get the environment spec of the python interpreter"""
     with _in_process_script("env_spec.py") as script:
-        return EnvSpec.from_spec(
-            **json.loads(
-                subprocess.check_output([executable, "-Es", script], env={"PDM_LIBS": sysconfig.get_path("purelib")})
-            )
-        )
+        return EnvSpec.from_spec(**json.loads(subprocess.check_output([executable, "-Es", script])))

@@ -78,10 +78,11 @@ class BaseRepository:
                 DeprecationWarning,
                 stacklevel=2,
             )
+        else:
             ignore_compatibility = True
         if env_spec is None:  # pragma: no cover
             if ignore_compatibility:
-                env_spec = EnvSpec.allow_all()
+                env_spec = environment.allow_all_spec
             else:
                 env_spec = environment.spec
         self.env_spec = env_spec
@@ -297,7 +298,7 @@ class BaseRepository:
             project.pyproject.metadata.get("description", "UNKNOWN"),
         )
 
-    def _is_python_match(self, link: Link) -> bool:
+    def _is_python_match(self, link: Link) -> bool:  # FIXME: to remove
         from packaging.tags import Tag
         from packaging.utils import parse_wheel_filename
 
@@ -358,8 +359,6 @@ class BaseRepository:
         else:  # the req must be a named requirement
             with self.environment.get_finder(sources, env_spec=self.env_spec) as finder:
                 links = [package.link for package in finder.find_matches(req.as_line())]
-            if self.env_spec.is_allow_all():
-                links = [link for link in links if self._is_python_match(link)]
         for link in links:
             if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
                 # The links found can still be a local directory or vcs, skippping it.

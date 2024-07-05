@@ -1,5 +1,3 @@
-import dataclasses
-
 import pytest
 from resolvelib.resolvers import ResolutionImpossible, Resolver
 
@@ -24,20 +22,14 @@ def resolve(project, repository):
         direct_minimal_versions=False,
         inherit_metadata=False,
         platform=None,
-        cross_platform=False,
     ):
-        from dep_logic.tags import Platform
-
-        if cross_platform:
-            env_spec = EnvSpec.allow_all()
-        else:
-            env_spec = project.environment.spec.with_python(project.environment.python_requires)
-            replace_dict = {}
-            if requires_python:
-                replace_dict["requires_python"] = PySpecSet(requires_python)._logic
-            if platform:
-                replace_dict["platform"] = Platform.parse(platform)
-            env_spec = dataclasses.replace(env_spec, **replace_dict)
+        env_spec = project.environment.allow_all_spec
+        replace_dict = {}
+        if requires_python:
+            replace_dict["requires_python"] = PySpecSet(requires_python)
+        if platform:
+            replace_dict["platform"] = platform
+        env_spec = env_spec.replace(**replace_dict)
         if allow_prereleases is not None:
             project.pyproject.settings.setdefault("resolution", {})["allow-prereleases"] = allow_prereleases
         requirements = []
@@ -404,7 +396,7 @@ def test_resolve_record_markers(resolve, repository, project):
     repository.add_dependencies("E", "1.0", ["F; platform_machine=='x86_64'"])
     repository.add_dependencies("F", "1.0", ["B"])
 
-    result = resolve(["A"], ">=3.6", inherit_metadata=True, cross_platform=True)
+    result = resolve(["A"], ">=3.6", inherit_metadata=True)
     assert result["a"].version == "1.0"
     assert "d" not in result
     assert (

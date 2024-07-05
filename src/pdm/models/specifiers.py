@@ -142,14 +142,18 @@ class PySpecSet(SpecifierSet):
         return f"<PySpecSet {self}>"
 
     def __and__(self, other: Any) -> PySpecSet:
-        if not isinstance(other, PySpecSet):
-            return NotImplemented
-        return type(self)(self._logic & other._logic)
+        if isinstance(other, PySpecSet):
+            return type(self)(self._logic & other._logic)
+        elif isinstance(other, VersionSpecifier):
+            return type(self)(self._logic & other)
+        return NotImplemented
 
     def __or__(self, other: Any) -> PySpecSet:
-        if not isinstance(other, PySpecSet):
-            return NotImplemented
-        return type(self)(self._logic | other._logic)
+        if isinstance(other, PySpecSet):
+            return type(self)(self._logic | other._logic)
+        elif isinstance(other, VersionSpecifier):
+            return type(self)(self._logic | other)
+        return NotImplemented
 
     @classmethod
     def _populate_version_range(cls, lower: Version, upper: Version) -> Iterable[Version]:

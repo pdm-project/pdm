@@ -160,11 +160,12 @@ class BaseEnvironment(abc.ABC):
                 "`ignore_compatibility` argument is deprecated, pass in `env_spec` instead.\n",
                 stacklevel=2,
             )
+        else:
             ignore_compatibility = False
 
         if env_spec is None:
             if ignore_compatibility:  # pragma: no cover
-                env_spec = EnvSpec.allow_all()
+                env_spec = self.allow_all_spec
             else:
                 env_spec = self.spec
 
@@ -210,6 +211,10 @@ class BaseEnvironment(abc.ABC):
     @cached_property
     def spec(self) -> EnvSpec:
         return get_env_spec(self.interpreter.executable.as_posix())
+
+    @property
+    def allow_all_spec(self) -> EnvSpec:
+        return EnvSpec(self.python_requires._logic)
 
     def which(self, command: str) -> str | None:
         """Get the full path of the given executable against this environment."""

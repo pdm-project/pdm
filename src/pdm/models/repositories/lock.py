@@ -63,18 +63,18 @@ class LockedRepository(BaseRepository):
                 result[can.identify()] = can
         return result
 
-    def clear(self) -> None:
-        self.packages.clear()
-        self.targets.clear()
-        if "all_candidates" in self.__dict__:
-            del self.__dict__["all_candidates"]
-
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
-        from pdm.project.lockfile import FLAG_STATIC_URLS
+        from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_STATIC_URLS
 
         root = self.environment.project.root
         static_urls = FLAG_STATIC_URLS in self.environment.project.lockfile.strategy
         self.targets = [EnvSpec.from_spec(**t) for t in lockfile.get("metadata", {}).get("targets", [])]
+        if not self.targets and lockfile:  # pragma: no cover
+            # XXX: for reading old lockfiles, to be removed in the future
+            if FLAG_CROSS_PLATFORM in self.environment.project.lockfile.strategy:
+                self.targets.append(self.environment.allow_all_spec)
+            else:
+                self.targets.append(self.environment.spec)
         with cd(root):
             for package in lockfile.get("package", []):
                 version = package.get("version")
@@ -279,6 +279,7 @@ class LockedRepository(BaseRepository):
         metadata = tomlkit.table()
         if groups is None:
             groups = list(project.iter_groups())
+        strategy.discard(FLAG_CROSS_PLATFORM)
         metadata.update(
             {
                 "groups": sorted(groups, key=_group_sort_key),

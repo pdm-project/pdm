@@ -465,7 +465,9 @@ class Project:
         from pdm.resolver.providers import BaseProvider, get_provider
 
         if env_spec is None:
-            env_spec = EnvSpec.allow_all() if ignore_compatibility in (True, NotSet) else self.environment.spec
+            env_spec = (
+                self.environment.allow_all_spec if ignore_compatibility in (True, NotSet) else self.environment.spec
+            )
         repo_params = inspect.signature(self.get_repository).parameters
         if "env_spec" in repo_params:
             repository = self.get_repository(env_spec=env_spec)
@@ -837,4 +839,4 @@ class Project:
 
     @property
     def lock_targets(self) -> list[EnvSpec]:
-        return [self.environment.spec.with_python(self.python_requires)]
+        return [self.environment.allow_all_spec]

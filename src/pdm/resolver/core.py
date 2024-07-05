@@ -34,10 +34,7 @@ def resolve(
     provider = cast(BaseProvider, resolver.provider)
     repository = cast(BaseRepository, provider.repository)
     env_spec = repository.env_spec
-    if env_spec.is_allow_all():
-        python_req = PythonRequirement.from_pyspec_set(repository.environment.python_requires)
-    else:
-        python_req = PythonRequirement.from_pyspec_set(env_spec.py_spec)
+    python_req = PythonRequirement.from_pyspec_set(env_spec.py_spec)
     requirements.append(python_req)
     result = resolver.resolve(requirements, max_rounds)
 

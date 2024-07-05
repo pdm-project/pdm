@@ -16,6 +16,7 @@ from pdm.cli.options import (
     skip_option,
 )
 from pdm.models.markers import EnvSpec
+from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.utils import convert_to_datetime
 
@@ -105,19 +106,15 @@ class Command(BaseCommand):
         project.core.state.exclude_newer = options.exclude_newer
         env_spec: EnvSpec | None = None
         if any([options.python, options.platform, options.implementation]):
-            from dep_logic.tags import Platform
-            from dep_logic.tags.tags import Implementation, _ensure_version_specifier
+            replace_dict = {}
+            if options.python:
+                replace_dict["requires_python"] = PySpecSet(options.python)
+            if options.platform:
+                replace_dict["platform"] = options.platform
+            if options.implementation:
+                replace_dict["implementation"] = options.implementation
+            env_spec = project.environment.allow_all_spec.replace(**replace_dict)
 
-            current_spec = project.environment.spec
-            env_spec = EnvSpec(
-                requires_python=_ensure_version_specifier(options.python)
-                if options.python
-                else project.environment.python_requires._logic,
-                platform=Platform.parse(options.platform) if options.platform else current_spec.platform,
-                implementation=Implementation.parse(options.implementation)
-                if options.implementation
-                else current_spec.implementation,
-            )
         actions.do_lock(
             project,
             refresh=options.refresh,

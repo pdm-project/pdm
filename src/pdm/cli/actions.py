@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import dataclasses
 import datetime
 import hashlib
 import inspect
@@ -28,7 +27,7 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvCompatibility, EnvSpec
+from pdm.models.markers import EnvSpec
 from pdm.models.repositories import LockedRepository
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
@@ -92,28 +91,21 @@ def do_lock(
         result_repo = locked_repo
     if not supports_env_spec:  # pragma: no cover
         ui.warn("Lock targets are not supported by the current provider")
-        targets = [EnvSpec.allow_all() if FLAG_CROSS_PLATFORM in lock_strategy else project.environment.spec]
-    elif FLAG_CROSS_PLATFORM in lock_strategy:
-        if env_spec is not None:
-            raise PdmUsageError("Cannot pass --python/--platform/--implementation with `cross_platform` strategy")
-        if append:
-            raise PdmUsageError("Cannot use `--append` with `cross_platform` strategy")
-        targets = [EnvSpec.allow_all()]
+
+    if append:
+        if env_spec is None:
+            raise PdmUsageError("Cannot use `--append` without --python/--platform/--implementation")
+        if env_spec in locked_repo.targets:
+            ui.echo(f"{termui.Emoji.LOCK} Lock target {env_spec} already exists, skip locking.")
+            return locked_repo.all_candidates
+        targets = [env_spec]
+        result_repo = locked_repo  # Append to the same lockfile
     else:
-        if append:
-            if env_spec is None:
-                raise PdmUsageError("Cannot use `--append` without --python/--platform/--implementation")
-            if env_spec in locked_repo.targets:
-                ui.echo(f"{termui.Emoji.LOCK} Lock target {env_spec} already exists, skip locking.")
-                return locked_repo.all_candidates
-            targets = [env_spec]
-            result_repo = locked_repo
-        else:
-            targets = [env_spec] if env_spec else (locked_repo.targets[:] or project.lock_targets)
+        targets = [env_spec] if env_spec else (locked_repo.targets[:] or project.lock_targets)
     # Restrict the target python to within the project's requires-python
-    global_requires_python = project.environment.python_requires._logic
+    global_requires_python = project.environment.python_requires
     for i, target in enumerate(targets):
-        targets[i] = dataclasses.replace(target, requires_python=target.requires_python & global_requires_python)
+        targets[i] = target.replace(requires_python=global_requires_python & target.requires_python)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     hooks.try_emit("pre_lock", requirements=requirements, dry_run=dry_run)
     with ui.logging("lock"):
@@ -179,9 +171,7 @@ def _lock_for_env(
     lock_strategy: set[str],
     max_rounds: int,
 ) -> dict[str, Candidate]:
-    reporter.spinner.update(
-        f"Resolve for environment ({env_spec.requires_python}, {env_spec.platform}, {env_spec.implementation.name})"
-    )
+    reporter.spinner.update(f"Resolve for environment {env_spec}")
     requirements = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
     resolver: Resolver = project.core.resolver_class(provider, reporter)
     mapping, *_ = resolve(
@@ -201,6 +191,8 @@ def resolve_candidates_from_lockfile(
     groups: Collection[str] | None = None,
     env_spec: EnvSpec | None = None,
 ) -> dict[str, Candidate]:
+    from dep_logic.tags import EnvCompatibility
+
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     if env_spec is None:
@@ -212,14 +204,14 @@ def resolve_candidates_from_lockfile(
         provider = project.get_provider(for_install=True, env_spec=env_spec)
         locked_repo = cast("LockedRepository", provider.repository)
         lock_targets = locked_repo.targets or project.lock_targets
-        if FLAG_CROSS_PLATFORM not in project.lockfile.strategy and env_spec not in lock_targets:
+        if env_spec not in lock_targets:
             compatibilities = [target.compare(env_spec) for target in lock_targets]
-            if not any(compat == EnvCompatibility.LE for compat in compatibilities):
+            if not any(compat == EnvCompatibility.LOWER_OR_EQUAL for compat in compatibilities):
                 loose_compatible_target = next(
                     (
                         target
                         for (target, compat) in zip(lock_targets, compatibilities)
-                        if compat == EnvCompatibility.GT
+                        if compat == EnvCompatibility.HIGHER
                     ),
                     None,
                 )
