@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import unearth
 from dep_logic.specifiers import InvalidSpecifier, parse_version_specifier
+from packaging.specifiers import InvalidSpecifier as PkgInvalidSpecifier
 from packaging.version import Version
 from unearth.evaluator import Evaluator, FormatControl, LinkMismatchError, Package
 
@@ -39,7 +40,7 @@ class PDMEvaluator(Evaluator):
         if not self.ignore_compatibility and link.requires_python:
             try:
                 requires_python = parse_version_specifier(link.requires_python)
-            except InvalidSpecifier as e:
+            except (InvalidSpecifier, PkgInvalidSpecifier) as e:
                 raise LinkMismatchError(f"Invalid requires-python: {link.requires_python}") from e
             if (requires_python & self.env_spec.requires_python).is_empty():
                 raise LinkMismatchError(
