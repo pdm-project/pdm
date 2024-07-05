@@ -73,7 +73,7 @@ class Marker:
             non_python_marker = _exclude_multi(non_python_marker, *PLATFORM_MARKERS)
         if spec.implementation is None:
             non_python_marker = _exclude_multi(non_python_marker, *IMPLEMENTATION_MARKERS)
-        return not (spec.py_spec & python_spec).is_empty() and non_python_marker.evaluate(spec.markers())
+        return not (python_spec & spec.requires_python).is_empty() and non_python_marker.evaluate(spec.markers())
 
     @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:
@@ -152,10 +152,6 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
 
 
 class EnvSpec(_EnvSpec):
-    @property
-    def py_spec(self) -> PySpecSet:
-        return PySpecSet(self.requires_python)
-
     def replace(self, **kwargs: Any) -> Self:
         from dep_logic.tags import Implementation, Platform
 

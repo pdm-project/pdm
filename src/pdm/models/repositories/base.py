@@ -172,7 +172,7 @@ class BaseRepository:
 
         if self.is_this_package(requirement):
             return [self.make_this_candidate(requirement)]
-        requires_python = requirement.requires_python & self.env_spec.py_spec
+        requires_python = requirement.requires_python & self.env_spec.requires_python
         cans = LazySequence(self._find_candidates(requirement, minimal_version=minimal_version))
         applicable_cans = LazySequence(
             c
@@ -181,7 +181,7 @@ class BaseRepository:
         )
 
         def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate, None, None]:
-            env_requires_python = self.env_spec.py_spec
+            env_requires_python = PySpecSet(self.env_spec.requires_python)
             if ignore_requires_python:
                 yield from candidates
                 return

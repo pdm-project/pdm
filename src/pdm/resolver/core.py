@@ -7,6 +7,7 @@ from pdm import termui
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import strip_extras
+from pdm.models.specifiers import PySpecSet
 from pdm.resolver.graph import merge_markers, populate_groups
 from pdm.resolver.providers import BaseProvider
 from pdm.resolver.python import PythonRequirement
@@ -34,7 +35,7 @@ def resolve(
     provider = cast(BaseProvider, resolver.provider)
     repository = cast(BaseRepository, provider.repository)
     env_spec = repository.env_spec
-    python_req = PythonRequirement.from_pyspec_set(env_spec.py_spec)
+    python_req = PythonRequirement.from_pyspec_set(PySpecSet(env_spec.requires_python))
     requirements.append(python_req)
     result = resolver.resolve(requirements, max_rounds)
 

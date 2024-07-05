@@ -20,7 +20,7 @@ class PyPIRepository(BaseRepository):
     DEFAULT_INDEX_URL = "https://pypi.org"
 
     @cache_result
-    def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateMetadata:
+    def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateMetadata:  # pragma: no cover
         if not candidate.name or not candidate.version:
             # Only look for json api for named requirements.
             raise CandidateInfoNotFound(candidate)
@@ -83,7 +83,7 @@ class PyPIRepository(BaseRepository):
 
         session = self.environment.session
         resp = session.get(search_url, params={"q": query})
-        if resp.status_code == 404:
+        if resp.status_code == 404:  # pragma: no cover
             self.environment.project.core.ui.warn(
                 f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
                 f"to {self.DEFAULT_INDEX_URL!r} now.\n"

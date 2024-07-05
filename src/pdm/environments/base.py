@@ -9,13 +9,13 @@ import sys
 import tempfile
 import weakref
 from contextlib import contextmanager
-from functools import cached_property, partial
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator
 
 from pdm._types import NotSet, NotSetType
 from pdm.exceptions import BuildError, PdmUsageError
-from pdm.models.in_process import get_env_spec, get_uname, sysconfig_get_platform
+from pdm.models.in_process import get_env_spec
 from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
@@ -101,33 +101,6 @@ class BaseEnvironment(abc.ABC):
     def session(self) -> PDMPyPIClient:
         """Build the session and cache it."""
         return self._build_session()
-
-    @contextmanager
-    def _patch_target_python(self) -> Generator[None, None, None]:
-        """Patch the packaging modules to respect the arch of target python."""
-        import sysconfig
-
-        import packaging.tags
-
-        old_32bit = packaging.tags._32_BIT_INTERPRETER
-        old_os_uname = getattr(os, "uname", None)
-        old_get_platform = sysconfig.get_platform
-
-        if old_os_uname is not None:
-
-            def uname() -> os.uname_result:
-                return get_uname(str(self.interpreter.path))
-
-            os.uname = uname
-        packaging.tags._32_BIT_INTERPRETER = self.interpreter.is_32bit
-        sysconfig.get_platform = partial(sysconfig_get_platform, str(self.interpreter.path))
-        try:
-            yield
-        finally:
-            sysconfig.get_platform = old_get_platform
-            packaging.tags._32_BIT_INTERPRETER = old_32bit
-            if old_os_uname is not None:
-                os.uname = old_os_uname
 
     @contextmanager
     def get_finder(
@@ -229,7 +202,7 @@ class BaseEnvironment(abc.ABC):
         new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
         return shutil.which(command, path=new_path)
 
-    def _download_pip_wheel(self, path: str | Path) -> None:
+    def _download_pip_wheel(self, path: str | Path) -> None:  # pragma: no cover
         from unearth import UnpackError
 
         download_error = BuildError("Can't get a working copy of pip for the project")
@@ -281,9 +254,9 @@ class BaseEnvironment(abc.ABC):
 
         if os.name != "nt":
             return "posix"
-        if (arch := self.spec.platform.arch) == Arch.X86:
+        if (arch := self.spec.platform.arch) == Arch.X86:  # pragma: no cover
             return "win-ia32"
-        elif arch == Arch.Aarch64:
+        elif arch == Arch.Aarch64:  # pragma: no cover
             return "win-arm64"
         else:
             return "win-amd64"

@@ -45,20 +45,6 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
 
 
 @functools.lru_cache
-def get_uname(executable: str) -> os.uname_result:
-    """Get uname of the system"""
-    script = "import os, json; print(json.dumps(os.uname()))"
-    return os.uname_result(json.loads(subprocess.check_output([executable, "-EsSc", script])))
-
-
-@functools.lru_cache
-def sysconfig_get_platform(executable: str) -> str:
-    """Get platform from sysconfig"""
-    script = "import sysconfig; print(sysconfig.get_platform())"
-    return subprocess.check_output([executable, "-EsSc", script]).decode().strip()
-
-
-@functools.lru_cache
 def get_env_spec(executable: str) -> EnvSpec:
     """Get the environment spec of the python interpreter"""
     with _in_process_script("env_spec.py") as script:
