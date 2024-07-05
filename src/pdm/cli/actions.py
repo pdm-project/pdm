@@ -33,6 +33,7 @@ from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver import resolve
 from pdm.termui import logger
+from pdm.utils import deprecation_warning
 
 if TYPE_CHECKING:
     from pdm.models.requirements import Requirement
@@ -179,7 +180,7 @@ def _lock_for_env(
     mapping, *_ = resolve(
         resolver,
         requirements,
-        max_rounds,
+        max_rounds=max_rounds,
         inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
     )
     if project.enable_write_lockfile:
@@ -190,6 +191,7 @@ def _lock_for_env(
 def resolve_candidates_from_lockfile(
     project: Project,
     requirements: Iterable[Requirement],
+    cross_platform: bool | None = None,
     groups: Collection[str] | None = None,
     env_spec: EnvSpec | None = None,
 ) -> dict[str, Candidate]:
@@ -197,6 +199,8 @@ def resolve_candidates_from_lockfile(
 
     ui = project.core.ui
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
+    if cross_platform is not None:  # pragma: no cover
+        deprecation_warning("cross_platform argument is deprecated", stacklevel=2)
     if env_spec is None:
         # Resolve for the current environment by default
         env_spec = project.environment.spec
@@ -205,7 +209,7 @@ def resolve_candidates_from_lockfile(
         reporter = BaseReporter()
         provider = project.get_provider(for_install=True, env_spec=env_spec)
         locked_repo = cast("LockedRepository", provider.repository)
-        lock_targets = locked_repo.targets or project.lock_targets
+        lock_targets = locked_repo.targets
         if env_spec not in lock_targets:
             compatibilities = [target.compare(env_spec) for target in lock_targets]
             if not any(compat == EnvCompatibility.LOWER_OR_EQUAL for compat in compatibilities):
@@ -234,7 +238,7 @@ def resolve_candidates_from_lockfile(
                 mapping, *_ = resolve(
                     resolver,
                     reqs,
-                    resolve_max_rounds,
+                    max_rounds=resolve_max_rounds,
                     inherit_metadata=True,
                 )
             except ResolutionImpossible as e:

@@ -425,7 +425,7 @@ def fs_supports_link_method(method: str) -> bool:
         return True
 
 
-def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:
+def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:  # pragma: no cover
     """Show a deprecation warning with the given message and raise an error
     after a specified version.
     """

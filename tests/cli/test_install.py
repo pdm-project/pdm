@@ -368,7 +368,8 @@ def test_excluded_groups_ignored_if_dev_passed(project, working_set, pdm):
 
 
 @pytest.mark.parametrize("nested", [False, True])
-def test_install_from_multi_target_lock(project, pdm, repository, nested):
+@pytest.mark.parametrize("groups", [("default",), None])
+def test_install_from_multi_target_lock(project, pdm, repository, nested, groups):
     from pdm.cli.actions import resolve_candidates_from_lockfile
 
     deps = [
@@ -385,13 +386,13 @@ def test_install_from_multi_target_lock(project, pdm, repository, nested):
     pdm(["lock", "--platform", "linux", "--append"], obj=project, strict=True)
 
     candidates = resolve_candidates_from_lockfile(
-        project, project.get_dependencies(), env_spec=EnvSpec.from_spec("==3.11", "windows")
+        project, project.get_dependencies(), env_spec=EnvSpec.from_spec("==3.11", "windows"), groups=groups
     )
     assert candidates["django"].version == "1.11.8"
     assert "sqlparse" not in candidates
 
     candidates = resolve_candidates_from_lockfile(
-        project, project.get_dependencies(), env_spec=EnvSpec.from_spec("==3.11", "linux")
+        project, project.get_dependencies(), env_spec=EnvSpec.from_spec("==3.11", "linux"), groups=groups
     )
     assert candidates["django"].version == "2.2.9"
     assert "sqlparse" in candidates

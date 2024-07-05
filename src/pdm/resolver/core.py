@@ -11,7 +11,7 @@ from pdm.models.specifiers import PySpecSet
 from pdm.resolver.graph import merge_markers, populate_groups
 from pdm.resolver.providers import BaseProvider
 from pdm.resolver.python import PythonRequirement
-from pdm.utils import normalize_name
+from pdm.utils import deprecation_warning, normalize_name
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Resolver
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 def resolve(
     resolver: Resolver,
     requirements: list[Requirement],
+    requires_python: PySpecSet | None = None,
     max_rounds: int = 10000,
     keep_self: bool = False,
     inherit_metadata: bool = False,
@@ -32,6 +33,8 @@ def resolve(
         1. A map of pinned candidates
         2. A map of resolved dependencies for each dependency group
     """
+    if requires_python is not None:  # pragma: no cover
+        deprecation_warning("requires_python argument is deprecated and has no effect.")
     provider = cast(BaseProvider, resolver.provider)
     repository = cast(BaseRepository, provider.repository)
     env_spec = repository.env_spec
