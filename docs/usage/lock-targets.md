@@ -44,9 +44,9 @@ PDM supports specifying one or more environment criteria when generating a lock 
 
 You can ignore some of the criteria, for example, by specifying only `--platform=linux`, the generated lock file will be applicable to Linux platform and all implementations.
 
-!!! note "`python` specifier and `requires-python`"
+!!! note "`python` criterion and `requires-python`"
 
-    `python` specifier in the lock target is still limited by the `requires-python` in `pyproject.toml`. For example, if `requires-python` is `>=3.8` and you specified `--python="<3.11"`, the lock target will be `>=3.8,<3.11`.
+    `--python` option, or `requires-python` criterion in the lock target is still limited by the `requires-python` in `pyproject.toml`. For example, if `requires-python` is `>=3.8` and you specified `--python="<3.11"`, the lock target will be `>=3.8,<3.11`.
 
 ## Separate lock files or merge into one
 
