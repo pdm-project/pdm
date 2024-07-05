@@ -9,7 +9,7 @@ class EnvError(Exception):
 
 
 def get_arch() -> str:
-    arch = platform.machine()
+    arch = platform.machine().lower()
     if arch in ("i386", "i686"):
         return "x86"
     if arch == "amd64":
