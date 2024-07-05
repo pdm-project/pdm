@@ -60,8 +60,10 @@ def do_lock(
         project.lockfile.default_strategies.remove(FLAG_INHERIT_METADATA)
     lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if FLAG_CROSS_PLATFORM in lock_strategy:
-        # FIXME: add doc link
-        project.core.ui.deprecated("`cross_platform` strategy is deprecated in favor of the new lock targets.")
+        project.core.ui.deprecated(
+            "`cross_platform` strategy is deprecated in favor of the new lock targets.\n"
+            "See docs: http://pdm-project.org/en/latest/usage/lock-targets/"
+        )
     locked_repo = project.get_locked_repository()
     if refresh:
         if env_spec is not None:

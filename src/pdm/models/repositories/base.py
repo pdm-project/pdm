@@ -298,40 +298,6 @@ class BaseRepository:
             project.pyproject.metadata.get("description", "UNKNOWN"),
         )
 
-    def _is_python_match(self, link: Link) -> bool:  # FIXME: to remove
-        from packaging.tags import Tag
-        from packaging.utils import parse_wheel_filename
-
-        def is_tag_match(tag: Tag, python_requires: PySpecSet) -> bool:
-            if tag.interpreter.startswith(("cp", "py")):
-                major, minor = tag.interpreter[2], tag.interpreter[3:]
-                if not minor:
-                    version = f"{major}.0"
-                else:
-                    version = f"{major}.{minor}.0"
-                if tag.abi == "abi3":
-                    spec = PySpecSet(f">={version}")  # cp37-abi3 is compatible with >=3.7
-                else:
-                    spec = PySpecSet(f"~={version}")  # cp37-cp37 is only compatible with 3.7.*
-                return not (spec & python_requires).is_empty()
-            else:
-                # we don't know about compatility for non-cpython implementations
-                # assume it is compatible
-                return True
-
-        if not link.is_wheel:
-            return True
-        python_requires = self.environment.python_requires
-        tags = parse_wheel_filename(link.filename)[-1]
-        result = any(is_tag_match(tag, python_requires) for tag in tags)
-        if not result:
-            termui.logger.debug(
-                "Skipping %r because it is not compatible with %r",
-                link,
-                python_requires,
-            )
-        return result
-
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         """Get hashes of all possible installable candidates
         of a given package version.

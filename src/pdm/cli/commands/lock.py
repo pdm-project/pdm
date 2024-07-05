@@ -72,7 +72,8 @@ class Command(BaseCommand):
         target_group.add_argument(
             # FIXME: add doc link
             "--platform",
-            help="The platform to lock for. E.g. `windows`, `linux`, `macos`, `manylinux_2_17_x86_64`",
+            help="The platform to lock for. E.g. `windows`, `linux`, `macos`, `manylinux_2_17_x86_64`. "
+            "See docs for available choices: http://pdm-project.org/en/latest/usage/lock-targets/",
         )
         target_group.add_argument(
             "--implementation",

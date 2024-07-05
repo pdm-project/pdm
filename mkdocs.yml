@@ -55,7 +55,9 @@ nav:
       - Introduction: index.md
       - usage/project.md
       - usage/dependency.md
-      - usage/lockfile.md
+      - Lock Files:
+        - usage/lockfile.md
+        - usage/lock-targets.md
       - usage/publish.md
       - usage/config.md
       - usage/scripts.md
