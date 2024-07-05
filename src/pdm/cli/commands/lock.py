@@ -1,4 +1,5 @@
 import argparse
+import re
 import sys
 from typing import cast
 
@@ -109,6 +110,8 @@ class Command(BaseCommand):
         if any([options.python, options.platform, options.implementation]):
             replace_dict = {}
             if options.python:
+                if re.match(r"[\d.]+", options.python):
+                    options.python = f">={options.python}"
                 replace_dict["requires_python"] = PySpecSet(options.python)
             if options.platform:
                 replace_dict["platform"] = options.platform

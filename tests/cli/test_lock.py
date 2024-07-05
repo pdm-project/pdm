@@ -314,7 +314,7 @@ def test_lock_all_with_excluded_groups(project, pdm, args):
     assert "pyopenssl" not in project.get_locked_repository().candidates
 
 
-@pytest.mark.parametrize("args", [("--append",)])
+@pytest.mark.parametrize("args", [("--append",), ("--python", "<3.6")])
 def test_forbidden_lock_target_options(project, pdm, args):
     result = pdm(["lock", *args], obj=project)
     assert result.exit_code != 0

@@ -419,8 +419,9 @@ def test_install_from_lock_with_lower_version(project, pdm, working_set):
 @pytest.mark.parametrize(
     "python,platform", [("==3.11", "macos"), ("==3.10", "manylinux_2_17_x86_64"), ("==3.11", "manylinux_2_17_aarch64")]
 )
-def test_install_from_lock_with_incompatible_targets(project, pdm, python, platform):
-    pdm(["lock", "--platform", "linux", "--python", ">=3.11"], obj=project, strict=True)
+@pytest.mark.parametrize("python_option", ["3.11", ">=3.11"])
+def test_install_from_lock_with_incompatible_targets(project, pdm, python, platform, python_option):
+    pdm(["lock", "--platform", "linux", "--python", python_option], obj=project, strict=True)
     project.environment.__dict__["spec"] = EnvSpec.from_spec(python, platform)
     result = pdm(["install"], obj=project)
     assert result.exit_code == 1

@@ -225,6 +225,11 @@ class LockedRepository(BaseRepository):
                     new_marker = None
                 else:
                     new_marker = old_marker | candidate.req.marker
+                    bare_marker, py_spec = new_marker.split_pyspec()
+                    if py_spec.is_superset(self.environment.python_requires):
+                        new_marker = bare_marker
+                    if new_marker.is_any():
+                        new_marker = None
                 # merge groups
                 new_groups = list(set(existing.candidate.req.groups) | set(candidate.req.groups))
                 existing.candidate.req = dataclasses.replace(

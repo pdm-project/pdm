@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import datetime
 import hashlib
 import inspect
@@ -27,8 +28,9 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvSpec
+from pdm.models.markers import EnvSpec, get_marker
 from pdm.models.repositories import LockedRepository
+from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver import resolve
@@ -108,7 +110,12 @@ def do_lock(
     # Restrict the target python to within the project's requires-python
     global_requires_python = project.environment.python_requires
     for i, target in enumerate(targets):
-        targets[i] = target.replace(requires_python=global_requires_python & target.requires_python)
+        if (merged := global_requires_python & target.requires_python).is_empty():
+            raise PdmUsageError(
+                f"The target requires Python {target.requires_python} which is not compatible with "
+                f"the project's requires-python {global_requires_python}"
+            )
+        targets[i] = target.replace(requires_python=merged)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     hooks.try_emit("pre_lock", requirements=requirements, dry_run=dry_run)
     with ui.logging("lock"):
@@ -185,6 +192,11 @@ def _lock_for_env(
     )
     if project.enable_write_lockfile:
         fetch_hashes(provider.repository, mapping.values())
+    if not (env_python := PySpecSet(env_spec.requires_python)).is_superset(project.environment.python_requires):
+        python_marker = get_marker(env_python.as_marker_string())
+        for candidate in mapping.values():
+            marker = candidate.req.marker or get_marker("")
+            candidate.req = dataclasses.replace(candidate.req, marker=marker & python_marker)
     return mapping
 
 
