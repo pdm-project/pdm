@@ -35,9 +35,7 @@ jobs:
 
       - name: Build artifacts
         run: |
-          pip install .
-          pdm install --plugins
-          pdm build
+          pipx run build
 
       - name: Test Build
         run: |
