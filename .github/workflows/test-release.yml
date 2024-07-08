@@ -41,5 +41,5 @@ jobs:
 
       - name: Test Build
         run: |
-          python -m pip install dist/*.whl
+          python -m pip install "pdm[locked] @ file://${$(pwd)/dist/*.whl}"
           pdm --help
