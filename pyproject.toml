@@ -85,6 +85,12 @@ includes = ["src/pdm"]
 source-includes = ["tests", "typings", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
+locked = true
+
+[tool.pdm]
+plugins = [
+    "pdm-build-locked"
+]
 
 [tool.pdm.scripts]
 pre_release = "python tasks/max_versions.py"
