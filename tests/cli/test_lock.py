@@ -315,7 +315,13 @@ def test_lock_all_with_excluded_groups(project, pdm, args):
 
 
 @pytest.mark.parametrize(
-    "args", [("--append",), ("--python", "<3.6"), ("-S", "cross_platform", "--append", "--python", "3.10")]
+    "args",
+    [
+        ("--append",),
+        ("--python", "<3.6"),
+        ("-S", "cross_platform", "--append", "--python", "3.10"),
+        ("--platform", "linux", "--refresh"),
+    ],
 )
 def test_forbidden_lock_target_options(project, pdm, args):
     result = pdm(["lock", *args], obj=project)
@@ -344,6 +350,9 @@ def test_lock_for_multiple_targets(project, pdm, repository, nested):
     assert len(locked.targets) == 1
     pytz = candidates["pytz"][0]
     assert str(pytz.req.marker) == 'sys_platform == "win32"'
+
+    result = pdm(["lock", "--platform", "windows", "--append"], obj=project, strict=True)
+    assert "already exists, skip locking." in result.stdout
 
     pdm(["lock", "--platform", "linux", "--append"], obj=project, strict=True)
     locked = project.get_locked_repository()

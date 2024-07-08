@@ -2,17 +2,20 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "all", "doc", "pytest", "test", "tox", "workflow"]
-strategy = ["cross_platform", "inherit_metadata"]
-lock_version = "4.4.2"
+groups = ["default", "all", "cookiecutter", "copier", "doc", "keyring", "pytest", "template", "test", "tox", "workflow"]
+strategy = ["inherit_metadata"]
+lock_version = "4.5.0"
 content_hash = "sha256:0df0576deab085cfb27cd55b912aff0c9778f8dd5c6fa54aec76464e897d1861"
+
+[[metadata.targets]]
+requires_python = ">=3.8"
 
 [[package]]
 name = "anyio"
 version = "4.3.0"
 requires_python = ">=3.8"
 summary = "High level compatibility layer for multiple asynchronous event loop implementations"
-groups = ["all", "default", "test"]
+groups = ["default", "all", "test"]
 dependencies = [
     "exceptiongroup>=1.0.2; python_version < \"3.11\"",
     "idna>=2.8",
@@ -39,9 +42,10 @@ name = "arrow"
 version = "1.2.3"
 requires_python = ">=3.6"
 summary = "Better dates & times for Python"
-groups = ["all"]
+groups = ["all", "cookiecutter", "template"]
 dependencies = [
     "python-dateutil>=2.7.0",
+    "typing-extensions; python_version < \"3.8\"",
 ]
 files = [
     {file = "arrow-1.2.3-py3-none-any.whl", hash = "sha256:5a49ab92e3b7b71d96cd6bfcc4df14efefc9dfa96ea19045815914a6ab6b1fe2"},
@@ -54,6 +58,9 @@ version = "23.1.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
 groups = ["workflow"]
+dependencies = [
+    "importlib-metadata; python_version < \"3.8\"",
+]
 files = [
     {file = "attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04"},
     {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
@@ -77,7 +84,7 @@ files = [
 name = "binaryornot"
 version = "0.4.4"
 summary = "Ultra-lightweight pure Python package to check if a file is binary or text."
-groups = ["all"]
+groups = ["all", "cookiecutter", "template"]
 dependencies = [
     "chardet>=3.0.2",
 ]
@@ -91,7 +98,7 @@ name = "blinker"
 version = "1.7.0"
 requires_python = ">=3.8"
 summary = "Fast, simple object-to-object and broadcast signaling"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "blinker-1.7.0-py3-none-any.whl", hash = "sha256:c3f865d4d54db7abc53758a01601cf343fe55b84c1de4e3fa910e420b438d5b9"},
     {file = "blinker-1.7.0.tar.gz", hash = "sha256:e6820ff6fa4e4d1d8e2747c2283749c3f547e4fee112b98555cdcdae32996182"},
@@ -113,7 +120,7 @@ name = "certifi"
 version = "2024.2.2"
 requires_python = ">=3.6"
 summary = "Python package for providing Mozilla's CA Bundle."
-groups = ["all", "default", "doc", "test"]
+groups = ["default", "all", "cookiecutter", "doc", "template", "test"]
 files = [
     {file = "certifi-2024.2.2-py3-none-any.whl", hash = "sha256:dc383c07b76109f368f6106eee2b593b04a011ea4d55f652c6ca24a754d1cdd1"},
     {file = "certifi-2024.2.2.tar.gz", hash = "sha256:0569859f95fc761b18b45ef421b1290a0f65f147e92a1e5eb3e635f9a5e4e66f"},
@@ -123,7 +130,7 @@ files = [
 name = "cffi"
 version = "1.15.1"
 summary = "Foreign Function Interface for Python calling C code."
-groups = ["all"]
+groups = ["all", "keyring"]
 marker = "sys_platform == \"linux\""
 dependencies = [
     "pycparser",
@@ -200,7 +207,7 @@ name = "chardet"
 version = "5.2.0"
 requires_python = ">=3.7"
 summary = "Universal encoding detector for Python 3"
-groups = ["all", "tox"]
+groups = ["all", "cookiecutter", "template", "tox"]
 files = [
     {file = "chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"},
     {file = "chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7"},
@@ -211,7 +218,7 @@ name = "charset-normalizer"
 version = "3.3.2"
 requires_python = ">=3.7.0"
 summary = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-groups = ["all", "doc"]
+groups = ["all", "cookiecutter", "doc", "template"]
 files = [
     {file = "charset-normalizer-3.3.2.tar.gz", hash = "sha256:f30c3cb33b24454a82faecaf01b19c18562b1e89558fb6c56de4d9118a032fd5"},
     {file = "charset_normalizer-3.3.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:25baf083bf6f6b341f4121c2f3c548875ee6f5339300e08be3f2b2ba1721cdd3"},
@@ -297,9 +304,10 @@ name = "click"
 version = "8.1.7"
 requires_python = ">=3.7"
 summary = "Composable command line interface toolkit"
-groups = ["all", "doc", "workflow"]
+groups = ["all", "cookiecutter", "doc", "template", "workflow"]
 dependencies = [
     "colorama; platform_system == \"Windows\"",
+    "importlib-metadata; python_version < \"3.8\"",
 ]
 files = [
     {file = "click-8.1.7-py3-none-any.whl", hash = "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"},
@@ -311,7 +319,7 @@ name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
-groups = ["all", "doc", "pytest", "test", "tox", "workflow"]
+groups = ["all", "cookiecutter", "copier", "doc", "pytest", "template", "test", "tox", "workflow"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -322,7 +330,7 @@ name = "cookiecutter"
 version = "2.1.1"
 requires_python = ">=3.7"
 summary = "A command-line utility that creates projects from project templates, e.g. creating a Python package project from a Python package project template."
-groups = ["all"]
+groups = ["all", "cookiecutter", "template"]
 dependencies = [
     "Jinja2<4.0.0,>=2.7",
     "binaryornot>=0.4.4",
@@ -342,12 +350,14 @@ name = "copier"
 version = "8.0.0"
 requires_python = ">=3.7,<4.0"
 summary = "A library for rendering project templates."
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
+    "backports-cached-property>=1.0.0; python_version < \"3.8\"",
     "colorama>=0.4.3",
     "decorator>=5.1.1",
     "dunamai>=1.7.0",
     "funcy>=1.17",
+    "importlib-metadata<7.0,>=3.4; python_version < \"3.8\"",
     "jinja2-ansible-filters>=1.3.1",
     "jinja2>=3.1.1",
     "packaging>=23.0",
@@ -358,6 +368,7 @@ dependencies = [
     "pyyaml-include>=1.2",
     "pyyaml>=5.3.1",
     "questionary>=1.8.1",
+    "typing-extensions<5.0.0,>=3.7.4; python_version < \"3.8\"",
 ]
 files = [
     {file = "copier-8.0.0-py3-none-any.whl", hash = "sha256:adad3b4c8101584ea2c2e2580e34f37e791940ae103e2480ae9f509d32e6cb0b"},
@@ -512,7 +523,7 @@ name = "cryptography"
 version = "41.0.1"
 requires_python = ">=3.7"
 summary = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-groups = ["all"]
+groups = ["all", "keyring"]
 marker = "sys_platform == \"linux\""
 dependencies = [
     "cffi>=1.12",
@@ -544,7 +555,7 @@ name = "decorator"
 version = "5.1.1"
 requires_python = ">=3.5"
 summary = "Decorators for Humans"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 files = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
     {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
@@ -555,7 +566,7 @@ name = "dep-logic"
 version = "0.4.1"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "packaging>=22",
 ]
@@ -568,7 +579,7 @@ files = [
 name = "distlib"
 version = "0.3.8"
 summary = "Distribution utilities"
-groups = ["all", "default", "test", "tox"]
+groups = ["default", "tox"]
 files = [
     {file = "distlib-0.3.8-py2.py3-none-any.whl", hash = "sha256:034db59a0b96f8ca18035f36290806a9a6e6bd9d1ff91e45a7f172eb17e51784"},
     {file = "distlib-0.3.8.tar.gz", hash = "sha256:1530ea13e350031b6312d8580ddb6b27a104275a31106523b8f123787f494f64"},
@@ -579,8 +590,9 @@ name = "dunamai"
 version = "1.17.0"
 requires_python = ">=3.5,<4.0"
 summary = "Dynamic version generation"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
+    "importlib-metadata>=1.6.0; python_version < \"3.8\"",
     "packaging>=20.9",
 ]
 files = [
@@ -593,7 +605,7 @@ name = "exceptiongroup"
 version = "1.2.0"
 requires_python = ">=3.7"
 summary = "Backport of PEP 654 (exception groups)"
-groups = ["all", "default", "pytest", "test"]
+groups = ["default", "all", "pytest", "test"]
 marker = "python_version < \"3.11\""
 files = [
     {file = "exceptiongroup-1.2.0-py3-none-any.whl", hash = "sha256:4bfd3996ac73b41e9b9628b04e079f193850720ea5945fc96a08633c66912f14"},
@@ -616,7 +628,7 @@ name = "filelock"
 version = "3.13.3"
 requires_python = ">=3.8"
 summary = "A platform independent file lock."
-groups = ["all", "default", "test", "tox"]
+groups = ["default", "tox"]
 files = [
     {file = "filelock-3.13.3-py3-none-any.whl", hash = "sha256:5ffa845303983e7a0b7ae17636509bc97997d58afeafa72fb141a17b152284cb"},
     {file = "filelock-3.13.3.tar.gz", hash = "sha256:a79895a25bbefdf55d1a2a0a80968f7dbb28edcd6d4234a0afb3f37ecde4b546"},
@@ -627,7 +639,7 @@ name = "findpython"
 version = "0.6.0"
 requires_python = ">=3.8"
 summary = "A utility to find python versions on your system"
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "packaging>=20",
 ]
@@ -640,7 +652,7 @@ files = [
 name = "funcy"
 version = "2.0"
 summary = "A fancy and practical functional tools"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 files = [
     {file = "funcy-2.0-py2.py3-none-any.whl", hash = "sha256:53df23c8bb1651b12f095df764bfb057935d49537a56de211b098f4c79614bb0"},
     {file = "funcy-2.0.tar.gz", hash = "sha256:3963315d59d41c6f30c04bc910e10ab50a3ac4a225868bfa96feed133df075cb"},
@@ -666,6 +678,7 @@ requires_python = ">=3.7"
 summary = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 groups = ["doc"]
 dependencies = [
+    "cached-property; python_version < \"3.8\"",
     "colorama>=0.4",
 ]
 files = [
@@ -678,7 +691,10 @@ name = "h11"
 version = "0.14.0"
 requires_python = ">=3.7"
 summary = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
-groups = ["all", "default", "test"]
+groups = ["default", "all", "test"]
+dependencies = [
+    "typing-extensions; python_version < \"3.8\"",
+]
 files = [
     {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
     {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
@@ -689,7 +705,7 @@ name = "hishel"
 version = "0.0.25"
 requires_python = ">=3.8"
 summary = "Persistent cache implementation for httpx and httpcore"
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "httpx>=0.22.0",
     "typing-extensions>=4.8.0",
@@ -704,7 +720,7 @@ name = "httpcore"
 version = "1.0.5"
 requires_python = ">=3.8"
 summary = "A minimal low-level HTTP client."
-groups = ["all", "default", "test"]
+groups = ["default", "all", "test"]
 dependencies = [
     "certifi",
     "h11<0.15,>=0.13",
@@ -719,7 +735,7 @@ name = "httpx"
 version = "0.27.0"
 requires_python = ">=3.8"
 summary = "The next generation HTTP client."
-groups = ["all", "default", "test"]
+groups = ["default", "all", "test"]
 dependencies = [
     "anyio",
     "certifi",
@@ -738,7 +754,7 @@ version = "0.27.0"
 extras = ["socks"]
 requires_python = ">=3.8"
 summary = "The next generation HTTP client."
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "httpx==0.27.0",
     "socksio==1.*",
@@ -753,7 +769,7 @@ name = "idna"
 version = "3.6"
 requires_python = ">=3.5"
 summary = "Internationalized Domain Names in Applications (IDNA)"
-groups = ["all", "default", "doc", "test"]
+groups = ["default", "all", "cookiecutter", "doc", "template", "test"]
 files = [
     {file = "idna-3.6-py3-none-any.whl", hash = "sha256:c05567e9c24a6b9faaa835c4821bad0590fbb9d5779e7caa6e1cc4978e7eb24f"},
     {file = "idna-3.6.tar.gz", hash = "sha256:9ecdbbd083b06798ae1e86adcbfe8ab1479cf864e4ee30fe4e46a003d12491ca"},
@@ -764,9 +780,10 @@ name = "importlib-metadata"
 version = "7.1.0"
 requires_python = ">=3.8"
 summary = "Read metadata from Python packages"
-groups = ["all", "default", "doc", "test"]
+groups = ["default", "all", "doc", "keyring"]
 marker = "python_version < \"3.12\""
 dependencies = [
+    "typing-extensions>=3.6.4; python_version < \"3.8\"",
     "zipp>=0.5",
 ]
 files = [
@@ -779,7 +796,7 @@ name = "importlib-resources"
 version = "6.4.0"
 requires_python = ">=3.8"
 summary = "Read resources from Python packages"
-groups = ["all", "default", "test", "workflow"]
+groups = ["default", "all", "keyring", "workflow"]
 marker = "python_version < \"3.10\""
 dependencies = [
     "zipp>=3.1.0; python_version < \"3.10\"",
@@ -815,7 +832,7 @@ name = "installer"
 version = "0.7.0"
 requires_python = ">=3.7"
 summary = "A library for installing Python wheels."
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "installer-0.7.0-py3-none-any.whl", hash = "sha256:05d1933f0a5ba7d8d6296bb6d5018e7c94fa473ceb10cf198a92ccea19c27b53"},
     {file = "installer-0.7.0.tar.gz", hash = "sha256:a26d3e3116289bb08216e0d0f7d925fcef0b0194eedfa0c944bcaaa106c4b631"},
@@ -826,7 +843,7 @@ name = "jaraco-classes"
 version = "3.2.3"
 requires_python = ">=3.7"
 summary = "Utility functions for Python class constructs"
-groups = ["all"]
+groups = ["all", "keyring"]
 dependencies = [
     "more-itertools",
 ]
@@ -840,7 +857,7 @@ name = "jeepney"
 version = "0.8.0"
 requires_python = ">=3.7"
 summary = "Low-level, pure Python DBus protocol wrapper."
-groups = ["all"]
+groups = ["all", "keyring"]
 marker = "sys_platform == \"linux\""
 files = [
     {file = "jeepney-0.8.0-py3-none-any.whl", hash = "sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755"},
@@ -852,7 +869,7 @@ name = "jinja2"
 version = "3.1.3"
 requires_python = ">=3.7"
 summary = "A very fast and expressive template engine."
-groups = ["all", "doc", "workflow"]
+groups = ["all", "cookiecutter", "copier", "doc", "template", "workflow"]
 dependencies = [
     "MarkupSafe>=2.0",
 ]
@@ -865,7 +882,7 @@ files = [
 name = "jinja2-ansible-filters"
 version = "1.3.2"
 summary = "A port of Ansible's jinja2 filters without requiring ansible core."
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
     "Jinja2",
     "PyYAML",
@@ -879,7 +896,7 @@ files = [
 name = "jinja2-time"
 version = "0.2.0"
 summary = "Jinja2 Extension for Dates and Times"
-groups = ["all"]
+groups = ["all", "cookiecutter", "template"]
 dependencies = [
     "arrow",
     "jinja2",
@@ -894,7 +911,7 @@ name = "keyring"
 version = "24.1.1"
 requires_python = ">=3.7"
 summary = "Store and access your passwords safely."
-groups = ["all"]
+groups = ["all", "keyring"]
 dependencies = [
     "SecretStorage>=3.2; sys_platform == \"linux\"",
     "importlib-metadata>=4.11.4; python_version < \"3.12\"",
@@ -941,7 +958,7 @@ name = "markdown-it-py"
 version = "3.0.0"
 requires_python = ">=3.8"
 summary = "Python port of markdown-it. Markdown parsing, done right!"
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "mdurl~=0.1",
 ]
@@ -955,7 +972,7 @@ name = "markupsafe"
 version = "2.1.5"
 requires_python = ">=3.7"
 summary = "Safely add untrusted strings to HTML/XML markup."
-groups = ["all", "doc", "test", "workflow"]
+groups = ["all", "cookiecutter", "copier", "doc", "template", "test", "workflow"]
 files = [
     {file = "MarkupSafe-2.1.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a17a92de5231666cfbe003f0e4b9b3a7ae3afb1ec2845aadc2bacc93ff85febc"},
     {file = "MarkupSafe-2.1.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:72b6be590cc35924b02c78ef34b467da4ba07e4e0f0454a2c5907f473fc50ce5"},
@@ -1015,7 +1032,7 @@ name = "mdurl"
 version = "0.1.2"
 requires_python = ">=3.7"
 summary = "Markdown URL utilities"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
@@ -1052,6 +1069,7 @@ dependencies = [
     "platformdirs>=2.2.0",
     "pyyaml-env-tag>=0.1",
     "pyyaml>=5.1",
+    "typing-extensions>=3.10; python_version < \"3.8\"",
     "watchdog>=2.0",
 ]
 files = [
@@ -1193,7 +1211,7 @@ name = "more-itertools"
 version = "9.1.0"
 requires_python = ">=3.7"
 summary = "More routines for operating on iterables, beyond itertools"
-groups = ["all"]
+groups = ["all", "keyring"]
 files = [
     {file = "more-itertools-9.1.0.tar.gz", hash = "sha256:cabaa341ad0389ea83c17a94566a53ae4c9d07349861ecb14dc6d0345cf9ac5d"},
     {file = "more_itertools-9.1.0-py3-none-any.whl", hash = "sha256:d2bc7f02446e86a68911e58ded76d6561eea00cddfb2a91e7019bbb586c799f3"},
@@ -1204,7 +1222,7 @@ name = "msgpack"
 version = "1.0.8"
 requires_python = ">=3.8"
 summary = "MessagePack serializer"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "msgpack-1.0.8-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:505fe3d03856ac7d215dbe005414bc28505d26f0c128906037e66d98c4e95868"},
     {file = "msgpack-1.0.8-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e6b7842518a63a9f17107eb176320960ec095a8ee3b4420b5f688e24bf50c53c"},
@@ -1269,7 +1287,7 @@ name = "packaging"
 version = "24.0"
 requires_python = ">=3.7"
 summary = "Core utilities for Python packages"
-groups = ["all", "default", "doc", "pytest", "test", "tox"]
+groups = ["default", "all", "copier", "doc", "pytest", "template", "test", "tox"]
 files = [
     {file = "packaging-24.0-py3-none-any.whl", hash = "sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5"},
     {file = "packaging-24.0.tar.gz", hash = "sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9"},
@@ -1305,7 +1323,7 @@ name = "pathspec"
 version = "0.12.1"
 requires_python = ">=3.8"
 summary = "Utility library for gitignore style pattern matching of file paths."
-groups = ["all", "doc"]
+groups = ["all", "copier", "doc", "template"]
 files = [
     {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
     {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
@@ -1316,7 +1334,7 @@ name = "pbs-installer"
 version = "2024.4.24"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "pbs_installer-2024.4.24-py3-none-any.whl", hash = "sha256:f8291f0231003d279d0de8fde88fa87b7c6d7fabc2671235113cf67513ff74f5"},
     {file = "pbs_installer-2024.4.24.tar.gz", hash = "sha256:19224733068b0ffa39b53afbb61544bee8ecb9503e7222ba034f07b9913e2c1c"},
@@ -1338,7 +1356,7 @@ name = "platformdirs"
 version = "4.2.0"
 requires_python = ">=3.8"
 summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-groups = ["all", "default", "doc", "test", "tox"]
+groups = ["default", "doc", "tox"]
 files = [
     {file = "platformdirs-4.2.0-py3-none-any.whl", hash = "sha256:0614df2a2f37e1a662acbd8e2b25b92ccf8632929bc6d43467e17fe89c75e068"},
     {file = "platformdirs-4.2.0.tar.gz", hash = "sha256:ef0cc731df711022c174543cb70a9b5bd22e5a9337c8624ef2c2ceb8ddad8768"},
@@ -1360,7 +1378,7 @@ name = "plumbum"
 version = "1.8.2"
 requires_python = ">=3.6"
 summary = "Plumbum: shell combinators library"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
     "pywin32; platform_system == \"Windows\" and platform_python_implementation != \"PyPy\"",
 ]
@@ -1374,7 +1392,7 @@ name = "prompt-toolkit"
 version = "3.0.38"
 requires_python = ">=3.7.0"
 summary = "Library for building powerful interactive command lines in Python"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
     "wcwidth",
 ]
@@ -1399,7 +1417,7 @@ name = "pycparser"
 version = "2.21"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 summary = "C parser in Python"
-groups = ["all"]
+groups = ["all", "keyring"]
 marker = "sys_platform == \"linux\""
 files = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
@@ -1411,7 +1429,7 @@ name = "pydantic"
 version = "1.10.9"
 requires_python = ">=3.7"
 summary = "Data validation and settings management using python type hints"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
     "typing-extensions>=4.2.0",
 ]
@@ -1459,7 +1477,7 @@ name = "pygments"
 version = "2.17.2"
 requires_python = ">=3.7"
 summary = "Pygments is a syntax highlighting package written in Python."
-groups = ["all", "default", "doc", "test"]
+groups = ["default", "all", "copier", "doc", "template"]
 files = [
     {file = "pygments-2.17.2-py3-none-any.whl", hash = "sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c"},
     {file = "pygments-2.17.2.tar.gz", hash = "sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367"},
@@ -1500,7 +1518,7 @@ name = "pyproject-hooks"
 version = "1.0.0"
 requires_python = ">=3.7"
 summary = "Wrappers to call pyproject.toml-based build backend hooks."
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
 ]
@@ -1606,7 +1624,7 @@ name = "python-dateutil"
 version = "2.9.0.post0"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 summary = "Extensions to the standard Python datetime module"
-groups = ["all", "doc"]
+groups = ["all", "cookiecutter", "doc", "template"]
 dependencies = [
     "six>=1.5",
 ]
@@ -1620,7 +1638,7 @@ name = "python-dotenv"
 version = "1.0.1"
 requires_python = ">=3.8"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
     {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
@@ -1631,7 +1649,7 @@ name = "python-slugify"
 version = "8.0.1"
 requires_python = ">=3.7"
 summary = "A Python slugify application that also handles Unicode"
-groups = ["all"]
+groups = ["all", "cookiecutter", "template"]
 dependencies = [
     "text-unidecode>=1.3",
 ]
@@ -1655,7 +1673,7 @@ files = [
 name = "pywin32"
 version = "306"
 summary = "Python for Window Extensions"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 marker = "platform_system == \"Windows\" and platform_python_implementation != \"PyPy\""
 files = [
     {file = "pywin32-306-cp310-cp310-win32.whl", hash = "sha256:06d3420a5155ba65f0b72f2699b5bacf3109f36acbe8923765c22938a69dfc8d"},
@@ -1679,7 +1697,7 @@ name = "pywin32-ctypes"
 version = "0.2.1"
 requires_python = ">=3.6"
 summary = "A (partial) reimplementation of pywin32 using ctypes/cffi"
-groups = ["all"]
+groups = ["all", "keyring"]
 marker = "sys_platform == \"win32\""
 files = [
     {file = "pywin32-ctypes-0.2.1.tar.gz", hash = "sha256:934a2def1e5cbc472b2b6bf80680c0f03cd87df65dfd58bfd1846969de095b03"},
@@ -1691,7 +1709,7 @@ name = "pyyaml"
 version = "6.0.1"
 requires_python = ">=3.6"
 summary = "YAML parser and emitter for Python"
-groups = ["all", "doc"]
+groups = ["all", "cookiecutter", "copier", "doc", "template"]
 files = [
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a"},
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f"},
@@ -1753,7 +1771,7 @@ name = "pyyaml-include"
 version = "1.3"
 requires_python = ">=3.5"
 summary = "Extending PyYAML with a custom constructor for including YAML files within YAML files"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
     "PyYAML<7.0,>=5.1",
 ]
@@ -1767,7 +1785,7 @@ name = "questionary"
 version = "1.10.0"
 requires_python = ">=3.6,<4.0"
 summary = "Python library to build pretty command line user prompts ⭐️"
-groups = ["all"]
+groups = ["all", "copier", "template"]
 dependencies = [
     "prompt-toolkit<4.0,>=2.0",
 ]
@@ -1869,7 +1887,7 @@ name = "requests"
 version = "2.31.0"
 requires_python = ">=3.7"
 summary = "Python HTTP for Humans."
-groups = ["all", "doc"]
+groups = ["all", "cookiecutter", "doc", "template"]
 dependencies = [
     "certifi>=2017.4.17",
     "charset-normalizer<4,>=2",
@@ -1885,7 +1903,7 @@ files = [
 name = "resolvelib"
 version = "1.0.1"
 summary = "Resolve abstract dependencies into concrete ones"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "resolvelib-1.0.1-py2.py3-none-any.whl", hash = "sha256:d2da45d1a8dfee81bdd591647783e340ef3bcb104b54c383f70d422ef5cc7dbf"},
     {file = "resolvelib-1.0.1.tar.gz", hash = "sha256:04ce76cbd63fded2078ce224785da6ecd42b9564b1390793f64ddecbe997b309"},
@@ -1896,7 +1914,7 @@ name = "rich"
 version = "13.7.1"
 requires_python = ">=3.7.0"
 summary = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "markdown-it-py>=2.2.0",
     "pygments<3.0.0,>=2.13.0",
@@ -1912,7 +1930,7 @@ name = "secretstorage"
 version = "3.3.3"
 requires_python = ">=3.6"
 summary = "Python bindings to FreeDesktop.org Secret Service API"
-groups = ["all"]
+groups = ["all", "keyring"]
 marker = "sys_platform == \"linux\""
 dependencies = [
     "cryptography>=2.0",
@@ -1939,7 +1957,7 @@ name = "shellingham"
 version = "1.5.4"
 requires_python = ">=3.7"
 summary = "Tool to Detect Surrounding Shell"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"},
     {file = "shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de"},
@@ -1950,7 +1968,7 @@ name = "six"
 version = "1.16.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 summary = "Python 2 and 3 compatibility utilities"
-groups = ["all", "doc"]
+groups = ["all", "cookiecutter", "doc", "template"]
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
@@ -1961,7 +1979,7 @@ name = "sniffio"
 version = "1.3.1"
 requires_python = ">=3.7"
 summary = "Sniff out which async library your code is running under"
-groups = ["all", "default", "test"]
+groups = ["default", "all", "test"]
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
@@ -1972,7 +1990,7 @@ name = "socksio"
 version = "1.0.0"
 requires_python = ">=3.6"
 summary = "Sans-I/O implementation of SOCKS4, SOCKS4A, and SOCKS5."
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "socksio-1.0.0-py3-none-any.whl", hash = "sha256:95dc1f15f9b34e8d7b16f06d74b8ccf48f609af32ab33c608d08761c5dcbb1f3"},
     {file = "socksio-1.0.0.tar.gz", hash = "sha256:f88beb3da5b5c38b9890469de67d0cb0f9d494b78b106ca1845f96c10b91c4ac"},
@@ -1982,7 +2000,7 @@ files = [
 name = "text-unidecode"
 version = "1.3"
 summary = "The most basic Text::Unidecode port"
-groups = ["all"]
+groups = ["all", "cookiecutter", "template"]
 files = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
     {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
@@ -1993,7 +2011,7 @@ name = "tomli"
 version = "2.0.1"
 requires_python = ">=3.7"
 summary = "A lil' TOML parser"
-groups = ["all", "default", "pytest", "test", "tox", "workflow"]
+groups = ["default", "pytest", "test", "tox", "workflow"]
 marker = "python_version < \"3.11\""
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
@@ -2005,7 +2023,7 @@ name = "tomlkit"
 version = "0.12.4"
 requires_python = ">=3.7"
 summary = "Style preserving TOML library"
-groups = ["all", "default", "test"]
+groups = ["default"]
 files = [
     {file = "tomlkit-0.12.4-py3-none-any.whl", hash = "sha256:5cd82d48a3dd89dee1f9d64420aa20ae65cfbd00668d6f094d7578a78efbb77b"},
     {file = "tomlkit-0.12.4.tar.gz", hash = "sha256:7ca1cfc12232806517a8515047ba66a19369e71edf2439d0f5824f91032b6cc3"},
@@ -2040,11 +2058,13 @@ dependencies = [
     "chardet>=5.2",
     "colorama>=0.4.6",
     "filelock>=3.13.1",
+    "importlib-metadata>=7.0.1; python_version < \"3.8\"",
     "packaging>=23.2",
     "platformdirs>=4.1",
     "pluggy>=1.3",
     "pyproject-api>=1.6.1",
     "tomli>=2.0.1; python_version < \"3.11\"",
+    "typing-extensions>=4.9; python_version < \"3.8\"",
     "virtualenv>=20.25",
 ]
 files = [
@@ -2072,7 +2092,7 @@ name = "truststore"
 version = "0.8.0"
 requires_python = ">= 3.10"
 summary = "Verify certificates using native system trust stores"
-groups = ["all", "default", "test"]
+groups = ["default"]
 marker = "python_version >= \"3.10\""
 files = [
     {file = "truststore-0.8.0-py3-none-any.whl", hash = "sha256:e37a5642ae9fc48caa8f120b6283d77225d600d224965a672c9e8ef49ce4bb4c"},
@@ -2084,7 +2104,7 @@ name = "typing-extensions"
 version = "4.10.0"
 requires_python = ">=3.8"
 summary = "Backported and Experimental Type Hints for Python 3.8+"
-groups = ["all", "default", "doc", "test", "workflow"]
+groups = ["default", "all", "copier", "doc", "template", "test", "workflow"]
 files = [
     {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
     {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
@@ -2095,7 +2115,7 @@ name = "unearth"
 version = "0.16.0"
 requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
-groups = ["all", "default", "test"]
+groups = ["default"]
 dependencies = [
     "httpx<1,>=0.27.0",
     "packaging>=20",
@@ -2110,7 +2130,7 @@ name = "urllib3"
 version = "2.2.1"
 requires_python = ">=3.8"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
-groups = ["all", "doc"]
+groups = ["all", "cookiecutter", "doc", "template"]
 files = [
     {file = "urllib3-2.2.1-py3-none-any.whl", hash = "sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d"},
     {file = "urllib3-2.2.1.tar.gz", hash = "sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"},
@@ -2121,10 +2141,11 @@ name = "virtualenv"
 version = "20.25.1"
 requires_python = ">=3.7"
 summary = "Virtual Python Environment builder"
-groups = ["all", "default", "test", "tox"]
+groups = ["default", "tox"]
 dependencies = [
     "distlib<1,>=0.3.7",
     "filelock<4,>=3.12.2",
+    "importlib-metadata>=6.6; python_version < \"3.8\"",
     "platformdirs<5,>=3.9.1",
 ]
 files = [
@@ -2174,7 +2195,10 @@ files = [
 name = "wcwidth"
 version = "0.2.6"
 summary = "Measures the displayed width of unicode strings in a terminal"
-groups = ["all"]
+groups = ["all", "copier", "template"]
+dependencies = [
+    "backports-functools-lru-cache>=1.2.1; python_version < \"3.2\"",
+]
 files = [
     {file = "wcwidth-0.2.6-py2.py3-none-any.whl", hash = "sha256:795b138f6875577cd91bba52baf9e445cd5118fd32723b460e30a0af30ea230e"},
     {file = "wcwidth-0.2.6.tar.gz", hash = "sha256:a5220780a404dbe3353789870978e472cfe477761f06ee55077256e509b156d0"},
@@ -2199,7 +2223,7 @@ name = "zipp"
 version = "3.18.1"
 requires_python = ">=3.8"
 summary = "Backport of pathlib-compatible object wrapper for zip files"
-groups = ["all", "default", "doc", "test", "workflow"]
+groups = ["default", "all", "doc", "keyring", "workflow"]
 marker = "python_version < \"3.12\""
 files = [
     {file = "zipp-3.18.1-py3-none-any.whl", hash = "sha256:206f5a15f2af3dbaee80769fb7dc6f249695e940acca08dfb2a4769fe61e538b"},
