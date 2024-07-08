@@ -408,7 +408,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
         {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
         '--json[Output all scripts infos in JSON]' \
-        '--reuse-env[Reuse the script environment for self-contained scripts]' \
+        '--recreate[Recreate the script environment for self-contained scripts]' \
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]' \
         {-s,--site-packages}'[Load site-packages from the selected interpreter]' \
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:' \

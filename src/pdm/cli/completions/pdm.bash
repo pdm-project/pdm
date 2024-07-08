@@ -105,7 +105,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (run)
-            opts="--global --help --json --list --project --quiet --reuse-env --site-packages --skip --venv --verbose"
+            opts="--global --help --json --list --project --quiet --recreate --site-packages --skip --venv --verbose"
             ;;
 
             (search)
