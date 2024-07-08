@@ -23,7 +23,7 @@ In this case, it's almost impossible to get a single resolution for each package
 
 PDM supports specifying one or more environment criteria when generating a lock file. These criteria include:
 
-- `--python=<PYTHON_RANGE>`: A [PEP 440](https://www.python.org/dev/peps/pep-0440/) compatible Python version specifier. For example, `--python=">=3.8,<3.10"` will generate a lock file for Python versions `>=3.8` and `<3.10`.
+- `--python=<PYTHON_RANGE>`: A [PEP 440](https://www.python.org/dev/peps/pep-0440/) compatible Python version specifier. For example, `--python=">=3.8,<3.10"` will generate a lock file for Python versions `>=3.8` and `<3.10`. For convenience, `--python=3.10` is equivalent to `--python=">=3.10"`, meaning to resolve for Python 3.10 and above.
 - `--platform=<PLATFORM>`: A platform specifier. For example, `pdm lock --platform=linux` will generate a lock file for Linux x86_64 platform. Available options are:
     * `linux`
     * `windows`

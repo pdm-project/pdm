@@ -5,10 +5,13 @@ authors = [
     {name = "Frost Ming", email = "me@frostming.com"},
 ]
 dependencies = [
-    "llama-index>=0.8.59",
     "setuptools>=68.2.2",
     "openai>=0.28.1",
     "streamlit>=1.28.1",
+    "llama-index-llms-azure-openai>=0.1.8",
+    "llama-index-core>=0.10.52.post2",
+    "llama-index-embeddings-azure-openai>=0.1.10",
+    "llama-index-readers-file>=0.1.27",
 ]
 requires-python = ">=3.10,<3.12"
 readme = "README.md"
