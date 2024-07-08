@@ -7,6 +7,7 @@ from __future__ import annotations
 import atexit
 import contextlib
 import functools
+import inspect
 import json
 import os
 import re
@@ -424,7 +425,7 @@ def fs_supports_link_method(method: str) -> bool:
         return True
 
 
-def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:
+def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:  # pragma: no cover
     """Show a deprecation warning with the given message and raise an error
     after a specified version.
     """
@@ -555,3 +556,15 @@ def get_all_installable_python_versions(build_dir: bool = False) -> list[PythonV
     arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
     matches = [v for v, u in PYTHON_VERSIONS.items() if u.get((THIS_PLATFORM, arch, not build_dir))]
     return matches
+
+
+def get_class_init_params(klass: type) -> set[str]:
+    arguments: set[str] = set()
+    for cls in klass.__mro__:
+        if "__init__" not in cls.__dict__:
+            continue
+        params = inspect.signature(cls).parameters
+        arguments.update({k for k, v in params.items() if v.kind not in (v.VAR_POSITIONAL, v.VAR_KEYWORD)})
+        if not any(p.kind in (p.VAR_POSITIONAL, p.VAR_KEYWORD) for p in params.values()):
+            break
+    return arguments

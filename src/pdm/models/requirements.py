@@ -200,10 +200,7 @@ class Requirement:
         """Return whether the passed in PEP 508 string
         is the same requirement as this one.
         """
-        if line.strip().startswith("-e "):
-            req = parse_requirement(line.split("-e ", 1)[-1], True)
-        else:
-            req = parse_requirement(line, False)
+        req = parse_line(line)
         return self.key == req.key
 
     @classmethod
@@ -219,7 +216,7 @@ class Requirement:
         if getattr(req, "url", None):
             link = Link(cast(str, req.url))
             klass = VcsRequirement if link.is_vcs else FileRequirement
-            return klass(url=req.url, **kwargs)
+            return klass(url=cast(str, req.url), **kwargs)
         else:
             return NamedRequirement(**kwargs)  # type: ignore[arg-type]
 
@@ -465,6 +462,12 @@ def parse_as_pkg_requirement(line: str) -> PackageRequirement:
             raise
         new_line = fix_legacy_specifier(line)
         return PackageRequirement(new_line)
+
+
+def parse_line(line: str) -> Requirement:
+    if line.startswith("-e "):
+        return parse_requirement(line[3:].strip(), editable=True)
+    return parse_requirement(line)
 
 
 def parse_requirement(line: str, editable: bool = False) -> Requirement:

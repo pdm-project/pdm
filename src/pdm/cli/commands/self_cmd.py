@@ -13,6 +13,7 @@ from pdm.cli.options import verbose_option
 from pdm.cli.utils import Package, build_dependency_graph
 from pdm.compat import Distribution
 from pdm.environments import BareEnvironment
+from pdm.models.markers import EnvSpec
 from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 from pdm.utils import is_in_zipapp, normalize_name, parse_version
@@ -158,7 +159,7 @@ class RemoveCommand(BaseCommand):
         to_resolve = list(packages)
 
         ws = WorkingSet()
-        graph = build_dependency_graph(ws)
+        graph = build_dependency_graph(ws, env_spec=EnvSpec.current())
         while to_resolve:
             temp: list[Package] = []
             for name in to_resolve:

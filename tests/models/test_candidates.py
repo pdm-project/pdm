@@ -7,6 +7,7 @@ from unearth import Link
 
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
+from pdm.models.specifiers import PySpecSet
 from pdm.utils import is_path_relative_to, path_to_url
 from tests import FIXTURES
 
@@ -202,7 +203,7 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     file_link = Link(path_to_url((FIXTURES / "artifacts/demo-0.0.1.tar.gz").as_posix()))
     built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
     wheel_cache = project.make_wheel_cache()
-    cache_path = wheel_cache.get_path_for_link(file_link, project.environment.target_python)
+    cache_path = wheel_cache.get_path_for_link(file_link, project.environment.spec)
     if not cache_path.exists():
         cache_path.mkdir(parents=True)
     shutil.copy2(built_path, cache_path)
@@ -250,6 +251,8 @@ def test_cache_egg_info_sdist(project):
 
 def test_invalidate_incompatible_wheel_link(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
+    project.environment.python_requires = PySpecSet(">=3.6")
+    project.environment.__dict__["spec"] = project.environment.spec.replace(platform="linux")
     req = parse_requirement("demo")
     prepared = Candidate(
         req,

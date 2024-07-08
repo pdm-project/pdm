@@ -3,6 +3,7 @@ from resolvelib.resolvers import ResolutionImpossible, Resolver
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.exceptions import PackageWarning
+from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve as _resolve
@@ -14,14 +15,21 @@ from tests import FIXTURES
 def resolve(project, repository):
     def resolve_func(
         lines,
-        requires_python="",
+        requires_python=None,
         allow_prereleases=None,
         strategy="all",
         tracked_names=None,
         direct_minimal_versions=False,
         inherit_metadata=False,
+        platform=None,
     ):
-        repository.environment.python_requires = PySpecSet(requires_python)
+        env_spec = project.environment.allow_all_spec
+        replace_dict = {}
+        if requires_python:
+            replace_dict["requires_python"] = PySpecSet(requires_python)
+        if platform:
+            replace_dict["platform"] = platform
+        env_spec = env_spec.replace(**replace_dict)
         if allow_prereleases is not None:
             project.pyproject.settings.setdefault("resolution", {})["allow-prereleases"] = allow_prereleases
         requirements = []
@@ -30,15 +38,15 @@ def resolve(project, repository):
                 requirements.append(parse_requirement(line[3:], True))
             else:
                 requirements.append(parse_requirement(line))
-        provider = project.get_provider(strategy, tracked_names, direct_minimal_versions=direct_minimal_versions)
+        provider = project.get_provider(
+            strategy, tracked_names, direct_minimal_versions=direct_minimal_versions, env_spec=env_spec
+        )
 
         ui = project.core.ui
         with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
             reporter = SpinnerReporter(spin, requirements)
             resolver = Resolver(provider, reporter)
-            mapping, *_ = _resolve(
-                resolver, requirements, repository.environment.python_requires, inherit_metadata=inherit_metadata
-            )
+            mapping, *_ = _resolve(resolver, requirements, inherit_metadata=inherit_metadata)
             return mapping
 
     return resolve_func
@@ -65,7 +73,8 @@ def test_resolve_exclude(resolve, project):
     assert "urllib3" not in result
 
 
-def test_resolve_requires_python(resolve):
+def test_resolve_requires_python(resolve, project):
+    project.environment.python_requires = PySpecSet(">=2.7")
     with pytest.warns(PackageWarning) as records:
         result = resolve(["django"])
     assert len(records) > 0
@@ -272,6 +281,7 @@ def test_resolve_circular_dependencies(resolve, repository):
 def test_resolve_candidates_to_install(project):
     project.lockfile.set_data(
         {
+            "metadata": {"strategy": ["cross_platform"]},
             "package": [
                 {
                     "name": "pytest",
@@ -295,19 +305,17 @@ def test_resolve_candidates_to_install(project):
                     "version": "2.2.0",
                     "summary": "backports module",
                 },
-            ]
+            ],
         }
     )
-    project.environment.marker_environment["sys_platform"] = "linux"
     reqs = [parse_requirement("pytest")]
-    result = resolve_candidates_from_lockfile(project, reqs)
+    result = resolve_candidates_from_lockfile(project, reqs, env_spec=EnvSpec.from_spec("==3.11", "linux", "cpython"))
     assert result["pytest"].version == "4.6.0"
     assert result["py"].version == "3.6.0"
     assert "configparser" not in result
     assert "backports" not in result
 
-    project.environment.marker_environment["sys_platform"] = "win32"
-    result = resolve_candidates_from_lockfile(project, reqs)
+    result = resolve_candidates_from_lockfile(project, reqs, env_spec=EnvSpec.from_spec("==3.11", "windows", "cpython"))
     assert result["pytest"].version == "4.6.0"
     assert result["py"].version == "3.6.0"
     assert result["configparser"].version == "1.2.0"
@@ -366,7 +374,7 @@ def test_resolve_skip_candidate_with_invalid_metadata(resolve, repository):
 
 def test_resolve_direct_minimal_versions(resolve, repository, project):
     repository.add_candidate("pytz", "2019.6")
-    project.add_dependencies({"django": parse_requirement("django")})
+    project.add_dependencies(["django"])
     result = resolve(["django"], ">=3.6", direct_minimal_versions=True)
     assert result["django"].version == "1.11.8"
     assert result["pytz"].version == "2019.6"

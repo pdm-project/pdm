@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import operator
-from dataclasses import dataclass
-from functools import reduce
-from typing import Any, overload
+from dataclasses import dataclass, replace
+from functools import lru_cache, reduce
+from typing import TYPE_CHECKING, Any, cast, overload
 
 from dep_logic.markers import (
     BaseMarker,
@@ -14,10 +14,28 @@ from dep_logic.markers import (
     from_pkg_marker,
     parse_marker,
 )
+from dep_logic.tags import EnvSpec as _EnvSpec
 from packaging.markers import Marker as PackageMarker
 
 from pdm.exceptions import RequirementError
 from pdm.models.specifiers import PySpecSet
+
+if TYPE_CHECKING:
+    from typing import Self
+
+
+PLATFORM_MARKERS = frozenset(
+    {"sys_platform", "platform_release", "platform_system", "platform_version", "os_name", "platform_machine"}
+)
+IMPLEMENTATION_MARKERS = frozenset({"implementation_name", "implementation_version", "platform_python_implementation"})
+PYTHON_MARKERS = frozenset({"python_version", "python_full_version"})
+
+
+def _exclude_multi(marker: Marker, *names: str) -> Marker:
+    inner = marker.inner
+    for name in names:
+        inner = inner.exclude(name)
+    return type(marker)(inner)
 
 
 @dataclass(frozen=True, unsafe_hash=True, repr=False)
@@ -49,12 +67,21 @@ class Marker:
     def evaluate(self, environment: dict[str, Any] | None = None) -> bool:
         return self.inner.evaluate(environment)
 
+    def matches(self, spec: EnvSpec) -> bool:
+        non_python_marker, python_spec = self.split_pyspec()
+        if spec.platform is None:
+            non_python_marker = _exclude_multi(non_python_marker, *PLATFORM_MARKERS)
+        if spec.implementation is None:
+            non_python_marker = _exclude_multi(non_python_marker, *IMPLEMENTATION_MARKERS)
+        return not (python_spec & spec.requires_python).is_empty() and non_python_marker.evaluate(spec.markers())
+
+    @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:
         """Split `python_version` and `python_full_version` from marker string"""
-        python_marker = self.inner.only("python_version", "python_full_version")
+        python_marker = self.inner.only(*PYTHON_MARKERS)
         if python_marker.is_any():
             return self, PySpecSet()
-        new_marker = type(self)(self.inner.exclude("python_version").exclude("python_full_version"))
+        new_marker = _exclude_multi(self, *PYTHON_MARKERS)
         return new_marker, _build_pyspec_from_marker(python_marker)
 
     def split_extras(self) -> tuple[Marker, Marker]:
@@ -122,3 +149,24 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         return reduce(operator.or_, (_build_pyspec_from_marker(m) for m in marker.markers))
     else:  # pragma: no cover
         raise TypeError(f"Unsupported marker type: {type(marker)}")
+
+
+class EnvSpec(_EnvSpec):
+    def replace(self, **kwargs: Any) -> Self:
+        from dep_logic.tags import Implementation, Platform
+
+        if "requires_python" in kwargs:
+            kwargs["requires_python"] = cast(PySpecSet, kwargs["requires_python"])._logic
+        if "platform" in kwargs:
+            kwargs["platform"] = Platform.parse(kwargs["platform"])
+        if "implementation" in kwargs:
+            kwargs["implementation"] = Implementation.parse(kwargs["implementation"])
+        return replace(self, **kwargs)
+
+    def markers_with_defaults(self) -> dict[str, str]:
+        from packaging.markers import default_environment
+
+        return {**default_environment(), **self.markers()}  # type: ignore[dict-item]
+
+    def is_allow_all(self) -> bool:
+        return self.platform is None and self.implementation is None

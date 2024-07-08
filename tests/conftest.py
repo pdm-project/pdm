@@ -9,6 +9,8 @@ from urllib.parse import unquote, urlparse
 import pytest
 from unearth.vcs import Git, vcs_support
 
+from pdm.project import Project
+from pdm.utils import path_to_url
 from tests import FIXTURES
 
 if TYPE_CHECKING:
@@ -97,13 +99,24 @@ def copytree(src: Path, dst: Path) -> None:
 
 
 @pytest.fixture()
-def fixture_project(project_no_init):
+def fixture_project(project_no_init: Project, request: pytest.FixtureRequest, local_finder_artifacts: Path):
     """Initialize a project from a fixture project"""
 
     def func(project_name):
         source = FIXTURES / "projects" / project_name
         copytree(source, project_no_init.root)
         project_no_init.pyproject.reload()
+        if "local_finder" in request.fixturenames:
+            artifacts_dir = str(local_finder_artifacts)
+            project_no_init.pyproject.settings["source"] = [
+                {
+                    "type": "find_links",
+                    "verify_ssl": False,
+                    "url": path_to_url(artifacts_dir),
+                    "name": "pypi",
+                }
+            ]
+            project_no_init.pyproject.write()
         project_no_init.environment = None
         return project_no_init
 

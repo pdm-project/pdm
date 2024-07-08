@@ -43,12 +43,9 @@ class Command(BaseCommand):
     def install_plugins(self, project: Project) -> None:
         from pdm.environments import PythonEnvironment
         from pdm.installers.core import install_requirements
-        from pdm.models.requirements import parse_requirement
+        from pdm.models.requirements import parse_line
 
-        plugins = [
-            parse_requirement(r[3:], True) if r.startswith("-e ") else parse_requirement(r)
-            for r in project.pyproject.plugins
-        ]
+        plugins = [parse_line(r) for r in project.pyproject.plugins]
         if not plugins:
             return
         plugin_root = project.root / ".pdm-plugins"

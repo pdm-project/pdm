@@ -70,7 +70,7 @@ if TYPE_CHECKING:
 
     from _pytest.fixtures import SubRequest
 
-    from pdm._types import FileHash, RepositoryConfig
+    from pdm._types import FileHash
 
 
 class FileByteStream(IteratorByteStream):
@@ -130,8 +130,34 @@ class LocalIndexTransport(httpx.BaseTransport):
         return httpx.Response(status_code, headers=headers, content=content, stream=stream)
 
 
-class _FakeLink:
-    is_wheel = False
+class RepositoryData:
+    def __init__(self, pypi_json: Path) -> None:
+        self.pypi_data = self.load_fixtures(pypi_json)
+
+    @staticmethod
+    def load_fixtures(pypi_json: Path) -> dict[str, Any]:
+        return json.loads(pypi_json.read_text())
+
+    def add_candidate(self, name: str, version: str, requires_python: str = "") -> None:
+        pypi_data = self.pypi_data.setdefault(normalize_name(name), {}).setdefault(version, {})
+        pypi_data["requires_python"] = requires_python
+
+    def add_dependencies(self, name: str, version: str, requirements: list[str]) -> None:
+        pypi_data = self.pypi_data[normalize_name(name)][version]
+        pypi_data.setdefault("dependencies", []).extend(requirements)
+
+    def get_raw_dependencies(self, candidate: Candidate) -> tuple[str, list[str]]:
+        try:
+            pypi_data = self.pypi_data[cast(str, candidate.req.key)]
+            for version, data in sorted(pypi_data.items(), key=lambda item: len(item[0])):
+                base, *_ = version.partition("+")
+                if candidate.version in (version, base):
+                    return version, data.get("dependencies", [])
+        except KeyError:
+            pass
+        assert candidate.prepared is not None
+        meta = candidate.prepared.metadata
+        return meta.version, meta.requires or []
 
 
 class TestRepository(BaseRepository):
@@ -139,29 +165,12 @@ class TestRepository(BaseRepository):
     A mock repository to ease testing dependencies
     """
 
-    def __init__(self, sources: list[RepositoryConfig], environment: BaseEnvironment, pypi_json: Path):
-        super().__init__(sources, environment)
-        self._pypi_data = self.load_fixtures(pypi_json)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._pypi_data = self.get_data()
 
-    def get_raw_dependencies(self, candidate: Candidate) -> tuple[str, list[str]]:
-        try:
-            pypi_data = self._pypi_data[cast(str, candidate.req.key)]
-            for version, data in sorted(pypi_data.items(), key=lambda item: len(item[0])):
-                base, *_ = version.partition("+")
-                if candidate.version in (version, base):
-                    return version, data.get("dependencies", [])
-        except KeyError:
-            pass
-        meta = candidate.prepare(self.environment).metadata
-        return meta.version, meta.requires or []
-
-    def add_candidate(self, name: str, version: str, requires_python: str = "") -> None:
-        pypi_data = self._pypi_data.setdefault(normalize_name(name), {}).setdefault(version, {})
-        pypi_data["requires_python"] = requires_python
-
-    def add_dependencies(self, name: str, version: str, requirements: list[str]) -> None:
-        pypi_data = self._pypi_data[normalize_name(name)][version]
-        pypi_data.setdefault("dependencies", []).extend(requirements)
+    def get_data(self) -> dict[str, Any]:
+        raise NotImplementedError("To be injected by the fixture.")
 
     def _get_dependencies_from_fixture(self, candidate: Candidate) -> CandidateMetadata:
         try:
@@ -195,12 +204,8 @@ class TestRepository(BaseRepository):
                 version=version,
             )
             c.requires_python = candidate.get("requires_python", "")
-            c.link = cast(Link, _FakeLink())
+            c.link = Link(f"https://mypypi.org/packages/{c.name}-{c.version}.tar.gz")
             yield c
-
-    @staticmethod
-    def load_fixtures(pypi_json: Path) -> dict[str, Any]:
-        return json.loads(pypi_json.read_text())
 
 
 class Metadata(dict):
@@ -438,7 +443,7 @@ def project(project_no_init: Project) -> Project:
 
 
 @pytest.fixture
-def working_set(mocker: MockerFixture, repository: TestRepository) -> MockWorkingSet:
+def working_set(mocker: MockerFixture, repository: RepositoryData) -> MockWorkingSet:
     """
     a mock working set as a fixture
 
@@ -453,6 +458,7 @@ def working_set(mocker: MockerFixture, repository: TestRepository) -> MockWorkin
     class MockInstallManager(InstallManager):
         def install(self, candidate: Candidate) -> Distribution:  # type: ignore[override]
             key = normalize_name(candidate.name or "")
+            candidate.prepare(self.environment)
             version, dependencies = repository.get_raw_dependencies(candidate)
             dist = Distribution(key, version, candidate.req.editable)
             dist.dependencies = dependencies
@@ -513,20 +519,21 @@ def repository_pypi_json() -> Path:
 
 @pytest.fixture()
 def repository(
-    project: Project,
+    core: Core,
     mocker: MockerFixture,
     repository_pypi_json: Path,
     local_finder: type[None],
-) -> TestRepository:
+) -> RepositoryData:
     """
     A fixture providing a mock PyPI repository
 
     Returns:
         A mock repository
     """
-    rv = TestRepository([], project.environment, repository_pypi_json)
-    mocker.patch.object(project, "get_repository", return_value=rv)
-    return rv
+    repo = RepositoryData(repository_pypi_json)
+    core.repository_class = TestRepository
+    mocker.patch.object(TestRepository, "get_data", return_value=repo.pypi_data)
+    return repo
 
 
 @dataclass

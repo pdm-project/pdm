@@ -9,20 +9,22 @@ import shutil
 import sys
 from functools import cached_property, reduce
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence, cast
 
 import tomlkit
 from pbs_installer import PythonVersion
 from tomlkit.items import Array
 
 from pdm import termui
-from pdm._types import RepositoryConfig
+from pdm._types import NotSet, NotSetType, RepositoryConfig
+from pdm.compat import CompatibleSequence
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import DEFAULT_BACKEND, BuildBackend, get_backend_by_spec
 from pdm.models.caches import PackageCache
+from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.repositories import BaseRepository, LockedRepository
-from pdm.models.requirements import Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import Requirement, parse_line, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config, ensure_boolean
 from pdm.project.lockfile import Lockfile
@@ -34,6 +36,7 @@ from pdm.utils import (
     find_project_root,
     find_python_in_path,
     get_all_installable_python_versions,
+    get_class_init_params,
     is_conda_base,
     is_conda_base_python,
     is_path_relative_to,
@@ -306,14 +309,14 @@ class Project:
         return self._environment
 
     @environment.setter
-    def environment(self, value: BaseEnvironment) -> None:
+    def environment(self, value: BaseEnvironment | None) -> None:
         self._environment = value
 
     @property
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
 
-    def get_dependencies(self, group: str | None = None) -> dict[str, Requirement]:
+    def get_dependencies(self, group: str | None = None) -> Sequence[Requirement]:
         metadata = self.pyproject.metadata
         group = group or "default"
         optional_dependencies = metadata.get("optional-dependencies", {})
@@ -333,7 +336,7 @@ class Project:
                 deps = dev_dependencies[group]
             else:
                 raise PdmUsageError(f"Non-exist group {group}")
-        result = {}
+        result = []
         with cd(self.root):
             for line in deps:
                 if line.startswith("-e "):
@@ -349,8 +352,8 @@ class Project:
                     req = parse_requirement(line)
                 req.groups = [group]
                 # make editable packages behind normal ones to override correctly.
-                result[req.identify()] = req
-        return result
+                result.append(req)
+        return CompatibleSequence(result)
 
     def iter_groups(self) -> Iterable[str]:
         groups = {"default"}
@@ -361,7 +364,7 @@ class Project:
         return groups
 
     @property
-    def all_dependencies(self) -> dict[str, dict[str, Requirement]]:
+    def all_dependencies(self) -> dict[str, Sequence[Requirement]]:
         return {group: self.get_dependencies(group) for group in self.iter_groups()}
 
     @property
@@ -409,30 +412,43 @@ class Project:
         return sources
 
     def get_repository(
-        self, cls: type[BaseRepository] | None = None, ignore_compatibility: bool = True
+        self,
+        cls: type[BaseRepository] | None = None,
+        ignore_compatibility: bool | NotSetType = NotSet,
+        env_spec: EnvSpec | None = None,
     ) -> BaseRepository:
         """Get the repository object"""
         if cls is None:
             cls = self.core.repository_class
         sources = self.sources or []
-        return cls(sources, self.environment, ignore_compatibility=ignore_compatibility)
+        params = get_class_init_params(cls)
+        if "env_spec" in params:
+            return cls(sources, self.environment, env_spec=env_spec)
+        else:
+            return cls(sources, self.environment, ignore_compatibility=ignore_compatibility)
 
-    @property
-    def locked_repository(self) -> LockedRepository:
+    def get_locked_repository(self, env_spec: EnvSpec | None = None) -> LockedRepository:
         try:
             lockfile = self.lockfile._data.unwrap()
         except ProjectError:
             lockfile = {}
 
-        return LockedRepository(lockfile, self.sources, self.environment)
+        return LockedRepository(lockfile, self.sources, self.environment, env_spec=env_spec)
+
+    @property
+    def locked_repository(self) -> LockedRepository:
+        deprecation_warning("Project.locked_repository is deprecated, use Project.get_locked_repository() instead", 2)
+        return self.get_locked_repository()
 
     def get_provider(
         self,
         strategy: str = "all",
         tracked_names: Iterable[str] | None = None,
         for_install: bool = False,
-        ignore_compatibility: bool = True,
+        ignore_compatibility: bool | NotSetType = NotSet,
         direct_minimal_versions: bool = False,
+        env_spec: EnvSpec | None = None,
+        locked_repository: LockedRepository | None = None,
     ) -> BaseProvider:
         """Build a provider class for resolver.
 
@@ -444,17 +460,27 @@ class Project:
         :returns: The provider object
         """
 
-        from pdm.resolver.providers import BaseProvider, get_provider, provider_arguments
+        import inspect
 
-        repository = self.get_repository(ignore_compatibility=ignore_compatibility)
-        locked_repository: LockedRepository | None = None
-        try:
-            locked_repository = self.locked_repository
-        except Exception:  # pragma: no cover
-            if for_install:
-                raise
-            if strategy != "all":
-                self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
+        from pdm.resolver.providers import BaseProvider, get_provider
+
+        if env_spec is None:
+            env_spec = (
+                self.environment.allow_all_spec if ignore_compatibility in (True, NotSet) else self.environment.spec
+            )
+        repo_params = inspect.signature(self.get_repository).parameters
+        if "env_spec" in repo_params:
+            repository = self.get_repository(env_spec=env_spec)
+        else:  # pragma: no cover
+            repository = self.get_repository(ignore_compatibility=ignore_compatibility)
+        if locked_repository is None:
+            try:
+                locked_repository = self.get_locked_repository(env_spec)
+            except Exception:  # pragma: no cover
+                if for_install:
+                    raise
+                if strategy != "all":
+                    self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
         if for_install:
             assert locked_repository is not None
@@ -465,20 +491,10 @@ class Project:
         params: dict[str, Any] = {}
         if strategy != "all":
             params["tracked_names"] = [strip_extras(name)[0] for name in tracked_names or ()]
-        locked_candidates = {} if locked_repository is None else locked_repository.all_candidates
-        accepted_args = provider_arguments(provider_class)
-        if "locked_candidates" in accepted_args:
-            params["locked_candidates"] = locked_candidates
-        elif "preferred_pins" in accepted_args:  # pragma: no cover
-            deprecation_warning(
-                "`preferred_pins` has been moved to keyword-only argument `locked_candidates`", stacklevel=1
-            )
-            params["preferred_pins"] = locked_candidates
-        else:  # pragma: no cover
-            deprecation_warning(
-                "Missing `locked_candidates` argument from the provider class, it will be populated automatically",
-                stacklevel=1,
-            )
+        locked_candidates: dict[str, list[Candidate]] = (
+            {} if locked_repository is None else locked_repository.all_candidates
+        )
+        params["locked_candidates"] = locked_candidates
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
     def get_reporter(
@@ -572,26 +588,44 @@ class Project:
 
     def add_dependencies(
         self,
-        requirements: dict[str, Requirement],
+        requirements: Iterable[str | Requirement],
         to_group: str = "default",
         dev: bool = False,
         show_message: bool = True,
         write: bool = True,
-    ) -> None:
+    ) -> list[Requirement]:
+        """Add requirements to the given group, and return the requirements of that group."""
+        if isinstance(requirements, Mapping):  # pragma: no cover
+            deprecation_warning(
+                "Passing a requirements map to add_dependencies is deprecated, " "please pass an iterable", stacklevel=2
+            )
+            requirements = requirements.values()
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
-        for _, dep in requirements.items():
+        parsed_deps = [parse_line(dep) for dep in deps]
+        updated_indices: set[int] = set()
+
+        for req in requirements:
+            if isinstance(req, str):
+                req = parse_line(req)
             matched_index = next(
-                (i for i, r in enumerate(deps) if dep.matches(r)),
+                (i for i, r in enumerate(deps) if req.matches(r) and i not in updated_indices),
                 None,
             )
-            req = dep.as_line()
+            dep = req.as_line()
             if matched_index is None:
-                deps.append(req)
+                updated_indices.add(len(deps))
+                deps.append(dep)
+                parsed_deps.append(req)
             else:
-                deps[matched_index] = req
+                deps[matched_index] = dep
+                parsed_deps[matched_index] = req
+                updated_indices.add(matched_index)
         setter(cast(Array, deps).multiline(True))
         if write:
             self.pyproject.write(show_message)
+        for r in parsed_deps:
+            r.groups = [to_group]
+        return parsed_deps
 
     def init_global_project(self) -> None:
         if not self.is_global or not self.pyproject.empty():
@@ -802,3 +836,7 @@ class Project:
             return max(filtered_matches, key=lambda v: (v.major, v.minor, v.micro))
 
         return None
+
+    @property
+    def lock_targets(self) -> list[EnvSpec]:
+        return [self.environment.allow_all_spec]

@@ -11,8 +11,6 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
-from packaging.utils import parse_wheel_filename
-
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
@@ -76,12 +74,7 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in data.items() if v is not None}
 
 
-def _find_best_match_link(
-    finder: PackageFinder,
-    req: Requirement,
-    files: list[FileHash],
-    ignore_compatibility: bool = False,
-) -> Link | None:
+def _find_best_match_link(finder: PackageFinder, req: Requirement, files: list[FileHash]) -> Link | None:
     """Get the best matching link for a requirement"""
 
     # This function is called when a lock file candidate is given or incompatible wheel
@@ -93,26 +86,14 @@ def _find_best_match_link(
     links = [Link(f["url"]) for f in files if "url" in f]
     hashes = convert_hashes(files)
 
-    def attempt_to_find() -> Link | None:
-        if not links:
-            best = finder.find_best_match(req.as_line(), hashes=hashes).best
-        else:
-            # this branch won't be executed twice if ignore_compatibility is True
-            evaluator = finder.build_evaluator(req.name)
-            packages = finder._evaluate_links(links, evaluator)
-            best = max(packages, key=finder._sort_key, default=None)
-        return best.link if best is not None else None
-
-    assert finder.ignore_compatibility is False
-    found = attempt_to_find()
-    if ignore_compatibility and (found is None or not found.is_wheel):
-        # try to find a wheel for easy metadata extraction
-        finder.ignore_compatibility = True
-        new_found = attempt_to_find()
-        if new_found is not None:
-            found = new_found
-        finder.ignore_compatibility = False
-    return found
+    if not links:
+        best = finder.find_best_match(req.as_line(), hashes=hashes).best
+    else:
+        # this branch won't be executed twice if ignore_compatibility is True
+        evaluator = finder.build_evaluator(req.name)
+        packages = finder._evaluate_links(links, evaluator)
+        best = max(packages, key=finder._sort_key, default=None)
+    return best.link if best is not None else None
 
 
 class MetadataDistribution(im.Distribution):
@@ -432,16 +413,14 @@ class PreparedCandidate:
             return
 
         sources = filtered_sources(self.environment.project.sources, self.req.key)
-        with self.environment.get_finder(sources) as finder:
+        env_spec = self.environment.allow_all_spec if allow_all else self.environment.spec
+        with self.environment.get_finder(sources, env_spec=env_spec) as finder:
             if not self.link or self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all):
                 if self.req.is_file_or_url:
                     raise CandidateNotFound(f"The URL requirement {self.req.as_line()} is a wheel but incompatible")
                 self.link = self._cached = None  # reset the incompatible wheel
                 self.link = _find_best_match_link(
-                    finder,
-                    self.req.as_pinned_version(self.candidate.version),
-                    self.candidate.hashes,
-                    ignore_compatibility=allow_all,
+                    finder, self.req.as_pinned_version(self.candidate.version), self.candidate.hashes
                 )
                 if not self.link:
                     raise CandidateNotFound(
@@ -653,7 +632,7 @@ class PreparedCandidate:
             return None
         wheel_cache = self.environment.project.make_wheel_cache()
         assert self.candidate.link
-        cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.target_python)
+        cache_entry = wheel_cache.get(self.candidate.link, self.candidate.name, self.environment.spec)
         if cache_entry is not None:
             termui.logger.info("Using cached wheel: %s", cache_entry)
         return cache_entry
@@ -687,19 +666,14 @@ class PreparedCandidate:
         return self.environment.project.core.create_temp_dir(prefix="pdm-build-")
 
     def _wheel_compatible(self, wheel_file: str, allow_all: bool = False) -> bool:
-        if allow_all:
-            return True
-        supported_tags = self.environment.target_python.supported_tags()
-        file_tags = parse_wheel_filename(wheel_file)[-1]
-        return not file_tags.isdisjoint(supported_tags)
+        env_spec = self.environment.allow_all_spec if allow_all else self.environment.spec
+        return env_spec.wheel_compatibility(wheel_file) is not None
 
     def _get_wheel_dir(self) -> str:
         assert self.candidate.link
         wheel_cache = self.environment.project.make_wheel_cache()
         if self.should_cache():
             termui.logger.info("Saving wheel to cache: %s", self.candidate.link)
-            return wheel_cache.get_path_for_link(self.candidate.link, self.environment.target_python).as_posix()
+            return wheel_cache.get_path_for_link(self.candidate.link, self.environment.spec).as_posix()
         else:
-            return wheel_cache.get_ephemeral_path_for_link(
-                self.candidate.link, self.environment.target_python
-            ).as_posix()
+            return wheel_cache.get_ephemeral_path_for_link(self.candidate.link, self.environment.spec).as_posix()

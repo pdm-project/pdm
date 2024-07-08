@@ -128,9 +128,8 @@ class Command(BaseCommand):
         # Map dependency groups to requirements.
         name_to_groups: Mapping[str, set[str]] = defaultdict(set)
         for g in project.iter_groups():
-            for k in project.get_dependencies(g):
-                if "[" in k:
-                    k = k.split("[")[0]
+            for r in project.get_dependencies(g):
+                k = r.key or "unknown"
                 name_to_groups[k].add(g)
 
         # Set up `--include` and `--exclude` dep groups.
@@ -152,9 +151,7 @@ class Command(BaseCommand):
 
         # Requirements as importtools distributions (eg packages).
         # Resolve all the requirements. Map the candidates to distributions.
-        requirements = [
-            r for g in selected_groups if g != SUBDEP_GROUP_LABEL for r in project.get_dependencies(g).values()
-        ]
+        requirements = [r for g in selected_groups if g != SUBDEP_GROUP_LABEL for r in project.get_dependencies(g)]
         if options.resolve:
             candidates = actions.resolve_candidates_from_lockfile(
                 project, requirements, groups=selected_groups - {SUBDEP_GROUP_LABEL}
@@ -170,7 +167,7 @@ class Command(BaseCommand):
         selected_keys = {r.identify() for r in requirements}
         dep_graph = build_dependency_graph(
             packages,
-            project.environment.marker_environment,
+            project.environment.spec,
             None if not (include or exclude) else selected_keys,
             include_sub=SUBDEP_GROUP_LABEL in selected_groups,
         )

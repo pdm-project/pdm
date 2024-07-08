@@ -184,10 +184,10 @@ def test_select_dependencies(project):
         "test": ["pytest"],
         "doc": ["mkdocs"],
     }
-    assert sorted(project.get_dependencies()) == ["requests"]
+    assert sorted([r.key for r in project.get_dependencies()]) == ["requests"]
 
-    assert sorted(project.get_dependencies("security")) == ["cryptography"]
-    assert sorted(project.get_dependencies("test")) == ["pytest"]
+    assert sorted([r.key for r in project.get_dependencies("security")]) == ["cryptography"]
+    assert sorted([r.key for r in project.get_dependencies("test")]) == ["pytest"]
 
     assert sorted(project.iter_groups()) == [
         "default",
@@ -357,8 +357,8 @@ def prepare_repository(repository, project):
     repository.add_candidate("foo", "3.0", ">=3.8,<3.13")
     repository.add_candidate("foo", "2.0", ">=3.7,<3.12")
     repository.add_candidate("foo", "1.0", ">=3.7")
-    repository.environment.python_requires = PySpecSet(">=3.9")
-    project.add_dependencies({"foo": parse_requirement("foo")})
+    project.environment.python_requires = PySpecSet(">=3.9")
+    project.add_dependencies(["foo"])
 
 
 @pytest.mark.usefixtures("prepare_repository")
@@ -372,7 +372,7 @@ def test_quiet_mode(pdm, project, is_quiet, extra_args, recwarn):
     assert 'For example, "<3.13,>=3.9"' in str(recwarn[0].message)
     assert 'For example, "<3.12,>=3.9"' in str(recwarn[1].message)
     assert ("to suppress these warnings" in result.stderr) is not is_quiet
-    assert project.locked_repository.all_candidates["foo"].version == "1.0"
+    assert project.get_locked_repository().candidates["foo"].version == "1.0"
 
 
 @pytest.mark.usefixtures("prepare_repository")

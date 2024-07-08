@@ -7,22 +7,22 @@ from pdm import termui
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import BaseRepository
 from pdm.models.requirements import strip_extras
+from pdm.models.specifiers import PySpecSet
 from pdm.resolver.graph import merge_markers, populate_groups
 from pdm.resolver.providers import BaseProvider
 from pdm.resolver.python import PythonRequirement
-from pdm.utils import normalize_name
+from pdm.utils import deprecation_warning, normalize_name
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Resolver
 
     from pdm.models.requirements import Requirement
-    from pdm.models.specifiers import PySpecSet
 
 
 def resolve(
     resolver: Resolver,
     requirements: list[Requirement],
-    requires_python: PySpecSet,
+    requires_python: PySpecSet | None = None,
     max_rounds: int = 10000,
     keep_self: bool = False,
     inherit_metadata: bool = False,
@@ -33,9 +33,13 @@ def resolve(
         1. A map of pinned candidates
         2. A map of resolved dependencies for each dependency group
     """
-    requirements.append(PythonRequirement.from_pyspec_set(requires_python))
+    if requires_python is not None:  # pragma: no cover
+        deprecation_warning("requires_python argument is deprecated and has no effect.")
     provider = cast(BaseProvider, resolver.provider)
     repository = cast(BaseRepository, provider.repository)
+    env_spec = repository.env_spec
+    python_req = PythonRequirement.from_pyspec_set(PySpecSet(env_spec.requires_python))
+    requirements.append(python_req)
     result = resolver.resolve(requirements, max_rounds)
 
     if repository.has_warnings:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import os
 from typing import TYPE_CHECKING, Callable
 
@@ -12,19 +11,22 @@ from resolvelib.resolvers import Criterion
 from pdm.exceptions import InvalidPyVersion, RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import LockedRepository
-from pdm.models.requirements import FileRequirement, parse_requirement, strip_extras
+from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
+from pdm.models.specifiers import PySpecSet
 from pdm.resolver.python import PythonCandidate, PythonRequirement, find_python_matches, is_python_satisfied_by
 from pdm.termui import logger
 from pdm.utils import deprecation_warning, is_url, normalize_name, parse_version, url_without_fragments
 
 if TYPE_CHECKING:
-    from typing import Any, Iterable, Iterator, Mapping, Sequence
+    from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeVar
 
     from resolvelib.resolvers import RequirementInformation
 
     from pdm._types import Comparable
     from pdm.models.repositories import BaseRepository
     from pdm.models.requirements import Requirement
+
+    ProviderT = TypeVar("ProviderT", bound="type[BaseProvider]")
 
 
 _PROVIDER_REGISTORY: dict[str, type[BaseProvider]] = {}
@@ -34,20 +36,8 @@ def get_provider(strategy: str) -> type[BaseProvider]:
     return _PROVIDER_REGISTORY[strategy]
 
 
-def provider_arguments(provider: type[BaseProvider]) -> set[str]:
-    arguments: set[str] = set()
-    for cls in provider.__mro__:
-        if "__init__" not in cls.__dict__:
-            continue
-        params = inspect.signature(cls).parameters
-        arguments.update({k for k, v in params.items() if v.kind not in (v.VAR_POSITIONAL, v.VAR_KEYWORD)})
-        if not any(p.kind in (p.VAR_POSITIONAL, p.VAR_KEYWORD) for p in params.values()):
-            break
-    return arguments
-
-
-def register_provider(strategy: str) -> Callable[[type[BaseProvider]], type[BaseProvider]]:
-    def wrapper(cls: type[BaseProvider]) -> type[BaseProvider]:
+def register_provider(strategy: str) -> Callable[[ProviderT], ProviderT]:
+    def wrapper(cls: ProviderT) -> ProviderT:
         _PROVIDER_REGISTORY[strategy] = cls
         return cls
 
@@ -62,7 +52,8 @@ class BaseProvider(AbstractProvider):
         allow_prereleases: bool | None = None,
         overrides: dict[str, str] | None = None,
         direct_minimal_versions: bool = False,
-        locked_candidates: dict[str, Candidate] | None = None,
+        *,
+        locked_candidates: dict[str, list[Candidate]],
     ) -> None:
         if overrides is not None:  # pragma: no cover
             deprecation_warning(
@@ -73,13 +64,6 @@ class BaseProvider(AbstractProvider):
                 "The `allow_prereleases` argument is deprecated and will be removed in the future.", stacklevel=2
             )
         project = repository.environment.project
-        if locked_candidates is None:  # pragma: no cover
-            try:
-                locked_repository = project.locked_repository
-            except Exception:
-                locked_candidates = {}
-            else:
-                locked_candidates = locked_repository.all_candidates
         self.repository = repository
         self.allow_prereleases = project.pyproject.allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
@@ -168,11 +152,11 @@ class BaseProvider(AbstractProvider):
         return self._find_candidates(parse_requirement(req))
 
     def _is_direct_requirement(self, requirement: Requirement) -> bool:
-        from collections import ChainMap
+        from itertools import chain
 
         project = self.repository.environment.project
-        all_dependencies = ChainMap(*project.all_dependencies.values())
-        return requirement.identify() in all_dependencies
+        all_dependencies = chain.from_iterable(project.all_dependencies.values())
+        return any(r.is_named and requirement.identify() == r.identify() for r in all_dependencies)
 
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named and not isinstance(self.repository, LockedRepository):
@@ -184,15 +168,17 @@ class BaseProvider(AbstractProvider):
             prerelease = requirement.prerelease
             if prerelease is None and (key := requirement.identify()) in self.locked_candidates:
                 # keep the prerelease if it is locked
-                candidate = self.locked_candidates[key]
-                if candidate.version is not None:
-                    try:
-                        parsed_version = parse_version(candidate.version)
-                    except InvalidVersion:  # pragma: no cover
-                        pass
-                    else:
-                        if parsed_version.is_prerelease:
-                            prerelease = True
+                candidates = self.locked_candidates[key]
+                for candidate in candidates:
+                    if candidate.version is not None:
+                        try:
+                            parsed_version = parse_version(candidate.version)
+                        except InvalidVersion:  # pragma: no cover
+                            pass
+                        else:
+                            if parsed_version.is_prerelease:
+                                prerelease = True
+                                break
             return self.repository.find_candidates(
                 requirement,
                 self.allow_prereleases if prerelease is None else prerelease,
@@ -276,6 +262,7 @@ class BaseProvider(AbstractProvider):
             logger.error("Invalid metadata in %s: %s", candidate, e)
             raise RequirementsConflicted(Criterion([], [], [])) from None
 
+        self.fetched_dependencies[candidate.dep_key] = deps[:]
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
         valid_deps: list[Requirement] = []
@@ -284,14 +271,15 @@ class BaseProvider(AbstractProvider):
                 dep.requires_python
                 & requires_python
                 & candidate.req.requires_python
-                & self.repository.environment.python_requires
+                & PySpecSet(self.repository.env_spec.requires_python)
             ).is_empty():
+                continue
+            if dep.marker and not dep.marker.matches(self.repository.env_spec):
                 continue
             if dep.identify() in self.excludes:
                 continue
             dep.requires_python &= candidate.req.requires_python
             valid_deps.append(dep)
-        self.fetched_dependencies[candidate.dep_key] = valid_deps[:]
         # A candidate contributes to the Python requirements only when:
         # It isn't an optional dependency, or the requires-python doesn't cover
         # the req's requires-python.
@@ -320,16 +308,17 @@ class ReusePinProvider(BaseProvider):
         super().__init__(*args, **kwargs)
         self.tracked_names = set(tracked_names)
 
-    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+    def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         bare_name = strip_extras(identifier)[0]
-        if bare_name in self.tracked_names:
-            return None
-        pin = self.locked_candidates.get(identifier)
-        if pin is None:
-            return None
-        if requirement is not None:
-            pin.req = requirement
-        return pin
+        if bare_name in self.tracked_names or identifier not in self.locked_candidates:
+            return []
+        return self.locked_candidates[identifier]
+
+    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+        deprecation_warning(
+            "The get_reuse_candidate method is deprecated, use iter_reuse_candidates instead.", stacklevel=2
+        )
+        return next(iter(self.iter_reuse_candidates(identifier, requirement)), None)
 
     def find_matches(
         self,
@@ -341,8 +330,7 @@ class ReusePinProvider(BaseProvider):
 
         def matches_gen() -> Iterator[Candidate]:
             requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
-            pin = self.get_reuse_candidate(identifier, requested_req)
-            if pin is not None:
+            for pin in self.iter_reuse_candidates(identifier, requested_req):
                 incompat = list(incompatibilities[identifier])
                 pin._preferred = True  # type: ignore[attr-defined]
                 if pin not in incompat and all(self.is_satisfied_by(r, pin) for r in requirements[identifier]):
@@ -402,9 +390,10 @@ class ReuseInstalledProvider(ReusePinProvider):
         super().__init__(*args, **kwargs)
         self.installed = self.repository.environment.get_working_set()
 
-    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+    def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         key = strip_extras(identifier)[0]
         if key not in self.installed or requirement is None:
-            return super().get_reuse_candidate(identifier, requirement)
-        dist = self.installed[key]
-        return Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])
+            return super().iter_reuse_candidates(identifier, requirement)
+        else:
+            dist = self.installed[key]
+            return [Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])]
