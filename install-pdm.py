@@ -292,11 +292,17 @@ class Installer:
 
         if self.version:
             if self.version.upper() == "HEAD":
-                req = f"git+{REPO}.git@main#egg=pdm"
+                req = f"pdm[locked] @ git+{REPO}.git@main"
             else:
-                req = f"pdm=={self.version}"
+                try:
+                    parsed = tuple(map(int, self.version.split(".")))
+                except ValueError:
+                    extra = ""
+                else:
+                    extra = "[locked]" if parsed >= (2, 17) else ""
+                req = f"pdm{extra}=={self.version}"
         else:
-            req = "pdm"
+            req = "pdm[locked]"
         args = [req] + [d for d in self.additional_deps if d]
         pip_cmd = [str(venv_python), "-Im", "pip", "install", *args]
         _call_subprocess(pip_cmd)
