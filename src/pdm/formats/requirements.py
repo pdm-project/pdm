@@ -5,9 +5,9 @@ import hashlib
 import shlex
 import urllib.parse
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import PdmException, PdmUsageError
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
 from pdm.utils import expand_env_vars_in_auth
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from argparse import Namespace
     from os import PathLike
 
+    from pdm.environments import BaseEnvironment
     from pdm.models.candidates import Candidate
     from pdm.project import Project
 
@@ -27,7 +28,7 @@ class RequirementParser:
 
     # TODO: support no_binary, only_binary, prefer_binary, pre and no_index
 
-    def __init__(self) -> None:
+    def __init__(self, environment: BaseEnvironment) -> None:
         self.requirements: list[Requirement] = []
         self.index_url: str | None = None
         self.extra_index_urls: list[str] = []
@@ -43,6 +44,7 @@ class RequirementParser:
         parser.add_argument("-e", "--editable", nargs="+")
         parser.add_argument("-r", "--requirement")
         self._parser = parser
+        self._env = environment
 
     def _clean_line(self, line: str) -> str:
         """Strip the surrounding whitespaces and comment from the line"""
@@ -75,21 +77,32 @@ class RequirementParser:
         if args.editable:
             self.requirements.append(parse_requirement(" ".join(args.editable), True))
         if args.requirement:
-            referenced_requirements = str(Path(filename).parent.joinpath(args.requirement))
-            self.parse(referenced_requirements)
+            referenced_requirements = Path(filename).parent.joinpath(args.requirement).as_posix()
+            self.parse_file(referenced_requirements)
 
-    def parse(self, filename: str) -> None:
-        with open(filename, encoding="utf-8") as f:
+    def parse_lines(self, lines: Iterable[str], filename: str = "<temp file>") -> None:
+        this_line = ""
+        for line in filter(None, map(self._clean_line, lines)):
+            if line.endswith("\\"):
+                this_line += line[:-1].rstrip() + " "
+                continue
+            this_line += line
+            self._parse_line(filename, this_line)
             this_line = ""
-            for line in filter(None, map(self._clean_line, f)):
-                if line.endswith("\\"):
-                    this_line += line[:-1].rstrip() + " "
-                    continue
-                this_line += line
-                self._parse_line(filename, this_line)
-                this_line = ""
-            if this_line:
-                self._parse_line(filename, this_line)
+        if this_line:
+            self._parse_line(filename, this_line)
+
+    def parse_file(self, filename_or_url: str) -> None:
+        parsed = urllib.parse.urlparse(filename_or_url)
+        if parsed.scheme in ("http", "https", "file"):
+            resp = self._env.session.get(filename_or_url)
+            if resp.is_error:  # pragma: no cover
+                raise PdmException(
+                    f"Failed to fetch {filename_or_url}: ({resp.status_code} - {resp.reason_phrase}) {resp.text}"
+                )
+            return self.parse_lines(resp.text.splitlines(), filename_or_url)
+        with open(filename_or_url, encoding="utf-8") as f:
+            self.parse_lines(f, filename_or_url)
 
 
 def check_fingerprint(project: Project, filename: PathLike) -> bool:
@@ -130,8 +143,8 @@ def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], 
 
 
 def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-    parser = RequirementParser()
-    parser.parse(str(filename))
+    parser = RequirementParser(project.environment)
+    parser.parse_file(str(filename))
     backend = project.backend
 
     deps = make_array([], True)

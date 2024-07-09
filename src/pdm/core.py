@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 from resolvelib import Resolver
 
@@ -56,6 +56,8 @@ class State:
     """Whether to make an isolated environment and install requirements for build"""
     enable_cache: bool = True
     """Whether to enable the cache"""
+    constraints: list[str] = dc.field(default_factory=list)
+    """The requirement constraints for the resolver"""
 
 
 class Core:
@@ -74,33 +76,10 @@ class Core:
         self.version = __version__
         self.exit_stack = contextlib.ExitStack()
         self.ui = termui.UI(exit_stack=self.exit_stack)
-        self._states = [State()]
+        self.state = State()
         self.exit_stack.callback(setattr, self, "config_settings", None)
         self.init_parser()
         self.load_plugins()
-
-    @property
-    def state(self) -> State:
-        """Get the current state object."""
-        return self._states[-1]
-
-    @contextlib.contextmanager
-    def push_state(self, __empty: bool = False, /, **kwargs: Any) -> Iterator[State]:  # pragma: no cover
-        """Push a new state object to the stack.
-
-        Args:
-            __empty (bool): Whether to make an empty state.
-            **kwargs: The new attributes to set to the state object.
-        """
-        if __empty:
-            new_state = State(**kwargs)
-        else:
-            new_state = dc.replace(self.state, **kwargs)
-        self._states.append(new_state)
-        try:
-            yield new_state
-        finally:
-            self._states.pop()
 
     def create_temp_dir(self, *args: Any, **kwargs: Any) -> str:
         return self.exit_stack.enter_context(TemporaryDirectory(*args, **kwargs))
@@ -200,11 +179,14 @@ class Core:
         for callback in getattr(options, "callbacks", []):
             callback(project, options)
 
-        if getattr(options, "lockfile", None):
-            project.set_lockfile(cast(str, options.lockfile))
+        if lockfile := getattr(options, "lockfile", None):
+            project.set_lockfile(cast(str, lockfile))
 
         if getattr(options, "use_venv", None):
             use_venv(project, cast(str, options.use_venv))
+
+        if constraints := getattr(options, "constraint", None):
+            self.state.constraints = constraints
 
         if command is None:
             self.parser.print_help()

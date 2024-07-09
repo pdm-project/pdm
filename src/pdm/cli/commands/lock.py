@@ -10,6 +10,7 @@ from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
     config_setting_option,
+    constraint_option,
     groups_group,
     lock_strategy_group,
     lockfile_option,
@@ -30,6 +31,7 @@ class Command(BaseCommand):
         lockfile_option,
         no_isolation_option,
         config_setting_option,
+        constraint_option,
         skip_option,
         groups_group,
         lock_strategy_group,

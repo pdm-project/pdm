@@ -486,3 +486,13 @@ config_setting_option = Option(
     "or `-Ckey(=value)`",
 )
 install_group.options.append(config_setting_option)
+
+constraint_option = Option(
+    "-c",
+    "--constraint",
+    default=os.getenv("PDM_CONSTRAINT"),
+    action="append",
+    help="Use the constraint file in pip-requirements format. [env var: PDM_CONSTRAINT] "
+    "This option can be used multiple times. "
+    "See https://pip.pypa.io/en/stable/user_guide/#constraints-files",
+)

@@ -24,6 +24,7 @@ complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l versi
 # add
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a add -d 'Add package(s) to pyproject.toml and install them'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l constraint -d 'Use the constraint file in pip-requirements format. [env var: PDM_CONSTRAINT] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l dev -d 'Add packages into dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l editable -d 'Specify editable packages'
@@ -193,6 +194,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l verbose -d 'Use `-v`
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a install -d 'Install dependencies from lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l check -d 'Check if the lock file is up to date and fail otherwise'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l constraint -d 'Use the constraint file in pip-requirements format. [env var: PDM_CONSTRAINT] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l fail-fast -d 'Abort on first installation error'
@@ -239,6 +241,7 @@ complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a lo
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l append -d 'Append the result to the current lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l check -d 'Check if the lock file is up to date and quit'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l constraint -d 'Use the constraint file in pip-requirements format. [env var: PDM_CONSTRAINT] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l exclude-newer -d 'Exclude packages newer than the given UTC date in format `YYYY-MM-DD[THH:MM:SSZ]`'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the global project, supply the project root with `-p` option'
@@ -383,6 +386,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subco
 # remove
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a remove -d 'Remove packages from pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l constraint -d 'Use the constraint file in pip-requirements format. [env var: PDM_CONSTRAINT] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l dev -d 'Remove packages from dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l fail-fast -d 'Abort on first installation error'
@@ -502,6 +506,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l without -d 'Exclude 
 # update
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a update -d 'Update package(s) in pyproject.toml'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l constraint -d 'Use the constraint file in pip-requirements format. [env var: PDM_CONSTRAINT] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l fail-fast -d 'Abort on first installation error'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l frozen-lockfile -d 'Don\'t try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]'
