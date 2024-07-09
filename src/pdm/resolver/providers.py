@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from functools import cached_property
 from typing import TYPE_CHECKING, Callable
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
@@ -74,6 +75,18 @@ class BaseProvider(AbstractProvider):
         self.direct_minimal_versions = direct_minimal_versions
         self.locked_candidates = locked_candidates
         self._known_depth: dict[str, int] = {}
+
+    @cached_property
+    def requirement_constraints(self) -> dict[str, list[Requirement]]:
+        from pdm.formats.requirements import RequirementParser
+
+        parser = RequirementParser(self.repository.environment)
+        for constraint in self.repository.environment.project.core.state.constraints:
+            parser.parse_file(constraint)
+        result: dict[str, list[Requirement]] = {}
+        for req in parser.requirements:
+            result.setdefault(req.identify(), []).append(req)
+        return result
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
@@ -191,6 +204,10 @@ class BaseProvider(AbstractProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Callable[[], Iterator[Candidate]]:
+        from resolvelib.structs import IteratorMapping
+
+        requirements = IteratorMapping(requirements, lambda v: v, self.requirement_constraints)
+
         def matches_gen() -> Iterator[Candidate]:
             incompat = list(incompatibilities[identifier])
             if identifier == "python":

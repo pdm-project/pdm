@@ -1,0 +1,8 @@
+# This is a pip constraints file
+requests==2.20.0b1
+django==1.11.8
+certifi==2018.11.17
+chardet==3.0.4
+idna==2.7
+pytz==2019.3
+urllib3==1.23b0

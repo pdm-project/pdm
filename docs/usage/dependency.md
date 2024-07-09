@@ -312,6 +312,35 @@ Besides, if you don't want the root project to be installed, add `--no-self` opt
 
 You may also use the pdm lock command with these options to lock only the specified groups, which will be recorded in the `[metadata]` table of the lock file. If no `--group/--prod/--dev/--no-default` option is specified, `pdm sync` and `pdm update` will operate using the groups in the lockfile. However, if any groups that are not included in the lockfile are given as arguments to the commands, PDM will raise an error.
 
+## Constraint files
+
++++ 2.17.0
+
+PDM also supports [constraint files](https://pip.pypa.io/en/stable/user_guide/#constraints-files) to limit the versions of packages to be resolved or installed.
+
+Constraint files are pip-style requirement files that only control which version of a requirement is installed, not whether it is installed or not. The syntax is the same as the pip's `requirements.txt` file:
+
+```
+# This is a pip constraints file
+requests==2.20.0
+django==1.11.8
+certifi==2018.11.17
+chardet==3.0.4
+idna==2.7
+pytz==2019.3
+urllib3==1.23
+```
+
+And you can pass the constraint file to various PDM commands that would perform a resolution, such as [`pdm install`](../reference/cli.md#install), [`pdm lock`](../reference/cli.md#lock), [`pdm add`](../reference/cli.md#add), etc.
+
+```bash
+pdm lock -c constraints.txt
+```
+
+Note if the lock file is already present and up-to-date, `pdm install` won't perform a resolution and hence the constraint file won't be used.
+
+Constraints files can also be served via a URL, e.g. http://example.com/constraints.txt, so that your organization can store and serve them in a centralized place.
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:

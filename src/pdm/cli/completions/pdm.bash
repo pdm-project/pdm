@@ -29,7 +29,7 @@ _pdm_a919b69078acdf0a_complete()
         case "$com" in
 
             (add)
-            opts="--config-setting --dev --dry-run --editable --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose"
+            opts="--config-setting --constraint --dev --dry-run --editable --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose"
             ;;
 
             (build)
@@ -69,7 +69,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (install)
-            opts="--check --config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --plugins --production --project --quiet --skip --venv --verbose --without"
+            opts="--check --config-setting --constraint --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --plugins --production --project --quiet --skip --venv --verbose --without"
             ;;
 
             (list)
@@ -77,7 +77,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (lock)
-            opts="--append --check --config-setting --dev --exclude-newer --global --group --help --implementation --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --platform --production --project --python --quiet --refresh --skip --static-urls --strategy --update-reuse --update-reuse-installed --verbose --without"
+            opts="--append --check --config-setting --constraint --dev --exclude-newer --global --group --help --implementation --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --platform --production --project --python --quiet --refresh --skip --static-urls --strategy --update-reuse --update-reuse-installed --verbose --without"
             ;;
 
             (outdated)
@@ -101,7 +101,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (remove)
-            opts="--config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --quiet --skip --venv --verbose"
+            opts="--config-setting --constraint --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --quiet --skip --venv --verbose"
             ;;
 
             (run)
@@ -125,7 +125,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (update)
-            opts="--config-setting --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
+            opts="--config-setting --constraint --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
             ;;
 
             (use)

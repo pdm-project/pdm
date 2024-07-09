@@ -8,7 +8,8 @@ from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, Compatibility
-from pdm.utils import parse_version
+from pdm.utils import parse_version, path_to_url
+from tests import FIXTURES
 
 
 def test_lock_command(project, pdm, mocker):
@@ -371,3 +372,17 @@ def test_lock_for_multiple_targets(project, pdm, repository, nested):
     assert len(locked.targets) == 1
     pytz = candidates["pytz"][0]
     assert str(pytz.req.marker) == 'sys_platform == "win32"'
+
+
+CONSTRAINT_FILE = str(FIXTURES / "constraints.txt")
+
+
+@pytest.mark.usefixtures("repository")
+@pytest.mark.parametrize("constraint", [CONSTRAINT_FILE, path_to_url(CONSTRAINT_FILE)])
+def test_lock_with_constraints_file(project, pdm, constraint):
+    project.add_dependencies(["requests"])
+    pdm(["lock", "--constraint", constraint], obj=project, strict=True)
+    candidates = project.get_locked_repository().candidates
+    assert candidates["requests"].version == "2.20.0b1"
+    assert candidates["urllib3"].version == "1.23b0"
+    assert "django" not in candidates
