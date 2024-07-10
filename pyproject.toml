@@ -86,6 +86,7 @@ source-includes = ["tests", "typings", "CHANGELOG.md", "LICENSE", "README.md", "
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
 locked = true
+locked-groups = ["default", "all"]
 
 [tool.pdm.scripts]
 pre_release = "python tasks/max_versions.py"
