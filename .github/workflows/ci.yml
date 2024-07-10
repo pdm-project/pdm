@@ -96,6 +96,7 @@ jobs:
       - name: Install current PDM via script
         if: matrix.install-via == 'script'
         run: |
+          shasum -a256 --check install-pdm.py.sha256
           python install-pdm.py --version head
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies

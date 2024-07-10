@@ -201,7 +201,12 @@ class Requirement:
         is the same requirement as this one.
         """
         req = parse_line(line)
-        return self.key == req.key
+        return (
+            self.key == req.key
+            or isinstance(self, FileRequirement)
+            and isinstance(req, FileRequirement)
+            and self.url == req.url
+        )
 
     @classmethod
     def from_pkg_requirement(cls, req: PackageRequirement) -> Requirement:
