@@ -418,14 +418,14 @@ class Synchronizer(BaseSynchronizer):
                 else:
                     parallel_jobs.append((kind, key))
 
-        state = SimpleNamespace(errors=[], failed_jobs=[], jobs=[], mark_failed=False)
+        state = SimpleNamespace(errors=[], parallel_failed=[], sequential_failed=[], jobs=[], mark_failed=False)
 
         def update_progress(future: Future | DummyFuture, kind: str, key: str) -> None:
             error = future.exception()
             if error:
                 exc_info = (type(error), error, error.__traceback__)
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
-                state.failed_jobs.append((kind, key))
+                state.parallel_failed.append((kind, key))
                 state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
                 if self.fail_fast:
                     for future in state.jobs:
@@ -441,18 +441,34 @@ class Synchronizer(BaseSynchronizer):
             TaskProgressColumn("[info]{task.percentage:>3.0f}%[/]"),
         ) as progress:
             live = progress.live
-            for kind, key in sequential_jobs:
-                handlers[kind](key, progress)
             for i in range(self.retry_times + 1):
+                for kind, key in sequential_jobs:
+                    try:
+                        handlers[kind](key, progress)
+                    except Exception:
+                        termui.logger.exception("Error occurs: ")
+                        state.sequential_failed.append((kind, key))
+                        state.errors.extend([f"{kind} [success]{key}[/] failed:\n", traceback.format_exc()])
+                        if self.fail_fast:
+                            state.mark_failed = True
+                            break
+                if state.mark_failed:
+                    break
                 state.jobs.clear()
                 with self.create_executor() as executor:
                     for kind, key in parallel_jobs:
                         future = executor.submit(handlers[kind], key, progress)
                         future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
                         state.jobs.append(future)
-                if state.mark_failed or not state.failed_jobs or i == self.retry_times:
+                if (
+                    state.mark_failed
+                    or i == self.retry_times
+                    or not state.sequential_failed
+                    and not state.parallel_failed
+                ):
                     break
-                parallel_jobs, state.failed_jobs = state.failed_jobs, []
+                sequential_jobs, state.sequential_failed = state.sequential_failed, []
+                parallel_jobs, state.parallel_failed = state.parallel_failed, []
                 state.errors.clear()
                 live.console.print("Retry failed jobs")
 
