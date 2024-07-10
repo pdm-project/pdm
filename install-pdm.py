@@ -236,7 +236,7 @@ class Installer:
             path = os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
             path = os.path.join(path, "pdm")
 
-        return Path(path)
+        return Path(path).resolve()
 
     def _make_env(self) -> Path:
         venv_path = self._path / "venv"
