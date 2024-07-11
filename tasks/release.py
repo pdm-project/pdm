@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import argparse
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import parver
 from rich.console import Console
+
+if TYPE_CHECKING:
+    from parver._typing import PreTag
 
 _console = Console(highlight=False)
 _err_console = Console(stderr=True, highlight=False)
@@ -21,42 +26,37 @@ def echo(*args: str, err: bool = False, **kwargs: Any):
 PROJECT_DIR = Path(__file__).parent.parent
 
 
-def get_current_version():
-    from pdm.pep517.base import Builder
-
-    metadata = Builder(PROJECT_DIR).meta
-    return metadata.version
+def get_current_version() -> str:
+    return subprocess.check_output(["git", "describe", "--abbrev=0", "--tags"], cwd=PROJECT_DIR).decode().strip()
 
 
-def bump_version(pre=None, major=False, minor=False, patch=True):
-    if not any([major, minor, patch, pre]):
-        patch = True
-    if len([v for v in [major, minor, patch] if v]) > 1:
-        echo(
-            "Only one option should be provided among (--major, --minor, --patch)",
-            style="red",
-            err=True,
-        )
+def bump_version(pre: str | None = None, major: bool = False, minor: bool = False) -> str:
+    if major and minor:
+        echo("Only one option should be provided among (--major, --minor)", style="red", err=True)
         sys.exit(1)
     current_version = parver.Version.parse(get_current_version())
     if major or minor:
-        version_idx = [major, minor, patch].index(True)
+        version_idx = [major, minor].index(True)
         version = current_version.bump_release(index=version_idx)
-    else:
+    elif pre is not None and current_version.is_prerelease:
         version = current_version
-    if pre:
-        if version.pre_tag == pre:
-            pass
+    else:
+        version = current_version.bump_release(index=2)
+    if pre is not None:
+        if version.pre_tag != pre:
+            version = version.replace(pre_tag=cast("PreTag", pre), pre=0)
         else:
-            version = version.replace(pre_tag=pre, pre=0)
+            version = version.bump_pre()
     else:
         version = version.replace(pre=None, post=None)
     version = version.replace(local=None, dev=None)
     return str(version)
 
 
-def release(dry_run=False, commit=True, pre=None, major=False, minor=False, patch=True):
-    new_version = bump_version(pre, major, minor, patch)
+def release(
+    dry_run: bool = False, commit: bool = True, pre: str | None = None, major: bool = False, minor: bool = False
+) -> None:
+    new_version = bump_version(pre, major, minor)
     echo(f"Bump version to: {new_version}", style="yellow")
     if dry_run:
         subprocess.check_call(["towncrier", "build", "--version", new_version, "--draft"])
@@ -82,14 +82,13 @@ def parse_args(argv=None):
         help="Do not commit to Git",
     )
     group = parser.add_argument_group(title="version part")
-    group.add_argument("--pre", help="Pre tag")
+    group.add_argument("--pre", help="Bump with the pre tag", choices=["a", "b", "rc"])
     group.add_argument("--major", action="store_true", help="Bump major version")
     group.add_argument("--minor", action="store_true", help="Bump minor version")
-    group.add_argument("--patch", action="store_true", help="Bump patch version")
 
     return parser.parse_args(argv)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    release(args.dry_run, args.commit, args.pre, args.major, args.minor, args.patch)
+    release(args.dry_run, args.commit, args.pre, args.major, args.minor)

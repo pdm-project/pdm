@@ -138,4 +138,4 @@ temp.py
 # Pyannotate generated stubs
 type_info.json
 .pdm-build/
-src/pdm/models/VERSION
+src/pdm/VERSION

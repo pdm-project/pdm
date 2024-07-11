@@ -76,7 +76,7 @@ pdm = "pdm.core:main"
 
 [tool.pdm.version]
 source = "scm"
-write_to = "pdm/models/VERSION"
+write_to = "pdm/VERSION"
 
 [tool.pdm.build]
 excludes = ["./**/.git"]
@@ -127,10 +127,9 @@ doc = [
     "mkdocs-version-annotations>=1.0.0",
 ]
 workflow = [
-    "pdm-pep517>=1.0.0,<2.0.0",
     "parver>=0.3.1",
     "towncrier>=20",
-    "pycomplete~=0.3"
+    "pycomplete~=0.3",
 ]
 
 [tool.ruff]
