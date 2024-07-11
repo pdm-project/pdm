@@ -379,9 +379,9 @@ CONSTRAINT_FILE = str(FIXTURES / "constraints.txt")
 
 @pytest.mark.usefixtures("repository")
 @pytest.mark.parametrize("constraint", [CONSTRAINT_FILE, path_to_url(CONSTRAINT_FILE)])
-def test_lock_with_constraints_file(project, pdm, constraint):
+def test_lock_with_override_file(project, pdm, constraint):
     project.add_dependencies(["requests"])
-    pdm(["lock", "--constraint", constraint], obj=project, strict=True)
+    pdm(["lock", "--override", constraint], obj=project, strict=True)
     candidates = project.get_locked_repository().candidates
     assert candidates["requests"].version == "2.20.0b1"
     assert candidates["urllib3"].version == "1.23b0"
