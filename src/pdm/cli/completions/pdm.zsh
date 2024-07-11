@@ -68,7 +68,7 @@ _pdm() {
         {-d,--dev}'[Add packages into dev dependencies]'
         {-G,--group}'[Specify the target dependency group to add into]:group:_pdm_groups'
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
-        {-c+,--constraint+}'[Use the constraint file in pip-requirements format. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:constraint:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         '--no-sync[Only write pyproject.toml and do not sync the working set]'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
@@ -218,7 +218,7 @@ _pdm() {
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-d,--dev}"[Select dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
-        {-c+,--constraint+}'[Use the constraint file in pip-requirements format. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:constraint:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         {--prod,--production}"[Unselect dev dependencies]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
@@ -263,7 +263,7 @@ _pdm() {
         "--check[Check if the lock file is up to date and quit]"
         {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
-        {-c+,--constraint+}'[Use the constraint file in pip-requirements format. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:constraint:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
@@ -393,7 +393,7 @@ _pdm() {
         {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
-        {-c+,--constraint+}'[Use the constraint file in pip-requirements format. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:constraint:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
@@ -471,7 +471,7 @@ _pdm() {
         {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
-        {-c+,--constraint+}'[Use the constraint file in pip-requirements format. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:constraint:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'

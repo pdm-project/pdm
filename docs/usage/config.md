@@ -313,29 +313,6 @@ name = "NameOfFeed"
 url = "https://pkgs.dev.azure.com/[org name]/_packaging/[feed name]/pypi/simple/"
 ```
 
-## Override the resolved package versions
-
-+++ 1.12.0
-
-Sometimes you can't get a dependency resolution due to incorrect version ranges set by upstream libraries that you can't fix.
-In this case you can use PDM's overrides feature to force a specific version of a package to be installed.
-
-Given the following configuration in `pyproject.toml`:
-
-```toml
-[tool.pdm.resolution.overrides]
-asgiref = "3.2.10"  # exact version
-urllib3 = ">=1.26.2"  # version range
-pytz = "https://mypypi.org/packages/pytz-2020.9-py3-none-any.whl"  # absolute URL
-```
-
-Each entry of that table is a package name with the wanted version.
-In this example, PDM will resolve the above packages into the given versions no matter whether there is any other resolution available.
-
-!!! warning
-    By using `[tool.pdm.resolution.overrides]` setting, you are at your own risk of any incompatibilities from that resolution. It can only be used if there is no valid resolution for your requirements and you know the specific version works.
-    Most of the time, you can just add any transient constraints to the `dependencies` array.
-
 ## Exclude specific packages and their dependencies from the lock file
 
 +++ 2.12.0

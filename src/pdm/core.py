@@ -56,8 +56,8 @@ class State:
     """Whether to make an isolated environment and install requirements for build"""
     enable_cache: bool = True
     """Whether to enable the cache"""
-    constraints: list[str] = dc.field(default_factory=list)
-    """The requirement constraints for the resolver"""
+    overrides: list[str] = dc.field(default_factory=list)
+    """The requirement overrides for the resolver"""
 
 
 class Core:
@@ -185,8 +185,8 @@ class Core:
         if getattr(options, "use_venv", None):
             use_venv(project, cast(str, options.use_venv))
 
-        if constraints := getattr(options, "constraint", None):
-            self.state.constraints = constraints
+        if overrides := getattr(options, "override", None):
+            self.state.overrides = overrides
 
         if command is None:
             self.parser.print_help()

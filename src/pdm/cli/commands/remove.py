@@ -7,11 +7,11 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import (
-    constraint_option,
     dry_run_option,
     frozen_lockfile_option,
     install_group,
     lockfile_option,
+    override_option,
     skip_option,
     venv_option,
 )
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         install_group,
         dry_run_option,
         lockfile_option,
-        constraint_option,
+        override_option,
         frozen_lockfile_option,
         skip_option,
         venv_option,

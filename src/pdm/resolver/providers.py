@@ -68,25 +68,10 @@ class BaseProvider(AbstractProvider):
         self.repository = repository
         self.allow_prereleases = project.pyproject.allow_prereleases  # Root allow_prereleases value
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
-        self.overrides: Mapping[str, str] = {
-            normalize_name(k): v for k, v in project.pyproject.resolution.get("overrides", {}).items()
-        }
         self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
         self.locked_candidates = locked_candidates
         self._known_depth: dict[str, int] = {}
-
-    @cached_property
-    def requirement_constraints(self) -> dict[str, list[Requirement]]:
-        from pdm.formats.requirements import RequirementParser
-
-        parser = RequirementParser(self.repository.environment)
-        for constraint in self.repository.environment.project.core.state.constraints:
-            parser.parse_file(constraint)
-        result: dict[str, list[Requirement]] = {}
-        for req in parser.requirements:
-            result.setdefault(req.identify(), []).append(req)
-        return result
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
@@ -151,18 +136,38 @@ class BaseProvider(AbstractProvider):
             identifier,
         )
 
-    def get_override_candidates(self, identifier: str) -> Iterable[Candidate]:
-        requested = self.overrides[identifier]
-        if is_url(requested):
-            req = f"{identifier} @ {requested}"
-        else:
-            try:
-                SpecifierSet(requested)
-            except InvalidSpecifier:  # handle bare versions
-                req = f"{identifier}=={requested}"
+    @cached_property
+    def overrides(self) -> dict[str, Requirement]:
+        """A mapping of package name to the requirement for overriding."""
+        from pdm.formats.requirements import RequirementParser
+
+        project_overrides: dict[str, str] = {
+            normalize_name(k): v
+            for k, v in self.repository.environment.project.pyproject.resolution.get("overrides", {}).items()
+        }
+        requirements: dict[str, Requirement] = {}
+        for name, value in project_overrides.items():
+            if is_url(value):
+                req = f"{name} @ {value}"
             else:
-                req = f"{identifier}{requested}"
-        return self._find_candidates(parse_requirement(req))
+                try:
+                    SpecifierSet(value)
+                except InvalidSpecifier:
+                    req = f"{name}=={value}"
+                else:
+                    req = f"{name}{value}"
+            r = parse_requirement(req)
+            requirements[r.identify()] = r
+
+        # Read from --override files
+        parser = RequirementParser(self.repository.environment)
+        for override_file in self.repository.environment.project.core.state.overrides:
+            parser.parse_file(override_file)
+        for r in parser.requirements:
+            # There might be duplicates, we only keep the last one
+            requirements[r.identify()] = r
+
+        return requirements
 
     def _is_direct_requirement(self, requirement: Requirement) -> bool:
         from itertools import chain
@@ -204,19 +209,15 @@ class BaseProvider(AbstractProvider):
         requirements: Mapping[str, Iterator[Requirement]],
         incompatibilities: Mapping[str, Iterator[Candidate]],
     ) -> Callable[[], Iterator[Candidate]]:
-        from resolvelib.structs import IteratorMapping
-
-        requirements = IteratorMapping(requirements, lambda v: v, self.requirement_constraints)
-
         def matches_gen() -> Iterator[Candidate]:
             incompat = list(incompatibilities[identifier])
             if identifier == "python":
                 candidates = find_python_matches(identifier, requirements)
                 return (c for c in candidates if c not in incompat)
             elif identifier in self.overrides:
-                return iter(self.get_override_candidates(identifier))
+                return iter(self._find_candidates(self.overrides[identifier]))
             elif (name := strip_extras(identifier)[0]) in self.overrides:
-                return iter(self.get_override_candidates(name))
+                return iter(self._find_candidates(self.overrides[name]))
             reqs = sorted(requirements[identifier], key=self.requirement_preference)
             if not reqs:
                 return iter(())
