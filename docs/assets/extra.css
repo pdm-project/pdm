@@ -26,7 +26,7 @@ a.pdm-expansions {
   border-radius: 50%;
   width: 80px;
   height: 80px;
-  background-color: #7e56c2;
+  background-color: var(--md-primary-fg-color);
   transition: all 0.2s ease-in-out;
   fill: white;
 }
