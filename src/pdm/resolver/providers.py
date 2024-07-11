@@ -156,15 +156,16 @@ class BaseProvider(AbstractProvider):
                     req = f"{name}=={value}"
                 else:
                     req = f"{name}{value}"
-            requirements[r.identify()] = (r := parse_requirement(req))
+            r = parse_requirement(req)
+            requirements[r.identify()] = r
 
         # Read from --override files
         parser = RequirementParser(self.repository.environment)
         for override_file in self.repository.environment.project.core.state.overrides:
             parser.parse_file(override_file)
-        for req in parser.requirements:
+        for r in parser.requirements:
             # There might be duplicates, we only keep the last one
-            requirements[req.identify()] = req
+            requirements[r.identify()] = r
 
         return requirements
 
