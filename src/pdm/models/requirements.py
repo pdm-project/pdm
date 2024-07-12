@@ -244,6 +244,7 @@ class FileRequirement(Requirement):
     path: Path | None = None
     subdirectory: str | None = None
     check_installable: bool = True
+    _root: Path = dataclasses.field(default_factory=Path.cwd, repr=False)
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -295,7 +296,7 @@ class FileRequirement(Requirement):
             return None
         if self.path.is_absolute():
             try:
-                result = self.path.relative_to(Path.cwd()).as_posix()
+                result = self.path.relative_to(self._root).as_posix()
             except ValueError:
                 return self.path.as_posix()
         else:
@@ -332,14 +333,19 @@ class FileRequirement(Requirement):
         if path == ".":
             path = ""
         self.url = backend.relative_path_to_url(path)
+        self._root = backend.root
+
+    @property
+    def absolute_path(self) -> Path | None:
+        return self._root.joinpath(self.path) if self.path else None
 
     @property
     def is_local(self) -> bool:
-        return self.path and self.path.exists() or False
+        return (path := self.absolute_path) is not None and path.exists()
 
     @property
     def is_local_dir(self) -> bool:
-        return self.is_local and cast(Path, self.path).is_dir()
+        return self.is_local and cast(Path, self.absolute_path).is_dir()
 
     def as_file_link(self) -> Link:
         from unearth import Link

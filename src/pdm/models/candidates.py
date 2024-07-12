@@ -27,7 +27,6 @@ from pdm.models.requirements import (
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet
 from pdm.utils import (
-    cd,
     comparable_version,
     convert_hashes,
     filtered_sources,
@@ -262,11 +261,10 @@ class Candidate:
             if not self.req.editable:
                 result.update(revision=self.get_revision())
         elif not self.req.is_named:
-            with cd(project_root):
-                if self.req.is_file_or_url and self.req.is_local:
-                    result.update(path=self.req.str_path)
-                else:
-                    result.update(url=self.req.url)
+            if self.req.is_file_or_url and self.req.is_local:
+                result.update(path=self.req.str_path)
+            else:
+                result.update(url=self.req.url)
         return {k: v for k, v in result.items() if v}
 
     def format(self) -> str:
